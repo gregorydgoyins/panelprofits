@@ -1,0 +1,34 @@
+// Hostinger DNS Configuration for thewritersroom.app
+
+// Add these DNS records in your Hostinger DNS management panel:
+
+// Primary A Record
+Host: @
+Type: A
+Value: 75.2.60.5
+TTL: 3600
+
+// WWW CNAME Record
+Host: www
+Type: CNAME
+Value: thewritersroom.netlify.app.
+TTL: 3600
+
+// Netlify DNS Verification Record
+Host: _redirect
+Type: TXT
+Value: [Your Netlify verification code]
+TTL: 3600
+
+// Additional records for email (if needed):
+Host: @
+Type: MX
+Priority: 10
+Value: mx1.hostinger.com
+TTL: 14400
+
+Host: @
+Type: MX
+Priority: 20
+Value: mx2.hostinger.com
+TTL: 14400
