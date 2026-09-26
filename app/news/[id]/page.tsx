@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 import { getNewsStory, shortNewsSource } from "@/lib/news/feed";
 import { findNewsEntities } from "@/lib/news/entities";
 import { NewsBriefing } from "@/components/news/news-briefing";
-import { AnchorDesk } from "@/components/news/AnchorDesk";
 
 export const dynamic = "force-dynamic";
 
@@ -53,9 +52,6 @@ export default async function NewsStoryPage({ params }: { params: Promise<{ id: 
             <span>{shortNewsSource(story.source)}</span>
           </div>
           <h1 className="mt-4 text-2xl font-semibold leading-tight text-slate-100 sm:text-4xl">{story.headline}</h1>
-          <div className="mt-6">
-            <AnchorDesk story={story} />
-          </div>
           <NewsBriefing
             headline={story.headline}
             summary={story.summary}

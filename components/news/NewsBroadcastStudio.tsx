@@ -5,7 +5,6 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { TopTicker } from "./TopTicker";
 import { StoryPanel } from "./StoryPanel";
-import { AnchorDesk } from "./AnchorDesk";
 import { NewsCountdown } from "./NewsCountdown";
 import type { NewsStory } from "@/lib/news/feed";
 import "@/styles/newsroom-final.css";
@@ -108,13 +107,8 @@ export function NewsBroadcastStudio({ initialStories }: NewsBroadcastStudioProps
         onSelect={(id) => setActiveStoryId(id)}
       />
 
-      <main className="newsroom-layout">
+      <main className="min-w-0">
         <StoryPanel story={activeStory} />
-
-        <AnchorDesk
-          story={activeStory}
-          fallbackLoopVideo="/media/newsdesk-loop.mp4"
-        />
       </main>
     </div>
   );

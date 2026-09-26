@@ -6,7 +6,6 @@ import { ArrowLeft, Radio, Search, SlidersHorizontal } from "lucide-react";
 import { type NewsStory } from "@/lib/news/feed";
 import { TopTicker } from "@/components/news/TopTicker";
 import { StoryPanel } from "@/components/news/StoryPanel";
-import { AnchorDesk } from "@/components/news/AnchorDesk";
 import { NewsCountdown } from "@/components/news/NewsCountdown";
 
 interface NewsroomProps {
@@ -75,17 +74,9 @@ export function Newsroom({ stories }: NewsroomProps) {
         </label>
       </div>
 
-      {/* Main Broadcast Stage: 2-Column Newsroom Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-6 items-start">
-        {/* Left Column: Story Dossier & Analysis Grid */}
-        <div className="min-w-0">
-          <StoryPanel story={activeStory} />
-        </div>
-
-        {/* Right Column: Lead Anchor Broadcast Desk */}
-        <div className="lg:sticky lg:top-20 space-y-4">
-          <AnchorDesk story={activeStory} />
-        </div>
+      {/* Main Newsroom Stage: Clean High-Speed Editorial & Intelligence Suite */}
+      <div className="min-w-0">
+        <StoryPanel story={activeStory} />
       </div>
     </div>
   );
