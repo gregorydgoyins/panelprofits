@@ -1,16 +1,15 @@
-import { getNewsStories, type NewsStory } from "@/lib/news/feed";
-import { NewsBroadcastStudio } from "@/components/news/NewsBroadcastStudio";
-import "@/styles/newsroom-final.css";
+import { getNewsStories } from "@/lib/news/feed";
+import { Newsroom } from "@/components/news/newsroom";
 
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Newsroom // Broadcast Studio | Panel Profits",
-  description: "Live broadcast newsroom studio featuring Alex Morgan on the lead desk.",
+  title: "Newsroom // Narrative Engine | Panel Profits",
+  description: "Live newsroom wire and narrative market analysis.",
 };
 
 export default async function NewsroomPage() {
   const stories = await getNewsStories(60);
 
-  return <NewsBroadcastStudio initialStories={stories} />;
+  return <Newsroom stories={stories} />;
 }
