@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { TopTicker } from "./TopTicker";
 import { StoryPanel } from "./StoryPanel";
 import { NewsCountdown } from "./NewsCountdown";
+import { BroadcastPlayer } from "./BroadcastPlayer";
 import type { NewsStory } from "@/lib/news/feed";
 import "@/styles/newsroom-final.css";
 
@@ -107,8 +108,14 @@ export function NewsBroadcastStudio({ initialStories }: NewsBroadcastStudioProps
         onSelect={(id) => setActiveStoryId(id)}
       />
 
-      <main className="min-w-0">
-        <StoryPanel story={activeStory} />
+      <main className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-6 items-start">
+        <div className="min-w-0">
+          <StoryPanel story={activeStory} />
+        </div>
+
+        <div className="lg:sticky lg:top-20 space-y-4">
+          <BroadcastPlayer story={activeStory} />
+        </div>
       </main>
     </div>
   );

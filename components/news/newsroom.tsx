@@ -7,6 +7,7 @@ import { type NewsStory } from "@/lib/news/feed";
 import { TopTicker } from "@/components/news/TopTicker";
 import { StoryPanel } from "@/components/news/StoryPanel";
 import { NewsCountdown } from "@/components/news/NewsCountdown";
+import { BroadcastPlayer } from "@/components/news/BroadcastPlayer";
 
 interface NewsroomProps {
   stories: NewsStory[];
@@ -74,9 +75,15 @@ export function Newsroom({ stories }: NewsroomProps) {
         </label>
       </div>
 
-      {/* Main Newsroom Stage: Clean High-Speed Editorial & Intelligence Suite */}
-      <div className="min-w-0">
-        <StoryPanel story={activeStory} />
+      {/* Main Newsroom Stage: Editorial & Video Broadcast Player */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-6 items-start">
+        <div className="min-w-0">
+          <StoryPanel story={activeStory} />
+        </div>
+
+        <div className="lg:sticky lg:top-20 space-y-4">
+          <BroadcastPlayer story={activeStory} />
+        </div>
       </div>
     </div>
   );
