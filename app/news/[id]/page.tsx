@@ -80,14 +80,7 @@ export default async function NewsStoryPage({ params }: { params: Promise<{ id: 
             </div>
           </div>
 
-          {relatedEntities.length > 0 && (
-            <section className="mt-8 border-t border-slate-800 pt-5">
-              <p className="text-[10px] uppercase tracking-[0.16em] text-slate-400 font-mono">CBR Intelligence & Financial Lexicon Terms</p>
-              <p className="mt-1 text-xs leading-relaxed text-slate-500">
-                Clicking a gold linked term queries CBR Intelligence (`/intelligence?q=...`) for canonical lore and GCD issue histories. Clicking a cyan underlined term queries the CBR Financial Lexicon (`/lexicon?q=...`) for industry terms and corporate stock tickers.
-              </p>
-            </section>
-          )}
+
           <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-slate-800 pt-5 text-xs text-slate-500">
             <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
               Source Attribution: {story.source}
