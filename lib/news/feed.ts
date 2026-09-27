@@ -112,7 +112,7 @@ const TERTIARY_SOURCE_NAMES = new Set(["CBR", "THR", "COMICBOOK", "BLEEDING COOL
 const COMIC_TERMS = /comic\s*book|comic(s)?\b|superhero|super-hero|marvel|dc comics|avengers|x-men|spider-man|batman|superman|fantastic four|deadpool|wolverine|venom|manga|mangaka|anime|graphic novel|image comics|dark horse|idw|boom studios|viz media|shonen|shojo|webtoon|manhwa/i;
 const COMPANY_TERMS = /disney|warner bros|warner discovery|wbd|sony pictures|universal|paramount|skydance|marvel entertainment/i;
 const FINANCIAL_TERMS = /earnings|earning report|annual report|quarterly|revenue|profit|loss|shares|stock|investor|acquisition|merger|deal|buyout|results/i;
-const EXCLUDE_NON_COMIC_GAMING = /\b(gameplay|playstation\s*5|ps5|xbox|nintendo switch|platinum trophy|earphones|headset|found footage|horror movie|blair witch)\b/i;
+const EXCLUDE_NON_COMIC = /\b(gameplay|playstation\s*5|ps5|xbox|nintendo switch|platinum trophy|earphones|headset|found footage|horror movie|blair witch|messi|lionel messi|soccer|football|nfl|nba|basketball|premier league|champions league|mls|inter miami)\b/i;
 
 function shuffle<T>(items: T[]): T[] {
   const result = [...items];
@@ -125,12 +125,12 @@ function shuffle<T>(items: T[]): T[] {
 
 export function isRelevantComicStory(source: string, headline: string, summary: string | null): boolean {
   const text = `${headline} ${summary || ""}`;
+  if (EXCLUDE_NON_COMIC.test(text)) {
+    return false;
+  }
   const isComicOrManga = COMIC_TERMS.test(text);
   const isCompanyFinance = COMPANY_TERMS.test(text) && FINANCIAL_TERMS.test(text);
   if (!isComicOrManga && !isCompanyFinance) return false;
-  if (EXCLUDE_NON_COMIC_GAMING.test(headline) && !/comic|superhero|marvel|dc\b|batman|superman|avengers|manga|anime/i.test(headline)) {
-    return false;
-  }
   return true;
 }
 
