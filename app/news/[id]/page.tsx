@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { getNewsStory, shortNewsSource } from "@/lib/news/feed";
 import { findNewsEntities } from "@/lib/news/entities";
 import { NewsBriefing } from "@/components/news/news-briefing";
+import { PresenterPlayer } from "@/components/news/PresenterPlayer";
+import { evaluateStoryVideoActivation } from "@/lib/news/broadcast-selection";
 
 export const dynamic = "force-dynamic";
 
@@ -13,11 +15,12 @@ export default async function NewsStoryPage({ params }: { params: Promise<{ id: 
   if (!story) redirect("/news");
 
   const relatedEntities = findNewsEntities(story.headline, story.summary);
+  const videoDecision = evaluateStoryVideoActivation(story.id, story.source, story.headline, story.summary);
   const hasEditorialImage = Boolean(story.imageUrl && !story.imageUrl.includes("google.com/s2/favicons"));
   const hasPublisherMark = Boolean(story.imageUrl?.includes("google.com/s2/favicons"));
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:py-12">
+    <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:py-12">
       <Link
         href="/news"
         className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.14em] text-cyan-300 hover:text-cyan-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-400"
@@ -52,16 +55,31 @@ export default async function NewsStoryPage({ params }: { params: Promise<{ id: 
             <span>{shortNewsSource(story.source)}</span>
           </div>
           <h1 className="mt-4 text-2xl font-semibold leading-tight text-slate-100 sm:text-4xl">{story.headline}</h1>
-          <NewsBriefing
-            id={story.id}
-            headline={story.headline}
-            summary={story.summary}
-            source={story.source}
-            sourceUrl={story.url}
-            author={story.author}
-            publishedAt={story.publishedAt}
-            entities={relatedEntities}
-          />
+          
+          <div className={videoDecision.isVideoActive ? "mt-8 grid grid-cols-1 gap-8 lg:grid-cols-12" : "mt-8"}>
+            {videoDecision.isVideoActive && (
+              <div className="lg:col-span-5">
+                <PresenterPlayer
+                  story={story}
+                  presenter={videoDecision.presenter}
+                  categoryTag={videoDecision.storyCategoryTag}
+                />
+              </div>
+            )}
+            <div className={videoDecision.isVideoActive ? "lg:col-span-7" : ""}>
+              <NewsBriefing
+                id={story.id}
+                headline={story.headline}
+                summary={story.summary}
+                source={story.source}
+                sourceUrl={story.url}
+                author={story.author}
+                publishedAt={story.publishedAt}
+                entities={relatedEntities}
+              />
+            </div>
+          </div>
+
           {relatedEntities.length > 0 && (
             <section className="mt-8 border-t border-slate-800 pt-5">
               <p className="text-[10px] uppercase tracking-[0.16em] text-slate-400 font-mono">CBR Intelligence & Financial Lexicon Terms</p>
@@ -83,3 +101,4 @@ export default async function NewsStoryPage({ params }: { params: Promise<{ id: 
     </main>
   );
 }
+
