@@ -52,6 +52,7 @@ export function runArticleAuditorPass(paragraphs: string[]): {
       hasUncleanMarkdownOrLinks = true;
       violations.push(`P${i + 1}: Purged raw markdown link, REF tag, or brackets`);
       p = p
+        .replace(/\[([^\]\s(]+)\s*\([^)]*REF:[^)]*\)\]\([^)]+\)/gi, "$1") // [CGC (REF:CGC)](url) -> CGC
         .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // [text](url) -> text
         .replace(/\(REF:[^)]+\)/gi, "")          // (REF:TAG) -> empty
         .replace(/\[([^\]]+)\]/g, "$1");         // [text] -> text

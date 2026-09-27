@@ -55,6 +55,7 @@ export function cleanScrapedText(rawHtmlOrText: string): string {
   while (text !== prevText) {
     prevText = text;
     text = text
+      .replace(/\[([^\]\s(]+)\s*\([^)]*REF:[^)]*\)\]\([^)]+\)/gi, "$1") // [CGC (REF:CGC)](url) -> CGC
       .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // [text](url) -> text
       .replace(/\[([^\]]+)\]/g, "$1") // [text] -> text
       .replace(/\(REF:[^)]+\)/gi, "") // (REF:TAG) -> empty
