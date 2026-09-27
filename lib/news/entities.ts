@@ -61,6 +61,10 @@ export const KNOWN_NEWS_ENTITIES_MAP: EntityWikiDef[] = [
   { term: "Wolverine", ticker: "$LOGAN", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Wolverine" },
   { term: "Jubilee", ticker: "$JUBILEE", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Jubilee" },
   { term: "Apocalypse", ticker: "$APOCALYPSE", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Apocalypse" },
+  { term: "Thor", ticker: "$THOR", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Thor" },
+  { term: "Mjolnir", ticker: "$MJOLNIR", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Mjolnir" },
+  { term: "Captain America", ticker: "$CAP", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Captain%20America" },
+  { term: "Steve Rogers", ticker: "$CAP", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Steve%20Rogers" },
   { term: "Superman", ticker: "$SUPES", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Superman" },
   { term: "Wonder Woman", ticker: "$WW", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Wonder%20Woman" },
 
