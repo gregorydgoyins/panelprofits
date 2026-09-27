@@ -22,7 +22,7 @@ export interface GeneratedNewsArticle {
 
 /**
  * Completely purges all raw markdown links [text](url), raw brackets [text], 
- * raw ticker tags ($TICKER), and HTML tags from any input string.
+ * raw ticker tags ($TICKER), internal reference tags (REF:...), and HTML tags from any input string.
  * Guarantees 100% clean, pure plain text output.
  */
 export function cleanScrapedText(rawHtmlOrText: string): string {
@@ -60,7 +60,7 @@ export function cleanScrapedText(rawHtmlOrText: string): string {
     .replace(/&#(\d+);/g, (_, code) => String.fromCodePoint(Number(code)))
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ")
-    .replace(/\s+([,.:;?!])/g, "$1") // Fix floating punctuation spaces like "mutant ," -> "mutant,"
+    .replace(/\s+([,.:;?!])/g, "$1")
     .trim();
 }
 
@@ -111,7 +111,7 @@ export function extractEntitiesFromContext(text: string): EntityWikiDef[] {
 
 /**
  * Synthesizes a completely clean 4-paragraph Panel Profits article without any raw links,
- * brackets, or internal tag clutter.
+ * brackets, internal REF tags, or ticker clutter.
  */
 export function generatePanelProfitsArticle(ctx: ArticleGenerationContext): GeneratedNewsArticle {
   const author = selectAuthorForStory(ctx.source, ctx.storyKey);
