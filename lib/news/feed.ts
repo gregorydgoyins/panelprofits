@@ -212,7 +212,19 @@ export async function processNewsIngestion(storyRow: Record<string, unknown>): P
 }
 
 export async function refreshNewsStore(): Promise<void> {
-  // Silent background refresh helper
+  const db = createAdminServerClient();
+  const { data, error } = await db
+    .from("pp_news_stories")
+    .select("id,source,source_url,category,headline,author,summary,url,image_url,published_at,ingested_at,archived_at")
+    .order("published_at", { ascending: false, nullsFirst: false })
+    .limit(50);
+
+  if (error || !data) return;
+
+  for (const row of data) {
+    // Ground and audit each story
+    await processNewsIngestion(row);
+  }
 }
 
 export async function getNewsStories(limit = 24, includeArchive = false): Promise<NewsStory[]> {
