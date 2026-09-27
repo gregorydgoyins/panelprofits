@@ -163,9 +163,14 @@ export function buildStructuredStoryBrief(ctx: ArticleGenerationContext, rawFact
     storyType = "corporate_earnings";
   }
 
-  // Extract source facts
-  const sentences = rawFacts.split(/(?<=[.!?])\s+/).map((s) => s.trim()).filter((s) => s.length > 25);
-  const sourceFacts = sentences.slice(0, 6);
+  // Extract source facts (require distinct, non-generic sentences with substantive information)
+  const sentences = rawFacts
+    .split(/(?<=[.!?])\s+/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 30 && !/subscribe|all rights reserved|click here|read more|newsletter/i.test(s));
+
+  // Deduplicate sentences
+  const sourceFacts = Array.from(new Set(sentences)).slice(0, 6);
 
   // Entities
   const recognized = extractEntitiesFromContext(rawFacts);
@@ -174,7 +179,6 @@ export function buildStructuredStoryBrief(ctx: ArticleGenerationContext, rawFact
   const publishers = recognized.filter((e) => e.type === "publisher").map((e) => e.term);
   const publisher = publishers[0] || ctx.source.split(" ")[0];
 
-  // Relevant Lexicon Terms (Only add if semantically relevant to the story type!)
   const relevantLexiconTerms: string[] = [];
   if (storyType === "crowdfunding_launch") {
     relevantLexiconTerms.push("first printing", "creator lineage", "raw copies");
@@ -203,7 +207,7 @@ export function buildStructuredStoryBrief(ctx: ArticleGenerationContext, rawFact
 
 /**
  * STAGE 3: Original Story-Specific Journalism Generator
- * Writes customized, non-templated journalism based on the Brief.
+ * Writes customized, non-templated journalism based on extracted facts.
  */
 export function generatePanelProfitsArticle(ctx: ArticleGenerationContext): GeneratedNewsArticle {
   const author = selectAuthorForStory(ctx.source, ctx.storyKey);
@@ -215,106 +219,43 @@ export function generatePanelProfitsArticle(ctx: ArticleGenerationContext): Gene
   const paragraphs: string[] = [];
   let deck = "";
 
-  if (brief.storyType === "crowdfunding_launch") {
-    deck = `${brief.primarySubject} launches a new direct-to-fan publishing milestone via independent crowdfunding.`;
-    
+  const hasSubstantiveFacts = brief.sourceFacts.length >= 2;
+
+  if (hasSubstantiveFacts) {
+    deck = `${brief.primarySubject}: ${brief.sourceFacts[0].slice(0, 110)}...`;
+
+    // Paragraph 1: Direct reporting statement grounded in lead fact
     paragraphs.push(
-      `Independent creator publishing moves forward as ${brief.primarySubject} officially launches a new campaign reported by ${ctx.source}. The initiative provides fans direct access to upcoming graphic novel releases and exclusive print editions.`
+      `Reporting from ${ctx.source} confirms major developments regarding ${brief.primarySubject}. According to the announcement: ${brief.sourceFacts[0]}`
     );
-    
-    if (brief.sourceFacts.length >= 2) {
+
+    // Paragraph 2: Core facts detail & creative/publisher specifics
+    paragraphs.push(
+      `Further details confirm that ${brief.sourceFacts[1]} ${brief.sourceFacts[2] ? brief.sourceFacts[2] : ""}`.trim()
+    );
+
+    // Paragraph 3: Specific story arc / background facts if present
+    if (brief.sourceFacts.length >= 4) {
       paragraphs.push(
-        `Highlighting key facts from the announcement: ${brief.sourceFacts[0]} Additional details confirm that ${brief.sourceFacts[1]}`
+        `Additional documentation indicates: ${brief.sourceFacts[3]} ${brief.sourceFacts[4] || ""}`.trim()
       );
     } else {
       paragraphs.push(
-        `Details confirmed by ${ctx.source} outline campaign rewards, special edition variant covers, and target fulfillment schedules.`
+        `Publication records for ${brief.publisher} establish scheduled availability and distribution specifics for involved creative teams.`
       );
     }
 
+    // Paragraph 4: Contextualized market relevance grounded in target entities
     paragraphs.push(
-      `From a collector standpoint, direct crowdfunding releases often create scarce first printing physical copies that bypass standard distributor pipelines. Dedicated backers and collectors monitor campaign milestones for early creator lineage additions.`
+      `Secondary market tracking for ${brief.primarySubject} remains focused on verified reader engagement and physical distribution velocity across secondary sales channels.`
     );
-
-    paragraphs.push(
-      `Looking ahead, ${author.name} notes that campaign fulfillment and backer delivery timelines will determine long-term secondary market interest. Panel Profits will continue monitoring back-issue demand as physical copies reach readers.`
-    );
-
-  } else if (brief.storyType === "adaptation_casting") {
-    deck = `Screen adaptation developments for ${brief.primarySubject} spark renewed interest across key comic issues.`;
-
-    paragraphs.push(
-      `Media production reports from ${ctx.source} confirm major entertainment developments for ${brief.primarySubject}. Studio decisions and creative attachments are expanding public visibility for the underlying comic book intellectual property.`
-    );
-
-    if (brief.sourceFacts.length >= 2) {
-      paragraphs.push(
-        `According to reporting: ${brief.sourceFacts[0]} Production records further state: ${brief.sourceFacts[1]}`
-      );
-    } else {
-      paragraphs.push(
-        `Confirmed reporting highlights key creative team choices and casting announcements that bring canonical comic storylines to the screen.`
-      );
-    }
-
-    paragraphs.push(
-      `In comic market analysis, high-profile adaptation announcements frequently serve as catalysts for early character debuts and first appearance issues. Collectors and investors track media optioning news to evaluate key issue demand.`
-    );
-
-    paragraphs.push(
-      `Looking ahead, ${author.name} observes that trailer releases and official release dates will drive ongoing secondary sales volume. Panel Profits will track key issue sales across major auction platforms.`
-    );
-
-  } else if (brief.storyType === "creator_announcement") {
-    deck = `New creative team assignments for ${brief.publisher} bring fresh direction to ongoing series slates.`;
-
-    paragraphs.push(
-      `Publishing updates from ${ctx.source} reveal a significant creative transition for ${brief.publisher}. The announcement outlines incoming writers and artists taking over upcoming story arcs.`
-    );
-
-    if (brief.sourceFacts.length >= 2) {
-      paragraphs.push(
-        `Key details from the announcement note: ${brief.sourceFacts[0]} Publisher records indicate: ${brief.sourceFacts[1]}`
-      );
-    } else {
-      paragraphs.push(
-        `The creative transition promises new character developments, updated cover art solicitations, and landmark issue runs.`
-      );
-    }
-
-    paragraphs.push(
-      `Creator lineage plays a vital role in comic book valuation, as acclaimed runs often build sustained momentum for milestone issues and ratio variant covers.`
-    );
-
-    paragraphs.push(
-      `Looking ahead, ${author.name} emphasizes that critical reception and reader engagement on upcoming issues will dictate long-term holding value.`
-    );
-
   } else {
-    // Default / Comic Preview / General Story
-    deck = `Panel Profits reporting and editorial breakdown for ${brief.primarySubject} publishing updates from ${ctx.source}.`;
-
-    paragraphs.push(
-      `Recent reporting from ${ctx.source} details new publishing developments surrounding ${brief.primarySubject}. The update provides insight into upcoming issue solicitations and series momentum for ${brief.publisher}.`
-    );
-
-    if (brief.sourceFacts.length >= 2) {
-      paragraphs.push(
-        `Examining the core details: ${brief.sourceFacts[0]} Furthermore: ${brief.sourceFacts[1]}`
-      );
-    } else {
-      paragraphs.push(
-        `Publication parameters establish release dates, solicited creative credits, and upcoming story milestones.`
-      );
-    }
-
-    paragraphs.push(
-      `Market participants monitor ongoing series developments to assess canonical storylines and character debut potential.`
-    );
-
-    paragraphs.push(
-      `Looking ahead, ${author.name} notes that secondary market clearing prices and verified reader demand will reflect the story's overall impact.`
-    );
+    // Insufficient factual grounding -> Generate minimal placeholder for auditor rejection
+    deck = `Reporting for ${cleanHeadline} from ${ctx.source}.`;
+    paragraphs.push(`Brief update from ${ctx.source} regarding ${cleanHeadline}.`);
+    paragraphs.push(`Source records provide limited structural details beyond initial announcement parameters.`);
+    paragraphs.push(`Panel Profits is tracking further verification regarding this distribution.`);
+    paragraphs.push(`Market demand will depend on verified clearing metrics.`);
   }
 
   // --- THREE-PASS ENRICHMENT PIPELINE ---
@@ -340,6 +281,13 @@ export function generatePanelProfitsArticle(ctx: ArticleGenerationContext): Gene
 
   // --- PASS 4: AUDITOR ---
   const auditResult = runArticleAuditorPass(transformedParagraphs);
+
+  // Mark audit verdict as failed if factual grounding was insufficient
+  if (!hasSubstantiveFacts) {
+    auditResult.verdict.isPassed = false;
+    auditResult.verdict.auditScore = Math.min(auditResult.verdict.auditScore, 40);
+    auditResult.verdict.violations.push("INSUFFICIENT_SOURCE_FACTS: Article lacked at least 2 distinct attributable source facts.");
+  }
 
   return {
     headline: cleanHeadline,

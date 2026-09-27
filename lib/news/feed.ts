@@ -134,9 +134,9 @@ function mapStory(row: Record<string, unknown>): NewsStory {
     source: String(row.source),
     sourceUrl: String(row.source_url),
     category: row.category === "national" ? "national" : "international",
-    headline: cleanScrapedText(String(row.headline)),
+    headline: String(row.headline),
     author: row.author ? String(row.author) : null,
-    summary: row.summary ? cleanScrapedText(String(row.summary)) : null,
+    summary: row.summary ? String(row.summary) : null,
     url: String(row.url),
     imageUrl: row.image_url ? String(row.image_url) : null,
     publishedAt: row.published_at ? String(row.published_at) : null,
@@ -168,6 +168,49 @@ function diversifyStories(stories: NewsStory[], limit: number): NewsStory[] {
   return result;
 }
 
+export async function processNewsIngestion(storyRow: Record<string, unknown>): Promise<boolean> {
+  const db = createAdminServerClient();
+  const storyId = String(storyRow.id);
+  const url = String(storyRow.url);
+  const source = String(storyRow.source);
+  const sourceUrl = String(storyRow.source_url || url);
+  const headline = String(storyRow.headline);
+  const rawSummary = storyRow.summary ? String(storyRow.summary) : null;
+  const publishedAt = storyRow.published_at ? String(storyRow.published_at) : null;
+
+  const scrapedContent = await scrapeSourceArticle(url);
+  const generated = generatePanelProfitsArticle({
+    storyKey: storyId,
+    source,
+    sourceUrl,
+    headline,
+    rawSummary,
+    scrapedContent,
+    publishedAt,
+  });
+
+  // Only publish if audit verdict passed!
+  if (!generated.passReport.auditVerdict.isPassed) {
+    console.warn(`[Ingestion] Story ${storyId} rejected by auditor (Score: ${generated.passReport.auditVerdict.auditScore}):`, generated.passReport.auditVerdict.violations);
+    return false;
+  }
+
+  const cleanHeadline = cleanScrapedText(generated.headline);
+  const cleanSummary = generated.paragraphs.join("\n\n");
+  const author = generated.assignedAuthorName;
+
+  const { error } = await db
+    .from("pp_news_stories")
+    .update({ headline: cleanHeadline, summary: cleanSummary, author })
+    .eq("id", storyId);
+
+  if (error) {
+    console.error(`[Ingestion] Failed to persist story ${storyId}:`, error);
+    return false;
+  }
+  return true;
+}
+
 export async function refreshNewsStore(): Promise<void> {
   // Silent background refresh helper
 }
@@ -185,9 +228,14 @@ export async function getNewsStories(limit = 24, includeArchive = false): Promis
     ? await query.not("archived_at", "is", null)
     : await query.is("archived_at", null);
 
-  if (error || !data) {
-    return includeArchive ? [] : shuffle(memoryStories).slice(0, Math.min(Math.max(limit, 1), 100));
+  if (error) {
+    if (!isMissingTableError(error)) {
+      console.error("Error fetching news stories:", error);
+    }
+    return [];
   }
+  if (!data) return [];
+
   const stories = data.map(mapStory).filter((story) => isRelevantComicStory(story.source, story.headline, story.summary) && isUsableStoryImage(story.imageUrl));
   return diversifyStories(stories, Math.min(Math.max(limit, 1), 100));
 }
@@ -201,32 +249,7 @@ export async function getNewsStory(id: string): Promise<NewsStory | null> {
     .maybeSingle();
 
   if (!directStoryError && directStory) {
-    const mapped = mapStory(directStory);
-    
-    // Always regenerate clean, substantive 4-paragraph Panel Profits article from source
-    const scrapedContent = await scrapeSourceArticle(mapped.url);
-    const generated = generatePanelProfitsArticle({
-      storyKey: mapped.id,
-      source: mapped.source,
-      sourceUrl: mapped.sourceUrl,
-      headline: mapped.headline,
-      rawSummary: mapped.summary,
-      scrapedContent,
-      publishedAt: mapped.publishedAt,
-    });
-    
-    // Keep 3-pass generated HTML paragraphs intact with hyperlinks and ticker badges
-    mapped.headline = cleanScrapedText(generated.headline);
-    mapped.summary = generated.paragraphs.join("\n\n");
-    mapped.author = generated.assignedAuthorName;
-
-    // Overwrite database record with newly cleaned article
-    void db
-      .from("pp_news_stories")
-      .update({ headline: mapped.headline, summary: mapped.summary, author: mapped.author })
-      .eq("id", id);
-
-    return mapped;
+    return mapStory(directStory);
   }
 
   const activeStories = await getNewsStories(100);

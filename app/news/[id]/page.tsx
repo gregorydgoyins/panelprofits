@@ -58,28 +58,17 @@ export default async function NewsStoryPage({ params }: { params: Promise<{ id: 
           </div>
           <h1 className="mt-4 text-2xl font-semibold leading-tight text-slate-100 sm:text-4xl">{story.headline}</h1>
           
-          <div className={videoDecision.isVideoActive ? "mt-8 grid grid-cols-1 gap-8 lg:grid-cols-12" : "mt-8"}>
-            {videoDecision.isVideoActive && (
-              <div className="lg:col-span-5">
-                <PresenterPlayer
-                  story={story}
-                  presenter={videoDecision.presenter}
-                  categoryTag={videoDecision.storyCategoryTag}
-                />
-              </div>
-            )}
-            <div className={videoDecision.isVideoActive ? "lg:col-span-7" : ""}>
-              <NewsBriefing
-                id={story.id}
-                headline={story.headline}
-                summary={story.summary}
-                source={story.source}
-                sourceUrl={story.url}
-                author={story.author}
-                publishedAt={story.publishedAt}
-                entities={relatedEntities}
-              />
-            </div>
+          <div className="mt-8">
+            <NewsBriefing
+              id={story.id}
+              headline={story.headline}
+              summary={story.summary}
+              source={story.source}
+              sourceUrl={story.url}
+              author={story.author}
+              publishedAt={story.publishedAt}
+              entities={relatedEntities}
+            />
           </div>
 
 
