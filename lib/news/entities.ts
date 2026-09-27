@@ -65,6 +65,14 @@ export const KNOWN_NEWS_ENTITIES_MAP: EntityWikiDef[] = [
   { term: "Marvel", ticker: "$MRVL", type: "publisher", target: "intelligence", wikiPath: "/wiki?q=Marvel" },
   { term: "Image Comics", ticker: "$IMAGE", type: "publisher", target: "intelligence", wikiPath: "/wiki?q=Image%20Comics" },
 
+  // --- ANALYSTS ---
+  { term: "Devon Knight", type: "creator", target: "intelligence", wikiPath: "/analysts/devon-knight" },
+  { term: "Marcus Vance", type: "creator", target: "intelligence", wikiPath: "/analysts/marcus-vance" },
+  { term: "Elena Rostova", type: "creator", target: "intelligence", wikiPath: "/analysts/elena-rostova" },
+  { term: "Sarah Chen", type: "creator", target: "intelligence", wikiPath: "/analysts/sarah-chen" },
+  { term: "Thaddeus Pryor", type: "creator", target: "intelligence", wikiPath: "/analysts/thaddeus-pryor" },
+  { term: "Owen St. Clair", type: "creator", target: "intelligence", wikiPath: "/analysts/owen-st-clair" },
+
   // --- PASS 2: CBR LEXICON & FINANCIAL THESAURUS ---
   { term: "CGC", type: "grading", target: "lexicon", wikiPath: "/lexicon?q=CGC" },
   { term: "CBCS", type: "grading", target: "lexicon", wikiPath: "/lexicon?q=CBCS" },
@@ -79,6 +87,7 @@ export const KNOWN_NEWS_ENTITIES_MAP: EntityWikiDef[] = [
   { term: "release date", type: "lexicon", target: "lexicon", wikiPath: "/lexicon?q=Release%20Date" },
   { term: "Final Order Cutoff", type: "market-concept", target: "lexicon", wikiPath: "/lexicon?q=Final%20Order%20Cutoff" },
   { term: "reorder volume", type: "market-concept", target: "lexicon", wikiPath: "/lexicon?q=Reorder%20Volume" },
+  { term: "secondary market liquidity", type: "market-concept", target: "lexicon", wikiPath: "/lexicon?q=Secondary%20Market" },
   { term: "secondary market", type: "market-concept", target: "lexicon", wikiPath: "/lexicon?q=Secondary%20Market" },
   { term: "bid-ask spreads", type: "lexicon", target: "lexicon", wikiPath: "/lexicon?q=Bid-Ask%20Spread" },
   { term: "auction velocity", type: "lexicon", target: "lexicon", wikiPath: "/lexicon?q=Auction%20Velocity" },
