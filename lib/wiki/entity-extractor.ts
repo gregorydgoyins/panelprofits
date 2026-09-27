@@ -25,35 +25,90 @@ export const COMIC_FINANCIAL_GLOSSARY: Record<string, { term: string; definition
     definition: "The fundamental individual comic book publication issue serving as the granular base building block for portfolio valuation and market capitalization.",
     category: "Valuation"
   },
-  "cgc-census-float": {
-    term: "Census Float",
-    definition: "The total supply of officially graded and slabbed census copies available in public and private hands across specified grade tiers (e.g., 9.8, 9.6).",
+  "cgc": {
+    term: "CGC (Certified Guaranty Company)",
+    definition: "The third-party grading service that evaluates, encapsulates (slabs), and certifies comic book condition on a strict 0.5 to 10.0 numerical scale.",
+    category: "Grading & Certification"
+  },
+  "cbcs": {
+    term: "CBCS (Comic Book Certification Service)",
+    definition: "An independent third-party comic grading service providing physical condition authentication, signature verification, and tamper-evident slabbing.",
+    category: "Grading & Certification"
+  },
+  "raw-copies": {
+    term: "Raw Copies (Uncertified)",
+    definition: "Comic book issues preserved in original unencapsulated paper form without official third-party grading or plastic slabbing.",
+    category: "Asset State"
+  },
+  "high-grade": {
+    term: "High-Grade",
+    definition: "Comic books possessing near-flawless structural condition, typically scoring 9.2 (Near Mint) to 9.8 (Near Mint/Mint) on the grading scale.",
+    category: "Asset Condition"
+  },
+  "census-slabs": {
+    term: "Census Slabs",
+    definition: "The total documented population of officially graded and slabbed comic copies recorded in public grading censuses across specified grade tiers.",
     category: "Supply Dynamics"
   },
-  "key-issue-premium": {
-    term: "Key Issue Premium",
-    definition: "The valuation markup assigned to an issue due to historical milestone relevance (first appearances, origin stories, iconic cover art, or character deaths).",
-    category: "Asset Quality"
-  },
-  "creator-lineage-multiplier": {
-    term: "Creator Lineage Multiplier",
-    definition: "The historical price momentum and demand elasticity associated with iconic writer/artist runs (e.g., Stan Lee, Jack Kirby, Todd McFarlane, Frank Miller).",
-    category: "Fundamentals"
-  },
-  "variant-ratio-dilution": {
-    term: "Variant Ratio Dilution",
-    definition: "The supply-side impact on primary issue value caused by high-incentive incentive variant covers (1:25, 1:100, 1:500).",
+  "ratio-variant": {
+    term: "Ratio Variant Cover",
+    definition: "Incentive covers printed in limited quantities distributed to retailers based on order thresholds (e.g. 1:25, 1:50, 1:100 copies ordered).",
     category: "Market Structure"
   },
-  "pedigree-provenance": {
-    term: "Pedigree Provenance",
-    definition: "Recognized historical original-owner collections (e.g., Mile High, Edgar Church, Pacific Coast) that command premium market liquidity.",
-    category: "Provenance"
+  "first-appearance": {
+    term: "First Appearance",
+    definition: "The landmark debut issue where a comic book character, villain, team, or key item makes their initial canonical appearance.",
+    category: "Key Issue Milestones"
   },
-  "fmv-liquidity-spread": {
-    term: "FMV Liquidity Spread",
-    definition: "The delta between fair market value (FMV) consensus projections and realized transaction prices in public auction channels.",
+  "first-printing": {
+    term: "First Printing",
+    definition: "The initial manufacturing print run of a comic book issue, which commands maximum valuation over subsequent reorders.",
+    category: "Edition Provenance"
+  },
+  "release-date": {
+    term: "Release Date & On-Sale Coordinates",
+    definition: "The scheduled publication date when a comic issue reaches distributor shelves and begins secondary market price discovery.",
+    category: "Publication Parameters"
+  },
+  "final-order-cutoff": {
+    term: "Final Order Cutoff (FOC)",
+    definition: "The final deadline date when comic shop retailers must lock in initial order quantities with distributors, determining initial scarcity floors.",
+    category: "Distribution Dynamics"
+  },
+  "reorder-volume": {
+    term: "Reorder Volume",
+    definition: "Subsequent orders placed by comic shop retailers following initial sellouts, indicating rapid secondary demand velocity.",
+    category: "Demand Metrics"
+  },
+  "secondary-market": {
+    term: "Secondary Market",
+    definition: "The secondary exchange and auction ecosystem (eBay, Heritage, ComicConnect) where published key issues trade between collectors and investors.",
+    category: "Trading Ecosystem"
+  },
+  "bid-ask-spread": {
+    term: "Bid-Ask Spread",
+    definition: "The delta between the highest price a collector is willing to pay (bid) and the lowest price a seller is willing to accept (ask).",
     category: "Trading Mechanics"
+  },
+  "auction-velocity": {
+    term: "Auction Velocity",
+    definition: "The frequency and speed at which key issue copies clear across major public auction platforms.",
+    category: "Liquidity Metrics"
+  },
+  "liquidity-floor": {
+    term: "Liquidity Floor",
+    definition: "The baseline price point at which an issue consistently clears secondary transactions without significant price degradation.",
+    category: "Valuation"
+  },
+  "asset-catalysts": {
+    term: "Asset Catalyst Event",
+    definition: "A major media adaptation, movie optioning, or canonical comic event that triggers immediate demand volume for related key issues.",
+    category: "Demand Drivers"
+  },
+  "creator-lineage": {
+    term: "Creator Lineage & Run Momentum",
+    definition: "The historical valuation momentum and demand elasticity associated with iconic writer/artist creative runs.",
+    category: "Fundamentals"
   }
 };
 

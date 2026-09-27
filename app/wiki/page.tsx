@@ -50,30 +50,53 @@ export default async function WikiPage({ searchParams }: { searchParams: Promise
           Comic Equity & Investment Fundamentals
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {Object.entries(COMIC_FINANCIAL_GLOSSARY).map(([key, termObj]) => (
-            <div
-              key={key}
-              id={key}
-              className="border border-slate-800/80 bg-[#0A0D15] p-5 rounded hover:border-amber-400/50 transition-all shadow-md flex flex-col justify-between"
-            >
-              <div>
-                <div className="flex items-center justify-between border-b border-slate-800/60 pb-2.5">
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-amber-400 bg-amber-950/40 px-2 py-0.5 border border-amber-500/30 rounded">
-                    {termObj.category}
-                  </span>
-                  <Sparkles className="h-3 w-3 text-slate-500" />
+          {Object.entries(COMIC_FINANCIAL_GLOSSARY)
+            .sort(([keyA, objA], [keyB, objB]) => {
+              if (!queryText) return 0;
+              const qLower = queryText.toLowerCase();
+              const matchA = objA.term.toLowerCase().includes(qLower) || keyA.includes(qLower);
+              const matchB = objB.term.toLowerCase().includes(qLower) || keyB.includes(qLower);
+              if (matchA && !matchB) return -1;
+              if (!matchA && matchB) return 1;
+              return 0;
+            })
+            .map(([key, termObj]) => {
+              const isMatch = queryText && (termObj.term.toLowerCase().includes(queryText.toLowerCase()) || key.includes(queryText.toLowerCase()));
+              return (
+                <div
+                  key={key}
+                  id={key}
+                  className={`border ${
+                    isMatch
+                      ? "border-amber-400 bg-[#121624] shadow-[0_0_20px_rgba(251,191,36,0.2)]"
+                      : "border-slate-800/80 bg-[#0A0D15] hover:border-amber-400/50"
+                  } p-5 rounded transition-all shadow-md flex flex-col justify-between`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between border-b border-slate-800/60 pb-2.5">
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-amber-400 bg-amber-950/40 px-2 py-0.5 border border-amber-500/30 rounded">
+                        {termObj.category}
+                      </span>
+                      {isMatch ? (
+                        <span className="text-[9px] font-mono uppercase tracking-widest text-amber-300 bg-amber-900/60 px-2 py-0.5 border border-amber-400 rounded font-bold">
+                          Direct Match
+                        </span>
+                      ) : (
+                        <Sparkles className="h-3 w-3 text-slate-500" />
+                      )}
+                    </div>
+                    <h3 className="mt-3 text-base font-semibold text-slate-100">{termObj.term}</h3>
+                    <p className="mt-2 text-xs text-slate-400 leading-relaxed">{termObj.definition}</p>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-between text-[10px] font-mono text-slate-500">
+                    <span>PPCF STANDARD</span>
+                    <Link href={`/comics?q=${encodeURIComponent(termObj.term)}`} className="text-pink-400 hover:text-pink-300">
+                      Explore Equities &rarr;
+                    </Link>
+                  </div>
                 </div>
-                <h3 className="mt-3 text-base font-semibold text-slate-100">{termObj.term}</h3>
-                <p className="mt-2 text-xs text-slate-400 leading-relaxed">{termObj.definition}</p>
-              </div>
-              <div className="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-between text-[10px] font-mono text-slate-500">
-                <span>PPCF STANDARD</span>
-                <Link href={`/comics?q=${encodeURIComponent(termObj.term)}`} className="text-pink-400 hover:text-pink-300">
-                  Explore Equities &rarr;
-                </Link>
-              </div>
-            </div>
-          ))}
+              );
+            })}
         </div>
       </section>
 
