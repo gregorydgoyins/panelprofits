@@ -178,21 +178,21 @@ export async function processNewsIngestion(storyRow: Record<string, unknown>): P
   const publishedAt = storyRow.published_at ? String(storyRow.published_at) : null;
 
   // Strip all legacy templated boilerplate from stored summaries before fact extraction
-  const cleanedRawSummary = rawSummary
-    ? rawSummary
-        .replace(/^Official industry reporting confirms[\s\S]*?publication parameters:\s*/gi, "")
-        .replace(/^Industry solicitations and publisher announcements highlight[\s\S]*?publication parameters:\s*/gi, "")
-        .replace(/^Recent distribution data and corporate updates from[\s\S]*?scheduled distribution dates\.\s*/gi, "")
-        .replace(/^Publishing updates from[\s\S]*?upcoming story arcs\.\s*/gi, "")
-        .replace(/^Media production reports from[\s\S]*?comic book intellectual property\.\s*/gi, "")
-        .replace(/^Independent creator publishing moves forward[\s\S]*?exclusive print editions\.\s*/gi, "")
-        .replace(/Panel Profits analysts note that these release parameters[\s\S]*/gi, "")
-        .replace(/From a comic equity perspective[\s\S]*/gi, "")
-        .replace(/In terms of asset quality and creator lineage[\s\S]*/gi, "")
-        .replace(/Analyzing the broader market structure[\s\S]*/gi, "")
-        .replace(/Looking ahead, [\s\S]*/gi, "")
-        .trim()
-    : null;
+  let cleanedRawSummary = "";
+  if (rawSummary) {
+    const pubMatch = rawSummary.match(/publication parameters:\s*([\s\S]*?)(?:Panel Profits analysts note|From a comic equity|Looking ahead,|$)/i);
+    if (pubMatch && pubMatch[1].trim().length > 20) {
+      cleanedRawSummary = pubMatch[1].trim();
+    } else {
+      cleanedRawSummary = rawSummary
+        .split(/(?<=[.!?])\s+|\n\n+/)
+        .filter((s) => 
+          !/Official industry reporting confirms|Recent distribution data|Industry solicitations|Publishing updates from|Media production reports|Independent creator publishing|According to verified reporting|Panel Profits analysts note|From a comic equity|When studio optioning|In terms of asset quality|Analyzing the broader market|Looking ahead, |Panel Profits will continue tracking|release parameters establish/i.test(s)
+        )
+        .join(" ")
+        .trim();
+    }
+  }
 
   const scrapedContent = await scrapeSourceArticle(url);
   const generated = generatePanelProfitsArticle({

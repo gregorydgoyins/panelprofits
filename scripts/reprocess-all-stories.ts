@@ -11,23 +11,23 @@ if (!CONNECTION_STRING) {
 
 function cleanLegacyBoilerplate(text: string): string {
   if (!text) return "";
+  let cleaned = text.trim();
 
-  return text
-    // Strip old Mad Lib lead-ins
-    .replace(/Recent distribution data and corporate updates from [^.]+ detail a notable market development for [^.]+\./gi, "")
-    .replace(/The report provides updated operational metrics and publishing milestones that bear directly on secondary market liquidity\./gi, "")
-    .replace(/Official industry reporting confirms a major media development concerning [^.]+ from [^.]+\./gi, "")
-    .replace(/According to verified reporting from [^,]+, [^.\n]+\./gi, "")
-    .replace(/The underlying announcement details specific publication parameters:\s*/gi, "")
-    // Strip old Mad Lib mid-sections
-    .replace(/Panel Profits analysts note that these release parameters establish [^.\n]+\./gi, "")
-    .replace(/From a comic equity perspective, adaptation announcements serve as [^.\n]+\./gi, "")
-    .replace(/When studio optioning accelerates public interest, [^.\n]+\./gi, "")
-    // Strip old Mad Lib closings
-    .replace(/Looking ahead, [^.]+ notes that market sentiment will depend on [^.\n]+\./gi, "")
-    .replace(/Panel Profits will continue tracking transaction clearing data [^.\n]+\./gi, "")
-    .replace(/Panel Profits analysts note [^.\n]+\./gi, "")
-    .trim();
+  // If publication parameters marker exists, extract the middle pure source text
+  const pubMatch = cleaned.match(/publication parameters:\s*([\s\S]*?)(?:Panel Profits analysts note|From a comic equity|Looking ahead,|$)/i);
+  if (pubMatch && pubMatch[1].trim().length > 20) {
+    cleaned = pubMatch[1].trim();
+  } else {
+    // Filter out any sentence or block with legacy boilerplate
+    cleaned = cleaned
+      .split(/(?<=[.!?])\s+|\n\n+/)
+      .filter((s) => 
+        !/Official industry reporting confirms|Recent distribution data|Industry solicitations|Publishing updates from|Media production reports|Independent creator publishing|According to verified reporting|Panel Profits analysts note|From a comic equity|When studio optioning|In terms of asset quality|Analyzing the broader market|Looking ahead, |Panel Profits will continue tracking|release parameters establish/i.test(s)
+      )
+      .join(" ")
+      .trim();
+  }
+  return cleaned;
 }
 
 async function reprocessAllStories() {
@@ -51,7 +51,7 @@ async function reprocessAllStories() {
     const row = rows[i];
     const strippedRaw = cleanLegacyBoilerplate(row.summary || "");
 
-    // Generate clean, original article
+    // Generate clean, original, substantive article
     const generated = generatePanelProfitsArticle({
       storyKey: row.story_key || row.id,
       source: row.source,

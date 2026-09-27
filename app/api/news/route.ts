@@ -9,7 +9,7 @@ export async function GET(request: Request) {
   const limit = Number(url.searchParams.get("limit") || (archive ? 60 : 24));
   const stories = await getNewsStories(limit, archive);
   return NextResponse.json({ stories, refreshedAt: new Date().toISOString() }, {
-    headers: { "Cache-Control": "public, max-age=60, stale-while-revalidate=300" },
+    headers: { "Cache-Control": "no-store, no-cache, must-revalidate" },
   });
 }
 
