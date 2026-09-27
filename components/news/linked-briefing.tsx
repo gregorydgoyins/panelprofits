@@ -1,10 +1,9 @@
-import Link from "next/link";
-import { type EntityWikiDef } from "@/lib/news/entities";
+import type { EntityWikiDef } from "@/lib/news/entities";
 
-function escapeRegExp(value: string) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
+/**
+ * Pure plain-text article paragraph renderer.
+ * Completely guarantees zero inline links, zero ticker badges, and zero text clutter.
+ */
 export function LinkedBriefing({
   text,
 }: {
