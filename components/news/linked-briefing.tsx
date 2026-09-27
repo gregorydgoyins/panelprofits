@@ -11,5 +11,5 @@ export function LinkedBriefing({
   entities?: EntityWikiDef[];
   linkedSet?: Set<string>;
 }) {
-  return <>{text}</>;
+  return <span dangerouslySetInnerHTML={{ __html: text }} />;
 }
