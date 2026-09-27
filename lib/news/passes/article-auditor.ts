@@ -47,15 +47,21 @@ export function runArticleAuditorPass(paragraphs: string[]): {
            .replace(/What do you think[\s\S]*?\?/gi, "");
     }
 
-    // Check and purge any leftover raw markdown, REF tags, or raw brackets
+    // Check and purge any leftover raw markdown, REF tags, or raw brackets recursively
     if (/\[[^\]]+\]\([^)]+\)/.test(p) || /\(REF:[^)]+\)/i.test(p) || /\[[^\]]+\]/.test(p)) {
       hasUncleanMarkdownOrLinks = true;
       violations.push(`P${i + 1}: Purged raw markdown link, REF tag, or brackets`);
-      p = p
-        .replace(/\[([^\]\s(]+)\s*\([^)]*REF:[^)]*\)\]\([^)]+\)/gi, "$1") // [CGC (REF:CGC)](url) -> CGC
-        .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // [text](url) -> text
-        .replace(/\(REF:[^)]+\)/gi, "")          // (REF:TAG) -> empty
-        .replace(/\[([^\]]+)\]/g, "$1");         // [text] -> text
+      
+      let prevP = "";
+      while (p !== prevP) {
+        prevP = p;
+        p = p
+          .replace(/\[([^\]\s(]+)\s*\([^)]*REF:[^)]*\)\]\([^)]+\)/gi, "$1") // [CGC (REF:CGC)](url) -> CGC
+          .replace(/\[([^\]]+)\s*\([^)]*REF:[^)]*\)\]/gi, "$1")            // [CGC (REF:CGC)] -> CGC
+          .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")                          // [text](url) -> text
+          .replace(/\(REF:[^)]+\)/gi, "")                                   // (REF:TAG) -> empty
+          .replace(/\[([^\]]+)\]/g, "$1");                                  // [text] -> text
+      }
     }
 
     auditedParagraphs.push(p.trim());

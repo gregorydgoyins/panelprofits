@@ -56,12 +56,13 @@ export function cleanScrapedText(rawHtmlOrText: string): string {
     prevText = text;
     text = text
       .replace(/\[([^\]\s(]+)\s*\([^)]*REF:[^)]*\)\]\([^)]+\)/gi, "$1") // [CGC (REF:CGC)](url) -> CGC
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // [text](url) -> text
-      .replace(/\[([^\]]+)\]/g, "$1") // [text] -> text
-      .replace(/\(REF:[^)]+\)/gi, "") // (REF:TAG) -> empty
-      .replace(/\(\$[A-Z0-9_:]+\)/gi, "") // ($TICKER) -> empty
-      .replace(/\$[A-Z0-9_:]+/gi, "") // $TICKER -> empty
-      .replace(/https?:\/\/\S+/gi, ""); // raw http URLs -> empty
+      .replace(/\[([^\]]+)\s*\([^)]*REF:[^)]*\)\]/gi, "$1")            // [CGC (REF:CGC)] -> CGC
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")                          // [text](url) -> text
+      .replace(/\[([^\]]+)\]/g, "$1")                                  // [text] -> text
+      .replace(/\(REF:[^)]+\)/gi, "")                                   // (REF:TAG) -> empty
+      .replace(/\(\$[A-Z0-9_:]+\)/gi, "")                               // ($TICKER) -> empty
+      .replace(/\$[A-Z0-9_:]+/gi, "")                                   // $TICKER -> empty
+      .replace(/https?:\/\/\S+/gi, "");                                 // raw http URLs -> empty
   }
 
   text = text
