@@ -82,7 +82,6 @@ function formatClock(date: Date, zone: string) {
     timeZone: zone,
     hour: "2-digit",
     minute: "2-digit",
-    second: "2-digit",
     hour12: false,
   }).format(date);
 }
@@ -123,7 +122,7 @@ export function MarketClocks() {
       } catch {}
     };
     load();
-    const interval = window.setInterval(() => setNow(new Date()), 1000);
+    const interval = window.setInterval(() => setNow(new Date()), 60000);
     window.addEventListener("pp-clock-settings", load);
     return () => {
       window.clearInterval(interval);
@@ -158,12 +157,12 @@ export function MarketClocks() {
             <div key={`${clock.zone}-${index}`} className={`flex shrink-0 items-center gap-2 ${index === 0 ? "text-amber-200" : "text-slate-400"}`}>
               <span className="text-slate-600">{index === 0 ? "HOME" : "MARKET"}</span>
               <span>{clock.label}</span>
-              <span className="font-mono text-slate-200">--:--:--</span>
+              <span className="font-mono text-slate-200">--:--</span>
             </div>
           ))}
           <div className="ml-auto flex shrink-0 items-center gap-2 border-l border-slate-800 pl-3 text-emerald-300">
             <span>WORLD / UTC</span>
-            <span className="font-mono text-slate-100">--:--:--</span>
+            <span className="font-mono text-slate-100">--:--</span>
           </div>
         </div>
       </div>
