@@ -115,7 +115,7 @@ export function StoryPanel({ story }: { story: NewsStory }) {
           <div className="mt-5 space-y-4 text-sm sm:text-base leading-7 text-slate-300">
             {paragraphs.map((p, i) => (
               <p key={i}>
-                <LinkedBriefing text={p} terms={entities} />
+                <LinkedBriefing text={p} entities={entities} />
               </p>
             ))}
           </div>
@@ -132,18 +132,23 @@ export function StoryPanel({ story }: { story: NewsStory }) {
           <Block label="Market Impact" title="Asset Positioning" text={marketText} authorName={author.name} />
         </div>
 
-        {/* PPedia Entity Tags */}
+        {/* PPedia Thesaurus & Ticker Entity Tags */}
         {entities.length > 0 && (
           <div className="mt-6 flex flex-wrap items-center gap-2 pt-4 border-t border-slate-800/80">
-            <span className="text-[9px] font-mono uppercase tracking-widest text-slate-500 mr-1">PPedia:</span>
-            {entities.slice(0, 8).map((term) => (
+            <span className="text-[9px] font-mono uppercase tracking-widest text-slate-500 mr-1">PPedia Thesaurus:</span>
+            {entities.slice(0, 10).map((entity) => (
               <Link
-                key={term}
+                key={entity.term}
                 prefetch
-                href={`/wiki?q=${encodeURIComponent(term)}`}
-                className="border border-pink-500/40 bg-pink-950/20 px-2 py-0.5 text-[10px] text-pink-300 hover:border-pink-300 hover:text-pink-100 transition-colors"
+                href={entity.wikiPath}
+                className="inline-flex items-center gap-1 border border-amber-500/40 bg-amber-950/20 px-2 py-0.5 text-[10px] text-amber-300 hover:border-amber-300 hover:text-amber-100 transition-colors rounded"
               >
-                {term}
+                <span>{entity.term}</span>
+                {entity.ticker && (
+                  <span className="text-[8px] font-mono text-amber-400 font-semibold uppercase">
+                    ({entity.ticker})
+                  </span>
+                )}
               </Link>
             ))}
           </div>

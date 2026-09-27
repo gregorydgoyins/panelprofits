@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { type EntityWikiDef } from "@/lib/news/entities";
 
 function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -6,33 +7,42 @@ function escapeRegExp(value: string) {
 
 export function LinkedBriefing({
   text,
-  terms,
+  entities,
   linkedSet,
 }: {
   text: string;
-  terms: string[];
+  entities: EntityWikiDef[];
   linkedSet?: Set<string>;
 }) {
-  const usableTerms = terms.filter(Boolean).sort((a, b) => b.length - a.length);
-  if (!usableTerms.length) return <>{text}</>;
-  const pattern = new RegExp(`(${usableTerms.map(escapeRegExp).join("|")})`, "gi");
+  const usableEntities = [...entities].sort((a, b) => b.term.length - a.term.length);
+  if (!usableEntities.length) return <>{text}</>;
+
+  const pattern = new RegExp(`(${usableEntities.map((e) => escapeRegExp(e.term)).join("|")})`, "gi");
   const localSet = linkedSet || new Set<string>();
+
   return (
     <>
       {text.split(pattern).map((part, index) => {
-        const term = usableTerms.find((candidate) => candidate.toLowerCase() === part.toLowerCase());
-        const key = term?.toLowerCase();
-        if (!term || (key && localSet.has(key))) return <span key={`${part}-${index}`}>{part}</span>;
+        const match = usableEntities.find((e) => e.term.toLowerCase() === part.toLowerCase());
+        const key = match?.term.toLowerCase();
+        if (!match || (key && localSet.has(key))) return <span key={`${part}-${index}`}>{part}</span>;
         if (key) localSet.add(key);
+
         return (
-          <Link
-            prefetch
-            href={`/wiki?q=${encodeURIComponent(term)}`}
-            key={`${term}-${index}`}
-            className="font-medium text-pink-200 underline decoration-pink-400/70 underline-offset-4 hover:text-pink-100"
-          >
-            {part}
-          </Link>
+          <span key={`${match.term}-${index}`} className="inline-flex items-center gap-0.5">
+            <Link
+              prefetch
+              href={match.wikiPath}
+              className="font-medium text-amber-200 underline decoration-amber-500/70 underline-offset-4 hover:text-amber-100 transition-colors"
+            >
+              {part}
+            </Link>
+            {match.ticker && (
+              <span className="ml-1 px-1 py-0.2 text-[9px] font-mono tracking-tighter uppercase rounded border border-amber-500/40 bg-amber-950/40 text-amber-300">
+                {match.ticker}
+              </span>
+            )}
+          </span>
         );
       })}
     </>

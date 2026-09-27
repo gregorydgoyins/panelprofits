@@ -59,7 +59,7 @@ export default async function NewsStoryPage({ params }: { params: Promise<{ id: 
             sourceUrl={story.url}
             author={story.author}
             publishedAt={story.publishedAt}
-            terms={relatedEntities}
+            entities={relatedEntities}
           />
           {relatedEntities.length > 0 && (
             <section className="mt-8 border-t border-slate-800 pt-5">
