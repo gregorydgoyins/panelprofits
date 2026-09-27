@@ -173,10 +173,21 @@ export async function processNewsIngestion(storyRow: Record<string, unknown>): P
   const storyId = String(storyRow.id);
   const url = String(storyRow.url);
   const source = String(storyRow.source);
-  const sourceUrl = String(storyRow.source_url || url);
   const headline = String(storyRow.headline);
   const rawSummary = storyRow.summary ? String(storyRow.summary) : null;
   const publishedAt = storyRow.published_at ? String(storyRow.published_at) : null;
+
+  // Strip any legacy templated boilerplate from stored summaries before fact extraction
+  const cleanedRawSummary = rawSummary
+    ? rawSummary
+        .replace(/Official industry reporting confirms[\s\S]*?publication parameters:\s*/gi, "")
+        .replace(/Industry solicitations and publisher announcements highlight[\s\S]*?publication parameters:\s*/gi, "")
+        .replace(/Recent distribution data and corporate updates from[\s\S]*?distribution dates\.\s*/gi, "")
+        .replace(/Panel Profits analysts note that these release parameters[\s\S]*/gi, "")
+        .replace(/From a comic equity perspective[\s\S]*/gi, "")
+        .replace(/Looking ahead, [\s\S]*/gi, "")
+        .trim()
+    : null;
 
   const scrapedContent = await scrapeSourceArticle(url);
   const generated = generatePanelProfitsArticle({
@@ -184,7 +195,7 @@ export async function processNewsIngestion(storyRow: Record<string, unknown>): P
     source,
     sourceUrl,
     headline,
-    rawSummary,
+    rawSummary: cleanedRawSummary,
     scrapedContent,
     publishedAt,
   });
