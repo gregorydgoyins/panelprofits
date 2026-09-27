@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import { createAdminServerClient } from "@/lib/supabase/admin";
 import { isMissingTableError } from "@/lib/supabase/errors";
+import { scrapeSourceArticle, generatePanelProfitsArticle } from "@/lib/news/generator";
 
 export type NewsCategory = "national" | "international";
 export const DEFAULT_NEWS_IMAGE = "/newsroom-default.svg";
@@ -453,8 +454,40 @@ async function refreshNewsStoreInternal(): Promise<void> {
     fetchPerigonSource(),
     fetchTheNewsApiSource(),
   ]);
-  const rows = batches.flatMap((result) => result.status === "fulfilled" ? result.value : []);
-  const relevantRows = rows.filter((row) => isRelevantComicStory(row.source, row.headline, row.summary) && Boolean(row.summary && row.summary.replace(/\s+/g, " ").trim().length >= 280) && isUsableStoryImage(row.image_url));
+  const rawRows = batches.flatMap((result) => result.status === "fulfilled" ? result.value : []);
+  const candidateRows = rawRows.filter((row) => isRelevantComicStory(row.source, row.headline, row.summary) && isUsableStoryImage(row.image_url));
+
+  // Process candidate stories through the Panel Profits Article Generation Pipeline
+  const processedRows = await Promise.all(
+    candidateRows.slice(0, 40).map(async (row) => {
+      // Step 1: Follow source URL to retrieve underlying article facts
+      const scrapedContent = await scrapeSourceArticle(row.url);
+      
+      // Step 2: Synthesize original Panel Profits article using facts & lexicon
+      const generated = generatePanelProfitsArticle({
+        storyKey: row.story_key,
+        source: row.source,
+        sourceUrl: row.source_url,
+        headline: row.headline,
+        rawSummary: row.summary,
+        scrapedContent,
+        publishedAt: row.published_at,
+      });
+
+      // Join paragraphs into a complete, substantive Panel Profits article body
+      const fullArticleBody = generated.paragraphs.join("\n\n");
+
+      return {
+        ...row,
+        headline: generated.headline,
+        summary: fullArticleBody,
+        author: generated.assignedAuthorName,
+      };
+    })
+  );
+
+  const relevantRows = processedRows.filter((row) => Boolean(row.summary && row.summary.length >= 300));
+
   memoryStories = relevantRows.map((row) => ({
     id: row.story_key,
     source: row.source,
@@ -559,7 +592,7 @@ export async function getNewsStories(limit = 24, includeArchive = false): Promis
 
 export async function getNewsStory(id: string): Promise<NewsStory | null> {
   const cachedStory = memoryStories.find((story) => story.id === id);
-  if (cachedStory) return cachedStory;
+  if (cachedStory && cachedStory.summary && cachedStory.summary.length >= 350) return cachedStory;
 
   const db = createAdminServerClient();
   const { data: directStory, error: directStoryError } = await db
@@ -567,7 +600,33 @@ export async function getNewsStory(id: string): Promise<NewsStory | null> {
     .select("id,source,source_url,category,headline,author,summary,url,image_url,published_at,ingested_at,archived_at")
     .eq("id", id)
     .maybeSingle();
-  if (!directStoryError && directStory && isUsableStoryImage(directStory.image_url ? String(directStory.image_url) : null)) return mapStory(directStory);
+
+  if (!directStoryError && directStory && isUsableStoryImage(directStory.image_url ? String(directStory.image_url) : null)) {
+    const mapped = mapStory(directStory);
+    // If database record has thin content (old RSS summary), regenerate original Panel Profits article on the fly
+    if (!mapped.summary || mapped.summary.length < 350) {
+      const scrapedContent = await scrapeSourceArticle(mapped.url);
+      const generated = generatePanelProfitsArticle({
+        storyKey: mapped.id,
+        source: mapped.source,
+        sourceUrl: mapped.sourceUrl,
+        headline: mapped.headline,
+        rawSummary: mapped.summary,
+        scrapedContent,
+        publishedAt: mapped.publishedAt,
+      });
+      mapped.headline = generated.headline;
+      mapped.summary = generated.paragraphs.join("\n\n");
+      mapped.author = generated.assignedAuthorName;
+
+      // Asynchronously update database with regenerated article
+      void db
+        .from("pp_news_stories")
+        .update({ headline: mapped.headline, summary: mapped.summary, author: mapped.author })
+        .eq("id", id);
+    }
+    return mapped;
+  }
 
   const activeStories = await getNewsStories(100);
   const activeStory = activeStories.find((story) => story.id === id);
