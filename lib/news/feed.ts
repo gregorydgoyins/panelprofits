@@ -122,15 +122,10 @@ export function isRelevantComicStory(source: string, headline: string, summary: 
   return true;
 }
 
-const REFRESH_AFTER_MS = 10 * 60 * 1000;
 let memoryStories: NewsStory[] = [];
 
 function isTertiarySource(source: string) {
   return TERTIARY_SOURCE_NAMES.has(source);
-}
-
-function decodeEntities(value: string): string {
-  return cleanScrapedText(value);
 }
 
 function mapStory(row: Record<string, unknown>): NewsStory {
@@ -208,7 +203,7 @@ export async function getNewsStory(id: string): Promise<NewsStory | null> {
   if (!directStoryError && directStory) {
     const mapped = mapStory(directStory);
     
-    // Always regenerate clean, substantive 4-paragraph Panel Profits article
+    // Always regenerate clean, substantive 4-paragraph Panel Profits article from source
     const scrapedContent = await scrapeSourceArticle(mapped.url);
     const generated = generatePanelProfitsArticle({
       storyKey: mapped.id,
@@ -220,9 +215,16 @@ export async function getNewsStory(id: string): Promise<NewsStory | null> {
       publishedAt: mapped.publishedAt,
     });
     
-    mapped.headline = generated.headline;
-    mapped.summary = generated.paragraphs.join("\n\n");
+    // Force purge ALL old raw links, REF tags, brackets, and ticker clutter
+    mapped.headline = cleanScrapedText(generated.headline);
+    mapped.summary = generated.paragraphs.map(cleanScrapedText).join("\n\n");
     mapped.author = generated.assignedAuthorName;
+
+    // Overwrite database record with newly cleaned article
+    void db
+      .from("pp_news_stories")
+      .update({ headline: mapped.headline, summary: mapped.summary, author: mapped.author })
+      .eq("id", id);
 
     return mapped;
   }
