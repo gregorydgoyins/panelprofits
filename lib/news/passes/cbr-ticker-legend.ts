@@ -30,10 +30,10 @@ export function runCbrTickerLegendPass(text: string, seenTickers: Set<string>): 
       matchCount++;
       seenTickers.add(tickerKey);
       const targetUrl = entity.wikiPath || `/intelligence?q=${encodeURIComponent(entity.term)}`;
-      const tickerBadge = `<a href="${targetUrl}" class="ml-1 inline-flex items-center px-1.5 py-0.2 text-[10px] font-mono font-bold tracking-tight rounded border border-amber-500/40 bg-amber-950/40 text-amber-300 hover:border-amber-300 hover:text-amber-100 transition-colors" title="${entity.term} (${entity.ticker})">${entity.ticker}</a>`;
+      const tickerBadge = `<a href="${targetUrl}" class="inline-flex items-center px-1.5 py-0.5 text-xs font-mono font-bold tracking-tight rounded border border-amber-500/50 bg-amber-950/60 text-amber-300 hover:border-amber-300 hover:text-amber-100 transition-colors" title="${entity.term}">${entity.ticker}</a>`;
 
-      // If the term is already inside an anchor tag, append ticker right outside
-      resultText = resultText.replace(regex, `$1 ${tickerBadge}`);
+      // Replace term with clean ticker badge directly
+      resultText = resultText.replace(regex, tickerBadge);
     }
   }
 
