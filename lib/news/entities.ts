@@ -21,6 +21,10 @@ export const KNOWN_NEWS_ENTITIES_MAP: EntityWikiDef[] = [
   { term: "Netflix", ticker: "NFLX", type: "equity", target: "lexicon", wikiPath: "/lexicon?q=Netflix" },
 
   // --- ACTORS & CREATORS (CBR Intelligence -> Lore & Creator Index) ---
+  { term: "Gerry Duggan", ticker: "$DUGGAN", type: "creator", target: "intelligence", wikiPath: "/intelligence?q=Gerry%20Duggan" },
+  { term: "Javier Garrón", ticker: "$GARRON", type: "creator", target: "intelligence", wikiPath: "/intelligence?q=Javier%20Garron" },
+  { term: "David Marquez", ticker: "$MARQUEZ", type: "creator", target: "intelligence", wikiPath: "/intelligence?q=David%20Marquez" },
+  { term: "Andrew Dalhouse", ticker: "$DALHOUSE", type: "creator", target: "intelligence", wikiPath: "/intelligence?q=Andrew%20Dalhouse" },
   { term: "Ethan Hawke", ticker: "$HAWKE", type: "creator", target: "intelligence", wikiPath: "/intelligence?q=Ethan%20Hawke" },
   { term: "Ashley Allen", ticker: "$AALLEN", type: "creator", target: "intelligence", wikiPath: "/intelligence?q=Ashley%20Allen" },
   { term: "Domenico Carbone", ticker: "$CARBONE", type: "creator", target: "intelligence", wikiPath: "/intelligence?q=Domenico%20Carbone" },
@@ -31,6 +35,20 @@ export const KNOWN_NEWS_ENTITIES_MAP: EntityWikiDef[] = [
   { term: "Todd McFarlane", ticker: "$MCFARLANE", type: "creator", target: "intelligence", wikiPath: "/intelligence?q=Todd%20McFarlane" },
 
   // --- CHARACTERS & COMIC LORE (CBR Intelligence -> CBR Market Ticker) ---
+  { term: "Godzilla", ticker: "$GODZ", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Godzilla" },
+  { term: "Doctor Doom", ticker: "$DOOM", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Doctor%20Doom" },
+  { term: "Doom", ticker: "$DOOM", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Doctor%20Doom" },
+  { term: "Miles Morales", ticker: "$MILES", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Miles%20Morales" },
+  { term: "Spider-Man", ticker: "$SPIDEY", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Spider-Man" },
+  { term: "Odin", ticker: "$ODIN", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Odin" },
+  { term: "The Punisher", ticker: "$PUNISHER", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Punisher" },
+  { term: "Punisher", ticker: "$PUNISHER", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Punisher" },
+  { term: "Mothra", ticker: "$MOTHRA", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Mothra" },
+  { term: "Knull", ticker: "$KNULL", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Knull" },
+  { term: "Kang", ticker: "$KANG", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Kang" },
+  { term: "Emma Frost", ticker: "$FROST", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Emma%20Frost" },
+  { term: "Doctor Strange", ticker: "$STRANGE", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Doctor%20Strange" },
+  { term: "Man-Thing", ticker: "$MANTHING", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Man-Thing" },
   { term: "Bruce Wayne", ticker: "$BATMAN", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Bruce%20Wayne" },
   { term: "Batman", ticker: "$BATMAN", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Batman" },
   { term: "Dark Knight", ticker: "$BATMAN", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Dark%20Knight" },
@@ -39,7 +57,6 @@ export const KNOWN_NEWS_ENTITIES_MAP: EntityWikiDef[] = [
   { term: "Wolverine", ticker: "$LOGAN", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Wolverine" },
   { term: "Jubilee", ticker: "$JUBILEE", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Jubilee" },
   { term: "Apocalypse", ticker: "$APOCALYPSE", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Apocalypse" },
-  { term: "Spider-Man", ticker: "$SPIDEY", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Spider-Man" },
   { term: "Superman", ticker: "$SUPES", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Superman" },
   { term: "Wonder Woman", ticker: "$WW", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Wonder%20Woman" },
 
@@ -50,7 +67,17 @@ export const KNOWN_NEWS_ENTITIES_MAP: EntityWikiDef[] = [
   { term: "Marvel", ticker: "$MRVL", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Marvel" },
   { term: "Image Comics", ticker: "$IMAGE", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Image%20Comics" },
 
-  // --- CBR FINANCIAL LEXICON TERMS (Industry Terms & Financial Concepts) ---
+  // --- CBR FINANCIAL LEXICON TERMS (Industry Terms, Formatting & Publication Metadata) ---
+  { term: "Written by :", type: "lexicon", target: "lexicon", wikiPath: "/lexicon?q=Written%20by" },
+  { term: "Written by", type: "lexicon", target: "lexicon", wikiPath: "/lexicon?q=Written%20by" },
+  { term: "Art by :", type: "lexicon", target: "lexicon", wikiPath: "/lexicon?q=Art%20by" },
+  { term: "Art by", type: "lexicon", target: "lexicon", wikiPath: "/lexicon?q=Art%20by" },
+  { term: "Cover by :", type: "lexicon", target: "lexicon", wikiPath: "/lexicon?q=Cover%20by" },
+  { term: "Cover by", type: "lexicon", target: "lexicon", wikiPath: "/lexicon?q=Cover%20by" },
+  { term: "Page Count :", type: "lexicon", target: "lexicon", wikiPath: "/lexicon?q=Page%20Count" },
+  { term: "Page Count", type: "lexicon", target: "lexicon", wikiPath: "/lexicon?q=Page%20Count" },
+  { term: "Release Date :", type: "lexicon", target: "lexicon", wikiPath: "/lexicon?q=Release%20Date" },
+  { term: "Release Date", type: "lexicon", target: "lexicon", wikiPath: "/lexicon?q=Release%20Date" },
   { term: "live-action", type: "lexicon", target: "lexicon", wikiPath: "/lexicon?q=live-action" },
   { term: "animation", type: "lexicon", target: "lexicon", wikiPath: "/lexicon?q=animation" },
   { term: "movies", type: "lexicon", target: "lexicon", wikiPath: "/lexicon?q=movies" },

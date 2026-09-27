@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { ArrowUpRight, UserCheck, ShieldAlert, TrendingUp, TrendingDown, Minus, Award } from "lucide-react";
 import { classifyStoryPriority } from "@/lib/news/broadcast-script";
-import { findNewsEntities } from "@/lib/news/entities";
+import { findNewsEntities, type EntityWikiDef } from "@/lib/news/entities";
 import { LinkedBriefing } from "@/components/news/linked-briefing";
 import { selectAuthorForStory, generateAuthorMarketPrediction } from "@/lib/news/authors";
 import type { NewsStory } from "@/lib/news/feed";
@@ -27,7 +27,19 @@ const PRIORITY_LABELS: Record<string, { label: string; color: string; border: st
   background: { label: "WIRE", color: "#94A3B8", border: "border-slate-700", bg: "bg-slate-900/40" },
 };
 
-function Block({ label, title, text, authorName }: { label: string; title: string; text: string; authorName?: string }) {
+function Block({
+  label,
+  title,
+  text,
+  authorName,
+  entities,
+}: {
+  label: string;
+  title: string;
+  text: string;
+  authorName?: string;
+  entities?: EntityWikiDef[];
+}) {
   return (
     <section className="border border-slate-800/80 bg-[#07090F] p-4 shadow-sm rounded">
       <div className="flex items-center justify-between mb-1">
@@ -35,7 +47,9 @@ function Block({ label, title, text, authorName }: { label: string; title: strin
         {authorName && <span className="text-[8px] font-mono text-slate-500 uppercase">{authorName}</span>}
       </div>
       <h3 className="text-xs font-semibold text-slate-100">{title}</h3>
-      <p className="mt-1.5 text-xs text-slate-400 leading-relaxed">{text}</p>
+      <p className="mt-1.5 text-xs text-slate-400 leading-relaxed">
+        {entities ? <LinkedBriefing text={text} entities={entities} /> : text}
+      </p>
     </section>
   );
 }
@@ -128,9 +142,9 @@ export function StoryPanel({ story }: { story: NewsStory }) {
 
         {/* 3-Column Narrative Intelligence Grid */}
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <Block label="Analyst Breakdown" title={author.beat} text={analysisText} authorName={author.name} />
-          <Block label="Implications" title="What Changes Next" text={implicationsText} authorName={author.name} />
-          <Block label="Market Impact" title="Asset Positioning" text={marketText} authorName={author.name} />
+          <Block label="Analyst Breakdown" title={author.beat} text={analysisText} authorName={author.name} entities={entities} />
+          <Block label="Implications" title="What Changes Next" text={implicationsText} authorName={author.name} entities={entities} />
+          <Block label="Market Impact" title="Asset Positioning" text={marketText} authorName={author.name} entities={entities} />
         </div>
 
         {/* DEDICATED MARKET & ASSET RIPPLE PROJECTION SECTION (AT THE END) */}
