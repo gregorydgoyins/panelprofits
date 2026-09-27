@@ -34,12 +34,12 @@ export async function getDynamicEntitiesForText(text: string): Promise<EntityWik
 
   // 1. Analyst Personas
   const analysts = [
-    { term: "Devon Knight", path: "/analysts/devon-knight" },
-    { term: "Marcus Vance", path: "/analysts/marcus-vance" },
-    { term: "Elena Rostova", path: "/analysts/elena-rostova" },
-    { term: "Sarah Chen", path: "/analysts/sarah-chen" },
-    { term: "Thaddeus Pryor", path: "/analysts/thaddeus-pryor" },
-    { term: "Owen St. Clair", path: "/analysts/owen-st-clair" },
+    { term: "Devon Knight", path: "/news/authors/devon-knight" },
+    { term: "Marcus Vance", path: "/news/authors/marcus-vance" },
+    { term: "Elena Rostova", path: "/news/authors/elena-rostova" },
+    { term: "Sarah Chen", path: "/news/authors/sarah-chen" },
+    { term: "Thaddeus Pryor", path: "/news/authors/thaddeus-pryor" },
+    { term: "Owen St. Clair", path: "/news/authors/owen-st-clair" },
   ];
   for (const a of analysts) {
     if (lowerText.includes(a.term.toLowerCase())) {
