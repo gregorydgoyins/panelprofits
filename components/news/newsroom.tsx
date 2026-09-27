@@ -7,6 +7,8 @@ import { type NewsStory } from "@/lib/news/feed";
 import { TopTicker } from "@/components/news/TopTicker";
 import { StoryPanel } from "@/components/news/StoryPanel";
 import { NewsCountdown } from "@/components/news/NewsCountdown";
+import { PresenterPlayer } from "@/components/news/PresenterPlayer";
+import { evaluateStoryVideoActivation } from "@/lib/news/broadcast-selection";
 
 interface NewsroomProps {
   stories: NewsStory[];
@@ -31,6 +33,11 @@ export function Newsroom({ stories }: NewsroomProps) {
     if (!filteredStories.length) return null;
     return filteredStories.find((s) => s.id === activeStoryId) || filteredStories[0];
   }, [filteredStories, activeStoryId]);
+
+  const videoDecision = React.useMemo(() => {
+    if (!activeStory) return null;
+    return evaluateStoryVideoActivation(activeStory.id, activeStory.source, activeStory.headline, activeStory.summary);
+  }, [activeStory]);
 
   if (!stories.length || !activeStory) {
     return (
@@ -60,6 +67,11 @@ export function Newsroom({ stories }: NewsroomProps) {
           <span className="px-2.5 py-1 text-[10px] font-mono tracking-wider uppercase rounded border border-slate-800 bg-slate-900/60 text-amber-300">
             {filteredStories.length} Stories Active
           </span>
+          {videoDecision?.isVideoActive && (
+            <span className="px-2.5 py-1 text-[10px] font-mono tracking-wider uppercase rounded border border-purple-500/60 bg-purple-950/40 text-purple-300">
+              Video Presenter Active
+            </span>
+          )}
           <NewsCountdown lastRefreshed={stories[0]?.ingestedAt} />
         </div>
 
@@ -74,10 +86,25 @@ export function Newsroom({ stories }: NewsroomProps) {
         </label>
       </div>
 
-      {/* Main Newsroom Stage: Editorial Reader */}
-      <div className="w-full">
-        <StoryPanel story={activeStory} />
-      </div>
+      {/* Main Newsroom Stage: Editorial Reader & Conditional Presenter Video Player */}
+      {videoDecision?.isVideoActive ? (
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-6 items-start">
+          <div className="min-w-0">
+            <StoryPanel story={activeStory} />
+          </div>
+          <div className="lg:sticky lg:top-20 space-y-4">
+            <PresenterPlayer
+              story={activeStory}
+              presenter={videoDecision.presenter}
+              categoryTag={videoDecision.storyCategoryTag}
+            />
+          </div>
+        </div>
+      ) : (
+        <div className="w-full">
+          <StoryPanel story={activeStory} />
+        </div>
+      )}
     </div>
   );
 }
