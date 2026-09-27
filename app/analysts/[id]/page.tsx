@@ -16,7 +16,7 @@ export default async function AnalystPage({ params }: { params: Promise<{ id: st
 
   // Get recent stories by this analyst
   const allStories = await getNewsStories(50);
-  const analystStories = allStories.filter((s) => s.author.toLowerCase() === analyst.name.toLowerCase());
+  const analystStories = allStories.filter((s) => s.author && s.author.toLowerCase() === analyst.name.toLowerCase());
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
@@ -74,7 +74,7 @@ export default async function AnalystPage({ params }: { params: Promise<{ id: st
                   {story.headline}
                 </Link>
                 <p className="mt-1 text-xs text-slate-400 line-clamp-2">{story.summary}</p>
-                <span className="mt-2 inline-block text-[10px] text-slate-500">{new Date(story.publishedAt).toLocaleDateString()} · {story.source}</span>
+                <span className="mt-2 inline-block text-[10px] text-slate-500">{story.publishedAt ? new Date(story.publishedAt).toLocaleDateString() : "Recent"} · {story.source}</span>
               </div>
             ))}
             {!analystStories.length && (
