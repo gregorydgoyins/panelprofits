@@ -61,8 +61,30 @@ export const KNOWN_NEWS_ENTITIES_MAP: EntityWikiDef[] = [
   // --- PUBLISHERS ---
   { term: "DC Comics", ticker: "$DC", type: "publisher", target: "intelligence", wikiPath: "/wiki?q=DC%20Comics" },
   { term: "DC", ticker: "$DC", type: "publisher", target: "intelligence", wikiPath: "/wiki?q=DC%20Comics" },
+  { term: "Marvel Comics", ticker: "$MRVL", type: "publisher", target: "intelligence", wikiPath: "/wiki?q=Marvel" },
   { term: "Marvel", ticker: "$MRVL", type: "publisher", target: "intelligence", wikiPath: "/wiki?q=Marvel" },
   { term: "Image Comics", ticker: "$IMAGE", type: "publisher", target: "intelligence", wikiPath: "/wiki?q=Image%20Comics" },
+
+  // --- PASS 2: CBR LEXICON & FINANCIAL THESAURUS ---
+  { term: "CGC", type: "grading", target: "lexicon", wikiPath: "/lexicon?q=CGC" },
+  { term: "CBCS", type: "grading", target: "lexicon", wikiPath: "/lexicon?q=CBCS" },
+  { term: "raw copies", type: "grading", target: "lexicon", wikiPath: "/lexicon?q=Raw%20Copies" },
+  { term: "uncertified raw copies", type: "grading", target: "lexicon", wikiPath: "/lexicon?q=Raw%20Copies" },
+  { term: "high-grade", type: "grading", target: "lexicon", wikiPath: "/lexicon?q=High-Grade" },
+  { term: "census slabs", type: "grading", target: "lexicon", wikiPath: "/lexicon?q=Census" },
+  { term: "ratio variant", type: "market-concept", target: "lexicon", wikiPath: "/lexicon?q=Ratio%20Variant" },
+  { term: "first appearance", type: "market-concept", target: "lexicon", wikiPath: "/lexicon?q=First%20Appearance" },
+  { term: "first appearances", type: "market-concept", target: "lexicon", wikiPath: "/lexicon?q=First%20Appearance" },
+  { term: "first printing", type: "market-concept", target: "lexicon", wikiPath: "/lexicon?q=First%20Printing" },
+  { term: "release date", type: "lexicon", target: "lexicon", wikiPath: "/lexicon?q=Release%20Date" },
+  { term: "Final Order Cutoff", type: "market-concept", target: "lexicon", wikiPath: "/lexicon?q=Final%20Order%20Cutoff" },
+  { term: "reorder volume", type: "market-concept", target: "lexicon", wikiPath: "/lexicon?q=Reorder%20Volume" },
+  { term: "secondary market", type: "market-concept", target: "lexicon", wikiPath: "/lexicon?q=Secondary%20Market" },
+  { term: "bid-ask spreads", type: "lexicon", target: "lexicon", wikiPath: "/lexicon?q=Bid-Ask%20Spread" },
+  { term: "auction velocity", type: "lexicon", target: "lexicon", wikiPath: "/lexicon?q=Auction%20Velocity" },
+  { term: "liquidity floor", type: "lexicon", target: "lexicon", wikiPath: "/lexicon?q=Liquidity" },
+  { term: "asset catalysts", type: "lexicon", target: "lexicon", wikiPath: "/lexicon?q=Catalyst" },
+  { term: "creator lineage", type: "market-concept", target: "lexicon", wikiPath: "/lexicon?q=Creator%20Lineage" },
 ];
 
 export function findNewsEntities(headline: string, summary: string | null): EntityWikiDef[] {
