@@ -27,7 +27,7 @@ export interface GeneratedNewsArticle {
  */
 export function cleanScrapedText(rawHtmlOrText: string): string {
   if (!rawHtmlOrText) return "";
-  return rawHtmlOrText
+  let text = rawHtmlOrText
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
     .replace(/<nav[\s\S]*?<\/nav>/gi, " ")
@@ -35,11 +35,21 @@ export function cleanScrapedText(rawHtmlOrText: string): string {
     .replace(/<footer[\s\S]*?<\/footer>/gi, " ")
     .replace(/<aside[\s\S]*?<\/aside>/gi, " ")
     .replace(/<!--[\s\S]*?-->/g, " ")
-    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // Strip [text](url) -> text
-    .replace(/\[([^\]]+)\]/g, "$1") // Strip [text] -> text
-    .replace(/\(\$[A-Z0-9_:]+\)/g, "") // Strip ($TICKER)
-    .replace(/\$[A-Z0-9_:]+/g, "") // Strip $TICKER
+    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1");
+
+  // Multi-pass recursive sanitization to guarantee zero leftover brackets or URLs
+  let prevText = "";
+  while (text !== prevText) {
+    prevText = text;
+    text = text
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // [text](url) -> text
+      .replace(/\[([^\]]+)\]/g, "$1") // [text] -> text
+      .replace(/\(\$[A-Z0-9_:]+\)/gi, "") // ($TICKER) -> empty
+      .replace(/\$[A-Z0-9_:]+/gi, "") // $TICKER -> empty
+      .replace(/https?:\/\/\S+/gi, ""); // raw http URLs -> empty
+  }
+
+  return text
     .replace(/&amp;/g, "&")
     .replace(/&quot;/g, '"')
     .replace(/&#39;|&apos;/g, "'")
@@ -49,6 +59,7 @@ export function cleanScrapedText(rawHtmlOrText: string): string {
     .replace(/&#(\d+);/g, (_, code) => String.fromCodePoint(Number(code)))
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ")
+    .replace(/\s+([,.:;?!])/g, "$1") // Fix floating punctuation spaces like "mutant ," -> "mutant,"
     .trim();
 }
 
