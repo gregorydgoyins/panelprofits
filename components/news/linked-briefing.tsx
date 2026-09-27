@@ -41,10 +41,10 @@ export function LinkedBriefing({
               key={`${match.term}-${index}`}
               prefetch
               href={match.wikiPath}
-              className={`font-medium transition-colors ${
+              className={`font-semibold transition-colors ${
                 isLexicon
-                  ? "text-cyan-200 underline decoration-cyan-400/70 underline-offset-4 hover:text-cyan-100 font-mono"
-                  : "text-amber-200 underline decoration-amber-500/70 underline-offset-4 hover:text-amber-100 font-mono font-semibold"
+                  ? "text-cyan-200 underline decoration-cyan-400/80 underline-offset-4 hover:text-cyan-100"
+                  : "text-amber-300 underline decoration-amber-500/80 underline-offset-4 hover:text-amber-100 font-semibold"
               }`}
             >
               {displayLabel}
