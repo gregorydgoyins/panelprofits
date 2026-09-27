@@ -39,6 +39,11 @@ export const KNOWN_NEWS_ENTITIES_MAP: EntityWikiDef[] = [
   { term: "Thor", ticker: "$THOR", type: "character", target: "intelligence", wikiPath: "/wiki?q=Thor" },
   { term: "Mjolnir", ticker: "$MJOLNIR", type: "character", target: "intelligence", wikiPath: "/wiki?q=Mjolnir" },
   { term: "Captain America", ticker: "$CAP", type: "character", target: "intelligence", wikiPath: "/wiki?q=Captain%20America" },
+  { term: "Black Panther", ticker: "$PANTHER", type: "character", target: "intelligence", wikiPath: "/wiki?q=Black%20Panther" },
+  { term: "Shuri", ticker: "$SHURI", type: "character", target: "intelligence", wikiPath: "/wiki?q=Shuri" },
+  { term: "Chadwick Boseman", ticker: "$BOSEMAN", type: "creator", target: "intelligence", wikiPath: "/wiki?q=Chadwick%20Boseman" },
+  { term: "David Jonsson", ticker: "$JONSSON", type: "creator", target: "intelligence", wikiPath: "/wiki?q=David%20Jonsson" },
+  { term: "Angela Bassett", ticker: "$BASSETT", type: "creator", target: "intelligence", wikiPath: "/wiki?q=Angela%20Bassett" },
 
   // --- CREATORS ---
   { term: "Evan Narcisse", ticker: "$NARCISSE", type: "creator", target: "intelligence", wikiPath: "/wiki?q=Evan%20Narcisse" },

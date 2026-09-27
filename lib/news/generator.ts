@@ -61,6 +61,12 @@ export function cleanScrapedText(rawHtmlOrText: string): string {
       .replace(/https?:\/\/\S+/gi, ""); // raw http URLs -> empty
   }
 
+  text = text
+    .replace(/(?:IMAGE|PHOTO|CREDIT)\s+(?:COURTESY\s+OF|BY)\s+[^.\n]+/gi, " ")
+    .replace(/We want to hear from you in the comments[\s\S]*/gi, " ")
+    .replace(/Are you hoping to see[\s\S]*?\?/gi, " ")
+    .replace(/What do you think[\s\S]*?\?/gi, " ");
+
   return text
     .replace(/&amp;/g, "&")
     .replace(/&quot;/g, '"')
@@ -79,6 +85,7 @@ export function cleanScrapedText(rawHtmlOrText: string): string {
  * Scrapes source article URL and returns clean plain-text content.
  */
 export async function scrapeSourceArticle(url: string): Promise<string | null> {
+  if (process.env.NODE_ENV === "test" || process.env.VITEST) return null;
   if (!url || !url.startsWith("http")) return null;
   try {
     const response = await fetch(url, {

@@ -215,9 +215,9 @@ export async function getNewsStory(id: string): Promise<NewsStory | null> {
       publishedAt: mapped.publishedAt,
     });
     
-    // Force purge ALL old raw links, REF tags, brackets, and ticker clutter
+    // Keep 3-pass generated HTML paragraphs intact with hyperlinks and ticker badges
     mapped.headline = cleanScrapedText(generated.headline);
-    mapped.summary = generated.paragraphs.map(cleanScrapedText).join("\n\n");
+    mapped.summary = generated.paragraphs.join("\n\n");
     mapped.author = generated.assignedAuthorName;
 
     // Overwrite database record with newly cleaned article
