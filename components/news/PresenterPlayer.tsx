@@ -52,7 +52,10 @@ export function PresenterPlayer({
       </div>
 
       {/* Video Monitor Stage */}
-      <div className="relative aspect-video w-full bg-[#030407]">
+      <div 
+        className="relative aspect-video w-full bg-[#030407] bg-cover bg-center"
+        style={{ backgroundImage: `url(${presenter.avatarImage})` }}
+      >
         <video
           ref={videoRef}
           src={presenter.videoSampleUrl}
@@ -69,7 +72,7 @@ export function PresenterPlayer({
               videoRef.current.play().catch(() => {});
             }
           }}
-          className="h-full w-full object-cover"
+          className="h-full w-full object-cover relative z-10"
         />
 
         {/* Lower Third Overlay HUD */}
