@@ -37,13 +37,14 @@ export function cleanScrapedText(rawHtmlOrText: string): string {
     .replace(/<!--[\s\S]*?-->/g, " ")
     .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1");
 
-  // Multi-pass recursive sanitization to guarantee zero leftover brackets or URLs
+  // Multi-pass recursive sanitization to guarantee zero leftover brackets, REF tags, or URLs
   let prevText = "";
   while (text !== prevText) {
     prevText = text;
     text = text
       .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // [text](url) -> text
       .replace(/\[([^\]]+)\]/g, "$1") // [text] -> text
+      .replace(/\(REF:[^)]+\)/gi, "") // (REF:TAG) -> empty
       .replace(/\(\$[A-Z0-9_:]+\)/gi, "") // ($TICKER) -> empty
       .replace(/\$[A-Z0-9_:]+/gi, "") // $TICKER -> empty
       .replace(/https?:\/\/\S+/gi, ""); // raw http URLs -> empty
