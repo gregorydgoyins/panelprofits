@@ -56,10 +56,19 @@ export function PresenterPlayer({
         <video
           ref={videoRef}
           src={presenter.videoSampleUrl}
+          poster={presenter.avatarImage}
           playsInline
+          autoPlay
           loop
           muted={isMuted}
-          onLoadedData={() => setIsLoaded(true)}
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
+          onLoadedData={() => {
+            setIsLoaded(true);
+            if (videoRef.current) {
+              videoRef.current.play().catch(() => {});
+            }
+          }}
           className="h-full w-full object-cover"
         />
 

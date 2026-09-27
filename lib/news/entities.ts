@@ -20,7 +20,12 @@ export const KNOWN_NEWS_ENTITIES_MAP: EntityWikiDef[] = [
   { term: "Universal Pictures", ticker: "CMCSA", type: "equity", target: "lexicon", wikiPath: "/lexicon?q=Universal" },
   { term: "Netflix", ticker: "NFLX", type: "equity", target: "lexicon", wikiPath: "/lexicon?q=Netflix" },
 
-  // --- ACTORS & CREATORS (CBR Intelligence -> Lore & Creator Index) ---
+  { term: "Blade", ticker: "$BLADE", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Blade" },
+  { term: "Brielle Brooks", ticker: "$BRIELLE", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Brielle%20Brooks" },
+  { term: "Evan Narcisse", ticker: "$NARCISSE", type: "creator", target: "intelligence", wikiPath: "/intelligence?q=Evan%20Narcisse" },
+  { term: "Eve L. Ewing", ticker: "$EWING", type: "creator", target: "intelligence", wikiPath: "/intelligence?q=Eve%20L.%20Ewing" },
+  { term: "Ruairí Coleman", ticker: "$COLEMAN", type: "creator", target: "intelligence", wikiPath: "/intelligence?q=Ruairi%20Coleman" },
+  { term: "Stefano Caselli", ticker: "$CASELLI", type: "creator", target: "intelligence", wikiPath: "/intelligence?q=Stefano%20Caselli" },
   { term: "Greg Pak", ticker: "$GPAK", type: "creator", target: "intelligence", wikiPath: "/intelligence?q=Greg%20Pak" },
   { term: "Mark Buckingham", ticker: "$MBUC", type: "creator", target: "intelligence", wikiPath: "/intelligence?q=Mark%20Buckingham" },
   { term: "Phil Noto", ticker: "$NOTO", type: "creator", target: "intelligence", wikiPath: "/intelligence?q=Phil%20Noto" },
