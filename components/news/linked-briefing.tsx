@@ -28,7 +28,7 @@ export function LinkedBriefing({
         if (!match || (key && localSet.has(key))) return <span key={`${part}-${index}`}>{part}</span>;
         if (key) localSet.add(key);
 
-        const isDictionary = match.target === "dictionary";
+        const isLexicon = match.target === "lexicon";
 
         return (
           <span key={`${match.term}-${index}`} className="inline-flex items-center gap-0.5">
@@ -36,7 +36,7 @@ export function LinkedBriefing({
               prefetch
               href={match.wikiPath}
               className={`font-medium transition-colors ${
-                isDictionary
+                isLexicon
                   ? "text-cyan-200 underline decoration-cyan-400/70 underline-offset-4 hover:text-cyan-100"
                   : "text-amber-200 underline decoration-amber-500/70 underline-offset-4 hover:text-amber-100"
               }`}

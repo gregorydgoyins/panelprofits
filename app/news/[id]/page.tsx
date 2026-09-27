@@ -64,9 +64,9 @@ export default async function NewsStoryPage({ params }: { params: Promise<{ id: 
           />
           {relatedEntities.length > 0 && (
             <section className="mt-8 border-t border-slate-800 pt-5">
-              <p className="text-[10px] uppercase tracking-[0.16em] text-slate-400 font-mono">Related Entity Search Terms</p>
+              <p className="text-[10px] uppercase tracking-[0.16em] text-slate-400 font-mono">CBR Intelligence & Financial Lexicon Terms</p>
               <p className="mt-1 text-xs leading-relaxed text-slate-500">
-                Clicking a linked term queries the catalog knowledge index (`/wiki?q=...`) to resolve matching PPCF identities and verified canonical issues.
+                Clicking a gold linked term queries CBR Intelligence (`/intelligence?q=...`) for canonical lore and GCD issue histories. Clicking a cyan underlined term queries the CBR Financial Lexicon (`/lexicon?q=...`) for industry terms and corporate stock tickers.
               </p>
             </section>
           )}

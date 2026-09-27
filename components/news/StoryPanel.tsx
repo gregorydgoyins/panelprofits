@@ -176,10 +176,10 @@ export function StoryPanel({ story }: { story: NewsStory }) {
           </div>
         </div>
 
-        {/* PPedia Thesaurus & Ticker Entity Tags */}
+        {/* CBR Intelligence & CBR Financial Lexicon Entity Tags */}
         {entities.length > 0 && (
           <div className="mt-6 flex flex-wrap items-center gap-2 pt-4 border-t border-slate-800/80">
-            <span className="text-[9px] font-mono uppercase tracking-widest text-slate-500 mr-1">PPedia Thesaurus:</span>
+            <span className="text-[9px] font-mono uppercase tracking-widest text-slate-500 mr-1">CBR Intelligence & Financial Lexicon:</span>
             {entities.slice(0, 10).map((entity) => (
               <Link
                 key={entity.term}
