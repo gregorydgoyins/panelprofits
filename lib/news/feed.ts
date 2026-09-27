@@ -486,7 +486,7 @@ async function refreshNewsStoreInternal(): Promise<void> {
     })
   );
 
-  const relevantRows = processedRows.filter((row) => Boolean(row.summary && row.summary.length >= 300));
+  const relevantRows = processedRows.filter((row) => Boolean(row.summary && row.summary.trim().length >= 500));
 
   memoryStories = relevantRows.map((row) => ({
     id: row.story_key,
