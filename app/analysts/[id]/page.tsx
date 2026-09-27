@@ -6,8 +6,9 @@ import { getNewsStories } from "@/lib/news/feed";
 
 export const dynamic = "force-dynamic";
 
-export default async function AnalystPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export default async function AnalystPage({ params }: { params: Promise<{ id: string }> | { id: string } }) {
+  const resolvedParams = await params;
+  const id = resolvedParams.id;
   const analyst = AUTHOR_PERSONAS.find((p) => p.id === id || p.name.toLowerCase().replace(/[^a-z0-9]+/g, "-") === id);
 
   if (!analyst) {
