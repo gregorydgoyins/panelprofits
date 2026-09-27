@@ -15,11 +15,13 @@ export interface ArticleGenerationContext {
 import { runCbrDirectoryPass } from "@/lib/news/passes/cbr-directory";
 import { runCbrLexiconThesaurusPass } from "@/lib/news/passes/cbr-lexicon-thesaurus";
 import { runCbrTickerLegendPass } from "@/lib/news/passes/cbr-ticker-legend";
+import { runArticleAuditorPass, type ArticleAuditVerdict } from "@/lib/news/passes/article-auditor";
 
 export interface PassExecutionReport {
   cbrDirectoryCount: number;
   cbrLexiconCount: number;
   cbrTickerLegendCount: number;
+  auditVerdict: ArticleAuditVerdict;
 }
 
 export interface GeneratedNewsArticle {
@@ -249,16 +251,20 @@ export function generatePanelProfitsArticle(ctx: ArticleGenerationContext): Gene
     return pass3.transformedText;
   });
 
+  // --- PASS 4: QUALITY & COMPLIANCE AUDITOR ---
+  const auditResult = runArticleAuditorPass(transformedParagraphs);
+
   return {
     headline: cleanHeadline,
     deck: cleanScrapedText(deck),
-    paragraphs: transformedParagraphs,
+    paragraphs: auditResult.auditedParagraphs,
     recognizedEntities,
     assignedAuthorName: author.name,
     passReport: {
       cbrDirectoryCount: totalCbrDirectory,
       cbrLexiconCount: totalCbrLexicon,
       cbrTickerLegendCount: totalCbrTickerLegend,
+      auditVerdict: auditResult.verdict,
     },
   };
 }
