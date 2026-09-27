@@ -21,6 +21,9 @@ export const KNOWN_NEWS_ENTITIES_MAP: EntityWikiDef[] = [
   { term: "Netflix", ticker: "NFLX", type: "equity", target: "lexicon", wikiPath: "/lexicon?q=Netflix" },
 
   // --- ACTORS & CREATORS (CBR Intelligence -> Lore & Creator Index) ---
+  { term: "Greg Pak", ticker: "$GPAK", type: "creator", target: "intelligence", wikiPath: "/intelligence?q=Greg%20Pak" },
+  { term: "Mark Buckingham", ticker: "$MBUC", type: "creator", target: "intelligence", wikiPath: "/intelligence?q=Mark%20Buckingham" },
+  { term: "Phil Noto", ticker: "$NOTO", type: "creator", target: "intelligence", wikiPath: "/intelligence?q=Phil%20Noto" },
   { term: "Gerry Duggan", ticker: "$DUGGAN", type: "creator", target: "intelligence", wikiPath: "/intelligence?q=Gerry%20Duggan" },
   { term: "Javier Garrón", ticker: "$GARRON", type: "creator", target: "intelligence", wikiPath: "/intelligence?q=Javier%20Garron" },
   { term: "David Marquez", ticker: "$MARQUEZ", type: "creator", target: "intelligence", wikiPath: "/intelligence?q=David%20Marquez" },
@@ -35,6 +38,7 @@ export const KNOWN_NEWS_ENTITIES_MAP: EntityWikiDef[] = [
   { term: "Todd McFarlane", ticker: "$MCFARLANE", type: "creator", target: "intelligence", wikiPath: "/intelligence?q=Todd%20McFarlane" },
 
   // --- CHARACTERS & COMIC LORE (CBR Intelligence -> CBR Market Ticker) ---
+  { term: "Dragon Man", ticker: "$DRAGM", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Dragon%20Man" },
   { term: "Godzilla", ticker: "$GODZ", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Godzilla" },
   { term: "Doctor Doom", ticker: "$DOOM", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Doctor%20Doom" },
   { term: "Doom", ticker: "$DOOM", type: "character", target: "intelligence", wikiPath: "/intelligence?q=Doctor%20Doom" },

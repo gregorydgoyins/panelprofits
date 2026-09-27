@@ -33,27 +33,22 @@ export function LinkedBriefing({
 
         const isLexicon = match.target === "lexicon";
 
-        // FIRST MENTION: Full hyperlinked name + Ticker Badge
+        // FIRST MENTION: Full hyperlinked Name ($TICKER) as a single seamless clickable link
         if (isFirstMention) {
+          const displayLabel = match.ticker ? `${part} (${match.ticker})` : part;
           return (
-            <span key={`${match.term}-${index}`} className="inline-flex items-center gap-0.5">
-              <Link
-                prefetch
-                href={match.wikiPath}
-                className={`font-medium transition-colors ${
-                  isLexicon
-                    ? "text-cyan-200 underline decoration-cyan-400/70 underline-offset-4 hover:text-cyan-100"
-                    : "text-amber-200 underline decoration-amber-500/70 underline-offset-4 hover:text-amber-100"
-                }`}
-              >
-                {part}
-              </Link>
-              {match.ticker && (
-                <span className="ml-1 px-1 py-0.2 text-[9px] font-mono tracking-tighter uppercase rounded border border-amber-500/40 bg-amber-950/40 text-amber-300 font-semibold">
-                  ({match.ticker})
-                </span>
-              )}
-            </span>
+            <Link
+              key={`${match.term}-${index}`}
+              prefetch
+              href={match.wikiPath}
+              className={`font-medium transition-colors ${
+                isLexicon
+                  ? "text-cyan-200 underline decoration-cyan-400/70 underline-offset-4 hover:text-cyan-100 font-mono"
+                  : "text-amber-200 underline decoration-amber-500/70 underline-offset-4 hover:text-amber-100 font-mono font-semibold"
+              }`}
+            >
+              {displayLabel}
+            </Link>
           );
         }
 
