@@ -198,7 +198,7 @@ export async function processNewsIngestion(storyRow: Record<string, unknown>): P
   const generated = generatePanelProfitsArticle({
     storyKey: storyId,
     source,
-    sourceUrl,
+    sourceUrl: url,
     headline,
     rawSummary: cleanedRawSummary,
     scrapedContent,
