@@ -106,7 +106,7 @@ export default async function ResearchPage() {
               <Link key={firm!.firm_id} href={`/firms/${firm!.firm_id}`} className="flex items-center justify-between gap-3 p-4 hover:bg-[#0b0f15]">
                 <div>
                   <p className="text-sm text-slate-100">{firm!.firm_name}</p>
-                  <p className="mt-1 text-xs text-slate-500">{firm!.mythology || "Clean firm identity"} · {firm!.total_brokers} brokers</p>
+                  <p className="mt-1 text-xs text-slate-500">Institutional firm identity · {firm!.total_brokers} brokers</p>
                 </div>
                 <ArrowUpRight className="h-3.5 w-3.5 text-slate-600" />
               </Link>
