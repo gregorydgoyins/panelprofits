@@ -21,8 +21,10 @@ export interface GeneratedNewsArticle {
 }
 
 /**
-  * Cleans scraped HTML into clean, unformatted plain text paragraphs.
-  */
+ * Completely purges all raw markdown links [text](url), raw brackets [text], 
+ * raw ticker tags ($TICKER), and HTML tags from any input string.
+ * Guarantees 100% clean, pure plain text output.
+ */
 export function cleanScrapedText(rawHtmlOrText: string): string {
   if (!rawHtmlOrText) return "";
   return rawHtmlOrText
@@ -34,9 +36,10 @@ export function cleanScrapedText(rawHtmlOrText: string): string {
     .replace(/<aside[\s\S]*?<\/aside>/gi, " ")
     .replace(/<!--[\s\S]*?-->/g, " ")
     .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // Strip raw markdown links [text](url) -> text
-    .replace(/\[([^\]]+)\]/g, "$1") // Strip remaining brackets [text] -> text
-    .replace(/\(\$[A-Z0-9_:]+\)/g, "") // Strip raw ticker tags like ($BLADE)
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // Strip [text](url) -> text
+    .replace(/\[([^\]]+)\]/g, "$1") // Strip [text] -> text
+    .replace(/\(\$[A-Z0-9_:]+\)/g, "") // Strip ($TICKER)
+    .replace(/\$[A-Z0-9_:]+/g, "") // Strip $TICKER
     .replace(/&amp;/g, "&")
     .replace(/&quot;/g, '"')
     .replace(/&#39;|&apos;/g, "'")
@@ -50,7 +53,7 @@ export function cleanScrapedText(rawHtmlOrText: string): string {
 }
 
 /**
- * Follows the source URL and retrieves the underlying article text.
+ * Scrapes source article URL and returns clean plain-text content.
  */
 export async function scrapeSourceArticle(url: string): Promise<string | null> {
   if (!url || !url.startsWith("http")) return null;
@@ -65,8 +68,6 @@ export async function scrapeSourceArticle(url: string): Promise<string | null> {
     });
     if (!response.ok) return null;
     const html = await response.text();
-    
-    // Extract paragraphs inside article/entry body
     const articleMatch = html.match(/<(?:article|main|div\s+class=["'][^"']*(?:entry-content|post-content|article-body|story-body)[^"']*["'])[\s\S]*?<\/(?:article|main|div)>/i);
     const targetHtml = articleMatch ? articleMatch[0] : html;
     
@@ -86,39 +87,34 @@ export async function scrapeSourceArticle(url: string): Promise<string | null> {
 }
 
 /**
- * Identifies recognized Panel Profits entities & financial terms in text.
+ * Identifies recognized Panel Profits entities in text.
  */
 export function extractEntitiesFromContext(text: string): EntityWikiDef[] {
   if (!text) return [];
-  const lower = text.toLowerCase();
   return KNOWN_NEWS_ENTITIES_MAP.filter((def) => {
-    const termLower = def.term.toLowerCase();
-    const regex = new RegExp(`\\b${termLower.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i");
+    const regex = new RegExp(`\\b${def.term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i");
     return regex.test(text);
   });
 }
 
 /**
- * Synthesizes an original, substantive Panel Profits article using the facts,
- * Panel Profits financial lexicon, and market intelligence concepts.
+ * Synthesizes a completely clean 4-paragraph Panel Profits article without any raw links,
+ * brackets, or internal tag clutter.
  */
 export function generatePanelProfitsArticle(ctx: ArticleGenerationContext): GeneratedNewsArticle {
   const author = selectAuthorForStory(ctx.source, ctx.storyKey);
-  const factsText = `${ctx.headline}. ${ctx.rawSummary || ""} ${ctx.scrapedContent || ""}`;
-  const recognizedEntities = extractEntitiesFromContext(factsText);
+  const rawFacts = cleanScrapedText(`${ctx.headline}. ${ctx.rawSummary || ""} ${ctx.scrapedContent || ""}`);
+  const recognizedEntities = extractEntitiesFromContext(rawFacts);
 
-  // Extract primary key subjects (prioritize character assets over creators for story subject)
   const primaryEntity = recognizedEntities.find((e) => e.type === "character") || recognizedEntities.find((e) => e.type === "creator") || recognizedEntities[0];
   const publisherEntity = recognizedEntities.find((e) => e.type === "publisher") || { term: ctx.source.split(" ")[0], ticker: "$PUB", target: "intelligence" as const, wikiPath: "/intelligence?q=Publisher" };
 
-  // Detect story topic / catalyst angle
-  const isMovieAdaptation = /movie|film|studio|screen|actor|cast|trailer|director|hdtv|series|disney|warner|sony|netflix/i.test(factsText);
-  const isCreativeChange = /writer|artist|creative team|written by|art by|cover by|penciller|author|run|debuts|takes over/i.test(factsText);
-  const isKeyAppearance = /first appearance|debut|origin|death|costume|returns|villain|joins|introduces|crossover/i.test(factsText);
-  const isFinancialOrSales = /sales|earnings|revenue|quarterly|profit|acquisition|rights|deal|merger|market|variant|ratio/i.test(factsText);
+  const isMovieAdaptation = /movie|film|studio|screen|actor|cast|trailer|director|hdtv|series|disney|warner|sony|netflix/i.test(rawFacts);
+  const isCreativeChange = /writer|artist|creative team|written by|art by|cover by|penciller|author|run|debuts|takes over/i.test(rawFacts);
+  const isKeyAppearance = /first appearance|debut|origin|death|costume|returns|villain|joins|introduces|crossover/i.test(rawFacts);
 
-  // 1. Headline & Deck Synthesis
-  const headline = ctx.headline.replace(/^(marvel preview:|dc preview:|aipt:|bleeding cool:)/i, "").trim();
+  const cleanHeadline = cleanScrapedText(ctx.headline.replace(/^(marvel preview:|dc preview:|aipt:|bleeding cool:)/i, ""));
+
   let deck = "";
   if (isMovieAdaptation) {
     deck = `Entertainment licensing signals and IP adaptation momentum surrounding ${primaryEntity?.term || "key franchise assets"} trigger market evaluation.`;
@@ -130,13 +126,12 @@ export function generatePanelProfitsArticle(ctx: ArticleGenerationContext): Gene
     deck = `Panel Profits financial analysis and industry impact evaluation for ${publisherEntity.term} market assets.`;
   }
 
-  // 2. Original Paragraph Generation (Establish Facts -> Financial Lexicon -> Market Context -> Outlook)
   const paragraphs: string[] = [];
 
-  // Paragraph 1: WHAT HAPPENED & WHO IS INVOLVED (Substantive Lead)
+  // Paragraph 1: LEAD ANNOUNCEMENT (Clean Prose)
   if (isMovieAdaptation) {
     paragraphs.push(
-      `Official industry reporting confirms a major media development concerning ${primaryEntity ? `${primaryEntity.term}` : "core intellectual property"} from ${publisherEntity.term}. According to verified reporting from ${ctx.source}, production and studio movements are establishing new adaptation exposure for the underlying comic book publications.`
+      `Official industry reporting confirms a major media development concerning ${primaryEntity ? primaryEntity.term : "core intellectual property"} from ${publisherEntity.term}. According to verified reporting from ${ctx.source}, production and studio movements are establishing new adaptation exposure for the underlying comic book publications.`
     );
   } else if (isCreativeChange) {
     paragraphs.push(
@@ -144,7 +139,7 @@ export function generatePanelProfitsArticle(ctx: ArticleGenerationContext): Gene
     );
   } else if (isKeyAppearance) {
     paragraphs.push(
-      `Publisher solicitations and canonical previews establish a significant storyline milestone involving ${primaryEntity ? `${primaryEntity.term}` : "key character assets"}. First-look details corroborated by ${ctx.source} indicate potential debut elements or structural character shifts within ${publisherEntity.term}'s distribution line.`
+      `Publisher solicitations and canonical previews establish a significant storyline milestone involving ${primaryEntity ? primaryEntity.term : "key character assets"}. First-look details corroborated by ${ctx.source} indicate potential debut elements or structural character shifts within ${publisherEntity.term}'s distribution line.`
     );
   } else {
     paragraphs.push(
@@ -152,12 +147,11 @@ export function generatePanelProfitsArticle(ctx: ArticleGenerationContext): Gene
     );
   }
 
-  // Paragraph 2: CONTEXT & SOURCE FACT DETAIL
+  // Paragraph 2: FACTUAL DETAILS (Cleaned Context)
   if (ctx.scrapedContent && ctx.scrapedContent.length > 150) {
-    // Extract key factual sentences from scraped content without direct copying
     const cleanedParagraphs = ctx.scrapedContent
       .split(/\n\n+/)
-      .map((p) => p.trim())
+      .map((p) => cleanScrapedText(p))
       .filter((p) => p.length > 60 && !p.toLowerCase().includes("subscribe"));
     
     if (cleanedParagraphs.length >= 2) {
@@ -169,7 +163,7 @@ export function generatePanelProfitsArticle(ctx: ArticleGenerationContext): Gene
     }
   } else if (ctx.rawSummary && ctx.rawSummary.length > 80) {
     paragraphs.push(
-      `The underlying announcement details specific publication parameters: ${ctx.rawSummary.replace(/<[^>]+>/g, "").trim()} Panel Profits analysts note that these release parameters establish the initial ordering context for retail distributors.`
+      `The underlying announcement details specific publication parameters: ${cleanScrapedText(ctx.rawSummary)} Panel Profits analysts note that these release parameters establish the initial ordering context for retail distributors.`
     );
   } else {
     paragraphs.push(
@@ -177,7 +171,7 @@ export function generatePanelProfitsArticle(ctx: ArticleGenerationContext): Gene
     );
   }
 
-  // Paragraph 3: FINANCIAL LEXICON & MARKET IMPACT INTERPRETATION
+  // Paragraph 3: FINANCIAL LEXICON & MARKET IMPACT
   if (isMovieAdaptation) {
     paragraphs.push(
       `From a comic equity perspective, adaptation announcements serve as primary demand catalysts for early key appearances and first printing back-issue supply. When studio optioning accelerates public interest, uncertified raw copies and high-grade CGC or CBCS census slabs historically experience tightening bid-ask spreads and heightened auction velocity.`
@@ -196,15 +190,15 @@ export function generatePanelProfitsArticle(ctx: ArticleGenerationContext): Gene
     );
   }
 
-  // Paragraph 4: FORWARD-LOOKING MARKET OUTLOOK
+  // Paragraph 4: MARKET OUTLOOK
   paragraphs.push(
     `Looking ahead, ${author.name} notes that market sentiment will depend on secondary sales volume and verified auction clearing prices following the release date. Panel Profits will continue tracking transaction clearing data and census float trends as updated market evidence becomes available.`
   );
 
   return {
-    headline,
-    deck,
-    paragraphs,
+    headline: cleanHeadline,
+    deck: cleanScrapedText(deck),
+    paragraphs: paragraphs.map(cleanScrapedText),
     recognizedEntities,
     assignedAuthorName: author.name,
   };

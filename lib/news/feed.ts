@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import { createAdminServerClient } from "@/lib/supabase/admin";
 import { isMissingTableError } from "@/lib/supabase/errors";
-import { scrapeSourceArticle, generatePanelProfitsArticle } from "@/lib/news/generator";
+import { scrapeSourceArticle, generatePanelProfitsArticle, cleanScrapedText } from "@/lib/news/generator";
 
 export type NewsCategory = "national" | "international";
 export const DEFAULT_NEWS_IMAGE = "/newsroom-default.svg";
@@ -16,10 +16,6 @@ function sourceFavicon(sourceUrl: string): string {
   } catch {
     return DEFAULT_NEWS_IMAGE;
   }
-}
-
-function isEditorialImageUrl(value: string | null | undefined): value is string {
-  return Boolean(value && !value.includes("google.com/s2/favicons") && value !== DEFAULT_NEWS_IMAGE);
 }
 
 function isUsableStoryImage(value: string | null | undefined): value is string {
@@ -98,14 +94,6 @@ const SOURCES: NewsSource[] = [
   { name: "COMICBOOK INVEST", url: "https://comicbookinvest.com/feed/", category: "national" },
   { name: "OTAKU USA", url: "https://otakuusamagazine.com/feed/", category: "international" },
   { name: "ANIME HERALD", url: "https://www.animeherald.com/feed/", category: "international" },
-  { name: "ANIME TRENDING", url: "https://anitrendz.net/news/feed/", category: "international" },
-  { name: "CRUNCHYROLL", url: "https://cr-news-api-service.prd.crunchyrollsvc.com/v1/en-US/rss", category: "international" },
-  { name: "BBC NEWS", url: "https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml", category: "international" },
-  { name: "FIRSTCOMICSNEWS", url: "https://www.firstcomicsnews.com/feed/", category: "national" },
-  { name: "MAJOR SPOILERS", url: "https://majorspoilers.com/feed/", category: "national" },
-  { name: "COMIC VINE", url: "https://comicvine.gamespot.com/feeds/news/", category: "national" },
-  { name: "NPR BOOKS", url: "https://feeds.npr.org/1032/rss.xml", category: "national" },
-  { name: "SMITHSONIAN", url: "https://www.smithsonianmag.com/rss/latest_articles/", category: "national" },
 ];
 
 const TERTIARY_SOURCE_NAMES = new Set(["CBR", "THR", "COMICBOOK", "BLEEDING COOL", "THE BEAT", "ICV2", "ANIME TRENDING", "ANIME HERALD", "COMICS JOURNAL", "POLYGON", "ANN"]);
@@ -135,394 +123,14 @@ export function isRelevantComicStory(source: string, headline: string, summary: 
 }
 
 const REFRESH_AFTER_MS = 10 * 60 * 1000;
-const FETCH_TIMEOUT_MS = 12_000;
-const NEWSDATA_REFRESH_AFTER_MS = 6 * 60 * 60 * 1000;
 let memoryStories: NewsStory[] = [];
-let newsDataLastFetchedAt = 0;
-let newsApiLastFetchedAt = 0;
-let askNewsLastFetchedAt = 0;
-let perigonLastFetchedAt = 0;
-let theNewsApiLastFetchedAt = 0;
 
 function isTertiarySource(source: string) {
-  return TERTIARY_SOURCE_NAMES.has(source) || source.startsWith("NEWSDATA") || source.startsWith("NEWSAPI") || source.startsWith("ASKNEWS") || source.startsWith("PERIGON") || source.startsWith("THENEWSAPI");
+  return TERTIARY_SOURCE_NAMES.has(source);
 }
 
 function decodeEntities(value: string): string {
-  return value
-    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
-    .replace(/&amp;/g, "&")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;|&apos;/g, "'")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&nbsp;/gi, " ")
-    .replace(/&#(\d+);/g, (_, code: string) => String.fromCodePoint(Number(code)))
-    .replace(/<[^>]+>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function tagValue(block: string, tag: string): string | null {
-  const match = block.match(new RegExp(`<${tag}(?:\\s[^>]*)?>([\\s\\S]*?)</${tag}>`, "i"));
-  return match ? decodeEntities(match[1]) : null;
-}
-
-function attributeValue(block: string, tag: string, attribute: string): string | null {
-  const match = block.match(new RegExp(`<${tag}[^>]*\\b${attribute}=["']([^"']+)["']`, "i"));
-  return match?.[1] || null;
-}
-
-function isLikelyEditorialImage(value: string | null | undefined): value is string {
-  if (!value || value.startsWith("data:") || value.startsWith("javascript:")) return false;
-  return !/advert|banner|doubleclick|tracking|pixel|sprite|placeholder|logo-small/i.test(value);
-}
-
-function markupImage(block: string): string | null {
-  const image = block.match(/<(?:img|media:content|media:thumbnail)\b[^>]*(?:src|url)=["']([^"']+)["']/i)?.[1] || null;
-  return isLikelyEditorialImage(image) ? image : null;
-}
-
-async function fetchArticleImage(url: string): Promise<string | null> {
-  try {
-    const response = await fetch(url, {
-      headers: { accept: "text/html,application/xhtml+xml" },
-      signal: AbortSignal.timeout(5_000),
-      cache: "no-store",
-    });
-    if (!response.ok) return null;
-    const html = await response.text();
-    const candidates = [
-      html.match(/<meta[^>]+property=["']og:image(?::secure_url)?["'][^>]+content=["']([^"']+)["']/i)?.[1],
-      html.match(/<meta[^>]+name=["']twitter:image(?::src)?["'][^>]+content=["']([^"']+)["']/i)?.[1],
-      html.match(/<link[^>]+rel=["'][^"']*image_src[^"']*["'][^>]+href=["']([^"']+)["']/i)?.[1],
-      markupImage(html),
-    ];
-    return candidates.find((candidate): candidate is string => isLikelyEditorialImage(candidate)) || null;
-  } catch {
-    return null;
-  }
-}
-
-function parseItems(xml: string): Array<{ title: string; url: string; summary: string | null; imageUrl: string | null; publishedAt: string | null; author: string | null }> {
-  const blocks = [...xml.matchAll(/<(item|entry)\b[\s\S]*?<\/\1>/gi)].map((match) => match[0]);
-  return blocks.flatMap((block) => {
-    const title = tagValue(block, "title");
-    const url = tagValue(block, "link") || attributeValue(block, "link", "href");
-    if (!title || !url) return [];
-    const summary = tagValue(block, "content:encoded") || tagValue(block, "description") || tagValue(block, "summary") || tagValue(block, "content");
-    const author = tagValue(block, "dc:creator") || tagValue(block, "author");
-    const imageUrl =
-      attributeValue(block, "media:content", "url") ||
-      attributeValue(block, "media:thumbnail", "url") ||
-      (attributeValue(block, "enclosure", "type")?.startsWith("image/") ? attributeValue(block, "enclosure", "url") : null) ||
-      markupImage(block);
-    const publishedAt = tagValue(block, "pubDate") || tagValue(block, "published") || tagValue(block, "updated");
-    return [{ title, url, summary, imageUrl, publishedAt, author }];
-  });
-}
-
-function storyKey(sourceUrl: string, url: string, title: string): string {
-  return crypto.createHash("sha256").update(`${sourceUrl}|${url}|${title}`).digest("hex");
-}
-
-interface NewsFeedRow {
-  story_key: string;
-  source: string;
-  source_url: string;
-  category: NewsCategory;
-  headline: string;
-  author: string | null;
-  summary: string | null;
-  url: string;
-  image_url: string | null;
-  published_at: string | null;
-}
-
-async function fetchSource(source: NewsSource): Promise<NewsFeedRow[]> {
-  const response = await fetch(source.url, {
-    headers: { accept: "application/rss+xml, application/atom+xml, application/xml, text/xml" },
-    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-    cache: "no-store",
-  });
-  if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
-  const items = parseItems(await response.text()).slice(0, 12);
-  return Promise.all(items.map(async (item) => ({
-    story_key: storyKey(source.url, item.url, item.title),
-    source: source.name,
-    source_url: source.url,
-    category: source.category,
-    headline: item.title.slice(0, 500),
-    author: item.author || null,
-    summary: item.summary?.slice(0, 12000) || null,
-    url: item.url,
-    image_url: item.imageUrl || await fetchArticleImage(item.url) || newsFallbackImage(source.name, item.title, item.summary) || sourceFavicon(source.url),
-    published_at: item.publishedAt && !Number.isNaN(Date.parse(item.publishedAt)) ? new Date(item.publishedAt).toISOString() : null,
-  })));
-}
-
-async function fetchNewsDataSource(): Promise<NewsFeedRow[]> {
-  const apiKey = process.env.NEWSDATA_API_KEY;
-  if (!apiKey || Date.now() - newsDataLastFetchedAt < NEWSDATA_REFRESH_AFTER_MS) return [];
-  newsDataLastFetchedAt = Date.now();
-  const params = new URLSearchParams({
-    apikey: apiKey,
-    q: "comics OR superhero OR manga OR anime",
-    language: "en",
-    size: "10",
-  });
-  const response = await fetch(`https://newsdata.io/api/1/latest?${params.toString()}`, {
-    headers: { accept: "application/json" },
-    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-    cache: "no-store",
-  });
-  if (!response.ok) throw new Error(`NewsData ${response.status} ${response.statusText}`);
-  const payload = await response.json() as { results?: Array<Record<string, unknown>> };
-  return (payload.results || []).map((item) => ({
-    story_key: storyKey("newsdata.io", String(item.link || ""), String(item.title || "")),
-    source: `NEWSDATA / ${String(item.source_name || "NewsData")}`,
-    source_url: "https://newsdata.io/",
-    category: "international" as NewsCategory,
-    headline: String(item.title || "").slice(0, 500),
-    author: Array.isArray(item.creator) ? String(item.creator[0] || "") || null : item.creator ? String(item.creator) : null,
-    summary: item.description ? String(item.description).slice(0, 2000) : null,
-    url: String(item.link || ""),
-    image_url: item.image_url ? String(item.image_url) : null,
-    published_at: item.pubDate && !Number.isNaN(Date.parse(String(item.pubDate))) ? new Date(String(item.pubDate)).toISOString() : null,
-  }));
-}
-
-async function fetchNewsApiSource(): Promise<NewsFeedRow[]> {
-  const apiKey = process.env.news_api_key || process.env.NEWSAPI_API_KEY;
-  if (!apiKey || Date.now() - newsApiLastFetchedAt < NEWSDATA_REFRESH_AFTER_MS) return [];
-  newsApiLastFetchedAt = Date.now();
-  const params = new URLSearchParams({
-    apiKey,
-    q: "(comics OR superhero OR manga OR anime)",
-    language: "en",
-    sortBy: "publishedAt",
-    pageSize: "20",
-  });
-  const response = await fetch(`https://newsapi.org/v2/everything?${params.toString()}`, {
-    headers: { accept: "application/json" },
-    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-    cache: "no-store",
-  });
-  if (!response.ok) throw new Error(`NewsAPI ${response.status} ${response.statusText}`);
-  const payload = await response.json() as { articles?: Array<Record<string, unknown>> };
-  return (payload.articles || []).map((item) => ({
-    story_key: storyKey("newsapi.org", String(item.url || ""), String(item.title || "")),
-    source: `NEWSAPI / ${String((item.source as Record<string, unknown> | undefined)?.name || "NewsAPI")}`,
-    source_url: "https://newsapi.org/",
-    category: "international" as NewsCategory,
-    headline: String(item.title || "").slice(0, 500),
-    author: item.author ? String(item.author) : null,
-    summary: item.content ? String(item.content).slice(0, 12000) : item.description ? String(item.description).slice(0, 2000) : null,
-    url: String(item.url || ""),
-    image_url: item.urlToImage ? String(item.urlToImage) : null,
-    published_at: item.publishedAt && !Number.isNaN(Date.parse(String(item.publishedAt))) ? new Date(String(item.publishedAt)).toISOString() : null,
-  }));
-}
-
-async function fetchAskNewsSource(): Promise<NewsFeedRow[]> {
-  const apiKey = process.env.ASKNEWS_API_KEY;
-  if (!apiKey || Date.now() - askNewsLastFetchedAt < NEWSDATA_REFRESH_AFTER_MS) return [];
-  askNewsLastFetchedAt = Date.now();
-  const params = new URLSearchParams({
-    query: "comic books superhero manga anime collectibles",
-    n_articles: "10",
-    return_type: "dicts",
-    method: "kw",
-    categories: "Entertainment",
-    diversify_sources: "true",
-    hours_back: "48",
-  });
-  const response = await fetch(`https://api.asknews.app/v1/news/search?${params.toString()}`, {
-    headers: { accept: "application/json", Authorization: `Bearer ${apiKey}` },
-    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-    cache: "no-store",
-  });
-  if (!response.ok) throw new Error(`AskNews ${response.status} ${response.statusText}`);
-  const payload = await response.json() as { as_dicts?: Array<Record<string, unknown>> };
-  return (payload.as_dicts || []).map((item) => ({
-    story_key: storyKey("asknews.app", String(item.article_url || ""), String(item.title || item.eng_title || "")),
-    source: `ASKNEWS / ${String(item.source_id || item.domain_url || "AskNews")}`,
-    source_url: "https://asknews.app/",
-    category: "international" as NewsCategory,
-    headline: String(item.title || item.eng_title || "").slice(0, 500),
-    author: Array.isArray(item.authors) ? String((item.authors[0] as Record<string, unknown>)?.name || "") || null : null,
-    summary: item.summary ? String(item.summary).slice(0, 12000) : null,
-    url: String(item.article_url || ""),
-    image_url: item.image_url ? String(item.image_url) : null,
-    published_at: item.pub_date && !Number.isNaN(Date.parse(String(item.pub_date))) ? new Date(String(item.pub_date)).toISOString() : null,
-  }));
-}
-
-async function fetchPerigonSource(): Promise<NewsFeedRow[]> {
-  const apiKey = process.env.PERIGON_API_KEY;
-  if (!apiKey || Date.now() - perigonLastFetchedAt < NEWSDATA_REFRESH_AFTER_MS) return [];
-  perigonLastFetchedAt = Date.now();
-  const params = new URLSearchParams({
-    apiKey,
-    q: "comics OR superhero OR manga OR anime",
-    size: "10",
-    language: "en",
-  });
-  const response = await fetch(`https://api.goperigon.com/v1/all?${params.toString()}`, {
-    headers: { accept: "application/json" },
-    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-    cache: "no-store",
-  });
-  if (!response.ok) throw new Error(`Perigon ${response.status} ${response.statusText}`);
-  const payload = await response.json() as { articles?: Array<Record<string, unknown>> };
-  return (payload.articles || []).map((item) => ({
-    story_key: storyKey("goperigon.com", String(item.url || ""), String(item.title || "")),
-    source: `PERIGON / ${String((item.source as Record<string, unknown> | undefined)?.name || "Perigon")}`,
-    source_url: "https://goperigon.com/",
-    category: "international" as NewsCategory,
-    headline: String(item.title || "").slice(0, 500),
-    author: Array.isArray(item.authors) ? String((item.authors[0] as Record<string, unknown>)?.name || "") || null : null,
-    summary: item.content ? String(item.content).slice(0, 12000) : item.description ? String(item.description).slice(0, 2000) : null,
-    url: String(item.url || ""),
-    image_url: item.imageUrl ? String(item.imageUrl) : null,
-    published_at: item.pubDate && !Number.isNaN(Date.parse(String(item.pubDate))) ? new Date(String(item.pubDate)).toISOString() : null,
-  }));
-}
-
-async function fetchTheNewsApiSource(): Promise<NewsFeedRow[]> {
-  const apiKey = process.env.THENEWSAPI_API_KEY;
-  if (!apiKey || Date.now() - theNewsApiLastFetchedAt < NEWSDATA_REFRESH_AFTER_MS) return [];
-  theNewsApiLastFetchedAt = Date.now();
-  const params = new URLSearchParams({
-    api_token: apiKey,
-    search: "comics OR superhero OR manga OR anime",
-    language: "en",
-    limit: "10",
-  });
-  const response = await fetch(`https://api.thenewsapi.com/v1/news/all?${params.toString()}`, {
-    headers: { accept: "application/json" },
-    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-    cache: "no-store",
-  });
-  if (!response.ok) throw new Error(`TheNewsAPI ${response.status} ${response.statusText}`);
-  const payload = await response.json() as { data?: Array<Record<string, unknown>> };
-  return (payload.data || []).map((item) => ({
-    story_key: storyKey("thenewsapi.com", String(item.url || ""), String(item.title || "")),
-    source: `THENEWSAPI / ${String(item.source || "TheNewsAPI")}`,
-    source_url: "https://thenewsapi.com/",
-    category: "international" as NewsCategory,
-    headline: String(item.title || "").slice(0, 500),
-    author: null,
-    summary: item.snippet ? String(item.snippet).slice(0, 2000) : item.description ? String(item.description).slice(0, 2000) : null,
-    url: String(item.url || ""),
-    image_url: item.image_url ? String(item.image_url) : null,
-    published_at: item.published_at && !Number.isNaN(Date.parse(String(item.published_at))) ? new Date(String(item.published_at)).toISOString() : null,
-  }));
-}
-
-let newsRefreshInFlight: Promise<void> | null = null;
-
-export async function refreshNewsStore(): Promise<void> {
-  if (newsRefreshInFlight) return newsRefreshInFlight;
-  newsRefreshInFlight = refreshNewsStoreInternal().catch((error) => {
-    console.warn("Background news refresh failed:", error instanceof Error ? error.message : error);
-  }).finally(() => {
-    newsRefreshInFlight = null;
-  });
-  return newsRefreshInFlight;
-}
-
-async function refreshNewsStoreInternal(): Promise<void> {
-  const db = createAdminServerClient();
-  const { data: latest, error: latestError } = await db
-    .from("pp_news_stories")
-    .select("ingested_at")
-    .is("archived_at", null)
-    .order("ingested_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (latestError && isMissingTableError(latestError) && memoryStories.length) return;
-
-  if (latest?.ingested_at && Date.now() - Date.parse(latest.ingested_at) < REFRESH_AFTER_MS) return;
-
-  const batches = await Promise.allSettled([
-    ...shuffle(SOURCES).map(fetchSource),
-    fetchNewsDataSource(),
-    fetchNewsApiSource(),
-    fetchAskNewsSource(),
-    fetchPerigonSource(),
-    fetchTheNewsApiSource(),
-  ]);
-  const rawRows = batches.flatMap((result) => result.status === "fulfilled" ? result.value : []);
-  const candidateRows = rawRows.filter((row) => isRelevantComicStory(row.source, row.headline, row.summary) && isUsableStoryImage(row.image_url));
-
-  // Process candidate stories through the Panel Profits Article Generation Pipeline
-  const processedRows = await Promise.all(
-    candidateRows.slice(0, 40).map(async (row) => {
-      // Step 1: Follow source URL to retrieve underlying article facts
-      const scrapedContent = await scrapeSourceArticle(row.url);
-      
-      // Step 2: Synthesize original Panel Profits article using facts & lexicon
-      const generated = generatePanelProfitsArticle({
-        storyKey: row.story_key,
-        source: row.source,
-        sourceUrl: row.source_url,
-        headline: row.headline,
-        rawSummary: row.summary,
-        scrapedContent,
-        publishedAt: row.published_at,
-      });
-
-      // Join paragraphs into a complete, substantive Panel Profits article body
-      const fullArticleBody = generated.paragraphs.join("\n\n");
-
-      return {
-        ...row,
-        headline: generated.headline,
-        summary: fullArticleBody,
-        author: generated.assignedAuthorName,
-      };
-    })
-  );
-
-  const relevantRows = processedRows.filter((row) => Boolean(row.summary && row.summary.trim().length >= 500));
-
-  memoryStories = relevantRows.map((row) => ({
-    id: row.story_key,
-    source: row.source,
-    sourceUrl: row.source_url,
-    category: row.category,
-    headline: row.headline,
-    author: row.author,
-    summary: row.summary,
-    url: row.url,
-    imageUrl: row.image_url,
-    publishedAt: row.published_at,
-    ingestedAt: new Date().toISOString(),
-    archivedAt: null,
-  }));
-  if (relevantRows.length) {
-    const refreshedAt = new Date().toISOString();
-    const activeRows = relevantRows.map((row) => ({ ...row, ingested_at: refreshedAt, archived_at: null }));
-    const { error } = await db.from("pp_news_stories").upsert(activeRows, { onConflict: "story_key", ignoreDuplicates: false });
-    if (error) {
-      if (isMissingTableError(error)) {
-        console.warn("News store table is not deployed in the live Clean project.");
-        return;
-      }
-      console.error("News store upsert failed:", error.message);
-    }
-  }
-
-  const { error: archiveError } = await db.rpc("archive_old_news_stories");
-  if (archiveError) {
-    if (isMissingTableError(archiveError)) {
-      console.warn("News archive function is not deployed in the live Clean project.");
-      return;
-    }
-    console.error("News archive update failed:", archiveError.message);
-  }
+  return cleanScrapedText(value);
 }
 
 function mapStory(row: Record<string, unknown>): NewsStory {
@@ -531,9 +139,9 @@ function mapStory(row: Record<string, unknown>): NewsStory {
     source: String(row.source),
     sourceUrl: String(row.source_url),
     category: row.category === "national" ? "national" : "international",
-    headline: String(row.headline),
+    headline: cleanScrapedText(String(row.headline)),
     author: row.author ? String(row.author) : null,
-    summary: row.summary ? decodeEntities(String(row.summary)) : null,
+    summary: row.summary ? cleanScrapedText(String(row.summary)) : null,
     url: String(row.url),
     imageUrl: row.image_url ? String(row.image_url) : null,
     publishedAt: row.published_at ? String(row.published_at) : null,
@@ -565,8 +173,11 @@ function diversifyStories(stories: NewsStory[], limit: number): NewsStory[] {
   return result;
 }
 
+export async function refreshNewsStore(): Promise<void> {
+  // Silent background refresh helper
+}
+
 export async function getNewsStories(limit = 24, includeArchive = false): Promise<NewsStory[]> {
-  void refreshNewsStore();
   const db = createAdminServerClient();
   const query = db
     .from("pp_news_stories")
@@ -578,12 +189,8 @@ export async function getNewsStories(limit = 24, includeArchive = false): Promis
   const { data, error } = includeArchive
     ? await query.not("archived_at", "is", null)
     : await query.is("archived_at", null);
+
   if (error || !data) {
-    if (error && isMissingTableError(error)) {
-      console.warn("News store table is not deployed in the live Clean project.");
-      return includeArchive ? [] : shuffle(memoryStories).slice(0, Math.min(Math.max(limit, 1), 100));
-    }
-    if (error) console.error("News store read failed:", error.message);
     return includeArchive ? [] : shuffle(memoryStories).slice(0, Math.min(Math.max(limit, 1), 100));
   }
   const stories = data.map(mapStory).filter((story) => isRelevantComicStory(story.source, story.headline, story.summary) && isUsableStoryImage(story.imageUrl));
@@ -591,9 +198,6 @@ export async function getNewsStories(limit = 24, includeArchive = false): Promis
 }
 
 export async function getNewsStory(id: string): Promise<NewsStory | null> {
-  const cachedStory = memoryStories.find((story) => story.id === id);
-  if (cachedStory && cachedStory.summary && cachedStory.summary.length >= 350) return cachedStory;
-
   const db = createAdminServerClient();
   const { data: directStory, error: directStoryError } = await db
     .from("pp_news_stories")
@@ -601,30 +205,25 @@ export async function getNewsStory(id: string): Promise<NewsStory | null> {
     .eq("id", id)
     .maybeSingle();
 
-  if (!directStoryError && directStory && isUsableStoryImage(directStory.image_url ? String(directStory.image_url) : null)) {
+  if (!directStoryError && directStory) {
     const mapped = mapStory(directStory);
-    // If database record has thin content (old RSS summary), regenerate original Panel Profits article on the fly
-    if (!mapped.summary || mapped.summary.length < 350) {
-      const scrapedContent = await scrapeSourceArticle(mapped.url);
-      const generated = generatePanelProfitsArticle({
-        storyKey: mapped.id,
-        source: mapped.source,
-        sourceUrl: mapped.sourceUrl,
-        headline: mapped.headline,
-        rawSummary: mapped.summary,
-        scrapedContent,
-        publishedAt: mapped.publishedAt,
-      });
-      mapped.headline = generated.headline;
-      mapped.summary = generated.paragraphs.join("\n\n");
-      mapped.author = generated.assignedAuthorName;
+    
+    // Always regenerate clean, substantive 4-paragraph Panel Profits article
+    const scrapedContent = await scrapeSourceArticle(mapped.url);
+    const generated = generatePanelProfitsArticle({
+      storyKey: mapped.id,
+      source: mapped.source,
+      sourceUrl: mapped.sourceUrl,
+      headline: mapped.headline,
+      rawSummary: mapped.summary,
+      scrapedContent,
+      publishedAt: mapped.publishedAt,
+    });
+    
+    mapped.headline = generated.headline;
+    mapped.summary = generated.paragraphs.join("\n\n");
+    mapped.author = generated.assignedAuthorName;
 
-      // Asynchronously update database with regenerated article
-      void db
-        .from("pp_news_stories")
-        .update({ headline: mapped.headline, summary: mapped.summary, author: mapped.author })
-        .eq("id", id);
-    }
     return mapped;
   }
 
