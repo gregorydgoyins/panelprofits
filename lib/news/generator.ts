@@ -34,6 +34,9 @@ export function cleanScrapedText(rawHtmlOrText: string): string {
     .replace(/<aside[\s\S]*?<\/aside>/gi, " ")
     .replace(/<!--[\s\S]*?-->/g, " ")
     .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // Strip raw markdown links [text](url) -> text
+    .replace(/\[([^\]]+)\]/g, "$1") // Strip remaining brackets [text] -> text
+    .replace(/\(\$[A-Z0-9_:]+\)/g, "") // Strip raw ticker tags like ($BLADE)
     .replace(/&amp;/g, "&")
     .replace(/&quot;/g, '"')
     .replace(/&#39;|&apos;/g, "'")
