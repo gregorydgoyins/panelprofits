@@ -224,31 +224,22 @@ export function generatePanelProfitsArticle(ctx: ArticleGenerationContext): Gene
   if (hasSubstantiveFacts) {
     deck = `${brief.primarySubject}: ${brief.sourceFacts[0].slice(0, 110)}...`;
 
-    // Paragraph 1: Direct reporting statement grounded in lead fact
-    paragraphs.push(
-      `Reporting from ${ctx.source} confirms major developments regarding ${brief.primarySubject}. According to the announcement: ${brief.sourceFacts[0]}`
-    );
+    // Lead paragraph starts directly with the lead factual claim
+    paragraphs.push(brief.sourceFacts[0]);
 
-    // Paragraph 2: Core facts detail & creative/publisher specifics
-    paragraphs.push(
-      `Further details confirm that ${brief.sourceFacts[1]} ${brief.sourceFacts[2] ? brief.sourceFacts[2] : ""}`.trim()
-    );
-
-    // Paragraph 3: Specific story arc / background facts if present
-    if (brief.sourceFacts.length >= 4) {
+    // Body paragraph details secondary facts and specific context
+    if (brief.sourceFacts[1]) {
       paragraphs.push(
-        `Additional documentation indicates: ${brief.sourceFacts[3]} ${brief.sourceFacts[4] || ""}`.trim()
-      );
-    } else {
-      paragraphs.push(
-        `Publication records for ${brief.publisher} establish scheduled availability and distribution specifics for involved creative teams.`
+        `${brief.sourceFacts[1]} ${brief.sourceFacts[2] || ""}`.trim()
       );
     }
 
-    // Paragraph 4: Contextualized market relevance grounded in target entities
-    paragraphs.push(
-      `Secondary market tracking for ${brief.primarySubject} remains focused on verified reader engagement and physical distribution velocity across secondary sales channels.`
-    );
+    // Additional source facts if available
+    if (brief.sourceFacts[3]) {
+      paragraphs.push(
+        `${brief.sourceFacts[3]} ${brief.sourceFacts[4] || ""}`.trim()
+      );
+    }
   } else {
     // Insufficient factual grounding -> Generate minimal placeholder for auditor rejection
     deck = `Reporting for ${cleanHeadline} from ${ctx.source}.`;

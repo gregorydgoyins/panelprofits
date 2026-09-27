@@ -28,8 +28,8 @@ export function evaluateStoryVideoActivation(
   }
   const randVal = Math.abs(seed) % 100;
 
-  // Every story page features an active broadcast video presenter floor report
-  const isVideoActive = true;
+  // Suppress video player unless a verified broadcast asset exists
+  const isVideoActive = false;
 
   // Route presenter: Lead Anchor Alex Morgan gets top priority on Breaking / Record stories
   let presenter: PresenterAvatar;
