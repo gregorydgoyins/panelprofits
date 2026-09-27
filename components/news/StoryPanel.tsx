@@ -2,10 +2,11 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowUpRight, Newspaper } from "lucide-react";
+import { ArrowUpRight, UserCheck, ShieldAlert, Sparkles } from "lucide-react";
 import { classifyStoryPriority } from "@/lib/news/broadcast-script";
 import { findNewsEntities } from "@/lib/news/entities";
 import { LinkedBriefing } from "@/components/news/linked-briefing";
+import { selectAuthorForStory } from "@/lib/news/authors";
 import type { NewsStory } from "@/lib/news/feed";
 
 function relativeTime(d: string | null) {
@@ -26,10 +27,13 @@ const PRIORITY_LABELS: Record<string, { label: string; color: string; border: st
   background: { label: "WIRE", color: "#94A3B8", border: "border-slate-700", bg: "bg-slate-900/40" },
 };
 
-function Block({ label, title, text }: { label: string; title: string; text: string }) {
+function Block({ label, title, text, authorName }: { label: string; title: string; text: string; authorName?: string }) {
   return (
-    <section className="border border-slate-800/80 bg-[#07090F] p-4 shadow-sm">
-      <div className="text-[9px] font-mono uppercase tracking-[0.18em] text-amber-400 font-semibold mb-1">{label}</div>
+    <section className="border border-slate-800/80 bg-[#07090F] p-4 shadow-sm rounded">
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-[9px] font-mono uppercase tracking-[0.18em] text-amber-400 font-semibold">{label}</span>
+        {authorName && <span className="text-[8px] font-mono text-slate-500 uppercase">{authorName}</span>}
+      </div>
       <h3 className="text-xs font-semibold text-slate-100">{title}</h3>
       <p className="mt-1.5 text-xs text-slate-400 leading-relaxed">{text}</p>
     </section>
@@ -43,6 +47,7 @@ export function StoryPanel({ story }: { story: NewsStory }) {
   const pCfg = PRIORITY_LABELS[priority] || PRIORITY_LABELS.background;
   const desc = story.summary || "";
   const entities = findNewsEntities(story.headline, story.summary);
+  const author = selectAuthorForStory(story.source, story.id);
 
   const sentences = desc.split(/(?<=[.!?])\s+/).map((s) => s.trim()).filter(Boolean);
   const paragraphs = sentences.reduce<string[]>((groups, sentence, index) => {
@@ -51,24 +56,23 @@ export function StoryPanel({ story }: { story: NewsStory }) {
     return groups;
   }, []).slice(0, 8);
 
-  const analysisText =
-    desc.length > 60
-      ? "This represents an authentic market signal with direct implications for collector awareness, character relevance, and asset positioning."
-      : "We're monitoring this development closely for secondary market and positioning signals.";
-
-  const implicationsText = entities.length
-    ? `Buyers, watchers, and collectors focused on ${entities.slice(0, 2).join(" and ")} may begin repositioning ahead of broader market confirmation.`
-    : "Buyers, collectors, and rights-watchers may begin repositioning ahead of broader confirmation.";
-
-  const marketText = entities.length
-    ? `Watchlists tied to ${entities.slice(0, 3).join(", ")} are likely to see renewed attention in the near term. Key issues and related comic assets could move.`
-    : "Key issues, related character books, and speculative asset positions are likely to see renewed attention in the near term.";
+  const analysisText = `${author.writingStyle.introStyle} ${author.writingStyle.analysisFocus}`;
+  const implicationsText = `${author.writingStyle.implicationAngle} ${
+    entities.length
+      ? `Collectors observing ${entities.slice(0, 2).join(" and ")} should closely track FOC allocations.`
+      : "Broad positioning adjustments expected prior to official press confirmation."
+  }`;
+  const marketText = `${author.writingStyle.marketAngle} ${
+    entities.length
+      ? `Watchlists tied to ${entities.slice(0, 3).join(", ")} will reflect near-term pricing sentiment.`
+      : "Catalog items in this tier are entering a high-interest observation window."
+  }`;
 
   return (
     <article className="border border-slate-800 bg-[#0A0D15] p-6 sm:p-8 shadow-xl flex flex-col justify-between">
       <div>
         {/* Top Meta & Priority */}
-        <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
           <div className="flex items-center gap-2.5">
             <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-amber-300 font-semibold">
               Lead Story
@@ -81,17 +85,24 @@ export function StoryPanel({ story }: { story: NewsStory }) {
             </span>
           </div>
 
-          <div className="flex items-center gap-2 text-xs text-slate-400">
-            <span className="text-slate-200 font-medium">{story.source}</span>
-            {story.author && (
-              <>
-                <span className="text-slate-600">·</span>
-                <span className="text-slate-400">{story.author}</span>
-              </>
-            )}
-            <span className="text-slate-600">·</span>
-            <span className="text-slate-500">{relativeTime(story.publishedAt)}</span>
+          {/* Author Badge */}
+          <div className="flex items-center gap-2">
+            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-mono tracking-wider uppercase rounded border ${author.badgeBorder} ${author.badgeBg} ${author.badgeText}`}>
+              <UserCheck className="h-3 w-3" />
+              {author.name} · {author.role}
+            </span>
           </div>
+        </div>
+
+        {/* Provenance Banner */}
+        <div className="mt-3 flex items-center gap-2 px-3 py-1.5 text-[11px] font-mono rounded border border-slate-800 bg-[#06080D] text-slate-400">
+          <ShieldAlert className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+          <span>
+            WIRE PROVENANCE: <strong className="text-slate-200">{story.source}</strong>
+            {story.author && <span> · Reported by <strong className="text-slate-300">{story.author}</strong></span>}
+            <span className="text-slate-600"> | </span>
+            <span className="text-slate-500">{relativeTime(story.publishedAt)}</span>
+          </span>
         </div>
 
         {/* Big Headline */}
@@ -114,11 +125,11 @@ export function StoryPanel({ story }: { story: NewsStory }) {
           </p>
         )}
 
-        {/* 3-Column Narrative Intelligence Grid from Final */}
+        {/* 3-Column Narrative Intelligence Grid with Persona Voice */}
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <Block label="Desk Analysis" title="What matters now" text={analysisText} />
-          <Block label="Implications" title="What changes next" text={implicationsText} />
-          <Block label="Market Impact" title="Where attention moves" text={marketText} />
+          <Block label="Analyst Breakdown" title={author.beat} text={analysisText} authorName={author.name} />
+          <Block label="Implications" title="What Changes Next" text={implicationsText} authorName={author.name} />
+          <Block label="Market Impact" title="Asset Positioning" text={marketText} authorName={author.name} />
         </div>
 
         {/* PPedia Entity Tags */}
@@ -147,7 +158,7 @@ export function StoryPanel({ story }: { story: NewsStory }) {
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 text-xs text-amber-300/90 hover:text-amber-200 uppercase tracking-wider font-medium transition-colors"
         >
-          Read full article at {story.source} <ArrowUpRight className="h-3.5 w-3.5" />
+          Read original article at {story.source} <ArrowUpRight className="h-3.5 w-3.5" />
         </a>
         <Link
           href={`/news/${story.id}`}
