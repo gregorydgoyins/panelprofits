@@ -11,6 +11,18 @@ export interface ResearchPaper {
 }
 
 export const RESEARCH_PAPERS_REGISTRY: ResearchPaper[] = [
+  // --- 21 METRICS & QUANTITATIVE COMIC FINANCIAL PAPERS (ZERO MYTHOLOGY) ---
+  {
+    id: "wp-2026-21m",
+    title: "The 21 Metric Framework for Sequential Art Valuation & Asset Pricing",
+    category: "white-paper",
+    authors: ["Devon Knight", "Marcus Vance"],
+    publicationDate: "2026-09-12",
+    institution: "Panel Profits Quantitative Research Group",
+    abstract: "A rigorous mathematical formulation of the 21 core quantitative financial metrics governing comic book assets. Covers PPIX index weighting, census float velocity, CGC/CBCS grade-delta spreads, FMV clearing yields, CIMA order book depth, and liquidity-adjusted carrying costs across raw and slabbed instruments.",
+    downloadUrl: "/research/white-papers/wp-2026-21m.pdf",
+    doiOrRef: "PP-QUANT-2026-021"
+  },
   {
     id: "wp-2026-01",
     title: "Market Capitalization Models for Atomic Asset Classes in Comic Book Equities",

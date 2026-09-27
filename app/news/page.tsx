@@ -30,12 +30,32 @@ export default async function NewsPage() {
             </p>
           </div>
 
-          <Link
-            href="/research/archive"
-            className="flex w-fit items-center gap-2 border border-slate-800 bg-[#090C14] px-3.5 py-2 text-[11px] font-mono uppercase tracking-[0.14em] text-slate-300 hover:border-amber-400/60 hover:text-amber-200 transition-colors"
-          >
-            <Archive className="h-3.5 w-3.5 text-amber-400" /> Research Archive
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href="/video-archive"
+              className="flex items-center gap-2 border border-slate-800 bg-[#090C14] px-3.5 py-2 text-[11px] font-mono uppercase tracking-[0.14em] text-rose-300 hover:border-rose-400/60 hover:text-rose-200 transition-colors"
+            >
+              Video Archive
+            </Link>
+            <Link
+              href="/research/archive"
+              className="flex items-center gap-2 border border-slate-800 bg-[#090C14] px-3.5 py-2 text-[11px] font-mono uppercase tracking-[0.14em] text-amber-300 hover:border-amber-400/60 hover:text-amber-200 transition-colors"
+            >
+              <Archive className="h-3.5 w-3.5 text-amber-400" /> News Archive
+            </Link>
+            <Link
+              href="/research/white-papers"
+              className="flex items-center gap-2 border border-slate-800 bg-[#090C14] px-3.5 py-2 text-[11px] font-mono uppercase tracking-[0.14em] text-sky-300 hover:border-sky-400/60 hover:text-sky-200 transition-colors"
+            >
+              White Papers
+            </Link>
+            <Link
+              href="/research"
+              className="flex items-center gap-2 border border-slate-800 bg-[#090C14] px-3.5 py-2 text-[11px] font-mono uppercase tracking-[0.14em] text-purple-300 hover:border-purple-400/60 hover:text-purple-200 transition-colors"
+            >
+              Research Terminal
+            </Link>
+          </div>
         </div>
       </header>
 
