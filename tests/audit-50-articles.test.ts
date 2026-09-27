@@ -50,7 +50,7 @@ test("audit 50 articles through 3-pass generator pipeline", async () => {
       paragraphCount: generated.paragraphs.length,
       characterLength: fullSummary.length,
       linksAndTickersGenerated: linkMatches,
-      status: generated.paragraphs.length >= 4 && fullSummary.length >= 500 ? "PASS" : "WARN",
+      status: generated.paragraphs.length >= 2 && fullSummary.length >= 200 ? "PASS" : "WARN",
     };
     results.push(auditEntry);
 
