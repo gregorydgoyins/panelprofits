@@ -377,10 +377,10 @@ export function generateAuthorMarketPrediction(
       magnitude: magnitude1,
       percentageDelta: accuracyRating === "Speculative Miss (Way Off)" ? "-4.2%" : (magnitude1 === "sharp" ? "+18.5%" : "+4.8%"),
       rationale: accuracyRating === "Spot-On (High Accuracy)"
-        ? `Spot-On Call: Direct catalyst in this report is sparking strong buy orders for ${primaryEntity.term} key issues.`
+        ? `Direct catalyst in this report is sparking strong buy orders for ${primaryEntity.term} key issues.`
         : accuracyRating === "Debatable (Mixed Signals)"
-        ? `Mixed Signals: Market split on whether ${primaryEntity.term} catalyst translates to sustained secondary momentum.`
-        : `Speculative Miss: Initial rally in ${primaryEntity.term} failed as secondary sellers immediately dumped inventory.`,
+        ? `Market is split on whether the ${primaryEntity.term} catalyst translates to sustained secondary momentum.`
+        : `Initial rally in ${primaryEntity.term} is failing to hold as secondary sellers immediately supply inventory.`,
     },
     {
       ticker: secondaryEntity.ticker || "REF:KEY",
@@ -389,8 +389,8 @@ export function generateAuthorMarketPrediction(
       magnitude: magnitude2,
       percentageDelta: magnitude2 === "sharp" ? "+12.1%" : (randVal % 2 === 0 ? "0.0%" : "-2.5%"),
       rationale: (randVal % 2 === 0)
-        ? `Butterfly Effect: Collateral demand flatlining while liquidity rotates to primary news headline assets.`
-        : `Rippling effect across adjacent ${secondaryEntity.term} issues as speculative attention spreads.`,
+        ? `Collateral demand is flatlining while market liquidity rotates to primary news headline assets.`
+        : `Rippling effect across adjacent ${secondaryEntity.term} issues as speculative attention shifts.`,
     },
   ];
 

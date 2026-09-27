@@ -86,11 +86,11 @@ export function StoryPanel({ story }: { story: NewsStory }) {
             </span>
           </div>
 
-          {/* Author Badge with Seniority */}
+          {/* Author Badge */}
           <div className="flex items-center gap-2">
             <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-mono tracking-wider uppercase rounded border ${author.badgeBorder} ${author.badgeBg} ${author.badgeText}`}>
               <UserCheck className="h-3 w-3" />
-              {author.name} · {author.role} ({author.yearsExperience} yrs exp)
+              {author.name} · {author.role}
             </span>
           </div>
         </div>
@@ -139,16 +139,12 @@ export function StoryPanel({ story }: { story: NewsStory }) {
             <div className="flex items-center gap-2">
               <Award className="h-4 w-4 text-amber-400" />
               <span className="text-xs font-mono font-semibold uppercase tracking-wider text-amber-300">
-                Author Market Ripple Projection // {author.name}
+                Market Ripple Projection // {author.name}
               </span>
             </div>
-            <div className="flex items-center gap-3 text-[10px] font-mono">
-              <span className="text-slate-400">Seniority: <strong className="text-slate-200">{author.yearsExperience} Yrs Lead Reporter</strong></span>
-              <span className="text-slate-600">·</span>
-              <span className="text-amber-400">Call Accuracy: <strong className="text-amber-300">{prediction.accuracyRating}</strong></span>
-              <span className="text-slate-600">·</span>
-              <span className="text-slate-400">Score: <strong className="text-slate-200">{prediction.historicalAccuracyScore}</strong></span>
-            </div>
+            <span className="text-[10px] font-mono text-slate-400">
+              {author.role}
+            </span>
           </div>
 
           <p className="mt-3 text-xs leading-relaxed text-slate-400">
