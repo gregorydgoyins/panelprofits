@@ -89,7 +89,7 @@ export function NewsBriefing({
                     {ripple.direction === "up" && <TrendingUp className="h-3 w-3" />}
                     {ripple.direction === "down" && <TrendingDown className="h-3 w-3" />}
                     {ripple.direction === "flat" && <Minus className="h-3 w-3" />}
-                    {ripple.percentageDelta} ({ripple.magnitude})
+                    QUALITATIVE PROJECTED IMPACT ({ripple.magnitude.toUpperCase()})
                   </span>
                 </div>
                 <p className="mt-1 text-xs font-medium text-slate-200">{ripple.assetName}</p>

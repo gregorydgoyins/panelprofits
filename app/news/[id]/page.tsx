@@ -29,11 +29,13 @@ export default async function NewsStoryPage({ params }: { params: Promise<{ id: 
       </Link>
       <article className="mt-6 overflow-hidden border border-amber-300/90 bg-[#0b0f15] shadow-[0_0_38px_rgba(251,191,36,0.26)]">
         {hasEditorialImage && (
-          <img
-            src={story.imageUrl!}
-            alt={`${story.source} editorial image`}
-            className="max-h-[420px] w-full object-cover"
-          />
+          <div className="border-b border-slate-800 bg-[#07090F] p-4 sm:p-6 flex justify-center">
+            <img
+              src={story.imageUrl!}
+              alt={`${story.source} editorial artwork`}
+              className="max-h-[380px] w-auto max-w-full rounded object-contain shadow-lg"
+            />
+          </div>
         )}
         {!hasEditorialImage && hasPublisherMark && (
           <div className="flex min-h-40 items-center gap-5 border-b border-amber-900/50 bg-[#121722] px-6 py-8 sm:px-10">

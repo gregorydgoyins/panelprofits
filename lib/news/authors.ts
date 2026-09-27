@@ -375,21 +375,21 @@ export function generateAuthorMarketPrediction(
       assetName: `${primaryEntity.term} Assets / Related Key Basket`,
       direction: accuracyRating === "Speculative Miss (Way Off)" ? "down" : "up",
       magnitude: magnitude1,
-      percentageDelta: accuracyRating === "Speculative Miss (Way Off)" ? "-4.2%" : (magnitude1 === "sharp" ? "+18.5%" : "+4.8%"),
+      percentageDelta: "QUALITATIVE ANALYSIS",
       rationale: accuracyRating === "Spot-On (High Accuracy)"
-        ? `Direct catalyst in this report is sparking strong buy orders for ${primaryEntity.term} key issues.`
+        ? `Direct catalyst in this report is expected to drive demand for ${primaryEntity.term} key issues.`
         : accuracyRating === "Debatable (Mixed Signals)"
-        ? `Market is split on whether the ${primaryEntity.term} catalyst translates to sustained secondary momentum.`
-        : `Initial rally in ${primaryEntity.term} is failing to hold as secondary sellers immediately supply inventory.`,
+        ? `Market sentiment is split on whether the ${primaryEntity.term} catalyst translates to sustained interest.`
+        : `Initial interest in ${primaryEntity.term} may face resistance as secondary market supply absorbs demand.`,
     },
     {
       ticker: secondaryEntity.ticker || "$KEY",
       assetName: `${secondaryEntity.term} Secondary Slabs & Raw Proxies`,
       direction: (randVal % 2 === 0) ? "flat" : (accuracyRating === "Speculative Miss (Way Off)" ? "up" : "down"),
       magnitude: magnitude2,
-      percentageDelta: magnitude2 === "sharp" ? "+12.1%" : (randVal % 2 === 0 ? "0.0%" : "-2.5%"),
+      percentageDelta: "QUALITATIVE ANALYSIS",
       rationale: (randVal % 2 === 0)
-        ? `Collateral demand is flatlining while market liquidity rotates to primary news headline assets.`
+        ? `Collateral demand remains stable as attention stays focused on primary news headline assets.`
         : `Rippling effect across adjacent ${secondaryEntity.term} issues as speculative attention shifts.`,
     },
   ];

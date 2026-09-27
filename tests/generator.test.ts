@@ -16,7 +16,7 @@ describe("Panel Profits Original Article Generation Engine", () => {
     expect(generated.headline).toBe("The Fantastic Four: First Foes – Dragon Man #1");
     expect(generated.deck).toContain("Dragon Man");
     expect(generated.paragraphs.length).toBeGreaterThanOrEqual(4);
-    expect(generated.paragraphs[0]).toContain("Official industry reporting confirms");
+    expect(generated.paragraphs[0]).toMatch(/(Media production reports|Industry publishing distributions|Crowdfunding platform trackers|Creator press updates|Distribution announcements|First appearance tracking data|Official market distributions) from AIPT confirm/);
     expect(generated.paragraphs.join("\n\n").length).toBeGreaterThan(400);
   });
 
