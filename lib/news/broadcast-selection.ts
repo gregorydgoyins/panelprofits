@@ -28,9 +28,8 @@ export function evaluateStoryVideoActivation(
   }
   const randVal = Math.abs(seed) % 100;
 
-  // High-energy stories have 75% video probability; other stories have 35% probability.
-  // This guarantees frequent video triggers without following a strict pattern.
-  const isVideoActive = isHighEnergy ? randVal < 75 : randVal < 35;
+  // Every story page features an active broadcast video presenter floor report
+  const isVideoActive = true;
 
   // Route presenter: Lead Anchor Alex Morgan gets top priority on Breaking / Record stories
   let presenter: PresenterAvatar;
