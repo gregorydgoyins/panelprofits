@@ -53,6 +53,7 @@ export default async function NewsStoryPage({ params }: { params: Promise<{ id: 
           </div>
           <h1 className="mt-4 text-2xl font-semibold leading-tight text-slate-100 sm:text-4xl">{story.headline}</h1>
           <NewsBriefing
+            id={story.id}
             headline={story.headline}
             summary={story.summary}
             source={story.source}
