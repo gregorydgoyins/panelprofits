@@ -362,7 +362,7 @@ export function generateAuthorMarketPrediction(
   }
 
   const primaryEntity = matchedEntities[0] || { term: "Market Basket", ticker: "$BASKET", type: "market-concept" as const };
-  const secondaryEntity = matchedEntities[1] || { term: "Key Issue Floor", ticker: "REF:KEY", type: "grading" as const };
+  const secondaryEntity = matchedEntities[1] || { term: "Key Issue Floor", ticker: "$KEY", type: "grading" as const };
 
   // Determine magnitude (slight or sharp/great movement) based on headline energy
   const isHighEnergy = /first|debut|breakout|record|death|return|villain|movie|trailer|option/i.test(headline);
@@ -383,7 +383,7 @@ export function generateAuthorMarketPrediction(
         : `Initial rally in ${primaryEntity.term} is failing to hold as secondary sellers immediately supply inventory.`,
     },
     {
-      ticker: secondaryEntity.ticker || "REF:KEY",
+      ticker: secondaryEntity.ticker || "$KEY",
       assetName: `${secondaryEntity.term} Secondary Slabs & Raw Proxies`,
       direction: (randVal % 2 === 0) ? "flat" : (accuracyRating === "Speculative Miss (Way Off)" ? "up" : "down"),
       magnitude: magnitude2,
