@@ -1,7 +1,9 @@
 "use client";
 
 import * as React from "react";
+import { Video } from "lucide-react";
 import { getSourceTicker } from "@/lib/news/sourceTickerMap";
+import { evaluateStoryVideoActivation } from "@/lib/news/broadcast-selection";
 import type { NewsStory } from "@/lib/news/feed";
 
 const SOURCE_COLORS: Record<string, string> = {
@@ -62,17 +64,27 @@ export function TopTicker({ stories, activeId, onSelect }: TopTickerProps) {
         {stories.slice(0, 24).map((story) => {
           const isActive = story.id === activeId;
           const accent = getSourceAccent(story.source);
+          const videoDecision = evaluateStoryVideoActivation(story.id, story.source, story.headline, story.summary);
+
           return (
             <button
               key={story.id}
               onClick={() => onSelect(story.id)}
-              className={`group flex shrink-0 items-center gap-2 border px-2.5 py-1 text-left transition-all ${
+              className={`group flex shrink-0 items-center gap-2 border px-2.5 py-1 text-left transition-all rounded ${
                 isActive
                   ? "border-amber-400/90 bg-[#141824] shadow-[0_0_16px_rgba(251,191,36,0.2)]"
+                  : videoDecision.isVideoActive
+                  ? "border-purple-500/60 bg-[#0F0B1A] hover:border-purple-400 hover:bg-[#150F26]"
                   : "border-slate-800/80 bg-[#0B0E17] hover:border-slate-700 hover:bg-[#101420]"
               }`}
             >
-              <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: accent }} />
+              {videoDecision.isVideoActive ? (
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[8px] font-mono tracking-widest uppercase rounded bg-purple-950/80 text-purple-300 border border-purple-500/50 shrink-0">
+                  <Video className="h-2.5 w-2.5 text-purple-400 animate-pulse" /> VIDEO
+                </span>
+              ) : (
+                <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: accent }} />
+              )}
               <span className="max-w-[210px] truncate text-xs text-slate-200 group-hover:text-amber-100 font-medium">
                 {story.headline}
               </span>
