@@ -47,11 +47,14 @@ export function runArticleAuditorPass(paragraphs: string[]): {
            .replace(/What do you think[\s\S]*?\?/gi, "");
     }
 
-    // Check for raw markdown or raw URL leaks
-    if (/\[[^\]]+\]\([^)]+\)/.test(p) || /\(REF:[^)]+\)/i.test(p)) {
+    // Check and purge any leftover raw markdown, REF tags, or raw brackets
+    if (/\[[^\]]+\]\([^)]+\)/.test(p) || /\(REF:[^)]+\)/i.test(p) || /\[[^\]]+\]/.test(p)) {
       hasUncleanMarkdownOrLinks = true;
-      violations.push(`P${i + 1}: Found raw markdown link or REF tag`);
-      p = p.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").replace(/\(REF:[^)]+\)/gi, "");
+      violations.push(`P${i + 1}: Purged raw markdown link, REF tag, or brackets`);
+      p = p
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // [text](url) -> text
+        .replace(/\(REF:[^)]+\)/gi, "")          // (REF:TAG) -> empty
+        .replace(/\[([^\]]+)\]/g, "$1");         // [text] -> text
     }
 
     auditedParagraphs.push(p.trim());
