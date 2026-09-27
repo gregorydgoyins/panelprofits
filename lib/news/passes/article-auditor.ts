@@ -58,7 +58,7 @@ export function runArticleAuditorPass(paragraphs: string[]): {
         p = p
           .replace(/\[([^\]\s(]+)\s*\([^)]*REF:[^)]*\)\]\([^)]+\)/gi, "$1") // [CGC (REF:CGC)](url) -> CGC
           .replace(/\[([^\]]+)\s*\([^)]*REF:[^)]*\)\]/gi, "$1")            // [CGC (REF:CGC)] -> CGC
-          .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")                          // [text](url) -> text
+          .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+|\/[^)]+)\)/g, '<a href="$2" class="text-cyan-200 font-medium underline decoration-cyan-400/70 underline-offset-4 hover:text-cyan-100 transition-colors">$1</a>') // [text](url) -> HTML <a> tag
           .replace(/\(REF:[^)]+\)/gi, "")                                   // (REF:TAG) -> empty
           .replace(/\[([^\]]+)\]/g, "$1");                                  // [text] -> text
       }
