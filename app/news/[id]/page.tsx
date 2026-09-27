@@ -58,6 +58,16 @@ export default async function NewsStoryPage({ params }: { params: Promise<{ id: 
           </div>
           <h1 className="mt-4 text-2xl font-semibold leading-tight text-slate-100 sm:text-4xl">{story.headline}</h1>
           
+          {videoDecision.isVideoActive && (
+            <div className="mt-8 max-w-3xl">
+              <PresenterPlayer
+                story={story}
+                presenter={videoDecision.presenter}
+                categoryTag={videoDecision.storyCategoryTag}
+              />
+            </div>
+          )}
+
           <div className="mt-8">
             <NewsBriefing
               id={story.id}

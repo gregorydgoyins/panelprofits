@@ -26,10 +26,9 @@ export function evaluateStoryVideoActivation(
     seed = (seed << 5) - seed + hashStr.charCodeAt(i);
     seed |= 0;
   }
-  const randVal = Math.abs(seed) % 100;
 
-  // Suppress video player unless a verified broadcast asset exists
-  const isVideoActive = false;
+  // Active operational synchronized broadcast video presenter for news wire
+  const isVideoActive = true;
 
   // Route presenter: Lead Anchor Alex Morgan gets top priority on Breaking / Record stories
   let presenter: PresenterAvatar;
