@@ -1,10 +1,12 @@
 import crypto from "node:crypto";
+import { type EntityWikiDef, findNewsEntities } from "@/lib/news/entities";
 
 export interface AuthorPersona {
   id: string;
   name: string;
   role: string;
   beat: string;
+  yearsExperience: number; // Seniority in position
   avatarColor: string;
   badgeBg: string;
   badgeBorder: string;
@@ -18,12 +20,12 @@ export interface AuthorPersona {
 }
 
 export const AUTHOR_PERSONAS: AuthorPersona[] = [
-  // --- TIER 1: HIGH FREQUENCY WIRES (CBR, SCREENRANT, COMICBOOK, BLEEDING COOL, VARIETY, DEADLINE) ---
   {
     id: "marcus-vance",
     name: "Marcus Vance",
     role: "Senior Market Analyst",
     beat: "Key Speculation & First Appearances",
+    yearsExperience: 18,
     avatarColor: "#F59E0B",
     badgeBg: "bg-amber-950/60",
     badgeBorder: "border-amber-500/50",
@@ -40,6 +42,7 @@ export const AUTHOR_PERSONAS: AuthorPersona[] = [
     name: "Elena Rostova",
     role: "Hollywood & Rights Correspondent",
     beat: "Film/TV Optioning & Media Adaptations",
+    yearsExperience: 14,
     avatarColor: "#E11D48",
     badgeBg: "bg-rose-950/60",
     badgeBorder: "border-rose-500/50",
@@ -56,6 +59,7 @@ export const AUTHOR_PERSONAS: AuthorPersona[] = [
     name: "Devon Knight",
     role: "Modern Era Specialist",
     beat: "Indie Hits, Variant Ratios & Small Press",
+    yearsExperience: 6,
     avatarColor: "#10B981",
     badgeBg: "bg-emerald-950/60",
     badgeBorder: "border-emerald-500/50",
@@ -72,6 +76,7 @@ export const AUTHOR_PERSONAS: AuthorPersona[] = [
     name: "Sarah Chen",
     role: "Global Content Strategist",
     beat: "Manga, Anime Imports & Manhwa Trends",
+    yearsExperience: 9,
     avatarColor: "#06B6D4",
     badgeBg: "bg-cyan-950/60",
     badgeBorder: "border-cyan-500/50",
@@ -88,6 +93,7 @@ export const AUTHOR_PERSONAS: AuthorPersona[] = [
     name: "Thaddeus Pryor",
     role: "Vault & Vintage Historian",
     beat: "Golden, Silver & Bronze Age Collectibles",
+    yearsExperience: 24,
     avatarColor: "#D97706",
     badgeBg: "bg-amber-900/40",
     badgeBorder: "border-amber-600/50",
@@ -104,6 +110,7 @@ export const AUTHOR_PERSONAS: AuthorPersona[] = [
     name: "Jax Mercer",
     role: "Secondary Market Pulse",
     beat: "Auction House & eBay Realized Sales",
+    yearsExperience: 11,
     avatarColor: "#8B5CF6",
     badgeBg: "bg-purple-950/60",
     badgeBorder: "border-purple-500/50",
@@ -115,13 +122,12 @@ export const AUTHOR_PERSONAS: AuthorPersona[] = [
       marketAngle: "Auction clearing prices indicating active consolidation phase.",
     },
   },
-
-  // --- TIER 2: MEDIUM FREQUENCY WIRES (IGN, THE BEAT, AIPT, GAMESRADAR, ICV2) ---
   {
     id: "claire-holloway",
     name: "Claire Holloway",
     role: "Retail & Distribution Analyst",
     beat: "Direct Market Orders & Previews Catalog",
+    yearsExperience: 8,
     avatarColor: "#3B82F6",
     badgeBg: "bg-blue-950/60",
     badgeBorder: "border-blue-500/50",
@@ -138,6 +144,7 @@ export const AUTHOR_PERSONAS: AuthorPersona[] = [
     name: "Gideon Vane",
     role: "Publishing Executive Editor",
     beat: "Corporate Restructuring & Crossover Events",
+    yearsExperience: 19,
     avatarColor: "#64748B",
     badgeBg: "bg-slate-900/70",
     badgeBorder: "border-slate-600/50",
@@ -154,6 +161,7 @@ export const AUTHOR_PERSONAS: AuthorPersona[] = [
     name: "Zara Al-Mansoor",
     role: "Digital & Web3 Media Lead",
     beat: "Digital Comics, Webtoons & Tech Platforms",
+    yearsExperience: 4,
     avatarColor: "#EC4899",
     badgeBg: "bg-pink-950/60",
     badgeBorder: "border-pink-500/50",
@@ -170,6 +178,7 @@ export const AUTHOR_PERSONAS: AuthorPersona[] = [
     name: "Owen St. Clair",
     role: "Creator & Artist Spotter",
     beat: "Breakout Talent, Cover Art & Signings",
+    yearsExperience: 7,
     avatarColor: "#F43F5E",
     badgeBg: "bg-rose-900/40",
     badgeBorder: "border-rose-600/50",
@@ -181,13 +190,12 @@ export const AUTHOR_PERSONAS: AuthorPersona[] = [
       marketAngle: "Virgin cover variants and store exclusives showing distinct collector appreciation.",
     },
   },
-
-  // --- TIER 3: SPECIALIZED / LONG-TAIL WIRES ---
   {
     id: "remington-cole",
     name: "Remington Cole",
     role: "Grade & Condition Auditor",
     beat: "CGC/CBCS 9.8 Census & Restoration",
+    yearsExperience: 15,
     avatarColor: "#14B8A6",
     badgeBg: "bg-teal-950/60",
     badgeBorder: "border-teal-500/50",
@@ -204,6 +212,7 @@ export const AUTHOR_PERSONAS: AuthorPersona[] = [
     name: "Beatrice Monroe",
     role: "Macro Financial Analyst",
     beat: "Media Conglomerates, Mergers & Earnings",
+    yearsExperience: 22,
     avatarColor: "#A855F7",
     badgeBg: "bg-purple-900/40",
     badgeBorder: "border-purple-600/50",
@@ -220,6 +229,7 @@ export const AUTHOR_PERSONAS: AuthorPersona[] = [
     name: "Kaelen Voss",
     role: "Niche Speculation Strategist",
     beat: "Cameo Debuts, Team Origins & Retcons",
+    yearsExperience: 5,
     avatarColor: "#EAB308",
     badgeBg: "bg-yellow-950/60",
     badgeBorder: "border-yellow-500/50",
@@ -236,6 +246,7 @@ export const AUTHOR_PERSONAS: AuthorPersona[] = [
     name: "Yuki Tanaka",
     role: "Collector Community Pulse",
     beat: "Social Media Hype & Forum Sentiment",
+    yearsExperience: 3,
     avatarColor: "#0284C7",
     badgeBg: "bg-sky-950/60",
     badgeBorder: "border-sky-500/50",
@@ -252,6 +263,7 @@ export const AUTHOR_PERSONAS: AuthorPersona[] = [
     name: "Sterling Hayes",
     role: "Chief Narrative Officer",
     beat: "Executive Wire Synthesis & Market Overview",
+    yearsExperience: 27,
     avatarColor: "#F97316",
     badgeBg: "bg-orange-950/60",
     badgeBorder: "border-orange-500/50",
@@ -265,54 +277,127 @@ export const AUTHOR_PERSONAS: AuthorPersona[] = [
   },
 ];
 
-/**
-  Weighted Persona Allocation:
-  Routes high-frequency publisher sources (CBR, ScreenRant, Bleeding Cool, Variety) to Tier 1 authors,
-  and distributes other sources across specialized author personas deterministically.
- */
 export function selectAuthorForStory(source: string, storyId: string): AuthorPersona {
   const normSource = source.toUpperCase();
+  if (normSource.includes("CBR") || normSource.includes("BLEEDING COOL")) return AUTHOR_PERSONAS[0];
+  if (normSource.includes("VARIETY") || normSource.includes("DEADLINE") || normSource.includes("THR")) return AUTHOR_PERSONAS[1];
+  if (normSource.includes("SCREENRANT") || normSource.includes("GAMESRADAR")) return AUTHOR_PERSONAS[2];
+  if (normSource.includes("ANN") || normSource.includes("CRUNCHYROLL") || normSource.includes("ANIME")) return AUTHOR_PERSONAS[3];
+  if (normSource.includes("COMICBOOK INVEST") || normSource.includes("FIRSTCOMICS")) return AUTHOR_PERSONAS[4];
+  if (normSource.includes("COMICBOOK") || normSource.includes("COMIC VINE")) return AUTHOR_PERSONAS[5];
+  if (normSource.includes("ICV2") || normSource.includes("AIPT")) return AUTHOR_PERSONAS[6];
+  if (normSource.includes("BEAT") || normSource.includes("JOURNAL")) return AUTHOR_PERSONAS[7];
+  if (normSource.includes("POLYGON") || normSource.includes("IGN")) return AUTHOR_PERSONAS[8];
+  if (normSource.includes("BROKEN FRONTIER") || normSource.includes("COMICSXF")) return AUTHOR_PERSONAS[9];
 
-  // Tier 1 High-Frequency Sources -> Marcus, Elena, Devon, Sarah, Thaddeus, Jax
-  if (normSource.includes("CBR") || normSource.includes("BLEEDING COOL")) {
-    return AUTHOR_PERSONAS[0]; // Marcus Vance
-  }
-  if (normSource.includes("VARIETY") || normSource.includes("DEADLINE") || normSource.includes("THR")) {
-    return AUTHOR_PERSONAS[1]; // Elena Rostova
-  }
-  if (normSource.includes("SCREENRANT") || normSource.includes("GAMESRADAR")) {
-    return AUTHOR_PERSONAS[2]; // Devon Knight
-  }
-  if (normSource.includes("ANN") || normSource.includes("CRUNCHYROLL") || normSource.includes("ANIME")) {
-    return AUTHOR_PERSONAS[3]; // Sarah Chen
-  }
-  if (normSource.includes("COMICBOOK INVEST") || normSource.includes("FIRSTCOMICS")) {
-    return AUTHOR_PERSONAS[4]; // Thaddeus Pryor
-  }
-  if (normSource.includes("COMICBOOK") || normSource.includes("COMIC VINE")) {
-    return AUTHOR_PERSONAS[5]; // Jax Mercer
-  }
-
-  // Tier 2 Medium-Frequency Sources -> Claire, Gideon, Zara, Owen
-  if (normSource.includes("ICV2") || normSource.includes("AIPT")) {
-    return AUTHOR_PERSONAS[6]; // Claire Holloway
-  }
-  if (normSource.includes("BEAT") || normSource.includes("JOURNAL")) {
-    return AUTHOR_PERSONAS[7]; // Gideon Vane
-  }
-  if (normSource.includes("POLYGON") || normSource.includes("IGN")) {
-    return AUTHOR_PERSONAS[8]; // Zara Al-Mansoor
-  }
-  if (normSource.includes("BROKEN FRONTIER") || normSource.includes("COMICSXF")) {
-    return AUTHOR_PERSONAS[9]; // Owen St. Clair
-  }
-
-  // Fallback / General Allocation: Hash story ID to pick deterministically from all 15
   let hash = 0;
   for (let i = 0; i < storyId.length; i++) {
     hash = (hash << 5) - hash + storyId.charCodeAt(i);
     hash |= 0;
   }
-  const index = Math.abs(hash) % AUTHOR_PERSONAS.length;
-  return AUTHOR_PERSONAS[index];
+  return AUTHOR_PERSONAS[Math.abs(hash) % AUTHOR_PERSONAS.length];
+}
+
+export interface MarketAssetRipple {
+  ticker: string;
+  assetName: string;
+  direction: "up" | "down" | "flat";
+  magnitude: "slight" | "moderate" | "sharp";
+  percentageDelta: string;
+  rationale: string;
+}
+
+export interface AuthorMarketPrediction {
+  author: AuthorPersona;
+  accuracyRating: "Spot-On (High Accuracy)" | "Debatable (Mixed Signals)" | "Speculative Miss (Way Off)";
+  historicalAccuracyScore: string;
+  ripples: MarketAssetRipple[];
+}
+
+/**
+ * Generates an Author's Market Prediction & Asset Ripple Projection.
+ * Uses author seniority + story ID hash to determine randomized accuracy trait,
+ * and projects slight/great movements across related asset tickers.
+ */
+export function generateAuthorMarketPrediction(
+  storyId: string,
+  source: string,
+  headline: string,
+  summary: string | null
+): AuthorMarketPrediction {
+  const author = selectAuthorForStory(source, storyId);
+  const matchedEntities = findNewsEntities(headline, summary);
+
+  // Deterministic seed from story ID + author ID
+  let seed = 0;
+  const hashStr = `${storyId}:${author.id}:${headline}`;
+  for (let i = 0; i < hashStr.length; i++) {
+    seed = (seed << 5) - seed + hashStr.charCodeAt(i);
+    seed |= 0;
+  }
+  const randVal = Math.abs(seed) % 100;
+
+  // Seniority weights baseline accuracy, but randomness ensures anyone can hit or miss
+  // Seniority 20+ yrs: 55% Spot-On, 30% Debatable, 15% Miss
+  // Seniority 10-19 yrs: 45% Spot-On, 35% Debatable, 20% Miss
+  // Seniority < 10 yrs: 35% Spot-On, 40% Debatable, 25% Miss
+  let accuracyRating: "Spot-On (High Accuracy)" | "Debatable (Mixed Signals)" | "Speculative Miss (Way Off)";
+  let accuracyScoreNum = 0;
+
+  if (author.yearsExperience >= 20) {
+    if (randVal < 55) accuracyRating = "Spot-On (High Accuracy)";
+    else if (randVal < 85) accuracyRating = "Debatable (Mixed Signals)";
+    else accuracyRating = "Speculative Miss (Way Off)";
+    accuracyScoreNum = 78 + (randVal % 18);
+  } else if (author.yearsExperience >= 10) {
+    if (randVal < 45) accuracyRating = "Spot-On (High Accuracy)";
+    else if (randVal < 80) accuracyRating = "Debatable (Mixed Signals)";
+    else accuracyRating = "Speculative Miss (Way Off)";
+    accuracyScoreNum = 65 + (randVal % 22);
+  } else {
+    if (randVal < 35) accuracyRating = "Spot-On (High Accuracy)";
+    else if (randVal < 75) accuracyRating = "Debatable (Mixed Signals)";
+    else accuracyRating = "Speculative Miss (Way Off)";
+    accuracyScoreNum = 52 + (randVal % 28);
+  }
+
+  const primaryEntity = matchedEntities[0] || { term: "Market Basket", ticker: "$BASKET", type: "market-concept" as const };
+  const secondaryEntity = matchedEntities[1] || { term: "Key Issue Floor", ticker: "REF:KEY", type: "grading" as const };
+
+  // Determine magnitude (slight or sharp/great movement) based on headline energy
+  const isHighEnergy = /first|debut|breakout|record|death|return|villain|movie|trailer|option/i.test(headline);
+  const magnitude1: "slight" | "moderate" | "sharp" = isHighEnergy ? ((randVal % 2 === 0) ? "sharp" : "moderate") : "slight";
+  const magnitude2: "slight" | "moderate" | "sharp" = (randVal % 3 === 0) ? "sharp" : "slight";
+
+  const ripples: MarketAssetRipple[] = [
+    {
+      ticker: primaryEntity.ticker || "$ASSET",
+      assetName: `${primaryEntity.term} Assets / Related Key Basket`,
+      direction: accuracyRating === "Speculative Miss (Way Off)" ? "down" : "up",
+      magnitude: magnitude1,
+      percentageDelta: accuracyRating === "Speculative Miss (Way Off)" ? "-4.2%" : (magnitude1 === "sharp" ? "+18.5%" : "+4.8%"),
+      rationale: accuracyRating === "Spot-On (High Accuracy)"
+        ? `Spot-On Call: Direct catalyst in this report is sparking strong buy orders for ${primaryEntity.term} key issues.`
+        : accuracyRating === "Debatable (Mixed Signals)"
+        ? `Mixed Signals: Market split on whether ${primaryEntity.term} catalyst translates to sustained secondary momentum.`
+        : `Speculative Miss: Initial rally in ${primaryEntity.term} failed as secondary sellers immediately dumped inventory.`,
+    },
+    {
+      ticker: secondaryEntity.ticker || "REF:KEY",
+      assetName: `${secondaryEntity.term} Secondary Slabs & Raw Proxies`,
+      direction: (randVal % 2 === 0) ? "flat" : (accuracyRating === "Speculative Miss (Way Off)" ? "up" : "down"),
+      magnitude: magnitude2,
+      percentageDelta: magnitude2 === "sharp" ? "+12.1%" : (randVal % 2 === 0 ? "0.0%" : "-2.5%"),
+      rationale: (randVal % 2 === 0)
+        ? `Butterfly Effect: Collateral demand flatlining while liquidity rotates to primary news headline assets.`
+        : `Rippling effect across adjacent ${secondaryEntity.term} issues as speculative attention spreads.`,
+    },
+  ];
+
+  return {
+    author,
+    accuracyRating,
+    historicalAccuracyScore: `${accuracyScoreNum}%`,
+    ripples,
+  };
 }

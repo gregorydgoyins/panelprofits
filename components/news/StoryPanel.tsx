@@ -2,11 +2,11 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowUpRight, UserCheck, ShieldAlert, Sparkles } from "lucide-react";
+import { ArrowUpRight, UserCheck, ShieldAlert, TrendingUp, TrendingDown, Minus, Award } from "lucide-react";
 import { classifyStoryPriority } from "@/lib/news/broadcast-script";
 import { findNewsEntities } from "@/lib/news/entities";
 import { LinkedBriefing } from "@/components/news/linked-briefing";
-import { selectAuthorForStory } from "@/lib/news/authors";
+import { selectAuthorForStory, generateAuthorMarketPrediction } from "@/lib/news/authors";
 import type { NewsStory } from "@/lib/news/feed";
 
 function relativeTime(d: string | null) {
@@ -48,6 +48,7 @@ export function StoryPanel({ story }: { story: NewsStory }) {
   const desc = story.summary || "";
   const entities = findNewsEntities(story.headline, story.summary);
   const author = selectAuthorForStory(story.source, story.id);
+  const prediction = generateAuthorMarketPrediction(story.id, story.source, story.headline, story.summary);
 
   const sentences = desc.split(/(?<=[.!?])\s+/).map((s) => s.trim()).filter(Boolean);
   const paragraphs = sentences.reduce<string[]>((groups, sentence, index) => {
@@ -59,12 +60,12 @@ export function StoryPanel({ story }: { story: NewsStory }) {
   const analysisText = `${author.writingStyle.introStyle} ${author.writingStyle.analysisFocus}`;
   const implicationsText = `${author.writingStyle.implicationAngle} ${
     entities.length
-      ? `Collectors observing ${entities.slice(0, 2).join(" and ")} should closely track FOC allocations.`
+      ? `Collectors observing ${entities.slice(0, 2).map((e) => e.term).join(" and ")} should closely track FOC allocations.`
       : "Broad positioning adjustments expected prior to official press confirmation."
   }`;
   const marketText = `${author.writingStyle.marketAngle} ${
     entities.length
-      ? `Watchlists tied to ${entities.slice(0, 3).join(", ")} will reflect near-term pricing sentiment.`
+      ? `Watchlists tied to ${entities.slice(0, 3).map((e) => e.term).join(", ")} will reflect near-term pricing sentiment.`
       : "Catalog items in this tier are entering a high-interest observation window."
   }`;
 
@@ -85,11 +86,11 @@ export function StoryPanel({ story }: { story: NewsStory }) {
             </span>
           </div>
 
-          {/* Author Badge */}
+          {/* Author Badge with Seniority */}
           <div className="flex items-center gap-2">
             <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-mono tracking-wider uppercase rounded border ${author.badgeBorder} ${author.badgeBg} ${author.badgeText}`}>
               <UserCheck className="h-3 w-3" />
-              {author.name} · {author.role}
+              {author.name} · {author.role} ({author.yearsExperience} yrs exp)
             </span>
           </div>
         </div>
@@ -110,7 +111,7 @@ export function StoryPanel({ story }: { story: NewsStory }) {
           {story.headline}
         </h1>
 
-        {/* Editorial Body Text */}
+        {/* Editorial Body Text - Authentic Translation */}
         {paragraphs.length > 0 ? (
           <div className="mt-5 space-y-4 text-sm sm:text-base leading-7 text-slate-300">
             {paragraphs.map((p, i) => (
@@ -125,11 +126,58 @@ export function StoryPanel({ story }: { story: NewsStory }) {
           </p>
         )}
 
-        {/* 3-Column Narrative Intelligence Grid with Persona Voice */}
+        {/* 3-Column Narrative Intelligence Grid */}
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           <Block label="Analyst Breakdown" title={author.beat} text={analysisText} authorName={author.name} />
           <Block label="Implications" title="What Changes Next" text={implicationsText} authorName={author.name} />
           <Block label="Market Impact" title="Asset Positioning" text={marketText} authorName={author.name} />
+        </div>
+
+        {/* DEDICATED MARKET & ASSET RIPPLE PROJECTION SECTION (AT THE END) */}
+        <div className="mt-8 rounded border border-amber-500/30 bg-[#080B12] p-5">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-800/80 pb-3">
+            <div className="flex items-center gap-2">
+              <Award className="h-4 w-4 text-amber-400" />
+              <span className="text-xs font-mono font-semibold uppercase tracking-wider text-amber-300">
+                Author Market Ripple Projection // {author.name}
+              </span>
+            </div>
+            <div className="flex items-center gap-3 text-[10px] font-mono">
+              <span className="text-slate-400">Seniority: <strong className="text-slate-200">{author.yearsExperience} Yrs Lead Reporter</strong></span>
+              <span className="text-slate-600">·</span>
+              <span className="text-amber-400">Call Accuracy: <strong className="text-amber-300">{prediction.accuracyRating}</strong></span>
+              <span className="text-slate-600">·</span>
+              <span className="text-slate-400">Score: <strong className="text-slate-200">{prediction.historicalAccuracyScore}</strong></span>
+            </div>
+          </div>
+
+          <p className="mt-3 text-xs leading-relaxed text-slate-400">
+            Below is {author.name}&apos;s dedicated market assessment predicting how this news story will ripple across related equity tickers, key issue baskets, and collectible assets:
+          </p>
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {prediction.ripples.map((ripple, idx) => (
+              <div key={idx} className="rounded border border-slate-800/80 bg-[#06070B] p-3.5 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-xs font-semibold text-amber-300">{ripple.ticker}</span>
+                    <span className={`inline-flex items-center gap-1 font-mono text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                      ripple.direction === "up" ? "bg-emerald-950/60 text-emerald-300 border border-emerald-500/40" :
+                      ripple.direction === "down" ? "bg-rose-950/60 text-rose-300 border border-rose-500/40" :
+                      "bg-slate-800/60 text-slate-300 border border-slate-600/40"
+                    }`}>
+                      {ripple.direction === "up" && <TrendingUp className="h-3 w-3" />}
+                      {ripple.direction === "down" && <TrendingDown className="h-3 w-3" />}
+                      {ripple.direction === "flat" && <Minus className="h-3 w-3" />}
+                      {ripple.percentageDelta} ({ripple.magnitude})
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs font-medium text-slate-200">{ripple.assetName}</p>
+                  <p className="mt-2 text-xs text-slate-400 leading-normal">{ripple.rationale}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* PPedia Thesaurus & Ticker Entity Tags */}
