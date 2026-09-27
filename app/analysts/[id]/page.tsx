@@ -1,23 +1,37 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Briefcase, Award, FileText } from "lucide-react";
+import { ArrowLeft, Briefcase, FileText } from "lucide-react";
 import { AUTHOR_PERSONAS } from "@/lib/news/authors";
-import { getNewsStories } from "@/lib/news/feed";
+import { getNewsStories, type NewsStory } from "@/lib/news/feed";
 
-export const dynamic = "force-dynamic";
+export function generateStaticParams() {
+  return AUTHOR_PERSONAS.map((p) => ({ id: p.id }));
+}
 
-export default async function AnalystPage({ params }: { params: Promise<{ id: string }> | { id: string } }) {
-  const resolvedParams = await params;
-  const id = resolvedParams.id;
-  const analyst = AUTHOR_PERSONAS.find((p) => p.id === id || p.name.toLowerCase().replace(/[^a-z0-9]+/g, "-") === id);
+export default async function AnalystPage(props: {
+  params: Promise<{ id: string | string[] }> | { id: string | string[] };
+}) {
+  const resolvedParams = await props.params;
+  const rawId = Array.isArray(resolvedParams?.id) ? resolvedParams.id[0] : resolvedParams?.id;
+  const id = typeof rawId === "string" ? decodeURIComponent(rawId).toLowerCase().trim() : "";
+
+  const analyst = AUTHOR_PERSONAS.find(
+    (p) => p.id.toLowerCase() === id || p.name.toLowerCase().replace(/[^a-z0-9]+/g, "-") === id
+  );
 
   if (!analyst) {
     notFound();
   }
 
-  // Get recent stories by this analyst
-  const allStories = await getNewsStories(50);
-  const analystStories = allStories.filter((s) => s.author && s.author.toLowerCase() === analyst.name.toLowerCase());
+  let analystStories: NewsStory[] = [];
+  try {
+    const allStories = await getNewsStories(50);
+    analystStories = allStories.filter(
+      (s) => s.author && s.author.toLowerCase() === analyst.name.toLowerCase()
+    );
+  } catch {
+    analystStories = [];
+  }
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
