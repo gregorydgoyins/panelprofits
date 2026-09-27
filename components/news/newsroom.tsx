@@ -80,8 +80,8 @@ export function Newsroom({ stories }: NewsroomProps) {
           <input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search wire or ticker..."
-            className="w-full bg-transparent outline-none placeholder:text-slate-600 text-slate-200 text-xs"
+            aria-label="Search wire or ticker..."
+            className="w-full bg-transparent outline-none text-slate-200 text-xs"
           />
         </label>
       </div>
