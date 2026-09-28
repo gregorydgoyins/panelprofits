@@ -90,17 +90,17 @@ export function AuthenticatedSnapshot({
       {/* Middle Row: Collection & Watchlist Snapshots */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left: Collection Financial Summary */}
-        <div className="lg:col-span-7 rounded-xl border-2 border-orange-500/60 bg-[#0B0D14] p-6 shadow-xl transition-all portfolio-rimlight-hover space-y-5">
+        <div className="lg:col-span-7 rounded-xl border border-cyan-500/40 bg-[#0B0D14] p-6 shadow-xl transition-all portfolio-rimlight-hover space-y-5">
           <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
             <div className="flex items-center gap-2">
-              <Layers className="h-4 w-4 text-orange-400" />
+              <Layers className="h-4 w-4 text-cyan-400" />
               <h3 className="text-sm uppercase text-slate-100 tracking-wider">
                 COLLECTION FINANCIAL SNAPSHOT
               </h3>
             </div>
             <Link
               href="/collection"
-              className="text-xs text-orange-400 hover:text-orange-300 transition-colors flex items-center gap-1"
+              className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-1"
             >
               <span>MANAGE HOLDINGS</span>
               <ArrowRight className="h-3 w-3" />
@@ -230,17 +230,17 @@ export function AuthenticatedSnapshot({
 
       {/* Bottom Row: Recent Holdings Activity */}
       {recentItems.length > 0 && (
-        <div className="rounded-xl border-2 border-orange-500/60 bg-[#0B0D14] p-6 shadow-xl transition-all portfolio-rimlight-hover space-y-4">
+        <div className="rounded-xl border border-cyan-500/40 bg-[#0B0D14] p-6 shadow-xl transition-all portfolio-rimlight-hover space-y-4">
           <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
             <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-orange-400" />
+              <Clock className="h-4 w-4 text-cyan-400" />
               <h3 className="text-sm uppercase text-slate-100 tracking-wider">
                 RECENT COLLECTION ACTIVITY
               </h3>
             </div>
             <Link
               href="/collection"
-              className="text-xs text-orange-400 hover:text-orange-300 transition-colors flex items-center gap-1"
+              className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-1"
             >
               <span>VIEW FULL COLLECTION</span>
               <ArrowRight className="h-3 w-3" />
@@ -272,7 +272,7 @@ export function AuthenticatedSnapshot({
                   <div className="flex-1 min-w-0 space-y-0.5">
                     <Link
                       href={`/comics/${comic.id}`}
-                      className="text-slate-100 hover:text-orange-300 transition-colors line-clamp-1 block text-xs"
+                      className="text-slate-100 hover:text-cyan-300 transition-colors line-clamp-1 block text-xs"
                     >
                       {comic.series} #{comic.issue_number}
                     </Link>

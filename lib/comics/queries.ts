@@ -44,7 +44,12 @@ export async function getComics(params: ComicSearchParams): Promise<ComicQueryRe
 
   if (error) {
     console.error("Error fetching comics from Supabase:", error);
-    throw new Error(`Failed to query comics catalog: ${error.message}`);
+    return {
+      comics: [],
+      nextCursor: null,
+      prevCursor: params.cursor || null,
+      hasMore: false,
+    };
   }
 
   const items: ComicRecord[] = (data as ComicRecord[]) || [];

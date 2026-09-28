@@ -135,26 +135,47 @@ export async function getFirmDossier(firmId: string) {
 }
 
 export async function getBrokers(limit = 80) {
-  const db = createAdminServerClient();
-  const { data, error } = await db.from("brokers").select("broker_id,broker_code,full_name,firm_slug,ladder_level,primary_track,specialization,is_named_rival").order("full_name").limit(limit);
-  if (error) throw error;
-  return data || [];
+  try {
+    const db = createAdminServerClient();
+    const { data, error } = await db.from("brokers").select("broker_id,broker_code,full_name,firm_slug,ladder_level,primary_track,specialization,is_named_rival").order("full_name").limit(limit);
+    if (error) {
+      console.warn("Failed to get brokers:", error.message);
+      return [];
+    }
+    return data || [];
+  } catch (err) {
+    console.warn("Unexpected error in getBrokers:", err);
+    return [];
+  }
 }
 
 export async function getLearningCatalog() {
-  const db = createCleanReadOnlyServerClient();
-  const [{ data: classes }, { data: certifications }, { data: exams }, { data: levels }] = await Promise.all([
-    db.from("learn_classes").select("*").limit(80),
-    db.from("learn_certifications").select("*").limit(80),
-    db.from("learn_exams").select("*").limit(40),
-    db.from("career_pathway_levels").select("*").order("pathway_name").order("level").limit(80),
-  ]);
-  return { classes: classes || [], certifications: certifications || [], exams: exams || [], levels: levels || [] };
+  try {
+    const db = createCleanReadOnlyServerClient();
+    const [{ data: classes }, { data: certifications }, { data: exams }, { data: levels }] = await Promise.all([
+      db.from("learn_classes").select("*").limit(80),
+      db.from("learn_certifications").select("*").limit(80),
+      db.from("learn_exams").select("*").limit(40),
+      db.from("career_pathway_levels").select("*").order("pathway_name").order("level").limit(80),
+    ]);
+    return { classes: classes || [], certifications: certifications || [], exams: exams || [], levels: levels || [] };
+  } catch (err) {
+    console.warn("Unexpected error in getLearningCatalog:", err);
+    return { classes: [], certifications: [], exams: [], levels: [] };
+  }
 }
 
 export async function getDiaryEntries(userId: string) {
-  const db = createAdminServerClient();
-  const { data, error } = await db.from("player_diary_entries").select("*").eq("user_id", userId).order("occurred_at", { ascending: false }).limit(200);
-  if (error) throw error;
-  return data || [];
+  try {
+    const db = createAdminServerClient();
+    const { data, error } = await db.from("player_diary_entries").select("*").eq("user_id", userId).order("occurred_at", { ascending: false }).limit(200);
+    if (error) {
+      console.warn("Failed to get diary entries:", error.message);
+      return [];
+    }
+    return data || [];
+  } catch (err) {
+    console.warn("Unexpected error in getDiaryEntries:", err);
+    return [];
+  }
 }

@@ -75,7 +75,7 @@ export function EditHoldingModal({ item, isOpen, onClose }: EditHoldingModalProp
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
-      <div className="relative w-full max-w-lg rounded-lg border border-orange-500/40 bg-[#0E1017] p-6 shadow-2xl collection-rimlight-hover max-h-[90vh] overflow-y-auto">
+      <div className="relative w-full max-w-lg rounded-lg border border-cyan-500/40 bg-[#0E1017] p-6 shadow-2xl collection-rimlight-hover max-h-[90vh] overflow-y-auto">
         <button
           onClick={onClose}
           className="absolute right-4 top-4 text-slate-400 hover:text-slate-200"
@@ -175,7 +175,7 @@ export function EditHoldingModal({ item, isOpen, onClose }: EditHoldingModalProp
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Signed by creator, direct edition, white pages..."
-              className="w-full rounded border border-slate-800 bg-[#12151F] p-2 text-slate-100 text-xs focus:border-orange-500 focus:outline-none"
+              className="w-full rounded border border-slate-800 bg-[#12151F] p-2 text-slate-100 text-xs focus:border-cyan-500 focus:outline-none"
             />
           </div>
 
@@ -203,7 +203,7 @@ export function EditHoldingModal({ item, isOpen, onClose }: EditHoldingModalProp
               <Button
                 type="submit"
                 disabled={loading || deleteLoading}
-                className="bg-orange-600 hover:bg-orange-500 text-white text-xs px-4 py-2"
+                className="bg-cyan-600 hover:bg-cyan-500 text-white text-xs px-4 py-2"
               >
                 {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Save Changes"}
               </Button>

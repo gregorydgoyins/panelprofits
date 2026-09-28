@@ -49,10 +49,10 @@ export function MarketUniverse({ metrics }: MarketUniverseProps) {
         {/* ComicBase Entities */}
         <div className="rounded-lg border border-slate-800 bg-[#0F121C] p-3.5 space-y-1">
           <div className="text-[10px] text-slate-400 uppercase tracking-wider flex items-center gap-1">
-            <BookOpen className="h-3 w-3 text-orange-400" />
+            <BookOpen className="h-3 w-3 text-cyan-400" />
             <span>COMICBASE</span>
           </div>
-          <div className="text-xl sm:text-2xl text-orange-300">
+          <div className="text-xl sm:text-2xl text-cyan-300">
             {metrics.comicbaseEntities}
           </div>
           <p className="text-[10px] text-slate-500">Catalog & current baseline</p>

@@ -40,56 +40,80 @@ export interface EquityConstituent {
 }
 
 async function getObservationCount(db: ReturnType<typeof createCleanReadOnlyServerClient>, indexCode: string) {
-  const { count, error } = await db
-    .from("recovered_index_observations")
-    .select("id", { count: "exact", head: true })
-    .eq("index_code", indexCode);
-  if (error) throw error;
-  return count || 0;
+  try {
+    const { count, error } = await db
+      .from("recovered_index_observations")
+      .select("id", { count: "exact", head: true })
+      .eq("index_code", indexCode);
+    if (error) {
+      console.warn(`Observation count unavailable for ${indexCode}:`, error.message);
+      return 0;
+    }
+    return count || 0;
+  } catch (err) {
+    console.warn(`Error counting observations for ${indexCode}:`, err);
+    return 0;
+  }
 }
 
 export async function getEquityContracts(): Promise<EquityContract[]> {
-  const db = createCleanReadOnlyServerClient();
-  const { data, error } = await db
-    .from("recovered_index_contracts")
-    .select("index_code,display_name,methodology_version,expected_constituent_count,price_basis,grade_basis,selection_rule,weighting_rule,rebalance_rule,calculation_frequency,historical_status,production_status,notes")
-    .order("index_code");
-  if (error) {
-    if (isMissingTableError(error)) return [];
-    throw error;
+  try {
+    const db = createCleanReadOnlyServerClient();
+    const { data, error } = await db
+      .from("recovered_index_contracts")
+      .select("index_code,display_name,methodology_version,expected_constituent_count,price_basis,grade_basis,selection_rule,weighting_rule,rebalance_rule,calculation_frequency,historical_status,production_status,notes")
+      .order("index_code");
+    if (error) {
+      if (isMissingTableError(error)) return [];
+      console.warn("Failed to fetch equity contracts:", error.message);
+      return [];
+    }
+    return Promise.all((data || []).map(async (contract) => ({
+      ...contract,
+      observation_count: await getObservationCount(db, contract.index_code),
+    })));
+  } catch (err) {
+    console.warn("Unexpected error in getEquityContracts:", err);
+    return [];
   }
-  return Promise.all((data || []).map(async (contract) => ({
-    ...contract,
-    observation_count: await getObservationCount(db, contract.index_code),
-  })));
 }
 
 export async function getEquityDetail(indexCode: string): Promise<{ contract: EquityContract; observations: EquityObservation[]; constituents: EquityConstituent[] } | null> {
-  const db = createCleanReadOnlyServerClient();
-  const { data: contract, error: contractError } = await db
-    .from("recovered_index_contracts")
-    .select("index_code,display_name,methodology_version,expected_constituent_count,price_basis,grade_basis,selection_rule,weighting_rule,rebalance_rule,calculation_frequency,historical_status,production_status,notes")
-    .eq("index_code", indexCode)
-    .maybeSingle();
-  if (contractError || !contract) return null;
-  const [{ data: observations, error: observationsError }, { data: constituents, error: constituentError }] = await Promise.all([
-    db
-    .from("recovered_index_observations")
-    .select("observation_time,index_value,previous_value,absolute_change,percent_change,valid_constituent_count,expected_constituent_count,calculation_status,methodology_version")
-    .eq("index_code", indexCode)
-    .order("observation_time", { ascending: false })
-    .limit(250),
-    db
-      .from("recovered_index_constituents")
-      .select("seat_number,historical_identity,ppcf_id,match_status,historical_source,notes")
+  try {
+    if (!indexCode) return null;
+    const db = createCleanReadOnlyServerClient();
+    const { data: contract, error: contractError } = await db
+      .from("recovered_index_contracts")
+      .select("index_code,display_name,methodology_version,expected_constituent_count,price_basis,grade_basis,selection_rule,weighting_rule,rebalance_rule,calculation_frequency,historical_status,production_status,notes")
       .eq("index_code", indexCode)
-      .order("seat_number"),
-  ]);
-  if (observationsError) throw observationsError;
-  if (constituentError) throw constituentError;
-  return {
-    contract: { ...contract, observation_count: observations?.length || 0 },
-    observations: (observations || []) as EquityObservation[],
-    constituents: (constituents || []) as EquityConstituent[],
-  };
+      .maybeSingle();
+    if (contractError || !contract) return null;
+    const [{ data: observations, error: observationsError }, { data: constituents, error: constituentError }] = await Promise.all([
+      db
+        .from("recovered_index_observations")
+        .select("observation_time,index_value,previous_value,absolute_change,percent_change,valid_constituent_count,expected_constituent_count,calculation_status,methodology_version")
+        .eq("index_code", indexCode)
+        .order("observation_time", { ascending: false })
+        .limit(250),
+      db
+        .from("recovered_index_constituents")
+        .select("seat_number,historical_identity,ppcf_id,match_status,historical_source,notes")
+        .eq("index_code", indexCode)
+        .order("seat_number"),
+    ]);
+    if (observationsError) {
+      console.warn(`Observation query warning for ${indexCode}:`, observationsError.message);
+    }
+    if (constituentError) {
+      console.warn(`Constituent query warning for ${indexCode}:`, constituentError.message);
+    }
+    return {
+      contract: { ...contract, observation_count: observations?.length || 0 },
+      observations: (observations || []) as EquityObservation[],
+      constituents: (constituents || []) as EquityConstituent[],
+    };
+  } catch (err) {
+    console.warn(`Unexpected error in getEquityDetail for ${indexCode}:`, err);
+    return null;
+  }
 }

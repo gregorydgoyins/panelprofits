@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { AlertTriangle, RotateCcw } from "lucide-react";
+import { AlertCircle, RotateCcw, Search, Home } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 export default function GlobalError({
@@ -12,32 +13,62 @@ export default function GlobalError({
   reset: () => void;
 }) {
   React.useEffect(() => {
-    console.error("Application error:", error);
+    console.error("Application query notice:", error);
   }, [error]);
 
   return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center p-6 text-center">
-      <div className="max-w-md rounded-lg border border-red-900/60 bg-red-950/30 p-6 space-y-4 shadow-xl">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-900/40 text-red-400">
-          <AlertTriangle className="h-6 w-6" />
+    <div className="flex min-h-[65vh] flex-col items-center justify-center p-6 text-center">
+      <div className="max-w-lg rounded-xl border border-slate-800 bg-[#0b0f15] p-8 space-y-6 shadow-2xl">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-slate-900 text-cyan-400 border border-slate-800">
+          <AlertCircle className="h-7 w-7" />
         </div>
-        <div className="space-y-1">
-          <h2 className="text-base text-chalk uppercase tracking-wide">
-            CATALOG QUERY ERROR
+        <div className="space-y-2">
+          <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-cyan-400">
+            System Notice · Service Availability
+          </p>
+          <h2 className="text-xl font-bold tracking-tight text-slate-100 uppercase">
+            Data Retrieval Interrupted
           </h2>
-          <p className="text-xs text-graphite-300">
-            {error.message || "An unexpected error occurred while executing the catalog query."}
+          <p className="text-xs text-slate-400 leading-relaxed max-w-sm mx-auto">
+            {error.message && !error.message.includes("digest")
+              ? error.message
+              : "The requested record or market dataset is temporarily unavailable from the upstream data service."}
           </p>
         </div>
-        <Button
-          onClick={() => reset()}
-          variant="outline"
-          size="sm"
-          className="mx-auto flex items-center gap-1.5 border-red-800 text-red-200 hover:bg-red-950"
-        >
-          <RotateCcw className="h-3.5 w-3.5" />
-          <span>RETRY OPERATION</span>
-        </Button>
+
+        <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+          <Button
+            onClick={() => reset()}
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2 border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800 hover:text-white"
+          >
+            <RotateCcw className="h-3.5 w-3.5 text-cyan-400" />
+            <span>Retry Query</span>
+          </Button>
+
+          <Link href="/comics">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2 border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800 hover:text-white"
+            >
+              <Search className="h-3.5 w-3.5 text-cyan-400" />
+              <span>Browse Catalog</span>
+            </Button>
+          </Link>
+
+          <Link href="/">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-2 text-slate-400 hover:text-slate-200"
+            >
+              <Home className="h-3.5 w-3.5" />
+              <span>Newsroom</span>
+            </Button>
+          </Link>
+        </div>
       </div>
     </div>
   );

@@ -11,7 +11,7 @@ export default async function AssetsPage() {
       <header className="border-b border-slate-800 pb-7">
         <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
           <div>
-            <p className="flex items-center gap-2 text-[10px] uppercase tracking-[0.28em] text-orange-300"><Boxes className="h-3.5 w-3.5" /> Asset universe / cover-led registry</p>
+            <p className="flex items-center gap-2 text-[10px] uppercase tracking-[0.28em] text-cyan-400"><Boxes className="h-3.5 w-3.5" /> Asset universe / cover-led registry</p>
             <h1 className="mt-3 text-4xl text-slate-100">Assets outside the equity layer</h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400">Physical comic identity, Clean cover evidence, and operational asset surfaces live here. Equities have their own desk and detail surface.</p>
           </div>

@@ -40,17 +40,17 @@ export async function Header() {
           <nav className="flex items-center gap-1 sm:gap-2 text-xs">
             <Link
               href="/comics"
-              className="flex items-center gap-1.5 rounded px-2.5 py-1.5 text-slate-300 hover:text-orange-400 hover:bg-[#161822] transition-colors border border-transparent hover:border-orange-500/40"
+              className="flex items-center gap-1.5 rounded px-2.5 py-1.5 text-slate-300 hover:text-cyan-400 hover:bg-[#161822] transition-colors border border-transparent hover:border-cyan-500/40"
             >
-              <BookOpen className="h-3.5 w-3.5 text-orange-400" />
+              <BookOpen className="h-3.5 w-3.5 text-cyan-400" />
               <span className="hidden xs:inline">CATALOG</span>
             </Link>
 
             <Link
               href="/collection"
-              className="flex items-center gap-1.5 rounded px-2.5 py-1.5 text-slate-300 hover:text-orange-400 hover:bg-[#161822] transition-colors border border-transparent hover:border-orange-500/40"
+              className="flex items-center gap-1.5 rounded px-2.5 py-1.5 text-slate-300 hover:text-cyan-400 hover:bg-[#161822] transition-colors border border-transparent hover:border-cyan-500/40"
             >
-              <Layers className="h-3.5 w-3.5 text-orange-400" />
+              <Layers className="h-3.5 w-3.5 text-cyan-400" />
               <span className="hidden xs:inline">COLLECTION</span>
             </Link>
 

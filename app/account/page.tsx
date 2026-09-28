@@ -87,11 +87,11 @@ export default async function AccountPage() {
 
       {/* Account Metrics Grid */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 mb-8">
-        <Card className="border-orange-500/40 bg-[#0E1017] shadow-xl dashboard-rimlight-hover">
+        <Card className="border-cyan-500/40 bg-[#0E1017] shadow-xl dashboard-rimlight-hover">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs uppercase tracking-widest text-slate-400 flex items-center justify-between">
               <span>Collections</span>
-              <Layers className="h-4 w-4 text-orange-400" />
+              <Layers className="h-4 w-4 text-cyan-400" />
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -101,18 +101,18 @@ export default async function AccountPage() {
             </p>
             <Link
               href="/collection"
-              className="mt-3 inline-block text-xs text-orange-400 hover:text-orange-300 transition-colors"
+              className="mt-3 inline-block text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
             >
               View holdings &rarr;
             </Link>
           </CardContent>
         </Card>
 
-        <Card className="border-orange-500/40 bg-[#0E1017] shadow-xl dashboard-rimlight-hover">
+        <Card className="border-cyan-500/40 bg-[#0E1017] shadow-xl dashboard-rimlight-hover">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs uppercase tracking-widest text-slate-400 flex items-center justify-between">
               <span>Owned Quantity</span>
-              <span className="text-[10px] text-orange-400">TOTAL BOOKS</span>
+              <span className="text-[10px] text-cyan-400">TOTAL BOOKS</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -122,7 +122,7 @@ export default async function AccountPage() {
             </p>
             <Link
               href="/collection"
-              className="mt-3 inline-block text-xs text-orange-400 hover:text-orange-300 transition-colors"
+              className="mt-3 inline-block text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
             >
               Manage portfolio &rarr;
             </Link>
@@ -153,7 +153,7 @@ export default async function AccountPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="rounded-lg border border-slate-800 bg-[#0A0C13] p-5">
           <h2 className="text-sm font-light text-slate-200 mb-2 flex items-center gap-2">
-            <Layers className="h-4 w-4 text-orange-400" />
+            <Layers className="h-4 w-4 text-cyan-400" />
             Active Collections
           </h2>
           <div className="space-y-2">

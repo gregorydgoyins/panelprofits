@@ -11,13 +11,13 @@ export function HoldingsSummaryBanner({ summary, totalItemsCount }: HoldingsSumm
   const hasGainLoss = summary.dollarGainLoss !== null;
 
   return (
-    <div className="mb-6 rounded-lg border border-orange-500/40 bg-[#0C0E15] p-4 sm:p-5 shadow-xl collection-rimlight-hover">
+    <div className="mb-6 rounded-lg border border-cyan-500/40 bg-[#0C0E15] p-4 sm:p-5 shadow-xl collection-rimlight-hover">
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {/* Total Quantity */}
         <div className="rounded border border-slate-800/80 bg-[#121520] p-3">
           <div className="flex items-center justify-between text-[11px] uppercase tracking-wider text-slate-400">
             <span>Holdings</span>
-            <Layers className="h-3.5 w-3.5 text-orange-400" />
+            <Layers className="h-3.5 w-3.5 text-cyan-400" />
           </div>
           <div className="mt-1 flex items-baseline gap-2">
             <span className="text-2xl font-light text-slate-100">{summary.totalOwnedQuantity}</span>

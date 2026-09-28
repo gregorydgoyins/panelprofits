@@ -5,16 +5,25 @@ interface PriceObservationTimelineProps {
 }
 
 export async function PriceObservationTimeline({ ppcfId }: PriceObservationTimelineProps) {
-  const db = createAdminServerClient();
-  const { data: observations, error } = await db
-    .from("ppcf_price_observations")
-    .select("source_system,source_record_id,price_field,grade_label,amount,currency,observed_at")
-    .eq("ppcf_id", ppcfId)
-    .order("observed_at", { ascending: false, nullsFirst: false })
-    .order("created_at", { ascending: false })
-    .limit(24);
+  let observations: any[] = [];
+  try {
+    const db = createAdminServerClient();
+    const { data, error } = await db
+      .from("ppcf_price_observations")
+      .select("source_system,source_record_id,price_field,grade_label,amount,currency,observed_at")
+      .eq("ppcf_id", ppcfId)
+      .order("observed_at", { ascending: false, nullsFirst: false })
+      .order("created_at", { ascending: false })
+      .limit(24);
 
-  if (error) throw new Error(`Failed to query pricing observations: ${error.message}`);
+    if (error) {
+      console.warn(`Failed to query pricing observations for ${ppcfId}:`, error.message);
+    } else {
+      observations = data || [];
+    }
+  } catch (err) {
+    console.warn(`Unexpected error querying pricing observations for ${ppcfId}:`, err);
+  }
 
   return (
     <section className="border border-slate-800 bg-[#0b0f15] p-5 sm:p-6">

@@ -28,7 +28,7 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
       </div>
 
       <div
-        className="mt-4 overflow-x-auto rounded-lg border border-slate-700 focus-visible:ring-2 focus-visible:ring-amber-400"
+        className="mt-4 overflow-x-auto rounded-lg border border-slate-700 focus-visible:ring-2 focus-visible:ring-cyan-400"
         role="region"
         aria-label="Pricing evidence ladder by source and grade tier"
         tabIndex={0}

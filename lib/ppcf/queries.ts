@@ -19,30 +19,47 @@ export interface PpcfComicRecord {
 }
 
 export async function searchPpcfComics(queryText = "", limit = 24): Promise<PpcfComicRecord[]> {
-  const db = createAdminServerClient();
-  let query = db
-    .from("ppcf_fast_wiki_read_model")
-    .select("ppcf_id,gcd_issue_id,series_name,issue_number,publication_date,barcode,isbn,issue_title,variant_name,edition_fingerprint,cover_url,cover_storage_path,cover_source,cover_verified_at,identity_status")
-    .order("ppcf_id", { ascending: true })
-    .limit(Math.min(Math.max(limit, 1), 100));
+  try {
+    const db = createAdminServerClient();
+    let query = db
+      .from("ppcf_fast_wiki_read_model")
+      .select("ppcf_id,gcd_issue_id,series_name,issue_number,publication_date,barcode,isbn,issue_title,variant_name,edition_fingerprint,cover_url,cover_storage_path,cover_source,cover_verified_at,identity_status")
+      .order("ppcf_id", { ascending: true })
+      .limit(Math.min(Math.max(limit, 1), 100));
 
-  const cleanQuery = queryText.trim().replace(/[%_,]/g, " ");
-  if (cleanQuery) query = query.or(`ppcf_id.ilike.%${cleanQuery}%,series_name.ilike.%${cleanQuery}%,issue_title.ilike.%${cleanQuery}%`);
+    const cleanQuery = queryText.trim().replace(/[%_,]/g, " ");
+    if (cleanQuery) query = query.or(`ppcf_id.ilike.%${cleanQuery}%,series_name.ilike.%${cleanQuery}%,issue_title.ilike.%${cleanQuery}%`);
 
-  const { data, error } = await query;
-  if (error) throw new Error(`Failed to query PPCF catalog: ${error.message}`);
-  return (data || []) as PpcfComicRecord[];
+    const { data, error } = await query;
+    if (error) {
+      console.warn("Failed to query PPCF catalog:", error.message);
+      return [];
+    }
+    return (data || []) as PpcfComicRecord[];
+  } catch (err) {
+    console.warn("Unexpected error querying PPCF catalog:", err);
+    return [];
+  }
 }
 
 export async function getPpcfComic(ppcfId: string): Promise<PpcfComicRecord | null> {
-  const db = createAdminServerClient();
-  const { data, error } = await db
-    .from("ppcf_fast_wiki_read_model")
-    .select("ppcf_id,gcd_issue_id,series_name,issue_number,publication_date,barcode,isbn,issue_title,variant_name,edition_fingerprint,cover_url,cover_storage_path,cover_source,cover_verified_at,identity_status")
-    .eq("ppcf_id", ppcfId)
-    .maybeSingle();
-  if (error) throw new Error(`Failed to query PPCF record: ${error.message}`);
-  return (data as PpcfComicRecord | null) || null;
+  try {
+    if (!ppcfId) return null;
+    const db = createAdminServerClient();
+    const { data, error } = await db
+      .from("ppcf_fast_wiki_read_model")
+      .select("ppcf_id,gcd_issue_id,series_name,issue_number,publication_date,barcode,isbn,issue_title,variant_name,edition_fingerprint,cover_url,cover_storage_path,cover_source,cover_verified_at,identity_status")
+      .eq("ppcf_id", ppcfId.trim())
+      .maybeSingle();
+    if (error) {
+      console.warn(`Failed to query PPCF record ${ppcfId}:`, error.message);
+      return null;
+    }
+    return (data as PpcfComicRecord | null) || null;
+  } catch (err) {
+    console.warn(`Unexpected error querying PPCF record ${ppcfId}:`, err);
+    return null;
+  }
 }
 
 export async function getPpcfCoverage() {
@@ -80,14 +97,30 @@ export type PpcfAnalyticsSnapshot = {
 };
 
 export async function getPpcfAnalyticsSnapshot(): Promise<PpcfAnalyticsSnapshot> {
-  const db = createAdminServerClient();
-  const [identities, summaries, observations] = await Promise.all([
-    db.from("ppcf_canonical_comics").select("*", { count: "exact", head: true }),
-    db.from("ppcf_price_summaries").select("ppcf_id,observation_count"),
-    db.from("ppcf_price_observations").select("ppcf_id,currency"),
-  ]);
-  const error = identities.error || summaries.error || observations.error;
-  if (error) throw new Error(`Failed to query PPCF analytics: ${error.message}`);
+  const defaultSnapshot: PpcfAnalyticsSnapshot = {
+    identityCount: 0,
+    pricedIdentityCount: 0,
+    observationCount: 0,
+    currencies: [],
+    density: [
+      { label: "1 observation", identityCount: 0 },
+      { label: "2-13 observations", identityCount: 0 },
+      { label: "14+ observations", identityCount: 0 },
+    ],
+  };
+
+  try {
+    const db = createAdminServerClient();
+    const [identities, summaries, observations] = await Promise.all([
+      db.from("ppcf_canonical_comics").select("*", { count: "exact", head: true }),
+      db.from("ppcf_price_summaries").select("ppcf_id,observation_count"),
+      db.from("ppcf_price_observations").select("ppcf_id,currency"),
+    ]);
+    const error = identities.error || summaries.error || observations.error;
+    if (error) {
+      console.warn("Failed to query PPCF analytics:", error.message);
+      return defaultSnapshot;
+    }
 
   const summaryRows = summaries.data || [];
   const observationRows = observations.data || [];
@@ -112,13 +145,17 @@ export async function getPpcfAnalyticsSnapshot(): Promise<PpcfAnalyticsSnapshot>
     else densityBuckets[2].identityCount += 1;
   }
 
-  return {
-    identityCount: identities.count || 0,
-    pricedIdentityCount: summaryRows.length,
-    observationCount: observationRows.length,
-    currencies: [...currencyMap.entries()]
-      .map(([currency, value]) => ({ currency, observationCount: value.observationCount, identityCount: value.identities.size }))
-      .sort((a, b) => b.observationCount - a.observationCount),
-    density: densityBuckets,
-  };
+    return {
+      identityCount: identities.count || 0,
+      pricedIdentityCount: summaryRows.length,
+      observationCount: observationRows.length,
+      currencies: [...currencyMap.entries()]
+        .map(([currency, value]) => ({ currency, observationCount: value.observationCount, identityCount: value.identities.size }))
+        .sort((a, b) => b.observationCount - a.observationCount),
+      density: densityBuckets,
+    };
+  } catch (err) {
+    console.warn("Unexpected error in getPpcfAnalyticsSnapshot:", err);
+    return defaultSnapshot;
+  }
 }

@@ -84,89 +84,100 @@ function resolveCensusSourceAuthority(gradingCompany: string, provider: string):
 }
 
 export async function getComicCensusDossier(series: string, issueNumber: string): Promise<ComicCensusDossier | null> {
-  const db = createCleanReadOnlyServerClient();
-  const { data: snapshots, error: snapshotError } = await db
-    .from("graded_census_snapshots")
-    .select("id,title_name,issue_number_raw,edition_name,variant_name,snapshot_timestamp,source_url,total_graded,provider_id,grading_company_id")
-    .ilike("title_name", series)
-    .eq("issue_number_raw", issueNumber)
-    .order("snapshot_timestamp", { ascending: false })
-    .limit(1);
+  try {
+    if (!series || !issueNumber) return null;
+    const db = createCleanReadOnlyServerClient();
+    const { data: snapshots, error: snapshotError } = await db
+      .from("graded_census_snapshots")
+      .select("id,title_name,issue_number_raw,edition_name,variant_name,snapshot_timestamp,source_url,total_graded,provider_id,grading_company_id")
+      .ilike("title_name", series)
+      .eq("issue_number_raw", issueNumber)
+      .order("snapshot_timestamp", { ascending: false })
+      .limit(1);
 
-  if (snapshotError || !snapshots?.length) return null;
-  const snapshot = snapshots[0];
+    if (snapshotError || !snapshots?.length) return null;
+    const snapshot = snapshots[0];
 
-  const [{ data: rows }, { data: certifications }, { data: sales }, { data: providers }, { data: gcdCheck }] = await Promise.all([
-    db.from("graded_census_rows").select("native_grade_text,grade_numeric,native_designation,count_at_grade,count_higher,page_quality,has_restoration,has_conservation,has_signature,qualifier,grading_company_id").eq("snapshot_id", snapshot.id).order("grade_numeric", { ascending: false }),
-    db.from("graded_certifications").select("certification_number,native_grade_text,grade_numeric,native_designation,edition_name,variant_name,page_quality,has_restoration,has_conservation,has_signature,pedigree_name,last_verified_at,grading_company_id").ilike("title_name", series).eq("issue_number_raw", issueNumber).order("last_verified_at", { ascending: false }).limit(80),
-    db.from("graded_sales_observations").select("sale_date,sale_price,currency,native_grade_text,grade_numeric,native_designation,venue,sale_type,grading_company_id").ilike("title_name", series).eq("issue_number_raw", issueNumber).order("sale_date", { ascending: false }).limit(80),
-    db.from("graded_providers").select("id,name").in("id", [snapshot.provider_id]),
-    db.from("comics").select("gcd_source_id").ilike("series", series).eq("issue_number", issueNumber).limit(1).maybeSingle(),
-  ]);
+    const [{ data: rows }, { data: certifications }, { data: sales }, { data: providers }, { data: gcdCheck }] = await Promise.all([
+      db.from("graded_census_rows").select("native_grade_text,grade_numeric,native_designation,count_at_grade,count_higher,page_quality,has_restoration,has_conservation,has_signature,qualifier,grading_company_id").eq("snapshot_id", snapshot.id).order("grade_numeric", { ascending: false }),
+      db.from("graded_certifications").select("certification_number,native_grade_text,grade_numeric,native_designation,edition_name,variant_name,page_quality,has_restoration,has_conservation,has_signature,pedigree_name,last_verified_at,grading_company_id").ilike("title_name", series).eq("issue_number_raw", issueNumber).order("last_verified_at", { ascending: false }).limit(80),
+      db.from("graded_sales_observations").select("sale_date,sale_price,currency,native_grade_text,grade_numeric,native_designation,venue,sale_type,grading_company_id").ilike("title_name", series).eq("issue_number_raw", issueNumber).order("sale_date", { ascending: false }).limit(80),
+      db.from("graded_providers").select("id,name").in("id", [snapshot.provider_id]),
+      db.from("comics").select("gcd_source_id").ilike("series", series).eq("issue_number", issueNumber).limit(1).maybeSingle(),
+    ]);
 
-  const censusRows = (rows || []) as RawCensusRow[];
-  const certificationRows = (certifications || []) as RawCertification[];
-  const saleRows = (sales || []) as RawSale[];
-  const companyIds = [...new Set([snapshot.grading_company_id, ...censusRows.map((row) => row.grading_company_id), ...certificationRows.map((row) => row.grading_company_id), ...saleRows.map((row) => row.grading_company_id)])];
-  const { data: companies } = await db.from("grading_companies").select("id,name").in("id", companyIds);
+    const censusRows = (rows || []) as RawCensusRow[];
+    const certificationRows = (certifications || []) as RawCertification[];
+    const saleRows = (sales || []) as RawSale[];
+    const companyIds = [...new Set([snapshot.grading_company_id, ...censusRows.map((row) => row.grading_company_id), ...certificationRows.map((row) => row.grading_company_id), ...saleRows.map((row) => row.grading_company_id)])];
+    const { data: companies } = await db.from("grading_companies").select("id,name").in("id", companyIds);
 
-  const providerName = providers?.[0]?.name || "Primary Census Wire";
-  const companyNames = new Map((companies || []).map((company) => [company.id, company.name]));
+    const providerName = providers?.[0]?.name || "Primary Census Wire";
+    const companyNames = new Map((companies || []).map((company) => [company.id, company.name]));
 
-  const gradingCompany = companyNames.get(snapshot.grading_company_id) || "CGC";
-  const sourceAuthority = resolveCensusSourceAuthority(gradingCompany, providerName);
+    const gradingCompany = companyNames.get(snapshot.grading_company_id) || "CGC";
+    const sourceAuthority = resolveCensusSourceAuthority(gradingCompany, providerName);
 
-  return {
-    snapshot: {
-      title_name: snapshot.title_name,
-      issue_number_raw: snapshot.issue_number_raw,
-      edition_name: snapshot.edition_name,
-      variant_name: snapshot.variant_name,
-      snapshot_timestamp: snapshot.snapshot_timestamp,
-      source_url: snapshot.source_url,
-      total_graded: snapshot.total_graded,
-      gradingCompany,
-      provider: providerName,
-      sourceAuthority,
-      gcdRelevanceVerified: Boolean(gcdCheck?.gcd_source_id),
-    },
-    grades: censusRows.map(({ grading_company_id, ...row }) => ({
-      ...row,
-      gradingCompany: companyNames.get(grading_company_id) || "Unknown grader",
-      sourceAuthority: resolveCensusSourceAuthority(companyNames.get(grading_company_id) || "Unknown grader", providerName),
-    })),
-    certifications: certificationRows.map(({ grading_company_id, ...row }) => ({
-      ...row,
-      gradingCompany: companyNames.get(grading_company_id) || "Unknown grader",
-    })),
-    sales: saleRows.map(({ grading_company_id, ...row }) => ({
-      ...row,
-      gradingCompany: companyNames.get(grading_company_id) || "Unknown grader",
-    })),
-  };
+    return {
+      snapshot: {
+        title_name: snapshot.title_name,
+        issue_number_raw: snapshot.issue_number_raw,
+        edition_name: snapshot.edition_name,
+        variant_name: snapshot.variant_name,
+        snapshot_timestamp: snapshot.snapshot_timestamp,
+        source_url: snapshot.source_url,
+        total_graded: snapshot.total_graded,
+        gradingCompany,
+        provider: providerName,
+        sourceAuthority,
+        gcdRelevanceVerified: Boolean(gcdCheck?.gcd_source_id),
+      },
+      grades: censusRows.map(({ grading_company_id, ...row }) => ({
+        ...row,
+        gradingCompany: companyNames.get(grading_company_id) || "Unknown grader",
+        sourceAuthority: resolveCensusSourceAuthority(companyNames.get(grading_company_id) || "Unknown grader", providerName),
+      })),
+      certifications: certificationRows.map(({ grading_company_id, ...row }) => ({
+        ...row,
+        gradingCompany: companyNames.get(grading_company_id) || "Unknown grader",
+      })),
+      sales: saleRows.map(({ grading_company_id, ...row }) => ({
+        ...row,
+        gradingCompany: companyNames.get(grading_company_id) || "Unknown grader",
+      })),
+    };
+  } catch (err) {
+    console.warn("Failed to retrieve comic census dossier:", err);
+    return null;
+  }
 }
 
 export async function getPpcfCensusDossier(series: string | null, issueNumber: string | null, variantName: string | null): Promise<ComicCensusDossier | null> {
-  if (!series || !issueNumber) return null;
-  const db = createCleanReadOnlyServerClient();
-  const { data: snapshots, error } = await db
-    .from("graded_census_snapshots")
-    .select("edition_name,variant_name")
-    .ilike("title_name", series)
-    .eq("issue_number_raw", issueNumber)
-    .order("snapshot_timestamp", { ascending: false })
-    .limit(12);
+  try {
+    if (!series || !issueNumber) return null;
+    const db = createCleanReadOnlyServerClient();
+    const { data: snapshots, error } = await db
+      .from("graded_census_snapshots")
+      .select("edition_name,variant_name")
+      .ilike("title_name", series)
+      .eq("issue_number_raw", issueNumber)
+      .order("snapshot_timestamp", { ascending: false })
+      .limit(12);
 
-  if (error || !snapshots?.length) return null;
-  const requestedVariant = variantName?.trim() || null;
-  const exactEdition = snapshots.some((snapshot) => {
-    const snapshotVariant = snapshot.variant_name?.trim() || null;
-    const editionName = snapshot.edition_name?.trim() || null;
-    const variantMatches = requestedVariant ? snapshotVariant === requestedVariant : snapshotVariant === null;
-    const editionMatches = editionName === null || editionName.toLowerCase() === "regular";
-    return variantMatches && editionMatches;
-  });
-  if (!exactEdition) return null;
+    if (error || !snapshots?.length) return null;
+    const requestedVariant = variantName?.trim() || null;
+    const exactEdition = snapshots.some((snapshot) => {
+      const snapshotVariant = snapshot.variant_name?.trim() || null;
+      const editionName = snapshot.edition_name?.trim() || null;
+      const variantMatches = requestedVariant ? snapshotVariant === requestedVariant : snapshotVariant === null;
+      const editionMatches = editionName === null || editionName.toLowerCase() === "regular";
+      return variantMatches && editionMatches;
+    });
+    if (!exactEdition) return null;
 
-  return getComicCensusDossier(series, issueNumber);
+    return getComicCensusDossier(series, issueNumber);
+  } catch (err) {
+    console.warn("Failed to retrieve PPCF census dossier:", err);
+    return null;
+  }
 }

@@ -35,28 +35,50 @@ function formatPrinting(value: string | number | null): string {
 
 export default async function ComicDetailPage({ params }: ComicDetailPageProps) {
   const { id } = await params;
-  const [comic, user] = await Promise.all([
-    getComicById(id),
-    getCurrentUser(),
-  ]);
+  let comic = null;
+  let user = null;
+
+  try {
+    [comic, user] = await Promise.all([
+      getComicById(id),
+      getCurrentUser().catch(() => null),
+    ]);
+  } catch (err) {
+    console.error("Error loading comic detail base record:", err);
+  }
 
   if (!comic) {
     notFound();
   }
 
-  const [coverEvidence, censusDossier] = await Promise.all([
-    getComicCoverEvidence(comic.id),
-    getComicCensusDossier(comic.series, comic.issue_number),
+  const [coverEvidence, censusDossier, userStatus] = await Promise.all([
+    getComicCoverEvidence(comic.id).catch((err) => {
+      console.warn("Cover evidence read unavailable:", err);
+      return null;
+    }),
+    getComicCensusDossier(comic.series, comic.issue_number).catch((err) => {
+      console.warn("Census dossier read unavailable:", err);
+      return null;
+    }),
+    user
+      ? getComicUserStatus(comic.id).catch((err) => {
+          console.warn("User status read unavailable:", err);
+          return {
+            isInCollection: false,
+            collectionItem: null,
+            isInWatchlist: false,
+            watchlistItem: null,
+          };
+        })
+      : Promise.resolve({
+          isInCollection: false,
+          collectionItem: null,
+          isInWatchlist: false,
+          watchlistItem: null,
+        }),
   ]);
   const seriesLabel = displaySeries(comic.series, comic.issue_number);
   const issueLabel = displayIssue(comic.issue_number);
-
-  const userStatus = user ? await getComicUserStatus(comic.id) : {
-    isInCollection: false,
-    collectionItem: null,
-    isInWatchlist: false,
-    watchlistItem: null,
-  };
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-8">
@@ -81,7 +103,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column: Primary Cover & Physical Profile */}
         <div className="lg:col-span-4 space-y-6">
-          <div className="rounded-xl border-2 border-orange-500/60 bg-graphite-900/90 p-4 shadow-xl portfolio-rimlight-hover">
+          <div className="rounded-xl border border-cyan-500/40 bg-graphite-900/90 p-4 shadow-xl portfolio-rimlight-hover">
             <ComicCover
               coverUrl={comic.cover_retrieval_url || comic.cover_url || coverEvidence?.image_url}
               storagePath={comic.cover_storage_path || coverEvidence?.storage_path}
@@ -114,7 +136,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
         {/* Right Column: Identity, Actions, Pricing, Provenance */}
         <div className="lg:col-span-8 space-y-6">
           {/* Identity & Actions Header Card */}
-          <div className="rounded-xl border-2 border-orange-500/60 bg-graphite-900/90 p-6 space-y-5 shadow-xl markets-rimlight-hover">
+          <div className="rounded-xl border border-cyan-500/40 bg-graphite-900/90 p-6 space-y-5 shadow-xl markets-rimlight-hover">
             <div className="space-y-2">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="default" className="text-xs">
