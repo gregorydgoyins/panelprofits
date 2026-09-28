@@ -42,7 +42,7 @@ export function Newsroom({ stories }: NewsroomProps) {
   if (!stories.length || !activeStory) {
     return (
       <div className="border border-slate-800 bg-[#0A0D14] p-12 text-center text-sm text-slate-500">
-        <span className="font-mono text-xs text-amber-300 uppercase tracking-widest">
+        <span className="font-mono text-xs text-cyan-400 uppercase tracking-widest">
           WAITING FOR LIVE WIRE INGESTION...
         </span>
       </div>
@@ -64,7 +64,7 @@ export function Newsroom({ stories }: NewsroomProps) {
           <span className="px-2.5 py-1 text-[10px] font-mono tracking-wider uppercase rounded border border-slate-800 bg-slate-900/60 text-slate-300">
             Narrative Engine
           </span>
-          <span className="px-2.5 py-1 text-[10px] font-mono tracking-wider uppercase rounded border border-slate-800 bg-slate-900/60 text-amber-300">
+          <span className="px-2.5 py-1 text-[10px] font-mono tracking-wider uppercase rounded border border-slate-800 bg-slate-900/60 text-cyan-300">
             {filteredStories.length} Stories Active
           </span>
           {videoDecision?.isVideoActive && (

@@ -27,6 +27,15 @@ function cleanLegacyBoilerplate(text: string): string {
       .join(" ")
       .trim();
   }
+
+  cleaned = cleaned
+    .replace(/class="[^"]*"/gi, " ")
+    .replace(/href="[^"]*"/gi, " ")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/[<>"]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
   return cleaned;
 }
 

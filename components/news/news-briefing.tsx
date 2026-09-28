@@ -1,8 +1,6 @@
 import { LinkedBriefing } from "@/components/news/linked-briefing";
 import Link from "next/link";
-import { Award, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { type EntityWikiDef } from "@/lib/news/entities";
-import { selectAuthorForStory, generateAuthorMarketPrediction } from "@/lib/news/authors";
 
 function dateLabel(value: string | null) {
   if (!value) return "Publication date unavailable";
@@ -33,10 +31,20 @@ export function NewsBriefing({
   const sharedLinkedTerms = new Set<string>();
 
   return (
-    <div className="mt-8 space-y-6 border-l-2 border-amber-300/70 bg-amber-950/10 px-5 py-6 sm:px-7">
-      <div className="border-b border-amber-900/40 pb-4 text-[10px] uppercase tracking-[0.14em] text-amber-200">
+    <div className="mt-8 space-y-6 border-l-2 border-cyan-500/60 bg-cyan-950/15 px-5 py-6 sm:px-7 rounded-r">
+      <div className="border-b border-slate-800 pb-4 text-[10px] uppercase tracking-[0.14em] text-cyan-300 font-mono">
         <p>{source}{author ? ` · ${author}` : ""}</p>
-        <p className="mt-1 text-slate-500">{dateLabel(publishedAt)} · <a href={sourceUrl} target="_blank" rel="noreferrer" className="text-amber-200 underline underline-offset-2 hover:text-amber-100">Source article</a></p>
+        <p className="mt-1 text-slate-500 font-sans">
+          {dateLabel(publishedAt)} ·{" "}
+          <a
+            href={sourceUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="text-cyan-400 underline underline-offset-2 hover:text-cyan-200 transition-colors"
+          >
+            Source article
+          </a>
+        </p>
       </div>
 
       <section>

@@ -19,7 +19,7 @@ export default async function NewsPage() {
       <header className="border-b border-slate-800 pb-6 mb-6">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <div>
-            <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.28em] text-amber-300">
+            <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.28em] text-cyan-400">
               <Radio className="h-3.5 w-3.5 text-rose-500 animate-pulse" /> Panel Profits Narrative Wire
             </div>
             <h1 className="mt-2 text-3xl sm:text-4xl font-semibold tracking-tight text-slate-100">
@@ -39,9 +39,9 @@ export default async function NewsPage() {
             </Link>
             <Link
               href="/research/archive"
-              className="flex items-center gap-2 border border-slate-800 bg-[#090C14] px-3.5 py-2 text-[11px] font-mono uppercase tracking-[0.14em] text-amber-300 hover:border-amber-400/60 hover:text-amber-200 transition-colors"
+              className="flex items-center gap-2 border border-slate-800 bg-[#090C14] px-3.5 py-2 text-[11px] font-mono uppercase tracking-[0.14em] text-cyan-300 hover:border-cyan-400/60 hover:text-cyan-200 transition-colors"
             >
-              <Archive className="h-3.5 w-3.5 text-amber-400" /> News Archive
+              <Archive className="h-3.5 w-3.5 text-cyan-400" /> News Archive
             </Link>
             <Link
               href="/research/white-papers"

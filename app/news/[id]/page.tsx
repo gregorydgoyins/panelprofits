@@ -27,7 +27,7 @@ export default async function NewsStoryPage({ params }: { params: Promise<{ id: 
       >
         <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" /> Back to Newsroom
       </Link>
-      <article className="mt-6 overflow-hidden border border-amber-300/90 bg-[#0b0f15] shadow-[0_0_38px_rgba(251,191,36,0.26)]">
+      <article className="mt-6 overflow-hidden border border-slate-800 bg-[#0b0f15] shadow-xl">
         {hasEditorialImage && (
           <div className="border-b border-slate-800 bg-[#07090F] p-4 sm:p-6 flex justify-center">
             <img
@@ -38,21 +38,21 @@ export default async function NewsStoryPage({ params }: { params: Promise<{ id: 
           </div>
         )}
         {!hasEditorialImage && hasPublisherMark && (
-          <div className="flex min-h-40 items-center gap-5 border-b border-amber-900/50 bg-[#121722] px-6 py-8 sm:px-10">
+          <div className="flex min-h-40 items-center gap-5 border-b border-slate-800 bg-[#121722] px-6 py-8 sm:px-10">
             <img
               src={story.imageUrl!}
               alt={`${story.source} publisher logo`}
               className="h-16 w-16 object-contain shrink-0"
             />
             <div>
-              <p className="text-[10px] uppercase tracking-[0.18em] text-amber-300 font-mono font-medium">Publisher Attribution</p>
+              <p className="text-[10px] uppercase tracking-[0.18em] text-cyan-400 font-mono font-medium">Publisher Attribution</p>
               <p className="mt-1 text-sm font-medium text-slate-200">{story.source}</p>
               <p className="mt-1 text-xs text-slate-400 leading-relaxed">Source attribution and original reporting metadata remain linked in the reading frame.</p>
             </div>
           </div>
         )}
         <div className="p-6 sm:p-10">
-          <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.16em] text-amber-300 font-mono">
+          <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.16em] text-cyan-400 font-mono">
             <Newspaper className="h-3.5 w-3.5" aria-hidden="true" />
             <span>{shortNewsSource(story.source)}</span>
           </div>

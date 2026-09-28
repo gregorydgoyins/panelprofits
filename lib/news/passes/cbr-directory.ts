@@ -10,6 +10,7 @@ export interface PassResult {
  * PASS 1: CBR Directory
  * Scans article text for character lore, creators, publishers, and titles,
  * hyperlinking first mentions safely to /intelligence?q=... or /wiki?q=...
+ * Crisp sky-blue styling with zero brown/amber labels.
  */
 export function runCbrDirectoryPass(text: string, seenTerms: Set<string>): PassResult {
   if (!text) return { transformedText: "", matchCount: 0 };
@@ -26,7 +27,7 @@ export function runCbrDirectoryPass(text: string, seenTerms: Set<string>): PassR
       return {
         term: entity.term,
         render: (matched: string) =>
-          `<a href="${targetUrl}" class="text-amber-300 font-semibold underline decoration-amber-500/70 underline-offset-4 hover:text-amber-100 transition-colors">${matched}</a>`,
+          `<a href="${targetUrl}" class="text-sky-400 font-medium underline decoration-sky-500/40 underline-offset-4 hover:text-sky-200 transition-colors">${matched}</a>`,
         onMatch: () => seenTerms.add(termLower),
       };
     });

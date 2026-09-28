@@ -132,14 +132,29 @@ describe("Newsroom Accuracy Benchmarks", () => {
     }
   });
 
-  it("evaluates operational presenter video activation with valid media streams", () => {
+  it("evaluates operational presenter video selectively for breaking catalysts without cluttering every story", () => {
+    // Breaking record story activates broadcast video
+    const breaking = evaluateStoryVideoActivation(sampleArticles[2].storyKey, sampleArticles[2].source, sampleArticles[2].headline, sampleArticles[2].rawSummary);
+    expect(breaking.isVideoActive).toBe(true);
+    expect(breaking.presenter.name).toBe("Alex Morgan");
+    expect(breaking.presenter.videoSampleUrl).toMatch(/\.(mp4|webm)$/i);
+    expect(breaking.storyCategoryTag).toContain("BREAKING");
+
+    // Standard routine story does NOT activate video so the single video loop is not printed everywhere
+    const routine = evaluateStoryVideoActivation(sampleArticles[0].storyKey, sampleArticles[0].source, "Standard Weekly Solicitations Announcement", "Routine monthly list.");
+    expect(routine.isVideoActive).toBe(false);
+  });
+
+  it("produces strictly ZERO brown/amber labels or muddy badge classes in generated HTML", () => {
     for (const ctx of sampleArticles) {
-      const decision = evaluateStoryVideoActivation(ctx.storyKey, ctx.source, ctx.headline, ctx.rawSummary);
-      expect(decision.isVideoActive).toBe(true);
-      expect(decision.presenter).toBeDefined();
-      expect(decision.presenter.videoSampleUrl).toBeTruthy();
-      expect(decision.presenter.videoSampleUrl).toMatch(/\.(mp4|webm)$/i);
-      expect(decision.storyCategoryTag).toBeTruthy();
+      const article = generatePanelProfitsArticle(ctx);
+      for (const paragraph of article.paragraphs) {
+        expect(paragraph).not.toContain("text-amber");
+        expect(paragraph).not.toContain("bg-amber");
+        expect(paragraph).not.toContain("border-amber");
+        expect(paragraph).not.toContain("bg-yellow-950");
+        expect(paragraph).not.toContain("bg-orange-950");
+      }
     }
   });
 

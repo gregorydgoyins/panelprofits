@@ -98,6 +98,9 @@ export function cleanScrapedText(rawHtmlOrText: string): string {
     .replace(/&nbsp;/gi, " ")
     .replace(/&#(\d+);/g, (_, code) => String.fromCodePoint(Number(code)))
     .replace(/<[^>]+>/g, " ")
+    .replace(/class="[^"]*"/gi, " ")
+    .replace(/href="[^"]*"/gi, " ")
+    .replace(/[<>"]/g, " ")
     .replace(/\s+/g, " ")
     .replace(/\s+([,.:;?!])/g, "$1")
     .trim();

@@ -23,7 +23,7 @@ function relativeTime(d: string | null) {
 
 const PRIORITY_LABELS: Record<string, { label: string; color: string; border: string; bg: string }> = {
   breaking: { label: "BREAKING", color: "#F43F5E", border: "border-rose-500/50", bg: "bg-rose-950/40" },
-  developing: { label: "DEVELOPING", color: "#F59E0B", border: "border-amber-500/50", bg: "bg-amber-950/40" },
+  developing: { label: "DEVELOPING", color: "#06B6D4", border: "border-cyan-500/50", bg: "bg-cyan-950/40" },
   background: { label: "WIRE", color: "#94A3B8", border: "border-slate-700", bg: "bg-slate-900/40" },
 };
 
@@ -43,7 +43,7 @@ function Block({
   return (
     <section className="border border-slate-800/80 bg-[#07090F] p-4 shadow-sm rounded">
       <div className="flex items-center justify-between mb-1">
-        <span className="text-[9px] font-mono uppercase tracking-[0.18em] text-amber-400 font-semibold">{label}</span>
+        <span className="text-[9px] font-mono uppercase tracking-[0.18em] text-cyan-400 font-semibold">{label}</span>
         {authorName && <span className="text-[8px] font-mono text-slate-500 uppercase">{authorName}</span>}
       </div>
       <h3 className="text-xs font-semibold text-slate-100">{title}</h3>
@@ -89,7 +89,7 @@ export function StoryPanel({ story }: { story: NewsStory }) {
         {/* Top Meta & Priority */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
           <div className="flex items-center gap-2.5">
-            <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-amber-300 font-semibold">
+            <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-cyan-400 font-semibold">
               Lead Story
             </span>
             <span
@@ -111,7 +111,7 @@ export function StoryPanel({ story }: { story: NewsStory }) {
 
         {/* Provenance Banner */}
         <div className="mt-3 flex items-center gap-2 px-3 py-1.5 text-[11px] font-mono rounded border border-slate-800 bg-[#06080D] text-slate-400">
-          <ShieldAlert className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+          <ShieldAlert className="h-3.5 w-3.5 text-cyan-400 shrink-0" />
           <span>
             WIRE PROVENANCE: <strong className="text-slate-200">{story.source}</strong>
             {story.author && <span> · Reported by <strong className="text-slate-300">{story.author}</strong></span>}
@@ -125,7 +125,7 @@ export function StoryPanel({ story }: { story: NewsStory }) {
           {story.headline}
         </h1>
 
-        {/* Editorial Body Text - Authentic Translation */}
+        {/* Editorial Body Text */}
         {paragraphs.length > 0 ? (
           <div className="mt-5 space-y-4 text-sm sm:text-base leading-7 text-slate-300">
             {paragraphs.map((p, i) => (
@@ -147,12 +147,12 @@ export function StoryPanel({ story }: { story: NewsStory }) {
           <Block label="Market Impact" title="Asset Positioning" text={marketText} authorName={author.name} entities={entities} />
         </div>
 
-        {/* DEDICATED MARKET & ASSET RIPPLE PROJECTION SECTION (AT THE END) */}
-        <div className="mt-8 rounded border border-amber-500/30 bg-[#080B12] p-5">
+        {/* Dedicated Market & Asset Ripple Projection */}
+        <div className="mt-8 rounded border border-cyan-500/20 bg-[#080B12] p-5">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-800/80 pb-3">
             <div className="flex items-center gap-2">
-              <Award className="h-4 w-4 text-amber-400" />
-              <span className="text-xs font-mono font-semibold uppercase tracking-wider text-amber-300">
+              <Award className="h-4 w-4 text-cyan-400" />
+              <span className="text-xs font-mono font-semibold uppercase tracking-wider text-cyan-300">
                 Market Ripple Projection // {author.name}
               </span>
             </div>
@@ -170,7 +170,7 @@ export function StoryPanel({ story }: { story: NewsStory }) {
               <div key={idx} className="rounded border border-slate-800/80 bg-[#06070B] p-3.5 flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between">
-                    <span className="font-mono text-xs font-semibold text-amber-300">{ripple.ticker}</span>
+                    <span className="font-mono text-xs font-semibold text-cyan-300">{ripple.ticker}</span>
                     <span className={`inline-flex items-center gap-1 font-mono text-[10px] font-bold px-1.5 py-0.5 rounded ${
                       ripple.direction === "up" ? "bg-emerald-950/60 text-emerald-300 border border-emerald-500/40" :
                       ripple.direction === "down" ? "bg-rose-950/60 text-rose-300 border border-rose-500/40" :
@@ -199,11 +199,11 @@ export function StoryPanel({ story }: { story: NewsStory }) {
                 key={entity.term}
                 prefetch
                 href={entity.wikiPath}
-                className="inline-flex items-center gap-1 border border-amber-500/40 bg-amber-950/20 px-2 py-0.5 text-[10px] text-amber-300 hover:border-amber-300 hover:text-amber-100 transition-colors rounded"
+                className="inline-flex items-center gap-1 border border-slate-700 bg-slate-900/60 px-2 py-0.5 text-[10px] text-slate-300 hover:border-cyan-400 hover:text-cyan-200 transition-colors rounded"
               >
                 <span>{entity.term}</span>
                 {entity.ticker && (
-                  <span className="text-[8px] font-mono text-amber-400 font-semibold uppercase">
+                  <span className="text-[8px] font-mono text-cyan-400 font-semibold uppercase">
                     ({entity.ticker})
                   </span>
                 )}
@@ -219,7 +219,7 @@ export function StoryPanel({ story }: { story: NewsStory }) {
           href={story.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 text-xs text-amber-300/90 hover:text-amber-200 uppercase tracking-wider font-medium transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200 uppercase tracking-wider font-medium transition-colors"
         >
           Read original article at {story.source} <ArrowUpRight className="h-3.5 w-3.5" />
         </a>

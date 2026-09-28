@@ -10,7 +10,7 @@ export interface PassResult {
  * PASS 3: CBR Ticker Legend
  * Scans article text for recognized asset terms with tickers ($TICKER),
  * appending clean, clickable ticker badges on first mentions linking to /intelligence?q=...
- * NEVER replaces terms inside existing links or HTML tags.
+ * High-tech terminal cyan styling with zero brown/amber labels.
  */
 export function runCbrTickerLegendPass(text: string, seenTickers: Set<string>): PassResult {
   if (!text) return { transformedText: "", matchCount: 0 };
@@ -27,7 +27,7 @@ export function runCbrTickerLegendPass(text: string, seenTickers: Set<string>): 
       return {
         term: entity.term,
         render: (matched: string) =>
-          `<a href="${targetUrl}" class="inline-flex items-center px-1.5 py-0.5 text-xs font-mono font-bold tracking-tight rounded border border-amber-500/50 bg-amber-950/60 text-amber-300 hover:border-amber-300 hover:text-amber-100 transition-colors" title="${entity.term}">${entity.ticker}</a>`,
+          `<a href="${targetUrl}" class="inline-flex items-center px-1.5 py-0.5 text-xs font-mono font-bold tracking-tight rounded border border-cyan-500/40 bg-[#0C1626] text-cyan-300 hover:border-cyan-300 hover:text-cyan-100 transition-colors" title="${entity.term}">${entity.ticker}</a>`,
         onMatch: () => seenTickers.add(tickerKey),
       };
     });

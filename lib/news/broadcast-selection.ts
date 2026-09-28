@@ -1,4 +1,4 @@
-import { PRESENTERS_REGISTRY, type PresenterAvatar } from "@/lib/news/presenters";
+import { LEAD_BROADCAST_ANCHOR, type PresenterAvatar } from "@/lib/news/presenters";
 
 export interface BroadcastVideoDecision {
   isVideoActive: boolean;
@@ -7,8 +7,9 @@ export interface BroadcastVideoDecision {
 }
 
 /**
- * Determines whether a story qualifies for video broadcast based on topic energy,
- * and routes it to a non-repeating presenter from the 15-avatar registry.
+ * Determines whether a story qualifies for live video broadcast.
+ * Only genuine breaking catalysts and high-velocity market events activate the live video desk.
+ * Standard wire reporting remains clean, fast, and editorial-focused without video clutter.
  */
 export function evaluateStoryVideoActivation(
   storyId: string,
@@ -16,31 +17,16 @@ export function evaluateStoryVideoActivation(
   headline: string,
   summary: string | null
 ): BroadcastVideoDecision {
-  const text = `${headline} ${summary || ""}`;
-  const isHighEnergy = /first|debut|breakout|record|death|return|villain|movie|trailer|option|deal|announc/i.test(text);
+  const text = `${headline} ${summary || ""}`.toLowerCase();
 
-  // Deterministic seed from storyId + source
-  let seed = 0;
-  const hashStr = `${storyId}:${source}:${headline}`;
-  for (let i = 0; i < hashStr.length; i++) {
-    seed = (seed << 5) - seed + hashStr.charCodeAt(i);
-    seed |= 0;
-  }
+  // High-energy breaking market catalysts that qualify for live video broadcast
+  const isBreakingCatalyst = /breakout|breaking|auction record|shatters record|all-time record|debut|first appearance|billion|box office record|studio acquisition/i.test(text);
 
-  // Active operational synchronized broadcast video presenter for news wire
-  const isVideoActive = true;
-
-  // Route presenter: Lead Anchor Alex Morgan gets top priority on Breaking / Record stories
-  let presenter: PresenterAvatar;
-  if (/record|breakout|breaking|option/i.test(headline)) {
-    presenter = PRESENTERS_REGISTRY[0]; // Alex Morgan
-  } else {
-    // Non-repeating rotation index across the 15 presenters
-    const index = Math.abs(seed) % PRESENTERS_REGISTRY.length;
-    presenter = PRESENTERS_REGISTRY[index];
-  }
-
-  const categoryTag = isHighEnergy ? "BREAKING CATALYST // LIVE BROADCAST" : "FEATURED WIRE // SPECIAL REPORT";
+  const isVideoActive = isBreakingCatalyst;
+  const presenter = LEAD_BROADCAST_ANCHOR;
+  const categoryTag = isBreakingCatalyst
+    ? "BREAKING CATALYST // LIVE BROADCAST"
+    : "FEATURED WIRE // EDITORIAL DESK";
 
   return {
     isVideoActive,
