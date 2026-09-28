@@ -34,6 +34,11 @@ export default function GlobalError({
               ? error.message
               : "The requested record or market dataset is temporarily unavailable from the upstream data service."}
           </p>
+          {error.digest && (
+            <p className="font-mono text-[10px] text-slate-500 bg-slate-950/80 px-2.5 py-1 rounded border border-slate-800/80 max-w-xs mx-auto truncate select-all">
+              Ref ID: {error.digest}
+            </p>
+          )}
         </div>
 
         <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
