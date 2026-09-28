@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { ArrowUpRight, Newspaper, Calendar, ExternalLink } from "lucide-react";
-import { findNewsEntities } from "@/lib/news/entities";
+import { findNewsEntities, type EntityWikiDef } from "@/lib/news/entities";
 import { LinkedBriefing } from "@/components/news/linked-briefing";
 import { shortNewsSource, type NewsStory } from "@/lib/news/types";
 import { AuthenticVideoEmbed, extractAuthenticVideo } from "@/components/news/authentic-video-embed";
@@ -31,6 +31,7 @@ export function StoryPanel({ story }: { story: NewsStory }) {
     .split(/\n\n+/)
     .map((p) => p.trim())
     .filter(Boolean);
+  const allEntities = entities;
 
   const hasEditorialImage = Boolean(story.imageUrl && !story.imageUrl.includes("google.com/s2/favicons"));
 
@@ -63,9 +64,9 @@ export function StoryPanel({ story }: { story: NewsStory }) {
           )}
         </div>
 
-        {/* Lead Headline */}
+        {/* Lead Headline with Live Entity Tokenization */}
         <h1 className="mt-4 text-2xl sm:text-3xl font-semibold text-slate-100 leading-tight tracking-tight">
-          {story.headline}
+          <LinkedBriefing text={story.headline} entities={allEntities} />
         </h1>
 
         {/* Authentic Video Player or Editorial Artwork */}
@@ -85,12 +86,12 @@ export function StoryPanel({ story }: { story: NewsStory }) {
           )
         )}
 
-        {/* Story Body */}
+        {/* Story Body with Live Entity Tokenization */}
         <div className="mt-6 space-y-4 text-sm sm:text-base leading-relaxed text-slate-300">
           {paragraphs.length > 0 ? (
             paragraphs.map((p, idx) => (
               <p key={idx}>
-                <LinkedBriefing text={p} entities={entities} />
+                <LinkedBriefing text={p} entities={allEntities} />
               </p>
             ))
           ) : (
@@ -100,13 +101,14 @@ export function StoryPanel({ story }: { story: NewsStory }) {
           )}
         </div>
 
-        {/* Entity Cross-References */}
-        {entities.length > 0 && (
+
+        {/* Entity Cross-References Bar */}
+        {allEntities.length > 0 && (
           <div className="mt-6 flex flex-wrap items-center gap-2 pt-4 border-t border-slate-800/80">
             <span className="text-[9px] font-mono uppercase tracking-widest text-slate-500 mr-1">
               Referenced Lore & Market Entities:
             </span>
-            {entities.slice(0, 8).map((entity) => (
+            {allEntities.slice(0, 10).map((entity) => (
               <Link
                 key={entity.term}
                 prefetch

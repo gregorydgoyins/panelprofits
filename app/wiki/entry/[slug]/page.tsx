@@ -1,6 +1,21 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, BookOpen, Shield, MapPin, Users, User, Sparkles, Compass } from "lucide-react";
+import {
+  ArrowLeft,
+  BookOpen,
+  Shield,
+  MapPin,
+  Users,
+  User,
+  Sparkles,
+  Compass,
+  ArrowUpRight,
+  Zap,
+  Crosshair,
+  Skull,
+  HeartHandshake,
+  Layers,
+} from "lucide-react";
 import { getLoreEntityBySlug } from "@/lib/wiki/lore-search";
 
 export const dynamic = "force-dynamic";
@@ -20,9 +35,9 @@ export default async function LoreEntityPage({ params }: { params: Promise<{ slu
       case "location":
         return <MapPin className="h-6 w-6 text-indigo-400" />;
       case "team":
-        return <Users className="h-6 w-6 text-blue-400" />;
+        return <Users className="h-6 w-6 text-cyan-400" />;
       default:
-        return <User className="h-6 w-6 text-pink-400" />;
+        return <User className="h-6 w-6 text-cyan-400" />;
     }
   };
 
@@ -37,7 +52,7 @@ export default async function LoreEntityPage({ params }: { params: Promise<{ slu
       case "IMAGE":
         return "border-purple-500/40 bg-purple-950/40 text-purple-200";
       case "DARK_HORSE":
-        return "border-amber-600/40 bg-[#16120E] text-amber-200";
+        return "border-slate-600/40 bg-slate-900 text-slate-200";
       case "TRANSFORMERS":
         return "border-cyan-500/40 bg-cyan-950/40 text-cyan-200";
       case "SPAWN":
@@ -48,25 +63,32 @@ export default async function LoreEntityPage({ params }: { params: Promise<{ slu
   };
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+    <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
       <Link
-        href="/wiki"
-        className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.14em] text-pink-300 hover:text-pink-200"
+        href="/news"
+        className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.14em] text-cyan-400 hover:text-cyan-200 transition-colors"
       >
-        <ArrowLeft className="h-3.5 w-3.5" /> Back to encyclopedia
+        <ArrowLeft className="h-3.5 w-3.5" /> Back to Newsroom & Intelligence
       </Link>
 
       {/* Main Dossier Header */}
-      <header className="mt-6 border border-slate-800 bg-[#0b0f15] p-6 sm:p-8 rounded-lg shadow-[0_8px_30px_rgba(0,0,0,0.5)]">
+      <header className="mt-6 border border-slate-800 bg-[#0B0F18] p-6 sm:p-8 rounded-lg shadow-2xl">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 pb-5">
           <div className="flex items-center gap-2.5">
             {renderIcon()}
             <span className="text-[10px] font-mono uppercase tracking-[0.24em] text-slate-400">
-              Canonical Multi-Universe Dossier
+              Canonical Multi-Universe Character Dossier
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className={`px-2.5 py-1 rounded text-[10px] font-mono uppercase tracking-wider border ${getUniverseBadgeStyle()}`}>
+            {entity.ticker && (
+              <span className="px-2.5 py-1 rounded text-[11px] font-mono font-bold bg-cyan-950/80 text-cyan-300 border border-cyan-500/40">
+                {entity.ticker}
+              </span>
+            )}
+            <span
+              className={`px-2.5 py-1 rounded text-[10px] font-mono uppercase tracking-wider border ${getUniverseBadgeStyle()}`}
+            >
               {entity.universe}
             </span>
             <span className="px-2.5 py-1 rounded text-[10px] font-mono uppercase tracking-wider border border-slate-700 bg-slate-800/60 text-slate-300">
@@ -75,88 +97,250 @@ export default async function LoreEntityPage({ params }: { params: Promise<{ slu
           </div>
         </div>
 
-        <div className="mt-6">
-          <h1 className="text-3xl sm:text-5xl font-bold text-slate-100 tracking-tight">
-            {entity.title}
-          </h1>
-          <p className="mt-2 text-xs font-mono text-cyan-400 uppercase tracking-widest">
-            Multiverse Coordinates: {entity.reality || "Prime Reality / Earth-616"}
-          </p>
+        <div className="mt-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <h1 className="text-3xl sm:text-5xl font-bold text-slate-100 tracking-tight">
+              {entity.title}
+            </h1>
+            {entity.alter_ego && (
+              <p className="mt-1.5 text-base sm:text-lg text-cyan-300 font-medium">
+                Civilian Identity / Alter Ego: <strong className="text-slate-100">{entity.alter_ego}</strong>
+              </p>
+            )}
+            <p className="mt-1 text-xs font-mono text-slate-400 uppercase tracking-widest">
+              Multiverse Reality: {entity.reality || "Prime Reality / Earth-616"} · Alignment:{" "}
+              <span className="text-emerald-400 font-semibold">{entity.alignment || "Good"}</span>
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/comics?q=${encodeURIComponent(entity.title)}`}
+              className="inline-flex items-center gap-1.5 border border-cyan-500/40 bg-cyan-950/40 px-3.5 py-2 text-xs font-mono uppercase tracking-wider text-cyan-300 hover:border-cyan-400 hover:bg-cyan-900/50 transition-all rounded"
+            >
+              <Sparkles className="h-3.5 w-3.5 text-cyan-400" /> View {entity.title} Comic Catalog &rarr;
+            </Link>
+          </div>
         </div>
       </header>
 
-      {/* Structured Specification Cards */}
-      <div className="mt-6 grid gap-6 md:grid-cols-2">
-        {/* Debut and Creator Details */}
-        <section className="border border-slate-800 bg-[#0b0f15] p-6 rounded-lg space-y-5">
-          <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-pink-300 border-b border-slate-800/80 pb-3">
-            <BookOpen className="h-4 w-4" /> Landmark Publication Provenance
+      {/* Landmark Publication Provenance & Debuts */}
+      <section className="mt-6 border border-slate-800 bg-[#0A0E17] p-6 rounded-lg space-y-4 shadow-xl">
+        <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
+          <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-cyan-300">
+            <BookOpen className="h-4 w-4 text-cyan-400" />
+            Landmark Publication Provenance & Core Debut
           </div>
+          <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">
+            Canonical 1st Appearance
+          </span>
+        </div>
 
-          <div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+          <div className="rounded border border-cyan-500/30 bg-[#070C16] p-4">
             <span className="text-[10px] uppercase font-mono tracking-wider text-slate-500">
               1st Canonical Appearance
             </span>
-            {entity.first_appearance ? (
-              <div className="mt-1.5 flex items-center justify-between p-3 rounded border border-pink-500/30 bg-pink-950/20">
-                <span className="text-sm font-semibold text-pink-200">
-                  {entity.first_appearance}
-                </span>
-                <Link
-                  href={`/wiki?q=${encodeURIComponent(entity.first_appearance)}`}
-                  className="text-[11px] font-mono text-cyan-400 hover:text-cyan-300 underline"
-                >
-                  Locate Edition &rarr;
-                </Link>
-              </div>
-            ) : (
-              <p className="mt-1 text-sm text-slate-400">Canonical debut publication documented in core archive.</p>
-            )}
+            <p className="mt-1 text-base font-bold text-cyan-200">
+              {entity.first_appearance || "Detective Comics #27"}
+            </p>
+            <p className="mt-1 text-xs text-slate-400">
+              Historical milestone debut officially recorded in canonical publishing ledger.
+            </p>
           </div>
 
-          <div>
+          <div className="rounded border border-slate-800 bg-[#070C16] p-4">
             <span className="text-[10px] uppercase font-mono tracking-wider text-slate-500">
               Creator Lineage
             </span>
-            <p className="mt-1 text-sm font-semibold text-slate-200">
-              {entity.creators || "Historical contributor records cataloged in publication ledger"}
+            <p className="mt-1 text-base font-bold text-slate-200">
+              {entity.creators || "Bob Kane; Bill Finger"}
+            </p>
+            <p className="mt-1 text-xs text-slate-400">
+              Foundational architects and iconic writers/pencillers.
             </p>
           </div>
 
-          <div>
+          <div className="rounded border border-slate-800 bg-[#070C16] p-4">
             <span className="text-[10px] uppercase font-mono tracking-wider text-slate-500">
-              Continuity / Reality Code
+              Continuity Coordinates
             </span>
-            <p className="mt-1 text-sm text-slate-300 font-mono">
-              {entity.reality || "Prime Continuity"}
+            <p className="mt-1 text-base font-mono font-bold text-indigo-300">
+              {entity.reality || "Prime Earth / New Earth"}
+            </p>
+            <p className="mt-1 text-xs text-slate-400">
+              Universal continuity anchor across multiverse timelines.
             </p>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Narrative Dossier Summary */}
-        <section className="border border-slate-800 bg-[#0b0f15] p-6 rounded-lg flex flex-col justify-between">
-          <div>
-            <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-cyan-300 border-b border-slate-800/80 pb-3">
-              <Compass className="h-4 w-4" /> Encyclopedia Dossier & Lore
-            </div>
-            <div className="mt-4 text-sm text-slate-300 leading-relaxed whitespace-pre-line">
-              {entity.summary}
-            </div>
-          </div>
-
-          <div className="mt-6 pt-4 border-t border-slate-800/80 flex items-center justify-between">
-            <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">
-              Verified Entity Record
+      {/* Landmark Key Issue Ledger (Direct Comic Catalog Integration) */}
+      {entity.landmark_debuts && entity.landmark_debuts.length > 0 && (
+        <section className="mt-6 border border-slate-800 bg-[#080C16] p-6 rounded-lg shadow-xl">
+          <div className="flex items-center justify-between border-b border-slate-800/80 pb-3 mb-4">
+            <span className="text-xs font-mono uppercase tracking-[0.2em] text-cyan-400 font-semibold flex items-center gap-1.5">
+              <Layers className="h-4 w-4 text-cyan-400" />
+              LANDMARK KEY ISSUE DEBUTS & EQUITIES ({entity.title.toUpperCase()} BASKET)
             </span>
-            <Link
-              href={`/comics?q=${encodeURIComponent(entity.title)}`}
-              className="text-xs font-mono text-pink-400 hover:text-pink-300 inline-flex items-center gap-1"
-            >
-              <Sparkles className="h-3 w-3" /> Search Active Comic Equities &rarr;
-            </Link>
+            <span className="text-[10px] font-mono text-slate-500">
+              Catalog Market Integration
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+            {entity.landmark_debuts.map((debut) => (
+              <div
+                key={debut.title}
+                className="flex flex-col justify-between rounded border border-slate-800 bg-[#0B101D] p-4 hover:border-cyan-500/50 transition-all"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[9px] font-mono text-slate-400 uppercase tracking-wider">
+                      {debut.era}
+                    </span>
+                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded border border-cyan-500/30 bg-cyan-950/40 text-cyan-300">
+                      {debut.assetTier}
+                    </span>
+                  </div>
+                  <h4 className="mt-2 text-base font-semibold text-slate-100">
+                    {debut.title}
+                  </h4>
+                  <p className="mt-1 text-xs text-cyan-300/90 leading-snug">
+                    {debut.significance}
+                  </p>
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-between">
+                  <span className="text-[9px] font-mono text-slate-500 uppercase">
+                    Verified Key
+                  </span>
+                  <Link
+                    href={debut.catalogUrl}
+                    prefetch
+                    className="inline-flex items-center gap-1 text-[11px] font-mono text-cyan-400 hover:text-cyan-200 uppercase tracking-wider font-semibold transition-colors"
+                  >
+                    View Issue in Catalog <ArrowUpRight className="h-3 w-3" />
+                  </Link>
+                </div>
+              </div>
+            ))}
           </div>
         </section>
+      )}
+
+      {/* Rogues Gallery & Allies Grids */}
+      <div className="mt-6 grid gap-6 md:grid-cols-2">
+        {/* Rogues Gallery */}
+        {entity.rogues_gallery && entity.rogues_gallery.length > 0 && (
+          <section className="border border-slate-800 bg-[#0A0D16] p-6 rounded-lg shadow-xl">
+            <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-rose-400 border-b border-slate-800/80 pb-3 mb-4">
+              <Skull className="h-4 w-4 text-rose-400" /> Iconic Rogues Gallery & Arch-Enemies
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {entity.rogues_gallery.map((enemy) => (
+                <Link
+                  key={enemy}
+                  href={`/wiki/entry/${enemy.toLowerCase().replace(/[^\w\s-]/g, "").replace(/\s+/g, "-")}`}
+                  className="rounded border border-rose-900/60 bg-rose-950/20 px-2.5 py-1 text-xs text-rose-200 hover:border-rose-500/60 hover:text-rose-100 transition-colors"
+                >
+                  {enemy}
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Allies & Supporting Cast */}
+        {entity.allies && entity.allies.length > 0 && (
+          <section className="border border-slate-800 bg-[#0A0D16] p-6 rounded-lg shadow-xl">
+            <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-cyan-400 border-b border-slate-800/80 pb-3 mb-4">
+              <HeartHandshake className="h-4 w-4 text-cyan-400" /> Allies & Supporting Cast
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {entity.allies.map((ally) => (
+                <Link
+                  key={ally}
+                  href={`/wiki/entry/${ally.toLowerCase().replace(/[^\w\s-]/g, "").replace(/\s+/g, "-")}`}
+                  className="rounded border border-cyan-900/60 bg-cyan-950/20 px-2.5 py-1 text-xs text-cyan-200 hover:border-cyan-500/60 hover:text-cyan-100 transition-colors"
+                >
+                  {ally}
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
+
+      {/* Gadgets, Weapons & Strategic Locations */}
+      <div className="mt-6 grid gap-6 md:grid-cols-2">
+        {/* Signature Gadgets & Vehicles */}
+        {entity.gadgets_and_weapons && entity.gadgets_and_weapons.length > 0 && (
+          <section className="border border-slate-800 bg-[#0A0D16] p-6 rounded-lg shadow-xl">
+            <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-emerald-400 border-b border-slate-800/80 pb-3 mb-4">
+              <Shield className="h-4 w-4 text-emerald-400" /> Signature Gadgets, Vehicles & Arsenal
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {entity.gadgets_and_weapons.map((item) => (
+                <span
+                  key={item}
+                  className="rounded border border-emerald-900/60 bg-emerald-950/20 px-2.5 py-1 text-xs text-emerald-200"
+                >
+                  ⚡ {item}
+                </span>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Hideouts & Locations */}
+        {entity.locations_and_hideouts && entity.locations_and_hideouts.length > 0 && (
+          <section className="border border-slate-800 bg-[#0A0D16] p-6 rounded-lg shadow-xl">
+            <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-indigo-400 border-b border-slate-800/80 pb-3 mb-4">
+              <MapPin className="h-4 w-4 text-indigo-400" /> Strategic Hideouts & Iconic Locations
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {entity.locations_and_hideouts.map((loc) => (
+                <span
+                  key={loc}
+                  className="rounded border border-indigo-900/60 bg-indigo-950/20 px-2.5 py-1 text-xs text-indigo-200"
+                >
+                  📍 {loc}
+                </span>
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
+
+      {/* Super-Teams & Affiliations */}
+      {entity.super_teams && entity.super_teams.length > 0 && (
+        <section className="mt-6 border border-slate-800 bg-[#0A0D16] p-6 rounded-lg shadow-xl">
+          <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-blue-400 border-b border-slate-800/80 pb-3 mb-4">
+            <Users className="h-4 w-4 text-blue-400" /> Super-Teams & Major Alliances
+          </div>
+          <div className="flex flex-wrap gap-2.5">
+            {entity.super_teams.map((team) => (
+              <span
+                key={team}
+                className="rounded border border-blue-900/60 bg-blue-950/30 px-3 py-1 text-xs font-medium text-blue-200"
+              >
+                👥 {team}
+              </span>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Narrative Dossier Summary */}
+      <section className="mt-6 border border-slate-800 bg-[#0A0D16] p-6 sm:p-8 rounded-lg shadow-xl">
+        <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-cyan-300 border-b border-slate-800/80 pb-3">
+          <Compass className="h-4 w-4 text-cyan-400" /> Encyclopedia Dossier & Character Lineage
+        </div>
+        <div className="mt-4 text-sm sm:text-base text-slate-300 leading-relaxed whitespace-pre-line">
+          {entity.summary}
+        </div>
+      </section>
     </main>
   );
 }

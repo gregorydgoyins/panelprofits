@@ -51,7 +51,7 @@ export function NewsBriefing({
         <div className="space-y-4 text-base leading-8 text-slate-300">
           {paragraphs.map((paragraph, index) => (
             <p key={`${paragraph.slice(0, 32)}-${index}`}>
-              <LinkedBriefing text={paragraph} entities={entities} linkedSet={sharedLinkedTerms} />
+              <LinkedBriefing text={paragraph} entities={entities} />
             </p>
           ))}
         </div>

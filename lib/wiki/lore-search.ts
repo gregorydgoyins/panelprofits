@@ -11,6 +11,20 @@ export interface LoreEntitySummary {
   creators?: string;
   first_appearance?: string;
   summary: string;
+  alter_ego?: string;
+  ticker?: string;
+  gadgets_and_weapons?: string[];
+  locations_and_hideouts?: string[];
+  super_teams?: string[];
+  allies?: string[];
+  rogues_gallery?: string[];
+  landmark_debuts?: Array<{
+    title: string;
+    significance: string;
+    catalogUrl: string;
+    era?: string;
+    assetTier?: string;
+  }>;
 }
 
 interface LoreIndexData {
@@ -212,13 +226,46 @@ export function searchLoreEntities(query: string, limit = 18): LoreEntitySummary
   return results.slice(0, limit);
 }
 
+const SLUG_ALIASES: Record<string, string> = {
+  batman: "bruce-wayne-earth-two",
+  "bruce-wayne": "bruce-wayne-earth-two",
+  "dark-knight": "bruce-wayne-earth-two",
+  superman: "kal-l-earth-two",
+  "clark-kent": "kal-l-earth-two",
+  "spider-man": "peter-parker-earth-1610",
+  spiderman: "peter-parker-earth-1610",
+  "peter-parker": "peter-parker-earth-1610",
+  deadpool: "wade-wilson-earth-616",
+  joker: "joker-earth-two",
+  wolverine: "james-howlett-earth-811",
+};
+
 /**
  * Retrieves a single lore entity by its slug.
  */
 export function getLoreEntityBySlug(slug: string): LoreEntitySummary | null {
   loadLoreIndex();
-  if (!cachedSlugMap) return null;
-  return cachedSlugMap.get(slug) || null;
+  if (!slug || !cachedSlugMap) return null;
+  const cleanSlug = slug.toLowerCase().trim();
+
+  // 1. Direct slug match
+  if (cachedSlugMap.has(cleanSlug)) {
+    return cachedSlugMap.get(cleanSlug)!;
+  }
+
+  // 2. Direct alias match
+  const alias = SLUG_ALIASES[cleanSlug];
+  if (alias && cachedSlugMap.has(alias)) {
+    return cachedSlugMap.get(alias)!;
+  }
+
+  // 3. Match by title from cachedTitleMap (e.g. "batman", "iron man")
+  const titlePhrase = cleanSlug.replace(/-/g, " ");
+  if (cachedTitleMap && cachedTitleMap.has(titlePhrase)) {
+    return cachedTitleMap.get(titlePhrase)!;
+  }
+
+  return null;
 }
 
 /**
