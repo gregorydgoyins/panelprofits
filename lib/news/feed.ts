@@ -1,37 +1,9 @@
 import crypto from "node:crypto";
 import { createAdminServerClient } from "@/lib/supabase/admin";
 import { isMissingTableError } from "@/lib/supabase/errors";
-import { scrapeSourceArticle, generatePanelProfitsArticle, cleanScrapedText } from "@/lib/news/generator";
 
 export type NewsCategory = "national" | "international";
 export const DEFAULT_NEWS_IMAGE = "/newsroom-default.svg";
-
-function officialFavicon(domain: string): string {
-  return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
-}
-
-function sourceFavicon(sourceUrl: string): string {
-  try {
-    return officialFavicon(new URL(sourceUrl).hostname.replace(/^www\./, ""));
-  } catch {
-    return DEFAULT_NEWS_IMAGE;
-  }
-}
-
-function isUsableStoryImage(value: string | null | undefined): value is string {
-  if (typeof value !== "string" || value === DEFAULT_NEWS_IMAGE) return false;
-  return true;
-}
-
-export function newsFallbackImage(source: string, headline: string, summary: string | null): string | null {
-  const text = `${source} ${headline} ${summary || ""}`;
-  if (/\bmarvel\b|avengers|spider-man|x-men|wolverine|deadpool/i.test(text)) return officialFavicon("marvel.com");
-  if (/\bdc comics?\b|batman|superman|wonder woman|justice league/i.test(text)) return officialFavicon("dc.com");
-  if (/dark horse/i.test(text)) return officialFavicon("darkhorse.com");
-  if (/\bidw\b/i.test(text)) return officialFavicon("idwpublishing.com");
-  if (/boom studios|\bboom!\b/i.test(text)) return officialFavicon("boom-studios.com");
-  return null;
-}
 
 export interface NewsStory {
   id: string;
@@ -46,6 +18,18 @@ export interface NewsStory {
   publishedAt: string | null;
   ingestedAt: string;
   archivedAt: string | null;
+}
+
+export function officialFavicon(domain: string): string {
+  return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+}
+
+export function sourceFavicon(sourceUrl: string): string {
+  try {
+    return officialFavicon(new URL(sourceUrl).hostname.replace(/^www\./, ""));
+  } catch {
+    return DEFAULT_NEWS_IMAGE;
+  }
 }
 
 export function shortNewsSource(source: string): string {
@@ -66,50 +50,33 @@ export function shortNewsSource(source: string): string {
   return source.split(/\s+/).map((word) => word[0]).join("").slice(0, 5).toUpperCase();
 }
 
-interface NewsSource {
+export interface NewsSource {
   name: string;
   url: string;
   category: NewsCategory;
 }
 
-const SOURCES: NewsSource[] = [
+export const SOURCES: NewsSource[] = [
+  { name: "BLEEDING COOL", url: "https://bleedingcool.com/comics/feed/", category: "national" },
+  { name: "CBR", url: "https://www.cbr.com/feed/", category: "national" },
+  { name: "THE BEAT", url: "https://www.comicsbeat.com/feed/", category: "national" },
+  { name: "AIPT", url: "https://aiptcomics.com/feed/", category: "national" },
   { name: "VARIETY", url: "https://variety.com/feed/", category: "national" },
   { name: "DEADLINE", url: "https://deadline.com/feed/", category: "national" },
   { name: "THR", url: "https://www.hollywoodreporter.com/feed/", category: "national" },
-  { name: "COMICBOOK", url: "https://comicbook.com/feed/", category: "national" },
-  { name: "CBR", url: "https://www.cbr.com/feed/", category: "national" },
-  { name: "BLEEDING COOL", url: "https://bleedingcool.com/comics/feed/", category: "national" },
-  { name: "THE BEAT", url: "https://www.comicsbeat.com/feed/", category: "national" },
-  { name: "AIPT", url: "https://aiptcomics.com/feed/", category: "national" },
+  { name: "ICV2", url: "https://icv2.com/rss", category: "national" },
   { name: "GAMESRADAR", url: "https://www.gamesradar.com/feeds/all/", category: "international" },
   { name: "IGN", url: "https://www.ign.com/rss/articles/feed?tags=comics", category: "international" },
   { name: "POLYGON", url: "https://www.polygon.com/rss/index.xml", category: "international" },
-  { name: "ANN", url: "https://www.animenewsnetwork.com/all/rss.xml", category: "international" },
-  { name: "GUARDIAN", url: "https://www.theguardian.com/books/rss", category: "international" },
-  { name: "SCREENRANT", url: "https://screenrant.com/feed/", category: "international" },
-  { name: "COMICS JOURNAL", url: "https://www.tcj.com/feed/", category: "international" },
-  { name: "BROKEN FRONTIER", url: "https://www.brokenfrontier.com/feed/", category: "international" },
   { name: "COMICSXF", url: "https://comicsxf.com/feed/", category: "national" },
-  { name: "ICV2", url: "https://icv2.com/rss", category: "national" },
   { name: "COMICBOOK INVEST", url: "https://comicbookinvest.com/feed/", category: "national" },
-  { name: "OTAKU USA", url: "https://otakuusamagazine.com/feed/", category: "international" },
-  { name: "ANIME HERALD", url: "https://www.animeherald.com/feed/", category: "international" },
+  { name: "COMICS JOURNAL", url: "https://www.tcj.com/feed/", category: "international" },
 ];
 
-const TERTIARY_SOURCE_NAMES = new Set(["CBR", "THR", "COMICBOOK", "BLEEDING COOL", "THE BEAT", "ICV2", "ANIME TRENDING", "ANIME HERALD", "COMICS JOURNAL", "POLYGON", "ANN"]);
-const COMIC_TERMS = /comic\s*book|comic(s)?\b|superhero|super-hero|marvel|dc comics|avengers|x-men|spider-man|batman|superman|fantastic four|deadpool|wolverine|venom|manga|mangaka|graphic novel|image comics|\bdark horse (comics|publishing|entertainment)\b|\bdark horse\b(?!\s*horses?\b)|idw|boom studios|viz media|shonen|shojo|webtoon|manhwa/i;
+const COMIC_TERMS = /comic\s*book|comic(s)?\b|superhero|super-hero|marvel|dc comics|avengers|x-men|spider-man|batman|superman|fantastic four|deadpool|wolverine|venom|manga|mangaka|graphic novel|image comics|\bdark horse\b|idw|boom studios|viz media|spawn|spawn universe/i;
 const COMPANY_TERMS = /disney|warner bros|warner discovery|wbd|sony pictures|universal|paramount|skydance|marvel entertainment/i;
-const FINANCIAL_TERMS = /earnings|earning report|annual report|quarterly|revenue|profit|loss|shares|stock|investor|acquisition|merger|deal|buyout|results/i;
-const EXCLUDE_NON_COMIC = /\b(gameplay|playstation\s*5|ps5|xbox|nintendo switch|platinum trophy|earphones|headset|found footage|horror movie|blair witch|messi|lionel messi|soccer|football|nfl|nba|basketball|premier league|champions league|mls|inter miami|celebrity traitors|reality tv|dark horses\?|video game of all-time|pan dorobo|bread thief|brie larson.*video game|preschool)\b/i;
-
-function shuffle<T>(items: T[]): T[] {
-  const result = [...items];
-  for (let index = result.length - 1; index > 0; index -= 1) {
-    const swapIndex = crypto.randomInt(index + 1);
-    [result[index], result[swapIndex]] = [result[swapIndex], result[index]];
-  }
-  return result;
-}
+const FINANCIAL_TERMS = /earnings|revenue|profit|loss|shares|stock|investor|acquisition|merger|deal|buyout|results|box office/i;
+const EXCLUDE_NON_COMIC = /\b(gameplay|playstation\s*5|ps5|xbox|nintendo switch|platinum trophy|earphones|headset|found footage|horror movie|blair witch|messi|lionel messi|soccer|football|nfl|nba|basketball|premier league|champions league|mls|inter miami|celebrity traitors|reality tv)\b/i;
 
 export function isRelevantComicStory(source: string, headline: string, summary: string | null): boolean {
   const text = `${headline} ${summary || ""}`;
@@ -118,14 +85,183 @@ export function isRelevantComicStory(source: string, headline: string, summary: 
   }
   const isComicOrManga = COMIC_TERMS.test(text);
   const isCompanyFinance = COMPANY_TERMS.test(text) && FINANCIAL_TERMS.test(text);
-  if (!isComicOrManga && !isCompanyFinance) return false;
-  return true;
+  return isComicOrManga || isCompanyFinance;
 }
 
-let memoryStories: NewsStory[] = [];
+function decodeEntities(value: string): string {
+  return value
+    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&apos;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&#(\d+);/g, (_, code: string) => {
+      try {
+        return String.fromCodePoint(Number(code));
+      } catch {
+        return "";
+      }
+    })
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, code: string) => {
+      try {
+        return String.fromCodePoint(parseInt(code, 16));
+      } catch {
+        return "";
+      }
+    })
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
-function isTertiarySource(source: string) {
-  return TERTIARY_SOURCE_NAMES.has(source);
+function tagValue(block: string, tag: string): string | null {
+  const match = block.match(new RegExp(`<${tag}(?:\\s[^>]*)?>([\\s\\S]*?)</${tag}>`, "i"));
+  return match ? decodeEntities(match[1]) : null;
+}
+
+function attributeValue(block: string, tag: string, attribute: string): string | null {
+  const match = block.match(new RegExp(`<${tag}[^>]*\\b${attribute}=["']([^"']+)["']`, "i"));
+  return match?.[1] || null;
+}
+
+function isLikelyEditorialImage(value: string | null | undefined): value is string {
+  if (!value || value.startsWith("data:") || value.startsWith("javascript:")) return false;
+  return !/advert|banner|doubleclick|tracking|pixel|sprite|logo-small/i.test(value);
+}
+
+function extractImage(block: string): string | null {
+  const candidate =
+    attributeValue(block, "media:content", "url") ||
+    attributeValue(block, "media:thumbnail", "url") ||
+    (attributeValue(block, "enclosure", "type")?.startsWith("image/") ? attributeValue(block, "enclosure", "url") : null) ||
+    block.match(/<(?:img|media:content|media:thumbnail)\b[^>]*(?:src|url)=["']([^"']+)["']/i)?.[1] ||
+    null;
+
+  return isLikelyEditorialImage(candidate) ? candidate : null;
+}
+
+function parseFeedItems(xml: string): Array<{
+  title: string;
+  url: string;
+  summary: string | null;
+  imageUrl: string | null;
+  publishedAt: string | null;
+  author: string | null;
+}> {
+  const blocks = [...xml.matchAll(/<(item|entry)\b[\s\S]*?<\/\1>/gi)].map((match) => match[0]);
+  return blocks.flatMap((block) => {
+    const rawTitle = tagValue(block, "title");
+    const rawUrl = tagValue(block, "link") || attributeValue(block, "link", "href");
+    if (!rawTitle || !rawUrl) return [];
+
+    const title = decodeEntities(rawTitle).slice(0, 300);
+    const url = rawUrl.trim();
+    const rawSummary =
+      tagValue(block, "content:encoded") ||
+      tagValue(block, "description") ||
+      tagValue(block, "summary") ||
+      tagValue(block, "content");
+    const summary = rawSummary ? decodeEntities(rawSummary).slice(0, 3000) : null;
+    const author = tagValue(block, "dc:creator") || tagValue(block, "author") || null;
+    const imageUrl = extractImage(block);
+    const pubDateStr = tagValue(block, "pubDate") || tagValue(block, "published") || tagValue(block, "updated");
+    const publishedAt = pubDateStr && !Number.isNaN(Date.parse(pubDateStr)) ? new Date(pubDateStr).toISOString() : null;
+
+    return [{ title, url, summary, imageUrl, publishedAt, author }];
+  });
+}
+
+function generateStoryKey(sourceUrl: string, itemUrl: string, title: string): string {
+  return crypto.createHash("sha256").update(`${sourceUrl}|${itemUrl}|${title}`).digest("hex");
+}
+
+export async function fetchFeedSource(source: NewsSource): Promise<Array<{
+  story_key: string;
+  source: string;
+  source_url: string;
+  category: NewsCategory;
+  headline: string;
+  author: string | null;
+  summary: string | null;
+  url: string;
+  image_url: string | null;
+  published_at: string | null;
+}>> {
+  try {
+    const response = await fetch(source.url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        Accept: "application/rss+xml, application/atom+xml, application/xml, text/xml, */*",
+      },
+      signal: AbortSignal.timeout(8000),
+      cache: "no-store",
+    });
+
+    if (!response.ok) return [];
+    const xml = await response.text();
+    const items = parseFeedItems(xml);
+
+    return items
+      .filter((item) => isRelevantComicStory(source.name, item.title, item.summary))
+      .map((item) => ({
+        story_key: generateStoryKey(source.url, item.url, item.title),
+        source: source.name,
+        source_url: source.url,
+        category: source.category,
+        headline: item.title,
+        author: item.author,
+        summary: item.summary,
+        url: item.url,
+        image_url: item.imageUrl || sourceFavicon(source.url),
+        published_at: item.publishedAt,
+      }));
+  } catch {
+    return [];
+  }
+}
+
+export async function refreshNewsStore(): Promise<{ ingested: number; errors: number }> {
+  const db = createAdminServerClient();
+  let ingested = 0;
+  let errors = 0;
+
+  try {
+    const feedBatches = await Promise.allSettled(SOURCES.map(fetchFeedSource));
+    const allRows = feedBatches.flatMap((result) => (result.status === "fulfilled" ? result.value : []));
+
+    if (allRows.length > 0) {
+      const nowIso = new Date().toISOString();
+      const rowsToInsert = allRows.map((row) => ({
+        ...row,
+        ingested_at: nowIso,
+        archived_at: null,
+      }));
+
+      // Upsert into Supabase pp_news_stories on conflict story_key
+      const { error: upsertError } = await db
+        .from("pp_news_stories")
+        .upsert(rowsToInsert, { onConflict: "story_key", ignoreDuplicates: true });
+
+      if (upsertError) {
+        console.error("[News Ingest] Upsert error:", upsertError.message);
+        errors += 1;
+      } else {
+        ingested = rowsToInsert.length;
+      }
+    }
+
+    // Archive stale stories older than 3 days
+    try {
+      await db.rpc("archive_old_news_stories");
+    } catch {}
+  } catch (err) {
+    console.error("[News Ingest] Execution failed:", err);
+    errors += 1;
+  }
+
+  return { ingested, errors };
 }
 
 function mapStory(row: Record<string, unknown>): NewsStory {
@@ -145,104 +281,6 @@ function mapStory(row: Record<string, unknown>): NewsStory {
   };
 }
 
-function diversifyStories(stories: NewsStory[], limit: number): NewsStory[] {
-  const remaining = shuffle(stories);
-  const sourceCounts = new Map<string, number>();
-  const result: NewsStory[] = [];
-  const maxStoriesPerSource = 2;
-  while (remaining.length && result.length < limit) {
-    const eligible = remaining.filter((story) => (sourceCounts.get(story.source) || 0) < maxStoriesPerSource);
-    if (!eligible.length) break;
-    const minTier = Math.min(...eligible.map((story) => isTertiarySource(story.source) ? 1 : 0));
-    const tierCandidates = eligible.filter((story) => (isTertiarySource(story.source) ? 1 : 0) === minTier);
-    const minCount = Math.min(...new Set(tierCandidates.map((story) => sourceCounts.get(story.source) || 0)));
-    const candidates = tierCandidates.filter((story) => (sourceCounts.get(story.source) || 0) === minCount);
-    const weightedCandidates = candidates.flatMap((story) => isTertiarySource(story.source) ? [story] : [story, story, story]);
-    const selected = weightedCandidates[crypto.randomInt(weightedCandidates.length)];
-    const index = remaining.indexOf(selected);
-    if (index < 0) break;
-    remaining.splice(index, 1);
-    sourceCounts.set(selected.source, (sourceCounts.get(selected.source) || 0) + 1);
-    result.push(selected);
-  }
-  return result;
-}
-
-export async function processNewsIngestion(storyRow: Record<string, unknown>): Promise<boolean> {
-  const db = createAdminServerClient();
-  const storyId = String(storyRow.id);
-  const url = String(storyRow.url);
-  const source = String(storyRow.source);
-  const headline = String(storyRow.headline);
-  const rawSummary = storyRow.summary ? String(storyRow.summary) : null;
-  const publishedAt = storyRow.published_at ? String(storyRow.published_at) : null;
-
-  // Strip all legacy templated boilerplate from stored summaries before fact extraction
-  let cleanedRawSummary = "";
-  if (rawSummary) {
-    const pubMatch = rawSummary.match(/publication parameters:\s*([\s\S]*?)(?:Panel Profits analysts note|From a comic equity|Looking ahead,|$)/i);
-    if (pubMatch && pubMatch[1].trim().length > 20) {
-      cleanedRawSummary = pubMatch[1].trim();
-    } else {
-      cleanedRawSummary = rawSummary
-        .split(/(?<=[.!?])\s+|\n\n+/)
-        .filter((s) => 
-          !/Official industry reporting confirms|Recent distribution data|Industry solicitations|Publishing updates from|Media production reports|Independent creator publishing|According to verified reporting|Panel Profits analysts note|From a comic equity|When studio optioning|In terms of asset quality|Analyzing the broader market|Looking ahead, |Panel Profits will continue tracking|release parameters establish/i.test(s)
-        )
-        .join(" ")
-        .trim();
-    }
-  }
-
-  const scrapedContent = await scrapeSourceArticle(url);
-  const generated = generatePanelProfitsArticle({
-    storyKey: storyId,
-    source,
-    sourceUrl: url,
-    headline,
-    rawSummary: cleanedRawSummary,
-    scrapedContent,
-    publishedAt,
-  });
-
-  // Only publish if audit verdict passed!
-  if (!generated.passReport.auditVerdict.isPassed) {
-    console.warn(`[Ingestion] Story ${storyId} rejected by auditor (Score: ${generated.passReport.auditVerdict.auditScore}):`, generated.passReport.auditVerdict.violations);
-    return false;
-  }
-
-  const cleanHeadline = cleanScrapedText(generated.headline);
-  const cleanSummary = generated.paragraphs.join("\n\n");
-  const author = generated.assignedAuthorName;
-
-  const { error } = await db
-    .from("pp_news_stories")
-    .update({ headline: cleanHeadline, summary: cleanSummary, author })
-    .eq("id", storyId);
-
-  if (error) {
-    console.error(`[Ingestion] Failed to persist story ${storyId}:`, error);
-    return false;
-  }
-  return true;
-}
-
-export async function refreshNewsStore(): Promise<void> {
-  const db = createAdminServerClient();
-  const { data, error } = await db
-    .from("pp_news_stories")
-    .select("id,source,source_url,category,headline,author,summary,url,image_url,published_at,ingested_at,archived_at")
-    .order("published_at", { ascending: false, nullsFirst: false })
-    .limit(50);
-
-  if (error || !data) return;
-
-  for (const row of data) {
-    // Ground and audit each story
-    await processNewsIngestion(row);
-  }
-}
-
 export async function getNewsStories(limit = 24, includeArchive = false): Promise<NewsStory[]> {
   const db = createAdminServerClient();
   const query = db
@@ -250,7 +288,7 @@ export async function getNewsStories(limit = 24, includeArchive = false): Promis
     .select("id,source,source_url,category,headline,author,summary,url,image_url,published_at,ingested_at,archived_at")
     .order("published_at", { ascending: false, nullsFirst: false })
     .order("ingested_at", { ascending: false })
-    .limit(300);
+    .limit(limit);
 
   const { data, error } = includeArchive
     ? await query.not("archived_at", "is", null)
@@ -258,32 +296,26 @@ export async function getNewsStories(limit = 24, includeArchive = false): Promis
 
   if (error) {
     if (!isMissingTableError(error)) {
-      console.error("Error fetching news stories:", error);
+      console.error("[News Store] Fetch error:", error.message);
     }
     return [];
   }
-  if (!data) return [];
 
-  const stories = data.map(mapStory).filter((story) => isRelevantComicStory(story.source, story.headline, story.summary) && isUsableStoryImage(story.imageUrl));
-  return diversifyStories(stories, Math.min(Math.max(limit, 1), 100));
+  if (!data) return [];
+  return data.map(mapStory);
 }
 
 export async function getNewsStory(id: string): Promise<NewsStory | null> {
   const db = createAdminServerClient();
-  const { data: directStory, error: directStoryError } = await db
+  const { data, error } = await db
     .from("pp_news_stories")
     .select("id,source,source_url,category,headline,author,summary,url,image_url,published_at,ingested_at,archived_at")
     .eq("id", id)
     .maybeSingle();
 
-  if (!directStoryError && directStory) {
-    return mapStory(directStory);
+  if (error || !data) {
+    return null;
   }
 
-  const activeStories = await getNewsStories(100);
-  const activeStory = activeStories.find((story) => story.id === id);
-  if (activeStory) return activeStory;
-
-  const archivedStories = await getNewsStories(100, true);
-  return archivedStories.find((story) => story.id === id) || null;
+  return mapStory(data);
 }

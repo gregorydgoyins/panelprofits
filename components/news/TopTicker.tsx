@@ -1,38 +1,24 @@
 "use client";
 
 import * as React from "react";
-import { Video } from "lucide-react";
 import { getSourceTicker } from "@/lib/news/sourceTickerMap";
-import { evaluateStoryVideoActivation } from "@/lib/news/broadcast-selection";
 import type { NewsStory } from "@/lib/news/feed";
 
 const SOURCE_COLORS: Record<string, string> = {
-  CBR: "#c1121f",
-  "BLEEDING COOL": "#e85d04",
-  "THE BEAT": "#7b2d8b",
-  AIPT: "#1b6b3a",
-  ICV2: "#1d3557",
-  NEWSARAMA: "#c77d05",
-  CGC: "#2176ae",
-  HERITAGE: "#264653",
-  MULTIVERSITY: "#0077b6",
-  "MAJOR SPOILERS": "#c9184a",
-  "FIRSTCOMICSNEWS": "#059669",
-  "COMIC VINE": "#d97706",
-  "BROKEN FRONTIER": "#9d0208",
-  COMICBOOK: "#1565c0",
-  GOCOLLECT: "#00796b",
-  SCREENRANT: "#880e4f",
-  THR: "#7f1d1d",
-  DEADLINE: "#1c1c1c",
-  VARIETY: "#2d3748",
-  CRUNCHYROLL: "#f97316",
-  "OTAKU USA": "#ec4899",
-  "ANIME HERALD": "#8b5cf6",
-  "ANIME TRENDING": "#06b6d4",
-  "COMICS JOURNAL": "#64748b",
-  "COMICSXF": "#10b981",
-  "BBC NEWS": "#dc2626",
+  CBR: "#06B6D4",
+  "BLEEDING COOL": "#38BDF8",
+  "THE BEAT": "#818CF8",
+  AIPT: "#34D399",
+  ICV2: "#60A5FA",
+  GAMESRADAR: "#A78BFA",
+  COMICBOOK: "#38BDF8",
+  SCREENRANT: "#F43F5E",
+  THR: "#FB7185",
+  DEADLINE: "#94A3B8",
+  VARIETY: "#64748B",
+  "COMICS JOURNAL": "#94A3B8",
+  "COMICSXF": "#2DD4BF",
+  "COMICBOOK INVEST": "#38BDF8",
 };
 
 function getSourceAccent(source: string): string {
@@ -41,10 +27,7 @@ function getSourceAccent(source: string): string {
   for (const [key, color] of Object.entries(SOURCE_COLORS)) {
     if (norm.includes(key)) return color;
   }
-  const PALETTE = ["#1565c0", "#6a0dad", "#00796b", "#c77d05", "#7b2d8b", "#1b6b3a", "#9d0208", "#e85d04"];
-  let hash = 0;
-  for (let i = 0; i < source.length; i++) hash = (hash * 31 + source.charCodeAt(i)) & 0xffffffff;
-  return PALETTE[Math.abs(hash) % PALETTE.length];
+  return "#06B6D4";
 }
 
 interface TopTickerProps {
@@ -56,15 +39,15 @@ interface TopTickerProps {
 export function TopTicker({ stories, activeId, onSelect }: TopTickerProps) {
   return (
     <section className="flex items-center gap-3 border-y border-slate-800/80 bg-[#07090F] px-3 py-2 overflow-hidden shadow-inner">
-      <div className="shrink-0 text-[10px] font-mono uppercase tracking-[0.2em] text-cyan-400 font-semibold px-2 py-0.5 border-r border-slate-800">
-        WIRE
+      <div className="shrink-0 text-[10px] font-mono uppercase tracking-[0.2em] text-cyan-400 font-semibold px-2 py-0.5 border-r border-slate-800 flex items-center gap-2">
+        <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
+        WIRE TICKER
       </div>
 
       <div className="flex items-center gap-2 overflow-x-auto py-0.5 no-scrollbar scroll-smooth">
-        {stories.slice(0, 24).map((story) => {
+        {stories.slice(0, 30).map((story) => {
           const isActive = story.id === activeId;
           const accent = getSourceAccent(story.source);
-          const videoDecision = evaluateStoryVideoActivation(story.id, story.source, story.headline, story.summary);
 
           return (
             <button
@@ -73,19 +56,11 @@ export function TopTicker({ stories, activeId, onSelect }: TopTickerProps) {
               className={`group flex shrink-0 items-center gap-2 border px-2.5 py-1 text-left transition-all rounded ${
                 isActive
                   ? "border-cyan-400/90 bg-[#0F172A] shadow-[0_0_16px_rgba(6,182,212,0.25)]"
-                  : videoDecision.isVideoActive
-                  ? "border-purple-500/60 bg-[#0F0B1A] hover:border-purple-400 hover:bg-[#150F26]"
                   : "border-slate-800/80 bg-[#0B0E17] hover:border-slate-700 hover:bg-[#101420]"
               }`}
             >
-              {videoDecision.isVideoActive ? (
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[8px] font-mono tracking-widest uppercase rounded bg-purple-950/80 text-purple-300 border border-purple-500/50 shrink-0">
-                  <Video className="h-2.5 w-2.5 text-purple-400 animate-pulse" /> VIDEO
-                </span>
-              ) : (
-                <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: accent }} />
-              )}
-              <span className="max-w-[210px] truncate text-xs text-slate-200 group-hover:text-cyan-100 font-medium">
+              <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: accent }} />
+              <span className="max-w-[240px] truncate text-xs text-slate-200 group-hover:text-cyan-100 font-medium">
                 {story.headline}
               </span>
               <span className="text-[9px] font-mono font-semibold tracking-wider shrink-0" style={{ color: accent }}>

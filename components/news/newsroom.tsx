@@ -2,16 +2,26 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowLeft, Radio, Search, SlidersHorizontal } from "lucide-react";
-import { type NewsStory } from "@/lib/news/feed";
+import { Search, Radio, ExternalLink, Calendar, ArrowRight } from "lucide-react";
+import { type NewsStory, shortNewsSource } from "@/lib/news/feed";
 import { TopTicker } from "@/components/news/TopTicker";
 import { StoryPanel } from "@/components/news/StoryPanel";
-import { NewsCountdown } from "@/components/news/NewsCountdown";
-import { PresenterPlayer } from "@/components/news/PresenterPlayer";
-import { evaluateStoryVideoActivation } from "@/lib/news/broadcast-selection";
 
 interface NewsroomProps {
   stories: NewsStory[];
+}
+
+function timeAgo(d: string | null) {
+  if (!d) return "Recently";
+  const parsed = new Date(d);
+  if (isNaN(parsed.getTime())) return "Recently";
+  const ms = Date.now() - parsed.getTime();
+  const m = Math.floor(ms / 60000);
+  if (m < 60) return `${Math.max(m, 1)}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  if (h < 48) return "Yesterday";
+  return parsed.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 export function Newsroom({ stories }: NewsroomProps) {
@@ -34,16 +44,12 @@ export function Newsroom({ stories }: NewsroomProps) {
     return filteredStories.find((s) => s.id === activeStoryId) || filteredStories[0];
   }, [filteredStories, activeStoryId]);
 
-  const videoDecision = React.useMemo(() => {
-    if (!activeStory) return null;
-    return evaluateStoryVideoActivation(activeStory.id, activeStory.source, activeStory.headline, activeStory.summary);
-  }, [activeStory]);
-
   if (!stories.length || !activeStory) {
     return (
-      <div className="border border-slate-800 bg-[#0A0D14] p-12 text-center text-sm text-slate-500">
-        <span className="font-mono text-xs text-cyan-400 uppercase tracking-widest">
-          WAITING FOR LIVE WIRE INGESTION...
+      <div className="border border-slate-800 bg-[#0A0D14] p-12 text-center text-sm text-slate-500 rounded-lg">
+        <span className="font-mono text-xs text-cyan-400 uppercase tracking-widest flex items-center justify-center gap-2">
+          <span className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse" />
+          AWAITING LIVE WIRE INGESTION...
         </span>
       </div>
     );
@@ -51,60 +57,81 @@ export function Newsroom({ stories }: NewsroomProps) {
 
   return (
     <div className="space-y-6">
-      {/* Top Ticker Wire */}
+      {/* Live Ticker Wire at Top */}
       <TopTicker stories={filteredStories} activeId={activeStory.id} onSelect={setActiveStoryId} />
 
-      {/* Studio Header Bar & Filter Controls */}
+      {/* Control Bar: Status & Search */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-mono tracking-wider uppercase rounded border border-rose-500/60 bg-rose-950/40 text-rose-300">
-            <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse" />
-            LIVE
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-mono tracking-wider uppercase rounded border border-cyan-500/50 bg-cyan-950/40 text-cyan-300">
+            <Radio className="h-3 w-3 text-cyan-400 animate-pulse" />
+            LIVE WIRE
           </span>
           <span className="px-2.5 py-1 text-[10px] font-mono tracking-wider uppercase rounded border border-slate-800 bg-slate-900/60 text-slate-300">
-            Narrative Engine
+            {filteredStories.length} Real-Time Stories
           </span>
-          <span className="px-2.5 py-1 text-[10px] font-mono tracking-wider uppercase rounded border border-slate-800 bg-slate-900/60 text-cyan-300">
-            {filteredStories.length} Stories Active
-          </span>
-          {videoDecision?.isVideoActive && (
-            <span className="px-2.5 py-1 text-[10px] font-mono tracking-wider uppercase rounded border border-purple-500/60 bg-purple-950/40 text-purple-300">
-              Video Presenter Active
-            </span>
-          )}
-          <NewsCountdown lastRefreshed={stories[0]?.ingestedAt} />
         </div>
 
-        <label className="flex items-center gap-2 border border-slate-800 bg-[#080B11] px-3 py-1.5 text-xs text-slate-400 sm:w-64 rounded">
-          <Search className="h-3.5 w-3.5 text-slate-500" />
+        <label className="flex items-center gap-2 border border-slate-800 bg-[#080B11] px-3 py-1.5 text-xs text-slate-400 sm:w-72 rounded">
+          <Search className="h-3.5 w-3.5 text-slate-500 shrink-0" />
           <input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            aria-label="Search wire or ticker..."
-            className="w-full bg-transparent outline-none text-slate-200 text-xs"
+            placeholder="Search headlines, sources, lore..."
+            aria-label="Search news wire"
+            className="w-full bg-transparent outline-none text-slate-200 text-xs placeholder:text-slate-600"
           />
         </label>
       </div>
 
-      {/* Main Newsroom Stage: Editorial Reader & Conditional Presenter Video Player */}
-      {videoDecision?.isVideoActive ? (
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-6 items-start">
-          <div className="min-w-0">
-            <StoryPanel story={activeStory} />
-          </div>
-          <div className="lg:sticky lg:top-20 space-y-4">
-            <PresenterPlayer
-              story={activeStory}
-              presenter={videoDecision.presenter}
-              categoryTag={videoDecision.storyCategoryTag}
-            />
-          </div>
-        </div>
-      ) : (
-        <div className="w-full">
+      {/* Main 2-Column Grid: Featured Active Story + Live Wire Feed */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Left: Active Story Full View */}
+        <div className="lg:col-span-8 min-w-0">
           <StoryPanel story={activeStory} />
         </div>
-      )}
+
+        {/* Right: Live Wire List */}
+        <div className="lg:col-span-4 space-y-3">
+          <div className="border border-slate-800 bg-[#07090F] p-4 rounded-lg">
+            <div className="flex items-center justify-between border-b border-slate-800/80 pb-3 mb-3">
+              <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-cyan-400 font-semibold">
+                LATEST WIRE DISPATCHES
+              </span>
+              <span className="text-[9px] font-mono text-slate-500">
+                {filteredStories.length} TOTAL
+              </span>
+            </div>
+
+            <div className="space-y-2 max-h-[720px] overflow-y-auto pr-1 no-scrollbar">
+              {filteredStories.map((story) => {
+                const isSelected = story.id === activeStory.id;
+                return (
+                  <button
+                    key={story.id}
+                    onClick={() => setActiveStoryId(story.id)}
+                    className={`w-full text-left p-3 rounded transition-all border ${
+                      isSelected
+                        ? "border-cyan-400/80 bg-cyan-950/20 shadow-sm"
+                        : "border-slate-800/60 bg-[#0A0D15] hover:border-slate-700 hover:bg-[#0D121B]"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between text-[9px] font-mono text-slate-400 mb-1">
+                      <span className="text-cyan-400 font-semibold uppercase">
+                        {shortNewsSource(story.source)}
+                      </span>
+                      <span>{timeAgo(story.publishedAt)}</span>
+                    </div>
+                    <h3 className="text-xs font-medium text-slate-200 line-clamp-2 leading-snug">
+                      {story.headline}
+                    </h3>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

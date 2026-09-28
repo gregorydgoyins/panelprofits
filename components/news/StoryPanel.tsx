@@ -2,204 +2,103 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowUpRight, UserCheck, ShieldAlert, TrendingUp, TrendingDown, Minus, Award } from "lucide-react";
-import { classifyStoryPriority } from "@/lib/news/broadcast-script";
-import { findNewsEntities, type EntityWikiDef } from "@/lib/news/entities";
+import { ArrowUpRight, Newspaper, Calendar, ExternalLink } from "lucide-react";
+import { findNewsEntities } from "@/lib/news/entities";
 import { LinkedBriefing } from "@/components/news/linked-briefing";
-import { selectAuthorForStory, generateAuthorMarketPrediction } from "@/lib/news/authors";
-import type { NewsStory } from "@/lib/news/feed";
+import { shortNewsSource, type NewsStory } from "@/lib/news/feed";
 
 function relativeTime(d: string | null) {
   if (!d) return "Recently";
   const parsed = new Date(d);
   if (isNaN(parsed.getTime())) return "Recently";
   const ms = Date.now() - parsed.getTime();
-  const h = Math.floor(ms / 3600000);
-  if (h < 1) return "Just now";
+  const m = Math.floor(ms / 60000);
+  if (m < 60) return `${Math.max(m, 1)}m ago`;
+  const h = Math.floor(m / 60);
   if (h < 24) return `${h}h ago`;
   if (h < 48) return "Yesterday";
   return parsed.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-const PRIORITY_LABELS: Record<string, { label: string; color: string; border: string; bg: string }> = {
-  breaking: { label: "BREAKING", color: "#F43F5E", border: "border-rose-500/50", bg: "bg-rose-950/40" },
-  developing: { label: "DEVELOPING", color: "#06B6D4", border: "border-cyan-500/50", bg: "bg-cyan-950/40" },
-  background: { label: "WIRE", color: "#94A3B8", border: "border-slate-700", bg: "bg-slate-900/40" },
-};
-
-function Block({
-  label,
-  title,
-  text,
-  authorName,
-  entities,
-}: {
-  label: string;
-  title: string;
-  text: string;
-  authorName?: string;
-  entities?: EntityWikiDef[];
-}) {
-  return (
-    <section className="border border-slate-800/80 bg-[#07090F] p-4 shadow-sm rounded">
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-[9px] font-mono uppercase tracking-[0.18em] text-cyan-400 font-semibold">{label}</span>
-        {authorName && <span className="text-[8px] font-mono text-slate-500 uppercase">{authorName}</span>}
-      </div>
-      <h3 className="text-xs font-semibold text-slate-100">{title}</h3>
-      <p className="mt-1.5 text-xs text-slate-400 leading-relaxed">
-        {entities ? <LinkedBriefing text={text} entities={entities} /> : text}
-      </p>
-    </section>
-  );
-}
-
 export function StoryPanel({ story }: { story: NewsStory }) {
   if (!story) return null;
 
-  const priority = classifyStoryPriority({ headline: story.headline, description: story.summary });
-  const pCfg = PRIORITY_LABELS[priority] || PRIORITY_LABELS.background;
-  const desc = story.summary || "";
   const entities = findNewsEntities(story.headline, story.summary);
-  const author = selectAuthorForStory(story.source, story.id);
-  const prediction = generateAuthorMarketPrediction(story.id, story.source, story.headline, story.summary);
+  const rawSummary = story.summary || "";
+  const paragraphs = rawSummary
+    .split(/\n\n+/)
+    .map((p) => p.trim())
+    .filter(Boolean);
 
-  const sentences = desc.split(/(?<=[.!?])\s+/).map((s) => s.trim()).filter(Boolean);
-  const paragraphs = sentences.reduce<string[]>((groups, sentence, index) => {
-    const groupIndex = Math.floor(index / 3);
-    groups[groupIndex] = `${groups[groupIndex] || ""}${groups[groupIndex] ? " " : ""}${sentence}`;
-    return groups;
-  }, []).slice(0, 8);
-
-  const analysisText = `${author.writingStyle.introStyle} ${author.writingStyle.analysisFocus}`;
-  const implicationsText = `${author.writingStyle.implicationAngle} ${
-    entities.length
-      ? `Collectors observing ${entities.slice(0, 2).map((e) => e.term).join(" and ")} should closely track FOC allocations.`
-      : "Broad positioning adjustments expected prior to official press confirmation."
-  }`;
-  const marketText = `${author.writingStyle.marketAngle} ${
-    entities.length
-      ? `Watchlists tied to ${entities.slice(0, 3).map((e) => e.term).join(", ")} will reflect near-term pricing sentiment.`
-      : "Catalog items in this tier are entering a high-interest observation window."
-  }`;
+  const hasEditorialImage = Boolean(story.imageUrl && !story.imageUrl.includes("google.com/s2/favicons"));
 
   return (
-    <article className="border border-slate-800 bg-[#0A0D15] p-6 sm:p-8 shadow-xl flex flex-col justify-between">
+    <article className="border border-slate-800 bg-[#0A0D15] p-6 sm:p-8 shadow-xl flex flex-col justify-between rounded-lg">
       <div>
-        {/* Top Meta & Priority */}
+        {/* Header Metadata */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
           <div className="flex items-center gap-2.5">
-            <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-cyan-400 font-semibold">
-              Lead Story
+            <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-cyan-400 font-semibold flex items-center gap-1.5">
+              <Newspaper className="h-3.5 w-3.5 text-cyan-400" />
+              {shortNewsSource(story.source)}
             </span>
-            <span
-              className={`text-[9px] font-mono tracking-widest px-2 py-0.5 border ${pCfg.border} ${pCfg.bg}`}
-              style={{ color: pCfg.color }}
-            >
-              {pCfg.label}
-            </span>
-          </div>
-
-          {/* Author Badge */}
-          <div className="flex items-center gap-2">
-            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-mono tracking-wider uppercase rounded border ${author.badgeBorder} ${author.badgeBg} ${author.badgeText}`}>
-              <UserCheck className="h-3 w-3" />
-              {author.name} · {author.role}
+            <span className="text-slate-600 font-mono">|</span>
+            <span className="text-[10px] font-mono text-slate-400 flex items-center gap-1">
+              <Calendar className="h-3 w-3 text-slate-500" />
+              {relativeTime(story.publishedAt)}
             </span>
           </div>
+
+          {story.author && (
+            <span className="text-[10px] font-mono text-slate-400">
+              Reported by <strong className="text-slate-200">{story.author}</strong>
+            </span>
+          )}
         </div>
 
-        {/* Provenance Banner */}
-        <div className="mt-3 flex items-center gap-2 px-3 py-1.5 text-[11px] font-mono rounded border border-slate-800 bg-[#06080D] text-slate-400">
-          <ShieldAlert className="h-3.5 w-3.5 text-cyan-400 shrink-0" />
-          <span>
-            WIRE PROVENANCE: <strong className="text-slate-200">{story.source}</strong>
-            {story.author && <span> · Reported by <strong className="text-slate-300">{story.author}</strong></span>}
-            <span className="text-slate-600"> | </span>
-            <span className="text-slate-500">{relativeTime(story.publishedAt)}</span>
-          </span>
-        </div>
-
-        {/* Big Headline */}
-        <h1 className="mt-4 text-2xl sm:text-3xl font-semibold text-slate-100 leading-tight">
+        {/* Lead Headline */}
+        <h1 className="mt-4 text-2xl sm:text-3xl font-semibold text-slate-100 leading-tight tracking-tight">
           {story.headline}
         </h1>
 
-        {/* Editorial Body Text */}
-        {paragraphs.length > 0 ? (
-          <div className="mt-5 space-y-4 text-sm sm:text-base leading-7 text-slate-300">
-            {paragraphs.map((p, i) => (
-              <p key={i}>
-                <LinkedBriefing text={p} entities={entities} />
-              </p>
-            ))}
+        {/* Optional Editorial Artwork */}
+        {hasEditorialImage && (
+          <div className="mt-5 overflow-hidden rounded border border-slate-800/80 bg-[#06080D] flex justify-center">
+            <img
+              src={story.imageUrl!}
+              alt={story.headline}
+              className="max-h-[380px] w-auto max-w-full object-contain"
+            />
           </div>
-        ) : (
-          <p className="mt-5 text-sm leading-7 text-slate-400 italic">
-            This report was ingested from the wire with authentic publisher metadata. Read the original report below.
-          </p>
         )}
 
-        {/* 3-Column Narrative Intelligence Grid */}
-        <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <Block label="Analyst Breakdown" title={author.beat} text={analysisText} authorName={author.name} entities={entities} />
-          <Block label="Implications" title="What Changes Next" text={implicationsText} authorName={author.name} entities={entities} />
-          <Block label="Market Impact" title="Asset Positioning" text={marketText} authorName={author.name} entities={entities} />
+        {/* Story Body */}
+        <div className="mt-6 space-y-4 text-sm sm:text-base leading-relaxed text-slate-300">
+          {paragraphs.length > 0 ? (
+            paragraphs.map((p, idx) => (
+              <p key={idx}>
+                <LinkedBriefing text={p} entities={entities} />
+              </p>
+            ))
+          ) : (
+            <p className="text-slate-400 italic">
+              Original report metadata ingested from {story.source}. Read the complete story at the source link below.
+            </p>
+          )}
         </div>
 
-        {/* Dedicated Market & Asset Ripple Projection */}
-        <div className="mt-8 rounded border border-cyan-500/20 bg-[#080B12] p-5">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-800/80 pb-3">
-            <div className="flex items-center gap-2">
-              <Award className="h-4 w-4 text-cyan-400" />
-              <span className="text-xs font-mono font-semibold uppercase tracking-wider text-cyan-300">
-                Market Ripple Projection // {author.name}
-              </span>
-            </div>
-            <span className="text-[10px] font-mono text-slate-400">
-              {author.role}
-            </span>
-          </div>
-
-          <p className="mt-3 text-xs leading-relaxed text-slate-400">
-            Below is {author.name}&apos;s dedicated market assessment predicting how this news story will ripple across related equity tickers, key issue baskets, and collectible assets:
-          </p>
-
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            {prediction.ripples.map((ripple, idx) => (
-              <div key={idx} className="rounded border border-slate-800/80 bg-[#06070B] p-3.5 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-xs font-semibold text-cyan-300">{ripple.ticker}</span>
-                    <span className={`inline-flex items-center gap-1 font-mono text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                      ripple.direction === "up" ? "bg-emerald-950/60 text-emerald-300 border border-emerald-500/40" :
-                      ripple.direction === "down" ? "bg-rose-950/60 text-rose-300 border border-rose-500/40" :
-                      "bg-slate-800/60 text-slate-300 border border-slate-600/40"
-                    }`}>
-                      {ripple.direction === "up" && <TrendingUp className="h-3 w-3" />}
-                      {ripple.direction === "down" && <TrendingDown className="h-3 w-3" />}
-                      {ripple.direction === "flat" && <Minus className="h-3 w-3" />}
-                      {ripple.percentageDelta} ({ripple.magnitude})
-                    </span>
-                  </div>
-                  <p className="mt-1 text-xs font-medium text-slate-200">{ripple.assetName}</p>
-                  <p className="mt-2 text-xs text-slate-400 leading-normal">{ripple.rationale}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* CBR Intelligence & CBR Financial Lexicon Entity Tags */}
+        {/* Entity Cross-References */}
         {entities.length > 0 && (
           <div className="mt-6 flex flex-wrap items-center gap-2 pt-4 border-t border-slate-800/80">
-            <span className="text-[9px] font-mono uppercase tracking-widest text-slate-500 mr-1">CBR Intelligence & Financial Lexicon:</span>
-            {entities.slice(0, 10).map((entity) => (
+            <span className="text-[9px] font-mono uppercase tracking-widest text-slate-500 mr-1">
+              Referenced Lore & Market Entities:
+            </span>
+            {entities.slice(0, 8).map((entity) => (
               <Link
                 key={entity.term}
                 prefetch
                 href={entity.wikiPath}
-                className="inline-flex items-center gap-1 border border-slate-700 bg-slate-900/60 px-2 py-0.5 text-[10px] text-slate-300 hover:border-cyan-400 hover:text-cyan-200 transition-colors rounded"
+                className="inline-flex items-center gap-1 border border-slate-800 bg-slate-900/60 px-2 py-0.5 text-[10px] text-slate-300 hover:border-cyan-400 hover:text-cyan-200 transition-colors rounded"
               >
                 <span>{entity.term}</span>
                 {entity.ticker && (
@@ -213,21 +112,21 @@ export function StoryPanel({ story }: { story: NewsStory }) {
         )}
       </div>
 
-      {/* Footer Attribution Link */}
-      <div className="mt-6 pt-4 border-t border-slate-800/80 flex items-center justify-between">
+      {/* Footer Navigation & Outbound Link */}
+      <div className="mt-8 pt-4 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-4">
         <a
           href={story.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200 uppercase tracking-wider font-medium transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs text-cyan-400 hover:text-cyan-300 uppercase tracking-wider font-medium transition-colors"
         >
-          Read original article at {story.source} <ArrowUpRight className="h-3.5 w-3.5" />
+          Read full report at {story.source} <ExternalLink className="h-3.5 w-3.5" />
         </a>
         <Link
           href={`/news/${story.id}`}
-          className="text-xs text-cyan-400 hover:text-cyan-300 uppercase tracking-wider font-medium"
+          className="text-xs text-slate-400 hover:text-slate-200 uppercase tracking-wider font-medium flex items-center gap-1"
         >
-          Open Dedicated Dossier &rarr;
+          Permanent Dossier <ArrowUpRight className="h-3.5 w-3.5" />
         </Link>
       </div>
     </article>
