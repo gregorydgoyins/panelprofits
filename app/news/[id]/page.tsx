@@ -4,8 +4,7 @@ import { redirect } from "next/navigation";
 import { getNewsStory, shortNewsSource } from "@/lib/news/feed";
 import { findNewsEntities } from "@/lib/news/entities";
 import { NewsBriefing } from "@/components/news/news-briefing";
-import { PresenterPlayer } from "@/components/news/PresenterPlayer";
-import { evaluateStoryVideoActivation } from "@/lib/news/broadcast-selection";
+import { AuthenticVideoEmbed, extractAuthenticVideo } from "@/components/news/authentic-video-embed";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +14,7 @@ export default async function NewsStoryPage({ params }: { params: Promise<{ id: 
   if (!story) redirect("/news");
 
   const relatedEntities = findNewsEntities(story.headline, story.summary);
-  const videoDecision = evaluateStoryVideoActivation(story.id, story.source, story.headline, story.summary);
+  const authenticVideo = extractAuthenticVideo(story.summary, story.url);
   const hasEditorialImage = Boolean(story.imageUrl && !story.imageUrl.includes("google.com/s2/favicons"));
   const hasPublisherMark = Boolean(story.imageUrl?.includes("google.com/s2/favicons"));
 
@@ -58,13 +57,9 @@ export default async function NewsStoryPage({ params }: { params: Promise<{ id: 
           </div>
           <h1 className="mt-4 text-2xl font-semibold leading-tight text-slate-100 sm:text-4xl">{story.headline}</h1>
           
-          {videoDecision.isVideoActive && (
+          {authenticVideo && (
             <div className="mt-8 max-w-3xl">
-              <PresenterPlayer
-                story={story}
-                presenter={videoDecision.presenter}
-                categoryTag={videoDecision.storyCategoryTag}
-              />
+              <AuthenticVideoEmbed video={authenticVideo} headline={story.headline} />
             </div>
           )}
 

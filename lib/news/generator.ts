@@ -87,7 +87,11 @@ export function cleanScrapedText(rawHtmlOrText: string): string {
     .replace(/(?:IMAGE|PHOTO|CREDIT)\s+(?:COURTESY\s+OF|BY)\s+[^.\n]+/gi, " ")
     .replace(/We want to hear from you in the comments[\s\S]*/gi, " ")
     .replace(/Are you hoping to see[\s\S]*?\?/gi, " ")
-    .replace(/What do you think[\s\S]*?\?/gi, " ");
+    .replace(/What do you think[\s\S]*?\?/gi, " ")
+    .replace(/(?:watch|view|see)?\s*the\s+video\s*\((?:below|above)\)[^.]*\./gi, " ")
+    .replace(/\((?:video|trailer|clip)\s+(?:below|above)\)/gi, " ")
+    .replace(/the\s+video\s+(?:below|above)\s+features[^.]*\./gi, " ")
+    .replace(/watch the (?:teaser|trailer|clip) (?:below|above)[^.]*\./gi, " ");
 
   return text
     .replace(/&amp;/g, "&")

@@ -97,10 +97,10 @@ const SOURCES: NewsSource[] = [
 ];
 
 const TERTIARY_SOURCE_NAMES = new Set(["CBR", "THR", "COMICBOOK", "BLEEDING COOL", "THE BEAT", "ICV2", "ANIME TRENDING", "ANIME HERALD", "COMICS JOURNAL", "POLYGON", "ANN"]);
-const COMIC_TERMS = /comic\s*book|comic(s)?\b|superhero|super-hero|marvel|dc comics|avengers|x-men|spider-man|batman|superman|fantastic four|deadpool|wolverine|venom|manga|mangaka|anime|graphic novel|image comics|dark horse|idw|boom studios|viz media|shonen|shojo|webtoon|manhwa/i;
+const COMIC_TERMS = /comic\s*book|comic(s)?\b|superhero|super-hero|marvel|dc comics|avengers|x-men|spider-man|batman|superman|fantastic four|deadpool|wolverine|venom|manga|mangaka|graphic novel|image comics|\bdark horse (comics|publishing|entertainment)\b|\bdark horse\b(?!\s*horses?\b)|idw|boom studios|viz media|shonen|shojo|webtoon|manhwa/i;
 const COMPANY_TERMS = /disney|warner bros|warner discovery|wbd|sony pictures|universal|paramount|skydance|marvel entertainment/i;
 const FINANCIAL_TERMS = /earnings|earning report|annual report|quarterly|revenue|profit|loss|shares|stock|investor|acquisition|merger|deal|buyout|results/i;
-const EXCLUDE_NON_COMIC = /\b(gameplay|playstation\s*5|ps5|xbox|nintendo switch|platinum trophy|earphones|headset|found footage|horror movie|blair witch|messi|lionel messi|soccer|football|nfl|nba|basketball|premier league|champions league|mls|inter miami)\b/i;
+const EXCLUDE_NON_COMIC = /\b(gameplay|playstation\s*5|ps5|xbox|nintendo switch|platinum trophy|earphones|headset|found footage|horror movie|blair witch|messi|lionel messi|soccer|football|nfl|nba|basketball|premier league|champions league|mls|inter miami|celebrity traitors|reality tv|dark horses\?|video game of all-time|pan dorobo|bread thief|brie larson.*video game|preschool)\b/i;
 
 function shuffle<T>(items: T[]): T[] {
   const result = [...items];
