@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { ArrowRight, Newspaper } from "lucide-react";
-import { shortNewsSource, type NewsStory } from "@/lib/news/feed";
+import { shortNewsSource, type NewsStory } from "@/lib/news/types";
 import { getSourceTicker } from "@/lib/news/sourceTickerMap";
 
 interface NewsRailProps {

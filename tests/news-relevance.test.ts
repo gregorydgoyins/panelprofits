@@ -15,4 +15,23 @@ describe("newsroom relevance gate", () => {
   it("keeps directly relevant comics and character reporting", () => {
     expect(isRelevantComicStory("VARIETY", "Marvel announces a new X-Men series", "The superhero franchise returns with a new creative team.")).toBe(true);
   });
+
+  it("extracts canonical Marvel characters into entity links", async () => {
+    const { findNewsEntities } = await import("@/lib/news/entities");
+    const entities = findNewsEntities("Tomb of Apocalypse: Jubilee has a grave problem with Bucky", "Marvel comics release");
+    const terms = entities.map((e) => e.term);
+    expect(terms).toContain("Apocalypse");
+    expect(terms).toContain("Jubilee");
+    expect(terms).toContain("Bucky");
+  });
+
+  it("extracts canonical DC characters into entity links", async () => {
+    const { findNewsEntities } = await import("@/lib/news/entities");
+    const entities = findNewsEntities("Batman and Superman confront Joker in Gotham", "DC Comics release");
+    const terms = entities.map((e) => e.term);
+    expect(terms).toContain("Batman");
+    expect(terms).toContain("Superman");
+    expect(terms).toContain("Joker");
+    expect(terms).toContain("DC Comics");
+  });
 });

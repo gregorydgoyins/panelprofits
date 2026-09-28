@@ -9,10 +9,10 @@ export function generateStaticParams() {
 }
 
 export default async function NewsAuthorPage(props: {
-  params: Promise<{ id: string | string[] }> | { id: string | string[] };
+  params: Promise<{ id: string }>;
 }) {
   const resolvedParams = await props.params;
-  const rawId = Array.isArray(resolvedParams?.id) ? resolvedParams.id[0] : resolvedParams?.id;
+  const rawId = resolvedParams?.id;
   const id = typeof rawId === "string" ? decodeURIComponent(rawId).toLowerCase().trim() : "";
 
   const analyst = AUTHOR_PERSONAS.find(

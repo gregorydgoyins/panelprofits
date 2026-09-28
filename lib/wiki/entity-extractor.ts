@@ -112,23 +112,112 @@ export const COMIC_FINANCIAL_GLOSSARY: Record<string, { term: string; definition
   }
 };
 
-// Known Creator & Character Dictionary for Real-Time Knowledge Graph Parsing
+// Known Creator & Character Dictionary Grounded in Marvel Database & GCD
 const KNOWN_CREATORS = [
-  "Stan Lee", "Jack Kirby", "Steve Ditko", "Todd McFarlane", "Frank Miller",
-  "Alan Moore", "Jim Lee", "Rob Liefeld", "Chris Claremont", "Will Eisner",
-  "Bob Kane", "Bill Finger", "Jerry Siegel", "Joe Shuster", "Neal Adams",
-  "Bernie Wrightson", "John Romita", "John Buscema", "George Pérez", "Dave Gibbons",
-  "Grant Morrison", "Garth Ennis", "Brian Michael Bendis", "Geoff Johns", "Jonathan Hickman",
-  "Donny Cates", "Chip Zdarsky", "Al Ewing", "James Tynion IV", "Peach Momoko"
+  "Stan Lee", "Jack Kirby", "Steve Ditko", "Chris Claremont", "John Romita",
+  "John Romita Sr.", "John Buscema", "Roy Thomas", "Herb Trimpe", "Dave Cockrum",
+  "Len Wein", "Jim Starlin", "Gene Colan", "Marv Wolfman", "Gerry Conway",
+  "Ross Andru", "Archie Goodwin", "George Tuska", "Doug Moench", "Don Perlin",
+  "Gary Friedrich", "Mike Ploog", "Bill Everett", "Rob Liefeld", "Fabian Nicieza",
+  "Todd McFarlane", "Frank Miller", "Jim Lee", "Brian Michael Bendis", "Mark Bagley",
+  "Jonathan Hickman", "Al Ewing", "Donny Cates", "Chip Zdarsky", "Sal Buscema",
+  "Bill Mantlo", "Peter David", "Tom DeFalco", "Howard Mackie", "Mark Gruenwald",
+  "John Byrne", "Alan Davis", "Scott Lobdell", "Bob Kane", "Bill Finger",
+  "Jerry Siegel", "Joe Shuster", "Neal Adams", "Grant Morrison", "Geoff Johns"
 ];
 
 const KNOWN_CHARACTERS = [
-  "Spider-Man", "Batman", "Superman", "Wolverine", "Iron Man",
-  "Captain America", "Thor", "Hulk", "Wonder Woman", "Flash",
-  "Green Lantern", "Deadpool", "Venom", "Punisher", "Daredevil",
-  "Doctor Strange", "Black Panther", "Spawn", "Hellboy", "Magneto",
-  "Joker", "Doctor Doom", "Thanos", "Norman Osborn", "Harley Quinn"
+  "Spider-Man", "Wolverine", "Iron Man", "Captain America", "Thor",
+  "Hulk", "Deadpool", "Venom", "Daredevil", "Punisher",
+  "Doctor Doom", "Silver Surfer", "Galactus", "Thanos", "Moon Knight",
+  "Ghost Rider", "Blade", "Jubilee", "Apocalypse", "Winter Soldier",
+  "Bucky", "Taskmaster", "Kang the Conqueror", "Mister Sinister", "Doctor Octopus",
+  "Green Goblin", "Carnage", "Kraven the Hunter", "Cable", "Domino",
+  "Bishop", "Archangel", "She-Hulk", "Black Panther", "Sentry",
+  "Magneto", "Professor X", "Cyclops", "Storm", "Colossus",
+  "Nightcrawler", "Rogue", "Gambit", "Scarlet Witch", "Quicksilver",
+  "Hawkeye", "Black Widow", "Falcon", "Luke Cage", "Iron Fist",
+  "Shang-Chi", "X-Men", "Avengers", "Fantastic Four", "Sinister Six",
+  "Brotherhood of Evil Mutants", "Alpha Flight", "New Mutants", "Thunderbolts",
+  "Guardians of the Galaxy", "Illuminati", "Dora Milaje", "Batman", "Superman",
+  "Joker", "Wonder Woman", "Flash", "Green Lantern", "Aquaman",
+  "Spawn", "Hellboy", "Star Wars"
 ];
+
+const LANDMARK_MARVEL_DEBUTS: Record<string, { characters: string[]; creators: string[] }> = {
+  // Marvel Silver & Bronze Age Landmarks
+  "amazing fantasy #15": { characters: ["Spider-Man", "Aunt May", "Uncle Ben", "Flash Thompson"], creators: ["Stan Lee", "Steve Ditko"] },
+  "incredible hulk #181": { characters: ["Wolverine"], creators: ["Len Wein", "John Romita Sr.", "Herb Trimpe"] },
+  "giant-size x-men #1": { characters: ["Storm", "Colossus", "Nightcrawler", "Krakoa", "Thunderbird"], creators: ["Len Wein", "Dave Cockrum"] },
+  "werewolf by night #32": { characters: ["Moon Knight", "Frenchie"], creators: ["Doug Moench", "Don Perlin"] },
+  "iron man #55": { characters: ["Thanos", "Drax the Destroyer", "Starfox"], creators: ["Jim Starlin", "Mike Friedrich"] },
+  "new mutants #98": { characters: ["Deadpool", "Gideon", "Domino"], creators: ["Rob Liefeld", "Fabian Nicieza"] },
+  "new mutants #87": { characters: ["Cable"], creators: ["Rob Liefeld", "Louise Simonson"] },
+  "tomb of dracula #10": { characters: ["Blade"], creators: ["Marv Wolfman", "Gene Colan"] },
+  "amazing spider-man #129": { characters: ["Punisher", "Jackal"], creators: ["Gerry Conway", "Ross Andru", "John Romita Sr."] },
+  "amazing spider-man #300": { characters: ["Venom"], creators: ["Todd McFarlane", "David Michelinie"] },
+  "amazing spider-man #361": { characters: ["Carnage"], creators: ["David Michelinie", "Mark Bagley"] },
+  "amazing spider-man #14": { characters: ["Green Goblin"], creators: ["Stan Lee", "Steve Ditko"] },
+  "amazing spider-man #31": { characters: ["Gwen Stacy", "Harry Osborn"], creators: ["Stan Lee", "Steve Ditko"] },
+  "amazing spider-man #41": { characters: ["Rhino"], creators: ["Stan Lee", "John Romita Sr."] },
+  "amazing spider-man #50": { characters: ["Kingpin"], creators: ["Stan Lee", "John Romita Sr."] },
+  "amazing spider-man #101": { characters: ["Morbius the Living Vampire"], creators: ["Roy Thomas", "Gil Kane"] },
+  "amazing spider-man #194": { characters: ["Black Cat"], creators: ["Marv Wolfman", "Keith Pollard"] },
+  "marvel spotlight #5": { characters: ["Ghost Rider", "Zarathos"], creators: ["Gary Friedrich", "Mike Ploog"] },
+  "marvel spotlight #2": { characters: ["Werewolf by Night"], creators: ["Roy Thomas", "Gerry Conway", "Mike Ploog"] },
+  "marvel spotlight #28": { characters: ["Moon Knight"], creators: ["Doug Moench", "Don Perlin"] },
+  "hero for hire #1": { characters: ["Luke Cage"], creators: ["Archie Goodwin", "George Tuska", "John Romita Sr."] },
+  "marvel premiere #15": { characters: ["Iron Fist"], creators: ["Roy Thomas", "Gil Kane"] },
+  "special marvel edition #15": { characters: ["Shang-Chi"], creators: ["Steve Englehart", "Jim Starlin"] },
+  "fantastic four #1": { characters: ["Mister Fantastic", "Invisible Woman", "Human Torch", "Thing", "Mole Man"], creators: ["Stan Lee", "Jack Kirby"] },
+  "fantastic four #48": { characters: ["Silver Surfer", "Galactus"], creators: ["Jack Kirby", "Stan Lee"] },
+  "fantastic four #52": { characters: ["Black Panther"], creators: ["Jack Kirby", "Stan Lee"] },
+  "avengers #1": { characters: ["Avengers", "Loki"], creators: ["Stan Lee", "Jack Kirby"] },
+  "avengers #4": { characters: ["Captain America"], creators: ["Stan Lee", "Jack Kirby"] },
+  "avengers #57": { characters: ["Vision"], creators: ["Roy Thomas", "John Buscema"] },
+  "journey into mystery #83": { characters: ["Thor"], creators: ["Stan Lee", "Jack Kirby"] },
+  "strange tales #110": { characters: ["Doctor Strange", "Ancient One", "Nightmare"], creators: ["Stan Lee", "Steve Ditko"] },
+  "tales of suspense #39": { characters: ["Iron Man"], creators: ["Stan Lee", "Jack Kirby", "Don Heck"] },
+  "tales of suspense #52": { characters: ["Black Widow"], creators: ["Stan Lee", "Don Heck"] },
+  "tales of suspense #57": { characters: ["Hawkeye"], creators: ["Stan Lee", "Don Heck"] },
+  "captain america comics #1": { characters: ["Captain America", "Bucky"], creators: ["Joe Simon", "Jack Kirby"] },
+  "captain america #117": { characters: ["Falcon"], creators: ["Stan Lee", "Gene Colan"] },
+  "iron man #118": { characters: ["James Rhodes"], creators: ["David Michelinie", "Bob Layton", "John Byrne"] },
+  "thor #337": { characters: ["Beta Ray Bill"], creators: ["Walt Simonson"] },
+  "x-men #1": { characters: ["Professor X", "Cyclops", "Iceman", "Angel", "Beast", "Magneto"], creators: ["Stan Lee", "Jack Kirby"] },
+  "x-men #4": { characters: ["Scarlet Witch", "Quicksilver", "Toad"], creators: ["Stan Lee", "Jack Kirby"] },
+  "x-men #14": { characters: ["Sentinels", "Bolivar Trask"], creators: ["Stan Lee", "Jack Kirby"] },
+  "x-men #120": { characters: ["Alpha Flight"], creators: ["Chris Claremont", "John Byrne"] },
+  "uncanny x-men #101": { characters: ["Phoenix"], creators: ["Chris Claremont", "Dave Cockrum"] },
+  "uncanny x-men #129": { characters: ["Kitty Pryde", "Emma Frost", "Sebastian Shaw"], creators: ["Chris Claremont", "John Byrne"] },
+  "uncanny x-men #141": { characters: ["Days of Future Past", "Rachel Summers"], creators: ["Chris Claremont", "John Byrne"] },
+  "uncanny x-men #201": { characters: ["Cable"], creators: ["Chris Claremont", "Rick Leonardi"] },
+  "uncanny x-men #221": { characters: ["Mister Sinister"], creators: ["Chris Claremont", "Marc Silvestri"] },
+  "uncanny x-men #244": { characters: ["Jubilee"], creators: ["Chris Claremont", "Marc Silvestri"] },
+  "uncanny x-men #266": { characters: ["Gambit"], creators: ["Chris Claremont", "Jim Lee", "Mike Collins"] },
+  "x-factor #6": { characters: ["Apocalypse"], creators: ["Louise Simonson", "Jackson Guice"] },
+  "x-factor #24": { characters: ["Archangel"], creators: ["Louise Simonson", "Walt Simonson"] },
+  "daredevil #1": { characters: ["Daredevil", "Foggy Nelson", "Karen Page"], creators: ["Stan Lee", "Bill Everett"] },
+  "daredevil #131": { characters: ["Bullseye"], creators: ["Marv Wolfman", "Bob Brown"] },
+  "daredevil #168": { characters: ["Elektra"], creators: ["Frank Miller"] },
+  "ms. marvel #1": { characters: ["Carol Danvers"], creators: ["Gerry Conway", "John Buscema"] },
+  "captain marvel #14": { characters: ["Kamala Khan"], creators: ["G. Willow Wilson", "Adrian Alphona"] },
+  "ultimate spider-man #1": { characters: ["Miles Morales"], creators: ["Brian Michael Bendis", "Mark Bagley"] },
+  "ultimate fallout #4": { characters: ["Miles Morales"], creators: ["Brian Michael Bendis", "Sara Pichelli"] },
+  "edge of spider-verse #2": { characters: ["Spider-Gwen"], creators: ["Jason Latour", "Robbi Rodriguez"] },
+  "marvel super heroes secret wars #8": { characters: ["Alien Symbiote Costume"], creators: ["Jim Shooter", "Mike Zeck"] },
+
+  // DC Landmark Milestones
+  "action comics #1": { characters: ["Superman", "Lois Lane"], creators: ["Jerry Siegel", "Joe Shuster"] },
+  "detective comics #27": { characters: ["Batman", "Commissioner Gordon"], creators: ["Bob Kane", "Bill Finger"] },
+  "batman #1": { characters: ["Joker", "Catwoman"], creators: ["Bob Kane", "Bill Finger"] },
+  "all star comics #8": { characters: ["Wonder Woman"], creators: ["William Moulton Marston", "H. G. Peter"] },
+  "showcase #4": { characters: ["Flash (Barry Allen)"], creators: ["Robert Kanigher", "Carmine Infantino"] },
+  "showcase #22": { characters: ["Green Lantern (Hal Jordan)"], creators: ["John Broome", "Gil Kane"] },
+  "brave and the bold #28": { characters: ["Justice League of America"], creators: ["Gardner Fox", "Mike Sekowsky"] },
+  "swamp thing #37": { characters: ["John Constantine"], creators: ["Alan Moore", "Rick Veitch", "John Totleben"] },
+  "batman adventures #12": { characters: ["Harley Quinn"], creators: ["Paul Dini", "Bruce Timm", "Mike Parobeck"] },
+};
 
 const KNOWN_PUBLISHERS = [
   "Marvel Comics", "DC Comics", "Image Comics", "Dark Horse Comics",
@@ -137,12 +226,48 @@ const KNOWN_PUBLISHERS = [
 ];
 
 /**
- * Extracts recognized comic creators, characters, publishers, and financial terms from text.
+ * Extracts recognized comic creators, characters, publishers, and financial terms from text,
+ * with canonical landmark first-appearance resolution.
  */
-export function extractComicEntities(text: string): ExtractedEntity[] {
-  if (!text) return [];
+export function extractComicEntities(
+  text: string,
+  seriesName?: string | null,
+  issueNumber?: string | null
+): ExtractedEntity[] {
+  if (!text && !seriesName) return [];
   const entities: ExtractedEntity[] = [];
   const lowerText = text.toLowerCase();
+
+  // 0. Landmark First Appearance Resolution
+  if (seriesName && issueNumber) {
+    const cleanSeries = seriesName.toLowerCase().replace(/^(the|a)\s+/, "").trim();
+    const cleanIssue = issueNumber.replace(/^#/, "").trim();
+    const key = `${cleanSeries} #${cleanIssue}`;
+
+    if (LANDMARK_MARVEL_DEBUTS[key]) {
+      const debut = LANDMARK_MARVEL_DEBUTS[key];
+      for (const char of debut.characters) {
+        entities.push({
+          id: `debut-char-${char.toLowerCase().replace(/\s+/g, "-")}`,
+          name: char,
+          type: "character",
+          description: `Canonical 1st Appearance / Key Issue Milestone in ${seriesName} #${issueNumber}.`,
+          relevanceScore: 1.0,
+          wikiUrl: `/wiki?search=${encodeURIComponent(char)}`,
+        });
+      }
+      for (const cr of debut.creators) {
+        entities.push({
+          id: `debut-creator-${cr.toLowerCase().replace(/\s+/g, "-")}`,
+          name: cr,
+          type: "creator",
+          description: `Key Creator of landmark debuts in ${seriesName} #${issueNumber}.`,
+          relevanceScore: 0.98,
+          wikiUrl: `/wiki?search=${encodeURIComponent(cr)}`,
+        });
+      }
+    }
+  }
 
   // 1. Match Creators
   for (const creator of KNOWN_CREATORS) {

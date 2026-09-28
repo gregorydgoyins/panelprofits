@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { Search, Radio, ExternalLink, Calendar, ArrowRight } from "lucide-react";
-import { type NewsStory, shortNewsSource } from "@/lib/news/feed";
+import { type NewsStory, shortNewsSource } from "@/lib/news/types";
 import { TopTicker } from "@/components/news/TopTicker";
 import { StoryPanel } from "@/components/news/StoryPanel";
 

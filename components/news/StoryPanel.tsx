@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowUpRight, Newspaper, Calendar, ExternalLink } from "lucide-react";
 import { findNewsEntities } from "@/lib/news/entities";
 import { LinkedBriefing } from "@/components/news/linked-briefing";
-import { shortNewsSource, type NewsStory } from "@/lib/news/feed";
+import { shortNewsSource, type NewsStory } from "@/lib/news/types";
 
 function relativeTime(d: string | null) {
   if (!d) return "Recently";

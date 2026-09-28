@@ -8,6 +8,7 @@ interface RelationshipMapProps {
   ppcfId: string;
   gcdIssueId: number | null;
   seriesName: string | null;
+  issueNumber?: string | null;
   sourceLinks: Array<{ source_system: string; source_record_id: string }>;
   hasPricing: boolean;
   extraContextText?: string;
@@ -17,6 +18,7 @@ export function RelationshipMap({
   ppcfId,
   gcdIssueId,
   seriesName,
+  issueNumber,
   sourceLinks,
   hasPricing,
   extraContextText = "",
@@ -25,8 +27,8 @@ export function RelationshipMap({
 
   const entities = React.useMemo(() => {
     const textToScan = `${seriesName || ""} ${extraContextText}`;
-    return extractComicEntities(textToScan);
-  }, [seriesName, extraContextText]);
+    return extractComicEntities(textToScan, seriesName, issueNumber);
+  }, [seriesName, issueNumber, extraContextText]);
 
   const graphNodes = React.useMemo(() => {
     return buildEntityGraph(entities);
