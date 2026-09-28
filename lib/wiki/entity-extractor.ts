@@ -251,13 +251,15 @@ export const LANDMARK_MARVEL_DEBUTS: Record<string, { characters: string[]; crea
   "watchmen #1": { characters: ["Rorschach", "Doctor Manhattan", "Nite Owl", "The Comedian"], creators: ["Alan Moore", "Dave Gibbons"] },
   "sandman #1": { characters: ["Dream (Morpheus)"], creators: ["Neil Gaiman", "Sam Kieth", "Mike Dringenberg"] },
 
-  // Image & Dark Horse Milestones
+  // Image, Dark Horse, Star Wars & Hasbro Milestones
   "spawn #1": { characters: ["Spawn (Al Simmons)"], creators: ["Todd McFarlane"] },
   "savage dragon #1": { characters: ["Savage Dragon"], creators: ["Erik Larsen"] },
   "invincible #1": { characters: ["Invincible (Mark Grayson)", "Omni-Man"], creators: ["Robert Kirkman", "Cory Walker"] },
   "the walking dead #1": { characters: ["Rick Grimes"], creators: ["Robert Kirkman", "Tony Moore"] },
   "saga #1": { characters: ["Alana", "Marko"], creators: ["Brian K. Vaughan", "Fiona Staples"] },
   "hellboy: seed of destruction #1": { characters: ["Hellboy", "Abe Sapien"], creators: ["Mike Mignola", "John Byrne"] },
+  "star wars #1": { characters: ["Luke Skywalker", "Darth Vader", "Princess Leia"], creators: ["Roy Thomas", "Howard Chaykin"] },
+  "transformers #1": { characters: ["Optimus Prime", "Megatron", "Bumblebee"], creators: ["Bob Budiansky", "Bill Mantlo", "Frank Springer"] },
 };
 
 const KNOWN_PUBLISHERS = [

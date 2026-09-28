@@ -31,6 +31,23 @@ describe("comic debut resolver", () => {
     expect(wolverine?.characters).toContain("Wolverine");
   });
 
+  it("resolves landmark Star Wars, Image, and Transformers debut issues", () => {
+    const starwars = resolveIssueDebuts("Star Wars", "1");
+    expect(starwars).not.toBeNull();
+    expect(starwars?.universe).toBe("STAR_WARS");
+    expect(starwars?.characters).toContain("Darth Vader");
+
+    const spawn = resolveIssueDebuts("Spawn", "1");
+    expect(spawn).not.toBeNull();
+    expect(spawn?.universe).toBe("IMAGE");
+    expect(spawn?.characters.some((c) => c.includes("Spawn"))).toBe(true);
+
+    const tf = resolveIssueDebuts("Transformers", "1");
+    expect(tf).not.toBeNull();
+    expect(tf?.universe).toBe("TRANSFORMERS");
+    expect(tf?.characters).toContain("Optimus Prime");
+  });
+
   it("returns null for non-debut issues without errors", () => {
     const nonDebut = resolveIssueDebuts("Random Nonexistent Series 99999", "99999");
     expect(nonDebut).toBeNull();

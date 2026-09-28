@@ -6,7 +6,7 @@ export interface ComicDebutInfo {
   issue: string;
   characters: string[];
   creators: string[];
-  universe: "DC" | "MARVEL" | "IMAGE" | "DARK_HORSE" | "INDEPENDENT";
+  universe: "DC" | "MARVEL" | "IMAGE" | "DARK_HORSE" | "STAR_WARS" | "TRANSFORMERS" | "INDEPENDENT";
 }
 
 let dcDebutsCache: Record<string, { series: string; issue: string; characters: string[]; creators: string[] }> | null = null;
@@ -62,13 +62,15 @@ export function resolveIssueDebuts(seriesName?: string | null, issueNumber?: str
     const isDc = ["action comics", "detective comics", "batman", "superman", "showcase", "flash comics", "more fun", "all star", "all-star", "whiz", "green lantern", "crisis", "new teen titans", "swamp thing", "watchmen", "sandman", "brave and the bold"].some((d) => cleanSeries.includes(d));
     const isImage = ["spawn", "savage dragon", "invincible", "walking dead", "saga"].some((im) => cleanSeries.includes(im));
     const isDarkHorse = ["hellboy", "sin city", "dark horse"].some((dh) => cleanSeries.includes(dh));
+    const isStarWars = ["star wars", "darth vader", "boba fett", "mandalorian"].some((sw) => cleanSeries.includes(sw));
+    const isTransformers = ["transformers", "hasbro", "optimus"].some((tf) => cleanSeries.includes(tf));
 
     return {
       series: seriesName,
       issue: cleanIssue,
       characters: lm.characters,
       creators: lm.creators,
-      universe: isDc ? "DC" : isImage ? "IMAGE" : isDarkHorse ? "DARK_HORSE" : "MARVEL",
+      universe: isDc ? "DC" : isImage ? "IMAGE" : isDarkHorse ? "DARK_HORSE" : isStarWars ? "STAR_WARS" : isTransformers ? "TRANSFORMERS" : "MARVEL",
     };
   }
 
