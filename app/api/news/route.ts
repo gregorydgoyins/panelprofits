@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getNewsStories, refreshNewsStore } from "@/lib/news/feed";
+import { getNewsStories, refreshNewsStore, getNetworkHealthSummary } from "@/lib/news/feed";
 
 export const dynamic = "force-dynamic";
 
@@ -8,18 +8,27 @@ export async function GET(request: Request) {
   const archive = url.searchParams.get("archive") === "1";
   const limit = Number(url.searchParams.get("limit") || (archive ? 60 : 24));
   const stories = await getNewsStories(limit, archive);
-  return NextResponse.json({ stories, refreshedAt: new Date().toISOString() }, {
-    headers: { "Cache-Control": "no-store, no-cache, must-revalidate" },
-  });
+  const health = getNetworkHealthSummary();
+  return NextResponse.json(
+    { stories, health, refreshedAt: new Date().toISOString() },
+    {
+      headers: { "Cache-Control": "no-store, no-cache, must-revalidate" },
+    }
+  );
 }
 
 export async function POST(request: Request) {
   try {
-    await refreshNewsStore();
+    const result = await refreshNewsStore();
     const stories = await getNewsStories(24);
+    const health = getNetworkHealthSummary();
     return NextResponse.json({
       status: "refreshed",
       activeCount: stories.length,
+      ingested: result.ingested,
+      wireCount: result.wireCount,
+      syndicatedCount: result.syndicatedCount,
+      health,
       refreshedAt: new Date().toISOString(),
     });
   } catch (error) {

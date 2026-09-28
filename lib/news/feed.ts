@@ -14,7 +14,23 @@ export {
 import type { NewsCategory, NewsStory, NewsSource } from "./types";
 import { sourceFavicon } from "./types";
 
-export const SOURCES: NewsSource[] = [
+import { EXTENDED_NEWS_SOURCES } from "./extended-sources";
+import { CURATED_CHANNELS } from "./curated-sources";
+import { fetchAllWireStories } from "./wire-apis";
+import {
+  shouldAttemptFetch,
+  recordFetchSuccess,
+  recordFetchFailure,
+  getNetworkHealthSummary,
+  evaluateArticleQuality,
+  getAlternateFeedUrls,
+} from "./self-healing";
+
+export { getNetworkHealthSummary } from "./self-healing";
+export { fetchAllWireStories } from "./wire-apis";
+export { CURATED_CHANNELS } from "./curated-sources";
+
+export const PRIMARY_SOURCES: NewsSource[] = [
   // Primary Comic Industry Trade & Critical News
   { name: "BLEEDING COOL", url: "https://bleedingcool.com/comics/feed/", category: "national" },
   { name: "CBR", url: "https://www.cbr.com/feed/", category: "national" },
@@ -40,7 +56,7 @@ export const SOURCES: NewsSource[] = [
   { name: "COMIC BOOK HERALD", url: "https://www.comicbookherald.com/feed/", category: "national" },
   { name: "COMICHRON", url: "https://blog.comichron.com/feeds/posts/default?alt=rss", category: "national" },
 
-  // Publisher Direct Despatches
+  // Publisher Direct Bulletins
   { name: "IMAGE COMICS", url: "https://imagecomics.com/news.atom", category: "national" },
   { name: "DARK HORSE", url: "https://www.darkhorse.com/Blog/rss", category: "national" },
   { name: "2000 AD", url: "https://2000ad.com/news/feed/", category: "international" },
@@ -62,12 +78,24 @@ export const SOURCES: NewsSource[] = [
   { name: "VARIANT COMICS", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UC9c1MvP4U9m5JpS6a3N7Y7Q", category: "national" },
 ];
 
+export const EXTENDED_SOURCES: NewsSource[] = EXTENDED_NEWS_SOURCES;
+export const CURATED_SOURCES: NewsSource[] = CURATED_CHANNELS;
+
+// Deduplicated unified syndication network across 237+ feeds
+const sourceRegistryMap = new Map<string, NewsSource>();
+for (const s of [...PRIMARY_SOURCES, ...CURATED_SOURCES, ...EXTENDED_SOURCES]) {
+  if (!sourceRegistryMap.has(s.url)) {
+    sourceRegistryMap.set(s.url, s);
+  }
+}
+export const SOURCES: NewsSource[] = Array.from(sourceRegistryMap.values());
+
 const COMIC_TERMS = /comic\s*book|comic(s)?\b|superhero|super-hero|marvel|dc comics|avengers|x-men|spider-man|batman|superman|fantastic four|deadpool|wolverine|venom|manga|mangaka|graphic novel|image comics|\bdark horse\b|idw|boom studios|viz media|spawn|spawn universe/i;
 const COMPANY_TERMS = /disney|warner bros|warner discovery|wbd|sony pictures|universal|paramount|skydance|marvel entertainment/i;
 const FINANCIAL_TERMS = /earnings|revenue|profit|loss|shares|stock|investor|acquisition|merger|deal|buyout|results|box office/i;
 const EXCLUDE_NON_COMIC = /\b(gameplay|playstation\s*5|ps5|xbox|nintendo switch|platinum trophy|earphones|headset|found footage|horror movie|blair witch|messi|lionel messi|soccer|football|nfl|nba|basketball|premier league|champions league|mls|inter miami|celebrity traitors|reality tv)\b/i;
 
-const DEDICATED_COMIC_SOURCES = /lords of the long box|near mint condition|comictom101|cartoonist kayfabe|variant comics|gem mint collectibles|bleeding cool|the beat|aipt|cbr|comicbook invest|comics journal|comicsxf|multiversity|first comics news|comic crusaders|major spoilers|comic book herald|gocollect|covrprice|comichron|previewsworld|2000 ad|dark horse|image comics/i;
+const DEDICATED_COMIC_SOURCES = /lords of the long box|near mint condition|comictom101|cartoonist kayfabe|variant comics|gem mint collectibles|bleeding cool|the beat|aipt|cbr|comicbook invest|comics journal|comicsxf|multiversity|first comics news|comic crusaders|major spoilers|comic book herald|gocollect|covrprice|comichron|previewsworld|2000 ad|dark horse|image comics|marvel comics|dc comics|idw|boom studios|dynamite|valiant|archie comics|fantagraphics|kodansha|viz media|heritage comic|comiclink|comicconnect|shortboxed|key collector|comic tropes|comicpop|comics explained|casually comics|automatic comics|swagglehaus/i;
 
 export function isRelevantComicStory(source: string, headline: string, summary: string | null): boolean {
   if (DEDICATED_COMIC_SOURCES.test(source)) {
@@ -187,6 +215,13 @@ export async function fetchFeedSource(source: NewsSource): Promise<Array<{
   image_url: string | null;
   published_at: string | null;
 }>> {
+  if (!shouldAttemptFetch(source.url)) {
+    return [];
+  }
+
+  const start = Date.now();
+  let xml: string | null = null;
+
   try {
     const response = await fetch(source.url, {
       headers: {
@@ -197,12 +232,42 @@ export async function fetchFeedSource(source: NewsSource): Promise<Array<{
       cache: "no-store",
     });
 
-    if (!response.ok) return [];
-    const xml = await response.text();
+    if (response.ok) {
+      xml = await response.text();
+    } else {
+      // Self-healing attempt with alternate mirror paths if available
+      const alternates = getAlternateFeedUrls(source.url);
+      for (const altUrl of alternates.slice(0, 2)) {
+        try {
+          const altResp = await fetch(altUrl, {
+            headers: {
+              "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+              Accept: "application/rss+xml, application/atom+xml, application/xml, text/xml, */*",
+            },
+            signal: AbortSignal.timeout(5000),
+            cache: "no-store",
+          });
+          if (altResp.ok) {
+            xml = await altResp.text();
+            break;
+          }
+        } catch {}
+      }
+    }
+
+    if (!xml) {
+      recordFetchFailure(source.name, source.url, `HTTP ${response.status}: ${response.statusText}`);
+      return [];
+    }
+
+    recordFetchSuccess(source.name, source.url, Date.now() - start);
     const items = parseFeedItems(xml);
 
     return items
-      .filter((item) => isRelevantComicStory(source.name, item.title, item.summary))
+      .filter((item) => {
+        if (!isRelevantComicStory(source.name, item.title, item.summary)) return false;
+        return evaluateArticleQuality(item.title, item.summary).admit;
+      })
       .map((item) => ({
         story_key: generateStoryKey(source.url, item.url, item.title),
         source: source.name,
@@ -215,19 +280,70 @@ export async function fetchFeedSource(source: NewsSource): Promise<Array<{
         image_url: item.imageUrl || sourceFavicon(source.url),
         published_at: item.publishedAt,
       }));
-  } catch {
+  } catch (err) {
+    recordFetchFailure(source.name, source.url, (err as Error).message);
     return [];
   }
 }
 
-export async function refreshNewsStore(): Promise<{ ingested: number; errors: number }> {
+async function mapConcurrent<T, R>(
+  items: T[],
+  concurrency: number,
+  fn: (item: T) => Promise<R>
+): Promise<PromiseSettledResult<R>[]> {
+  const results: PromiseSettledResult<R>[] = new Array(items.length);
+  let currentIndex = 0;
+
+  const workers = Array.from({ length: Math.min(concurrency, items.length) }, async () => {
+    while (currentIndex < items.length) {
+      const index = currentIndex++;
+      try {
+        const val = await fn(items[index]);
+        results[index] = { status: "fulfilled", value: val };
+      } catch (reason) {
+        results[index] = { status: "rejected", reason };
+      }
+    }
+  });
+
+  await Promise.all(workers);
+  return results;
+}
+
+export async function refreshNewsStore(
+  sources: NewsSource[] = SOURCES,
+  concurrency = 24
+): Promise<{ ingested: number; errors: number; wireCount: number; syndicatedCount: number }> {
   const db = createAdminServerClient();
   let ingested = 0;
   let errors = 0;
+  let wireCount = 0;
+  let syndicatedCount = 0;
 
   try {
-    const feedBatches = await Promise.allSettled(SOURCES.map(fetchFeedSource));
-    const allRows = feedBatches.flatMap((result) => (result.status === "fulfilled" ? result.value : []));
+    // 1. Fetch syndicated RSS/Atom feeds concurrently with bounded pool
+    const feedBatches = await mapConcurrent(sources, concurrency, fetchFeedSource);
+    const syndicatedRows = feedBatches.flatMap((result) => (result.status === "fulfilled" ? result.value : []));
+    syndicatedCount = syndicatedRows.length;
+
+    // 2. Fetch multi-wire news APIs (NewsData, Perigon, TheNewsAPI, NewsAPI, AskNews)
+    let wireRows: Awaited<ReturnType<typeof fetchAllWireStories>> = [];
+    try {
+      wireRows = await fetchAllWireStories();
+      wireCount = wireRows.length;
+    } catch (wireErr) {
+      console.error("[News Ingest] Wire APIs fetch error:", wireErr);
+    }
+
+    // 3. Combine and deduplicate by unique story_key
+    const combinedMap = new Map<string, typeof syndicatedRows[0]>();
+    for (const row of [...syndicatedRows, ...wireRows]) {
+      if (!combinedMap.has(row.story_key)) {
+        combinedMap.set(row.story_key, row);
+      }
+    }
+
+    const allRows = Array.from(combinedMap.values());
 
     if (allRows.length > 0) {
       const nowIso = new Date().toISOString();
@@ -237,16 +353,19 @@ export async function refreshNewsStore(): Promise<{ ingested: number; errors: nu
         archived_at: null,
       }));
 
-      // Upsert into Supabase pp_news_stories on conflict story_key
-      const { error: upsertError } = await db
-        .from("pp_news_stories")
-        .upsert(rowsToInsert, { onConflict: "story_key", ignoreDuplicates: true });
+      // Upsert into Supabase pp_news_stories on conflict story_key in chunks of 100
+      for (let i = 0; i < rowsToInsert.length; i += 100) {
+        const chunk = rowsToInsert.slice(i, i + 100);
+        const { error: upsertError } = await db
+          .from("pp_news_stories")
+          .upsert(chunk, { onConflict: "story_key", ignoreDuplicates: true });
 
-      if (upsertError) {
-        console.error("[News Ingest] Upsert error:", upsertError.message);
-        errors += 1;
-      } else {
-        ingested = rowsToInsert.length;
+        if (upsertError) {
+          console.error("[News Ingest] Upsert error:", upsertError.message);
+          errors += 1;
+        } else {
+          ingested += chunk.length;
+        }
       }
     }
 
@@ -259,7 +378,7 @@ export async function refreshNewsStore(): Promise<{ ingested: number; errors: nu
     errors += 1;
   }
 
-  return { ingested, errors };
+  return { ingested, errors, wireCount, syndicatedCount };
 }
 
 function mapStory(row: Record<string, unknown>): NewsStory {

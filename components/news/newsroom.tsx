@@ -24,20 +24,53 @@ function timeAgo(d: string | null) {
   return parsed.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
+type AngleFilter = "all" | "market" | "scholarly" | "creator" | "video" | "publisher" | "wire";
+
+const ANGLE_MATCHERS: Record<AngleFilter, (s: NewsStory) => boolean> = {
+  all: () => true,
+  market: (s) =>
+    /heritage|comiclink|comicconnect|shortboxed|key collector|gocollect|covrprice|comicbook invest|cgc|cbcs|comichron|overstreet|hakes|auction|slab|cbsi/i.test(
+      `${s.source} ${s.sourceUrl} ${s.headline}`
+    ),
+  scholarly: (s) =>
+    /tcj|comics journal|solrad|comics grid|image text|gutter review|panel patter|sequential tart|broken frontier|graphic medicine|daily cartoonist|women write|scholarly|academic|review|essay/i.test(
+      `${s.source} ${s.sourceUrl} ${s.headline}`
+    ),
+  creator: (s) =>
+    /bendis|tynion|hickman|brubaker|deconnick|zdarsky|skottie young|tom king|lemire|millar|gillen|cates|duggan|soule|substack/i.test(
+      `${s.source} ${s.sourceUrl} ${s.headline}`
+    ),
+  video: (s) =>
+    /youtube|strip panel naked|matt draper|comic tropes|kayfabe|comicpop|near mint condition|swagglehaus|automatic comics|lords of the long box|variant comics|tom101|gem mint|comics explained|casually comics|nerdsync/i.test(
+      `${s.source} ${s.sourceUrl} ${s.headline}`
+    ),
+  publisher: (s) =>
+    /marvel|dc comics|image comics|dark horse|2000 ad|idw|boom studios|dynamite|fantagraphics|drawn and quarterly|kodansha|viz media|yen press|seven seas|oni press|vault comics/i.test(
+      `${s.source} ${s.sourceUrl} ${s.headline}`
+    ),
+  wire: (s) => /^newsdata|^perigon|^thenewsapi|^newsapi|^asknews/i.test(s.source),
+};
+
 export function Newsroom({ stories }: NewsroomProps) {
   const [activeStoryId, setActiveStoryId] = React.useState<string>(stories[0]?.id || "");
   const [searchQuery, setSearchQuery] = React.useState<string>("");
+  const [activeAngle, setActiveAngle] = React.useState<AngleFilter>("all");
 
   const filteredStories = React.useMemo(() => {
-    if (!searchQuery.trim()) return stories;
+    let result = stories;
+    if (activeAngle !== "all") {
+      const matcher = ANGLE_MATCHERS[activeAngle];
+      result = result.filter(matcher);
+    }
+    if (!searchQuery.trim()) return result;
     const q = searchQuery.toLowerCase();
-    return stories.filter(
+    return result.filter(
       (s) =>
         s.headline.toLowerCase().includes(q) ||
         s.source.toLowerCase().includes(q) ||
         (s.summary && s.summary.toLowerCase().includes(q))
     );
-  }, [stories, searchQuery]);
+  }, [stories, activeAngle, searchQuery]);
 
   const activeStory = React.useMemo(() => {
     if (!filteredStories.length) return null;
@@ -55,33 +88,68 @@ export function Newsroom({ stories }: NewsroomProps) {
     );
   }
 
+  const angleOptions: Array<{ key: AngleFilter; label: string }> = [
+    { key: "all", label: "All Channels" },
+    { key: "market", label: "Secondary Market & Slabs" },
+    { key: "scholarly", label: "Scholarly & Reviews" },
+    { key: "creator", label: "Creator Substacks" },
+    { key: "video", label: "Video Essays & Vlogs" },
+    { key: "publisher", label: "Publishers & Manga" },
+    { key: "wire", label: "News Wire APIs" },
+  ];
+
   return (
     <div className="space-y-6">
       {/* Live Ticker Wire at Top */}
       <TopTicker stories={filteredStories} activeId={activeStory.id} onSelect={setActiveStoryId} />
 
-      {/* Control Bar: Status & Search */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-1">
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-mono tracking-wider uppercase rounded border border-cyan-500/50 bg-cyan-950/40 text-cyan-300">
-            <Radio className="h-3 w-3 text-cyan-400 animate-pulse" />
-            LIVE WIRE
-          </span>
-          <span className="px-2.5 py-1 text-[10px] font-mono tracking-wider uppercase rounded border border-slate-800 bg-slate-900/60 text-slate-300">
-            {filteredStories.length} Real-Time Stories
-          </span>
+      {/* Control Bar: Network Telemetry, Filter Pills & Search */}
+      <div className="space-y-3 px-1">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-mono tracking-wider uppercase rounded border border-cyan-500/50 bg-cyan-950/40 text-cyan-300">
+              <Radio className="h-3 w-3 text-cyan-400 animate-pulse" />
+              LIVE WIRE
+            </span>
+            <span className="px-2.5 py-1 text-[10px] font-mono tracking-wider uppercase rounded border border-slate-800 bg-slate-900/60 text-slate-300">
+              {filteredStories.length} Filtered Stories
+            </span>
+            <span className="hidden sm:inline-flex px-2.5 py-1 text-[10px] font-mono tracking-wider uppercase rounded border border-emerald-500/40 bg-emerald-950/20 text-emerald-400">
+              240+ Network Feeds · 5 Wire APIs · Self-Healing: Active
+            </span>
+          </div>
+
+          <label className="flex items-center gap-2 border border-slate-800 bg-[#080B11] px-3 py-1.5 text-xs text-slate-400 sm:w-72 rounded">
+            <Search className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+            <input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search headlines, sources, lore..."
+              aria-label="Search news wire"
+              className="w-full bg-transparent outline-none text-slate-200 text-xs placeholder:text-slate-600"
+            />
+          </label>
         </div>
 
-        <label className="flex items-center gap-2 border border-slate-800 bg-[#080B11] px-3 py-1.5 text-xs text-slate-400 sm:w-72 rounded">
-          <Search className="h-3.5 w-3.5 text-slate-500 shrink-0" />
-          <input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search headlines, sources, lore..."
-            aria-label="Search news wire"
-            className="w-full bg-transparent outline-none text-slate-200 text-xs placeholder:text-slate-600"
-          />
-        </label>
+        {/* Content Angle Filter Pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar border-b border-slate-800/60 pt-1">
+          {angleOptions.map((opt) => {
+            const isActive = activeAngle === opt.key;
+            return (
+              <button
+                key={opt.key}
+                onClick={() => setActiveAngle(opt.key)}
+                className={`whitespace-nowrap px-3 py-1 text-[11px] font-mono uppercase tracking-[0.1em] rounded transition-all border ${
+                  isActive
+                    ? "border-cyan-400/80 bg-cyan-950/50 text-cyan-300 font-semibold shadow-[0_0_10px_rgba(6,182,212,0.15)]"
+                    : "border-slate-800/80 bg-[#080B11] text-slate-400 hover:border-slate-700 hover:text-slate-200"
+                }`}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Main 2-Column Grid: Featured Active Story + Live Wire Feed */}
@@ -96,7 +164,7 @@ export function Newsroom({ stories }: NewsroomProps) {
           <div className="border border-slate-800 bg-[#07090F] p-4 rounded-lg">
             <div className="flex items-center justify-between border-b border-slate-800/80 pb-3 mb-3">
               <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-cyan-400 font-semibold">
-                LATEST WIRE DISPATCHES
+                LATEST WIRE bulletins
               </span>
               <span className="text-[9px] font-mono text-slate-500">
                 {filteredStories.length} TOTAL

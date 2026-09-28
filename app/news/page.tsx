@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Newsroom // Live Comic Wire | Panel Profits",
-  description: "Live industry news wire, breaking publisher catalysts, and real-time comic dispatches.",
+  description: "Live industry news wire, breaking publisher catalysts, and real-time comic bulletins.",
 };
 
 export default async function NewsPage() {
@@ -26,7 +26,7 @@ export default async function NewsPage() {
               Newsroom
             </h1>
             <p className="mt-2 max-w-2xl text-xs sm:text-sm leading-6 text-slate-400">
-              Real-time dispatches from major industry sources, covering breaking series announcements, market catalysts, and publisher intelligence.
+              Real-time bulletins from major industry sources, covering breaking series announcements, market catalysts, and publisher intelligence.
             </p>
           </div>
 
