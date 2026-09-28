@@ -34,4 +34,14 @@ describe("newsroom relevance gate", () => {
     expect(terms).toContain("Joker");
     expect(terms).toContain("DC Comics");
   });
+
+  it("extracts multi-universe lore items and locations into dedicated wiki dossier links", async () => {
+    const { findNewsEntities } = await import("@/lib/news/entities");
+    const entities = findNewsEntities("Rare prototype of the Batmobile surfaces alongside the Infinity Gauntlet", "Collector auction highlights");
+    const terms = entities.map((e) => e.term);
+    expect(terms).toContain("Batmobile");
+    expect(terms).toContain("Infinity Gauntlet");
+    const batmobileDef = entities.find((e) => e.term === "Batmobile");
+    expect(batmobileDef?.wikiPath).toMatch(/^\/wiki\/entry\//);
+  });
 });

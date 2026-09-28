@@ -27,6 +27,7 @@ let dcDebutsCache: Record<string, BookDebutRecord> | null = null;
 let marvelDebutsCache: Record<string, BookDebutRecord> | null = null;
 
 function loadDebutsCache() {
+  if (typeof window !== "undefined") return;
   if (!dcDebutsCache) {
     try {
       const p = path.join(process.cwd(), "lib/wiki/dc_first_appearances.json");

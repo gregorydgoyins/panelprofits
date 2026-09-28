@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { searchLoreEntities, getLoreEntityBySlug, getFeaturedLoreEntities } from "@/lib/wiki/lore-search";
+import { searchLoreEntities, getLoreEntityBySlug, getFeaturedLoreEntities, findLoreEntitiesInText } from "@/lib/wiki/lore-search";
 
 describe("multi-universe lore search engine", () => {
   it("searches and resolves landmark items and weapons", () => {
@@ -41,5 +41,14 @@ describe("multi-universe lore search engine", () => {
     const featured = getFeaturedLoreEntities();
     expect(featured.length).toBeGreaterThan(0);
     expect(featured.some((f) => f.type === "character")).toBe(true);
+  });
+
+  it("extracts lore entities mentioned inside text sentences", () => {
+    const text = "The legendary Batmobile was driven through Gotham City while the Infinity Gauntlet was secured in Asgard.";
+    const matches = findLoreEntitiesInText(text, 5);
+    const titles = matches.map((m) => m.title);
+    expect(titles).toContain("Batmobile");
+    expect(titles).toContain("Infinity Gauntlet");
+    expect(titles).toContain("Gotham City");
   });
 });

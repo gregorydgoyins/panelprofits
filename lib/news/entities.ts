@@ -1,4 +1,5 @@
 import { createAdminServerClient } from "@/lib/supabase/admin";
+import { findLoreEntitiesInText } from "@/lib/wiki/lore-search";
 
 export interface EntityWikiDef {
   term: string;
@@ -256,6 +257,23 @@ export async function getDynamicEntitiesForText(text: string): Promise<EntityWik
     }
   }
 
+  // Match multi-universe lore entities (characters, items, locations, teams)
+  try {
+    const loreMatches = findLoreEntitiesInText(text, 6);
+    for (const lore of loreMatches) {
+      if (!matchedEntities.some((e) => e.term.toLowerCase() === lore.title.toLowerCase())) {
+        matchedEntities.push({
+          term: lore.title,
+          type: lore.type === "character" ? "character" : "lexicon",
+          target: "intelligence",
+          wikiPath: `/wiki/entry/${lore.slug}`,
+        });
+      }
+    }
+  } catch {
+    // Graceful fallback if lore index unavailable
+  }
+
   // Dynamic Supabase Database Query for unrecognized terms
   try {
     const db = createAdminServerClient();
@@ -303,9 +321,27 @@ export function findNewsEntities(headline: string, summary: string | null): Enti
  */
 export function extractEntitiesFromContext(text: string): EntityWikiDef[] {
   if (!text) return [];
-  return KNOWN_NEWS_ENTITIES_MAP.filter((def) => {
+  const baseMatches = KNOWN_NEWS_ENTITIES_MAP.filter((def) => {
     const escaped = def.term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const regex = new RegExp(`\\b${escaped}\\b`, "i");
     return regex.test(text);
   });
+
+  try {
+    const loreMatches = findLoreEntitiesInText(text, 4);
+    for (const lore of loreMatches) {
+      if (!baseMatches.some((e) => e.term.toLowerCase() === lore.title.toLowerCase())) {
+        baseMatches.push({
+          term: lore.title,
+          type: lore.type === "character" ? "character" : "lexicon",
+          target: "intelligence",
+          wikiPath: `/wiki/entry/${lore.slug}`,
+        });
+      }
+    }
+  } catch {
+    // Safe fallback
+  }
+
+  return baseMatches;
 }

@@ -14,6 +14,8 @@ import { displayIssue, displaySeries } from "@/lib/comics/display";
 import { getComicCoverEvidence } from "@/lib/comics/covers";
 import { getComicCensusDossier } from "@/lib/comics/census";
 import { CensusDossier } from "@/components/comics/census-dossier";
+import { resolveIssueDebuts } from "@/lib/wiki/debut-resolver";
+import { Sparkles, BookOpen } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -79,6 +81,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
   ]);
   const seriesLabel = displaySeries(comic.series, comic.issue_number);
   const issueLabel = displayIssue(comic.issue_number);
+  const debut = resolveIssueDebuts(comic.series, comic.issue_number);
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-8">
@@ -170,6 +173,84 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
                 </p>
               )}
             </div>
+
+            {/* Landmark Key Issue Debuts & Lore Equity */}
+            {debut && (debut.characters.length > 0 || (debut.items && debut.items.length > 0) || (debut.locations && debut.locations.length > 0) || (debut.teams && debut.teams.length > 0)) && (
+              <div className="rounded-lg border border-cyan-500/30 bg-graphite-950/80 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-cyan-400" />
+                    <span className="text-xs font-semibold tracking-wider uppercase text-cyan-300">
+                      Landmark Key Issue Debuts & Lore Equity
+                    </span>
+                  </div>
+                  <Badge variant="outline" className="border-cyan-500/40 text-[10px] text-cyan-400 uppercase">
+                    {debut.universe} Universe Canon
+                  </Badge>
+                </div>
+
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {debut.characters.map((ch) => (
+                    <Link
+                      key={ch}
+                      href={`/wiki?q=${encodeURIComponent(ch)}`}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-rose-950/40 border border-rose-500/40 text-rose-300 text-xs font-medium hover:border-rose-400 hover:bg-rose-900/50 transition-colors"
+                    >
+                      <span className="text-rose-400">★</span>
+                      <span>1st App: {ch}</span>
+                    </Link>
+                  ))}
+
+                  {debut.items?.map((it) => (
+                    <Link
+                      key={it}
+                      href={`/wiki?q=${encodeURIComponent(it)}`}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 text-xs font-medium hover:border-emerald-400 hover:bg-emerald-900/50 transition-colors"
+                    >
+                      <span className="text-emerald-400">⚡</span>
+                      <span>Item: {it}</span>
+                    </Link>
+                  ))}
+
+                  {debut.locations?.map((loc) => (
+                    <Link
+                      key={loc}
+                      href={`/wiki?q=${encodeURIComponent(loc)}`}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-indigo-950/40 border border-indigo-500/40 text-indigo-300 text-xs font-medium hover:border-indigo-400 hover:bg-indigo-900/50 transition-colors"
+                    >
+                      <span className="text-indigo-400">📍</span>
+                      <span>Origin: {loc}</span>
+                    </Link>
+                  ))}
+
+                  {debut.teams?.map((tm) => (
+                    <Link
+                      key={tm}
+                      href={`/wiki?q=${encodeURIComponent(tm)}`}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-blue-950/40 border border-blue-500/40 text-blue-300 text-xs font-medium hover:border-blue-400 hover:bg-blue-900/50 transition-colors"
+                    >
+                      <span className="text-blue-400">👥</span>
+                      <span>Team: {tm}</span>
+                    </Link>
+                  ))}
+                </div>
+
+                <div className="flex items-center justify-between pt-2 border-t border-graphite-800 text-[11px] text-graphite-400">
+                  <span className="truncate">
+                    {debut.creators && debut.creators.length > 0 && (
+                      <>Creator Lineage: {debut.creators.join(", ")}</>
+                    )}
+                  </span>
+                  <Link
+                    href={`/wiki?q=${encodeURIComponent(comic.series)}`}
+                    className="flex items-center gap-1 text-cyan-400 hover:text-cyan-300 font-medium shrink-0 ml-2"
+                  >
+                    <BookOpen className="h-3.5 w-3.5" />
+                    <span>View in Encyclopedia</span>
+                  </Link>
+                </div>
+              </div>
+            )}
 
             {/* Collection & Watchlist Actions */}
             <div className="pt-2 border-t border-graphite-800">
