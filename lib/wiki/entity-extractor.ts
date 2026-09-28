@@ -109,6 +109,46 @@ export const COMIC_FINANCIAL_GLOSSARY: Record<string, { term: string; definition
     term: "Creator Lineage & Run Momentum",
     definition: "The historical valuation momentum and demand elasticity associated with iconic writer/artist creative runs.",
     category: "Fundamentals"
+  },
+  "equity-valuation": {
+    term: "Equity Valuation",
+    definition: "The quantitative assessment of a comic issue's fundamental capital value based on historical sales velocity, CGC census scarcity, grade tier parity, and media catalyst elasticity.",
+    category: "Valuation & Capital Markets"
+  },
+  "secondary-market-velocity": {
+    term: "Secondary Market Velocity",
+    definition: "The rate at which transactions clear through aftermarket trading conduits (Heritage Auctions, ComicConnect, eBay, private brokers) following media adaptations or publisher catalysts.",
+    category: "Market Liquidity"
+  },
+  "pgx": {
+    term: "PGX (Professional Grading Experts)",
+    definition: "An independent third-party comic grading and encapsulation service establishing authenticated condition benchmarks.",
+    category: "Grading & Certification"
+  },
+  "fair-market-value": {
+    term: "Fair Market Value (FMV)",
+    definition: "The consensus clearing price at which an asset transfers between a willing buyer and a willing seller with equal access to historical pricing data.",
+    category: "Valuation"
+  },
+  "pedigree-provenance": {
+    term: "Pedigree Provenance",
+    definition: "Documented ownership heritage from recognized historical vintage collections (e.g. Edgar Church / Mile High, San Francisco, Allentown) that commands a valuation premium.",
+    category: "Provenance & Rarity"
+  },
+  "key-issue-premium": {
+    term: "Key Issue Premium",
+    definition: "The valuation spread between a landmark debut or death issue and ordinary adjacent filler issues within the same title run.",
+    category: "Valuation"
+  },
+  "synthetic-forward-contracts": {
+    term: "Synthetic Forward Contracts",
+    definition: "Derivatives structured to lock in forward delivery pricing for high-grade key issues prior to major cinematic release catalysts.",
+    category: "Derivatives"
+  },
+  "anchor-bonds": {
+    term: "Anchor Bonds",
+    definition: "Fixed-income comic asset pools backed by verified high-grade Golden and Silver Age sovereign holdings providing steady yields.",
+    category: "Fixed Income"
   }
 };
 

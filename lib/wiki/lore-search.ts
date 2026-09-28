@@ -305,7 +305,10 @@ const LORE_STOP_WORDS = new Set([
   "price", "prices", "sale", "sales", "auction", "record", "market", "grade", "graded",
   "hero", "heroes", "villain", "villains", "team", "world", "earth", "time", "death", "life",
   "city", "state", "star", "dark", "light", "high", "gold", "silver", "bronze", "modern",
-  "cgc", "cbcs", "pgx", "mint", "near", "fine", "good", "very", "rare", "scarce", "panel"
+  "cgc", "cbcs", "pgx", "mint", "near", "fine", "good", "very", "rare", "scarce", "panel",
+  "collector", "collectors", "collection", "collections", "creator", "creators", "reader",
+  "readers", "writer", "writers", "artist", "artists", "studio", "studios", "character",
+  "characters", "equity", "valuation", "slab", "slabs", "inventory", "spread", "spreads"
 ]);
 
 /**
