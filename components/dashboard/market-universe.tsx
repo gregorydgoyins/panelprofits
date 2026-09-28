@@ -61,10 +61,10 @@ export function MarketUniverse({ metrics }: MarketUniverseProps) {
         {/* GCD Bibliographic */}
         <div className="rounded-lg border border-slate-800 bg-[#0F121C] p-3.5 space-y-1">
           <div className="text-[10px] text-slate-400 uppercase tracking-wider flex items-center gap-1">
-            <Layers className="h-3 w-3 text-pink-400" />
+            <Layers className="h-3 w-3 text-cyan-400" />
             <span>GCD METADATA</span>
           </div>
-          <div className="text-xl sm:text-2xl text-pink-300">
+          <div className="text-xl sm:text-2xl text-cyan-300">
             {metrics.gcdBibliographicRecords}
           </div>
           <p className="text-[10px] text-slate-500">Deep bibliographic records</p>

@@ -1,3 +1,9 @@
 {
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "crons": [
+    {
+      "path": "/api/news/ingest",
+      "schedule": "0 0 * * *"
+    }
+  ]
 }

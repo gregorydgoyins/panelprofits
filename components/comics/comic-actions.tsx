@@ -123,20 +123,20 @@ export function ComicActions({
           variant="outline"
           className={`flex items-center gap-2 border px-4 py-2 text-xs transition-colors ${
             inWatchlistState
-              ? "border-pink-500 bg-pink-950/40 text-pink-200 hover:bg-pink-950/60"
-              : "border-slate-800 bg-[#121520] text-slate-300 hover:bg-[#1A1F30] hover:border-pink-500/60 hover:text-pink-300"
+              ? "border-cyan-500 bg-[#0C1626] text-cyan-300 hover:bg-[#10223D]"
+              : "border-slate-800 bg-[#121520] text-slate-300 hover:bg-[#1A1F30] hover:border-cyan-500/60 hover:text-cyan-300"
           }`}
         >
           {watchlistLoading ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin text-pink-400" />
+            <Loader2 className="h-3.5 w-3.5 animate-spin text-cyan-400" />
           ) : inWatchlistState ? (
             <>
-              <Bookmark className="h-3.5 w-3.5 fill-pink-500 text-pink-500" />
+              <Bookmark className="h-3.5 w-3.5 fill-cyan-400 text-cyan-400" />
               <span>Watching</span>
             </>
           ) : (
             <>
-              <Bookmark className="h-3.5 w-3.5 text-pink-400" />
+              <Bookmark className="h-3.5 w-3.5 text-cyan-400" />
               <span>Add to Watchlist</span>
             </>
           )}

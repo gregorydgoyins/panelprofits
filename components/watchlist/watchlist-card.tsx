@@ -45,7 +45,7 @@ export function WatchlistCard({ item }: WatchlistCardProps) {
   }
 
   return (
-    <div className="group relative flex flex-col rounded-lg border border-pink-500/40 bg-[#0C0E15] p-3.5 shadow-lg transition-all duration-200 hover:border-pink-500 hover:shadow-pink-500/10 research-rimlight-hover">
+    <div className="group relative flex flex-col rounded-lg border border-cyan-500/40 bg-[#0C0E15] p-3.5 shadow-lg transition-all duration-200 hover:border-cyan-500 hover:shadow-cyan-500/10 research-rimlight-hover">
       <div className="flex gap-3.5">
         {/* Cover Image */}
         <Link
@@ -69,7 +69,7 @@ export function WatchlistCard({ item }: WatchlistCardProps) {
             <div className="flex items-start justify-between gap-1">
               <Link
                 href={detailHref}
-                className="group-hover:text-pink-400 transition-colors"
+                className="group-hover:text-cyan-400 transition-colors"
               >
                 <h3 className="line-clamp-1 text-sm font-light text-slate-100">
                   {series} {issue}
@@ -94,7 +94,7 @@ export function WatchlistCard({ item }: WatchlistCardProps) {
             </div>
 
             <div className="mt-2 text-[10px] text-slate-500 flex items-center gap-1">
-              <Bookmark className="h-3 w-3 text-pink-400" />
+              <Bookmark className="h-3 w-3 text-cyan-400" />
               <span>Added: {dateAdded}</span>
             </div>
           </div>
@@ -140,7 +140,7 @@ export function WatchlistCard({ item }: WatchlistCardProps) {
 
         <Link
           href={detailHref}
-          className="flex items-center gap-1 text-[11px] text-pink-400 hover:text-pink-300 px-1"
+          className="flex items-center gap-1 text-[11px] text-cyan-400 hover:text-cyan-300 px-1"
         >
           View Full Dossier <ExternalLink className="h-3 w-3" />
         </Link>

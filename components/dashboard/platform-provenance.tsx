@@ -3,15 +3,15 @@ import { ShieldCheck, BookOpen, Layers, ExternalLink } from "lucide-react";
 
 export function PlatformProvenance() {
   return (
-    <section className="rounded-xl border-2 border-pink-500/60 bg-[#0B0D14] p-6 shadow-xl transition-all research-rimlight-hover">
+    <section className="rounded-xl border-2 border-cyan-500/40 bg-[#0B0D14] p-6 shadow-xl transition-all research-rimlight-hover">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-4 mb-6">
         <div className="flex items-center gap-2">
-          <ShieldCheck className="h-5 w-5 text-pink-400" />
+          <ShieldCheck className="h-5 w-5 text-cyan-400" />
           <h2 className="text-base sm:text-lg text-slate-100 tracking-wide uppercase">
             CATALOG PROVENANCE & ARCHITECTURE
           </h2>
         </div>
-        <span className="text-[11px] text-pink-300 rounded bg-pink-950/60 px-2.5 py-1 border border-pink-800/50 self-start sm:self-auto">
+        <span className="text-[11px] text-cyan-300 rounded bg-[#0C1626] px-2.5 py-1 border border-cyan-500/40 self-start sm:self-auto">
           THREE-TIER HARMONIZED SYSTEM
         </span>
       </div>
@@ -50,8 +50,8 @@ export function PlatformProvenance() {
         {/* Source 3: Grand Comics Database */}
         <div className="rounded-lg border border-slate-800 bg-[#0F121C] p-4 space-y-2.5">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-pink-400 uppercase tracking-wider">BIBLIOGRAPHIC ARCHIVE</span>
-            <span className="text-[10px] text-pink-300 bg-pink-950/50 px-2 py-0.5 rounded border border-pink-800/50">3.4M RECORDS</span>
+            <span className="text-xs text-blue-400 uppercase tracking-wider">BIBLIOGRAPHIC ARCHIVE</span>
+            <span className="text-[10px] text-blue-300 bg-blue-950/50 px-2 py-0.5 rounded border border-blue-800/50">3.4M RECORDS</span>
           </div>
           <h3 className="text-sm text-slate-100">Grand Comics Database (GCD)</h3>
           <p className="text-xs text-slate-400 leading-relaxed">

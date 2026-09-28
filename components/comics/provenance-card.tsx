@@ -17,7 +17,7 @@ export function ProvenanceCard({ comic }: ProvenanceCardProps) {
       <CardHeader className="pb-3 border-b border-slate-800">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Database className="h-4 w-4 text-pink-400" />
+            <Database className="h-4 w-4 text-cyan-400" />
             <CardTitle className="text-sm uppercase tracking-wider">
               PROVENANCE & SOURCE REGISTRY
             </CardTitle>

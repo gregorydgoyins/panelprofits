@@ -30,7 +30,7 @@ export default async function AnalyticsPage() {
         <div className="border border-slate-800 bg-[#0b0f15] p-5">
           <h2 className="text-lg text-slate-100">Analytical density</h2>
           <p className="mt-2 text-xs leading-5 text-slate-500">Fourteen observations is the threshold for continuous indicators. Sparse records remain descriptive.</p>
-          <div className="mt-5 divide-y divide-slate-800">{analytics.density.map((row) => <div key={row.label} className="flex items-center justify-between py-3 text-sm"><span className="text-slate-300">{row.label}</span><span className="tabular-nums text-pink-200">{row.identityCount.toLocaleString()} identities</span></div>)}</div>
+          <div className="mt-5 divide-y divide-slate-800">{analytics.density.map((row) => <div key={row.label} className="flex items-center justify-between py-3 text-sm"><span className="text-slate-300">{row.label}</span><span className="tabular-nums text-cyan-300">{row.identityCount.toLocaleString()} identities</span></div>)}</div>
         </div>
       </section>
 

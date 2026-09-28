@@ -16,13 +16,13 @@ interface RelationshipMapProps {
 
 function getEntityBadgeStyle(type: ExtractedEntity["type"], isSelected: boolean) {
   if (isSelected) {
-    return "border-pink-400 bg-pink-950/80 text-pink-200 shadow-[0_0_12px_rgba(244,114,182,0.3)]";
+    return "border-cyan-400 bg-cyan-950/80 text-cyan-200 shadow-[0_0_12px_rgba(6,182,212,0.3)]";
   }
   switch (type) {
     case "creator":
       return "border-cyan-500/40 bg-cyan-950/40 text-cyan-200 hover:border-cyan-400";
     case "character":
-      return "border-pink-500/40 bg-pink-950/40 text-pink-200 hover:border-pink-400";
+      return "border-cyan-500/40 bg-[#0C1626] text-cyan-200 hover:border-cyan-400";
     case "item":
       return "border-emerald-500/40 bg-emerald-950/40 text-emerald-200 hover:border-emerald-400";
     case "location":
@@ -43,7 +43,7 @@ function renderEntityIcon(type: ExtractedEntity["type"]) {
     case "creator":
       return <Sparkles className="h-3 w-3 text-cyan-400" />;
     case "character":
-      return <User className="h-3 w-3 text-pink-400" />;
+      return <User className="h-3 w-3 text-cyan-400" />;
     case "item":
       return <Shield className="h-3 w-3 text-emerald-400" />;
     case "location":
@@ -83,16 +83,16 @@ export function RelationshipMap({
   const comicBase = sourceLinks.filter((link) => link.source_system === "COMICBASE").length;
 
   return (
-    <section className="overflow-hidden border border-pink-500/40 bg-[#080c13] p-5 sm:p-6 shadow-[0_0_30px_rgba(244,114,182,0.06)] rounded-lg">
+    <section className="overflow-hidden border border-cyan-500/40 bg-[#080c13] p-5 sm:p-6 shadow-[0_0_30px_rgba(6,182,212,0.06)] rounded-lg">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-800/80 pb-4">
         <div className="flex items-center gap-2">
-          <Cable className="h-5 w-5 text-pink-400 animate-pulse" />
+          <Cable className="h-5 w-5 text-cyan-400 animate-pulse" />
           <h2 className="text-base font-semibold uppercase tracking-[0.16em] text-slate-100">
             Prezi Interactive Entity & Lineage Graph
           </h2>
         </div>
-        <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.14em] text-pink-300 bg-pink-950/40 border border-pink-500/30 px-2.5 py-1 rounded">
-          <Sparkles className="h-3 w-3 text-pink-400" />
+        <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.14em] text-cyan-300 bg-[#0C1626] border border-cyan-500/30 px-2.5 py-1 rounded">
+          <Sparkles className="h-3 w-3 text-cyan-400" />
           {entities.length} Dynamic Edges Resolved
         </div>
       </div>
@@ -104,7 +104,7 @@ export function RelationshipMap({
           className="absolute inset-0 opacity-15 pointer-events-none"
           style={{
             backgroundImage:
-              "radial-gradient(#F472B6 1px, transparent 1px), radial-gradient(#38BDF8 1px, transparent 1px)",
+              "radial-gradient(#06B6D4 1px, transparent 1px), radial-gradient(#38BDF8 1px, transparent 1px)",
             backgroundSize: "24px 24px",
             backgroundPosition: "0 0, 12px 12px",
           }}
@@ -112,9 +112,9 @@ export function RelationshipMap({
 
         {/* Central Core Node */}
         <div className="relative z-10 flex flex-col items-center justify-center">
-          <div className="relative border-2 border-pink-400/90 bg-pink-950/40 px-6 py-4 text-center shadow-[0_0_30px_rgba(244,114,182,0.3)] rounded-xl max-w-sm">
-            <Fingerprint className="mx-auto h-7 w-7 text-pink-300" />
-            <p className="mt-1 text-[10px] font-mono uppercase tracking-[0.2em] text-pink-200">
+          <div className="relative border-2 border-cyan-400/90 bg-[#0C1626] px-6 py-4 text-center shadow-[0_0_30px_rgba(6,182,212,0.3)] rounded-xl max-w-sm">
+            <Fingerprint className="mx-auto h-7 w-7 text-cyan-400" />
+            <p className="mt-1 text-[10px] font-mono uppercase tracking-[0.2em] text-cyan-300">
               Canonical Edition
             </p>
             <p className="mt-1 text-xl font-bold text-slate-100">{seriesName || "Edition Record"}</p>
@@ -191,11 +191,11 @@ export function RelationshipMap({
 
         {/* Active Node Detail Dossier Popup */}
         {selectedNode && (
-          <div className="mt-4 p-4 border border-pink-400/60 bg-[#0B0F19] rounded shadow-lg">
+          <div className="mt-4 p-4 border border-cyan-400/60 bg-[#0B0F19] rounded shadow-lg">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {renderEntityIcon(selectedNode.type)}
-                <span className="text-xs font-semibold text-pink-300 uppercase tracking-wider">
+                <span className="text-xs font-semibold text-cyan-300 uppercase tracking-wider">
                   {selectedNode.name}
                 </span>
                 <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-slate-800 text-slate-300">

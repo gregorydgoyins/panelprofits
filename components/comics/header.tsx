@@ -56,9 +56,9 @@ export async function Header() {
 
             <Link
               href="/watchlist"
-              className="flex items-center gap-1.5 rounded px-2.5 py-1.5 text-slate-300 hover:text-pink-400 hover:bg-[#161822] transition-colors border border-transparent hover:border-pink-500/40"
+              className="flex items-center gap-1.5 rounded px-2.5 py-1.5 text-slate-300 hover:text-cyan-400 hover:bg-[#161822] transition-colors border border-transparent hover:border-cyan-500/40"
             >
-              <Bookmark className="h-3.5 w-3.5 text-pink-400" />
+              <Bookmark className="h-3.5 w-3.5 text-cyan-400" />
               <span className="hidden xs:inline">WATCHLIST</span>
             </Link>
 

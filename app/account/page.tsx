@@ -129,11 +129,11 @@ export default async function AccountPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-pink-500/40 bg-[#0E1017] shadow-xl dashboard-rimlight-hover">
+        <Card className="border-cyan-500/30 bg-[#0E1017] shadow-xl dashboard-rimlight-hover">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs uppercase tracking-widest text-slate-400 flex items-center justify-between">
               <span>Watchlist</span>
-              <Bookmark className="h-4 w-4 text-pink-400" />
+              <Bookmark className="h-4 w-4 text-cyan-400" />
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -141,7 +141,7 @@ export default async function AccountPage() {
             <p className="mt-1 text-xs text-slate-400">Monitored market assets</p>
             <Link
               href="/watchlist"
-              className="mt-3 inline-block text-xs text-pink-400 hover:text-pink-300 transition-colors"
+              className="mt-3 inline-block text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
             >
               Open watchlist &rarr;
             </Link>
@@ -187,7 +187,7 @@ export default async function AccountPage() {
         <div className="rounded-lg border border-slate-800 bg-[#0A0C13] p-5 flex flex-col justify-between">
           <div>
             <h2 className="text-sm font-light text-slate-200 mb-2 flex items-center gap-2">
-              <Bookmark className="h-4 w-4 text-pink-400" />
+              <Bookmark className="h-4 w-4 text-cyan-400" />
               Market Watchlist
             </h2>
             <p className="text-xs text-slate-400 leading-relaxed">
@@ -197,7 +197,7 @@ export default async function AccountPage() {
           <div className="mt-4 pt-4 border-t border-slate-800/80 flex justify-end">
             <Link
               href="/watchlist"
-              className="rounded bg-pink-950/50 hover:bg-pink-900/60 px-4 py-2 text-xs text-pink-300 border border-pink-500/40 transition-colors"
+              className="rounded bg-[#0C1626] hover:bg-[#10223D] px-4 py-2 text-xs text-cyan-300 border border-cyan-500/40 transition-colors"
             >
               Go to Watchlist
             </Link>

@@ -199,15 +199,92 @@ export async function getIntelligenceRailComics(limit = 12): Promise<Intelligenc
  * Queries comics with genuine reference prices.
  */
 export async function getValuationRailComics(limit = 12): Promise<ValuationRailItem[]> {
-  return [];
+  try {
+    const cleanDb = createCleanReadOnlyServerClient();
+    const { data, error } = await cleanDb
+      .from("ce70_equity_universe")
+      .select("id, series, issue_number, reference_fmv_usd, price_formatted, cover_url")
+      .order("reference_fmv_usd", { ascending: false })
+      .limit(limit);
+
+    if (error || !data) {
+      if (error && !isMissingTableError(error)) {
+        console.error("Error fetching CE70 equity universe rail:", error);
+      }
+      return [];
+    }
+
+    return data.map((item) => ({
+      id: item.id,
+      series: item.series,
+      issueNumber: item.issue_number,
+      publisher: null,
+      publicationYear: null,
+      coverUrl: item.cover_url || null,
+      coverStoragePath: null,
+      priceFormatted: item.price_formatted || `$${Number(item.reference_fmv_usd).toLocaleString()}`,
+      priceValue: Number(item.reference_fmv_usd),
+      sourceLabel: "CE70 CLEAN EQUITY PORT",
+    }));
+  } catch (err) {
+    console.error("Exception in CE70 equity rail query:", err);
+    return [];
+  }
 }
 
 export async function getCleanAssetSurfaces(limit = 24): Promise<CleanAssetSurfaceItem[]> {
-  return [];
+  try {
+    const cleanDb = createCleanReadOnlyServerClient();
+    const { data, error } = await cleanDb
+      .from("ce70_index_definitions")
+      .select("seat_number, series, issue_number, era, publisher, constituent_count, asset_class, asset_subclass, cover_url")
+      .order("seat_number", { ascending: true })
+      .limit(limit);
+
+    if (error || !data) {
+      if (error && !isMissingTableError(error)) {
+        console.error("Error fetching CE70 asset surfaces:", error);
+      }
+      return [];
+    }
+
+    return data.map((item) => ({
+      id: `ce70-seat-${item.seat_number}`,
+      series: item.series,
+      issueNumber: String(item.seat_number),
+      publisher: item.publisher,
+      indexValue: null,
+      quantity: null,
+      source: "CLEAN ASSET PORT",
+      createdAt: null,
+      coverUrl: item.cover_url || null,
+      coverStoragePath: null,
+      assetClass: item.asset_class,
+      assetSubclass: item.asset_subclass || `${item.era.toUpperCase()} ERA`,
+      constituentCount: item.constituent_count || 1,
+    }));
+  } catch (err) {
+    console.error("Exception in CE70 asset surfaces query:", err);
+    return [];
+  }
 }
 
 export async function getCleanAssetSurface(surfaceKey: string) {
-  return null;
+  try {
+    const cleanDb = createCleanReadOnlyServerClient();
+    const seatNum = parseInt(surfaceKey.replace(/\D/g, ""), 10);
+    if (isNaN(seatNum)) return null;
+
+    const { data } = await cleanDb
+      .from("ce70_index_definitions")
+      .select("*")
+      .eq("seat_number", seatNum)
+      .maybeSingle();
+
+    return data || null;
+  } catch {
+    return null;
+  }
 }
 
 export async function getCleanNewsIntelligence(limit = 32): Promise<CleanNewsIntelligenceItem[]> {

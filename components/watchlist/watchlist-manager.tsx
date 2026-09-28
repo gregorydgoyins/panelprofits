@@ -46,7 +46,7 @@ export function WatchlistManager({
         </p>
         <Link
           href="/comics"
-          className="inline-flex items-center gap-1.5 rounded bg-pink-600 hover:bg-pink-500 px-4 py-2 text-xs text-white transition-colors"
+          className="inline-flex items-center gap-1.5 rounded bg-cyan-600 hover:bg-cyan-500 px-4 py-2 text-xs text-white transition-colors"
         >
           Explore Catalog &rarr;
         </Link>

@@ -12,8 +12,8 @@ export default async function ComicsPage({ searchParams }: { searchParams: Promi
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-      <header className="border-b border-pink-300/60 pb-7 shadow-[0_4px_22px_rgba(244,114,182,0.1)]">
-        <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.28em] text-pink-300">
+      <header className="border-b border-cyan-500/40 pb-7 shadow-[0_4px_22px_rgba(6,182,212,0.1)]">
+        <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.28em] text-cyan-400">
           <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
           <span>PPCF Catalog</span>
         </div>
@@ -25,9 +25,9 @@ export default async function ComicsPage({ searchParams }: { searchParams: Promi
         </p>
       </header>
 
-      <form role="search" className="mt-6 flex max-w-xl items-center gap-2 border border-slate-800 bg-[#0b0f15] p-2 focus-within:border-pink-300/80 focus-within:ring-1 focus-within:ring-pink-300/80 transition-all">
+      <form role="search" className="mt-6 flex max-w-xl items-center gap-2 border border-slate-800 bg-[#0b0f15] p-2 focus-within:border-cyan-400/80 focus-within:ring-1 focus-within:ring-cyan-400/80 transition-all">
         <label htmlFor="comic-search-input" className="sr-only">Search series, issue, or PPCF ID</label>
-        <Search className="ml-2 h-4 w-4 text-pink-300 shrink-0" aria-hidden="true" />
+        <Search className="ml-2 h-4 w-4 text-cyan-400 shrink-0" aria-hidden="true" />
         <input
           id="comic-search-input"
           name="q"
@@ -37,7 +37,7 @@ export default async function ComicsPage({ searchParams }: { searchParams: Promi
         />
         <button
           type="submit"
-          className="border border-pink-300/60 bg-pink-950/30 px-3 py-2 text-[10px] font-medium uppercase tracking-[0.14em] text-pink-200 hover:bg-pink-900/50 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 transition-colors"
+          className="border border-cyan-500/50 bg-[#0C1626] px-3 py-2 text-[10px] font-medium uppercase tracking-[0.14em] text-cyan-300 hover:bg-[#10223D] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 transition-colors"
         >
           Search
         </button>
@@ -49,7 +49,7 @@ export default async function ComicsPage({ searchParams }: { searchParams: Promi
         </span>
         <Link
           href="/wiki"
-          className="text-pink-300 hover:text-pink-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pink-400 underline underline-offset-4"
+          className="text-cyan-400 hover:text-cyan-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-400 underline underline-offset-4"
         >
           Open Encyclopedia Index
         </Link>

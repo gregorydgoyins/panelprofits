@@ -28,7 +28,7 @@ import {
 
 export { getNetworkHealthSummary } from "./self-healing";
 export { fetchAllWireStories } from "./wire-apis";
-export { CURATED_CHANNELS } from "./curated-sources";
+export { CURATED_CHANNELS, CURATED_FEEDS } from "./curated-sources";
 
 export const PRIMARY_SOURCES: NewsSource[] = [
   // Primary Comic Industry Trade & Critical News

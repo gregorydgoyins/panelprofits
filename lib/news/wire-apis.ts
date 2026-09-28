@@ -298,7 +298,8 @@ export async function fetchAskNewsWire(limit = 20): Promise<WireStoryDraft[]> {
 
   try {
     const query = encodeURIComponent("comic books marvel dc comics");
-    const url = `https://api.asknews.app/v1/news/search?query=${query}&n_articles=${limit}`;
+    const articleCount = Math.min(Math.max(limit, 1), 10);
+    const url = `https://api.asknews.app/v1/news/search?query=${query}&n_articles=${articleCount}`;
     const res = await fetch(url, {
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -322,14 +323,15 @@ export async function fetchAskNewsWire(limit = 20): Promise<WireStoryDraft[]> {
     const data = await res.json();
     recordFetchSuccess(sourceName, sourceUrl, Date.now() - start);
 
-    const articles = (data.articles || []) as Array<{
+    const articles = ((data.as_dicts || data.articles || []) as Array<{
       title?: string;
       headline?: string;
       article_url?: string;
       summary?: string;
       pub_date?: string;
       source_id?: string;
-    }>;
+      image_url?: string;
+    }>);
 
     return articles
       .filter((a) => {
@@ -353,7 +355,7 @@ export async function fetchAskNewsWire(limit = 20): Promise<WireStoryDraft[]> {
           author: null,
           summary: a.summary ? a.summary.slice(0, 3000) : null,
           url: itemUrl,
-          image_url: sourceFavicon(itemUrl),
+          image_url: a.image_url || sourceFavicon(itemUrl),
           published_at,
         };
       });

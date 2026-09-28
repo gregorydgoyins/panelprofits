@@ -5,6 +5,8 @@ import { getNewsStory, shortNewsSource } from "@/lib/news/feed";
 import { findNewsEntities } from "@/lib/news/entities";
 import { NewsBriefing } from "@/components/news/news-briefing";
 import { AuthenticVideoEmbed, extractAuthenticVideo } from "@/components/news/authentic-video-embed";
+import { PresenterPlayer } from "@/components/news/PresenterPlayer";
+import { getStoryVideoReel } from "@/lib/video/pipeline";
 
 export const dynamic = "force-dynamic";
 
@@ -13,8 +15,11 @@ export default async function NewsStoryPage({ params }: { params: Promise<{ id: 
   const story = await getNewsStory(id);
   if (!story) redirect("/news");
 
-  const relatedEntities = findNewsEntities(story.headline, story.summary);
-  const authenticVideo = extractAuthenticVideo(story.summary, story.url);
+  const [relatedEntities, videoReel] = await Promise.all([
+    Promise.resolve(findNewsEntities(story.headline, story.summary)),
+    getStoryVideoReel(story.id),
+  ]);
+  const authenticVideo = !videoReel ? extractAuthenticVideo(story.summary, story.url) : null;
   const hasEditorialImage = Boolean(story.imageUrl && !story.imageUrl.includes("google.com/s2/favicons"));
   const hasPublisherMark = Boolean(story.imageUrl?.includes("google.com/s2/favicons"));
 
@@ -57,6 +62,19 @@ export default async function NewsStoryPage({ params }: { params: Promise<{ id: 
           </div>
           <h1 className="mt-4 text-2xl font-semibold leading-tight text-slate-100 sm:text-4xl">{story.headline}</h1>
           
+          {videoReel && (
+            <div className="mt-8 max-w-3xl">
+              <PresenterPlayer
+                headline={videoReel.headline}
+                videoUrl={videoReel.videoUrl}
+                posterUrl={videoReel.posterUrl}
+                transcript={videoReel.transcript}
+                presenter={videoReel.presenter}
+                categoryTag="AI MARKET BROADCAST"
+              />
+            </div>
+          )}
+
           {authenticVideo && (
             <div className="mt-8 max-w-3xl">
               <AuthenticVideoEmbed video={authenticVideo} headline={story.headline} />

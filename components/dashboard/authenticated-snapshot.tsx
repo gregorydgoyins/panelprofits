@@ -66,12 +66,12 @@ export function AuthenticatedSnapshot({
               <span>MY COLLECTION</span>
             </Link>
 
-            {/* Open Watchlist -> Pink Action */}
+            {/* Open Watchlist -> Cyber Cyan Action */}
             <Link
               href="/watchlist"
-              className="inline-flex items-center gap-1.5 rounded border border-pink-500/60 bg-pink-950/30 px-3 py-2 text-pink-300 hover:border-pink-400 hover:bg-pink-900/40 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded border border-cyan-500/50 bg-[#0C1626] px-3 py-2 text-cyan-300 hover:border-cyan-400 hover:bg-[#10223D] transition-colors"
             >
-              <Bookmark className="h-3.5 w-3.5 text-pink-400" />
+              <Bookmark className="h-3.5 w-3.5 text-cyan-400" />
               <span>WATCHLIST</span>
             </Link>
 
@@ -165,17 +165,17 @@ export function AuthenticatedSnapshot({
         </div>
 
         {/* Right: Watchlist Preview */}
-        <div className="lg:col-span-5 rounded-xl border-2 border-pink-500/60 bg-[#0B0D14] p-6 shadow-xl transition-all research-rimlight-hover space-y-5">
+        <div className="lg:col-span-5 rounded-xl border-2 border-cyan-500/40 bg-[#0B0D14] p-6 shadow-xl transition-all research-rimlight-hover space-y-5">
           <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
             <div className="flex items-center gap-2">
-              <Bookmark className="h-4 w-4 text-pink-400" />
+              <Bookmark className="h-4 w-4 text-cyan-400" />
               <h3 className="text-sm uppercase text-slate-100 tracking-wider">
                 WATCHLIST INTELLIGENCE ({watchlistCount})
               </h3>
             </div>
             <Link
               href="/watchlist"
-              className="text-xs text-pink-400 hover:text-pink-300 transition-colors flex items-center gap-1"
+              className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-1"
             >
               <span>VIEW ALL</span>
               <ArrowRight className="h-3 w-3" />
@@ -186,7 +186,7 @@ export function AuthenticatedSnapshot({
             <div className="flex flex-col items-center justify-center p-6 text-center border border-dashed border-slate-800 rounded bg-[#0F121C]">
               <Bookmark className="h-6 w-6 text-slate-600 mb-2" />
               <p className="text-xs text-slate-400">Your watchlist is currently empty.</p>
-              <Link href="/comics" className="mt-2 text-xs text-pink-400 hover:underline">
+              <Link href="/comics" className="mt-2 text-xs text-cyan-400 hover:underline">
                 Explore catalog to add tracked issues
               </Link>
             </div>
@@ -201,7 +201,7 @@ export function AuthenticatedSnapshot({
                   <Link
                     key={item.id}
                     href={`/comics/${comic.id}`}
-                    className="group rounded border border-slate-800 bg-[#0E111B] p-2 hover:border-pink-500/70 transition-colors text-xs space-y-1.5"
+                    className="group rounded border border-slate-800 bg-[#0E111B] p-2 hover:border-cyan-500/70 transition-colors text-xs space-y-1.5"
                   >
                     <div className="overflow-hidden rounded border border-slate-800 bg-black">
                       <ComicCover
@@ -214,10 +214,10 @@ export function AuthenticatedSnapshot({
                       />
                     </div>
                     <div className="text-[10px]">
-                      <p className="text-slate-200 line-clamp-1 group-hover:text-pink-300">
+                      <p className="text-slate-200 line-clamp-1 group-hover:text-cyan-300">
                         {comic.series}
                       </p>
-                      <span className="text-pink-400">#{comic.issue_number}</span>
+                      <span className="text-cyan-400">#{comic.issue_number}</span>
                       <div className="text-emerald-400 pt-0.5">{pricing.formatted}</div>
                     </div>
                   </Link>
