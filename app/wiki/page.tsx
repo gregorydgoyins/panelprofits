@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { BookOpen, Search, Sparkles, TrendingUp, Cpu } from "lucide-react";
+import { BookOpen, Search, Sparkles, TrendingUp, Cpu, User, Shield, MapPin, Users } from "lucide-react";
 import { searchPpcfComics } from "@/lib/ppcf/queries";
 import { COMIC_FINANCIAL_GLOSSARY } from "@/lib/wiki/entity-extractor";
 import { queryPineconeVectorIndex } from "@/lib/wiki/pinecone";
+import { searchLoreEntities, getFeaturedLoreEntities } from "@/lib/wiki/lore-search";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,21 @@ export default async function WikiPage({ searchParams }: { searchParams: Promise
     searchPpcfComics(queryText, 24),
     queryText ? queryPineconeVectorIndex(queryText, 6) : Promise.resolve([]),
   ]);
+
+  const loreEntities = queryText ? searchLoreEntities(queryText, 18) : getFeaturedLoreEntities();
+
+  const renderLoreIcon = (type: string) => {
+    switch (type) {
+      case "item":
+        return <Shield className="h-4 w-4 text-emerald-400" />;
+      case "location":
+        return <MapPin className="h-4 w-4 text-indigo-400" />;
+      case "team":
+        return <Users className="h-4 w-4 text-blue-400" />;
+      default:
+        return <User className="h-4 w-4 text-pink-400" />;
+    }
+  };
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
@@ -25,7 +41,7 @@ export default async function WikiPage({ searchParams }: { searchParams: Promise
           Comic Lore & Equity Oracle
         </h1>
         <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-400">
-          Universal encyclopedic crosswalk connecting Grand Comics Database (GCD) publication history, verified creator lineages, and Investopedia-style comic equity financial mechanics.
+          Universal encyclopedic crosswalk connecting Grand Comics Database (GCD) publication history, verified creator lineages, multi-universe character & artifact lore, and Investopedia-style comic equity financial mechanics.
         </p>
       </header>
 
@@ -35,16 +51,78 @@ export default async function WikiPage({ searchParams }: { searchParams: Promise
         <input
           name="q"
           defaultValue={queryText}
-          placeholder="Search creators, titles, characters, or financial terms..."
-          className="min-w-0 flex-1 bg-transparent px-2 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-600"
+          aria-label="Search encyclopedia"
+          className="min-w-0 flex-1 bg-transparent px-2 py-2 text-sm text-slate-100 outline-none text-slate-100"
         />
         <button className="border border-pink-300/60 bg-pink-950/40 px-4 py-2 text-[10px] uppercase tracking-[0.14em] text-pink-200 hover:bg-pink-900/60 transition-colors rounded">
           Search Oracle
         </button>
       </form>
 
+      {/* Multi-Universe Lore & Character Dossiers */}
+      <section className="mt-10" aria-label="Multi-Universe Lore Dossiers">
+        <div className="mb-4 flex items-center justify-between border-b border-slate-800 pb-3">
+          <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-[0.18em] text-pink-400 font-semibold">
+            <Sparkles className="h-4 w-4 text-pink-400" />
+            {queryText ? `Multi-Universe Lore Matches for "${queryText}"` : "Premier Landmark Universe Lore & Characters"}
+          </div>
+          <span className="text-xs text-slate-500 font-mono">{loreEntities.length} Dossiers</span>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {loreEntities.map((ent) => (
+            <Link
+              key={ent.slug}
+              href={`/wiki/entry/${ent.slug}`}
+              className="border border-slate-800 bg-[#0b0f15] p-5 rounded transition-all hover:border-pink-400/80 hover:shadow-[0_0_22px_rgba(244,114,182,0.18)] flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex justify-between items-center pb-2 border-b border-slate-800/80">
+                  <div className="flex items-center gap-1.5">
+                    {renderLoreIcon(ent.type)}
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-pink-300 font-semibold">
+                      {ent.universe}
+                    </span>
+                  </div>
+                  <span className="text-[9px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-slate-800 text-slate-300">
+                    {ent.type.toUpperCase()}
+                  </span>
+                </div>
+                <h3 className="mt-3 text-lg font-bold text-slate-100">{ent.title}</h3>
+                {ent.first_appearance && (
+                  <p className="mt-1 text-xs font-mono text-cyan-300">
+                    Debut: {ent.first_appearance}
+                  </p>
+                )}
+                {ent.creators && (
+                  <p className="mt-0.5 text-[11px] text-slate-400">
+                    Creators: {ent.creators}
+                  </p>
+                )}
+                <p className="mt-2 text-xs text-slate-400 line-clamp-3 leading-relaxed">
+                  {ent.summary}
+                </p>
+              </div>
+
+              <div className="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-between text-[10px] font-mono text-slate-500">
+                <span>{ent.reality || "CANON"}</span>
+                <span className="text-pink-400 hover:text-pink-300">View Dossier &rarr;</span>
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        {!loreEntities.length && queryText && (
+          <div className="border border-slate-800 bg-[#090C14] px-4 py-8 text-center rounded">
+            <p className="text-xs text-slate-400 font-mono">
+              No direct lore entities matched &ldquo;{queryText}&rdquo;. Check canonical comic editions below.
+            </p>
+          </div>
+        )}
+      </section>
+
       {/* Investopedia-Style Equity Financial Terms Grid */}
-      <section className="mt-10" aria-label="Comic Equity Financial Glossary">
+      <section className="mt-12" aria-label="Comic Equity Financial Glossary">
         <div className="flex items-center gap-2 mb-4 text-xs font-mono uppercase tracking-[0.18em] text-cyan-400 font-semibold">
           <TrendingUp className="h-4 w-4 text-cyan-300" />
           Comic Equity & Investment Fundamentals
@@ -102,7 +180,7 @@ export default async function WikiPage({ searchParams }: { searchParams: Promise
 
       {/* Pinecone 65k Vector Estate Semantic Matches */}
       {vectorMatches.length > 0 && (
-        <section className="mt-10" aria-label="Pinecone Semantic Vector Matches">
+        <section className="mt-12" aria-label="Pinecone Semantic Vector Matches">
           <div className="flex items-center gap-2 mb-4 text-xs font-mono uppercase tracking-[0.18em] text-cyan-400 font-semibold">
             <Cpu className="h-4 w-4 text-cyan-300" />
             Pinecone Vector Estate Matches (Semantic 65k Index)
