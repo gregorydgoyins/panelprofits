@@ -112,7 +112,7 @@ export const COMIC_FINANCIAL_GLOSSARY: Record<string, { term: string; definition
   }
 };
 
-// Known Creator & Character Dictionary Grounded in Marvel Database & GCD
+// Known Creator & Character Dictionary Grounded in Marvel Database, DC Database, and GCD
 const KNOWN_CREATORS = [
   "Stan Lee", "Jack Kirby", "Steve Ditko", "Chris Claremont", "John Romita",
   "John Romita Sr.", "John Buscema", "Roy Thomas", "Herb Trimpe", "Dave Cockrum",
@@ -123,7 +123,11 @@ const KNOWN_CREATORS = [
   "Jonathan Hickman", "Al Ewing", "Donny Cates", "Chip Zdarsky", "Sal Buscema",
   "Bill Mantlo", "Peter David", "Tom DeFalco", "Howard Mackie", "Mark Gruenwald",
   "John Byrne", "Alan Davis", "Scott Lobdell", "Bob Kane", "Bill Finger",
-  "Jerry Siegel", "Joe Shuster", "Neal Adams", "Grant Morrison", "Geoff Johns"
+  "Jerry Siegel", "Joe Shuster", "Neal Adams", "Grant Morrison", "Geoff Johns",
+  "Carmine Infantino", "Robert Kanigher", "John Broome", "Gardner Fox", "Harry Lampert",
+  "William Moulton Marston", "Harry G. Peter", "Dennis O'Neil", "George Pérez", "Paul Dini",
+  "Bruce Timm", "Neil Gaiman", "Alan Moore", "Garth Ennis", "Robert Kirkman",
+  "Mike Mignola", "Erik Larsen", "Brian K. Vaughan", "Sheldon Mayer", "Otto Binder", "C. C. Beck"
 ];
 
 const KNOWN_CHARACTERS = [
@@ -139,12 +143,22 @@ const KNOWN_CHARACTERS = [
   "Hawkeye", "Black Widow", "Falcon", "Luke Cage", "Iron Fist",
   "Shang-Chi", "X-Men", "Avengers", "Fantastic Four", "Sinister Six",
   "Brotherhood of Evil Mutants", "Alpha Flight", "New Mutants", "Thunderbolts",
-  "Guardians of the Galaxy", "Illuminati", "Dora Milaje", "Batman", "Superman",
-  "Joker", "Wonder Woman", "Flash", "Green Lantern", "Aquaman",
-  "Spawn", "Hellboy", "Star Wars"
+  "Guardians of the Galaxy", "Illuminati", "Dora Milaje",
+  // DC Lore Characters & Teams
+  "Batman", "Superman", "Joker", "Wonder Woman", "The Flash", "Flash", "Green Lantern",
+  "Aquaman", "Robin", "Nightwing", "Batgirl", "Commissioner Gordon", "Penguin",
+  "Riddler", "Two-Face", "Ra's al Ghul", "Poison Ivy", "Harley Quinn", "Deathstroke",
+  "Bane", "Scarecrow", "Supergirl", "Lois Lane", "Lex Luthor", "Brainiac",
+  "General Zod", "Doomsday", "Cheetah", "Black Manta", "Green Arrow", "Black Canary",
+  "Hal Jordan", "John Stewart", "Sinestro", "Martian Manhunter", "Shazam", "Black Adam",
+  "Hawkman", "Hawkgirl", "Cyborg", "Starfire", "Raven", "Beast Boy",
+  "Justice League", "Justice Society of America", "Teen Titans", "Suicide Squad",
+  "Watchmen", "Rorschach", "Doctor Manhattan",
+  // Image & Dark Horse Lore
+  "Spawn", "Hellboy", "Invincible", "Savage Dragon", "Star Wars"
 ];
 
-const LANDMARK_MARVEL_DEBUTS: Record<string, { characters: string[]; creators: string[] }> = {
+export const LANDMARK_MARVEL_DEBUTS: Record<string, { characters: string[]; creators: string[] }> = {
   // Marvel Silver & Bronze Age Landmarks
   "amazing fantasy #15": { characters: ["Spider-Man", "Aunt May", "Uncle Ben", "Flash Thompson"], creators: ["Stan Lee", "Steve Ditko"] },
   "incredible hulk #181": { characters: ["Wolverine"], creators: ["Len Wein", "John Romita Sr.", "Herb Trimpe"] },
@@ -212,11 +226,38 @@ const LANDMARK_MARVEL_DEBUTS: Record<string, { characters: string[]; creators: s
   "detective comics #27": { characters: ["Batman", "Commissioner Gordon"], creators: ["Bob Kane", "Bill Finger"] },
   "batman #1": { characters: ["Joker", "Catwoman"], creators: ["Bob Kane", "Bill Finger"] },
   "all star comics #8": { characters: ["Wonder Woman"], creators: ["William Moulton Marston", "H. G. Peter"] },
-  "showcase #4": { characters: ["Flash (Barry Allen)"], creators: ["Robert Kanigher", "Carmine Infantino"] },
+  "showcase #4": { characters: ["The Flash (Barry Allen)"], creators: ["Robert Kanigher", "Carmine Infantino"] },
   "showcase #22": { characters: ["Green Lantern (Hal Jordan)"], creators: ["John Broome", "Gil Kane"] },
   "brave and the bold #28": { characters: ["Justice League of America"], creators: ["Gardner Fox", "Mike Sekowsky"] },
+  "flash comics #1": { characters: ["The Flash (Jay Garrick)", "Hawkman"], creators: ["Gardner Fox", "Harry Lampert"] },
+  "more fun comics #73": { characters: ["Aquaman", "Green Arrow", "Speedy"], creators: ["Paul Norris", "Mort Weisinger", "George Papp"] },
+  "action comics #252": { characters: ["Supergirl", "Brainiac"], creators: ["Otto Binder", "Al Plastino"] },
+  "detective comics #38": { characters: ["Robin (Dick Grayson)"], creators: ["Bill Finger", "Bob Kane", "Jerry Robinson"] },
+  "detective comics #359": { characters: ["Batgirl (Barbara Gordon)"], creators: ["Gardner Fox", "Carmine Infantino"] },
+  "all star comics #3": { characters: ["Justice Society of America"], creators: ["Gardner Fox", "Sheldon Mayer"] },
+  "whiz comics #2": { characters: ["Captain Marvel / Shazam", "Billy Batson"], creators: ["Bill Parker", "C. C. Beck"] },
+  "green lantern #76": { characters: ["Green Lantern / Green Arrow Run"], creators: ["Dennis O'Neil", "Neal Adams"] },
+  "crisis on infinite earths #7": { characters: ["Anti-Monitor"], creators: ["Marv Wolfman", "George Pérez"] },
+  "new teen titans #1": { characters: ["Raven", "Starfire", "Cyborg"], creators: ["Marv Wolfman", "George Pérez"] },
+  "new teen titans #2": { characters: ["Deathstroke the Terminator"], creators: ["Marv Wolfman", "George Pérez"] },
+  "batman #232": { characters: ["Ra's al Ghul"], creators: ["Dennis O'Neil", "Neal Adams"] },
+  "batman #181": { characters: ["Poison Ivy"], creators: ["Robert Kanigher", "Sheldon Moldoff"] },
+  "detective comics #58": { characters: ["Penguin"], creators: ["Bill Finger", "Bob Kane"] },
+  "detective comics #66": { characters: ["Two-Face"], creators: ["Bill Finger", "Bob Kane"] },
+  "detective comics #140": { characters: ["Riddler"], creators: ["Bill Finger", "Dick Sprang"] },
+  "batman #357": { characters: ["Jason Todd", "Killer Croc"], creators: ["Gerry Conway", "Gene Colan"] },
   "swamp thing #37": { characters: ["John Constantine"], creators: ["Alan Moore", "Rick Veitch", "John Totleben"] },
   "batman adventures #12": { characters: ["Harley Quinn"], creators: ["Paul Dini", "Bruce Timm", "Mike Parobeck"] },
+  "watchmen #1": { characters: ["Rorschach", "Doctor Manhattan", "Nite Owl", "The Comedian"], creators: ["Alan Moore", "Dave Gibbons"] },
+  "sandman #1": { characters: ["Dream (Morpheus)"], creators: ["Neil Gaiman", "Sam Kieth", "Mike Dringenberg"] },
+
+  // Image & Dark Horse Milestones
+  "spawn #1": { characters: ["Spawn (Al Simmons)"], creators: ["Todd McFarlane"] },
+  "savage dragon #1": { characters: ["Savage Dragon"], creators: ["Erik Larsen"] },
+  "invincible #1": { characters: ["Invincible (Mark Grayson)", "Omni-Man"], creators: ["Robert Kirkman", "Cory Walker"] },
+  "the walking dead #1": { characters: ["Rick Grimes"], creators: ["Robert Kirkman", "Tony Moore"] },
+  "saga #1": { characters: ["Alana", "Marko"], creators: ["Brian K. Vaughan", "Fiona Staples"] },
+  "hellboy: seed of destruction #1": { characters: ["Hellboy", "Abe Sapien"], creators: ["Mike Mignola", "John Byrne"] },
 };
 
 const KNOWN_PUBLISHERS = [
