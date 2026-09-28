@@ -16,13 +16,39 @@ import {
   HeartHandshake,
   Layers,
 } from "lucide-react";
-import { getLoreEntityBySlug } from "@/lib/wiki/lore-search";
+import { getLoreEntityBySlug, type LoreEntitySummary } from "@/lib/wiki/lore-search";
+import { createPublicServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
 export default async function LoreEntityPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const entity = getLoreEntityBySlug(slug);
+  let entity: LoreEntitySummary | null = getLoreEntityBySlug(slug);
+
+  if (!entity) {
+    try {
+      const supabase = createPublicServerClient();
+      const { data: page } = await supabase
+        .from("ppcf_wiki_pages")
+        .select("*")
+        .eq("slug", slug.toLowerCase().trim())
+        .maybeSingle();
+
+      if (page) {
+        const pType = (page.page_type || "").toLowerCase();
+        entity = {
+          slug: page.slug,
+          title: page.display_title,
+          universe: page.universe,
+          type: (pType === "item" || pType === "vehicle" ? "item" : pType === "location" ? "location" : pType === "team" ? "team" : "character") as LoreEntitySummary["type"],
+          reality: page.reality,
+          creators: page.creators,
+          first_appearance: page.first_appearance,
+          summary: page.summary || `Canonical ${page.universe} entry in Panel Profits knowledge database.`,
+        };
+      }
+    } catch {}
+  }
 
   if (!entity) {
     notFound();

@@ -3,7 +3,8 @@ import { BookOpen, Search, Sparkles, TrendingUp, Cpu, User, Shield, MapPin, User
 import { searchPpcfComics } from "@/lib/ppcf/queries";
 import { COMIC_FINANCIAL_GLOSSARY } from "@/lib/wiki/entity-extractor";
 import { queryPineconeVectorIndex } from "@/lib/wiki/pinecone";
-import { searchLoreEntities, getFeaturedLoreEntities } from "@/lib/wiki/lore-search";
+import { searchLoreEntities, getFeaturedLoreEntities, type LoreEntitySummary } from "@/lib/wiki/lore-search";
+import { createPublicServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,48 @@ export default async function WikiPage({ searchParams }: { searchParams: Promise
     queryText ? queryPineconeVectorIndex(queryText, 6) : Promise.resolve([]),
   ]);
 
-  const loreEntities = queryText ? searchLoreEntities(queryText, 18) : getFeaturedLoreEntities();
+  let loreEntities: LoreEntitySummary[] = [];
+  if (queryText) {
+    const localMatches = searchLoreEntities(queryText, 18);
+    const seenSlugs = new Set(localMatches.map((m) => m.slug));
+    loreEntities = [...localMatches];
+
+    try {
+      const supabase = createPublicServerClient();
+      const { data: dbPages } = await supabase
+        .from("ppcf_wiki_pages")
+        .select("*")
+        .ilike("display_title", `%${queryText}%`)
+        .limit(24);
+
+      if (dbPages && dbPages.length > 0) {
+        for (const page of dbPages) {
+          if (!seenSlugs.has(page.slug)) {
+            seenSlugs.add(page.slug);
+            const pType = (page.page_type || "").toLowerCase();
+            loreEntities.push({
+              slug: page.slug,
+              title: page.display_title,
+              universe: page.universe,
+              type: (pType === "item" || pType === "vehicle"
+                ? "item"
+                : pType === "location"
+                ? "location"
+                : pType === "team"
+                ? "team"
+                : "character") as LoreEntitySummary["type"],
+              reality: page.reality,
+              creators: page.creators,
+              first_appearance: page.first_appearance,
+              summary: page.summary || `Canonical ${page.universe} entry in Panel Profits knowledge database.`,
+            });
+          }
+        }
+      }
+    } catch {}
+  } else {
+    loreEntities = getFeaturedLoreEntities();
+  }
 
   const renderLoreIcon = (type: string) => {
     switch (type) {
@@ -26,7 +68,7 @@ export default async function WikiPage({ searchParams }: { searchParams: Promise
       case "team":
         return <Users className="h-4 w-4 text-blue-400" />;
       default:
-        return <User className="h-4 w-4 text-pink-400" />;
+        return <User className="h-4 w-4 text-cyan-400" />;
     }
   };
 
@@ -34,7 +76,7 @@ export default async function WikiPage({ searchParams }: { searchParams: Promise
     <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
       {/* Header Bar */}
       <header className="border-b border-slate-800 pb-7">
-        <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.28em] text-pink-300">
+        <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.28em] text-cyan-300">
           <BookOpen className="h-3.5 w-3.5" /> Panel Profits Encyclopedia & Financial Knowledge Engine
         </div>
         <h1 className="mt-3 text-3xl text-slate-100 sm:text-5xl font-bold tracking-tight">
@@ -47,14 +89,15 @@ export default async function WikiPage({ searchParams }: { searchParams: Promise
 
       {/* Search Input Bar */}
       <form className="mt-6 flex max-w-xl items-center gap-2 border border-slate-800 bg-[#0b0f15] p-2 rounded shadow-lg">
-        <Search className="ml-2 h-4 w-4 text-pink-300" />
+        <Search className="ml-2 h-4 w-4 text-cyan-400" />
         <input
           name="q"
           defaultValue={queryText}
           aria-label="Search encyclopedia"
-          className="min-w-0 flex-1 bg-transparent px-2 py-2 text-sm text-slate-100 outline-none text-slate-100"
+          className="min-w-0 flex-1 bg-transparent px-2 py-2 text-sm text-slate-100 outline-none text-slate-100 placeholder:text-slate-500"
+          placeholder="Search 220,000+ characters, teams, lore & financial terms..."
         />
-        <button className="border border-pink-300/60 bg-pink-950/40 px-4 py-2 text-[10px] uppercase tracking-[0.14em] text-pink-200 hover:bg-pink-900/60 transition-colors rounded">
+        <button className="border border-cyan-500/60 bg-cyan-950/40 px-4 py-2 text-[10px] uppercase tracking-[0.14em] text-cyan-200 hover:bg-cyan-900/60 transition-colors rounded font-semibold">
           Search Oracle
         </button>
       </form>
@@ -62,8 +105,8 @@ export default async function WikiPage({ searchParams }: { searchParams: Promise
       {/* Multi-Universe Lore & Character Dossiers */}
       <section className="mt-10" aria-label="Multi-Universe Lore Dossiers">
         <div className="mb-4 flex items-center justify-between border-b border-slate-800 pb-3">
-          <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-[0.18em] text-pink-400 font-semibold">
-            <Sparkles className="h-4 w-4 text-pink-400" />
+          <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-[0.18em] text-cyan-400 font-semibold">
+            <Sparkles className="h-4 w-4 text-cyan-400" />
             {queryText ? `Multi-Universe Lore Matches for "${queryText}"` : "Premier Landmark Universe Lore & Characters"}
           </div>
           <span className="text-xs text-slate-500 font-mono">{loreEntities.length} Dossiers</span>
@@ -74,13 +117,13 @@ export default async function WikiPage({ searchParams }: { searchParams: Promise
             <Link
               key={ent.slug}
               href={`/wiki/entry/${ent.slug}`}
-              className="border border-slate-800 bg-[#0b0f15] p-5 rounded transition-all hover:border-pink-400/80 hover:shadow-[0_0_22px_rgba(244,114,182,0.18)] flex flex-col justify-between"
+              className="border border-slate-800 bg-[#0b0f15] p-5 rounded transition-all hover:border-cyan-400/80 hover:shadow-[0_0_22px_rgba(6,182,212,0.18)] flex flex-col justify-between"
             >
               <div>
                 <div className="flex justify-between items-center pb-2 border-b border-slate-800/80">
                   <div className="flex items-center gap-1.5">
                     {renderLoreIcon(ent.type)}
-                    <span className="text-[10px] font-mono uppercase tracking-wider text-pink-300 font-semibold">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-300 font-semibold">
                       {ent.universe}
                     </span>
                   </div>
@@ -106,7 +149,7 @@ export default async function WikiPage({ searchParams }: { searchParams: Promise
 
               <div className="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-between text-[10px] font-mono text-slate-500">
                 <span>{ent.reality || "CANON"}</span>
-                <span className="text-pink-400 hover:text-pink-300">View Dossier &rarr;</span>
+                <span className="text-cyan-400 hover:text-cyan-300">View Dossier &rarr;</span>
               </div>
             </Link>
           ))}
@@ -168,8 +211,8 @@ export default async function WikiPage({ searchParams }: { searchParams: Promise
                   </div>
                   <div className="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-between text-[10px] font-mono text-slate-500">
                     <span>PPCF STANDARD</span>
-                    <Link href={`/comics?q=${encodeURIComponent(termObj.term)}`} className="text-pink-400 hover:text-pink-300">
-                      Explore Equities &rarr;
+                    <Link href={`/lexicon/${key}`} className="text-cyan-400 hover:text-cyan-300">
+                      Explore Lexicon &rarr;
                     </Link>
                   </div>
                 </div>
@@ -221,10 +264,10 @@ export default async function WikiPage({ searchParams }: { searchParams: Promise
             <Link
               key={comic.ppcf_id}
               href={`/wiki/${comic.ppcf_id}`}
-              className="border border-slate-800 bg-[#0b0f15] p-5 rounded transition-all hover:border-pink-400/70 hover:shadow-[0_0_22px_rgba(244,114,182,0.18)]"
+              className="border border-slate-800 bg-[#0b0f15] p-5 rounded transition-all hover:border-cyan-400/70 hover:shadow-[0_0_22px_rgba(6,182,212,0.18)]"
             >
               <div className="flex justify-between items-center">
-                <span className="text-[9px] font-mono uppercase tracking-[0.12em] text-pink-300 bg-pink-950/40 px-2 py-0.5 border border-pink-500/30 rounded">
+                <span className="text-[9px] font-mono uppercase tracking-[0.12em] text-cyan-300 bg-cyan-950/40 px-2 py-0.5 border border-cyan-500/30 rounded">
                   PPCF CATALOG
                 </span>
                 <span className="text-[9px] uppercase tracking-[0.12em] text-slate-500 font-mono">
