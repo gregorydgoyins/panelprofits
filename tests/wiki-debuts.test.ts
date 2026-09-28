@@ -48,6 +48,48 @@ describe("comic debut resolver", () => {
     expect(tf?.characters).toContain("Optimus Prime");
   });
 
+  it("resolves landmark item and location debuts across DC and Marvel", () => {
+    const batmobile = resolveIssueDebuts("Detective Comics", "35");
+    expect(batmobile).not.toBeNull();
+    expect(batmobile?.universe).toBe("DC");
+    expect(batmobile?.items).toContain("Batmobile");
+
+    const batcave = resolveIssueDebuts("Batman", "12");
+    expect(batcave).not.toBeNull();
+    expect(batcave?.universe).toBe("DC");
+    expect(batcave?.locations).toContain("Batcave");
+
+    const gotham = resolveIssueDebuts("Batman", "4");
+    expect(gotham).not.toBeNull();
+    expect(gotham?.universe).toBe("DC");
+    expect(gotham?.locations).toContain("Gotham City");
+
+    const metropolis = resolveIssueDebuts("Action Comics", "16");
+    expect(metropolis).not.toBeNull();
+    expect(metropolis?.universe).toBe("DC");
+    expect(metropolis?.locations).toContain("Metropolis");
+
+    const mjolnir = resolveIssueDebuts("Journey Into Mystery", "83");
+    expect(mjolnir).not.toBeNull();
+    expect(mjolnir?.universe).toBe("MARVEL");
+    expect(mjolnir?.items).toContain("Mjolnir");
+
+    const asgard = resolveIssueDebuts("Journey Into Mystery", "85");
+    expect(asgard).not.toBeNull();
+    expect(asgard?.universe).toBe("MARVEL");
+    expect(asgard?.locations).toContain("Asgard");
+
+    const baxter = resolveIssueDebuts("Fantastic Four", "3");
+    expect(baxter).not.toBeNull();
+    expect(baxter?.universe).toBe("MARVEL");
+    expect(baxter?.locations).toContain("Baxter Building");
+
+    const gauntlet = resolveIssueDebuts("Silver Surfer", "44");
+    expect(gauntlet).not.toBeNull();
+    expect(gauntlet?.universe).toBe("MARVEL");
+    expect(gauntlet?.items).toContain("Infinity Gauntlet");
+  });
+
   it("returns null for non-debut issues without errors", () => {
     const nonDebut = resolveIssueDebuts("Random Nonexistent Series 99999", "99999");
     expect(nonDebut).toBeNull();

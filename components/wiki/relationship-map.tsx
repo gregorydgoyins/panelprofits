@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Cable, Database, DollarSign, Fingerprint, Sparkles, User, Shield, Layers } from "lucide-react";
+import { Cable, Database, DollarSign, Fingerprint, Sparkles, User, Shield, Layers, MapPin, Users } from "lucide-react";
 import { extractComicEntities, buildEntityGraph, type ExtractedEntity } from "@/lib/wiki/entity-extractor";
 
 interface RelationshipMapProps {
@@ -12,6 +12,51 @@ interface RelationshipMapProps {
   sourceLinks: Array<{ source_system: string; source_record_id: string }>;
   hasPricing: boolean;
   extraContextText?: string;
+}
+
+function getEntityBadgeStyle(type: ExtractedEntity["type"], isSelected: boolean) {
+  if (isSelected) {
+    return "border-pink-400 bg-pink-950/80 text-pink-200 shadow-[0_0_12px_rgba(244,114,182,0.3)]";
+  }
+  switch (type) {
+    case "creator":
+      return "border-cyan-500/40 bg-cyan-950/40 text-cyan-200 hover:border-cyan-400";
+    case "character":
+      return "border-pink-500/40 bg-pink-950/40 text-pink-200 hover:border-pink-400";
+    case "item":
+      return "border-emerald-500/40 bg-emerald-950/40 text-emerald-200 hover:border-emerald-400";
+    case "location":
+      return "border-indigo-500/40 bg-indigo-950/40 text-indigo-200 hover:border-indigo-400";
+    case "team":
+      return "border-blue-500/40 bg-blue-950/40 text-blue-200 hover:border-blue-400";
+    case "publisher":
+      return "border-slate-700 bg-slate-900/60 text-slate-300 hover:border-slate-600";
+    case "concept":
+      return "border-cyan-600/40 bg-[#0C1626] text-cyan-300 hover:border-cyan-500";
+    default:
+      return "border-slate-800 bg-slate-900/60 text-slate-300 hover:border-slate-700";
+  }
+}
+
+function renderEntityIcon(type: ExtractedEntity["type"]) {
+  switch (type) {
+    case "creator":
+      return <Sparkles className="h-3 w-3 text-cyan-400" />;
+    case "character":
+      return <User className="h-3 w-3 text-pink-400" />;
+    case "item":
+      return <Shield className="h-3 w-3 text-emerald-400" />;
+    case "location":
+      return <MapPin className="h-3 w-3 text-indigo-400" />;
+    case "team":
+      return <Users className="h-3 w-3 text-blue-400" />;
+    case "publisher":
+      return <Layers className="h-3 w-3 text-slate-400" />;
+    case "concept":
+      return <DollarSign className="h-3 w-3 text-cyan-400" />;
+    default:
+      return <Cable className="h-3 w-3 text-slate-400" />;
+  }
 }
 
 export function RelationshipMap({
@@ -116,11 +161,11 @@ export function RelationshipMap({
           </div>
         </div>
 
-        {/* Extracted Creator & Character Micro-Nodes */}
+        {/* Extracted Creator, Character & Lore Micro-Nodes */}
         {entities.length > 0 && (
           <div className="mt-6 border-t border-slate-800/80 pt-4">
             <p className="text-[10px] font-mono uppercase tracking-[0.16em] text-slate-400 mb-3">
-              Resolved Lore & Creator Crosswalks:
+              Resolved Lore, Debut & Lineage Crosswalks:
             </p>
             <div className="flex flex-wrap gap-2">
               {entities.map((ent) => (
@@ -128,15 +173,14 @@ export function RelationshipMap({
                   key={ent.id}
                   type="button"
                   onClick={() => setSelectedNode(ent)}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded border transition-all ${
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded border transition-all ${getEntityBadgeStyle(
+                    ent.type,
                     selectedNode?.id === ent.id
-                      ? "border-pink-400 bg-pink-950/80 text-pink-200 shadow-[0_0_12px_rgba(244,114,182,0.3)]"
-                      : "border-slate-800 bg-slate-900/60 text-slate-300 hover:border-slate-700"
-                  }`}
+                  )}`}
                 >
-                  <User className="h-3 w-3 text-pink-400" />
+                  {renderEntityIcon(ent.type)}
                   <span className="font-medium">{ent.name}</span>
-                  <span className="text-[9px] uppercase tracking-wider text-slate-500 font-mono">
+                  <span className="text-[9px] uppercase tracking-wider text-slate-400 font-mono">
                     ({ent.type})
                   </span>
                 </button>
@@ -149,9 +193,15 @@ export function RelationshipMap({
         {selectedNode && (
           <div className="mt-4 p-4 border border-pink-400/60 bg-[#0B0F19] rounded shadow-lg">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-pink-300 uppercase tracking-wider">
-                {selectedNode.name}
-              </span>
+              <div className="flex items-center gap-2">
+                {renderEntityIcon(selectedNode.type)}
+                <span className="text-xs font-semibold text-pink-300 uppercase tracking-wider">
+                  {selectedNode.name}
+                </span>
+                <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-slate-800 text-slate-300">
+                  {selectedNode.type}
+                </span>
+              </div>
               <button
                 type="button"
                 onClick={() => setSelectedNode(null)}

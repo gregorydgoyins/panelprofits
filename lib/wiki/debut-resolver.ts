@@ -1,16 +1,30 @@
 import fs from "fs";
 import path from "path";
+import { LANDMARK_MARVEL_DEBUTS } from "./entity-extractor";
 
 export interface ComicDebutInfo {
   series: string;
   issue: string;
   characters: string[];
   creators: string[];
+  items?: string[];
+  locations?: string[];
+  teams?: string[];
   universe: "DC" | "MARVEL" | "IMAGE" | "DARK_HORSE" | "STAR_WARS" | "TRANSFORMERS" | "INDEPENDENT";
 }
 
-let dcDebutsCache: Record<string, { series: string; issue: string; characters: string[]; creators: string[] }> | null = null;
-let marvelDebutsCache: Record<string, { series: string; issue: string; characters: string[]; creators: string[] }> | null = null;
+interface BookDebutRecord {
+  series: string;
+  issue: string;
+  characters?: string[];
+  creators?: string[];
+  items?: string[];
+  locations?: string[];
+  teams?: string[];
+}
+
+let dcDebutsCache: Record<string, BookDebutRecord> | null = null;
+let marvelDebutsCache: Record<string, BookDebutRecord> | null = null;
 
 function loadDebutsCache() {
   if (!dcDebutsCache) {
@@ -44,10 +58,9 @@ function loadDebutsCache() {
   }
 }
 
-import { LANDMARK_MARVEL_DEBUTS } from "./entity-extractor";
-
 /**
- * Resolves debut characters and creators for any comic issue across DC & Marvel databases.
+ * Resolves debut characters, creators, items, and locations for any comic issue
+ * across DC, Marvel, Star Wars, and Indie publisher databases.
  */
 export function resolveIssueDebuts(seriesName?: string | null, issueNumber?: string | null): ComicDebutInfo | null {
   if (!seriesName || !issueNumber) return null;
@@ -55,6 +68,8 @@ export function resolveIssueDebuts(seriesName?: string | null, issueNumber?: str
   const cleanSeries = seriesName.toLowerCase().replace(/^(the|a)\s+/, "").trim();
   const cleanIssue = issueNumber.replace(/^#/, "").trim();
   const key = `${cleanSeries} #${cleanIssue}`;
+
+  loadDebutsCache();
 
   // 0. Check Curated Landmark Milestones
   if (LANDMARK_MARVEL_DEBUTS[key]) {
@@ -65,25 +80,37 @@ export function resolveIssueDebuts(seriesName?: string | null, issueNumber?: str
     const isStarWars = ["star wars", "darth vader", "boba fett", "mandalorian"].some((sw) => cleanSeries.includes(sw));
     const isTransformers = ["transformers", "hasbro", "optimus"].some((tf) => cleanSeries.includes(tf));
 
+    // Check if cache has additional entities to merge
+    const dbRecord = isDc ? dcDebutsCache?.[key] : marvelDebutsCache?.[key];
+    const mergedChars = Array.from(new Set([...(lm.characters || []), ...(dbRecord?.characters || [])]));
+    const mergedCreators = Array.from(new Set([...(lm.creators || []), ...(dbRecord?.creators || [])]));
+    const mergedItems = Array.from(new Set([...(lm.items || []), ...(dbRecord?.items || [])]));
+    const mergedLocations = Array.from(new Set([...(lm.locations || []), ...(dbRecord?.locations || [])]));
+    const mergedTeams = Array.from(new Set([...(lm.teams || []), ...(dbRecord?.teams || [])]));
+
     return {
       series: seriesName,
       issue: cleanIssue,
-      characters: lm.characters,
-      creators: lm.creators,
+      characters: mergedChars,
+      creators: mergedCreators,
+      items: mergedItems,
+      locations: mergedLocations,
+      teams: mergedTeams,
       universe: isDc ? "DC" : isImage ? "IMAGE" : isDarkHorse ? "DARK_HORSE" : isStarWars ? "STAR_WARS" : isTransformers ? "TRANSFORMERS" : "MARVEL",
     };
   }
-
-  loadDebutsCache();
 
   // 1. Check DC Database Debuts
   if (dcDebutsCache && dcDebutsCache[key]) {
     const entry = dcDebutsCache[key];
     return {
-      series: entry.series,
-      issue: entry.issue,
-      characters: entry.characters,
-      creators: entry.creators,
+      series: entry.series || seriesName,
+      issue: entry.issue || cleanIssue,
+      characters: entry.characters || [],
+      creators: entry.creators || [],
+      items: entry.items || [],
+      locations: entry.locations || [],
+      teams: entry.teams || [],
       universe: "DC",
     };
   }
@@ -92,10 +119,13 @@ export function resolveIssueDebuts(seriesName?: string | null, issueNumber?: str
   if (marvelDebutsCache && marvelDebutsCache[key]) {
     const entry = marvelDebutsCache[key];
     return {
-      series: entry.series,
-      issue: entry.issue,
-      characters: entry.characters,
-      creators: entry.creators,
+      series: entry.series || seriesName,
+      issue: entry.issue || cleanIssue,
+      characters: entry.characters || [],
+      creators: entry.creators || [],
+      items: entry.items || [],
+      locations: entry.locations || [],
+      teams: entry.teams || [],
       universe: "MARVEL",
     };
   }
