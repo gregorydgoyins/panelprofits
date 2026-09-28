@@ -44,4 +44,14 @@ describe("newsroom relevance gate", () => {
     const batmobileDef = entities.find((e) => e.term === "Batmobile");
     expect(batmobileDef?.wikiPath).toMatch(/^\/wiki\/entry\//);
   });
+
+  it("automatically admits dedicated comic video channels and extracts authentic video embeds", async () => {
+    expect(isRelevantComicStory("LORDS OF THE LONG BOX", "Top 10 Key Issues Heating Up This Week", "Speculation market briefing")).toBe(true);
+    expect(isRelevantComicStory("NEAR MINT CONDITION", "Upcoming Marvel Omnibus Releases", "Full unboxing overview")).toBe(true);
+    const { extractAuthenticVideo } = await import("@/components/news/authentic-video-embed");
+    const video = extractAuthenticVideo("Check out this week's key run", "https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+    expect(video).not.toBeNull();
+    expect(video?.provider).toBe("youtube");
+    expect(video?.embedUrl).toBe("https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ");
+  });
 });

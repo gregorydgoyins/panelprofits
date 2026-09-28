@@ -6,6 +6,7 @@ import { ArrowUpRight, Newspaper, Calendar, ExternalLink } from "lucide-react";
 import { findNewsEntities } from "@/lib/news/entities";
 import { LinkedBriefing } from "@/components/news/linked-briefing";
 import { shortNewsSource, type NewsStory } from "@/lib/news/types";
+import { AuthenticVideoEmbed, extractAuthenticVideo } from "@/components/news/authentic-video-embed";
 
 function relativeTime(d: string | null) {
   if (!d) return "Recently";
@@ -24,6 +25,7 @@ export function StoryPanel({ story }: { story: NewsStory }) {
   if (!story) return null;
 
   const entities = findNewsEntities(story.headline, story.summary);
+  const authenticVideo = extractAuthenticVideo(story.summary, story.url);
   const rawSummary = story.summary || "";
   const paragraphs = rawSummary
     .split(/\n\n+/)
@@ -47,6 +49,11 @@ export function StoryPanel({ story }: { story: NewsStory }) {
               <Calendar className="h-3 w-3 text-slate-500" />
               {relativeTime(story.publishedAt)}
             </span>
+            {authenticVideo && (
+              <span className="px-1.5 py-0.5 rounded bg-red-950/60 border border-red-500/40 text-[9px] font-mono text-red-400 font-semibold uppercase">
+                VIDEO BROADCAST
+              </span>
+            )}
           </div>
 
           {story.author && (
@@ -61,15 +68,21 @@ export function StoryPanel({ story }: { story: NewsStory }) {
           {story.headline}
         </h1>
 
-        {/* Optional Editorial Artwork */}
-        {hasEditorialImage && (
-          <div className="mt-5 overflow-hidden rounded border border-slate-800/80 bg-[#06080D] flex justify-center">
-            <img
-              src={story.imageUrl!}
-              alt={story.headline}
-              className="max-h-[380px] w-auto max-w-full object-contain"
-            />
+        {/* Authentic Video Player or Editorial Artwork */}
+        {authenticVideo ? (
+          <div className="mt-5">
+            <AuthenticVideoEmbed video={authenticVideo} headline={story.headline} />
           </div>
+        ) : (
+          hasEditorialImage && (
+            <div className="mt-5 overflow-hidden rounded border border-slate-800/80 bg-[#06080D] flex justify-center">
+              <img
+                src={story.imageUrl!}
+                alt={story.headline}
+                className="max-h-[380px] w-auto max-w-full object-contain"
+              />
+            </div>
+          )
         )}
 
         {/* Story Body */}

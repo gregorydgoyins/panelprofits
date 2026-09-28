@@ -15,20 +15,51 @@ import type { NewsCategory, NewsStory, NewsSource } from "./types";
 import { sourceFavicon } from "./types";
 
 export const SOURCES: NewsSource[] = [
+  // Primary Comic Industry Trade & Critical News
   { name: "BLEEDING COOL", url: "https://bleedingcool.com/comics/feed/", category: "national" },
   { name: "CBR", url: "https://www.cbr.com/feed/", category: "national" },
   { name: "THE BEAT", url: "https://www.comicsbeat.com/feed/", category: "national" },
   { name: "AIPT", url: "https://aiptcomics.com/feed/", category: "national" },
+  { name: "ICV2", url: "https://icv2.com/rss", category: "national" },
+  { name: "COMICS JOURNAL", url: "https://www.tcj.com/feed/", category: "international" },
+  { name: "COMICSXF", url: "https://comicsxf.com/feed/", category: "national" },
+  { name: "MULTIVERSITY COMICS", url: "https://www.multiversitycomics.com/feed/", category: "national" },
+  { name: "FIRST COMICS NEWS", url: "https://www.firstcomicsnews.com/feed/", category: "national" },
+  { name: "MAJOR SPOILERS", url: "https://majorspoilers.com/feed/", category: "national" },
+  { name: "COMIC CRUSADERS", url: "https://www.comiccrusaders.com/feed/", category: "national" },
+  { name: "GRAPHIC POLICY", url: "https://graphicpolicy.com/feed/", category: "national" },
+  { name: "SMASH PAGES", url: "https://smashpages.net/feed/", category: "national" },
+  { name: "TRIPWIRE", url: "https://tripwiremagazine.co.uk/feed/", category: "international" },
+  { name: "BROKEN FRONTIER", url: "https://www.brokenfrontier.com/feed/", category: "international" },
+  { name: "PREVIEWS WORLD", url: "https://www.previewsworld.com/rss", category: "national" },
+
+  // Secondary Market & Comic Equity Analytics Feeds
+  { name: "COMICBOOK INVEST", url: "https://comicbookinvest.com/feed/", category: "national" },
+  { name: "GOCOLLECT", url: "https://gocollect.com/blog/feed", category: "national" },
+  { name: "COVRPRICE", url: "https://covrprice.com/feed/", category: "national" },
+  { name: "COMIC BOOK HERALD", url: "https://www.comicbookherald.com/feed/", category: "national" },
+  { name: "COMICHRON", url: "https://blog.comichron.com/feeds/posts/default?alt=rss", category: "national" },
+
+  // Publisher Direct Despatches
+  { name: "IMAGE COMICS", url: "https://imagecomics.com/news.atom", category: "national" },
+  { name: "DARK HORSE", url: "https://www.darkhorse.com/Blog/rss", category: "national" },
+  { name: "2000 AD", url: "https://2000ad.com/news/feed/", category: "international" },
+
+  // Financial & Media Industry M&A
   { name: "VARIETY", url: "https://variety.com/feed/", category: "national" },
   { name: "DEADLINE", url: "https://deadline.com/feed/", category: "national" },
   { name: "THR", url: "https://www.hollywoodreporter.com/feed/", category: "national" },
-  { name: "ICV2", url: "https://icv2.com/rss", category: "national" },
   { name: "GAMESRADAR", url: "https://www.gamesradar.com/feeds/all/", category: "international" },
   { name: "IGN", url: "https://www.ign.com/rss/articles/feed?tags=comics", category: "international" },
   { name: "POLYGON", url: "https://www.polygon.com/rss/index.xml", category: "international" },
-  { name: "COMICSXF", url: "https://comicsxf.com/feed/", category: "national" },
-  { name: "COMICBOOK INVEST", url: "https://comicbookinvest.com/feed/", category: "national" },
-  { name: "COMICS JOURNAL", url: "https://www.tcj.com/feed/", category: "international" },
+
+  // Video Broadcast Channels (YouTube Native Atom XML Feeds)
+  { name: "LORDS OF THE LONG BOX", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCowVZaDHDd7eoiU8ll5QPGQ", category: "national" },
+  { name: "NEAR MINT CONDITION", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCUX6kqTUFQqv1tH6J-0Z5fA", category: "national" },
+  { name: "COMICTOM101", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UC6s16tJ0e5lQ5nQ4-6-666Q", category: "national" },
+  { name: "GEM MINT COLLECTIBLES", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UC31fEeAOTnfRgvGFwYJsFUA", category: "national" },
+  { name: "CARTOONIST KAYFABE", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCU61d9D1F-Y03e05-Pj2-uA", category: "national" },
+  { name: "VARIANT COMICS", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UC9c1MvP4U9m5JpS6a3N7Y7Q", category: "national" },
 ];
 
 const COMIC_TERMS = /comic\s*book|comic(s)?\b|superhero|super-hero|marvel|dc comics|avengers|x-men|spider-man|batman|superman|fantastic four|deadpool|wolverine|venom|manga|mangaka|graphic novel|image comics|\bdark horse\b|idw|boom studios|viz media|spawn|spawn universe/i;
@@ -36,7 +67,12 @@ const COMPANY_TERMS = /disney|warner bros|warner discovery|wbd|sony pictures|uni
 const FINANCIAL_TERMS = /earnings|revenue|profit|loss|shares|stock|investor|acquisition|merger|deal|buyout|results|box office/i;
 const EXCLUDE_NON_COMIC = /\b(gameplay|playstation\s*5|ps5|xbox|nintendo switch|platinum trophy|earphones|headset|found footage|horror movie|blair witch|messi|lionel messi|soccer|football|nfl|nba|basketball|premier league|champions league|mls|inter miami|celebrity traitors|reality tv)\b/i;
 
+const DEDICATED_COMIC_SOURCES = /lords of the long box|near mint condition|comictom101|cartoonist kayfabe|variant comics|gem mint collectibles|bleeding cool|the beat|aipt|cbr|comicbook invest|comics journal|comicsxf|multiversity|first comics news|comic crusaders|major spoilers|comic book herald|gocollect|covrprice|comichron|previewsworld|2000 ad|dark horse|image comics/i;
+
 export function isRelevantComicStory(source: string, headline: string, summary: string | null): boolean {
+  if (DEDICATED_COMIC_SOURCES.test(source)) {
+    return true;
+  }
   const text = `${headline} ${summary || ""}`;
   if (EXCLUDE_NON_COMIC.test(text)) {
     return false;
@@ -111,18 +147,22 @@ function parseFeedItems(xml: string): Array<{
   const blocks = [...xml.matchAll(/<(item|entry)\b[\s\S]*?<\/\1>/gi)].map((match) => match[0]);
   return blocks.flatMap((block) => {
     const rawTitle = tagValue(block, "title");
-    const rawUrl = tagValue(block, "link") || attributeValue(block, "link", "href");
+    const ytVideoId = tagValue(block, "yt:videoId");
+    const rawUrl = ytVideoId
+      ? `https://www.youtube.com/watch?v=${ytVideoId}`
+      : tagValue(block, "link") || attributeValue(block, "link", "href");
     if (!rawTitle || !rawUrl) return [];
 
     const title = decodeEntities(rawTitle).slice(0, 300);
     const url = rawUrl.trim();
     const rawSummary =
       tagValue(block, "content:encoded") ||
+      tagValue(block, "media:description") ||
       tagValue(block, "description") ||
       tagValue(block, "summary") ||
       tagValue(block, "content");
     const summary = rawSummary ? decodeEntities(rawSummary).slice(0, 3000) : null;
-    const author = tagValue(block, "dc:creator") || tagValue(block, "author") || null;
+    const author = tagValue(block, "dc:creator") || tagValue(block, "name") || tagValue(block, "author") || null;
     const imageUrl = extractImage(block);
     const pubDateStr = tagValue(block, "pubDate") || tagValue(block, "published") || tagValue(block, "updated");
     const publishedAt = pubDateStr && !Number.isNaN(Date.parse(pubDateStr)) ? new Date(pubDateStr).toISOString() : null;

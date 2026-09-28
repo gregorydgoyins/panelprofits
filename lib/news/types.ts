@@ -40,6 +40,23 @@ export function shortNewsSource(source: string): string {
     "the beat": "THE BEAT",
     "the guardian film": "GUARDIAN",
     "the hollywood reporter": "THR",
+    "lords of the long box": "LOTLB",
+    "near mint condition": "NMC",
+    "comictom101": "TOM101",
+    "gem mint collectibles": "GEM MINT",
+    "cartoonist kayfabe": "KAYFABE",
+    "variant comics": "VARIANT",
+    "comicbook invest": "CBSI",
+    "comics journal": "TCJ",
+    "first comics news": "FCN",
+    "major spoilers": "SPOILERS",
+    "comic crusaders": "CRUSADERS",
+    "comic book herald": "CB HERALD",
+    "multiversity comics": "MULTIVERSITY",
+    "graphic policy": "GRAPHIC POL",
+    "previews world": "PREVIEWS",
+    "dark horse": "DARK HORSE",
+    "image comics": "IMAGE",
   };
   if (labels[normalized]) return labels[normalized];
   if (source.length <= 14) return source.toUpperCase();
