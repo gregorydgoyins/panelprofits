@@ -166,7 +166,7 @@ export default async function AccountPage() {
                   <div className="flex items-center gap-2">
                     <span className="text-slate-100">{col.name}</span>
                     {col.is_default && (
-                      <span className="rounded bg-orange-950/60 px-1.5 py-0.5 text-[9px] text-orange-300 border border-orange-500/40">
+                      <span className="rounded bg-[#0C1626] px-1.5 py-0.5 text-[9px] text-cyan-300 border border-cyan-500/40">
                         DEFAULT
                       </span>
                     )}
@@ -175,7 +175,7 @@ export default async function AccountPage() {
                 </div>
                 <Link
                   href={`/collection?id=${col.id}`}
-                  className="text-orange-400 hover:text-orange-300 transition-colors text-xs"
+                  className="text-cyan-400 hover:text-cyan-300 transition-colors text-xs"
                 >
                   Open
                 </Link>

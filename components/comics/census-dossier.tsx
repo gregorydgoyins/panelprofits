@@ -34,7 +34,7 @@ export function CensusDossier({ dossier }: { dossier: ComicCensusDossier | null 
                 ✓ GCD Crosswalk Verified
               </span>
             ) : (
-              <span className="inline-flex items-center rounded-full bg-amber-950/80 px-2.5 py-0.5 text-xs font-medium text-amber-300 border border-amber-800/80">
+              <span className="inline-flex items-center rounded-full bg-[#0C1626] px-2.5 py-0.5 text-xs font-medium text-cyan-300 border border-cyan-500/40">
                 Unverified GCD Crosswalk
               </span>
             )}

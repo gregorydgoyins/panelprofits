@@ -35,7 +35,7 @@ export default async function LearnPage() {
           <p className="mt-1 text-xs text-slate-500">Available learning units</p>
         </section>
         <section className="border border-slate-800 bg-[#0b0f15] p-5 shadow-sm">
-          <Award className="h-5 w-5 text-amber-300" aria-hidden="true" />
+          <Award className="h-5 w-5 text-cyan-400" aria-hidden="true" />
           <p className="mt-4 text-[10px] font-mono uppercase tracking-[0.2em] text-slate-500">Certifications</p>
           <p className="mt-1 text-3xl font-light text-slate-100">{certifications.length}</p>
           <p className="mt-1 text-xs text-slate-500">Credential definitions</p>

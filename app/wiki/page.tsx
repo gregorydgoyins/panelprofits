@@ -45,8 +45,8 @@ export default async function WikiPage({ searchParams }: { searchParams: Promise
 
       {/* Investopedia-Style Equity Financial Terms Grid */}
       <section className="mt-10" aria-label="Comic Equity Financial Glossary">
-        <div className="flex items-center gap-2 mb-4 text-xs font-mono uppercase tracking-[0.18em] text-amber-400 font-semibold">
-          <TrendingUp className="h-4 w-4 text-amber-300" />
+        <div className="flex items-center gap-2 mb-4 text-xs font-mono uppercase tracking-[0.18em] text-cyan-400 font-semibold">
+          <TrendingUp className="h-4 w-4 text-cyan-300" />
           Comic Equity & Investment Fundamentals
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -68,17 +68,17 @@ export default async function WikiPage({ searchParams }: { searchParams: Promise
                   id={key}
                   className={`border ${
                     isMatch
-                      ? "border-amber-400 bg-[#121624] shadow-[0_0_20px_rgba(251,191,36,0.2)]"
-                      : "border-slate-800/80 bg-[#0A0D15] hover:border-amber-400/50"
+                      ? "border-cyan-400 bg-[#0C1626] shadow-[0_0_20px_rgba(6,182,212,0.2)]"
+                      : "border-slate-800/80 bg-[#0A0D15] hover:border-cyan-400/50"
                   } p-5 rounded transition-all shadow-md flex flex-col justify-between`}
                 >
                   <div>
                     <div className="flex items-center justify-between border-b border-slate-800/60 pb-2.5">
-                      <span className="text-[10px] font-mono uppercase tracking-wider text-amber-400 bg-amber-950/40 px-2 py-0.5 border border-amber-500/30 rounded">
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-300 bg-[#0C1626] px-2 py-0.5 border border-cyan-500/40 rounded">
                         {termObj.category}
                       </span>
                       {isMatch ? (
-                        <span className="text-[9px] font-mono uppercase tracking-widest text-amber-300 bg-amber-900/60 px-2 py-0.5 border border-amber-400 rounded font-bold">
+                        <span className="text-[9px] font-mono uppercase tracking-widest text-cyan-200 bg-cyan-950/60 px-2 py-0.5 border border-cyan-400 rounded font-bold">
                           Direct Match
                         </span>
                       ) : (
@@ -114,7 +114,7 @@ export default async function WikiPage({ searchParams }: { searchParams: Promise
                 className="border border-cyan-800/60 bg-[#070B12] p-4 rounded hover:border-cyan-400/80 transition-all shadow-md"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-amber-300 bg-amber-950/40 px-2 py-0.5 border border-amber-500/30 rounded">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-300 bg-[#0C1626] px-2 py-0.5 border border-cyan-500/40 rounded">
                     {match.ticker}
                   </span>
                   <span className="text-[9px] font-mono text-cyan-300 bg-cyan-950/60 px-2 py-0.5 border border-cyan-500/30 rounded">

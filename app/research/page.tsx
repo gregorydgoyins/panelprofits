@@ -49,11 +49,11 @@ export default async function ResearchPage() {
 
           <Link
             href="/research/archive"
-            className="p-5 rounded border border-slate-800 bg-[#080C14] hover:border-amber-500/50 hover:bg-[#0B101C] transition-colors"
+            className="p-5 rounded border border-slate-800 bg-[#080C14] hover:border-cyan-500/50 hover:bg-[#0B101C] transition-colors"
           >
             <div className="flex items-center justify-between">
-              <span className="text-xs font-mono uppercase tracking-wider text-amber-300">News Archive</span>
-              <ArrowUpRight className="h-4 w-4 text-amber-400" />
+              <span className="text-xs font-mono uppercase tracking-wider text-cyan-400">News Archive</span>
+              <ArrowUpRight className="h-4 w-4 text-cyan-400" />
             </div>
             <p className="mt-2 text-sm font-semibold text-slate-100">Historical Wire</p>
             <p className="mt-1 text-xs text-slate-400">Archived narrative intelligence & newsroom stories.</p>
@@ -98,7 +98,7 @@ export default async function ResearchPage() {
 
         <section>
           <div className="mb-3 flex items-center gap-2">
-            <Search className="h-4 w-4 text-amber-300" />
+            <Search className="h-4 w-4 text-cyan-400" />
             <h2 className="text-sm uppercase tracking-[0.16em] text-slate-200">Firm identities</h2>
           </div>
           <div className="divide-y divide-slate-800 border-y border-slate-800">

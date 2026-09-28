@@ -48,7 +48,7 @@ export function ProvenanceCard({ comic }: ProvenanceCardProps) {
           {/* ComicBase Source */}
           <div className="portfolio-rimlight-hover rounded bg-[#0A0A0C] p-3 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-amber-300 text-[11px]">COMICBASE</span>
+              <span className="text-cyan-400 text-[11px]">COMICBASE</span>
               <Badge variant={comic.comicbase_source_id ? "secondary" : "outline"} className="text-[8px]">
                 {comic.comicbase_source_id ? "CONNECTED" : "UNLINKED"}
               </Badge>

@@ -49,7 +49,7 @@ export default async function MarketPage() {
           <div className="flex items-center gap-4 shrink-0 font-mono">
             {featuredTickers.map((t) => (
               <div key={t.ticker} className="flex items-center gap-2 bg-slate-900/60 px-3 py-1 border border-slate-800 rounded">
-                <span className="text-amber-300 font-semibold">{t.ticker}</span>
+                <span className="text-cyan-300 font-semibold">{t.ticker}</span>
                 <span className="text-slate-300">{t.fmv}</span>
                 <span className={t.change.startsWith("+") ? "text-emerald-400 font-medium" : "text-rose-400 font-medium"}>
                   {t.change}
@@ -154,7 +154,7 @@ export default async function MarketPage() {
       {/* Historical Benchmarks & Analysis Link */}
       <section className="mt-8 border border-slate-800 bg-[#0B0F17] p-6 rounded-lg">
         <div className="flex items-center gap-3 border-b border-slate-800/80 pb-4">
-          <ShieldAlert className="h-5 w-5 text-amber-300" />
+          <ShieldAlert className="h-5 w-5 text-cyan-400" />
           <h2 className="text-lg font-semibold text-slate-100">Recovered Historical Benchmark Contracts</h2>
         </div>
         <div className="mt-4 divide-y divide-slate-800/80">
@@ -162,7 +162,7 @@ export default async function MarketPage() {
             <div key={index.index_code} className="flex flex-col justify-between gap-3 py-3.5 sm:flex-row sm:items-center">
               <div>
                 <span className="text-sm font-semibold text-slate-200">{index.display_name}</span>
-                <span className="ml-3 font-mono text-[10px] text-amber-300 bg-amber-950/40 px-2 py-0.5 border border-amber-500/30 rounded">
+                <span className="ml-3 font-mono text-[10px] text-cyan-300 bg-[#0C1626] px-2 py-0.5 border border-cyan-500/40 rounded">
                   {index.index_code}
                 </span>
               </div>

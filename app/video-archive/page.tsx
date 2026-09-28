@@ -29,7 +29,7 @@ export default async function VideoArchivePage() {
           Presenter Video Archive
         </h1>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400">
-          Replay anchor broadcasts, studio market briefs, and high-energy catalyst reports floor-activated by our 15-presenter newsroom team.
+          Replay anchor broadcasts, studio market briefs, and high-energy breaking catalyst reports from the Panel Profits broadcast desk.
         </p>
       </header>
 
@@ -38,7 +38,7 @@ export default async function VideoArchivePage() {
           <Link
             key={story.id}
             href={`/news/${story.id}`}
-            className="group overflow-hidden rounded border border-slate-800 bg-[#080C14] hover:border-rose-500/50 transition-colors"
+            className="group overflow-hidden rounded border border-slate-800 bg-[#080C14] hover:border-cyan-500/50 transition-colors"
           >
             <div className="relative aspect-video w-full bg-[#04060A]">
               <img
@@ -47,16 +47,16 @@ export default async function VideoArchivePage() {
                 className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
               <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                <div className="h-10 w-10 rounded-full bg-rose-600/80 text-white flex items-center justify-center group-hover:bg-rose-500 transition-colors shadow-lg">
+                <div className="h-10 w-10 rounded-full bg-cyan-600/80 text-white flex items-center justify-center group-hover:bg-cyan-500 transition-colors shadow-lg">
                   <Play className="h-5 w-5 fill-current ml-0.5" />
                 </div>
               </div>
-              <span className="absolute top-2 left-2 px-2 py-0.5 text-[9px] font-mono uppercase tracking-wider bg-rose-950/80 border border-rose-500/60 text-rose-300 rounded">
+              <span className="absolute top-2 left-2 px-2 py-0.5 text-[9px] font-mono uppercase tracking-wider bg-cyan-950/80 border border-cyan-500/60 text-cyan-300 rounded">
                 {video.storyCategoryTag}
               </span>
             </div>
             <div className="p-4">
-              <div className="flex items-center gap-1 text-[10px] font-mono text-amber-300">
+              <div className="flex items-center gap-1 text-[10px] font-mono text-cyan-400">
                 <UserCheck className="h-3 w-3" />
                 <span>{video.presenter.name} · {video.presenter.role}</span>
               </div>

@@ -32,7 +32,7 @@ export function HoldingCard({ item }: HoldingCardProps) {
 
   return (
     <>
-      <div className="group relative flex flex-col rounded-lg border border-orange-500/40 bg-[#0C0E15] p-3.5 shadow-lg transition-all duration-200 hover:border-orange-500 hover:shadow-orange-500/10 collection-rimlight-hover">
+      <div className="group relative flex flex-col rounded-lg border border-cyan-500/40 bg-[#0C0E15] p-3.5 shadow-lg transition-all duration-200 hover:border-cyan-500 hover:shadow-cyan-500/10 collection-rimlight-hover">
         <div className="flex gap-3.5">
           {/* Cover Image */}
           <Link
@@ -56,7 +56,7 @@ export function HoldingCard({ item }: HoldingCardProps) {
               <div className="flex items-start justify-between gap-1">
                 <Link
                   href={detailHref}
-                  className="group-hover:text-orange-400 transition-colors"
+                  className="group-hover:text-cyan-400 transition-colors"
                 >
                   <h3 className="line-clamp-1 text-sm font-light text-slate-100">
                     {series} {issue}
@@ -64,7 +64,7 @@ export function HoldingCard({ item }: HoldingCardProps) {
                 </Link>
                 <button
                   onClick={() => setIsEditOpen(true)}
-                  className="text-slate-400 hover:text-orange-400 transition-colors p-1"
+                  className="text-slate-400 hover:text-cyan-400 transition-colors p-1"
                   title="Edit holding"
                 >
                   <Edit3 className="h-3.5 w-3.5" />
@@ -82,7 +82,7 @@ export function HoldingCard({ item }: HoldingCardProps) {
 
               {/* Holding Specs (Grade, Quantity, Date) */}
               <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[10px]">
-                <Badge variant="outline" className="border-orange-500/50 bg-orange-950/30 text-orange-300 font-light px-1.5 py-0">
+                <Badge variant="outline" className="border-cyan-500/50 bg-[#0C1626] text-cyan-300 font-light px-1.5 py-0">
                   {item.grade ? `${item.grading_company ? item.grading_company + " " : ""}${item.grade}` : "Raw / Ungraded"}
                 </Badge>
 
@@ -152,7 +152,7 @@ export function HoldingCard({ item }: HoldingCardProps) {
                 </span>
               </div>
             ) : valuation.isNon98GradeWithReferenceOnly ? (
-              <span className="text-[10px] text-amber-400/80 italic">
+              <span className="text-[10px] text-cyan-300/80 italic">
                 *Non-9.8 grade: 9.8 reference shown
               </span>
             ) : (
@@ -173,7 +173,7 @@ export function HoldingCard({ item }: HoldingCardProps) {
             </Button>
             <Link
               href={detailHref}
-              className="flex items-center gap-1 text-[11px] text-orange-400 hover:text-orange-300 px-1"
+              className="flex items-center gap-1 text-[11px] text-cyan-400 hover:text-cyan-300 px-1"
             >
               Dossier <ExternalLink className="h-3 w-3" />
             </Link>

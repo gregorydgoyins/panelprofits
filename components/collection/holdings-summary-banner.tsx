@@ -46,7 +46,7 @@ export function HoldingsSummaryBanner({ summary, totalItemsCount }: HoldingsSumm
         <div className="rounded border border-slate-800/80 bg-[#121520] p-3">
           <div className="flex items-center justify-between text-[11px] uppercase tracking-wider text-slate-400">
             <span>Current Value</span>
-            <span className="text-[10px] font-mono text-amber-400">FMV OBSERVED</span>
+            <span className="text-[10px] font-mono text-cyan-400">FMV OBSERVED</span>
           </div>
           <div className="mt-1 text-2xl font-light text-emerald-400">
             {summary.totalBaselineValue > 0
@@ -56,7 +56,7 @@ export function HoldingsSummaryBanner({ summary, totalItemsCount }: HoldingsSumm
           <div className="mt-1 flex items-center gap-1 text-[10px] text-slate-400">
             <span>{summary.pricedHoldingsCount} priced</span>
             {summary.unpricedHoldingsCount > 0 && (
-              <span className="text-amber-400/90 font-light">
+              <span className="text-cyan-300 font-light">
                 ({summary.unpricedHoldingsCount} unpriced)
               </span>
             )}
@@ -97,7 +97,7 @@ export function HoldingsSummaryBanner({ summary, totalItemsCount }: HoldingsSumm
 
       {summary.unpricedHoldingsCount > 0 && (
         <div className="mt-3 flex items-center gap-1.5 text-[11px] text-slate-400 border-t border-slate-800/60 pt-2.5">
-          <HelpCircle className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+          <HelpCircle className="h-3.5 w-3.5 text-cyan-400 shrink-0" />
           <span>
             <em>Honest Pricing Disclosure:</em> {summary.unpricedHoldingsCount} {summary.unpricedHoldingsCount === 1 ? "comic has" : "comics have"} no current secondary market benchmark. Unpriced items are excluded from valuation totals rather than counted as zero value.
           </span>

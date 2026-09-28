@@ -45,7 +45,7 @@ export function MarketTicker({ state, broadIndex, qualityIndex }: MarketTickerPr
             {[...items, ...items].map((item, index) => (
               <span key={`${item}-${index}`} className="inline-flex items-center gap-2 text-slate-300">
                 {item.includes("CMI") || item.includes("SOV") ? <Gauge className="h-3 w-3 text-emerald-300" /> : null}
-                {item.includes("PPIX") || item.includes("CE70") ? <ShieldCheck className="h-3 w-3 text-amber-300" /> : null}
+                {item.includes("PPIX") || item.includes("CE70") ? <ShieldCheck className="h-3 w-3 text-cyan-400" /> : null}
                 {item}
               </span>
             ))}

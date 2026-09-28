@@ -165,14 +165,14 @@ export function CollectionManager({
               onClick={() => handleSelectCollection(col.id)}
               className={`flex items-center gap-1.5 rounded px-3 py-1.5 text-xs transition-colors border ${
                 col.id === activeCollection.id
-                  ? "border-orange-500 bg-orange-950/40 text-orange-200 shadow"
+                  ? "border-cyan-500 bg-[#0C1626] text-cyan-200 shadow"
                   : "border-slate-800 bg-[#10131E] text-slate-400 hover:text-slate-200 hover:border-slate-700"
               }`}
             >
               <Layers className="h-3 w-3" />
               <span>{col.name}</span>
               {col.is_default && (
-                <span className="rounded bg-orange-900/60 px-1 text-[9px] text-orange-300">
+                <span className="rounded bg-[#0C1626] px-1 text-[9px] text-cyan-300 border border-cyan-500/40">
                   DEF
                 </span>
               )}
@@ -183,7 +183,7 @@ export function CollectionManager({
             variant="outline"
             size="sm"
             onClick={() => setIsCreating(true)}
-            className="h-7 text-xs border-dashed border-slate-700 bg-transparent text-slate-400 hover:text-slate-200 hover:border-orange-500/60 px-2.5"
+            className="h-7 text-xs border-dashed border-slate-700 bg-transparent text-slate-400 hover:text-slate-200 hover:border-cyan-500/60 px-2.5"
           >
             <Plus className="h-3 w-3 mr-1" /> New Collection
           </Button>
@@ -218,7 +218,7 @@ export function CollectionManager({
       {isCreating && (
         <form
           onSubmit={handleCreateCollection}
-          className="mb-6 rounded-lg border border-orange-500/50 bg-[#0E1017] p-4 text-xs collection-rimlight-hover"
+          className="mb-6 rounded-lg border border-cyan-500/50 bg-[#0E1017] p-4 text-xs collection-rimlight-hover"
         >
           <h3 className="font-light text-slate-200 mb-2">Create New Custom Collection</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
@@ -257,7 +257,7 @@ export function CollectionManager({
             <Button
               type="submit"
               disabled={createLoading}
-              className="bg-orange-600 hover:bg-orange-500 text-white text-xs px-4"
+              className="bg-cyan-600 hover:bg-cyan-500 text-white text-xs px-4"
             >
               {createLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Create Collection"}
             </Button>
@@ -269,7 +269,7 @@ export function CollectionManager({
       {isRenaming && (
         <form
           onSubmit={handleRenameCollection}
-          className="mb-6 rounded-lg border border-orange-500/50 bg-[#0E1017] p-4 text-xs collection-rimlight-hover"
+          className="mb-6 rounded-lg border border-cyan-500/50 bg-[#0E1017] p-4 text-xs collection-rimlight-hover"
         >
           <h3 className="font-light text-slate-200 mb-2">Rename Collection</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
@@ -306,7 +306,7 @@ export function CollectionManager({
             <Button
               type="submit"
               disabled={renameLoading}
-              className="bg-orange-600 hover:bg-orange-500 text-white text-xs px-4"
+              className="bg-cyan-600 hover:bg-cyan-500 text-white text-xs px-4"
             >
               {renameLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Save"}
             </Button>
@@ -333,7 +333,7 @@ export function CollectionManager({
           <select
             value={sortBy}
             onChange={(e) => handleSortChange(e.target.value)}
-            className="rounded border border-slate-800 bg-[#12151F] px-2 py-1 text-xs text-slate-200 focus:border-orange-500 focus:outline-none"
+            className="rounded border border-slate-800 bg-[#12151F] px-2 py-1 text-xs text-slate-200 focus:border-cyan-500 focus:outline-none"
           >
             <option value="recent">Recently Added</option>
             <option value="series">Series Title (A-Z)</option>
@@ -358,7 +358,7 @@ export function CollectionManager({
           </p>
           <Link
             href="/comics"
-            className="inline-flex items-center gap-1.5 rounded bg-orange-600 hover:bg-orange-500 px-4 py-2 text-xs text-white transition-colors"
+            className="inline-flex items-center gap-1.5 rounded bg-cyan-600 hover:bg-cyan-500 px-4 py-2 text-xs text-white transition-colors"
           >
             Explore Catalog &rarr;
           </Link>

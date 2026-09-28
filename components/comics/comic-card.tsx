@@ -36,7 +36,7 @@ export function ComicCard({ comic }: ComicCardProps) {
         {/* Identification */}
         <div className="space-y-1">
           <div className="flex items-start justify-between gap-1.5">
-            <h4 className="text-sm text-slate-100 line-clamp-1 group-hover:text-amber-400 transition-colors">
+            <h4 className="text-sm text-slate-100 line-clamp-1 group-hover:text-cyan-300 transition-colors">
               {seriesLabel}
             </h4>
             <span className="shrink-0 text-xs text-slate-200">

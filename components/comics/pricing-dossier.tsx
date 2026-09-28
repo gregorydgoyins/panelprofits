@@ -58,7 +58,7 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
                 >
                   {source}
                 </th>
-                <td className="px-2 py-3 text-right text-amber-300">
+                <td className="px-2 py-3 text-right text-cyan-300">
                   {source === "ComicBase" && cb !== null ? formatCurrency(cb) : "—"}
                 </td>
                 {GRADES.map((grade) => {
@@ -88,8 +88,8 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
       </div>
 
       <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
-        <div className="rounded-lg border border-amber-900/50 bg-amber-950/20 p-3.5">
-          <div className="text-[10px] font-mono font-medium uppercase tracking-wider text-amber-300">
+        <div className="rounded-lg border border-slate-800 bg-[#0C1626] p-3.5">
+          <div className="text-[10px] font-mono font-medium uppercase tracking-wider text-cyan-300">
             ComicBase Catalog Reference
           </div>
           <div className="mt-1.5 text-lg font-semibold text-slate-100">{cb === null ? "—" : formatCurrency(cb)}</div>

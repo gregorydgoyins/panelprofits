@@ -39,7 +39,7 @@ export async function PriceObservationTimeline({ ppcfId }: PriceObservationTimel
                   <td className="px-3 py-3 text-slate-400">{observation.observed_at || "Undated"}</td>
                   <td className="px-3 py-3 text-slate-300">{observation.source_system === "PANEL_PROFITS" ? "Panel Profits" : "ComicBase"}</td>
                   <td className="px-3 py-3 text-slate-400">{observation.price_field}</td>
-                  <td className="px-3 py-3 text-amber-200">{observation.grade_label || "Unspecified"}</td>
+                  <td className="px-3 py-3 text-cyan-300">{observation.grade_label || "Unspecified"}</td>
                   <td className="px-3 py-3 text-right tabular-nums text-emerald-300">{observation.amount == null ? "Unpriced" : `${observation.currency || "Unspecified currency"} ${Number(observation.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</td>
                 </tr>
               ))}

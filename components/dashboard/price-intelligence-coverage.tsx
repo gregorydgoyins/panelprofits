@@ -53,14 +53,14 @@ export function PriceIntelligenceCoverage() {
         <div className="rounded-lg border border-slate-800 bg-[#0F121C] p-4 space-y-2.5">
           <div className="flex items-center justify-between">
             <span className="text-xs text-blue-400 uppercase tracking-wider">INTEGRITY & DISCLOSURE</span>
-            <span className="text-[10px] text-amber-300 bg-amber-950/50 px-2 py-0.5 rounded border border-amber-800/50">HONEST LABELS</span>
+            <span className="text-[10px] text-cyan-300 bg-[#0C1626] px-2 py-0.5 rounded border border-cyan-500/40">HONEST LABELS</span>
           </div>
           <h3 className="text-sm text-slate-100">Zero Synthetic Extrapolation</h3>
           <p className="text-xs text-slate-400 leading-relaxed">
             Unpriced issues are honestly marked &ldquo;Unpriced&rdquo; rather than assigned fake zeroes. Grade 9.8 values are never conflated with raw or lower-grade comics.
           </p>
           <div className="pt-2 border-t border-slate-800/70 text-[11px] text-slate-500 flex items-center gap-1.5">
-            <ShieldAlert className="h-3 w-3 text-amber-400" />
+            <ShieldAlert className="h-3 w-3 text-cyan-400" />
             <span>No fake charts or simulated volume</span>
           </div>
         </div>

@@ -35,7 +35,7 @@ export default async function AnalystPage(props: {
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <Link href="/news" className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-amber-300 hover:text-amber-200">
+      <Link href="/news" className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-cyan-400 hover:text-cyan-200">
         <ArrowLeft className="h-3.5 w-3.5" /> Newsroom
       </Link>
 
@@ -59,7 +59,7 @@ export default async function AnalystPage(props: {
 
       <section className="mt-8 grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-1 border border-slate-800 bg-[#0b0f15] p-6 rounded-lg">
-          <h2 className="text-sm uppercase tracking-wider text-amber-300 font-semibold flex items-center gap-2">
+          <h2 className="text-sm uppercase tracking-wider text-cyan-400 font-semibold flex items-center gap-2">
             <Briefcase className="h-4 w-4" /> Analyst Profile
           </h2>
           <div className="mt-4 space-y-4 text-xs text-slate-300">
@@ -79,13 +79,13 @@ export default async function AnalystPage(props: {
         </div>
 
         <div className="lg:col-span-2 border border-slate-800 bg-[#0b0f15] p-6 rounded-lg">
-          <h2 className="text-sm uppercase tracking-wider text-amber-300 font-semibold flex items-center gap-2 mb-4">
+          <h2 className="text-sm uppercase tracking-wider text-cyan-400 font-semibold flex items-center gap-2 mb-4">
             <FileText className="h-4 w-4" /> Coverage & Market Reports ({analystStories.length})
           </h2>
           <div className="divide-y divide-slate-800">
             {analystStories.map((story) => (
               <div key={story.id} className="py-4">
-                <Link href={`/news/${story.id}`} className="text-base text-slate-100 hover:text-amber-300 font-medium">
+                <Link href={`/news/${story.id}`} className="text-base text-slate-100 hover:text-cyan-300 font-medium">
                   {story.headline}
                 </Link>
                 <p className="mt-1 text-xs text-slate-400 line-clamp-2">{story.summary}</p>

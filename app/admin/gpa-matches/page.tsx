@@ -23,7 +23,7 @@ export default async function GpaMatchesAdminPage() {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <div className="flex items-center space-x-2">
-            <ShieldCheck className="h-6 w-6 text-amber-400" />
+            <ShieldCheck className="h-6 w-6 text-cyan-400" />
             <h1 className="text-2xl font-light tracking-wide text-slate-100">
               GPA Catalog Discovery & Match Review
             </h1>

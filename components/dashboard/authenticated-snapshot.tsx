@@ -48,21 +48,21 @@ export function AuthenticatedSnapshot({
           </div>
 
           <div className="flex flex-wrap items-center gap-2 text-xs">
-            {/* Search Catalog -> Orange Action */}
+            {/* Search Catalog -> Cyan Action */}
             <Link
               href="/comics"
-              className="inline-flex items-center gap-1.5 rounded border border-orange-500/60 bg-orange-950/30 px-3 py-2 text-orange-300 hover:border-orange-400 hover:bg-orange-900/40 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded border border-cyan-500/60 bg-[#0C1626] px-3 py-2 text-cyan-300 hover:border-cyan-400 hover:bg-cyan-950/40 transition-colors"
             >
-              <Search className="h-3.5 w-3.5 text-orange-400" />
+              <Search className="h-3.5 w-3.5 text-cyan-400" />
               <span>SEARCH CATALOG</span>
             </Link>
 
-            {/* Open Collection -> Orange Action */}
+            {/* Open Collection -> Cyan Action */}
             <Link
               href="/collection"
-              className="inline-flex items-center gap-1.5 rounded border border-orange-500/60 bg-orange-950/30 px-3 py-2 text-orange-300 hover:border-orange-400 hover:bg-orange-900/40 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded border border-cyan-500/60 bg-[#0C1626] px-3 py-2 text-cyan-300 hover:border-cyan-400 hover:bg-cyan-950/40 transition-colors"
             >
-              <Layers className="h-3.5 w-3.5 text-orange-400" />
+              <Layers className="h-3.5 w-3.5 text-cyan-400" />
               <span>MY COLLECTION</span>
             </Link>
 

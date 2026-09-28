@@ -35,8 +35,8 @@ export function PlatformProvenance() {
         {/* Source 2: ComicBase */}
         <div className="rounded-lg border border-slate-800 bg-[#0F121C] p-4 space-y-2.5">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-orange-400 uppercase tracking-wider">CATALOG & GUIDE BASELINE</span>
-            <span className="text-[10px] text-orange-300 bg-orange-950/50 px-2 py-0.5 rounded border border-orange-800/50">1.2M ENTITIES</span>
+            <span className="text-xs text-cyan-400 uppercase tracking-wider">CATALOG & GUIDE BASELINE</span>
+            <span className="text-[10px] text-cyan-300 bg-[#0C1626] px-2 py-0.5 rounded border border-cyan-500/40">1.2M ENTITIES</span>
           </div>
           <h3 className="text-sm text-slate-100">ComicBase Catalog Dataset</h3>
           <p className="text-xs text-slate-400 leading-relaxed">

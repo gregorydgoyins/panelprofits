@@ -95,8 +95,8 @@ export function RelationshipMap({
             </p>
           </div>
 
-          <div className="border border-amber-400/50 bg-amber-950/20 p-3.5 rounded hover:border-amber-300 transition-colors">
-            <div className="flex items-center gap-1.5 text-amber-300 text-[10px] font-mono uppercase tracking-wider">
+          <div className="border border-cyan-400/50 bg-[#0C1626] p-3.5 rounded hover:border-cyan-300 transition-colors">
+            <div className="flex items-center gap-1.5 text-cyan-300 text-[10px] font-mono uppercase tracking-wider">
               <DollarSign className="h-3.5 w-3.5" /> Market Status
             </div>
             <p className="mt-2 text-sm font-semibold text-slate-200">

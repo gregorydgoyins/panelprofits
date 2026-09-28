@@ -44,7 +44,7 @@ export function GpaMatchReviewManager({ initialMatches }: Props) {
               onClick={() => setFilter(status)}
               className={`rounded px-3 py-1 text-xs font-medium transition-colors ${
                 filter === status
-                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
                   : 'bg-slate-800 text-slate-400 hover:text-slate-200 border border-transparent'
               }`}
             >
@@ -129,7 +129,7 @@ export function GpaMatchReviewManager({ initialMatches }: Props) {
                         ? 'bg-rose-950 text-rose-400 border border-rose-800'
                         : m.match_status === 'AUTO_MATCHED'
                         ? 'bg-blue-950 text-blue-400 border border-blue-800'
-                        : 'bg-amber-950 text-amber-400 border border-amber-800'
+                        : 'bg-[#0C1626] text-cyan-400 border border-cyan-500/40'
                     }`}
                   >
                     {m.match_status}
@@ -142,7 +142,7 @@ export function GpaMatchReviewManager({ initialMatches }: Props) {
                     placeholder="Reviewer notes..."
                     value={notesState[m.id] !== undefined ? notesState[m.id] : m.reviewer_notes || ''}
                     onChange={(e) => setNotesState({ ...notesState, [m.id]: e.target.value })}
-                    className="rounded bg-slate-950 border border-slate-700 px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-amber-500"
+                    className="rounded bg-slate-950 border border-slate-700 px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-500"
                   />
                   <button
                     disabled={isPending}

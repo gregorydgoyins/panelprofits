@@ -108,7 +108,7 @@ export function ComicFilters() {
           <button
             type="button"
             onClick={handleReset}
-            className="flex items-center gap-1 text-[11px] text-amber-400 hover:text-amber-300 transition-colors"
+            className="flex items-center gap-1 text-[11px] text-cyan-400 hover:text-cyan-300 transition-colors"
           >
             <RotateCcw className="h-3 w-3" />
             <span>RESET ALL</span>

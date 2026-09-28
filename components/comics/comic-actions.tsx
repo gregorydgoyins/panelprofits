@@ -99,18 +99,18 @@ export function ComicActions({
           variant="outline"
           className={`flex items-center gap-2 border px-4 py-2 text-xs transition-colors ${
             inCollectionState
-              ? "border-orange-500 bg-orange-950/40 text-orange-200 hover:bg-orange-950/60"
-              : "border-orange-500/60 bg-[#121520] text-orange-300 hover:bg-[#1A1F30] hover:border-orange-400"
+              ? "border-cyan-500 bg-[#0C1626] text-cyan-200 hover:bg-[#121c33]"
+              : "border-cyan-500/60 bg-[#121520] text-cyan-300 hover:bg-[#1A1F30] hover:border-cyan-400"
           }`}
         >
           {inCollectionState ? (
             <>
-              <Check className="h-3.5 w-3.5 text-orange-400" />
+              <Check className="h-3.5 w-3.5 text-cyan-400" />
               <span>In Collection (Qty: {quantity})</span>
             </>
           ) : (
             <>
-              <Plus className="h-3.5 w-3.5 text-orange-400" />
+              <Plus className="h-3.5 w-3.5 text-cyan-400" />
               <span>Add to Collection</span>
             </>
           )}
@@ -146,7 +146,7 @@ export function ComicActions({
       {/* Add / Edit Holding Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
-          <div className="relative w-full max-w-md rounded-lg border border-orange-500/50 bg-[#0E1017] p-6 shadow-2xl collection-rimlight-hover max-h-[90vh] overflow-y-auto">
+          <div className="relative w-full max-w-md rounded-lg border border-cyan-500/50 bg-[#0E1017] p-6 shadow-2xl collection-rimlight-hover max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => setIsModalOpen(false)}
               className="absolute right-4 top-4 text-slate-400 hover:text-slate-200"
@@ -155,7 +155,7 @@ export function ComicActions({
             </button>
 
             <h2 className="text-base font-light text-slate-100 mb-1 flex items-center gap-2">
-              <Layers className="h-4 w-4 text-orange-400" />
+              <Layers className="h-4 w-4 text-cyan-400" />
               {inCollectionState ? "Update Holding" : "Add to Collection"}
             </h2>
             <p className="text-xs text-slate-400 mb-4 truncate">
@@ -242,7 +242,7 @@ export function ComicActions({
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Notes, signing info, white pages..."
-                  className="w-full rounded border border-slate-800 bg-[#12151F] p-2 text-slate-100 text-xs focus:border-orange-500 focus:outline-none"
+                  className="w-full rounded border border-slate-800 bg-[#12151F] p-2 text-slate-100 text-xs focus:border-cyan-500 focus:outline-none"
                 />
               </div>
 
@@ -258,7 +258,7 @@ export function ComicActions({
                 <Button
                   type="submit"
                   disabled={collectionLoading}
-                  className="bg-orange-600 hover:bg-orange-500 text-white text-xs px-4 py-2"
+                  className="bg-cyan-600 hover:bg-cyan-500 text-white text-xs px-4 py-2"
                 >
                   {collectionLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Save to Collection"}
                 </Button>

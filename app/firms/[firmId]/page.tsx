@@ -27,15 +27,15 @@ export default async function FirmPage({ params }: { params: Promise<{ firmId: s
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <Link href="/firms" className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-amber-300 hover:text-amber-200"><ArrowLeft className="h-3.5 w-3.5" /> Firms</Link>
+      <Link href="/firms" className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-cyan-400 hover:text-cyan-200"><ArrowLeft className="h-3.5 w-3.5" /> Firms</Link>
       <header className="mt-6 border-b border-slate-800 pb-8">
-        <p className="text-[10px] uppercase tracking-[0.28em] text-amber-300">Institutional Profile / {firmId}</p>
+        <p className="text-[10px] uppercase tracking-[0.28em] text-cyan-400">Institutional Profile / {firmId}</p>
         <h1 className="mt-3 text-4xl text-slate-100">{displayName}</h1>
         <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-400">{philosophy}</p>
       </header>
 
       <section className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {cards.map(([label, value, Icon]) => <div key={label} className="border border-amber-500/30 bg-[#0b0f15] p-5 dashboard-rimlight-hover"><Icon className="h-5 w-5 text-amber-300" /><p className="mt-6 text-[10px] uppercase tracking-[0.18em] text-slate-500">{label}</p><p className="mt-2 text-2xl text-slate-100">{String(value)}</p></div>)}
+        {cards.map(([label, value, Icon]) => <div key={label} className="border border-cyan-500/30 bg-[#0b0f15] p-5 dashboard-rimlight-hover"><Icon className="h-5 w-5 text-cyan-400" /><p className="mt-6 text-[10px] uppercase tracking-[0.18em] text-slate-500">{label}</p><p className="mt-2 text-2xl text-slate-100">{String(value)}</p></div>)}
       </section>
 
       <section className="mt-8 grid gap-8 lg:grid-cols-2">

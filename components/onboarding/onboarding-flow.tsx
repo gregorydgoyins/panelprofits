@@ -55,7 +55,7 @@ export function OnboardingFlow({ initialName }: { initialName: string }) {
         )}
         {stage === 1 && (
           <div>
-            <Compass className="h-6 w-6 text-amber-300" />
+            <Compass className="h-6 w-6 text-cyan-400" />
             <p className="mt-8 text-[10px] uppercase tracking-[0.24em] text-slate-500">What happens next?</p>
             <h2 className="mt-2 text-2xl text-slate-100">Read the market before you move</h2>
             <p className="mt-4 max-w-lg text-sm leading-7 text-slate-400">Your account opens with a private collection, watchlist, and the authoritative comic market. The game will reveal decisions as the live systems become available. Nothing hidden is assigned to you here.</p>

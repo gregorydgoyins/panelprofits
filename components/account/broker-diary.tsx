@@ -39,7 +39,7 @@ export function BrokerDiary({ entries }: { entries: DiaryEntry[] }) {
           <div key={entry.id} className="p-4 hover:bg-slate-900/40 transition-colors flex items-start justify-between gap-4">
             <div className="flex items-start gap-3">
               <div className="mt-0.5 rounded p-2 bg-slate-950 border border-slate-800 text-slate-300">
-                {entry.type === "whale_alert" && <ShieldAlert className="h-4 w-4 text-amber-400" />}
+                {entry.type === "whale_alert" && <ShieldAlert className="h-4 w-4 text-cyan-400" />}
                 {entry.type === "trade" && <TrendingUp className="h-4 w-4 text-emerald-400" />}
                 {entry.type === "acquisition" && <Award className="h-4 w-4 text-cyan-400" />}
                 {entry.type === "valuation_change" && <TrendingUp className="h-4 w-4 text-purple-400" />}
@@ -49,7 +49,7 @@ export function BrokerDiary({ entries }: { entries: DiaryEntry[] }) {
                 <div className="flex items-center gap-2">
                   <h4 className="text-sm font-semibold text-slate-100">{entry.title}</h4>
                   {entry.ticker && (
-                    <span className="text-[9px] font-mono uppercase bg-amber-950/40 border border-amber-500/30 text-amber-300 px-1.5 py-0.5 rounded">
+                    <span className="text-[9px] font-mono uppercase bg-[#0C1626] border border-cyan-500/40 text-cyan-300 px-1.5 py-0.5 rounded">
                       {entry.ticker}
                     </span>
                   )}

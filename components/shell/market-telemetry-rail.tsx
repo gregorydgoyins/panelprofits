@@ -12,7 +12,7 @@ export function MarketTelemetryRail({ telemetry }: { telemetry: MarketTelemetry 
         <span className="text-slate-700">|</span>
         <span className="flex items-center gap-1.5"><Activity className="h-3 w-3 text-emerald-300" /> TICK {telemetry.tick}</span>
         <span>CE50 {telemetry.ce50Last === null ? "—" : telemetry.ce50Last.toFixed(2)}</span>
-        <span className={telemetry.regime === "CALM" ? "text-emerald-300" : "text-amber-300"}>REGIME {telemetry.regime || "UNKNOWN"}</span>
+        <span className={telemetry.regime === "CALM" ? "text-emerald-300" : "text-cyan-300"}>REGIME {telemetry.regime || "UNKNOWN"}</span>
         <span>DRAWDOWN {drawdown}</span>
         <span>STRESS {stress}</span>
         <span className="flex items-center gap-1.5"><Gauge className="h-3 w-3 text-purple-300" /> TECTONIC {telemetry.tectonicTier ?? "—"}</span>

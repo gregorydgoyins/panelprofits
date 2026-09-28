@@ -154,7 +154,7 @@ export function MarketClocks() {
             <Clock3 className="h-3.5 w-3.5" /> MARKET CLOCKS
           </div>
           {clocks.map((clock, index) => (
-            <div key={`${clock.zone}-${index}`} className={`flex shrink-0 items-center gap-2 ${index === 0 ? "text-amber-200" : "text-slate-400"}`}>
+            <div key={`${clock.zone}-${index}`} className={`flex shrink-0 items-center gap-2 ${index === 0 ? "text-cyan-300" : "text-slate-400"}`}>
               <span className="text-slate-600">{index === 0 ? "HOME" : "MARKET"}</span>
               <span>{clock.label}</span>
               <span className="font-mono text-slate-200">--:--</span>
@@ -176,7 +176,7 @@ export function MarketClocks() {
           <Clock3 className="h-3.5 w-3.5" /> MARKET CLOCKS
         </div>
         {clocks.map((clock, index) => (
-          <div key={`${clock.zone}-${index}`} className={`flex shrink-0 items-center gap-2 ${index === 0 ? "text-amber-200" : "text-slate-400"}`}>
+          <div key={`${clock.zone}-${index}`} className={`flex shrink-0 items-center gap-2 ${index === 0 ? "text-cyan-300" : "text-slate-400"}`}>
             <span className="text-slate-600">{index === 0 ? "HOME" : "MARKET"}</span>
             <span>{clock.label}</span>
             <span className="font-mono text-slate-200">{formatClock(renderedTime, clock.zone)}</span>
@@ -189,17 +189,17 @@ export function MarketClocks() {
         </div>
       </div>
       {barometersVisible && <div aria-label="Market barometers" className="mx-auto mt-1 flex max-w-7xl items-center gap-4 overflow-x-auto whitespace-nowrap border-t border-slate-800/60 pt-1 text-[9px] uppercase tracking-[0.12em] text-slate-500">
-        <span className="text-amber-300">MARKET BAROMETERS</span>
-        <span>CE70 <b className="text-amber-200">DEFINED / NOT POPULATED</b></span>
-        <span>PPIX-60 <b className="text-amber-200">DEFINED / NOT POPULATED</b></span>
-        <span>PPIX COMPOSITE <b className="text-amber-200">SPECIFICATION INCOMPLETE</b></span>
-        <span>PPIX 100 <b className="text-amber-200">DEFINED / NOT POPULATED</b></span>
+        <span className="text-cyan-400">MARKET BAROMETERS</span>
+        <span>CE70 <b className="text-slate-400">DEFINED / NOT POPULATED</b></span>
+        <span>PPIX-60 <b className="text-slate-400">DEFINED / NOT POPULATED</b></span>
+        <span>PPIX COMPOSITE <b className="text-slate-400">SPECIFICATION INCOMPLETE</b></span>
+        <span>PPIX 100 <b className="text-slate-400">DEFINED / NOT POPULATED</b></span>
       </div>}
       {open && <div className="!absolute right-4 top-full z-50 mt-2 max-h-[calc(100vh-6rem)] w-[min(720px,calc(100vw-2rem))] overflow-y-auto border border-cyan-300/40 bg-[#0b1018] p-4 shadow-2xl trading-rimlight-hover sm:right-6 lg:right-8">
         <div className="flex items-center justify-between border-b border-slate-800 pb-3"><div><p className="text-[10px] uppercase tracking-[0.18em] text-cyan-300">Market clock settings</p><p className="mt-1 text-xs text-slate-500">Home office plus four market zones</p></div><button type="button" aria-label="Close market clock settings" onClick={() => setOpen(false)} className="text-slate-500 hover:text-white"><X className="h-4 w-4" /></button></div>
-        <div className="mt-3 border border-slate-800 bg-[#070a0f] p-3"><p className="text-[10px] uppercase tracking-[0.16em] text-slate-500">Home Office</p><p className="mt-2 text-sm text-amber-200">{homeLabel}</p><p className="mt-1 text-[10px] leading-4 text-slate-600">Current firm office time.</p></div>
+        <div className="mt-3 border border-slate-800 bg-[#070a0f] p-3"><p className="text-[10px] uppercase tracking-[0.16em] text-slate-500">Home Office</p><p className="mt-2 text-sm text-cyan-200">{homeLabel}</p><p className="mt-1 text-[10px] leading-4 text-slate-600">Current firm office time.</p></div>
         <div className="mt-4"><p className="text-[10px] uppercase tracking-[0.16em] text-slate-500">Visible market zones</p><div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">{CITY_CHOICES.map((choice) => { const key = choiceKey(choice); return <label key={key} className="flex min-w-0 items-start gap-2 text-xs text-slate-300"><input type="checkbox" checked={zones.includes(key)} disabled={!zones.includes(key) && zones.length >= 4} onChange={(event) => saveZones(event.target.checked ? [...zones, key].slice(0, 4) : zones.filter((zone) => zone !== key))} className="mt-0.5 shrink-0 accent-cyan-300" /><span className="min-w-0">{choice.label}<span className="block truncate text-[9px] text-slate-600">{choice.market}</span></span></label>; })}</div></div>
-        <label className="mt-4 flex items-center justify-between gap-3 border-t border-slate-800 pt-3 text-xs text-slate-300"><span>Show market barometers</span><input type="checkbox" checked={barometersVisible} onChange={(event) => toggleBarometers(event.target.checked)} className="accent-amber-300" /></label>
+        <label className="mt-4 flex items-center justify-between gap-3 border-t border-slate-800 pt-3 text-xs text-slate-300"><span>Show market barometers</span><input type="checkbox" checked={barometersVisible} onChange={(event) => toggleBarometers(event.target.checked)} className="accent-cyan-400" /></label>
       </div>}
     </div>
   );
