@@ -883,10 +883,23 @@ interface WikiDbIndex {
 }
 
 let wikiDbIndexPromise: Promise<WikiDbIndex> | null = null;
+let wikiDbIndexLoadedAt = 0;
+
+// A warm serverless instance can stay alive for hours, and this index is
+// otherwise loaded exactly once per process and reused forever -- if the
+// underlying public.ppcf_wiki_pages rows are corrected (or corrupted) after
+// that first load, a long-lived instance would keep serving the stale
+// snapshot indefinitely with no way to recover short of a redeploy. A TTL
+// bounds that window. 15 minutes is chosen to stay well clear of the cost of
+// a full reload (~219k rows via paginated 1k-row queries) while still
+// self-healing within a reasonable time if the DB changes underneath it.
+const WIKI_DB_INDEX_TTL_MS = 15 * 60 * 1000;
 
 async function loadWikiCorpusFromDb(): Promise<WikiDbIndex> {
-  if (wikiDbIndexPromise) return wikiDbIndexPromise;
+  const isStale = wikiDbIndexPromise !== null && Date.now() - wikiDbIndexLoadedAt > WIKI_DB_INDEX_TTL_MS;
+  if (wikiDbIndexPromise && !isStale) return wikiDbIndexPromise;
 
+  wikiDbIndexLoadedAt = Date.now();
   wikiDbIndexPromise = (async () => {
     const titleMap = new Map<string, LoreEntitySummary>();
     const slugMap = new Map<string, LoreEntitySummary>();

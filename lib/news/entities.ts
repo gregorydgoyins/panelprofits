@@ -528,8 +528,14 @@ export const KNOWN_NEWS_ENTITIES_MAP: EntityWikiDef[] = [
   ...ADAPTATION_ROLE_CHARACTER_ENTITIES,
 ];
 
-// In-memory cache for dynamic text lookups
-const entityCache = new Map<string, EntityWikiDef[]>();
+// In-memory cache for dynamic text lookups. Entries are derived in part from
+// live Supabase queries (recovered_index_contracts, and transitively the
+// ppcf_wiki_pages-backed lore index), so a stale entry served forever from a
+// long-lived warm instance would silently paper over corrected DB data the
+// same way the wiki corpus cache in lib/wiki/lore-search.ts could. A short
+// TTL keeps this cheap per-request while letting it recover on its own.
+const ENTITY_CACHE_TTL_MS = 15 * 60 * 1000;
+const entityCache = new Map<string, { data: EntityWikiDef[]; loadedAt: number }>();
 
 /**
  * Matches financial & market-concept terminology against the real 4,653-term CBR market
@@ -559,7 +565,8 @@ function matchCbrLexiconEntities(text: string): EntityWikiDef[] {
 export async function getDynamicEntitiesForText(text: string): Promise<EntityWikiDef[]> {
   if (!text || text.trim().length === 0) return [];
   const textHash = text.slice(0, 120);
-  if (entityCache.has(textHash)) return entityCache.get(textHash)!;
+  const cached = entityCache.get(textHash);
+  if (cached && Date.now() - cached.loadedAt <= ENTITY_CACHE_TTL_MS) return cached.data;
 
   const actorMap = new Map<string, AdaptationActor>();
   for (const a of ADAPTATION_ACTORS) {
@@ -696,7 +703,7 @@ export async function getDynamicEntitiesForText(text: string): Promise<EntityWik
   const filtered = matchedEntities.filter(
     (e) => !GENERIC_REAL_WORLD_LOCATIONS.has(e.term.toLowerCase())
   );
-  entityCache.set(textHash, filtered);
+  entityCache.set(textHash, { data: filtered, loadedAt: Date.now() });
   return filtered;
 }
 
