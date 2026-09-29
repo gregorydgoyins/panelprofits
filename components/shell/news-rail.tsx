@@ -4,8 +4,7 @@ import * as React from "react";
 import { ArrowRight, Newspaper } from "lucide-react";
 import { shortNewsSource, type NewsStory } from "@/lib/news/types";
 import { getSourceTicker } from "@/lib/news/sourceTickerMap";
-
-const STRICT_NEGATIVE_FILTER = /\b(ac\/dc\b|mayor\s+bowser|ribbon-cutting|washington,?\s*d\.?c\.?|(?:dc|d\.c\.)\s+(?:mayor|council|police|government|politics|statehood|attorney|public\s+schools)|florida\s+state|seminoles|fsu\b|gators\b|college\s+football|high\s+school\s+football|wrestling|pwi 500|wwe|aew|nfl|nba|mlb|nhl|ncaa|quarterback|touchdown|football|basketball|baseball|soccer|hockey|premier league|champions league|mls|inter miami|acc\b|sec\b|big ten|big 12|pac-12|touchdowns|linebacker|interception|puck|formula 1|\bf1\b|nascar|tennis|wimbledon|golf|\bpga\b|boxing|\bmma\b|\bufc\b|super bowl|earphones|smartwatch|airpods|vacuum cleaner|casino|crypto casino|slot machine|weight loss|celebrity gossip|love island|bachelor|real housewives|dc council|trayon white|city council|county commissioner|zoning board|police blotter|homicide|shooting incident|car crash|traffic accident|terror suspects|bribery trial|bribery mistrial|bribery case|politico caught|local election|mayoral election|gubernatorial|senate seat|congressional district|tax hike|affordable housing|mortgage rates|gameplay|playstation\s*5|ps5|xbox|nintendo switch|platinum trophy)\b/i;
+import { STRICT_NEGATIVE_FILTER } from "@/lib/news/self-healing";
 
 interface NewsRailProps {
   initialStories: NewsStory[];
