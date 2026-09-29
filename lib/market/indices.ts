@@ -30,7 +30,14 @@ export interface EquitiesRailItem {
 }
 
 /**
- * Calculates the CE70, PPIX 100, and PPOC Composite market indices using verified Clean observations.
+ * Returns the real recovered_index_contracts rows (CE70, PPIX60, PPIX100,
+ * PPIX_COMPOSITE, etc. — whatever is actually seeded), matched against any
+ * rows in recovered_index_observations. No values are invented: a contract
+ * with no observation row returns null current/previous/percentChange, and
+ * status reflects the contract's real production_status (e.g.
+ * BLOCKED_INCOMPLETE_MEMBERSHIP) rather than a fabricated "ACTIVE". If the
+ * contracts table has no rows, this returns an empty array — callers must
+ * render an honest "no live data" state rather than substituting numbers.
  */
 export async function calculateMarketIndices(): Promise<MarketIndexRecord[]> {
   const db = createCleanReadOnlyServerClient();
@@ -43,6 +50,8 @@ export async function calculateMarketIndices(): Promise<MarketIndexRecord[]> {
   if (error && !isMissingTableError(error)) {
     console.error("Error fetching index contracts:", error);
   }
+
+  if (!contracts || !contracts.length) return [];
 
   const { data: observations } = await db
     .from("recovered_index_observations")
@@ -62,57 +71,18 @@ export async function calculateMarketIndices(): Promise<MarketIndexRecord[]> {
     }
   }
 
-  const defaultIndices: MarketIndexRecord[] = [
-    {
-      indexCode: "CE70",
-      displayName: "CE70 Core Equities Index",
-      methodologyVersion: "2.1.0-CLEAN",
-      expectedConstituentCount: 70,
-      currentValue: obsMap.get("CE70")?.current ?? 1420.50,
-      previousValue: obsMap.get("CE70")?.prev ?? 1405.10,
-      percentChange: obsMap.get("CE70")?.pct ?? 1.096,
-      status: obsMap.get("CE70")?.status ?? "ACTIVE",
-      description: "70-Seat Primary Blue Chip Comic Asset Benchmark.",
-    },
-    {
-      indexCode: "PPIX100",
-      displayName: "PPIX 100 Key Issue Index",
-      methodologyVersion: "1.8.4-CLEAN",
-      expectedConstituentCount: 100,
-      currentValue: obsMap.get("PPIX100")?.current ?? 2850.75,
-      previousValue: obsMap.get("PPIX100")?.prev ?? 2810.00,
-      percentChange: obsMap.get("PPIX100")?.pct ?? 1.450,
-      status: obsMap.get("PPIX100")?.status ?? "ACTIVE",
-      description: "Top 100 Highest FMV Key Issues across Golden, Silver, and Bronze eras.",
-    },
-    {
-      indexCode: "PPOC",
-      displayName: "PPOC Composite Market Index",
-      methodologyVersion: "3.0.0-COMPOSITE",
-      expectedConstituentCount: 500,
-      currentValue: obsMap.get("PPOC")?.current ?? 980.20,
-      previousValue: obsMap.get("PPOC")?.prev ?? 978.40,
-      percentChange: obsMap.get("PPOC")?.pct ?? 0.184,
-      status: obsMap.get("PPOC")?.status ?? "ACTIVE",
-      description: "Broad-market capitalization weighted comic equity index.",
-    },
-  ];
-
-  if (!contracts || !contracts.length) return defaultIndices;
-
   return contracts.map((contract) => {
     const obs = obsMap.get(contract.index_code);
-    const fallback = defaultIndices.find((i) => i.indexCode === contract.index_code);
     return {
       indexCode: contract.index_code,
       displayName: contract.display_name,
       methodologyVersion: contract.methodology_version,
       expectedConstituentCount: contract.expected_constituent_count,
-      currentValue: obs?.current ?? fallback?.currentValue ?? null,
-      previousValue: obs?.prev ?? fallback?.previousValue ?? null,
-      percentChange: obs?.pct ?? fallback?.percentChange ?? null,
+      currentValue: obs?.current ?? null,
+      previousValue: obs?.prev ?? null,
+      percentChange: obs?.pct ?? null,
       status: obs?.status ?? contract.production_status,
-      description: contract.notes || fallback?.description || "Comic Market Equity Index",
+      description: contract.notes || "Comic Market Equity Index",
     };
   });
 }

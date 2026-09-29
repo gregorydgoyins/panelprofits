@@ -41,7 +41,7 @@ export default async function MarketPage() {
           Comic Equities & Market Indices
         </h1>
         <p className="mt-2.5 max-w-3xl text-sm leading-relaxed text-slate-400">
-          Real-time market capitalizations, 3-tier index benchmarks (CE70, PPIX 100, PPOC Composite), and canonical asset float analytics derived strictly from verified observations.
+          Real-time market capitalizations, the recovered index benchmark family, and canonical asset float analytics derived strictly from verified observations.
         </p>
       </header>
 
@@ -75,7 +75,7 @@ export default async function MarketPage() {
         </div>
       </section>
 
-      {/* Core Indices Section (CE70, PPIX 100, PPOC Composite) */}
+      {/* Core Indices Section (recovered index contracts, whichever are seeded) */}
       <section className="mt-8" aria-label="Core Market Indices">
         <div className="flex items-center gap-2 mb-4 text-xs font-mono uppercase tracking-[0.18em] text-emerald-400 font-semibold">
           <BarChart3 className="h-4 w-4 text-emerald-300" />

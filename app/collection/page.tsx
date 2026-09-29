@@ -1,14 +1,28 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser, getUserCollections, getCollectionItems, ensureDefaultCollection } from "@/lib/account/queries";
 import { calculateHoldingsSummary } from "@/lib/account/calculations";
+import { getDiaryEntries } from "@/lib/panel-profits/queries";
 import { HoldingsSummaryBanner } from "@/components/collection/holdings-summary-banner";
 import { CollectionManager } from "@/components/collection/collection-manager";
-import { BrokerDiary } from "@/components/account/broker-diary";
+import { BrokerDiary, type DiaryEntry } from "@/components/account/broker-diary";
 
 export const metadata = {
   title: "My Collection | Panel Profits",
   description: "Track and value your personal comic collection with real-time baseline pricing and market intelligence.",
 };
+
+const DIARY_ENTRY_TYPES = new Set<DiaryEntry["type"]>(["trade", "acquisition", "valuation_change", "whale_alert", "note"]);
+
+function toDiaryEntry(row: { id: string; entry_type: string; title: string; body: string; occurred_at: string }): DiaryEntry {
+  const type = DIARY_ENTRY_TYPES.has(row.entry_type as DiaryEntry["type"]) ? (row.entry_type as DiaryEntry["type"]) : "note";
+  return {
+    id: row.id,
+    type,
+    title: row.title,
+    description: row.body,
+    timestamp: new Date(row.occurred_at).toLocaleString(),
+  };
+}
 
 export default async function CollectionPage({
   searchParams,
@@ -54,6 +68,14 @@ export default async function CollectionPage({
   });
   const summary = calculateHoldingsSummary(allItemsResult.items);
 
+  // Real per-account diary entries (the same source backing /diary). No
+  // institutional "whale" trade feed exists in this codebase, so nothing
+  // is invented for that — this shows the account's own recorded entries,
+  // and the diary component's built-in empty state covers the case where
+  // there are none yet.
+  const diaryRows = await getDiaryEntries(user.id);
+  const diaryEntries = diaryRows.map(toDiaryEntry);
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       {/* Page Title & Context */}
@@ -82,39 +104,9 @@ export default async function CollectionPage({
         totalCount={result.totalCount}
       />
 
-      {/* Broker Diary & Institutional Whales Activity Feed */}
+      {/* Broker Diary (real account diary entries; no fabricated activity) */}
       <div className="mt-12">
-        <BrokerDiary
-          entries={[
-            {
-              id: "whale-1",
-              type: "whale_alert",
-              title: "Institutional Whale Acquisition",
-              description: "A private portfolio acquired a CGC 9.8 copy of Amazing Spider-Man #300 via Heritage Auctions.",
-              timestamp: "2 hours ago",
-              amountUsd: 4250.00,
-              ticker: "$SPDR",
-            },
-            {
-              id: "trade-1",
-              type: "trade",
-              title: "CE70 Index Rebalance Trade",
-              description: "Seat #14 rebalanced constituent weights following updated Clean census float observation.",
-              timestamp: "5 hours ago",
-              amountUsd: 1850.00,
-              ticker: "$CE70",
-            },
-            {
-              id: "acq-1",
-              type: "acquisition",
-              title: "Portfolio Cost Basis Logging",
-              description: "Acquisition cost basis of $1,200.00 recorded for Batman #428 9.8 graded slab.",
-              timestamp: "1 day ago",
-              amountUsd: 1200.00,
-              ticker: "$BTMN",
-            },
-          ]}
-        />
+        <BrokerDiary entries={diaryEntries} />
       </div>
     </div>
   );
