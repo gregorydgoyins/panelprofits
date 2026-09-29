@@ -649,7 +649,7 @@ export async function getDynamicEntitiesForText(text: string): Promise<EntityWik
 
   // Match multi-universe lore entities (characters, items, locations, teams)
   try {
-    const loreMatches = findLoreEntitiesInText(text, 6);
+    const loreMatches = findLoreEntitiesInText(text, 20);
     for (const lore of loreMatches) {
       const loreTitleLower = lore.title.toLowerCase();
       if (GENERIC_REAL_WORLD_LOCATIONS.has(loreTitleLower)) continue;
@@ -785,7 +785,7 @@ export function extractEntitiesFromContext(text: string): EntityWikiDef[] {
   }
 
   try {
-    const loreMatches = findLoreEntitiesInText(text, 6);
+    const loreMatches = findLoreEntitiesInText(text, 20);
     for (const lore of loreMatches) {
       const loreTitleLower = lore.title.toLowerCase();
       if (GENERIC_REAL_WORLD_LOCATIONS.has(loreTitleLower)) continue;

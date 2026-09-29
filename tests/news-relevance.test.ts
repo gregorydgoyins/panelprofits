@@ -256,12 +256,22 @@ describe("newsroom relevance gate", () => {
     expect(fcDossier?.ticker).toBe("$XMEN:FIRST-CLASS");
     expect(fcDossier?.landmark_debuts?.length).toBeGreaterThanOrEqual(1);
 
-    // 6. Generic lexicon concepts are not rendered as inline hover badge spam
+    // 6. Financial & grading glossary concepts ARE rendered as inline hover-linked badges.
+    // These are the site's "Investopedia" glossary terms -- they must link through to a real
+    // /lexicon/<slug> page just like character and equity entities link to their own pages.
     const jargonText = "From an equity valuation perspective, high-grade certified census slabs and uncertified raw inventory see narrowing bid-ask spreads.";
     const jargonEntities = findNewsEntities("Market Update", jargonText);
     const parsedNodes = parseTextWithEntities(jargonText, jargonEntities);
-    // All words should remain plain text strings, not hover card badges
-    expect(parsedNodes.every((n) => typeof n === "string")).toBe(true);
+    const badgeNodes = parsedNodes.filter((n) => typeof n !== "string");
+    expect(badgeNodes.length).toBeGreaterThan(0);
+
+    const glossaryEntities = jargonEntities.filter(
+      (e) => e.type === "market-concept" || e.type === "grading" || e.type === "lexicon"
+    );
+    expect(glossaryEntities.length).toBeGreaterThan(0);
+    for (const entity of glossaryEntities) {
+      expect(entity.wikiPath.startsWith("/lexicon/")).toBe(true);
+    }
   });
 
   it("universally recognizes media adaptations and comic storylines across MCU, DC, Sony, X-Men, Image, and classic crossovers", async () => {
@@ -456,10 +466,16 @@ describe("newsroom relevance gate", () => {
 
     const synthesized = parseAndSynthesizeArticle(story);
 
-    // 1. Preserves authentic paragraphs and creates structured sections
-    expect(synthesized.paragraphs.length).toBe(3);
-    expect(synthesized.sections.length).toBe(3);
+    // 1. Preserves the 3 authentic source paragraphs, then appends real analytical
+    // paragraphs (catalyst analysis, lore background, ramifications, ripples) built from
+    // the same computed data as the widget cards below the article -- so the article body
+    // reliably runs well past the 3-4 paragraph minimum instead of stopping at the raw
+    // wire-service summary.
+    expect(synthesized.paragraphs.length).toBeGreaterThanOrEqual(6);
+    expect(synthesized.paragraphs.length).toBe(synthesized.sections.length);
     expect(synthesized.paragraphs[0]).toContain("Latverian Witches");
+    // The 3 authentic source paragraphs are followed by analytical paragraphs.
+    expect(synthesized.paragraphs[3]).not.toBe(synthesized.paragraphs[0]);
 
     // 2. Encyclopedic Lore Dossiers identified
     const loreTerms = synthesized.loreDeepDives.map((l) => l.term);

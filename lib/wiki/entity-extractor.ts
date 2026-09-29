@@ -149,6 +149,111 @@ export const COMIC_FINANCIAL_GLOSSARY: Record<string, { term: string; definition
     term: "Anchor Bonds",
     definition: "Fixed-income comic asset pools backed by verified high-grade Golden and Silver Age sovereign holdings providing steady yields.",
     category: "Fixed Income"
+  },
+  "comic-futures": {
+    term: "Comic Futures",
+    definition: "Standardized contracts obligating the buyer to take delivery (or cash-settle) a specified certified comic key issue at a locked forward price on a set future date.",
+    category: "Derivatives"
+  },
+  "call-options": {
+    term: "Call Options",
+    definition: "A derivative contract granting the holder the right, but not the obligation, to buy a comic equity at a fixed strike price before expiration, used to speculate on upside catalysts.",
+    category: "Derivatives"
+  },
+  "put-options": {
+    term: "Put Options",
+    definition: "A derivative contract granting the holder the right, but not the obligation, to sell a comic equity at a fixed strike price before expiration, used to hedge against downside catalyst risk.",
+    category: "Derivatives"
+  },
+  "derivative-contracts": {
+    term: "Derivative Contracts",
+    definition: "Financial instruments whose value is derived from an underlying certified comic key issue or index, including futures, options, and swaps traded against that asset.",
+    category: "Derivatives"
+  },
+  "spread-contracts": {
+    term: "Spread Contracts",
+    definition: "A position combining two related options or futures on the same underlying key issue to profit from the price differential between them while limiting directional exposure.",
+    category: "Derivatives"
+  },
+  "straddle-options": {
+    term: "Straddle Options",
+    definition: "A combined call-and-put position at the same strike and expiration, used to profit from large price moves in either direction following an uncertain catalyst event.",
+    category: "Derivatives"
+  },
+  "comic-swaps": {
+    term: "Comic Swaps",
+    definition: "Bilateral agreements to exchange future cash flows or valuation exposure tied to different comic equities, typically used to rebalance concentration risk across publishers or eras.",
+    category: "Derivatives"
+  },
+  "comic-tokenization": {
+    term: "Comic Tokenization",
+    definition: "The process of representing fractional or whole ownership of a physical certified comic asset as a digital token recorded on a distributed ledger.",
+    category: "Digital Assets"
+  },
+  "digital-ledger-provenance": {
+    term: "Digital Ledger Provenance",
+    definition: "An immutable on-chain record tracking a certified comic asset's ownership history, grading events, and custody transfers to support authentication and valuation.",
+    category: "Digital Assets"
+  },
+  "blockchain-minting": {
+    term: "Blockchain Minting",
+    definition: "The act of issuing a new digital token or certificate on a blockchain that represents and is tied to a specific physical certified comic issue.",
+    category: "Digital Assets"
+  },
+  "nft-comic-assets": {
+    term: "NFT Comic Assets",
+    definition: "Non-fungible tokens representing verified digital or digitally-linked-to-physical comic assets, tradable independently of the underlying paper copy.",
+    category: "Digital Assets"
+  },
+  "on-chain-grading-verification": {
+    term: "On-Chain Grading Verification",
+    definition: "A system for recording third-party grading results (e.g. CGC, CBCS, PGX) on a distributed ledger so grade and census data cannot be altered after certification.",
+    category: "Digital Assets"
+  },
+  "digital-slab-custody": {
+    term: "Digital Slab Custody",
+    definition: "Custodial arrangements in which a certified physical slab is held by a trusted vault while its ownership and transfer rights are managed and traded digitally.",
+    category: "Digital Assets"
+  },
+  "securitized-comic-yield": {
+    term: "Securitized Comic Yield",
+    definition: "Income distributed to investors from a pooled, securitized basket of high-grade comic assets, typically generated through leasing, licensing, or appreciation realization.",
+    category: "Fixed Income"
+  },
+  "fixed-income-comic-notes": {
+    term: "Fixed-Income Comic Notes",
+    definition: "Debt instruments backed by a portfolio of certified comic assets that pay a scheduled coupon, offering investors comic-market exposure without direct physical ownership.",
+    category: "Fixed Income"
+  },
+  "sovereign-bond-vault": {
+    term: "Sovereign Bond Vault",
+    definition: "A custodial reserve of blue-chip Golden and Silver Age key issues held as collateral backing for fixed-income comic notes and anchor bonds.",
+    category: "Fixed Income"
+  },
+  "signature-series": {
+    term: "Signature Series",
+    definition: "Comics independently witnessed and certified by a grading service as signed by a creator, actor, or other verified signatory, commanding a premium over an unsigned copy of the same grade.",
+    category: "Grading & Certification"
+  },
+  "overprint": {
+    term: "Overprint",
+    definition: "A print run quantity exceeding original distributor demand forecasts, which increases available supply and typically suppresses secondary market pricing relative to scarcer, correctly-forecast print runs.",
+    category: "Supply Dynamics"
+  },
+  "box-office": {
+    term: "Box Office Haul",
+    definition: "Theatrical revenue generated by a comic adaptation film or franchise entry, tracked as a demand signal correlated with speculative buying in the source character's key issues.",
+    category: "Demand Drivers"
+  },
+  "9-8-census": {
+    term: "9.8 Census",
+    definition: "The documented population count of copies graded 9.8 (Near Mint/Mint) for a given issue across major certification services, used as the standard scarcity benchmark for high-grade pricing.",
+    category: "Supply Dynamics"
+  },
+  "census-float": {
+    term: "Census Float",
+    definition: "The portion of a graded population census believed to be actively available for trade, excluding copies held in long-term vaults, museums, or non-selling collections.",
+    category: "Supply Dynamics"
   }
 };
 

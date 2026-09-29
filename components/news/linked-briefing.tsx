@@ -38,8 +38,13 @@ export function parseTextWithEntities(text: string, entities?: EntityWikiDef[]):
   // Strip any legacy raw HTML markup so we parse pure text cleanly
   const cleanText = text.replace(/<[^>]+>/g, "");
 
+  // NOTE: market-concept / grading / lexicon entities (financial & grading glossary terms,
+  // e.g. "Fair Market Value", "CGC", "Bid-Ask Spread") are intentionally included here.
+  // They previously never rendered as links at all -- this is the root cause of the
+  // "Investopedia glossary links never show up" bug. Do not re-add a type exclusion here
+  // without wiring an equivalent real link target for that type.
   const activeEntities = (entities || []).filter(
-    (e) => !BLOCKED_TERMS.has(e.term.toLowerCase()) && e.type !== "market-concept" && e.type !== "grading" && e.type !== "lexicon"
+    (e) => !BLOCKED_TERMS.has(e.term.toLowerCase())
   );
 
   if (activeEntities.length === 0) {
@@ -86,6 +91,7 @@ export function parseTextWithEntities(text: string, entities?: EntityWikiDef[]):
       const isCreatorOrTalent = entity.type === "creator";
       const isStudio = entity.type === "publisher";
       const isEquity = entity.type === "equity";
+      const isGlossaryTerm = entity.type === "market-concept" || entity.type === "grading" || entity.type === "lexicon";
 
       nodes.push(
         <EntityHoverCard
@@ -100,6 +106,8 @@ export function parseTextWithEntities(text: string, entities?: EntityWikiDef[]):
               ? "text-emerald-300 hover:text-emerald-100 bg-emerald-950/30 hover:bg-emerald-900/50 border border-emerald-500/40"
               : isStudio
               ? "text-indigo-300 hover:text-indigo-100 bg-indigo-950/40 hover:bg-indigo-900/60 border border-indigo-500/40"
+              : isGlossaryTerm
+              ? "text-violet-300 hover:text-violet-100 bg-violet-950/40 hover:bg-violet-900/60 border border-violet-500/40"
               : "text-sky-300 hover:text-sky-100 bg-sky-950/30 hover:bg-sky-900/50 border border-sky-500/40"
           }`}
         >
