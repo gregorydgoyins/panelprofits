@@ -100,6 +100,9 @@ export const GENERIC_REAL_WORLD_LOCATIONS = new Set([
 
 export const LORE_OBSCURE_COLLISION_BLOCKLIST = new Set([
   "the marvel",
+  "marvel-vehicle-marvel",
+  "marvel universe",
+  "the marvel universe",
   "the car",
   "the box",
   "the ship",
@@ -159,6 +162,11 @@ export const TOP_TIER_HERO_WHITELIST = new Set([
   "asgard",
   "krypton",
   "atlantis",
+  "doom",
+  "banner",
+  "franklin",
+  "rogers",
+  "carter",
 ]);
 
 let cachedIndex: LoreIndexData | null = null;
@@ -207,6 +215,17 @@ export const KNOWN_HERO_TICKERS: Record<string, string> = {
   "x-men": "$XMEN",
   "fantastic four": "$FF",
   "justice league": "$JL",
+  "doctor doom": "$DOOM",
+  "doom": "$DOOM",
+  "bruce banner": "$HULK",
+  "banner": "$HULK",
+  "steve rogers": "$CAP",
+  "peggy carter": "$CARTER",
+  "agent carter": "$CARTER",
+  "franklin richards": "$FF:FRANKLIN",
+  "franklin": "$FF:FRANKLIN",
+  "marvel cinematic universe": "$MCU",
+  "mcu": "$MCU",
 };
 
 export function deriveEntityTicker(title: string, universe: string): string {
@@ -517,18 +536,367 @@ export function searchLoreEntities(query: string, limit = 18): LoreEntitySummary
   return results.slice(0, limit);
 }
 
+export const CANONICAL_PREMIER_ENTITIES: Record<string, LoreEntitySummary> = {
+  "doctor-doom": {
+    slug: "doctor-doom",
+    title: "Doctor Doom (Victor von Doom)",
+    universe: "MARVEL",
+    type: "character",
+    reality: "Earth-616",
+    alignment: "Neutral / Villain",
+    creators: "Stan Lee; Jack Kirby",
+    first_appearance: "Fantastic Four Vol 1 5",
+    summary: "Victor von Doom is the sovereign monarch of Latveria, supreme scientific genius, and master sorcerer. Eternal arch-nemesis of the Fantastic Four and one of the most formidable entities in the Marvel Universe.",
+    ticker: "$DOOM",
+    landmark_debuts: [
+      {
+        title: "The Fantastic Four #5 (1962)",
+        significance: "1st Canonical Appearance of Doctor Doom (Victor Von Doom)",
+        catalogUrl: "/comics?q=Fantastic+Four+5",
+        era: "SILVER",
+        assetTier: "SOVEREIGN_BLUE_CHIP",
+      },
+      {
+        title: "Secret Wars #1 (2015)",
+        significance: "Jonathan Hickman & Esad Ribic crossover establishing God Emperor Doom",
+        catalogUrl: "/comics?q=Secret+Wars+1",
+        era: "MODERN",
+        assetTier: "KEY_EQUITY",
+      },
+    ],
+  },
+  "bruce-banner": {
+    slug: "bruce-banner",
+    title: "Bruce Banner (The Incredible Hulk)",
+    universe: "MARVEL",
+    type: "character",
+    reality: "Earth-616",
+    alignment: "Good / Complex",
+    creators: "Stan Lee; Jack Kirby",
+    first_appearance: "The Incredible Hulk Vol 1 1",
+    summary: "Dr. Robert Bruce Banner is a brilliant nuclear physicist irradiated by gamma radiation during an experimental bomb detonation, transforming into the green behemoth known as the Incredible Hulk.",
+    ticker: "$HULK",
+    landmark_debuts: [
+      {
+        title: "The Incredible Hulk #1 (1962)",
+        significance: "1st Canonical Appearance of Bruce Banner and the Incredible Hulk",
+        catalogUrl: "/comics?q=Incredible+Hulk+1",
+        era: "SILVER",
+        assetTier: "SOVEREIGN_BLUE_CHIP",
+      },
+      {
+        title: "The Incredible Hulk #181 (1974)",
+        significance: "Hulk battles Wolverine in iconic 1st full appearance of Wolverine",
+        catalogUrl: "/comics?q=Incredible+Hulk+181",
+        era: "BRONZE",
+        assetTier: "SOVEREIGN_BLUE_CHIP",
+      },
+    ],
+  },
+  "steve-rogers": {
+    slug: "steve-rogers",
+    title: "Steve Rogers (Captain America)",
+    universe: "MARVEL",
+    type: "character",
+    reality: "Earth-616",
+    alignment: "Good",
+    creators: "Joe Simon; Jack Kirby",
+    first_appearance: "Captain America Comics Vol 1 1",
+    summary: "Steven Grant Rogers is a World War II supersoldier enhanced to human physical perfection by the Super-Soldier Serum. Armed with an indestructible Vibranium shield, he serves as Captain America, the Sentinel of Liberty.",
+    ticker: "$CAP",
+    landmark_debuts: [
+      {
+        title: "Captain America Comics #1 (1941)",
+        significance: "1st Canonical Appearance of Steve Rogers (Captain America) punching Adolf Hitler",
+        catalogUrl: "/comics?q=Captain+America+Comics+1",
+        era: "GOLDEN",
+        assetTier: "SOVEREIGN_BLUE_CHIP",
+      },
+      {
+        title: "The Avengers #4 (1964)",
+        significance: "Silver Age Revival of Captain America unfrozen from ice; joins the Avengers",
+        catalogUrl: "/comics?q=Avengers+4",
+        era: "SILVER",
+        assetTier: "SOVEREIGN_BLUE_CHIP",
+      },
+    ],
+  },
+  "peggy-carter": {
+    slug: "peggy-carter",
+    title: "Peggy Carter (Agent Carter)",
+    universe: "MARVEL",
+    type: "character",
+    reality: "Earth-616",
+    alignment: "Good",
+    creators: "Stan Lee; Jack Kirby",
+    first_appearance: "Tales of Suspense Vol 1 75",
+    summary: "Margaret 'Peggy' Carter is a top-tier Allied intelligence officer, French Resistance fighter, founding leader of S.H.I.E.L.D., and the wartime love of Steve Rogers.",
+    ticker: "$CARTER",
+    landmark_debuts: [
+      {
+        title: "Tales of Suspense #75 (1966)",
+        significance: "1st Canonical Appearance of Peggy Carter",
+        catalogUrl: "/comics?q=Tales+of+Suspense+75",
+        era: "SILVER",
+        assetTier: "KEY_EQUITY",
+      },
+    ],
+  },
+  "franklin-richards": {
+    slug: "franklin-richards",
+    title: "Franklin Richards (Psi-Lord)",
+    universe: "MARVEL",
+    type: "character",
+    reality: "Earth-616",
+    alignment: "Good",
+    creators: "Stan Lee; Jack Kirby",
+    first_appearance: "Fantastic Four Annual Vol 1 6",
+    summary: "Franklin Benjamin Richards is the Beyond-Omega level reality-warping mutant son of Mister Fantastic (Reed Richards) and the Invisible Woman (Sue Storm), capable of creating pocket universes.",
+    ticker: "$FF:FRANKLIN",
+    landmark_debuts: [
+      {
+        title: "Fantastic Four Annual #6 (1968)",
+        significance: "1st Canonical Appearance and birth of Franklin Richards",
+        catalogUrl: "/comics?q=Fantastic+Four+Annual+6",
+        era: "SILVER",
+        assetTier: "KEY_EQUITY",
+      },
+    ],
+  },
+  "thor": {
+    slug: "thor",
+    title: "Thor (Odinson)",
+    universe: "MARVEL",
+    type: "character",
+    reality: "Earth-616",
+    alignment: "Good",
+    creators: "Stan Lee; Jack Kirby; Larry Lieber",
+    first_appearance: "Journey into Mystery Vol 1 83",
+    summary: "Thor Odinson is the Asgardian God of Thunder, prince of Asgard, founding member of the Avengers, and wielder of the enchanted uru hammer Mjolnir.",
+    ticker: "$THOR",
+    landmark_debuts: [
+      {
+        title: "Journey into Mystery #83 (1962)",
+        significance: "1st Canonical Appearance of Thor (Odinson)",
+        catalogUrl: "/comics?q=Journey+into+Mystery+83",
+        era: "SILVER",
+        assetTier: "SOVEREIGN_BLUE_CHIP",
+      },
+      {
+        title: "Journey into Mystery #85 (1962)",
+        significance: "1st Appearance of Loki, Odin, Heimdall, Balder, and Asgard",
+        catalogUrl: "/comics?q=Journey+into+Mystery+85",
+        era: "SILVER",
+        assetTier: "SOVEREIGN_BLUE_CHIP",
+      },
+    ],
+  },
+  "avengers": {
+    slug: "avengers",
+    title: "The Avengers",
+    universe: "MARVEL",
+    type: "team",
+    reality: "Earth-616",
+    alignment: "Good",
+    creators: "Stan Lee; Jack Kirby",
+    first_appearance: "The Avengers Vol 1 1",
+    summary: "Earth's Mightiest Heroes assembled to fight the foes no single superhero could withstand. Founding roster: Iron Man, Thor, Hulk, Ant-Man, and the Wasp.",
+    ticker: "$AVNG",
+    landmark_debuts: [
+      {
+        title: "The Avengers #1 (1963)",
+        significance: "1st Appearance of the Avengers and battle against Loki",
+        catalogUrl: "/comics?q=Avengers+1",
+        era: "SILVER",
+        assetTier: "SOVEREIGN_BLUE_CHIP",
+      },
+    ],
+  },
+  "marvel-cinematic-universe": {
+    slug: "marvel-cinematic-universe",
+    title: "Marvel Cinematic Universe (MCU)",
+    universe: "MARVEL",
+    type: "equity",
+    reality: "Earth-199999",
+    alignment: "Good",
+    creators: "Kevin Feige; Marvel Studios",
+    first_appearance: "Iron Man (2008)",
+    summary: "The highest-grossing media franchise in history, spanning Phases 1 through 6, interconnecting superhero features, streaming series, and secondary market comic equities.",
+    ticker: "$MCU",
+    landmark_debuts: [
+      {
+        title: "Tales of Suspense #39 (1963)",
+        significance: "1st Appearance of Iron Man (Genesis of the Cinematic Universe)",
+        catalogUrl: "/comics?q=Tales+of+Suspense+39",
+        era: "SILVER",
+        assetTier: "SOVEREIGN_BLUE_CHIP",
+      },
+      {
+        title: "The Avengers #1 (1963)",
+        significance: "1st Team Debut of Earth's Mightiest Heroes",
+        catalogUrl: "/comics?q=Avengers+1",
+        era: "SILVER",
+        assetTier: "SOVEREIGN_BLUE_CHIP",
+      },
+    ],
+  },
+  "claire-temple": {
+    slug: "claire-temple",
+    title: "Claire Temple (Night Nurse)",
+    universe: "MARVEL",
+    type: "character",
+    reality: "Earth-616",
+    alignment: "Good",
+    creators: "Archie Goodwin; George Tuska",
+    first_appearance: "Hero for Hire Vol 1 2",
+    summary: "Dr. Claire Temple is an elite medical doctor specializing in providing underground trauma care for street-level vigilantes and superheroes across New York City.",
+    ticker: "$NURSE",
+    landmark_debuts: [
+      {
+        title: "Hero for Hire #2 (1972)",
+        significance: "1st Canonical Appearance of Claire Temple",
+        catalogUrl: "/comics?q=Hero+for+Hire+2",
+        era: "BRONZE",
+        assetTier: "KEY_EQUITY",
+      },
+      {
+        title: "Night Nurse #1 (1972)",
+        significance: "1st Issue of Linda Carter, establishing the Night Nurse mantle",
+        catalogUrl: "/comics?q=Night+Nurse+1",
+        era: "BRONZE",
+        assetTier: "KEY_EQUITY",
+      },
+    ],
+  },
+  "night-nurse": {
+    slug: "night-nurse",
+    title: "Night Nurse (Claire Temple / Linda Carter)",
+    universe: "MARVEL",
+    type: "character",
+    reality: "Earth-616",
+    alignment: "Good",
+    creators: "Jean Thomas; Win Mortimer; Archie Goodwin",
+    first_appearance: "Night Nurse Vol 1 1",
+    summary: "The Night Nurse mantle represents the clandestine medical lifeline for New York City's superhero community, pioneered by Linda Carter and popularized by Claire Temple.",
+    ticker: "$NURSE",
+    landmark_debuts: [
+      {
+        title: "Night Nurse #1 (1972)",
+        significance: "1st Appearance of the Night Nurse mantle",
+        catalogUrl: "/comics?q=Night+Nurse+1",
+        era: "BRONZE",
+        assetTier: "KEY_EQUITY",
+      },
+      {
+        title: "Hero for Hire #2 (1972)",
+        significance: "1st Appearance of Claire Temple",
+        catalogUrl: "/comics?q=Hero+for+Hire+2",
+        era: "BRONZE",
+        assetTier: "KEY_EQUITY",
+      },
+    ],
+  },
+  "iron-man": {
+    slug: "iron-man",
+    title: "Iron Man (Tony Stark)",
+    universe: "MARVEL",
+    type: "character",
+    reality: "Earth-616",
+    alignment: "Good",
+    creators: "Stan Lee; Larry Lieber; Don Heck; Jack Kirby",
+    first_appearance: "Tales of Suspense Vol 1 39",
+    summary: "Anthony Edward 'Tony' Stark is a visionary industrialist, inventor, founding Avenger, and CEO of Stark Industries who constructed the invincible Iron Man powered armor.",
+    ticker: "$IRON",
+    landmark_debuts: [
+      {
+        title: "Tales of Suspense #39 (1963)",
+        significance: "1st Canonical Appearance and Origin of Iron Man (Tony Stark)",
+        catalogUrl: "/comics?q=Tales+of+Suspense+39",
+        era: "SILVER",
+        assetTier: "SOVEREIGN_BLUE_CHIP",
+      },
+      {
+        title: "Tales of Suspense #52 (1964)",
+        significance: "1st Appearance of Black Widow (Natasha Romanoff)",
+        catalogUrl: "/comics?q=Tales+of+Suspense+52",
+        era: "SILVER",
+        assetTier: "SOVEREIGN_BLUE_CHIP",
+      },
+    ],
+  },
+  "spider-man": {
+    slug: "spider-man",
+    title: "Spider-Man (Peter Parker)",
+    universe: "MARVEL",
+    type: "character",
+    reality: "Earth-616",
+    alignment: "Good",
+    creators: "Stan Lee; Steve Ditko",
+    first_appearance: "Amazing Fantasy Vol 1 15",
+    summary: "Peter Benjamin Parker was bitten by a radioactive spider as a high school student, gaining arachnid abilities and dedicating his life to the ethos: 'With great power there must also come great responsibility.'",
+    ticker: "$SPDR",
+    landmark_debuts: [
+      {
+        title: "Amazing Fantasy #15 (1962)",
+        significance: "1st Canonical Appearance of Spider-Man (Peter Parker), Uncle Ben, Aunt May",
+        catalogUrl: "/comics?q=Amazing+Fantasy+15",
+        era: "SILVER",
+        assetTier: "SOVEREIGN_BLUE_CHIP",
+      },
+      {
+        title: "The Amazing Spider-Man #1 (1963)",
+        significance: "1st Issue of Ongoing Series; 1st Appearance of J. Jonah Jameson",
+        catalogUrl: "/comics?q=Amazing+Spider-Man+1",
+        era: "SILVER",
+        assetTier: "SOVEREIGN_BLUE_CHIP",
+      },
+    ],
+  },
+};
+
 const SLUG_ALIASES: Record<string, string> = {
   batman: "bruce-wayne-earth-two",
   "bruce-wayne": "bruce-wayne-earth-two",
   "dark-knight": "bruce-wayne-earth-two",
   superman: "kal-l-earth-two",
   "clark-kent": "kal-l-earth-two",
-  "spider-man": "peter-parker-earth-1610",
-  spiderman: "peter-parker-earth-1610",
-  "peter-parker": "peter-parker-earth-1610",
+  "spider-man": "spider-man",
+  spiderman: "spider-man",
+  "spider-m": "spider-man",
+  "peter-parker": "spider-man",
   deadpool: "wade-wilson-earth-616",
   joker: "joker-earth-two",
   wolverine: "james-howlett-earth-811",
+  "doctor-doom": "doctor-doom",
+  doom: "doctor-doom",
+  "dr-doom": "doctor-doom",
+  "victor-von-doom": "doctor-doom",
+  "bruce-banner": "bruce-banner",
+  banner: "bruce-banner",
+  hulk: "bruce-banner",
+  "the-hulk": "bruce-banner",
+  "incredible-hulk": "bruce-banner",
+  "steve-rogers": "steve-rogers",
+  "captain-america": "steve-rogers",
+  cap: "steve-rogers",
+  "peggy-carter": "peggy-carter",
+  "agent-carter": "peggy-carter",
+  "captain-carter": "peggy-carter",
+  "franklin-richards": "franklin-richards",
+  franklin: "franklin-richards",
+  thor: "thor",
+  "thor-odinson": "thor",
+  avengers: "avengers",
+  "the-avengers": "avengers",
+  "marvel-cinematic-universe": "marvel-cinematic-universe",
+  mcu: "marvel-cinematic-universe",
+  "marvel-universe": "marvel-cinematic-universe",
+  "the-marvel-universe": "marvel-cinematic-universe",
+  "marvel-vehicle-marvel": "marvel-cinematic-universe",
+  "claire-temple": "claire-temple",
+  "night-nurse": "night-nurse",
+  "iron-man": "iron-man",
+  "tony-stark": "iron-man",
 };
 
 /**
@@ -536,21 +904,31 @@ const SLUG_ALIASES: Record<string, string> = {
  */
 export function getLoreEntityBySlug(slug: string): LoreEntitySummary | null {
   loadLoreIndex();
-  if (!slug || !cachedSlugMap) return null;
+  if (!slug) return null;
   const cleanSlug = slug.toLowerCase().trim();
 
-  // 1. Direct slug match
-  if (cachedSlugMap.has(cleanSlug)) {
+  // 1. Direct canonical premier entity match
+  if (CANONICAL_PREMIER_ENTITIES[cleanSlug]) {
+    return CANONICAL_PREMIER_ENTITIES[cleanSlug];
+  }
+
+  // 2. Direct slug map match
+  if (cachedSlugMap && cachedSlugMap.has(cleanSlug)) {
     return cachedSlugMap.get(cleanSlug)!;
   }
 
-  // 2. Direct alias match
+  // 3. Direct alias match
   const alias = SLUG_ALIASES[cleanSlug];
-  if (alias && cachedSlugMap.has(alias)) {
-    return cachedSlugMap.get(alias)!;
+  if (alias) {
+    if (CANONICAL_PREMIER_ENTITIES[alias]) {
+      return CANONICAL_PREMIER_ENTITIES[alias];
+    }
+    if (cachedSlugMap && cachedSlugMap.has(alias)) {
+      return cachedSlugMap.get(alias)!;
+    }
   }
 
-  // 3. Match by title from cachedTitleMap (e.g. "batman", "iron man")
+  // 4. Match by title from cachedTitleMap (e.g. "batman", "iron man")
   const titlePhrase = cleanSlug.replace(/-/g, " ");
   if (cachedTitleMap && cachedTitleMap.has(titlePhrase)) {
     return cachedTitleMap.get(titlePhrase)!;

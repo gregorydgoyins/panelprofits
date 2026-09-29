@@ -405,13 +405,29 @@ export const KNOWN_NEWS_ENTITIES_MAP: EntityWikiDef[] = [
   { term: "Wolverine", ticker: "$WOLV", type: "character", target: "intelligence", wikiPath: "/wiki/entry/wolverine" },
   { term: "Iron Man", ticker: "$IRON", type: "character", target: "intelligence", wikiPath: "/wiki/entry/iron-man" },
   { term: "Captain America", ticker: "$CAP", type: "character", target: "intelligence", wikiPath: "/wiki/entry/captain-america" },
+  { term: "Steve Rogers", ticker: "$CAP", type: "character", target: "intelligence", wikiPath: "/wiki/entry/steve-rogers" },
+  { term: "Peggy Carter", ticker: "$CARTER", type: "character", target: "intelligence", wikiPath: "/wiki/entry/peggy-carter" },
+  { term: "Agent Carter", ticker: "$CARTER", type: "character", target: "intelligence", wikiPath: "/wiki/entry/peggy-carter" },
+  { term: "Captain Carter", ticker: "$CARTER", type: "character", target: "intelligence", wikiPath: "/wiki/entry/peggy-carter" },
+  { term: "Franklin Richards", ticker: "$FF:FRANKLIN", type: "character", target: "intelligence", wikiPath: "/wiki/entry/franklin-richards" },
+  { term: "Franklin", ticker: "$FF:FRANKLIN", type: "character", target: "intelligence", wikiPath: "/wiki/entry/franklin-richards" },
   { term: "Thor", ticker: "$THOR", type: "character", target: "intelligence", wikiPath: "/wiki/entry/thor" },
   { term: "Hulk", ticker: "$HULK", type: "character", target: "intelligence", wikiPath: "/wiki/entry/hulk" },
+  { term: "Bruce Banner", ticker: "$HULK", type: "character", target: "intelligence", wikiPath: "/wiki/entry/bruce-banner" },
+  { term: "Banner", ticker: "$HULK", type: "character", target: "intelligence", wikiPath: "/wiki/entry/bruce-banner" },
   { term: "Deadpool", ticker: "$DP", type: "character", target: "intelligence", wikiPath: "/wiki/entry/deadpool" },
   { term: "Venom", ticker: "$VNM", type: "character", target: "intelligence", wikiPath: "/wiki/entry/venom" },
   { term: "Daredevil", ticker: "$DD", type: "character", target: "intelligence", wikiPath: "/wiki/entry/daredevil" },
   { term: "Punisher", ticker: "$PNSH", type: "character", target: "intelligence", wikiPath: "/wiki/entry/punisher" },
   { term: "Doctor Doom", ticker: "$DOOM", type: "character", target: "intelligence", wikiPath: "/wiki/entry/doctor-doom" },
+  { term: "Victor von Doom", ticker: "$DOOM", type: "character", target: "intelligence", wikiPath: "/wiki/entry/doctor-doom" },
+  { term: "Victor Von Doom", ticker: "$DOOM", type: "character", target: "intelligence", wikiPath: "/wiki/entry/doctor-doom" },
+  { term: "Dr. Doom", ticker: "$DOOM", type: "character", target: "intelligence", wikiPath: "/wiki/entry/doctor-doom" },
+  { term: "Doom", ticker: "$DOOM", type: "character", target: "intelligence", wikiPath: "/wiki/entry/doctor-doom" },
+  { term: "the Marvel universe", ticker: "$MCU", type: "equity", target: "intelligence", wikiPath: "/wiki/entry/marvel-cinematic-universe" },
+  { term: "the Marvel Universe", ticker: "$MCU", type: "equity", target: "intelligence", wikiPath: "/wiki/entry/marvel-cinematic-universe" },
+  { term: "Marvel universe", ticker: "$MCU", type: "equity", target: "intelligence", wikiPath: "/wiki/entry/marvel-cinematic-universe" },
+  { term: "Marvel Universe", ticker: "$MCU", type: "equity", target: "intelligence", wikiPath: "/wiki/entry/marvel-cinematic-universe" },
   { term: "Silver Surfer", ticker: "$SLVR", type: "character", target: "intelligence", wikiPath: "/wiki/entry/silver-surfer" },
   { term: "Galactus", ticker: "$GLCT", type: "character", target: "intelligence", wikiPath: "/wiki/entry/galactus" },
   { term: "Thanos", ticker: "$THNS", type: "character", target: "intelligence", wikiPath: "/wiki/entry/thanos" },
@@ -594,10 +610,15 @@ export async function getDynamicEntitiesForText(text: string): Promise<EntityWik
   for (const entity of KNOWN_NEWS_ENTITIES_MAP) {
     const termLower = entity.term.toLowerCase();
     if (GENERIC_REAL_WORLD_LOCATIONS.has(termLower)) continue;
-    if (seenTerms.has(termLower)) continue;
-
-    const regex = new RegExp(`\\b${termLower.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i");
-    if (regex.test(lowerText)) {
+    const escaped = entity.term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const startsWithWord = /^\w/.test(entity.term);
+    const endsWithWord = /\w$/.test(entity.term);
+    const prefix = startsWithWord ? "\\b" : "(?<=^|\\s|[^\\w])";
+    const suffix = endsWithWord ? "\\b" : "(?=$|\\s|[^\\w])";
+    const isSingleWordCapitalized = /^[A-Z][a-z0-9]*$/.test(entity.term);
+    const flags = isSingleWordCapitalized ? "" : "i";
+    const regex = new RegExp(`${prefix}${escaped}${suffix}`, flags);
+    if (regex.test(isSingleWordCapitalized ? text : lowerText)) {
       seenTerms.add(termLower);
       const clone: EntityWikiDef = { ...entity };
 
@@ -726,10 +747,14 @@ export function extractEntitiesFromContext(text: string): EntityWikiDef[] {
   for (const def of KNOWN_NEWS_ENTITIES_MAP) {
     const termLower = def.term.toLowerCase();
     if (GENERIC_REAL_WORLD_LOCATIONS.has(termLower)) continue;
-    if (seenTerms.has(termLower)) continue;
-
     const escaped = def.term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const regex = new RegExp(`\\b${escaped}\\b`, "i");
+    const startsWithWord = /^\w/.test(def.term);
+    const endsWithWord = /\w$/.test(def.term);
+    const prefix = startsWithWord ? "\\b" : "(?<=^|\\s|[^\\w])";
+    const suffix = endsWithWord ? "\\b" : "(?=$|\\s|[^\\w])";
+    const isSingleWordCapitalized = /^[A-Z][a-z0-9]*$/.test(def.term);
+    const flags = isSingleWordCapitalized ? "" : "i";
+    const regex = new RegExp(`${prefix}${escaped}${suffix}`, flags);
     if (regex.test(text)) {
       seenTerms.add(termLower);
       const clone: EntityWikiDef = { ...def };

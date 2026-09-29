@@ -66,7 +66,13 @@ export function parseTextWithEntities(text: string, entities?: EntityWikiDef[]):
       nodes.push(cleanText.slice(lastIndex, start));
     }
 
-    const entity = sorted.find((e) => e.term.toLowerCase() === matchedTerm.toLowerCase());
+    const entity = sorted.find((e) => {
+      if (e.term.toLowerCase() !== matchedTerm.toLowerCase()) return false;
+      if (/^[A-Z][a-z0-9]*$/.test(e.term)) {
+        return /^[A-Z]/.test(matchedTerm);
+      }
+      return true;
+    });
     if (entity) {
       const isCharacter = entity.type === "character";
       const isCreatorOrTalent = entity.type === "creator";

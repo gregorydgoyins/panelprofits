@@ -477,7 +477,7 @@
         "character": "Captain America (Steve Rogers)",
         "universe": "MARVEL",
         "landmarkIssue": "Captain America Comics #1",
-        "comicTicker": "$CAPA"
+        "comicTicker": "$CAP"
       },
       {
         "character": "Human Torch (Johnny Storm)",
@@ -492,11 +492,29 @@
     "imdbId": "nm0262635"
   },
   {
+    "name": "Hayley Atwell",
+    "aliases": [
+      "Hayley Elizabeth Atwell"
+    ],
+    "roles": [
+      {
+        "character": "Peggy Carter (Captain Carter)",
+        "universe": "MARVEL",
+        "landmarkIssue": "Tales of Suspense #75",
+        "comicTicker": "$CARTER"
+      }
+    ],
+    "franchises": [
+      "Marvel Cinematic Universe"
+    ],
+    "imdbId": "nm2017943"
+  },
+  {
     "name": "Chris Hemsworth",
     "aliases": [],
     "roles": [
       {
-        "character": "Thor Odinson",
+        "character": "Thor (Odinson)",
         "universe": "MARVEL",
         "landmarkIssue": "Journey into Mystery #83",
         "comicTicker": "$THOR"

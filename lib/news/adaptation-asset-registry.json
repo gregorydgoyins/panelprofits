@@ -133,15 +133,16 @@
     "summary": "Iron Man 2 marked the cinematic debut of Scarlett Johansson's Black Widow and War Machine's armored combat, catalyzing demand for Tales of Suspense #52."
   },
   {
-    "title": "Thor",
+    "title": "Thor (2011)",
     "slug": "thor-2011",
     "ticker": "$THOR:THOR",
     "universe": "MARVEL",
     "franchise": "Marvel Cinematic Universe",
     "type": "equity",
     "aliases": [
-      "Thor (2011)",
-      "Thor movie"
+      "Thor 2011",
+      "Thor movie",
+      "Thor film"
     ],
     "landmarkIssue": "Journey into Mystery #83",
     "landmarkIssues": [
@@ -1295,7 +1296,7 @@
     "summary": "WandaVision kicked off Marvel Studios' television expansion on Disney+, receiving 23 Emmy nominations and catalyzing secondary market interest for Scarlet Witch and Agatha Harkness keys."
   },
   {
-    "title": "Loki",
+    "title": "Loki (TV Series)",
     "slug": "loki-series",
     "ticker": "$MCU:LOKI",
     "universe": "MARVEL",
@@ -1303,7 +1304,9 @@
     "type": "equity",
     "aliases": [
       "Loki Series",
-      "Loki Disney+"
+      "Loki Disney+",
+      "Loki TV series",
+      "Loki show"
     ],
     "landmarkIssue": "Journey into Mystery #85",
     "landmarkIssues": [
@@ -2834,5 +2837,100 @@
       "Todd McFarlane"
     ],
     "summary": "Spawn launched Image Comics into history in 1992, becoming the longest-running creator-owned comic book series in history and a perennial auction powerhouse."
+  },
+  {
+    "title": "Spider-Man: Beyond the Spider-Verse",
+    "slug": "spider-man-beyond-the-spider-verse",
+    "ticker": "$SPDR:BTSV",
+    "universe": "MARVEL",
+    "franchise": "Sony's Spider-Man Universe",
+    "type": "equity",
+    "aliases": [
+      "Beyond the Spider-Verse",
+      "Spider-Man Beyond the Spider-Verse"
+    ],
+    "landmarkIssue": "Ultimate Fallout #4",
+    "landmarkIssues": [
+      {
+        "title": "Ultimate Fallout #4 (2011)",
+        "significance": "1st Appearance of Miles Morales (Spider-Man)",
+        "catalogUrl": "/comics?q=Ultimate+Fallout+4",
+        "era": "MODERN",
+        "assetTier": "SOVEREIGN_BLUE_CHIP"
+      },
+      {
+        "title": "Edge of Spider-Verse #2 (2014)",
+        "significance": "1st Appearance of Spider-Gwen (Gwen Stacy)",
+        "catalogUrl": "/comics?q=Edge+of+Spider-Verse+2",
+        "era": "MODERN",
+        "assetTier": "KEY_EQUITY"
+      }
+    ],
+    "characters": [
+      "Miles Morales",
+      "Gwen Stacy",
+      "Peter B. Parker",
+      "Spider-Man 2099",
+      "The Spot"
+    ],
+    "creators": [
+      "Phil Lord",
+      "Christopher Miller",
+      "Joaquim Dos Santos",
+      "Kemp Powers",
+      "Justin K. Thompson"
+    ],
+    "summary": "Spider-Man: Beyond the Spider-Verse is Sony's upcoming animated tentpole concluding the acclaimed Spider-Verse trilogy."
+  },
+  {
+    "title": "Marvel Cinematic Universe",
+    "slug": "marvel-cinematic-universe",
+    "ticker": "$MCU",
+    "universe": "MARVEL",
+    "franchise": "Marvel Cinematic Universe",
+    "type": "equity",
+    "aliases": [
+      "MCU",
+      "Marvel Universe",
+      "the Marvel universe",
+      "the Marvel Universe",
+      "Marvel Cinematic Universe (MCU)"
+    ],
+    "landmarkIssue": "Tales of Suspense #39",
+    "landmarkIssues": [
+      {
+        "title": "Tales of Suspense #39 (1963)",
+        "significance": "1st Appearance of Iron Man (Genesis of MCU)",
+        "catalogUrl": "/comics?q=Tales+of+Suspense+39",
+        "era": "SILVER",
+        "assetTier": "SOVEREIGN_BLUE_CHIP"
+      },
+      {
+        "title": "The Avengers #1 (1963)",
+        "significance": "1st Appearance of the Avengers",
+        "catalogUrl": "/comics?q=Avengers+1",
+        "era": "SILVER",
+        "assetTier": "SOVEREIGN_BLUE_CHIP"
+      }
+    ],
+    "characters": [
+      "Iron Man",
+      "Captain America",
+      "Thor",
+      "Hulk",
+      "Black Widow",
+      "Hawkeye",
+      "Doctor Doom",
+      "Loki",
+      "Spider-Man"
+    ],
+    "creators": [
+      "Kevin Feige",
+      "Stan Lee",
+      "Jack Kirby",
+      "Joe Russo",
+      "Anthony Russo"
+    ],
+    "summary": "The Marvel Cinematic Universe (MCU) is the highest-grossing media franchise in history, interconnecting major superhero features, streaming series, and comic equities."
   }
 ]

@@ -349,4 +349,96 @@ describe("newsroom relevance gate", () => {
     const comicDcEntities = findNewsEntities("DC Studios reveals upcoming Gods and Monsters slate", "DC Studios co-heads announce new Superman and Batman films.");
     expect(comicDcEntities.some((e) => e.ticker === "$DC")).toBe(true);
   });
+
+  it("correctly extracts entities from the Avengers: Doomsday Doctor Doom story without fragmented misses", async () => {
+    const { findNewsEntities } = await import("@/lib/news/entities");
+    const { parseTextWithEntities } = await import("@/components/news/linked-briefing");
+    const { getLoreEntityBySlug } = await import("@/lib/wiki/lore-search");
+
+    const text =
+      "The directors of Avengers: Doomsday have hinted that Doctor Doom is abducting different heroes from around the Marvel universe. " +
+      "At the end of the end-of-Avengers: Endgame Encore, Bruce Banner is seen recording a video message in a bunker when Doom appears and seemingly kidnaps him. " +
+      "Director Joe Russo hinted that this is part of Doom's larger plan, which may extend beyond just Banner. " +
+      "Other possible abductions may include children of various Marvel heroes, including Franklin, Thor's adopted child, and possibly the child of Steve Rogers and Peggy Carter. " +
+      "Doom is set to return next year in Avengers: Secret Wars.";
+
+    const entities = findNewsEntities("Doctor Doom Appears to Be Abducting Heroes in Avengers: Doomsday", text);
+    const terms = entities.map((e) => e.term);
+
+    // 1. Verify all key entities are recognized
+    expect(terms).toContain("Avengers: Doomsday");
+    expect(terms).toContain("Doctor Doom");
+    expect(terms).toContain("Doom");
+    expect(terms).toContain("the Marvel universe");
+    expect(terms).toContain("Avengers: Endgame Encore");
+    expect(terms).toContain("Bruce Banner");
+    expect(terms).toContain("Banner");
+    expect(terms).toContain("Joe Russo");
+    expect(terms).toContain("Franklin");
+    expect(terms).toContain("Thor");
+    expect(terms).toContain("Steve Rogers");
+    expect(terms).toContain("Peggy Carter");
+    expect(terms).toContain("Avengers: Secret Wars");
+
+    // 2. Verify tickers and wiki paths
+    const doomsdayAsset = entities.find((e) => e.term === "Avengers: Doomsday");
+    expect(doomsdayAsset?.ticker).toBe("$AVNG:DOOMSDAY");
+    expect(doomsdayAsset?.wikiPath).toBe("/wiki/entry/avengers-doomsday");
+
+    const doomEntity = entities.find((e) => e.term === "Doom");
+    expect(doomEntity?.ticker).toBe("$DOOM");
+    expect(doomEntity?.wikiPath).toBe("/wiki/entry/doctor-doom");
+
+    const thorEntity = entities.find((e) => e.term === "Thor");
+    expect(thorEntity?.ticker).toBe("$THOR");
+    expect(thorEntity?.wikiPath).toBe("/wiki/entry/thor");
+
+    const franklinEntity = entities.find((e) => e.term === "Franklin");
+    expect(franklinEntity?.ticker).toBe("$FF:FRANKLIN");
+    expect(franklinEntity?.wikiPath).toBe("/wiki/entry/franklin-richards");
+
+    const carterEntity = entities.find((e) => e.term === "Peggy Carter");
+    expect(carterEntity?.ticker).toBe("$CARTER");
+    expect(carterEntity?.wikiPath).toBe("/wiki/entry/peggy-carter");
+
+    const bannerEntity = entities.find((e) => e.term === "Banner");
+    expect(bannerEntity?.ticker).toBe("$HULK");
+    expect(bannerEntity?.wikiPath).toBe("/wiki/entry/bruce-banner");
+
+    // 3. Verify no obscure vehicle collision or DC villain collision
+    expect(entities.some((e) => e.wikiPath?.includes("marvel-vehicle-marvel"))).toBe(false);
+    expect(entities.some((e) => e.wikiPath?.includes("doomsday-new-earth"))).toBe(false);
+
+    // 4. Verify all generated wiki paths resolve to valid dossiers (no 404s)
+    expect(getLoreEntityBySlug("doctor-doom")).not.toBeNull();
+    expect(getLoreEntityBySlug("bruce-banner")).not.toBeNull();
+    expect(getLoreEntityBySlug("steve-rogers")).not.toBeNull();
+    expect(getLoreEntityBySlug("peggy-carter")).not.toBeNull();
+    expect(getLoreEntityBySlug("franklin-richards")).not.toBeNull();
+    expect(getLoreEntityBySlug("thor")?.ticker).toBe("$THOR");
+    expect(getLoreEntityBySlug("avengers-doomsday")).not.toBeNull();
+    expect(getLoreEntityBySlug("avengers-endgame")).not.toBeNull();
+    expect(getLoreEntityBySlug("avengers-secret-wars")).not.toBeNull();
+    expect(getLoreEntityBySlug("marvel-cinematic-universe")).not.toBeNull();
+
+    // 5. Verify parsed badges in text
+    const parsed = parseTextWithEntities(text, entities);
+    const badgeEntities = parsed
+      .filter((n: any) => n && typeof n === "object" && n.props?.entity)
+      .map((n: any) => n.props.entity.term);
+
+    expect(badgeEntities).toContain("Avengers: Doomsday");
+    expect(badgeEntities).toContain("Doctor Doom");
+    expect(badgeEntities).toContain("the Marvel universe");
+    expect(badgeEntities).toContain("Avengers: Endgame Encore");
+    expect(badgeEntities).toContain("Bruce Banner");
+    expect(badgeEntities).toContain("Doom");
+    expect(badgeEntities).toContain("Joe Russo");
+    expect(badgeEntities).toContain("Banner");
+    expect(badgeEntities).toContain("Franklin");
+    expect(badgeEntities).toContain("Thor");
+    expect(badgeEntities).toContain("Steve Rogers");
+    expect(badgeEntities).toContain("Peggy Carter");
+    expect(badgeEntities).toContain("Avengers: Secret Wars");
+  });
 });
