@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import type { NewsCategory, NewsStory } from "./types";
 import { sourceFavicon } from "./types";
-import { evaluateArticleQuality, recordFetchFailure, recordFetchSuccess } from "./self-healing";
+import { evaluateArticleQuality, isRelevantComicStory, recordFetchFailure, recordFetchSuccess } from "./self-healing";
 
 export interface WireStoryDraft {
   story_key: string;
@@ -60,7 +60,11 @@ export async function fetchNewsDataWire(limit = 25): Promise<WireStoryDraft[]> {
       .slice(0, limit)
       .filter((r) => {
         if (!r.title || !r.link) return false;
-        return evaluateArticleQuality(r.title, r.description || null).admit;
+        const sourceLabel = `NEWSDATA: ${(r.source_id || "GLOBAL").toUpperCase()}`;
+        return (
+          isRelevantComicStory(sourceLabel, r.title, r.description || null) &&
+          evaluateArticleQuality(r.title, r.description || null).admit
+        );
       })
       .map((r) => {
         const itemUrl = r.link!;
@@ -127,7 +131,12 @@ export async function fetchPerigonWire(limit = 30): Promise<WireStoryDraft[]> {
     return articles
       .filter((a) => {
         if (!a.title || !a.url) return false;
-        return evaluateArticleQuality(a.title, a.description || null).admit;
+        const domain = a.source?.domain || "perigon.io";
+        const sourceLabel = `PERIGON: ${domain.replace(/^www\./, "").toUpperCase()}`;
+        return (
+          isRelevantComicStory(sourceLabel, a.title, a.description || null) &&
+          evaluateArticleQuality(a.title, a.description || null).admit
+        );
       })
       .map((a) => {
         const itemUrl = a.url!;
@@ -192,7 +201,11 @@ export async function fetchTheNewsApiWire(limit = 20): Promise<WireStoryDraft[]>
     return items
       .filter((i) => {
         if (!i.title || !i.url) return false;
-        return evaluateArticleQuality(i.title, i.description || null).admit;
+        const sourceLabel = `THENEWSAPI: ${(i.source || "GLOBAL").toUpperCase()}`;
+        return (
+          isRelevantComicStory(sourceLabel, i.title, i.description || null) &&
+          evaluateArticleQuality(i.title, i.description || null).admit
+        );
       })
       .map((i) => {
         const itemUrl = i.url!;
@@ -259,7 +272,11 @@ export async function fetchNewsApiOrgWire(limit = 30): Promise<WireStoryDraft[]>
     return articles
       .filter((a) => {
         if (!a.title || !a.url) return false;
-        return evaluateArticleQuality(a.title, a.description || null).admit;
+        const sourceLabel = `NEWSAPI: ${(a.source?.name || "GLOBAL").toUpperCase()}`;
+        return (
+          isRelevantComicStory(sourceLabel, a.title, a.description || null) &&
+          evaluateArticleQuality(a.title, a.description || null).admit
+        );
       })
       .map((a) => {
         const itemUrl = a.url!;
@@ -337,7 +354,11 @@ export async function fetchAskNewsWire(limit = 20): Promise<WireStoryDraft[]> {
       .filter((a) => {
         const title = a.title || a.headline;
         if (!title || !a.article_url) return false;
-        return evaluateArticleQuality(title, a.summary || null).admit;
+        const sourceLabel = `ASKNEWS: ${(a.source_id || "GLOBAL").toUpperCase()}`;
+        return (
+          isRelevantComicStory(sourceLabel, title, a.summary || null) &&
+          evaluateArticleQuality(title, a.summary || null).admit
+        );
       })
       .map((a) => {
         const itemUrl = a.article_url!;

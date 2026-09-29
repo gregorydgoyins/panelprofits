@@ -5,7 +5,10 @@ const { url, anonKey } = resolveSupabaseConfig();
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || anonKey;
 
 export function createAdminServerClient() {
-  return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+  const rawKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || anonKey;
+  const cleanKey = (rawKey || "").trim().replace(/^["']|["']$/g, "");
+  const cleanUrl = (url || "").trim().replace(/^["']|["']$/g, "");
+  return createClient(cleanUrl, cleanKey, { auth: { persistSession: false, autoRefreshToken: false } });
 }
 
 export function createCleanReadOnlyServerClient() {

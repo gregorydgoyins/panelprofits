@@ -84,4 +84,55 @@ describe("newsroom relevance gate", () => {
     expect(sinkEntities.map((e) => e.term)).toContain("Sadie Sink");
     expect(sinkEntities.some((e) => e.term.includes("Songbird"))).toBe(true);
   });
+
+  it("strictly rejects sports wires, college athletics, and civic/courtroom news with 100% precision", () => {
+    // Exact false-positive wire examples reported by users
+    expect(isRelevantComicStory("PERIGON: KENTUCKY.COM", "Defensive Coordinator Tony White Apologizes to FSU Football's Offense", "The Florida State Seminoles (2-2, 0-1 ACC) defeated Central Arkansas 34-7.")).toBe(false);
+    expect(isRelevantComicStory("PERIGON: FRESNOBEE.COM", "Defensive Coordinator Tony White Apologizes to FSU Football's Offense", "FSU defense struggles with penalties.")).toBe(false);
+    expect(isRelevantComicStory("PERIGON: WTOP.COM", "Judge declares mistrial in DC Council member Trayon White's bribery case", "The jury failed to reach a verdict in the bribery trial.")).toBe(false);
+    expect(isRelevantComicStory("PERIGON: DAILYWIRE.COM", "DC Politico Caught Taking Envelopes Of Cash On Camera Gets Off With Mistrial", "Political scandal in the district.")).toBe(false);
+    expect(isRelevantComicStory("NEWSDATA", "NFL Quarterback throws four touchdowns in overtime win", "Sports roundup for Sunday games.")).toBe(false);
+    expect(isRelevantComicStory("NEWSAPI", "Lakers defeat Celtics in NBA championship rematch", "Basketball game summary.")).toBe(false);
+    expect(isRelevantComicStory("THENEWSAPI", "City Council approves municipal zoning ordinance for downtown park", "Local municipal affairs.")).toBe(false);
+  });
+
+  it("never auto-links generic real-world geographic locations into comic lore badges", async () => {
+    const { findNewsEntities } = await import("@/lib/news/entities");
+    const { parseTextWithEntities } = await import("@/components/news/linked-briefing");
+
+    const sportsEntities = findNewsEntities(
+      "Defensive Coordinator Tony White Apologizes to FSU Football's Offense",
+      "The Florida State Seminoles defeated Central Arkansas in Florida. Florida has had defensive issues in Florida."
+    );
+    const terms = sportsEntities.map((e) => e.term.toLowerCase());
+    expect(terms).not.toContain("florida");
+    expect(terms).not.toContain("california");
+    expect(terms).not.toContain("state of florida");
+
+    // Also verify UI token parser does not badge Florida
+    const nodes = parseTextWithEntities("The team played in Florida and Florida State won.", sportsEntities);
+    const textRendered = nodes.map((n) => (typeof n === "string" ? n : "")).join("");
+    // If Florida was not badged, it remains as raw text in the output nodes
+    expect(textRendered).toContain("Florida");
+  });
+
+  it("greedily resolves full compound titles and storylines intact as single tokens", async () => {
+    const { findNewsEntities } = await import("@/lib/news/entities");
+    const { parseTextWithEntities } = await import("@/components/news/linked-briefing");
+
+    const text = "Marvel Studios announces Spider-Man: Brand New Day and an Avengers: Endgame Encore theatrical release.";
+    const entities = findNewsEntities(text, "Key theatrical franchise updates for comic collectors.");
+
+    const entityTerms = entities.map((e) => e.term);
+    expect(entityTerms).toContain("Spider-Man: Brand New Day");
+    expect(entityTerms).toContain("Avengers: Endgame Encore");
+
+    // Verify UI parser tokenizes the full compound phrase without leaving ': Brand New Day' or ': Endgame Encore' as trailing raw text
+    const nodes = parseTextWithEntities(text, entities);
+    const rawStrings = nodes.filter((n) => typeof n === "string") as string[];
+
+    // Ensure raw strings do NOT contain the orphaned subtitle tails
+    expect(rawStrings.some((s) => s.includes(": Brand New Day"))).toBe(false);
+    expect(rawStrings.some((s) => s.includes(": Endgame Encore"))).toBe(false);
+  });
 });

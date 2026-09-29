@@ -5,6 +5,22 @@ import Link from "next/link";
 import type { EntityWikiDef } from "@/lib/news/entities";
 import { EntityHoverCard } from "@/components/news/EntityHoverCard";
 
+const BLOCKED_TERMS = new Set([
+  "florida",
+  "california",
+  "texas",
+  "america",
+  "united states",
+  "europe",
+  "england",
+  "london",
+  "new york",
+  "chicago",
+  "dc",
+  "state of florida",
+  "kentucky",
+]);
+
 /**
  * Tokenizes article text and headlines, dynamically replacing recognized
  * characters, creators, actors, directors, and studio entities with live clickable badges.
@@ -14,12 +30,16 @@ export function parseTextWithEntities(text: string, entities?: EntityWikiDef[]):
   // Strip any legacy raw HTML markup so we parse pure text cleanly
   const cleanText = text.replace(/<[^>]+>/g, "");
 
-  if (!entities || entities.length === 0) {
+  const activeEntities = (entities || []).filter(
+    (e) => !BLOCKED_TERMS.has(e.term.toLowerCase())
+  );
+
+  if (activeEntities.length === 0) {
     return [cleanText];
   }
 
   // Sort entities by term length descending so longer phrases match first (e.g. "Bruce Wayne" before "Bruce")
-  const sorted = [...entities].sort((a, b) => b.term.length - a.term.length);
+  const sorted = [...activeEntities].sort((a, b) => b.term.length - a.term.length);
   const escapedTerms = sorted.map((e) => e.term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
   
   if (escapedTerms.length === 0) {

@@ -36,6 +36,68 @@ interface LoreIndexData {
   teams: Array<{ slug: string; title: string; universe: string; reality?: string; creators?: string; first_appearance?: string; summary: string }>;
 }
 
+export const GENERIC_REAL_WORLD_LOCATIONS = new Set([
+  "florida",
+  "california",
+  "texas",
+  "america",
+  "united states",
+  "united states of america",
+  "europe",
+  "england",
+  "great britain",
+  "united kingdom",
+  "london",
+  "new york",
+  "new york city",
+  "chicago",
+  "los angeles",
+  "san francisco",
+  "washington",
+  "washington dc",
+  "paris",
+  "france",
+  "tokyo",
+  "japan",
+  "germany",
+  "berlin",
+  "italy",
+  "rome",
+  "canada",
+  "ontario",
+  "australia",
+  "sydney",
+  "china",
+  "beijing",
+  "russia",
+  "moscow",
+  "africa",
+  "asia",
+  "brazil",
+  "mexico",
+  "india",
+  "ireland",
+  "scotland",
+  "spain",
+  "egypt",
+  "greece",
+  "state of florida",
+  "florida keys",
+  "state of california",
+  "state of new york",
+  "everglades",
+  "florida everglades",
+  "kentucky",
+  "alabama",
+  "georgia",
+  "ohio",
+  "michigan",
+  "pennsylvania",
+  "virginia",
+  "arkansas",
+  "central arkansas",
+]);
+
 let cachedIndex: LoreIndexData | null = null;
 let cachedSlugMap: Map<string, LoreEntitySummary> | null = null;
 let cachedTitleMap: Map<string, LoreEntitySummary> | null = null;
@@ -84,8 +146,17 @@ function loadLoreIndex(): LoreIndexData {
   if (cachedIndex) {
     const registerTitle = (title: string, summary: LoreEntitySummary) => {
       const clean = title.trim().toLowerCase();
+      if (summary.type === "location" && GENERIC_REAL_WORLD_LOCATIONS.has(clean)) {
+        return;
+      }
       if (clean.length >= 3 && !cachedTitleMap!.has(clean)) {
         cachedTitleMap!.set(clean, summary);
+      }
+      const normalized = clean.replace(/[^\w\s-]/g, " ").replace(/\s+/g, " ").trim();
+      if (normalized.length >= 3 && !cachedTitleMap!.has(normalized)) {
+        if (!(summary.type === "location" && GENERIC_REAL_WORLD_LOCATIONS.has(normalized))) {
+          cachedTitleMap!.set(normalized, summary);
+        }
       }
     };
 
@@ -376,8 +447,13 @@ export function findLoreEntitiesInText(text: string, limit = 6): LoreEntitySumma
         if (phrase.length < 4 || LORE_STOP_WORDS.has(phrase)) continue;
       }
 
+      if (GENERIC_REAL_WORLD_LOCATIONS.has(phrase)) continue;
+
       const entity = cachedTitleMap.get(phrase);
       if (entity && !seenSlugs.has(entity.slug)) {
+        if (entity.type === "location" && GENERIC_REAL_WORLD_LOCATIONS.has(entity.title.toLowerCase())) {
+          continue;
+        }
         seenSlugs.add(entity.slug);
         matched.push(entity);
       }

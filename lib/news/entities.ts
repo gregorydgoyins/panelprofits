@@ -1,5 +1,5 @@
 import { createAdminServerClient } from "@/lib/supabase/admin";
-import { findLoreEntitiesInText } from "@/lib/wiki/lore-search";
+import { findLoreEntitiesInText, GENERIC_REAL_WORLD_LOCATIONS } from "@/lib/wiki/lore-search";
 import adaptationCastData from "./adaptation-cast-registry.json";
 
 export interface EntityWikiDef {
@@ -157,7 +157,8 @@ export const KNOWN_NEWS_ENTITIES_MAP: EntityWikiDef[] = [
   // --- PUBLISHERS (Grounded in ppcf_gcd_publishers) ---
   { term: "Marvel", ticker: "$MRVL", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Marvel" },
   { term: "DC Comics", ticker: "$DC", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=DC" },
-  { term: "DC", ticker: "$DC", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=DC" },
+  { term: "DC Studios", ticker: "$DC", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=DC" },
+  { term: "DC Universe", ticker: "$DC", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=DC" },
   { term: "Image Comics", ticker: "$IMGC", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Image+Comics" },
   { term: "Dark Horse", ticker: "$DH", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Dark+Horse" },
   { term: "IDW Publishing", ticker: "$IDW", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=IDW" },
@@ -170,6 +171,35 @@ export const KNOWN_NEWS_ENTITIES_MAP: EntityWikiDef[] = [
   { term: "Ablaze", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Ablaze" },
   { term: "Ahoy Comics", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Ahoy+Comics" },
   { term: "Titan Comics", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Titan+Comics" },
+
+  // --- COMPOUND STORYLINES, RUNS & MAJOR ADAPTATION TITLES ---
+  { term: "Spider-Man: Brand New Day", ticker: "$SPDR", type: "character", target: "intelligence", wikiPath: "/comics?q=Spider-Man+Brand+New+Day" },
+  { term: "Spider-Man Brand New Day", ticker: "$SPDR", type: "character", target: "intelligence", wikiPath: "/comics?q=Spider-Man+Brand+New+Day" },
+  { term: "Spider-Man: No Way Home", ticker: "$SPDR", type: "character", target: "intelligence", wikiPath: "/wiki/entry/spider-man" },
+  { term: "Spider-Man: Across the Spider-Verse", ticker: "$SPDR", type: "character", target: "intelligence", wikiPath: "/wiki/entry/spider-man" },
+  { term: "Spider-Man: Into the Spider-Verse", ticker: "$SPDR", type: "character", target: "intelligence", wikiPath: "/wiki/entry/spider-man" },
+  { term: "Avengers: Endgame Encore", ticker: "$AVNG", type: "character", target: "intelligence", wikiPath: "/comics?q=Avengers+Endgame" },
+  { term: "Avengers Endgame Encore", ticker: "$AVNG", type: "character", target: "intelligence", wikiPath: "/comics?q=Avengers+Endgame" },
+  { term: "Avengers: Endgame", ticker: "$AVNG", type: "character", target: "intelligence", wikiPath: "/comics?q=Avengers+Endgame" },
+  { term: "Avengers Endgame", ticker: "$AVNG", type: "character", target: "intelligence", wikiPath: "/comics?q=Avengers+Endgame" },
+  { term: "Avengers: Infinity War", ticker: "$AVNG", type: "character", target: "intelligence", wikiPath: "/comics?q=Avengers+Infinity+War" },
+  { term: "Avengers: Secret Wars", ticker: "$AVNG", type: "character", target: "intelligence", wikiPath: "/comics?q=Avengers+Secret+Wars" },
+  { term: "Avengers: Doomsday", ticker: "$AVNG", type: "character", target: "intelligence", wikiPath: "/comics?q=Avengers+Doomsday" },
+  { term: "Captain America: Brave New World", ticker: "$CAP", type: "character", target: "intelligence", wikiPath: "/comics?q=Captain+America+Brave+New+World" },
+  { term: "Captain America: Civil War", ticker: "$CAP", type: "character", target: "intelligence", wikiPath: "/comics?q=Captain+America+Civil+War" },
+  { term: "Captain America: The Winter Soldier", ticker: "$CAP", type: "character", target: "intelligence", wikiPath: "/comics?q=Captain+America+The+Winter+Soldier" },
+  { term: "Daredevil: Born Again", ticker: "$DD", type: "character", target: "intelligence", wikiPath: "/comics?q=Daredevil+Born+Again" },
+  { term: "Batman: The Brave and the Bold", ticker: "$BAT", type: "character", target: "intelligence", wikiPath: "/comics?q=Batman+The+Brave+and+the+Bold" },
+  { term: "Batman: Year One", ticker: "$BAT", type: "character", target: "intelligence", wikiPath: "/comics?q=Batman+Year+One" },
+  { term: "Batman: The Dark Knight Returns", ticker: "$BAT", type: "character", target: "intelligence", wikiPath: "/comics?q=Batman+The+Dark+Knight+Returns" },
+  { term: "Batman: The Killing Joke", ticker: "$BAT", type: "character", target: "intelligence", wikiPath: "/comics?q=Batman+The+Killing+Joke" },
+  { term: "Batman: The Long Halloween", ticker: "$BAT", type: "character", target: "intelligence", wikiPath: "/comics?q=Batman+The+Long+Halloween" },
+  { term: "Superman: Legacy", ticker: "$SUPR", type: "character", target: "intelligence", wikiPath: "/comics?q=Superman+Legacy" },
+  { term: "The Dark Knight", ticker: "$BAT", type: "character", target: "intelligence", wikiPath: "/comics?q=The+Dark+Knight" },
+  { term: "Crisis on Infinite Earths", ticker: "$DC", type: "character", target: "intelligence", wikiPath: "/comics?q=Crisis+on+Infinite+Earths" },
+  { term: "Secret Wars", ticker: "$MRVL", type: "character", target: "intelligence", wikiPath: "/comics?q=Secret+Wars" },
+  { term: "Infinity Gauntlet", ticker: "$MRVL", type: "character", target: "intelligence", wikiPath: "/comics?q=Infinity+Gauntlet" },
+  { term: "Civil War", ticker: "$MRVL", type: "character", target: "intelligence", wikiPath: "/comics?q=Civil+War" },
 
   // --- CHARACTERS & LORE (Direct Dossier Routes) ---
   { term: "Spider-Man", ticker: "$SPDR", type: "character", target: "intelligence", wikiPath: "/wiki/entry/spider-man" },
@@ -400,8 +430,11 @@ export async function getDynamicEntitiesForText(text: string): Promise<EntityWik
     // Database query fallback
   }
 
-  entityCache.set(textHash, matchedEntities);
-  return matchedEntities;
+  const filtered = matchedEntities.filter(
+    (e) => !GENERIC_REAL_WORLD_LOCATIONS.has(e.term.toLowerCase())
+  );
+  entityCache.set(textHash, filtered);
+  return filtered;
 }
 
 /**
@@ -418,6 +451,7 @@ export function findNewsEntities(headline: string, summary: string | null): Enti
 export function extractEntitiesFromContext(text: string): EntityWikiDef[] {
   if (!text) return [];
   const baseMatches = KNOWN_NEWS_ENTITIES_MAP.filter((def) => {
+    if (GENERIC_REAL_WORLD_LOCATIONS.has(def.term.toLowerCase())) return false;
     const escaped = def.term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const regex = new RegExp(`\\b${escaped}\\b`, "i");
     return regex.test(text);
@@ -426,6 +460,7 @@ export function extractEntitiesFromContext(text: string): EntityWikiDef[] {
   try {
     const loreMatches = findLoreEntitiesInText(text, 4);
     for (const lore of loreMatches) {
+      if (GENERIC_REAL_WORLD_LOCATIONS.has(lore.title.toLowerCase())) continue;
       if (!baseMatches.some((e) => e.term.toLowerCase() === lore.title.toLowerCase())) {
         baseMatches.push({
           term: lore.title,
@@ -443,7 +478,10 @@ export function extractEntitiesFromContext(text: string): EntityWikiDef[] {
   for (const match of [...baseMatches]) {
     if (match.roleDetails) {
       const charTerm = match.roleDetails.character;
-      if (!baseMatches.some((e) => e.term.toLowerCase() === charTerm.toLowerCase())) {
+      if (
+        !GENERIC_REAL_WORLD_LOCATIONS.has(charTerm.toLowerCase()) &&
+        !baseMatches.some((e) => e.term.toLowerCase() === charTerm.toLowerCase())
+      ) {
         baseMatches.push({
           term: charTerm,
           ticker: match.roleDetails.comicTicker,
@@ -456,5 +494,5 @@ export function extractEntitiesFromContext(text: string): EntityWikiDef[] {
     }
   }
 
-  return baseMatches;
+  return baseMatches.filter((def) => !GENERIC_REAL_WORLD_LOCATIONS.has(def.term.toLowerCase()));
 }

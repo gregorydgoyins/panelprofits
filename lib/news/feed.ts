@@ -23,6 +23,7 @@ import {
   recordFetchFailure,
   getNetworkHealthSummary,
   evaluateArticleQuality,
+  isRelevantComicStory,
   getAlternateFeedUrls,
 } from "./self-healing";
 
@@ -90,36 +91,7 @@ for (const s of [...PRIMARY_SOURCES, ...CURATED_SOURCES, ...EXTENDED_SOURCES]) {
 }
 export const SOURCES: NewsSource[] = Array.from(sourceRegistryMap.values());
 
-const COMIC_TERMS = /comic\s*book|comic(s)?\b|superhero|super-hero|marvel|dc comics|avengers|x-men|spider-man|batman|superman|fantastic four|deadpool|wolverine|venom|manga|mangaka|graphic novel|image comics|\bdark horse\b|idw|boom studios|viz media|spawn|spawn universe/i;
-const COMPANY_TERMS = /disney|warner bros|warner discovery|wbd|sony pictures|universal|paramount|skydance|marvel entertainment/i;
-const FINANCIAL_TERMS = /earnings|revenue|profit|loss|shares|stock|investor|acquisition|merger|deal|buyout|results|box office/i;
-const EXCLUDE_NON_COMIC = /\b(gameplay|playstation\s*5|ps5|xbox|nintendo switch|platinum trophy|earphones|headset|found footage|horror movie|blair witch|messi|lionel messi|soccer|football|nfl|nba|basketball|premier league|champions league|mls|inter miami|celebrity traitors|reality tv)\b/i;
-
-const DEDICATED_COMIC_SOURCES = /lords of the long box|near mint condition|comictom101|cartoonist kayfabe|variant comics|gem mint collectibles|bleeding cool|the beat|aipt|cbr|comicbook invest|comics journal|comicsxf|multiversity|first comics news|comic crusaders|major spoilers|comic book herald|gocollect|covrprice|comichron|previewsworld|2000 ad|dark horse|image comics|marvel comics|dc comics|idw|boom studios|dynamite|valiant|archie comics|fantagraphics|kodansha|viz media|heritage comic|comiclink|comicconnect|shortboxed|key collector|comic tropes|comicpop|comics explained|casually comics|automatic comics|swagglehaus/i;
-
-import adaptationCastData from "./adaptation-cast-registry.json";
-
-const ADAPTATION_ACTOR_NAMES = (adaptationCastData as Array<{ name: string; aliases: string[] }>).flatMap(
-  (a) => [a.name, ...a.aliases]
-);
-const ADAPTATION_ACTOR_REGEX = new RegExp(
-  `\\b(${ADAPTATION_ACTOR_NAMES.map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})\\b`,
-  "i"
-);
-
-export function isRelevantComicStory(source: string, headline: string, summary: string | null): boolean {
-  if (DEDICATED_COMIC_SOURCES.test(source)) {
-    return true;
-  }
-  const text = `${headline} ${summary || ""}`;
-  if (EXCLUDE_NON_COMIC.test(text)) {
-    return false;
-  }
-  const isComicOrManga = COMIC_TERMS.test(text);
-  const isCompanyFinance = COMPANY_TERMS.test(text) && FINANCIAL_TERMS.test(text);
-  const isAdaptationActor = ADAPTATION_ACTOR_REGEX.test(text);
-  return isComicOrManga || isCompanyFinance || isAdaptationActor;
-}
+export { isRelevantComicStory, STRICT_NEGATIVE_FILTER, CORE_COMIC_SIGNALS, evaluateArticleQuality } from "./self-healing";
 
 function decodeEntities(value: string): string {
   return value
@@ -346,11 +318,16 @@ export async function refreshNewsStore(
       console.error("[News Ingest] Wire APIs fetch error:", wireErr);
     }
 
-    // 3. Combine and deduplicate by unique story_key
+    // 3. Combine and deduplicate by unique story_key, enforcing strict relevance gate
     const combinedMap = new Map<string, typeof syndicatedRows[0]>();
     for (const row of [...syndicatedRows, ...wireRows]) {
-      if (!combinedMap.has(row.story_key)) {
-        combinedMap.set(row.story_key, row);
+      if (
+        isRelevantComicStory(row.source, row.headline, row.summary) &&
+        evaluateArticleQuality(row.headline, row.summary).admit
+      ) {
+        if (!combinedMap.has(row.story_key)) {
+          combinedMap.set(row.story_key, row);
+        }
       }
     }
 
