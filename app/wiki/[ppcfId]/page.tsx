@@ -10,6 +10,7 @@ import { getPpcfCensusDossier } from "@/lib/comics/census";
 import { resolveIssueDebuts } from "@/lib/wiki/debut-resolver";
 
 export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
 
 export default async function WikiRecordPage({ params }: { params: Promise<{ ppcfId: string }> }) {
   const { ppcfId } = await params;

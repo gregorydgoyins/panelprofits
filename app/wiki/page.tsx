@@ -7,6 +7,7 @@ import { searchLoreEntities, type LoreEntitySummary } from "@/lib/wiki/lore-sear
 import { createPublicServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
 
 // Real universes present in public.ppcf_wiki_pages, excluding the unrelated
 // FINANCIAL market-lexicon mirror. The indie universes' stored strings have

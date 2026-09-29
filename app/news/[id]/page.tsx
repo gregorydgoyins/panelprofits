@@ -15,6 +15,7 @@ import { AudioBriefingPlayer } from "@/components/news/AudioBriefingPlayer";
 import { AnalystDeskMemo } from "@/components/news/AnalystDeskMemo";
 
 export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
 
 export default async function NewsStoryPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

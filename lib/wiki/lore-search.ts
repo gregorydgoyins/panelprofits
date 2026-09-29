@@ -327,6 +327,22 @@ function loadLoreIndex(): LoreIndexData {
   cachedSlugMap = new Map();
   cachedTitleMap = new Map();
   if (cachedIndex) {
+    // The bundled JSON index (lib/wiki/multi_universe_character_index.json)
+    // was captured by an early ingestion pass whose MediaWiki infobox parser
+    // sometimes failed on a page, leaving the raw unparsed wikitext line (e.g.
+    // "| Title = Warlock", "* Some Alias") stored as the character's title
+    // instead of the parsed value -- about 3.3k of the ~32.7k titled entries in
+    // this file are affected. These entries have no usable title, so they are
+    // dropped from the in-memory index entirely rather than surfaced in search
+    // results; the live public.ppcf_wiki_pages DB (queried directly by the
+    // featured-section and async DB-backed search paths) holds correctly
+    // re-ingested versions of the same characters.
+    const isRawWikitextTitle = (title: string | undefined | null): boolean => {
+      if (!title) return true;
+      const t = title.trim();
+      return t.startsWith("|") || t.startsWith("*");
+    };
+
     const registerTitle = (title: string, summary: LoreEntitySummary) => {
       const clean = title.trim().toLowerCase();
       if (summary.type === "location" && GENERIC_REAL_WORLD_LOCATIONS.has(clean)) {
@@ -351,6 +367,7 @@ function loadLoreIndex(): LoreIndexData {
 
     for (const [uni, chars] of Object.entries(cachedIndex.universes || {})) {
       for (const ch of chars) {
+        if (isRawWikitextTitle(ch.title)) continue;
         const derivedTicker = deriveEntityTicker(ch.title, ch.universe || uni);
         const debuts = [];
         if (ch.first_appearance && typeof ch.first_appearance === "string") {
@@ -382,6 +399,7 @@ function loadLoreIndex(): LoreIndexData {
     }
 
     for (const it of cachedIndex.items || []) {
+      if (isRawWikitextTitle(it.title)) continue;
       const itemSummary: LoreEntitySummary = {
         slug: it.slug,
         title: it.title,
@@ -398,6 +416,7 @@ function loadLoreIndex(): LoreIndexData {
     }
 
     for (const loc of cachedIndex.locations || []) {
+      if (isRawWikitextTitle(loc.title)) continue;
       const itemSummary: LoreEntitySummary = {
         slug: loc.slug,
         title: loc.title,
@@ -414,6 +433,7 @@ function loadLoreIndex(): LoreIndexData {
     }
 
     for (const tm of cachedIndex.teams || []) {
+      if (isRawWikitextTitle(tm.title)) continue;
       const itemSummary: LoreEntitySummary = {
         slug: tm.slug,
         title: tm.title,
