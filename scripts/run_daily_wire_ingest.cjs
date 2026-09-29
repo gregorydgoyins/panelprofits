@@ -44,45 +44,58 @@ function evaluateQuality(headline, summary) {
 }
 
 // 1. NewsData.io
-async function fetchNewsData(targetCount = 50) {
-  console.log('[Wire] Fetching from NewsData.io...');
+async function fetchNewsData(targetCount = 200) {
+  console.log('[Wire] Fetching from NewsData.io (target 200)...');
   const stories = [];
   const queries = [
     '"comic books" OR "graphic novel"',
     '"marvel comics" OR "dc comics"',
-    '"cgc" OR "comic grading" OR "first appearance"'
+    '"cgc" OR "comic grading" OR "first appearance"',
+    '"spider-man" OR "batman" OR "x-men"',
+    '"image comics" OR "dark horse comics"'
   ];
 
   for (const q of queries) {
     if (stories.length >= targetCount) break;
-    try {
-      const url = `https://newsdata.io/api/1/news?apikey=${NEWSDATA_API_KEY}&q=${encodeURIComponent(q)}&language=en`;
-      const res = await fetch(url, { headers: { 'User-Agent': 'PanelProfitsDailyWorker/1.0' }, signal: AbortSignal.timeout(10000) });
-      if (!res.ok) {
-        console.warn(`  NewsData HTTP ${res.status}: ${res.statusText}`);
-        continue;
+    let nextPage = null;
+    for (let page = 0; page < 4; page++) {
+      if (stories.length >= targetCount) break;
+      try {
+        const pageParam = nextPage ? `&page=${encodeURIComponent(nextPage)}` : '';
+        const url = `https://newsdata.io/api/1/news?apikey=${NEWSDATA_API_KEY}&q=${encodeURIComponent(q)}&language=en${pageParam}`;
+        const res = await fetch(url, { headers: { 'User-Agent': 'PanelProfitsDailyWorker/1.0' }, signal: AbortSignal.timeout(10000) });
+        if (!res.ok) {
+          console.warn(`  NewsData HTTP ${res.status}: ${res.statusText}`);
+          break;
+        }
+        const data = await res.json();
+        const results = data.results || [];
+        if (results.length === 0) break;
+
+        for (const r of results) {
+          if (!r.title || !r.link) continue;
+          if (!evaluateQuality(r.title, r.description).admit) continue;
+          const itemUrl = r.link;
+          const headline = r.title.trim();
+          stories.push({
+            story_key: generateStoryKey('https://newsdata.io', itemUrl, headline),
+            source: `NEWSDATA: ${(r.source_id || 'GLOBAL').toUpperCase()}`,
+            source_url: itemUrl,
+            category: 'international',
+            headline,
+            author: Array.isArray(r.creator) && r.creator.length > 0 ? r.creator.join(', ') : null,
+            summary: r.description ? r.description.slice(0, 3000) : null,
+            url: itemUrl,
+            image_url: r.image_url || null,
+            published_at: r.pubDate && !isNaN(Date.parse(r.pubDate)) ? new Date(r.pubDate).toISOString() : new Date().toISOString()
+          });
+        }
+        nextPage = data.nextPage;
+        if (!nextPage) break;
+      } catch (err) {
+        console.warn('  NewsData error:', err.message);
+        break;
       }
-      const data = await res.json();
-      for (const r of data.results || []) {
-        if (!r.title || !r.link) continue;
-        if (!evaluateQuality(r.title, r.description).admit) continue;
-        const itemUrl = r.link;
-        const headline = r.title.trim();
-        stories.push({
-          story_key: generateStoryKey('https://newsdata.io', itemUrl, headline),
-          source: `NEWSDATA: ${(r.source_id || 'GLOBAL').toUpperCase()}`,
-          source_url: itemUrl,
-          category: 'international',
-          headline,
-          author: Array.isArray(r.creator) && r.creator.length > 0 ? r.creator.join(', ') : null,
-          summary: r.description ? r.description.slice(0, 3000) : null,
-          url: itemUrl,
-          image_url: r.image_url || null,
-          published_at: r.pubDate && !isNaN(Date.parse(r.pubDate)) ? new Date(r.pubDate).toISOString() : new Date().toISOString()
-        });
-      }
-    } catch (err) {
-      console.warn('  NewsData error:', err.message);
     }
   }
   console.log(`  NewsData retrieved ${stories.length} stories.`);
@@ -90,78 +103,92 @@ async function fetchNewsData(targetCount = 50) {
 }
 
 // 2. Perigon Wire
-async function fetchPerigon(targetCount = 50) {
-  console.log('[Wire] Fetching from Perigon...');
+async function fetchPerigon(targetCount = 200) {
+  console.log('[Wire] Fetching from Perigon (target 200)...');
   const stories = [];
-  try {
-    const url = `https://api.goperigon.com/v1/all?apiKey=${PERIGON_API_KEY}&q=${encodeURIComponent('comic books OR comic collecting OR marvel comics OR dc comics')}&language=en&size=50&sortBy=date`;
-    const res = await fetch(url, { headers: { 'User-Agent': 'PanelProfitsDailyWorker/1.0' }, signal: AbortSignal.timeout(10000) });
-    if (!res.ok) {
-      console.warn(`  Perigon HTTP ${res.status}: ${res.statusText}`);
-      return stories;
+  for (let page = 0; page < 3; page++) {
+    if (stories.length >= targetCount) break;
+    try {
+      const url = `https://api.goperigon.com/v1/all?apiKey=${PERIGON_API_KEY}&q=${encodeURIComponent('comic books OR comic collecting OR marvel comics OR dc comics')}&language=en&size=100&page=${page}&sortBy=date`;
+      const res = await fetch(url, { headers: { 'User-Agent': 'PanelProfitsDailyWorker/1.0' }, signal: AbortSignal.timeout(12000) });
+      if (!res.ok) {
+        console.warn(`  Perigon HTTP ${res.status}: ${res.statusText}`);
+        break;
+      }
+      const data = await res.json();
+      const articles = data.articles || [];
+      if (articles.length === 0) break;
+
+      for (const a of articles) {
+        if (!a.title || !a.url) continue;
+        if (!evaluateQuality(a.title, a.description || a.summary).admit) continue;
+        const itemUrl = a.url;
+        const headline = a.title.trim();
+        const sourceLabel = a.source?.domain || a.source?.name || 'PERIGON';
+        stories.push({
+          story_key: generateStoryKey('https://api.goperigon.com', itemUrl, headline),
+          source: `PERIGON: ${sourceLabel.toUpperCase()}`,
+          source_url: itemUrl,
+          category: 'international',
+          headline,
+          author: Array.isArray(a.authorsByline) && a.authorsByline.length > 0 ? a.authorsByline.join(', ') : null,
+          summary: (a.summary || a.description || '').slice(0, 3000) || null,
+          url: itemUrl,
+          image_url: a.imageUrl || null,
+          published_at: a.pubDate && !isNaN(Date.parse(a.pubDate)) ? new Date(a.pubDate).toISOString() : new Date().toISOString()
+        });
+      }
+    } catch (err) {
+      console.warn('  Perigon error:', err.message);
+      break;
     }
-    const data = await res.json();
-    for (const a of data.articles || []) {
-      if (!a.title || !a.url) continue;
-      if (!evaluateQuality(a.title, a.description || a.summary).admit) continue;
-      const itemUrl = a.url;
-      const headline = a.title.trim();
-      const sourceLabel = a.source?.domain || a.source?.name || 'PERIGON';
-      stories.push({
-        story_key: generateStoryKey('https://api.goperigon.com', itemUrl, headline),
-        source: `PERIGON: ${sourceLabel.toUpperCase()}`,
-        source_url: itemUrl,
-        category: 'international',
-        headline,
-        author: Array.isArray(a.authorsByline) && a.authorsByline.length > 0 ? a.authorsByline.join(', ') : null,
-        summary: (a.summary || a.description || '').slice(0, 3000) || null,
-        url: itemUrl,
-        image_url: a.imageUrl || null,
-        published_at: a.pubDate && !isNaN(Date.parse(a.pubDate)) ? new Date(a.pubDate).toISOString() : new Date().toISOString()
-      });
-    }
-  } catch (err) {
-    console.warn('  Perigon error:', err.message);
   }
   console.log(`  Perigon retrieved ${stories.length} stories.`);
   return stories;
 }
 
 // 3. TheNewsAPI Wire
-async function fetchTheNewsApi(targetCount = 50) {
-  console.log('[Wire] Fetching from TheNewsAPI...');
+async function fetchTheNewsApi(targetCount = 200) {
+  console.log('[Wire] Fetching from TheNewsAPI (target 200)...');
   const stories = [];
-  const searches = ['comics', 'marvel+batman', 'superhero+cgc'];
+  const searches = ['comics', 'marvel+batman', 'superhero+cgc', 'graphic+novels', 'comic+collecting'];
   for (const s of searches) {
     if (stories.length >= targetCount) break;
-    try {
-      const url = `https://api.thenewsapi.com/v1/news/all?api_token=${THENEWSAPI_API_KEY}&search=${s}&language=en&limit=25`;
-      const res = await fetch(url, { headers: { 'User-Agent': 'PanelProfitsDailyWorker/1.0' }, signal: AbortSignal.timeout(10000) });
-      if (!res.ok) {
-        console.warn(`  TheNewsAPI HTTP ${res.status}: ${res.statusText}`);
-        continue;
+    for (let page = 1; page <= 4; page++) {
+      if (stories.length >= targetCount) break;
+      try {
+        const url = `https://api.thenewsapi.com/v1/news/all?api_token=${THENEWSAPI_API_KEY}&search=${s}&language=en&limit=50&page=${page}`;
+        const res = await fetch(url, { headers: { 'User-Agent': 'PanelProfitsDailyWorker/1.0' }, signal: AbortSignal.timeout(10000) });
+        if (!res.ok) {
+          console.warn(`  TheNewsAPI HTTP ${res.status}: ${res.statusText}`);
+          break;
+        }
+        const data = await res.json();
+        const items = data.data || [];
+        if (items.length === 0) break;
+
+        for (const i of items) {
+          if (!i.title || !i.url) continue;
+          if (!evaluateQuality(i.title, i.description).admit) continue;
+          const itemUrl = i.url;
+          const headline = i.title.trim();
+          stories.push({
+            story_key: generateStoryKey('https://api.thenewsapi.com', itemUrl, headline),
+            source: `THENEWSAPI: ${(i.source || 'GLOBAL').toUpperCase()}`,
+            source_url: itemUrl,
+            category: 'international',
+            headline,
+            author: null,
+            summary: (i.description || '').slice(0, 3000) || null,
+            url: itemUrl,
+            image_url: i.image_url || null,
+            published_at: i.published_at && !isNaN(Date.parse(i.published_at)) ? new Date(i.published_at).toISOString() : new Date().toISOString()
+          });
+        }
+      } catch (err) {
+        console.warn('  TheNewsAPI error:', err.message);
+        break;
       }
-      const data = await res.json();
-      for (const i of data.data || []) {
-        if (!i.title || !i.url) continue;
-        if (!evaluateQuality(i.title, i.description).admit) continue;
-        const itemUrl = i.url;
-        const headline = i.title.trim();
-        stories.push({
-          story_key: generateStoryKey('https://api.thenewsapi.com', itemUrl, headline),
-          source: `THENEWSAPI: ${(i.source || 'GLOBAL').toUpperCase()}`,
-          source_url: itemUrl,
-          category: 'international',
-          headline,
-          author: null,
-          summary: (i.description || '').slice(0, 3000) || null,
-          url: itemUrl,
-          image_url: i.image_url || null,
-          published_at: i.published_at && !isNaN(Date.parse(i.published_at)) ? new Date(i.published_at).toISOString() : new Date().toISOString()
-        });
-      }
-    } catch (err) {
-      console.warn('  TheNewsAPI error:', err.message);
     }
   }
   console.log(`  TheNewsAPI retrieved ${stories.length} stories.`);
@@ -169,102 +196,122 @@ async function fetchTheNewsApi(targetCount = 50) {
 }
 
 // 4. AskNews Wire
-async function fetchAskNews(targetCount = 50) {
-  console.log('[Wire] Fetching from AskNews...');
+async function fetchAskNews(targetCount = 80) {
+  console.log('[Wire] Fetching from AskNews (multi-query topic sweep)...');
   const stories = [];
-  try {
-    const query = encodeURIComponent('comic books marvel dc comics');
-    const url = `https://api.asknews.app/v1/news/search?query=${query}&n_articles=10`;
-    const res = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${ASKNEWS_API_KEY}`,
-        Accept: 'application/json',
-        'User-Agent': 'PanelProfitsDailyWorker/1.0'
-      },
-      signal: AbortSignal.timeout(10000)
-    });
-    if (!res.ok) {
-      console.warn(`  AskNews HTTP ${res.status}: ${res.statusText}`);
-      return stories;
-    }
-    const data = await res.json();
-    const articles = data.as_dicts || data.articles || [];
-    for (const a of articles) {
-      const title = a.title || a.headline;
-      if (!title || !a.article_url) continue;
-      if (!evaluateQuality(title, a.summary).admit) continue;
-      const itemUrl = a.article_url;
-      const headline = title.trim();
-      const sourceId = a.source_id || 'ASKNEWS';
-      stories.push({
-        story_key: generateStoryKey('https://api.asknews.app', itemUrl, headline),
-        source: `ASKNEWS: ${sourceId.toUpperCase()}`,
-        source_url: itemUrl,
-        category: 'international',
-        headline,
-        author: null,
-        summary: (a.summary || '').slice(0, 3000) || null,
-        url: itemUrl,
-        image_url: a.image_url || null,
-        published_at: a.pub_date && !isNaN(Date.parse(a.pub_date)) ? new Date(a.pub_date).toISOString() : new Date().toISOString()
+  const topics = [
+    'comic books marvel dc comics',
+    'spider-man batman x-men comics',
+    'cgc comic grading auction',
+    'graphic novel omnibus manga',
+    'image comics dark horse skybound',
+    'comic book movie adaptation fmv',
+    'superman action comics detective comics',
+    'avengers secret wars marvel studios'
+  ];
+
+  for (const topic of topics) {
+    if (stories.length >= targetCount) break;
+    try {
+      const query = encodeURIComponent(topic);
+      const url = `https://api.asknews.app/v1/news/search?query=${query}&n_articles=10`;
+      const res = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${ASKNEWS_API_KEY}`,
+          Accept: 'application/json',
+          'User-Agent': 'PanelProfitsDailyWorker/1.0'
+        },
+        signal: AbortSignal.timeout(10000)
       });
+      if (!res.ok) {
+        console.warn(`  AskNews HTTP ${res.status}: ${res.statusText}`);
+        continue;
+      }
+      const data = await res.json();
+      const articles = data.as_dicts || data.articles || [];
+      for (const a of articles) {
+        const title = a.title || a.headline;
+        if (!title || !a.article_url) continue;
+        if (!evaluateQuality(title, a.summary).admit) continue;
+        const itemUrl = a.article_url;
+        const headline = title.trim();
+        const sourceId = a.source_id || 'ASKNEWS';
+        stories.push({
+          story_key: generateStoryKey('https://api.asknews.app', itemUrl, headline),
+          source: `ASKNEWS: ${sourceId.toUpperCase()}`,
+          source_url: itemUrl,
+          category: 'international',
+          headline,
+          author: null,
+          summary: (a.summary || '').slice(0, 3000) || null,
+          url: itemUrl,
+          image_url: a.image_url || null,
+          published_at: a.pub_date && !isNaN(Date.parse(a.pub_date)) ? new Date(a.pub_date).toISOString() : new Date().toISOString()
+        });
+      }
+    } catch (err) {
+      console.warn('  AskNews error:', err.message);
     }
-  } catch (err) {
-    console.warn('  AskNews error:', err.message);
   }
   console.log(`  AskNews retrieved ${stories.length} stories.`);
   return stories;
 }
 
 // 5. NewsAPI.org Wire
-async function fetchNewsApiOrg(targetCount = 50) {
-  console.log('[Wire] Fetching from NewsAPI.org...');
+async function fetchNewsApiOrg(targetCount = 200) {
+  console.log('[Wire] Fetching from NewsAPI.org (target 200)...');
   const stories = [];
-  try {
-    const query = encodeURIComponent('"comic books" OR "graphic novels" OR "marvel comics" OR "dc comics"');
-    const url = `https://newsapi.org/v2/everything?apiKey=${NEWS_API_KEY}&q=${query}&language=en&sortBy=publishedAt&pageSize=50`;
-    const res = await fetch(url, { headers: { 'User-Agent': 'PanelProfitsDailyWorker/1.0' }, signal: AbortSignal.timeout(10000) });
-    if (!res.ok) {
-      console.warn(`  NewsAPI.org HTTP ${res.status}: ${res.statusText}`);
-      return stories;
+  for (let page = 1; page <= 2; page++) {
+    if (stories.length >= targetCount) break;
+    try {
+      const url = `https://newsapi.org/v2/everything?apiKey=${NEWS_API_KEY}&q=${encodeURIComponent('comic book OR comic books OR graphic novel OR marvel comics OR dc comics')}&language=en&sortBy=publishedAt&pageSize=100&page=${page}`;
+      const res = await fetch(url, { headers: { 'User-Agent': 'PanelProfitsDailyWorker/1.0' }, signal: AbortSignal.timeout(10000) });
+      if (!res.ok) {
+        console.warn(`  NewsAPI HTTP ${res.status}: ${res.statusText}`);
+        break;
+      }
+      const data = await res.json();
+      const articles = data.articles || [];
+      if (articles.length === 0) break;
+
+      for (const a of articles) {
+        if (!a.title || !a.url) continue;
+        if (!evaluateQuality(a.title, a.description || a.content).admit) continue;
+        const itemUrl = a.url;
+        const headline = a.title.trim();
+        const sourceName = a.source?.name || 'NEWSAPI';
+        stories.push({
+          story_key: generateStoryKey('https://newsapi.org', itemUrl, headline),
+          source: `NEWSAPI: ${sourceName.toUpperCase()}`,
+          source_url: itemUrl,
+          category: 'international',
+          headline,
+          author: a.author || null,
+          summary: (a.description || a.content || '').slice(0, 3000) || null,
+          url: itemUrl,
+          image_url: a.urlToImage || null,
+          published_at: a.publishedAt && !isNaN(Date.parse(a.publishedAt)) ? new Date(a.publishedAt).toISOString() : new Date().toISOString()
+        });
+      }
+    } catch (err) {
+      console.warn('  NewsAPI error:', err.message);
+      break;
     }
-    const data = await res.json();
-    for (const a of data.articles || []) {
-      if (!a.title || !a.url) continue;
-      if (!evaluateQuality(a.title, a.description).admit) continue;
-      const itemUrl = a.url;
-      const headline = a.title.trim();
-      const sourceName = a.source?.name || 'NEWSAPI';
-      stories.push({
-        story_key: generateStoryKey('https://newsapi.org', itemUrl, headline),
-        source: `NEWSAPI: ${sourceName.toUpperCase()}`,
-        source_url: itemUrl,
-        category: 'international',
-        headline,
-        author: a.author || null,
-        summary: (a.description || a.content || '').slice(0, 3000) || null,
-        url: itemUrl,
-        image_url: a.urlToImage || null,
-        published_at: a.publishedAt && !isNaN(Date.parse(a.publishedAt)) ? new Date(a.publishedAt).toISOString() : new Date().toISOString()
-      });
-    }
-  } catch (err) {
-    console.warn('  NewsAPI.org error:', err.message);
   }
-  console.log(`  NewsAPI.org retrieved ${stories.length} stories.`);
+  console.log(`  NewsAPI retrieved ${stories.length} stories.`);
   return stories;
 }
 
 async function runDailyIngestion() {
-  console.log('=== STARTING MULTI-WIRE DAILY INGESTION ===');
+  console.log('=== STARTING MULTI-WIRE DAILY INGESTION (TARGET 200/WIRE) ===');
   console.log(`Timestamp: ${new Date().toISOString()}`);
 
   const [newsdata, perigon, thenewsapi, asknews, newsapi] = await Promise.all([
-    fetchNewsData(50),
-    fetchPerigon(50),
-    fetchTheNewsApi(50),
-    fetchAskNews(50),
-    fetchNewsApiOrg(50)
+    fetchNewsData(200),
+    fetchPerigon(200),
+    fetchTheNewsApi(200),
+    fetchAskNews(80),
+    fetchNewsApiOrg(200)
   ]);
 
   const allStories = [...newsdata, ...perigon, ...thenewsapi, ...asknews, ...newsapi];

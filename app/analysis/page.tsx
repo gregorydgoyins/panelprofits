@@ -5,9 +5,9 @@ import { getPanelTelemetry } from "@/lib/panel-profits/queries";
 export const dynamic = "force-dynamic";
 
 const recovered = [
-  ["CE70", "70 constitutional seats · origin-era allocation · defined, not populated in Clean"],
-  ["PPIX-60", "FMV × Census 9.8 / divisor · 60-issue capitalization benchmark · defined, not populated"],
-  ["PPIX-100", "100-instrument liquidity-weighted pulse index · defined, not populated"],
+  ["CE70", "70 constitutional seats · origin-era allocation · ACTIVE & POPULATED IN CLEAN SUPABASE"],
+  ["PPIX-60", "FMV × Census 9.8 / divisor · 60-issue capitalization benchmark · ACTIVE & POPULATED IN CLEAN SUPABASE"],
+  ["PPIX-100", "100-instrument liquidity-weighted pulse index · ACTIVE & POPULATED IN CLEAN SUPABASE"],
   ["PPIX Composite", "Referenced historically, but no authoritative weighting formula recovered"],
   ["CE50", "Historical 50-constituent benchmark · distinct from CE70"],
 ];

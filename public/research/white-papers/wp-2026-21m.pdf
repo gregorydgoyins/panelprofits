@@ -1,0 +1,170 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [6 0 R 8 0 R] /Count 2 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 7 0 R >>
+endobj
+7 0 obj
+<< /Length 1818 >>
+stream
+BT
+/F2 18 Tf
+54 740 Td
+(The 21 Metric Framework for Sequential Art Valuation) Tj
+/F2 12 Tf
+54 714 Td
+(Mathematical Principles Governing Comic Book Asset Pricing) Tj
+/F1 9 Tf
+54 696 Td
+(Authors: Devon Knight, Marcus Vance | Panel Profits Quantitative Research Group) Tj
+/F1 9 Tf
+54 682 Td
+(Publication Date: 2026-09-12 | Reference: PP-QUANT-2026-021 | Classification: Institutional) Tj
+/F2 12 Tf
+54 648 Td
+(Abstract) Tj
+/F1 10 Tf
+54 630 Td
+(A rigorous mathematical formulation of the 21 core quantitative financial metrics) Tj
+54 616 Td
+(governing comic book assets. Covers PPIX index weighting, census float velocity,) Tj
+54 602 Td
+(CGC/CBCS grade-delta spreads, FMV clearing yields, CIMA order book depth, and) Tj
+54 588 Td
+(liquidity-adjusted carrying costs across raw and slabbed instruments.) Tj
+/F2 12 Tf
+54 558 Td
+(Section 1: Valuation Foundations & Float Dynamics) Tj
+/F1 10 Tf
+54 540 Td
+(Sequential art assets diverge fundamentally from traditional equity derivatives) Tj
+54 526 Td
+(due to discrete grade quantization and physical census shrinkage. The primary) Tj
+54 512 Td
+(pricing surface is governed by the Grade Delta Spread \(GDS\), which establishes) Tj
+54 498 Td
+(non-linear clearing price escalation across adjacent CGC increments.) Tj
+/F3 9 Tf
+64 478 Td
+(GDS\(g\) = [FMV\(g\) - FMV\(g - 0.2\)] / [CGC_Census\(g\) + epsilon]) Tj
+/F1 10 Tf
+54 464 Td
+(Metric 1 \(GDS\) directly measures the incremental premium per grade delta) Tj
+54 450 Td
+(normalized by graded population availability. Metric 2 \(RSF, Relative Scarcity) Tj
+54 436 Td
+(Factor\) models high-grade scarcity relative to total survivor population.) Tj
+/F3 9 Tf
+64 416 Td
+(RSF = Census_Grade_9.8 / \(Total_Graded_Population + 1.0\)) Tj
+/F1 8 Tf
+54 40 Td
+(PANEL PROFITS RESEARCH TERMINAL  |  PAGE 1 OF 2  |  CONFIDENTIAL & PROPRIETARY) Tj
+ET
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 9 0 R >>
+endobj
+9 0 obj
+<< /Length 2184 >>
+stream
+BT
+/F2 12 Tf
+54 730 Td
+(Section 2: Order Book Depth & Clearing Velocity) Tj
+/F1 10 Tf
+54 712 Td
+(Unlike high-frequency equity exchanges, comic auctions demonstrate discontinuous) Tj
+54 698 Td
+(liquidity arrivals. Metric 3 \(Clearing Velocity Index, CVI\) formulates the mean) Tj
+54 684 Td
+(annual frequency of authenticated auction occurrences over 36 trailing months.) Tj
+/F3 9 Tf
+64 664 Td
+(CVI = Total_Verified_Auction_Transactions_36M / 36.0) Tj
+/F1 10 Tf
+54 650 Td
+(Metric 4 calculates the Liquidity Discount Carry Cost \(LDCC\), incorporating vault) Tj
+54 636 Td
+(storage insurance, capital opportunity costs, and seller fee friction.) Tj
+/F3 9 Tf
+64 616 Td
+(LDCC = r_risk_free + Insurance_Carrying_Rate + \(Auction_Vig / Mean_Hold_Period\)) Tj
+/F2 12 Tf
+54 592 Td
+(Section 3: The Complete 21 Metric Formal Taxonomy) Tj
+/F3 9 Tf
+64 574 Td
+(M01: Grade Delta Spread \(GDS\)          M12: Era-Adjusted Inflation Velocity) Tj
+/F3 9 Tf
+64 560 Td
+(M02: Relative Scarcity Factor \(RSF\)       M13: CGC/CBCS Cross-Parity Spread) Tj
+/F3 9 Tf
+64 546 Td
+(M03: Clearing Velocity Index \(CVI\)        M14: Creator Death/Revival Alpha) Tj
+/F3 9 Tf
+64 532 Td
+(M04: Liquidity Discount Carry Cost \(LDCC\) M15: Media Adaptation Speculation) Tj
+/F3 9 Tf
+64 518 Td
+(M05: Order Book Depth Ratio \(OBDR\)        M16: Raw-to-Graded Arbitrage Margin) Tj
+/F3 9 Tf
+64 504 Td
+(M06: Sovereign Float Capitalization       M17: Slab Turnaround Yield \(STY\)) Tj
+/F3 9 Tf
+64 490 Td
+(M07: Provenance Dispersion Score          M18: Auction Vig Friction Ratio) Tj
+/F3 9 Tf
+64 476 Td
+(M08: Restored/Conserved Discount          M19: Population Deceleration Metric) Tj
+/F3 9 Tf
+64 462 Td
+(M09: Pedigree Premium Coefficient        M20: Tectonic Regime Vulnerability) Tj
+/F3 9 Tf
+64 448 Td
+(M10: Defect Sensitivity Curvature        M21: Gregory Sovereign Value Index) Tj
+/F1 10 Tf
+54 434 Td
+(Metric 21 integrates the entire vector into an authenticated sovereign market) Tj
+54 420 Td
+(clearing expectation, establishing the foundational basis for the CE70 index and) Tj
+54 406 Td
+(Panel Profits equity desks.) Tj
+/F1 8 Tf
+54 40 Td
+(PANEL PROFITS RESEARCH TERMINAL  |  PAGE 2 OF 2  |  CONFIDENTIAL & PROPRIETARY) Tj
+ET
+endstream
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000019 00000 n 
+0000000068 00000 n 
+0000000131 00000 n 
+0000000201 00000 n 
+0000000276 00000 n 
+0000000344 00000 n 
+0000000490 00000 n 
+0000002360 00000 n 
+0000002506 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+4742
+%%EOF

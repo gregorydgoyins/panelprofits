@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { GameShell } from "@/components/game/game-shell";
 import { getCurrentUser, getPlayerEntryPath, getUserProfile } from "@/lib/account/queries";
+import { getPlayerFirmContext } from "@/lib/game/player-state";
 
 export const dynamic = "force-dynamic";
 
@@ -11,5 +12,8 @@ export default async function GamePage() {
   if (entryPath !== "/game") redirect(entryPath);
   const profile = await getUserProfile();
   if (!profile) redirect("/onboarding");
-  return <GameShell profile={profile} />;
+
+  const firmContext = await getPlayerFirmContext(user.id);
+
+  return <GameShell profile={profile} firmContext={firmContext} />;
 }

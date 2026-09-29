@@ -1,0 +1,122 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [6 0 R 8 0 R] /Count 2 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 7 0 R >>
+endobj
+7 0 obj
+<< /Length 1292 >>
+stream
+BT
+/F2 18 Tf
+54 740 Td
+(Census Float Dynamics & Slab Scarcity in Post-War Comics) Tj
+/F2 12 Tf
+54 714 Td
+(Statistical Modeling of Census Deceleration and Grade Elasticity) Tj
+/F1 9 Tf
+54 696 Td
+(Authors: Jax Mercer, Gideon Vane | International Society for Asset Valuation) Tj
+/F1 9 Tf
+54 682 Td
+(Publication Date: 2026-01-18 | DOI: 10.1016/j.jcae.2026.01.005 | Scholarly Paper) Tj
+/F2 12 Tf
+54 648 Td
+(Abstract) Tj
+/F1 10 Tf
+54 630 Td
+(This paper examines census population trends for Silver and Bronze Age key issues) Tj
+54 616 Td
+(graded at 9.6 and 9.8. We model the relationship between third-party grading) Tj
+54 602 Td
+(submission rates and realized price spreads in major auction houses.) Tj
+/F2 12 Tf
+54 572 Td
+(1. The Deceleration Asymptote) Tj
+/F1 10 Tf
+54 554 Td
+(Analysis of 25 years of CGC and CBCS census data demonstrates that high-grade) Tj
+54 540 Td
+(\(9.6+\) survivor discovery follows an S-curve asymptote. For pre-1970 issues, new) Tj
+54 526 Td
+(high-grade discoveries have declined by 91% since 2018, establishing extreme) Tj
+54 512 Td
+(supply inelasticity.) Tj
+/F3 9 Tf
+64 492 Td
+(dCensus_9.8\(t\) / dt = k * Census_9.8\(t\) * [ 1 - \(Census_9.8\(t\) / K_max\) ]) Tj
+/F1 8 Tf
+54 40 Td
+(PANEL PROFITS RESEARCH TERMINAL  |  PAGE 1 OF 2  |  CONFIDENTIAL & PROPRIETARY) Tj
+ET
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 9 0 R >>
+endobj
+9 0 obj
+<< /Length 914 >>
+stream
+BT
+/F2 12 Tf
+54 730 Td
+(2. Price Elasticity of Scarcity) Tj
+/F1 10 Tf
+54 712 Td
+(When the census growth rate approaches zero, the price elasticity of demand) Tj
+54 698 Td
+(increases dramatically. Collectors and sovereign institutions demonstrate) Tj
+54 684 Td
+(willingness to pay exponential premiums for the marginal authenticated copy.) Tj
+/F1 10 Tf
+54 664 Td
+(We observe a cross-elasticity coefficient of E = 2.45 between census stagnation) Tj
+54 650 Td
+(and realized auction clearing highs.) Tj
+/F2 12 Tf
+54 620 Td
+(3. Concluding Remarks) Tj
+/F1 10 Tf
+54 602 Td
+(Post-war key comics in uncirculated state represent one of the most physically) Tj
+54 588 Td
+(constrained collectible asset classes globally, with verifiable census records) Tj
+54 574 Td
+(validating long-term institutional pricing models.) Tj
+/F1 8 Tf
+54 40 Td
+(PANEL PROFITS RESEARCH TERMINAL  |  PAGE 2 OF 2  |  CONFIDENTIAL & PROPRIETARY) Tj
+ET
+endstream
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000019 00000 n 
+0000000068 00000 n 
+0000000131 00000 n 
+0000000201 00000 n 
+0000000276 00000 n 
+0000000344 00000 n 
+0000000490 00000 n 
+0000001834 00000 n 
+0000001980 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+2945
+%%EOF

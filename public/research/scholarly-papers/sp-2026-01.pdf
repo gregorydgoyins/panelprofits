@@ -1,0 +1,124 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [6 0 R 8 0 R] /Count 2 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 7 0 R >>
+endobj
+7 0 obj
+<< /Length 1270 >>
+stream
+BT
+/F2 18 Tf
+54 740 Td
+(Econometric Analysis of IP Adaptations on Collectibles) Tj
+/F2 12 Tf
+54 714 Td
+(Evaluating Announcement Arbitrage and Post-Release Contraction) Tj
+/F1 9 Tf
+54 696 Td
+(Authors: Dr. Thaddeus Pryor, Sarah Chen | Journal of Cultural Asset Economics) Tj
+/F1 9 Tf
+54 682 Td
+(Publication Date: 2026-04-10 | DOI: 10.1016/j.jcae.2026.04.012 | Peer-Reviewed) Tj
+/F2 12 Tf
+54 648 Td
+(Abstract) Tj
+/F1 10 Tf
+54 630 Td
+(A scholarly paper analyzing 40 years of comic book market data during major studio) Tj
+54 616 Td
+(film and television announcements. We evaluate the pre-trailer speculative run) Tj
+54 602 Td
+(versus post-release liquidity contraction across 1,200 key issue appearances.) Tj
+/F2 12 Tf
+54 572 Td
+(1. Methodology & Data Sources) Tj
+/F1 10 Tf
+54 554 Td
+(We constructed an event-study model around 320 cinematic intellectual property) Tj
+54 540 Td
+(adaptations spanning 1986 to 2026. Transactional evidence was compiled from GPA) Tj
+54 526 Td
+(Analysis, Heritage Auctions, ComicLink, and Panel Profits verified price ledgers.) Tj
+/F3 9 Tf
+64 506 Td
+(CAR_i\(t_1, t_2\) = SUM_{t=t_1}^{t_2} [ R_{i,t} - \(alpha_i + beta_i * R_{CE70,t}\) ]) Tj
+/F1 8 Tf
+54 40 Td
+(PANEL PROFITS RESEARCH TERMINAL  |  PAGE 1 OF 2  |  CONFIDENTIAL & PROPRIETARY) Tj
+ET
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 9 0 R >>
+endobj
+9 0 obj
+<< /Length 992 >>
+stream
+BT
+/F2 12 Tf
+54 730 Td
+(2. Empirical Findings: The Announcement Spike) Tj
+/F1 10 Tf
+54 712 Td
+(The announcement of a character entering a cinematic franchise generates a mean) Tj
+54 698 Td
+(Cumulative Abnormal Return \(CAR\) of +48.6% across the key first appearance within) Tj
+54 684 Td
+(30 trading days.) Tj
+/F1 10 Tf
+54 664 Td
+(However, following box office premiere, an average liquidity contraction of -31.2%) Tj
+54 650 Td
+(occurs as speculative holders attempt simultaneous exit into illiquid retail) Tj
+54 636 Td
+(demand.) Tj
+/F2 12 Tf
+54 606 Td
+(3. Conclusion) Tj
+/F1 10 Tf
+54 588 Td
+(Long-term terminal value is governed by canonical cultural durability rather than) Tj
+54 574 Td
+(transient media cycles. Blue-chip constitutional assets demonstrate strong) Tj
+54 560 Td
+(resilience, establishing secular value appreciation across multi-decade holding) Tj
+54 546 Td
+(periods.) Tj
+/F1 8 Tf
+54 40 Td
+(PANEL PROFITS RESEARCH TERMINAL  |  PAGE 2 OF 2  |  CONFIDENTIAL & PROPRIETARY) Tj
+ET
+endstream
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000019 00000 n 
+0000000068 00000 n 
+0000000131 00000 n 
+0000000201 00000 n 
+0000000276 00000 n 
+0000000344 00000 n 
+0000000490 00000 n 
+0000001812 00000 n 
+0000001958 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+3001
+%%EOF

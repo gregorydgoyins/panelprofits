@@ -1,0 +1,36 @@
+name: Daily Comic Market Wire Ingestion Worker
+
+on:
+  schedule:
+    # Runs at 00:00 UTC daily
+    - cron: '0 0 * * *'
+
+jobs:
+  ingest:
+    name: Run Multi-Wire Background Ingestion
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Execute Multi-Wire Ingestion Engine
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          CLEAN_DATABASE_URL: ${{ secrets.CLEAN_DATABASE_URL }}
+          NEWSDATA_API_KEY: ${{ secrets.NEWSDATA_API_KEY }}
+          PERIGON_API_KEY: ${{ secrets.PERIGON_API_KEY }}
+          THENEWSAPI_API_KEY: ${{ secrets.THENEWSAPI_API_KEY }}
+          ASKNEWS_API_KEY: ${{ secrets.ASKNEWS_API_KEY }}
+          NEWS_API_KEY: ${{ secrets.NEWS_API_KEY }}
+        run: node scripts/run_daily_wire_ingest.cjs

@@ -1,0 +1,138 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [6 0 R 8 0 R] /Count 2 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 7 0 R >>
+endobj
+7 0 obj
+<< /Length 1698 >>
+stream
+BT
+/F2 18 Tf
+54 740 Td
+(Market Capitalization Models for Comic Book Equities) Tj
+/F2 12 Tf
+54 714 Td
+(Standardized Asset Unit Formulation for Certified Collectibles) Tj
+/F1 9 Tf
+54 696 Td
+(Authors: Devon Knight, Marcus Vance | Panel Profits Quantitative Research Group) Tj
+/F1 9 Tf
+54 682 Td
+(Publication Date: 2026-08-14 | Reference: PP-WP-2026-001) Tj
+/F2 12 Tf
+54 648 Td
+(Abstract) Tj
+/F1 10 Tf
+54 630 Td
+(This white paper introduces a standardized market capitalization methodology for) Tj
+54 616 Td
+(evaluating individual comic book issues as atomic asset units. By aggregating) Tj
+54 602 Td
+(CGC/CBCS census float, realized auction clearing prices, and FMV liquidity) Tj
+54 588 Td
+(spreads, we construct an institutional valuation index for vintage and modern) Tj
+54 574 Td
+(comic holdings.) Tj
+/F2 12 Tf
+54 544 Td
+(1. Defining Atomic Comic Capitalization) Tj
+/F1 10 Tf
+54 526 Td
+(Equity market capitalization assumes continuous shares of homogeneous ownership.) Tj
+54 512 Td
+(In contrast, comic capitalizations represent heterogeneous survivor aggregates) Tj
+54 498 Td
+(bounded by survival degradation. We define Total Issue Capitalization \(TIC\) as the) Tj
+54 484 Td
+(integral of graded census frequency multiplied by sovereign clearing FMV across) Tj
+54 470 Td
+(all verified grades.) Tj
+/F3 9 Tf
+64 450 Td
+(TIC\(Issue\) = SUM_{grade=0.5}^{10.0} [ Census\(grade\) * FMV\(grade\) ]) Tj
+/F1 10 Tf
+54 436 Td
+(When unslabbed raw populations are estimated, an empirical Bayesian multiplier) Tj
+54 422 Td
+(theta_raw is applied, establishing the Total Universe Enterprise Float \(TUEF\).) Tj
+/F1 8 Tf
+54 40 Td
+(PANEL PROFITS RESEARCH TERMINAL  |  PAGE 1 OF 2  |  CONFIDENTIAL & PROPRIETARY) Tj
+ET
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 9 0 R >>
+endobj
+9 0 obj
+<< /Length 1102 >>
+stream
+BT
+/F2 12 Tf
+54 730 Td
+(2. Float Liquidity and Constitutional Index Weighting) Tj
+/F1 10 Tf
+54 712 Td
+(For the CE70 benchmark, constituent weighting relies strictly on Sovereign Float) Tj
+54 698 Td
+(Capitalization \(SFC\), discarding untradeable museum holdbacks and unverified) Tj
+54 684 Td
+(private collections. This ensures that market price discovery reflects actionable) Tj
+54 670 Td
+(transactional clearing depth.) Tj
+/F3 9 Tf
+64 650 Td
+(Weight_CE70\(i\) = SFC\(i\) / SUM_{j=1}^{70} [ SFC\(j\) ]) Tj
+/F2 12 Tf
+54 626 Td
+(3. Empirical Validation across Golden and Silver Age Blue Chips) Tj
+/F1 10 Tf
+54 608 Td
+(Empirical testing over 2016-2026 historical records indicates that CE70) Tj
+54 594 Td
+(constituents display lower annualized downside variance \(sigma = 8.4%\) relative to) Tj
+54 580 Td
+(speculative raw moderns \(sigma = 34.2%\).) Tj
+/F1 10 Tf
+54 560 Td
+(The methodology forms the quantitative backbone of the comicbookstockexchange.com) Tj
+54 546 Td
+(index calculation engine.) Tj
+/F1 8 Tf
+54 40 Td
+(PANEL PROFITS RESEARCH TERMINAL  |  PAGE 2 OF 2  |  CONFIDENTIAL & PROPRIETARY) Tj
+ET
+endstream
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000019 00000 n 
+0000000068 00000 n 
+0000000131 00000 n 
+0000000201 00000 n 
+0000000276 00000 n 
+0000000344 00000 n 
+0000000490 00000 n 
+0000002240 00000 n 
+0000002386 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+3540
+%%EOF
