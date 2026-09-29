@@ -173,8 +173,11 @@ export function resolveComicCover(comic: ComicCoverInput): ResolvedCover {
   if (comic.cover_storage_path && comic.cover_storage_path.trim().length > 0) {
     const cleanPath = comic.cover_storage_path.trim();
     if (!cleanPath.startsWith("http")) {
+      const bucketPrefixedPath = cleanPath.startsWith("pp/")
+        ? `comic-covers/${cleanPath}`
+        : cleanPath;
       return {
-        url: `${baseUrl}/storage/v1/object/public/${cleanPath}`,
+        url: `${baseUrl}/storage/v1/object/public/${bucketPrefixedPath}`,
         isFallback: false,
         sourceTier: "storage",
         qualityTier: comic.cover_verified_at ? "verified" : "unverified",

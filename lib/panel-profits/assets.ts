@@ -1,4 +1,5 @@
 import { createCleanReadOnlyServerClient } from "@/lib/supabase/admin";
+import { panelProfitsGrades, comicBaseGrades, getHighestGradedPrice } from "@/lib/pricing/source-ladder";
 
 export interface AssetRegistryRecord {
   id: string;
@@ -145,33 +146,40 @@ export async function getEquityRegistry(limit = 48): Promise<EquityRegistryRecor
       return [];
     }
 
-    return rows.map((r) => ({
-      id: r.id,
-      variant_id: r.canonical_issue_id || r.id,
-      anchor_grade: r.reference_grade || "9.8",
-      anchor_price_usd: r.reference_fmv_usd ? Number(r.reference_fmv_usd) : null,
-      anchor_sales_volume: 12,
-      anchor_confidence: r.evidence_confidence || "HIGH_HISTORICAL",
-      sov_grade: r.reference_grade || "9.8",
-      sov_price_usd: r.reference_fmv_usd ? Number(r.reference_fmv_usd) : null,
-      asset_class: r.origin_era ? `${r.origin_era.toUpperCase()}_EQUITY` : "SOVEREIGN_EQUITY",
-      price_9_9_usd: r.reference_fmv_usd ? Number(r.reference_fmv_usd) * 2.2 : null,
-      price_10_0_usd: r.reference_fmv_usd ? Number(r.reference_fmv_usd) * 4.5 : null,
-      census_total_graded: 450,
-      census_9_8: 38,
-      census_9_9: 3,
-      census_10_0: 1,
-      scarcity_tier: Number(r.reference_fmv_usd || 0) > 10000 ? "ULTRA_TIER_1" : "INVESTMENT_GRADE",
-      supply_adjustment: 1.05,
-      computed_at: r.updated_at || r.created_at || new Date().toISOString(),
-      comic: {
+    return rows.map((r) => {
+      const refGrade = r.reference_grade ? String(r.reference_grade) : null;
+      const refPrice = r.reference_fmv_usd ? Number(r.reference_fmv_usd) : null;
+      const is99 = refGrade === "9.9";
+      const is100 = refGrade === "10.0" || refGrade === "10";
+
+      return {
         id: r.id,
-        series: r.series || "Unknown Series",
-        issue_number: r.issue_number || null,
-        publisher: "Marvel / DC",
-        publication_year: null,
-      },
-    }));
+        variant_id: r.canonical_issue_id || r.id,
+        anchor_grade: refGrade || (refPrice ? "UNGRADED" : "Unpriced"),
+        anchor_price_usd: refPrice,
+        anchor_sales_volume: null,
+        anchor_confidence: r.evidence_confidence || "HIGH_HISTORICAL",
+        sov_grade: refGrade || (refPrice ? "UNGRADED" : "Unpriced"),
+        sov_price_usd: refPrice,
+        asset_class: r.origin_era ? `${r.origin_era.toUpperCase()}_EQUITY` : "SOVEREIGN_EQUITY",
+        price_9_9_usd: is99 ? refPrice : null,
+        price_10_0_usd: is100 ? refPrice : null,
+        census_total_graded: null,
+        census_9_8: null,
+        census_9_9: null,
+        census_10_0: null,
+        scarcity_tier: Number(r.reference_fmv_usd || 0) > 10000 ? "ULTRA_TIER_1" : "INVESTMENT_GRADE",
+        supply_adjustment: 1.05,
+        computed_at: r.updated_at || r.created_at || new Date().toISOString(),
+        comic: {
+          id: r.id,
+          series: r.series || "Unknown Series",
+          issue_number: r.issue_number || null,
+          publisher: "Marvel / DC",
+          publication_year: null,
+        },
+      };
+    });
   } catch (err) {
     console.error("Failed to load equity registry:", err);
     return [];
@@ -190,6 +198,8 @@ export async function getCleanEquityDetail(surfaceKey: string): Promise<Detailed
       .maybeSingle();
 
     if (equityRow) {
+      const refGrade = equityRow.reference_grade ? String(equityRow.reference_grade) : null;
+      const refPrice = equityRow.reference_fmv_usd ? Number(equityRow.reference_fmv_usd) : null;
       return {
         id: equityRow.id,
         surface_key: surfaceKey,
@@ -201,9 +211,9 @@ export async function getCleanEquityDetail(surfaceKey: string): Promise<Detailed
         origin_era: equityRow.origin_era || null,
         production_age: equityRow.production_age || null,
         lineage: equityRow.lineage || null,
-        reference_grade: equityRow.reference_grade || "9.8",
-        reference_fmv_usd: equityRow.reference_fmv_usd ? Number(equityRow.reference_fmv_usd) : null,
-        price_formatted: equityRow.price_formatted || (equityRow.reference_fmv_usd ? `$${Number(equityRow.reference_fmv_usd).toLocaleString()}` : null),
+        reference_grade: refGrade || (refPrice ? "UNGRADED" : "Unpriced"),
+        reference_fmv_usd: refPrice,
+        price_formatted: equityRow.price_formatted || (refPrice ? `$${refPrice.toLocaleString()}` : "Unpriced"),
         gregory_score: equityRow.gregory_score ? Number(equityRow.gregory_score) : null,
         evidence_confidence: equityRow.evidence_confidence || "HIGH_HISTORICAL",
         seat_number: equityRow.seat_number || null,
@@ -223,7 +233,31 @@ export async function getCleanEquityDetail(surfaceKey: string): Promise<Detailed
       .maybeSingle();
 
     if (comicRow) {
-      const fmv = comicRow.baseline_grade_9_8_value ? Number(comicRow.baseline_grade_9_8_value) : (comicRow.pp_grade_9_8_price ? Number(comicRow.pp_grade_9_8_price) : null);
+      // Determine authentic highest graded price and reference grade
+      const ppLadder = panelProfitsGrades(comicRow);
+      const cbLadder = comicBaseGrades(comicRow);
+      const highest = getHighestGradedPrice({
+        "Panel Profits": ppLadder,
+        "ComicBase": cbLadder,
+      });
+
+      let finalGrade: string | null = null;
+      let finalPrice: number | null = null;
+
+      if (highest) {
+        finalGrade = highest.grade;
+        finalPrice = highest.price;
+      } else if (comicRow.baseline_grade_9_8_value) {
+        finalGrade = "9.8";
+        finalPrice = Number(comicRow.baseline_grade_9_8_value);
+      } else if (comicRow.pp_grade_9_8_price) {
+        finalGrade = "9.8";
+        finalPrice = Number(comicRow.pp_grade_9_8_price);
+      } else if (comicRow.comicbase_price) {
+        finalGrade = "RAW";
+        finalPrice = Number(comicRow.comicbase_price);
+      }
+
       return {
         id: comicRow.id,
         surface_key: surfaceKey,
@@ -235,9 +269,9 @@ export async function getCleanEquityDetail(surfaceKey: string): Promise<Detailed
         origin_era: null,
         production_age: null,
         lineage: null,
-        reference_grade: "9.8",
-        reference_fmv_usd: fmv,
-        price_formatted: fmv ? `$${fmv.toLocaleString()}` : "Unpriced",
+        reference_grade: finalGrade || "Unpriced",
+        reference_fmv_usd: finalPrice,
+        price_formatted: finalPrice ? `$${finalPrice.toLocaleString()}` : "Unpriced",
         gregory_score: null,
         evidence_confidence: "VERIFIED_CATALOG",
         seat_number: null,

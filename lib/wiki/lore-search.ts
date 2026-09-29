@@ -108,6 +108,57 @@ export const LORE_OBSCURE_COLLISION_BLOCKLIST = new Set([
   "the shield",
   "the suit",
   "the sword",
+  "been",
+  "roger",
+  "kung",
+  "bunny",
+  "hero",
+  "films",
+  "movie",
+  "movies",
+]);
+
+export const TOP_TIER_HERO_WHITELIST = new Set([
+  "batman",
+  "superman",
+  "spiderman",
+  "spider-man",
+  "wolverine",
+  "thor",
+  "hulk",
+  "deadpool",
+  "venom",
+  "punisher",
+  "daredevil",
+  "joker",
+  "batmobile",
+  "apocalypse",
+  "jubilee",
+  "bucky",
+  "spawn",
+  "hellboy",
+  "thanos",
+  "galactus",
+  "magneto",
+  "cyclops",
+  "storm",
+  "colossus",
+  "nightcrawler",
+  "rogue",
+  "gambit",
+  "hawkeye",
+  "carnage",
+  "cable",
+  "domino",
+  "bishop",
+  "archangel",
+  "blade",
+  "taskmaster",
+  "sentry",
+  "quicksilver",
+  "asgard",
+  "krypton",
+  "atlantis",
 ]);
 
 let cachedIndex: LoreIndexData | null = null;
@@ -446,23 +497,38 @@ export function findLoreEntitiesInText(text: string, limit = 6): LoreEntitySumma
   loadLoreIndex();
   if (!cachedTitleMap) return [];
 
-  const cleanWords = text
+  const rawWords = text
     .replace(/[^\w\s-]/g, " ")
     .split(/\s+/)
     .filter(Boolean);
+
+  if (rawWords.length === 0) return [];
 
   const matched: LoreEntitySummary[] = [];
   const seenSlugs = new Set<string>();
 
   // Check 4-grams down to 1-grams to prioritize longest matches
   for (let n = 4; n >= 1; n--) {
-    for (let i = 0; i <= cleanWords.length - n; i++) {
+    for (let i = 0; i <= rawWords.length - n; i++) {
       if (matched.length >= limit) break;
-      const phrase = cleanWords.slice(i, i + n).join(" ").toLowerCase();
 
-      // Filter out 1-word stop words or short words
+      const slice = rawWords.slice(i, i + n);
+      const phrase = slice.join(" ").toLowerCase();
+
+      // Filter out 1-word stop words, short words, or unwhitelisted 1-grams
       if (n === 1) {
-        if (phrase.length < 4 || LORE_STOP_WORDS.has(phrase)) continue;
+        if (phrase.length < 4 || LORE_STOP_WORDS.has(phrase) || !TOP_TIER_HERO_WHITELIST.has(phrase)) {
+          continue;
+        }
+        // Require proper capitalization in the original text (e.g. "Batman", not "been")
+        if (slice[0][0] !== slice[0][0].toUpperCase()) {
+          continue;
+        }
+      } else {
+        // Multi-word entities must start with a capital letter and end with a capital letter or digit
+        if (slice[0][0] !== slice[0][0].toUpperCase() || !/^[A-Z0-9]/.test(slice[n - 1])) {
+          continue;
+        }
       }
 
       if (GENERIC_REAL_WORLD_LOCATIONS.has(phrase)) continue;

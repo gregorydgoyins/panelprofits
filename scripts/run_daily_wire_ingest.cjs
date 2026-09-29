@@ -32,15 +32,16 @@ function generateStoryKey(sourceUrl, itemUrl, title) {
   return crypto.createHash('sha256').update(`${sourceUrl}|${itemUrl}|${title.trim()}`).digest('hex');
 }
 
+const STRICT_NEGATIVE_FILTER = /\b(wrestling|pwi 500|wwe|aew|nfl|nba|mlb|nhl|ncaa|quarterback|touchdown|football|basketball|baseball|soccer|hockey|premier league|champions league|mls|inter miami|seminoles|fsu|acc\b|sec\b|big ten|big 12|pac-12|touchdowns|linebacker|interception|puck|formula 1|\bf1\b|nascar|tennis|wimbledon|golf|\bpga\b|boxing|\bmma\b|\bufc\b|martial arts film|martial arts films|martial arts movie|martial arts movies|kung fu hustle|action filmmaking|super bowl|earphones|smartwatch|airpods|vacuum cleaner|casino|crypto casino|slot machine|weight loss|celebrity gossip|love island|bachelor|real housewives|dc council|trayon white|city council|county commissioner|zoning board|police blotter|homicide|shooting incident|car crash|traffic accident|terror suspects|bribery trial|local election|mayoral election|tax hike|affordable housing|gameplay|playstation\s*5|ps5|xbox|nintendo switch|found footage|horror movie)\b/i;
+
+const CORE_COMIC_SIGNALS = /\b(comic|comics|graphic novel|manga|mangaka|omnibus|superhero|superheroes|marvel|dc comics|batman|superman|spider-man|spiderman|x-men|avengers|spawn|dark horse|image comics|idw|boom studios|cgc|cbcs|slabbed|stan lee|jack kirby|will eisner|alan moore|neil gaiman|grant morrison|cbr|comicbook|gocollect|covrprice|comichron|first appearance|key issue)\b/i;
+
 function evaluateQuality(headline, summary) {
-  const text = `${headline} ${summary || ''}`.toLowerCase();
-  const comicTerms = [
-    'comic', 'marvel', 'dc', 'batman', 'superman', 'spiderman', 'spider-man',
-    'x-men', 'avengers', 'cgc', 'grading', 'graphic novel', 'manga', 'stan lee',
-    'jack kirby', 'hero', 'villain', 'spawn', 'image comics', 'dark horse', 'first appearance'
-  ];
-  const matched = comicTerms.some((term) => text.includes(term));
-  return { admit: matched };
+  const text = `${headline} ${summary || ''}`;
+  if (STRICT_NEGATIVE_FILTER.test(text)) {
+    return { admit: false };
+  }
+  return { admit: CORE_COMIC_SIGNALS.test(text) };
 }
 
 // 1. NewsData.io

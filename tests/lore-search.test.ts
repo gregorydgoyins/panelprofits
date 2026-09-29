@@ -51,4 +51,17 @@ describe("multi-universe lore search engine", () => {
     expect(titles).toContain("Infinity Gauntlet");
     expect(titles).toContain("Gotham City");
   });
+
+  it("strictly rejects common 1-gram false positives (been, roger, kung, bunny, films)", () => {
+    const text = "From the year 2000 until the present, these films have been considered among the best examples of high-class action filmmaking. Legendary critic Roger Ebert described Kung Fu Hootle as 'Jackie Chan and Buster Keaton meet Quentin Tarantino and Bugs Bunny,' while Zhang Yimou's Chinese-Hong Kong co-production Hero may be his best movie.";
+    const matches = findLoreEntitiesInText(text, 10);
+    const titles = matches.map((m) => m.title.toLowerCase());
+    expect(titles).not.toContain("been");
+    expect(titles).not.toContain("roger");
+    expect(titles).not.toContain("kung");
+    expect(titles).not.toContain("bunny");
+    expect(titles).not.toContain("hero");
+    expect(matches.length).toBe(0);
+  });
 });
+

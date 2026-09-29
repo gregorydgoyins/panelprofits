@@ -83,6 +83,17 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
   const issueLabel = displayIssue(comic.issue_number);
   const debut = resolveIssueDebuts(comic.series, comic.issue_number);
 
+  // Non-pricing metadata hierarchy: GCD 1st -> ComicBase 2nd -> Legacy Master 3rd
+  // Strictly separated from secondary market transaction / observation dates
+  const resolvedPubDate =
+    (comic.gcd_data as Record<string, unknown> | undefined)?.["GCD - gcd_issue.publication_date"] as string ||
+    (comic.gcd_data as Record<string, unknown> | undefined)?.["issue_publication_date"] as string ||
+    (comic.gcd_data as Record<string, unknown> | undefined)?.["publication_date"] as string ||
+    (comic.comicbase_data as Record<string, unknown> | undefined)?.["pub_date"] as string ||
+    comic.publication_date ||
+    (comic.comicbase_data as Record<string, unknown> | undefined)?.["CB - Value Year 1"] as string ||
+    null;
+
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Back Navigation & Breadcrumb */}
@@ -281,7 +292,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
 
               <div className="rounded bg-graphite-950 p-2.5 space-y-0.5">
                 <span className="text-[10px] uppercase text-graphite-500">PUB DATE</span>
-                <p className="text-chalk">{formatDate(comic.publication_date)}</p>
+                <p className="text-chalk">{formatDate(resolvedPubDate)}</p>
               </div>
 
               <div className="rounded bg-graphite-950 p-2.5 space-y-0.5">

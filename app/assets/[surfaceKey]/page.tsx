@@ -99,7 +99,11 @@ export default async function AssetSurfacePage({ params }: AssetSurfacePageProps
               <div className="border border-slate-800 bg-[#070A10] p-3.5 rounded">
                 <p className="text-[10px] uppercase tracking-wider text-slate-500">Reference Grade</p>
                 <p className="mt-1 text-xl font-bold text-cyan-300">
-                  CGC {asset.reference_grade || "9.8"}
+                  {asset.reference_grade
+                    ? asset.reference_grade === "RAW" || asset.reference_grade === "UNGRADED"
+                      ? "RAW Ungraded"
+                      : `Grade ${asset.reference_grade}`
+                    : "Unpriced"}
                 </p>
               </div>
 

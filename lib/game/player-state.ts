@@ -61,7 +61,7 @@ export async function getPlayerFirmContext(userId: string): Promise<PlayerFirmCo
             instrumentId: eq.id,
             series: eq.series || "Comic Asset",
             issueNumber: eq.issue_number || "1",
-            grade: eq.reference_grade || "9.8",
+            grade: eq.reference_grade || (eq.reference_fmv_usd ? "RAW" : "Unpriced"),
             quantity,
             entryPriceUsd: entryPrice,
             currentFmvUsd: fmv,

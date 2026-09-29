@@ -22,6 +22,23 @@ describe("Comic Cover Resolver Ladder", () => {
     expect(result.url).toContain("storage/v1/object/public/covers/marvel/asm_300.jpg");
   });
 
+  it("resolves Tier 1: Supabase comic-covers bucket with pp/ prefix path", () => {
+    const result = resolveComicCover({
+      id: "0000050eb83d6d81a7f8951d79a237df0341741a70a99349451333856cd09987",
+      series: "American Flagg!",
+      issue_number: "2",
+      cover_storage_path: "pp/00/0000050eb83d6d81a7f8951d79a237df0341741a70a99349451333856cd09987.jpg",
+      cover_verified_at: "2026-09-18T00:30:41.000Z",
+      cover_sha256: "84a3bb30da4cde0066ff761f60fad895d35ca9855504c5b6f0ae29f616dd34fa",
+    });
+
+    expect(result.sourceTier).toBe("storage");
+    expect(result.isFallback).toBe(false);
+    expect(result.qualityTier).toBe("verified");
+    expect(result.url).toContain("storage/v1/object/public/comic-covers/pp/00/0000050eb83d6d81a7f8951d79a237df0341741a70a99349451333856cd09987.jpg");
+    expect(result.checksum).toBe("84a3bb30da4cde0066ff761f60fad895d35ca9855504c5b6f0ae29f616dd34fa");
+  });
+
   it("resolves Tier 2: Direct canonical URL", () => {
     const result = resolveComicCover({
       id: "test-2",
