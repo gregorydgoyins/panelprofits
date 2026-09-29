@@ -98,6 +98,18 @@ export const GENERIC_REAL_WORLD_LOCATIONS = new Set([
   "central arkansas",
 ]);
 
+export const LORE_OBSCURE_COLLISION_BLOCKLIST = new Set([
+  "the marvel",
+  "the car",
+  "the box",
+  "the ship",
+  "the gun",
+  "the plane",
+  "the shield",
+  "the suit",
+  "the sword",
+]);
+
 let cachedIndex: LoreIndexData | null = null;
 let cachedSlugMap: Map<string, LoreEntitySummary> | null = null;
 let cachedTitleMap: Map<string, LoreEntitySummary> | null = null;
@@ -149,10 +161,16 @@ function loadLoreIndex(): LoreIndexData {
       if (summary.type === "location" && GENERIC_REAL_WORLD_LOCATIONS.has(clean)) {
         return;
       }
+      if (LORE_OBSCURE_COLLISION_BLOCKLIST.has(clean)) {
+        return;
+      }
       if (clean.length >= 3 && !cachedTitleMap!.has(clean)) {
         cachedTitleMap!.set(clean, summary);
       }
       const normalized = clean.replace(/[^\w\s-]/g, " ").replace(/\s+/g, " ").trim();
+      if (LORE_OBSCURE_COLLISION_BLOCKLIST.has(normalized)) {
+        return;
+      }
       if (normalized.length >= 3 && !cachedTitleMap!.has(normalized)) {
         if (!(summary.type === "location" && GENERIC_REAL_WORLD_LOCATIONS.has(normalized))) {
           cachedTitleMap!.set(normalized, summary);
@@ -448,6 +466,7 @@ export function findLoreEntitiesInText(text: string, limit = 6): LoreEntitySumma
       }
 
       if (GENERIC_REAL_WORLD_LOCATIONS.has(phrase)) continue;
+      if (LORE_OBSCURE_COLLISION_BLOCKLIST.has(phrase)) continue;
 
       const entity = cachedTitleMap.get(phrase);
       if (entity && !seenSlugs.has(entity.slug)) {

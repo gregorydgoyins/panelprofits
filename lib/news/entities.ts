@@ -1,5 +1,5 @@
 import { createAdminServerClient } from "@/lib/supabase/admin";
-import { findLoreEntitiesInText, GENERIC_REAL_WORLD_LOCATIONS } from "@/lib/wiki/lore-search";
+import { findLoreEntitiesInText, GENERIC_REAL_WORLD_LOCATIONS, LORE_OBSCURE_COLLISION_BLOCKLIST } from "@/lib/wiki/lore-search";
 import adaptationCastData from "./adaptation-cast-registry.json";
 
 export interface EntityWikiDef {
@@ -33,6 +33,130 @@ interface AdaptationActor {
 
 const ADAPTATION_ACTORS: AdaptationActor[] = adaptationCastData as AdaptationActor[];
 
+/**
+ * Decomposes role character names like "Claire Temple (Night Nurse)" or "The Punisher (Frank Castle)"
+ * into cleanly matchable individual names like ["Claire Temple", "Night Nurse"] or ["The Punisher", "Punisher", "Frank Castle"].
+ */
+export function decomposeCharacterTerms(rawCharacter: string): string[] {
+  if (!rawCharacter) return [];
+  const clean = rawCharacter.replace(/\s*\/.*$/, "").replace(/\[.*?\]/g, "").trim();
+  const terms: string[] = [];
+
+  const parenMatch = clean.match(/^([^(]+)\(([^)]+)\)$/);
+  if (parenMatch) {
+    const main = parenMatch[1].trim();
+    const alias = parenMatch[2].trim();
+    if (main) terms.push(main);
+    if (alias && alias.toLowerCase() !== main.toLowerCase()) terms.push(alias);
+  } else {
+    terms.push(clean);
+  }
+
+  const expanded: string[] = [];
+  for (const t of terms) {
+    expanded.push(t);
+    if (t.startsWith("The ") && t.length > 5) {
+      expanded.push(t.slice(4));
+    }
+  }
+
+  return [...new Set(expanded)].filter((t) => t.length >= 2);
+}
+
+/**
+ * Dynamically resolves the most contextually relevant comic role and ticker for an actor
+ * who has portrayed multiple roles across different universes (e.g. Rosario Dawson in Marvel vs Star Wars vs Sin City).
+ */
+export function resolveActorRoleForContext(
+  actor: AdaptationActor,
+  contextText: string
+): AdaptationRole {
+  if (!actor.roles || actor.roles.length === 0) {
+    return {
+      character: "Character",
+      universe: "MARVEL",
+      landmarkIssue: "",
+      comicTicker: "$EQUITY",
+    };
+  }
+  if (actor.roles.length === 1) {
+    return actor.roles[0];
+  }
+
+  const lowerText = contextText.toLowerCase();
+
+  let bestRole = actor.roles[0];
+  let highestScore = -1;
+
+  for (const role of actor.roles) {
+    let score = 0;
+    const terms = decomposeCharacterTerms(role.character);
+
+    // 1. Direct character / alter ego mentions in context (+15 points per match)
+    for (const term of terms) {
+      const termLower = term.toLowerCase();
+      const escaped = termLower.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      if (new RegExp(`\\b${escaped}\\b`, "i").test(lowerText)) {
+        score += 15;
+      }
+    }
+
+    // 2. Landmark issue mention (+10 points)
+    if (role.landmarkIssue) {
+      const issueLower = role.landmarkIssue.toLowerCase();
+      const seriesPart = issueLower.replace(/#\d+.*$/, "").trim();
+      if (seriesPart.length >= 4 && lowerText.includes(seriesPart)) {
+        score += 10;
+      }
+    }
+
+    // 3. Universe and related franchise cues (+5 points)
+    const uni = role.universe.toUpperCase();
+    if (uni === "MARVEL") {
+      if (/\b(marvel|mcu|avengers|spider-man|spiderman|spider-m|daredevil|defenders|thor|hulk|iron man|captain america|disney)\b/i.test(lowerText)) {
+        score += 5;
+      }
+    } else if (uni === "DC") {
+      if (/\b(dc|dcu|dceu|batman|superman|gotham|warner|wbd)\b/i.test(lowerText)) {
+        score += 5;
+      }
+    } else if (uni === "STAR_WARS") {
+      if (/\b(star wars|jedi|sith|lucasfilm|mandalorian|ahsoka|clone wars)\b/i.test(lowerText)) {
+        score += 5;
+      }
+    } else if (uni === "DARK_HORSE") {
+      if (/\b(dark horse|sin city|hellboy)\b/i.test(lowerText)) {
+        score += 5;
+      }
+    } else if (uni === "IMAGE") {
+      if (/\b(image comics|the boys|spawn|invincible)\b/i.test(lowerText)) {
+        score += 5;
+      }
+    }
+
+    // 4. Franchise list cues (+3 points)
+    for (const fr of actor.franchises || []) {
+      const frLower = fr.toLowerCase();
+      if (lowerText.includes(frLower)) {
+        if (
+          (uni === "MARVEL" && frLower.includes("marvel")) ||
+          (uni === "DC" && frLower.includes("dc")) ||
+          (uni === "STAR_WARS" && frLower.includes("star wars"))
+        ) {
+          score += 3;
+        }
+      }
+    }
+
+    if (score > highestScore) {
+      highestScore = score;
+      bestRole = role;
+    }
+  }
+
+  return bestRole;
+}
+
 export const ADAPTATION_ACTOR_ENTITIES: EntityWikiDef[] = ADAPTATION_ACTORS.flatMap((actor) => {
   const primaryRole = actor.roles[0];
   const main: EntityWikiDef = {
@@ -52,6 +176,26 @@ export const ADAPTATION_ACTOR_ENTITIES: EntityWikiDef[] = ADAPTATION_ACTORS.flat
     roleDetails: primaryRole,
   }));
   return [main, ...aliasDefs];
+});
+
+export const ADAPTATION_ROLE_CHARACTER_ENTITIES: EntityWikiDef[] = ADAPTATION_ACTORS.flatMap((actor) => {
+  const defs: EntityWikiDef[] = [];
+  for (const role of actor.roles) {
+    const decomposed = decomposeCharacterTerms(role.character);
+    for (const term of decomposed) {
+      if (GENERIC_REAL_WORLD_LOCATIONS.has(term.toLowerCase())) continue;
+      const slug = term.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+      defs.push({
+        term,
+        ticker: role.comicTicker,
+        type: "character",
+        target: "intelligence",
+        wikiPath: `/wiki/entry/${slug}`,
+        roleDetails: role,
+      });
+    }
+  }
+  return defs;
 });
 
 /**
@@ -153,8 +297,35 @@ export const KNOWN_NEWS_ENTITIES_MAP: EntityWikiDef[] = [
   { term: "Final Order Cutoff", ticker: "$FOC", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/final-order-cutoff" },
   { term: "Signature Series", type: "grading", target: "lexicon", wikiPath: "/lexicon/signature-series" },
   { term: "Overprint", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/overprint" },
+  { term: "Box Office Haul", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/box-office" },
+  { term: "Box Office", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/box-office" },
 
-  // --- PUBLISHERS (Grounded in ppcf_gcd_publishers) ---
+  // --- PUBLISHERS & STUDIOS (Grounded in ppcf_gcd_publishers & Hollywood Studios) ---
+  { term: "Sony Pictures Entertainment", ticker: "$SONY", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Sony+Pictures" },
+  { term: "Sony Pictures", ticker: "$SONY", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Sony+Pictures" },
+  { term: "Sony", ticker: "$SONY", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Sony" },
+  { term: "Warner Bros. Discovery", ticker: "$WBD", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Warner+Bros" },
+  { term: "Warner Bros. Pictures", ticker: "$WBD", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Warner+Bros" },
+  { term: "Warner Bros.", ticker: "$WBD", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Warner+Bros" },
+  { term: "Warner Bros", ticker: "$WBD", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Warner+Bros" },
+  { term: "Universal Pictures", ticker: "$CMCSA", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Universal+Pictures" },
+  { term: "Universal", ticker: "$CMCSA", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Universal" },
+  { term: "Paramount Pictures", ticker: "$PARA", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Paramount" },
+  { term: "Paramount", ticker: "$PARA", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Paramount" },
+  { term: "Walt Disney Studios", ticker: "$DIS", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Disney" },
+  { term: "Walt Disney", ticker: "$DIS", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Disney" },
+  { term: "Disney", ticker: "$DIS", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Disney" },
+  { term: "Lucasfilm", ticker: "$DIS", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Lucasfilm" },
+  { term: "20th Century Studios", ticker: "$DIS", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=20th+Century+Studios" },
+  { term: "Lionsgate", ticker: "$LGF", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Lionsgate" },
+
+  // --- MEGA-FRANCHISES & CINEMATIC UNIVERSES ---
+  { term: "Marvel Cinematic Universe", ticker: "$MCU", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Marvel" },
+  { term: "DC Extended Universe", ticker: "$DCEU", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=DC" },
+  { term: "Sony's Spider-Man Universe", ticker: "$SPDR", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Sony+Spider-Man+Universe" },
+  { term: "Sony Spider-Man Universe", ticker: "$SPDR", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Sony+Spider-Man+Universe" },
+
+  // --- COMIC PUBLISHERS ---
   { term: "Marvel", ticker: "$MRVL", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Marvel" },
   { term: "DC Comics", ticker: "$DC", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=DC" },
   { term: "DC Studios", ticker: "$DC", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=DC" },
@@ -175,17 +346,29 @@ export const KNOWN_NEWS_ENTITIES_MAP: EntityWikiDef[] = [
   // --- COMPOUND STORYLINES, RUNS & MAJOR ADAPTATION TITLES ---
   { term: "Spider-Man: Brand New Day", ticker: "$SPDR", type: "character", target: "intelligence", wikiPath: "/comics?q=Spider-Man+Brand+New+Day" },
   { term: "Spider-Man Brand New Day", ticker: "$SPDR", type: "character", target: "intelligence", wikiPath: "/comics?q=Spider-Man+Brand+New+Day" },
+  { term: "Spider-man: Brand New Day", ticker: "$SPDR", type: "character", target: "intelligence", wikiPath: "/comics?q=Spider-Man+Brand+New+Day" },
+  { term: "Spider-man Brand New Day", ticker: "$SPDR", type: "character", target: "intelligence", wikiPath: "/comics?q=Spider-Man+Brand+New+Day" },
+  { term: "Spider-Man: BrandNew Day", ticker: "$SPDR", type: "character", target: "intelligence", wikiPath: "/comics?q=Spider-Man+Brand+New+Day" },
+  { term: "Spider-Man BrandNew Day", ticker: "$SPDR", type: "character", target: "intelligence", wikiPath: "/comics?q=Spider-Man+Brand+New+Day" },
+  { term: "Spider-man: BrandNew Day", ticker: "$SPDR", type: "character", target: "intelligence", wikiPath: "/comics?q=Spider-Man+Brand+New+Day" },
+  { term: "Spider-man BrandNew Day", ticker: "$SPDR", type: "character", target: "intelligence", wikiPath: "/comics?q=Spider-Man+Brand+New+Day" },
   { term: "Spider-Man: No Way Home", ticker: "$SPDR", type: "character", target: "intelligence", wikiPath: "/wiki/entry/spider-man" },
   { term: "Spider-Man: Across the Spider-Verse", ticker: "$SPDR", type: "character", target: "intelligence", wikiPath: "/wiki/entry/spider-man" },
   { term: "Spider-Man: Into the Spider-Verse", ticker: "$SPDR", type: "character", target: "intelligence", wikiPath: "/wiki/entry/spider-man" },
+  { term: "Avengers: Endgame: Encore", ticker: "$AVNG", type: "character", target: "intelligence", wikiPath: "/comics?q=Avengers+Endgame" },
+  { term: "Avengers Endgame: Encore", ticker: "$AVNG", type: "character", target: "intelligence", wikiPath: "/comics?q=Avengers+Endgame" },
   { term: "Avengers: Endgame Encore", ticker: "$AVNG", type: "character", target: "intelligence", wikiPath: "/comics?q=Avengers+Endgame" },
   { term: "Avengers Endgame Encore", ticker: "$AVNG", type: "character", target: "intelligence", wikiPath: "/comics?q=Avengers+Endgame" },
   { term: "Avengers: Endgame", ticker: "$AVNG", type: "character", target: "intelligence", wikiPath: "/comics?q=Avengers+Endgame" },
   { term: "Avengers Endgame", ticker: "$AVNG", type: "character", target: "intelligence", wikiPath: "/comics?q=Avengers+Endgame" },
   { term: "Avengers: Infinity War", ticker: "$AVNG", type: "character", target: "intelligence", wikiPath: "/comics?q=Avengers+Infinity+War" },
+  { term: "Avengers Infinity War", ticker: "$AVNG", type: "character", target: "intelligence", wikiPath: "/comics?q=Avengers+Infinity+War" },
   { term: "Avengers: Secret Wars", ticker: "$AVNG", type: "character", target: "intelligence", wikiPath: "/comics?q=Avengers+Secret+Wars" },
+  { term: "Avengers Secret Wars", ticker: "$AVNG", type: "character", target: "intelligence", wikiPath: "/comics?q=Avengers+Secret+Wars" },
   { term: "Avengers: Doomsday", ticker: "$AVNG", type: "character", target: "intelligence", wikiPath: "/comics?q=Avengers+Doomsday" },
+  { term: "Avengers Doomsday", ticker: "$AVNG", type: "character", target: "intelligence", wikiPath: "/comics?q=Avengers+Doomsday" },
   { term: "Captain America: Brave New World", ticker: "$CAP", type: "character", target: "intelligence", wikiPath: "/comics?q=Captain+America+Brave+New+World" },
+  { term: "Captain America Brave New World", ticker: "$CAP", type: "character", target: "intelligence", wikiPath: "/comics?q=Captain+America+Brave+New+World" },
   { term: "Captain America: Civil War", ticker: "$CAP", type: "character", target: "intelligence", wikiPath: "/comics?q=Captain+America+Civil+War" },
   { term: "Captain America: The Winter Soldier", ticker: "$CAP", type: "character", target: "intelligence", wikiPath: "/comics?q=Captain+America+The+Winter+Soldier" },
   { term: "Daredevil: Born Again", ticker: "$DD", type: "character", target: "intelligence", wikiPath: "/comics?q=Daredevil+Born+Again" },
@@ -202,6 +385,9 @@ export const KNOWN_NEWS_ENTITIES_MAP: EntityWikiDef[] = [
   { term: "Civil War", ticker: "$MRVL", type: "character", target: "intelligence", wikiPath: "/comics?q=Civil+War" },
 
   // --- CHARACTERS & LORE (Direct Dossier Routes) ---
+  { term: "Spider-M", ticker: "$SPDR", type: "character", target: "intelligence", wikiPath: "/wiki/entry/spider-man" },
+  { term: "Claire Temple", ticker: "$NURSE", type: "character", target: "intelligence", wikiPath: "/wiki/entry/claire-temple" },
+  { term: "Night Nurse", ticker: "$NURSE", type: "character", target: "intelligence", wikiPath: "/wiki/entry/night-nurse" },
   { term: "Spider-Man", ticker: "$SPDR", type: "character", target: "intelligence", wikiPath: "/wiki/entry/spider-man" },
   { term: "Wolverine", ticker: "$WOLV", type: "character", target: "intelligence", wikiPath: "/wiki/entry/wolverine" },
   { term: "Iron Man", ticker: "$IRON", type: "character", target: "intelligence", wikiPath: "/wiki/entry/iron-man" },
@@ -356,6 +542,8 @@ export const KNOWN_NEWS_ENTITIES_MAP: EntityWikiDef[] = [
   { term: "Mike Mignola", type: "creator", target: "intelligence", wikiPath: "/wiki?q=Mike+Mignola" },
   // --- ADAPTATION ACTORS & HOLLYWOOD ADAPTATION TALENT ---
   ...ADAPTATION_ACTOR_ENTITIES,
+  // --- ADAPTATION CHARACTER ROLES (Decomposed & Canonical) ---
+  ...ADAPTATION_ROLE_CHARACTER_ENTITIES,
 ];
 
 // In-memory cache for dynamic text lookups
@@ -363,7 +551,7 @@ const entityCache = new Map<string, EntityWikiDef[]>();
 
 /**
  * Dynamically resolves entities mentioned in text by combining:
- * 1. Pre-indexed canonical finance, creator, publisher, and lore entities.
+ * 1. Pre-indexed canonical finance, creator, publisher, and lore entities with contextual role disambiguation.
  * 2. On-demand dynamic database lookup in `ppcf_gcd_creators`, `ppcf_gcd_publishers`, `ppcf_gcd_series`, `recovered_index_contracts`.
  */
 export async function getDynamicEntitiesForText(text: string): Promise<EntityWikiDef[]> {
@@ -371,15 +559,40 @@ export async function getDynamicEntitiesForText(text: string): Promise<EntityWik
   const textHash = text.slice(0, 120);
   if (entityCache.has(textHash)) return entityCache.get(textHash)!;
 
+  const actorMap = new Map<string, AdaptationActor>();
+  for (const a of ADAPTATION_ACTORS) {
+    actorMap.set(a.name.toLowerCase(), a);
+    for (const al of a.aliases || []) {
+      actorMap.set(al.toLowerCase(), a);
+    }
+  }
+
   const matchedEntities: EntityWikiDef[] = [];
+  const seenTerms = new Set<string>();
   const lowerText = text.toLowerCase();
 
   // Match against canonical known registry
   for (const entity of KNOWN_NEWS_ENTITIES_MAP) {
     const termLower = entity.term.toLowerCase();
+    if (GENERIC_REAL_WORLD_LOCATIONS.has(termLower)) continue;
+    if (seenTerms.has(termLower)) continue;
+
     const regex = new RegExp(`\\b${termLower.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i");
     if (regex.test(lowerText)) {
-      matchedEntities.push(entity);
+      seenTerms.add(termLower);
+      const clone: EntityWikiDef = { ...entity };
+
+      // Dynamic Context-Aware Role Resolution for Multi-Universe Actors
+      if (actorMap.has(termLower)) {
+        const actor = actorMap.get(termLower)!;
+        const resolvedRole = resolveActorRoleForContext(actor, text);
+        clone.roleDetails = resolvedRole;
+        if (resolvedRole.comicTicker) {
+          clone.ticker = resolvedRole.comicTicker;
+        }
+      }
+
+      matchedEntities.push(clone);
     }
   }
 
@@ -387,7 +600,12 @@ export async function getDynamicEntitiesForText(text: string): Promise<EntityWik
   try {
     const loreMatches = findLoreEntitiesInText(text, 6);
     for (const lore of loreMatches) {
-      if (!matchedEntities.some((e) => e.term.toLowerCase() === lore.title.toLowerCase())) {
+      const loreTitleLower = lore.title.toLowerCase();
+      if (GENERIC_REAL_WORLD_LOCATIONS.has(loreTitleLower)) continue;
+      if (LORE_OBSCURE_COLLISION_BLOCKLIST.has(loreTitleLower)) continue;
+
+      if (!seenTerms.has(loreTitleLower)) {
+        seenTerms.add(loreTitleLower);
         matchedEntities.push({
           term: lore.title,
           type: lore.type === "character" ? "character" : "lexicon",
@@ -414,8 +632,9 @@ export async function getDynamicEntitiesForText(text: string): Promise<EntityWik
         if (
           contract.display_name &&
           lowerText.includes(contract.display_name.toLowerCase()) &&
-          !matchedEntities.some((e) => e.term === contract.display_name)
+          !seenTerms.has(contract.display_name.toLowerCase())
         ) {
+          seenTerms.add(contract.display_name.toLowerCase());
           matchedEntities.push({
             term: contract.display_name,
             ticker: `$${contract.index_code}`,
@@ -428,6 +647,29 @@ export async function getDynamicEntitiesForText(text: string): Promise<EntityWik
     }
   } catch {
     // Database query fallback
+  }
+
+  // Cross-link character roles for matched adaptation actors
+  for (const match of [...matchedEntities]) {
+    if (match.roleDetails) {
+      const decomposed = decomposeCharacterTerms(match.roleDetails.character);
+      for (const charTerm of decomposed) {
+        const charLower = charTerm.toLowerCase();
+        if (GENERIC_REAL_WORLD_LOCATIONS.has(charLower)) continue;
+        if (seenTerms.has(charLower)) continue;
+
+        seenTerms.add(charLower);
+        const slug = charTerm.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+        matchedEntities.push({
+          term: charTerm,
+          ticker: match.roleDetails.comicTicker,
+          type: "character",
+          target: "intelligence",
+          wikiPath: `/wiki/entry/${slug}`,
+          roleDetails: match.roleDetails,
+        });
+      }
+    }
   }
 
   const filtered = matchedEntities.filter(
@@ -450,18 +692,52 @@ export function findNewsEntities(headline: string, summary: string | null): Enti
  */
 export function extractEntitiesFromContext(text: string): EntityWikiDef[] {
   if (!text) return [];
-  const baseMatches = KNOWN_NEWS_ENTITIES_MAP.filter((def) => {
-    if (GENERIC_REAL_WORLD_LOCATIONS.has(def.term.toLowerCase())) return false;
+
+  const actorMap = new Map<string, AdaptationActor>();
+  for (const a of ADAPTATION_ACTORS) {
+    actorMap.set(a.name.toLowerCase(), a);
+    for (const al of a.aliases || []) {
+      actorMap.set(al.toLowerCase(), a);
+    }
+  }
+
+  const baseMatches: EntityWikiDef[] = [];
+  const seenTerms = new Set<string>();
+
+  for (const def of KNOWN_NEWS_ENTITIES_MAP) {
+    const termLower = def.term.toLowerCase();
+    if (GENERIC_REAL_WORLD_LOCATIONS.has(termLower)) continue;
+    if (seenTerms.has(termLower)) continue;
+
     const escaped = def.term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const regex = new RegExp(`\\b${escaped}\\b`, "i");
-    return regex.test(text);
-  });
+    if (regex.test(text)) {
+      seenTerms.add(termLower);
+      const clone: EntityWikiDef = { ...def };
+
+      // Dynamic Context-Aware Role Resolution for Multi-Universe Actors
+      if (actorMap.has(termLower)) {
+        const actor = actorMap.get(termLower)!;
+        const resolvedRole = resolveActorRoleForContext(actor, text);
+        clone.roleDetails = resolvedRole;
+        if (resolvedRole.comicTicker) {
+          clone.ticker = resolvedRole.comicTicker;
+        }
+      }
+
+      baseMatches.push(clone);
+    }
+  }
 
   try {
-    const loreMatches = findLoreEntitiesInText(text, 4);
+    const loreMatches = findLoreEntitiesInText(text, 6);
     for (const lore of loreMatches) {
-      if (GENERIC_REAL_WORLD_LOCATIONS.has(lore.title.toLowerCase())) continue;
-      if (!baseMatches.some((e) => e.term.toLowerCase() === lore.title.toLowerCase())) {
+      const loreTitleLower = lore.title.toLowerCase();
+      if (GENERIC_REAL_WORLD_LOCATIONS.has(loreTitleLower)) continue;
+      if (LORE_OBSCURE_COLLISION_BLOCKLIST.has(loreTitleLower)) continue;
+
+      if (!seenTerms.has(loreTitleLower)) {
+        seenTerms.add(loreTitleLower);
         baseMatches.push({
           term: lore.title,
           type: lore.type === "character" ? "character" : "lexicon",
@@ -477,17 +753,20 @@ export function extractEntitiesFromContext(text: string): EntityWikiDef[] {
   // Cross-link character roles for matched adaptation actors
   for (const match of [...baseMatches]) {
     if (match.roleDetails) {
-      const charTerm = match.roleDetails.character;
-      if (
-        !GENERIC_REAL_WORLD_LOCATIONS.has(charTerm.toLowerCase()) &&
-        !baseMatches.some((e) => e.term.toLowerCase() === charTerm.toLowerCase())
-      ) {
+      const decomposed = decomposeCharacterTerms(match.roleDetails.character);
+      for (const charTerm of decomposed) {
+        const charLower = charTerm.toLowerCase();
+        if (GENERIC_REAL_WORLD_LOCATIONS.has(charLower)) continue;
+        if (seenTerms.has(charLower)) continue;
+
+        seenTerms.add(charLower);
+        const slug = charTerm.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
         baseMatches.push({
           term: charTerm,
           ticker: match.roleDetails.comicTicker,
           type: "character",
           target: "intelligence",
-          wikiPath: `/wiki/entry/${charTerm.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`,
+          wikiPath: `/wiki/entry/${slug}`,
           roleDetails: match.roleDetails,
         });
       }

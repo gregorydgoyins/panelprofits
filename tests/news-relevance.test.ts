@@ -135,4 +135,78 @@ describe("newsroom relevance gate", () => {
     expect(rawStrings.some((s) => s.includes(": Brand New Day"))).toBe(false);
     expect(rawStrings.some((s) => s.includes(": Endgame Encore"))).toBe(false);
   });
+
+  it("resolves multi-universe actor roles dynamically, links studios, and extracts full compound titles without truncation", async () => {
+    const { findNewsEntities } = await import("@/lib/news/entities");
+    const { parseTextWithEntities } = await import("@/components/news/linked-briefing");
+
+    const text =
+      "Sony is reportedly planning a rerelease of Spider-Man: Brand New Day, inspired by Marvel Studios' recent release of Avengers Endgame: Encore. " +
+      "The studio is reportedly adding new footage to the film, which will include at least one cut cameo from Spider-man: BrandNew Day that connects to the Marvel Cinematic Universe. " +
+      "The rerelease will feature extra footage featuring Rosario Dawson's character Claire Temple, aka Night Nurse. " +
+      "This is not the first time Sony has rereleased one of its Tom Holland-starring Spider-M movies in theaters. " +
+      "The reported rerelease could add another $50M to its worldwide box office haul.";
+
+    const entities = findNewsEntities(
+      "Spider-Man: Brand New Day Getting Official New Version, Report Says",
+      text
+    );
+
+    const termSet = new Set(entities.map((e) => e.term));
+
+    // 1. Sony studio is recognized and linked
+    expect(termSet.has("Sony")).toBe(true);
+    const sonyDef = entities.find((e) => e.term === "Sony");
+    expect(sonyDef?.ticker).toBe("$SONY");
+    expect(sonyDef?.type).toBe("publisher");
+
+    // 2. Full compound title: Spider-Man: Brand New Day
+    expect(termSet.has("Spider-Man: Brand New Day")).toBe(true);
+
+    // 3. Full compound title: Avengers Endgame: Encore
+    expect(termSet.has("Avengers Endgame: Encore")).toBe(true);
+
+    // 4. Variation compound title: Spider-man: BrandNew Day (matches Spider-Man: BrandNew Day canonical)
+    expect(termSet.has("Spider-Man: BrandNew Day") || termSet.has("Spider-man: BrandNew Day")).toBe(true);
+
+    // 5. Mega-franchise: Marvel Cinematic Universe
+    expect(termSet.has("Marvel Cinematic Universe")).toBe(true);
+    const mcuDef = entities.find((e) => e.term === "Marvel Cinematic Universe");
+    expect(mcuDef?.ticker).toBe("$MCU");
+    // Ensure "The Marvel" obscure vehicle did NOT shadow Marvel Cinematic Universe
+    expect(termSet.has("The Marvel")).toBe(false);
+
+    // 6. Context-aware actor role: Rosario Dawson resolves to Claire Temple / Night Nurse ($NURSE), not $AHSOKA
+    expect(termSet.has("Rosario Dawson")).toBe(true);
+    const dawson = entities.find((e) => e.term === "Rosario Dawson");
+    expect(dawson?.ticker).toBe("$NURSE");
+    expect(dawson?.roleDetails?.character).toContain("Claire Temple");
+
+    // 7. Decomposed character roles: Claire Temple and Night Nurse
+    expect(termSet.has("Claire Temple")).toBe(true);
+    const claire = entities.find((e) => e.term === "Claire Temple");
+    expect(claire?.ticker).toBe("$NURSE");
+
+    expect(termSet.has("Night Nurse")).toBe(true);
+    const nurse = entities.find((e) => e.term === "Night Nurse");
+    expect(nurse?.ticker).toBe("$NURSE");
+
+    // 8. Wire abbreviation: Spider-M
+    expect(termSet.has("Spider-M")).toBe(true);
+    const spidM = entities.find((e) => e.term === "Spider-M");
+    expect(spidM?.ticker).toBe("$SPDR");
+
+    // 9. Market concepts: Box Office Haul
+    expect(termSet.has("Box Office Haul") || termSet.has("Box Office")).toBe(true);
+
+    // 10. Verify parseTextWithEntities does not truncate compound phrases into orphaned substrings
+    const nodes = parseTextWithEntities(text, entities);
+    const rawStrings = nodes.filter((n) => typeof n === "string") as string[];
+
+    // Must NOT have orphaned subtitle tails
+    expect(rawStrings.some((s) => s.includes(": Brand New Day"))).toBe(false);
+    expect(rawStrings.some((s) => s.includes("Endgame: Encore"))).toBe(false);
+    expect(rawStrings.some((s) => s.includes(": BrandNew Day"))).toBe(false);
+    expect(rawStrings.some((s) => s.includes("Cinematic Universe"))).toBe(false);
+  });
 });
