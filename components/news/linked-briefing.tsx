@@ -7,6 +7,8 @@ import { EntityHoverCard } from "@/components/news/EntityHoverCard";
 
 const BLOCKED_TERMS = new Set([
   "florida",
+  "orlando",
+  "orlando florida",
   "california",
   "texas",
   "america",
@@ -19,6 +21,12 @@ const BLOCKED_TERMS = new Set([
   "dc",
   "state of florida",
   "kentucky",
+  "dragons",
+  "dragon",
+  "rings",
+  "scratch",
+  "risk",
+  "australia",
 ]);
 
 /**
