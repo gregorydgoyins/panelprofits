@@ -7,6 +7,10 @@ import { NewsBriefing } from "@/components/news/news-briefing";
 import { AuthenticVideoEmbed, extractAuthenticVideo } from "@/components/news/authentic-video-embed";
 import { PresenterPlayer } from "@/components/news/PresenterPlayer";
 import { getStoryVideoReel } from "@/lib/video/pipeline";
+import { analyzeStoryCatalyst } from "@/lib/news/catalyst";
+import { CatalystKeyRail } from "@/components/news/CatalystKeyRail";
+import { AudioBriefingPlayer } from "@/components/news/AudioBriefingPlayer";
+import { AnalystDeskMemo } from "@/components/news/AnalystDeskMemo";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +26,7 @@ export default async function NewsStoryPage({ params }: { params: Promise<{ id: 
   const authenticVideo = !videoReel ? extractAuthenticVideo(story.summary, story.url) : null;
   const hasEditorialImage = Boolean(story.imageUrl && !story.imageUrl.includes("google.com/s2/favicons"));
   const hasPublisherMark = Boolean(story.imageUrl?.includes("google.com/s2/favicons"));
+  const catalyst = analyzeStoryCatalyst(story.headline, story.summary || "");
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:py-12">
@@ -81,6 +86,18 @@ export default async function NewsStoryPage({ params }: { params: Promise<{ id: 
             </div>
           )}
 
+          <div className="mt-6 max-w-3xl">
+            <AudioBriefingPlayer
+              headline={story.headline}
+              summary={story.summary}
+              source={story.source}
+            />
+          </div>
+
+          <div className="mt-6 max-w-3xl">
+            <CatalystKeyRail analysis={catalyst} />
+          </div>
+
           <div className="mt-8">
             <NewsBriefing
               id={story.id}
@@ -91,6 +108,16 @@ export default async function NewsStoryPage({ params }: { params: Promise<{ id: 
               author={story.author}
               publishedAt={story.publishedAt}
               entities={relatedEntities}
+            />
+          </div>
+
+          <div className="mt-8 max-w-3xl">
+            <AnalystDeskMemo
+              storyId={story.id}
+              source={story.source}
+              headline={story.headline}
+              summary={story.summary}
+              catalyst={catalyst}
             />
           </div>
 

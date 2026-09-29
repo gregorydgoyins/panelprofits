@@ -7,6 +7,10 @@ import { findNewsEntities, type EntityWikiDef } from "@/lib/news/entities";
 import { LinkedBriefing } from "@/components/news/linked-briefing";
 import { shortNewsSource, type NewsStory } from "@/lib/news/types";
 import { AuthenticVideoEmbed, extractAuthenticVideo } from "@/components/news/authentic-video-embed";
+import { analyzeStoryCatalyst } from "@/lib/news/catalyst";
+import { CatalystKeyRail } from "@/components/news/CatalystKeyRail";
+import { AudioBriefingPlayer } from "@/components/news/AudioBriefingPlayer";
+import { AnalystDeskMemo } from "@/components/news/AnalystDeskMemo";
 
 function relativeTime(d: string | null) {
   if (!d) return "Recently";
@@ -27,6 +31,7 @@ export function StoryPanel({ story }: { story: NewsStory }) {
   const entities = findNewsEntities(story.headline, story.summary);
   const authenticVideo = extractAuthenticVideo(story.summary, story.url);
   const rawSummary = story.summary || "";
+  const catalyst = analyzeStoryCatalyst(story.headline, rawSummary);
   const paragraphs = rawSummary
     .split(/\n\n+/)
     .map((p) => p.trim())
@@ -86,6 +91,16 @@ export function StoryPanel({ story }: { story: NewsStory }) {
           )
         )}
 
+        {/* In-Browser Text-to-Speech Audio Briefing Player */}
+        <AudioBriefingPlayer
+          headline={story.headline}
+          summary={story.summary}
+          source={story.source}
+        />
+
+        {/* Market Catalyst Engine Rail */}
+        <CatalystKeyRail analysis={catalyst} />
+
         {/* Story Body with Live Entity Tokenization */}
         <div className="mt-6 space-y-4 text-sm sm:text-base leading-relaxed text-slate-300">
           {paragraphs.length > 0 ? (
@@ -100,6 +115,15 @@ export function StoryPanel({ story }: { story: NewsStory }) {
             </p>
           )}
         </div>
+
+        {/* 3-Point Institutional Analyst Desk Memo */}
+        <AnalystDeskMemo
+          storyId={story.id}
+          source={story.source}
+          headline={story.headline}
+          summary={story.summary}
+          catalyst={catalyst}
+        />
 
 
         {/* Entity Cross-References Bar */}

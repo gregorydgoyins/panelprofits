@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import type { EntityWikiDef } from "@/lib/news/entities";
+import { EntityHoverCard } from "@/components/news/EntityHoverCard";
 
 /**
  * Tokenizes article text and headlines, dynamically replacing recognized
@@ -45,10 +46,9 @@ export function parseTextWithEntities(text: string, entities?: EntityWikiDef[]):
       const isStudio = entity.type === "publisher";
 
       nodes.push(
-        <Link
+        <EntityHoverCard
           key={`${start}-${matchedTerm}`}
-          href={entity.wikiPath}
-          prefetch
+          entity={entity}
           className={`inline-flex items-baseline font-medium rounded px-1.5 py-0.5 mx-0.5 transition-all text-xs sm:text-sm ${
             isCharacter
               ? "text-cyan-300 hover:text-cyan-100 bg-cyan-950/40 hover:bg-cyan-900/60 border border-cyan-500/40"
@@ -65,7 +65,7 @@ export function parseTextWithEntities(text: string, entities?: EntityWikiDef[]):
               {entity.ticker}
             </span>
           )}
-        </Link>
+        </EntityHoverCard>
       );
     } else {
       nodes.push(matchedTerm);
