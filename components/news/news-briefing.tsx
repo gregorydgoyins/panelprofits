@@ -5,7 +5,7 @@ import Link from "next/link";
 import { type EntityWikiDef } from "@/lib/news/entities";
 import { LinkedBriefing } from "@/components/news/linked-briefing";
 import { parseAndSynthesizeArticle } from "@/lib/news/article-parser";
-import { Activity, BookOpen } from "lucide-react";
+import { Activity, BookOpen, ShieldAlert } from "lucide-react";
 
 function dateLabel(value: string | null) {
   if (!value) return "Publication date unavailable";
@@ -73,6 +73,67 @@ export function NewsBriefing({
           </p>
         ))}
       </section>
+
+      {/* --- SUPERHERO MARKET RAMIFICATIONS & VALUATION IMPACT --- */}
+      {article.superheroRamifications.length > 0 && (
+        <div className="mt-6 rounded-lg border border-amber-900/60 bg-[#120f08] p-4 shadow-lg">
+          <div className="flex items-center gap-2 border-b border-amber-900/40 pb-2.5">
+            <ShieldAlert className="h-4 w-4 text-amber-400" />
+            <h2 className="text-[11px] font-mono uppercase tracking-[0.16em] text-amber-300 font-semibold">
+              SUPERHERO MARKET RAMIFICATIONS · VALUATION & CENSUS SHOCK MATRIX
+            </h2>
+          </div>
+          <p className="mt-2 text-xs text-slate-400 leading-relaxed">
+            Specific comic market consequences and secondary trading stance for every superhero and faction affected by this story:
+          </p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            {article.superheroRamifications.map((ram, idx) => (
+              <div key={idx} className="rounded border border-amber-900/40 bg-[#1a140b] p-3 flex flex-col justify-between">
+                <div>
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-900/30 pb-2">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-semibold text-xs text-amber-200">
+                        {ram.characterName}
+                      </span>
+                      <span className="font-mono text-[10px] text-amber-400">
+                        ({ram.ticker})
+                      </span>
+                    </div>
+                    <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border uppercase ${
+                      ram.marketStance.includes("BULLISH")
+                        ? "bg-emerald-950/80 border-emerald-500/60 text-emerald-300"
+                        : ram.marketStance.includes("COOLING")
+                        ? "bg-rose-950/80 border-rose-500/60 text-rose-300"
+                        : "bg-cyan-950/80 border-cyan-500/60 text-cyan-300"
+                    }`}>
+                      {ram.marketStance}
+                    </span>
+                  </div>
+
+                  <div className="mt-2 flex items-center justify-between text-[11px]">
+                    <span className="font-mono text-cyan-400">
+                      Debut: <Link href={`/comics?q=${encodeURIComponent(ram.firstAppearance)}`} className="underline hover:text-cyan-200">{ram.firstAppearance}</Link>
+                    </span>
+                    <span className="font-mono text-amber-300 text-[10px]">
+                      9.8 FMV: {ram.cgc98Fmv} ({ram.projectedVelocity})
+                    </span>
+                  </div>
+
+                  <div className="mt-2 text-xs text-slate-300 leading-relaxed">
+                    <strong className="text-amber-200 text-[11px] block font-mono">Story Ramification:</strong>
+                    {ram.directStoryRamification}
+                  </div>
+                </div>
+
+                <div className="mt-2.5 pt-2 border-t border-amber-900/20 text-[11px] text-slate-400 leading-snug">
+                  <strong className="text-cyan-400 text-[10px] block font-mono">Census & Pricing Dynamic:</strong>
+                  {ram.censusAndPricingImpact}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* --- THE MARKET BUTTERFLY EFFECT (ASSET RIPPLE PROJECTIONS) --- */}
       {article.butterflyRipples.length > 0 && (

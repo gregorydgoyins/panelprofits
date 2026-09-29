@@ -456,9 +456,9 @@ describe("newsroom relevance gate", () => {
 
     const synthesized = parseAndSynthesizeArticle(story);
 
-    // 1. Full 5-paragraph structure with section headings
-    expect(synthesized.paragraphs.length).toBe(5);
-    expect(synthesized.sections.length).toBe(5);
+    // 1. Preserves authentic paragraphs and creates structured sections
+    expect(synthesized.paragraphs.length).toBe(3);
+    expect(synthesized.sections.length).toBe(3);
     expect(synthesized.paragraphs[0]).toContain("Latverian Witches");
 
     // 2. Encyclopedic Lore Dossiers identified

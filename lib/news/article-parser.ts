@@ -1,6 +1,20 @@
 import { findNewsEntities, type EntityWikiDef } from "./entities";
 import { analyzeStoryCatalyst, type CatalystAnalysis } from "./catalyst";
 import { selectAuthorForStory, type AuthorPersona } from "./authors";
+import { getLoreEntityBySlug, type LoreEntitySummary } from "@/lib/wiki/lore-search";
+import adaptationCastData from "./adaptation-cast-registry.json";
+import adaptationAssetData from "./adaptation-asset-registry.json";
+
+export interface SuperheroMarketRamification {
+  characterName: string;
+  ticker: string;
+  firstAppearance: string;
+  cgc98Fmv: string;
+  marketStance: "ACCUMULATE (BULLISH)" | "HOLD / MONITOR" | "CONSOLIDATION / COOLING" | "HIGH VOLATILITY";
+  projectedVelocity: string;
+  directStoryRamification: string;
+  censusAndPricingImpact: string;
+}
 
 export interface MarketButterflyRipple {
   ticker: string;
@@ -30,13 +44,14 @@ export interface SynthesizedArticle {
   wordCount: number;
   entities: EntityWikiDef[];
   loreDeepDives: LoreDeepDiveEntry[];
+  superheroRamifications: SuperheroMarketRamification[];
   butterflyRipples: MarketButterflyRipple[];
   catalyst: CatalystAnalysis;
   author: AuthorPersona;
 }
 
-// Canonical encyclopedic background lore mapping for major characters, factions, and storylines
-const CANONICAL_COMIC_BACKGROUNDS: Record<string, { term: string; ticker: string; landmarkIssue: string; creators: string; era: string; description: string }> = {
+// Canonical curated encyclopedic background lore mapping for major characters, factions, and storylines
+const CANONICAL_COMIC_BACKGROUNDS: Record<string, { term: string; ticker: string; landmarkIssue: string; creators: string; era: string; description: string; baseFmv: number }> = {
   "latverian witches": {
     term: "Latverian Witches (Zefiro Sorcery Coven)",
     ticker: "$DOOM:LATV",
@@ -44,6 +59,7 @@ const CANONICAL_COMIC_BACKGROUNDS: Record<string, { term: string; ticker: string
     creators: "Gerry Conway, Gene Colan, Roger Stern, and Mike Mignola",
     era: "Bronze / Modern Age",
     description: "The mystical Romani coven of Latveria led ancestrally by Cynthia Von Doom. Drawing on ancient Balkan elemental magic and necromancy, their demonic entanglement with Mephisto formed the tragic crucible that drove Victor Von Doom to master the mystic arts alongside advanced quantum cybernetics.",
+    baseFmv: 1200,
   },
   "cynthia von doom": {
     term: "Cynthia Von Doom",
@@ -52,6 +68,7 @@ const CANONICAL_COMIC_BACKGROUNDS: Record<string, { term: string; ticker: string
     creators: "Gerry Conway, Gene Colan, Roger Stern, and Mike Mignola",
     era: "Bronze / Modern Age",
     description: "The sorceress mother of Doctor Doom whose fateful pact with Mephisto to protect her clan condemned her soul to the Nether-Realms, establishing Doom's lifelong annual quest to liberate her spirit and forge his mastery over sorcery.",
+    baseFmv: 1200,
   },
   "spider-man: brand new day": {
     term: "Spider-Man: Brand New Day",
@@ -60,6 +77,7 @@ const CANONICAL_COMIC_BACKGROUNDS: Record<string, { term: string; ticker: string
     creators: "Dan Slott, Marc Guggenheim, Bob Gale, Zeb Wells, Steve McNiven, and John Romita Jr.",
     era: "Modern Age (2008)",
     description: "A pivotal fresh start for Peter Parker following the controversial 'One More Day' arc, introducing Mr. Negative (Martin Li), Jackpot, and Overdrive while revitalizing the Wall-Crawler's street-level rogues gallery across tri-monthly publishing schedules.",
+    baseFmv: 450,
   },
   "claire temple": {
     term: "Claire Temple (Night Nurse)",
@@ -68,6 +86,7 @@ const CANONICAL_COMIC_BACKGROUNDS: Record<string, { term: string; ticker: string
     creators: "Archie Goodwin and George Tuska / Jean Thomas and Winslow Mortimer",
     era: "Bronze Age (1972)",
     description: "The street-level physician and underground medic of Harlem who treated Luke Cage, Daredevil, Iron Fist, and Spider-Man. Her character synthesizes the classic 1972 Night Nurse comic legacy with modern Marvel street-level continuity.",
+    baseFmv: 850,
   },
   "spider-man": {
     term: "Spider-Man (Peter Parker)",
@@ -76,6 +95,7 @@ const CANONICAL_COMIC_BACKGROUNDS: Record<string, { term: string; ticker: string
     creators: "Stan Lee and Steve Ditko",
     era: "Silver Age (1962)",
     description: "The definitive genesis of Peter Parker, representing the pinnacle of Marvel's Silver Age revolution and the single most valuable modern-era superhero investment equity in existence.",
+    baseFmv: 285000,
   },
   "avengers: endgame": {
     term: "Avengers: Endgame",
@@ -84,6 +104,7 @@ const CANONICAL_COMIC_BACKGROUNDS: Record<string, { term: string; ticker: string
     creators: "Jim Starlin, George Pérez, Ron Lim, Stan Lee, and Jack Kirby",
     era: "Silver / Copper Age",
     description: "Culminating the twenty-two film Infinity Saga, adapted from Jim Starlin's landmark 1991 cosmic crossover and Stan Lee and Jack Kirby's Silver Age foundation of Earth's Mightiest Heroes.",
+    baseFmv: 65000,
   },
   "avengers: doomsday": {
     term: "Avengers: Doomsday",
@@ -92,6 +113,7 @@ const CANONICAL_COMIC_BACKGROUNDS: Record<string, { term: string; ticker: string
     creators: "Stan Lee, Jack Kirby, Jim Shooter, and Mike Zeck",
     era: "Silver / Copper Age",
     description: "Establishing Victor Von Doom's standing as the supreme strategic adversary of the Marvel Multiverse, bridging Latverian sorcery with cosmic reality manipulation ahead of Secret Wars.",
+    baseFmv: 95000,
   },
   "avengers: secret wars": {
     term: "Avengers: Secret Wars",
@@ -100,6 +122,7 @@ const CANONICAL_COMIC_BACKGROUNDS: Record<string, { term: string; ticker: string
     creators: "Jim Shooter, Mike Zeck, Jonathan Hickman, and Esad Ribić",
     era: "Copper / Modern Age",
     description: "The gold standard of multi-universe event publishing, responsible for the comic debut of the Alien Symbiote costume (The Amazing Spider-Man #252) and the multiversal Battleworld restructuring.",
+    baseFmv: 1850,
   },
   "doctor doom": {
     term: "Doctor Doom (Victor Von Doom)",
@@ -108,6 +131,7 @@ const CANONICAL_COMIC_BACKGROUNDS: Record<string, { term: string; ticker: string
     creators: "Stan Lee and Jack Kirby",
     era: "Silver Age (1962)",
     description: "The sovereign monarch of Latveria whose intellect and mystical prowess have solidified his first appearance as a blue-chip cornerstone of Silver Age Marvel collecting.",
+    baseFmv: 95000,
   },
   "fantastic four": {
     term: "Fantastic Four (First Family)",
@@ -116,6 +140,7 @@ const CANONICAL_COMIC_BACKGROUNDS: Record<string, { term: string; ticker: string
     creators: "Stan Lee and Jack Kirby",
     era: "Silver Age (1961)",
     description: "The birth certificate of modern Marvel Comics, introducing Mister Fantastic (Reed Richards), Invisible Woman (Sue Storm), Human Torch (Johnny Storm), and the Thing (Ben Grimm).",
+    baseFmv: 165000,
   },
   "thunderbolts": {
     term: "Thunderbolts",
@@ -124,6 +149,7 @@ const CANONICAL_COMIC_BACKGROUNDS: Record<string, { term: string; ticker: string
     creators: "Kurt Busiek and Mark Bagley",
     era: "Modern Age (1997)",
     description: "One of the most celebrated twists in 1990s comic history, revealing Baron Zemo's Masters of Evil masquerading as patriotic heroes in the wake of the Onslaught event.",
+    baseFmv: 950,
   },
   "punisher": {
     term: "The Punisher (Frank Castle)",
@@ -132,6 +158,7 @@ const CANONICAL_COMIC_BACKGROUNDS: Record<string, { term: string; ticker: string
     creators: "Gerry Conway, Ross Andru, and John Romita Sr.",
     era: "Bronze Age (1974)",
     description: "The ruthless vigilante Frank Castle's debut, serving as the undisputed bellwether key of Bronze Age Marvel investment and anti-hero storytelling.",
+    baseFmv: 14500,
   },
   "wolverine": {
     term: "Wolverine (Logan / Weapon X)",
@@ -140,6 +167,7 @@ const CANONICAL_COMIC_BACKGROUNDS: Record<string, { term: string; ticker: string
     creators: "Len Wein, John Romita Sr., and Herb Trimpe",
     era: "Bronze Age (1974)",
     description: "The premier Bronze Age investment holy grail, marking the full introduction of Weapon X / Logan into Marvel continuity.",
+    baseFmv: 42000,
   },
   "batman": {
     term: "Batman (Bruce Wayne)",
@@ -148,6 +176,7 @@ const CANONICAL_COMIC_BACKGROUNDS: Record<string, { term: string; ticker: string
     creators: "Bob Kane and Bill Finger",
     era: "Golden Age (1939)",
     description: "The foundational genesis of the Dark Knight and Gotham City, commanding seven-figure clearing prices at sovereign international auction houses.",
+    baseFmv: 850000,
   },
   "superman": {
     term: "Superman (Kal-El / Clark Kent)",
@@ -156,19 +185,265 @@ const CANONICAL_COMIC_BACKGROUNDS: Record<string, { term: string; ticker: string
     creators: "Jerry Siegel and Joe Shuster",
     era: "Golden Age (1938)",
     description: "The foundational birth of the entire superhero genre and the most historically significant printed comic artifact in global cultural history.",
+    baseFmv: 1200000,
+  },
+  "x-men": {
+    term: "The X-Men",
+    ticker: "$XMEN",
+    landmarkIssue: "The X-Men #1 / Giant-Size X-Men #1",
+    creators: "Stan Lee, Jack Kirby, Len Wein, and Dave Cockrum",
+    era: "Silver / Bronze Age",
+    description: "Marvel's mutant allegorical masterpiece, anchoring generations of reader engagement and high-grade investment capital across Silver and Bronze Age certified registries.",
+    baseFmv: 48000,
+  },
+  "magneto": {
+    term: "Magneto (Erik Lehnsherr)",
+    ticker: "$MGNT",
+    landmarkIssue: "The X-Men #1",
+    creators: "Stan Lee and Jack Kirby",
+    era: "Silver Age (1963)",
+    description: "The Master of Magnetism, complex mutant liberator and perpetual ideological foil to Professor Charles Xavier, whose first appearance anchors Silver Age villain investment.",
+    baseFmv: 48000,
+  },
+  "cyclops": {
+    term: "Cyclops (Scott Summers)",
+    ticker: "$CYCL",
+    landmarkIssue: "The X-Men #1",
+    creators: "Stan Lee and Jack Kirby",
+    era: "Silver Age (1963)",
+    description: "The foundational field commander of the X-Men whose optic blasts and tactical discipline define the leadership core of mutantkind.",
+    baseFmv: 48000,
+  },
+  "gambit": {
+    term: "Gambit (Remy LeBeau)",
+    ticker: "$GMBT",
+    landmarkIssue: "Uncanny X-Men #266",
+    creators: "Chris Claremont and Jim Lee",
+    era: "Copper Age (1990)",
+    description: "The kinetic-charging Cajun thief whose debut in Uncanny X-Men #266 represents one of the most traded and liquid key issues of the 1990s comic era.",
+    baseFmv: 1100,
+  },
+  "shang-chi": {
+    term: "Shang-Chi (Master of Kung Fu)",
+    ticker: "$SHNG",
+    landmarkIssue: "Special Marvel Edition #15",
+    creators: "Steve Englehart and Jim Starlin",
+    era: "Bronze Age (1973)",
+    description: "Marvel's martial arts sovereign whose Bronze Age debut issue continues to command major high-grade premiums following his cinematic introduction.",
+    baseFmv: 3200,
+  },
+  "yelena belova": {
+    term: "Yelena Belova (Black Widow)",
+    ticker: "$THUN",
+    landmarkIssue: "Inhumans #5 (1999) / Black Widow #1",
+    creators: "Paul Jenkins, Jae Lee, Devin Grayson, and J.G. Jones",
+    era: "Modern Age (1999)",
+    description: "The Red Room assassin and sisterly counterpart to Natasha Romanoff, currently positioning as the tactical anchor of Marvel's cinematic Thunderbolts roster.",
+    baseFmv: 550,
   },
 };
 
 /**
- * Derives the Market Butterfly Effect (Asset Ripple Projections) across
- * physical comic keys based on the specific plot, studio, and character nuances.
+ * Universal dynamic resolver for superhero market ramifications.
+ * Analyzes EVERY mentioned character or faction in any story and calculates
+ * the direct valuation, census, and market stance implications on their key comic issues.
+ */
+function deriveSuperheroMarketRamifications(
+  text: string,
+  entities: EntityWikiDef[],
+  loreDossiers: LoreDeepDiveEntry[]
+): SuperheroMarketRamification[] {
+  const lower = text.toLowerCase();
+  const ramifications: SuperheroMarketRamification[] = [];
+  const seenCharacters = new Set<string>();
+
+  // Helper evaluator
+  const evaluateCharacter = (name: string, ticker: string, firstApp: string, baseFmvNum: number, universeDesc: string) => {
+    const cleanName = name.toLowerCase();
+    if (seenCharacters.has(cleanName)) return;
+    seenCharacters.add(cleanName);
+
+    let stance: SuperheroMarketRamification["marketStance"] = "ACCUMULATE (BULLISH)";
+    let velocity = "+18.5% Bid Momentum";
+    let storyRamification = "";
+    let censusImpact = "";
+
+    // Contextual ramifications logic
+    if (cleanName.includes("doom") && (lower.includes("not real villain") || lower.includes("allies") || lower.includes("latverian"))) {
+      stance = "CONSOLIDATION / COOLING";
+      velocity = "-4.2% Short-Term Consolidation";
+      storyRamification = "Sharing antagonist focus with the Latverian Witches diffuses speculative buying from solo Doom keys into ensemble sorcery and multiverse crossover issues.";
+      censusImpact = "High-grade CGC 9.8 copies of Fantastic Four #5 find temporary price resistance around $95,000; investors look for entry points near historical moving average support.";
+    } else if (cleanName.includes("latverian") || cleanName.includes("cynthia")) {
+      stance = "ACCUMULATE (BULLISH)";
+      velocity = "+32.0% Liquidity Surge";
+      storyRamification = "Positioning ancestral Latverian sorceresses as covert puppetmasters immediately transforms obscure back-issue keys into front-line speculative targets.";
+      censusImpact = "Astonishing Tales #8 and Marvel Graphic Novel #49 experience rapid inventory depletion across online dealer listings; raw copies see 2x markups within 48 hours.";
+    } else if (cleanName.includes("storm") || cleanName.includes("invisible woman") || cleanName.includes("fantastic four") || cleanName.includes("reed richards")) {
+      stance = "ACCUMULATE (BULLISH)";
+      velocity = "+16.8% Inflow Acceleration";
+      storyRamification = "Leading the investigation into multiversal incursions elevates Sue Storm and the First Family to premier defensive leadership status in the crossover hierarchy.";
+      censusImpact = "Fantastic Four #1 and early Silver Age keys (#2-#10) see accelerated auction turnover and narrowing bid-ask spreads on major platforms like Heritage and ComicLink.";
+    } else if (cleanName.includes("gambit") || cleanName.includes("channing")) {
+      stance = "ACCUMULATE (BULLISH)";
+      velocity = "+28.5% Volume Surge";
+      storyRamification = "Confirmed attachment of Channing Tatum's Gambit in major ensemble Avengers and X-Men crossover warfare cements Remy LeBeau's premier status across modern cinematic timelines.";
+      censusImpact = "Uncanny X-Men #266 in CGC 9.8 sees immediate buyer interest, testing upper price resistance as auction cleared lots accelerate.";
+    } else if (cleanName.includes("spider-man") || cleanName.includes("brand new day")) {
+      stance = "ACCUMULATE (BULLISH)";
+      velocity = "+24.0% Liquidity Influx";
+      storyRamification = "Theatrical rerelease and restored cameo confirmations direct renewed spotlight onto Dan Slott's 2008 publishing continuity and Mr. Negative rogues gallery debuts.";
+      censusImpact = "The Amazing Spider-Man #546 CGC 9.8 population experiences heightened turnover, with raw copies commanding instant retail premiums.";
+    } else if (cleanName.includes("claire temple") || cleanName.includes("night nurse") || cleanName.includes("rosario")) {
+      stance = "ACCUMULATE (BULLISH)";
+      velocity = "+34.5% Auction Escalation";
+      storyRamification = "Restoring Claire Temple's cut cameo creates an undeniable bridge between street-level Netflix continuity and tentpole theatrical MCU timelines.";
+      censusImpact = "Hero for Hire #2 (1st Claire Temple) and Night Nurse #1 experience an immediate scarcity squeeze across graded slab registries.";
+    } else if (cleanName.includes("magneto") || cleanName.includes("ian mckellen") || cleanName.includes("cyclops") || cleanName.includes("x-men")) {
+      stance = "ACCUMULATE (BULLISH)";
+      velocity = "+19.2% Blue-Chip Inflow";
+      storyRamification = "Multiverse incursion warfare drawing classic Fox X-Men legends alongside modern Avengers creates unprecedented multi-franchise collector nostalgia.";
+      censusImpact = "The X-Men #1 and Giant-Size X-Men #1 cement their standing as sovereign bedrock assets, experiencing zero supply dilution.";
+    } else {
+      stance = lower.includes("villain") || lower.includes("cast") || lower.includes("return") || lower.includes("rerelease")
+        ? "ACCUMULATE (BULLISH)"
+        : "HOLD / MONITOR";
+      velocity = "+12.5% Steady Demand";
+      storyRamification = `Reporting actively involves ${name} in the expanding media landscape, bolstering consumer awareness and cross-generational character recognition.`;
+      censusImpact = `Certified high-grade census copies of ${firstApp} sustain resilient floor valuations, maintaining steady liquidity across third-party marketplaces.`;
+    }
+
+    const priceFormatted = baseFmvNum > 0 ? `$${baseFmvNum.toLocaleString()}` : "Market Benchmark";
+
+    ramifications.push({
+      characterName: name,
+      ticker,
+      firstAppearance: firstApp,
+      cgc98Fmv: priceFormatted,
+      marketStance: stance,
+      projectedVelocity: velocity,
+      directStoryRamification: storyRamification,
+      censusAndPricingImpact: censusImpact,
+    });
+  };
+
+  // 1. Process curated canonical characters matched in text
+  for (const [key, lore] of Object.entries(CANONICAL_COMIC_BACKGROUNDS)) {
+    if (lower.includes(key)) {
+      evaluateCharacter(lore.term, lore.ticker, lore.landmarkIssue, lore.baseFmv || 1500, lore.description);
+    }
+  }
+
+  // 2. Process adaptation cast members
+  for (const cast of adaptationCastData as Array<{ name: string; roles: Array<{ character: string; landmarkIssue: string; comicTicker: string }>; franchises: string[] }>) {
+    if (lower.includes(cast.name.toLowerCase())) {
+      for (const role of cast.roles) {
+        evaluateCharacter(
+          `${role.character} (${cast.name})`,
+          role.comicTicker || "$EQUITY",
+          role.landmarkIssue,
+          1850,
+          `Cinematic portrayal across ${cast.franchises.join(", ")}`
+        );
+      }
+    }
+  }
+
+  // 3. Process any remaining extracted lore entities
+  for (const lore of loreDossiers) {
+    if (!seenCharacters.has(lore.term.toLowerCase())) {
+      evaluateCharacter(lore.term, lore.ticker, lore.firstAppearance, 2200, lore.encyclopedicLore);
+    }
+  }
+
+  return ramifications.slice(0, 8);
+}
+
+/**
+ * Universal dynamic resolver for encyclopedic lore dossiers across 210,000+ entities.
+ */
+function resolveDynamicLoreDeepDives(text: string, entities: EntityWikiDef[]): LoreDeepDiveEntry[] {
+  const lowerAll = text.toLowerCase();
+  const loreDeepDives: LoreDeepDiveEntry[] = [];
+  const seenTerms = new Set<string>();
+
+  // 1. Check curated backgrounds first
+  for (const [key, lore] of Object.entries(CANONICAL_COMIC_BACKGROUNDS)) {
+    if (lowerAll.includes(key)) {
+      if (!seenTerms.has(lore.term.toLowerCase())) {
+        seenTerms.add(lore.term.toLowerCase());
+        loreDeepDives.push({
+          term: lore.term,
+          ticker: lore.ticker,
+          firstAppearance: lore.landmarkIssue,
+          creators: lore.creators,
+          era: lore.era,
+          encyclopedicLore: lore.description,
+        });
+      }
+    }
+  }
+
+  // 2. Resolve adaptation cast roles and talent
+  for (const cast of adaptationCastData as Array<{ name: string; roles: Array<{ character: string; landmarkIssue: string; comicTicker: string; universe: string }>; franchises: string[] }>) {
+    if (lowerAll.includes(cast.name.toLowerCase())) {
+      for (const role of cast.roles) {
+        if (!seenTerms.has(role.character.toLowerCase())) {
+          seenTerms.add(role.character.toLowerCase());
+          loreDeepDives.push({
+            term: `${role.character} (Portrayed by ${cast.name})`,
+            ticker: role.comicTicker || "$EQUITY",
+            firstAppearance: role.landmarkIssue,
+            creators: `Cast attachment across ${cast.franchises.join(", ")}`,
+            era: role.landmarkIssue.includes("196") ? "Silver Age" : role.landmarkIssue.includes("197") ? "Bronze Age" : role.landmarkIssue.includes("198") ? "Copper Age" : "Modern Age",
+            encyclopedicLore: `Major cinematic adaptation asset. The attached portrayal of ${role.character} directly channels collector demand into ${role.landmarkIssue}, serving as the primary secondary market catalyst for this equity.`,
+          });
+        }
+      }
+    }
+  }
+
+  // 3. Resolve matched entities via lore database
+  for (const entity of entities) {
+    const termLower = entity.term.toLowerCase();
+    if (seenTerms.has(termLower)) continue;
+    if (entity.type === "publisher" && !["dc studios", "marvel studios"].includes(termLower)) continue;
+
+    const slug = entity.wikiPath ? entity.wikiPath.replace("/wiki/entry/", "").replace("/wiki?q=", "") : termLower.replace(/\s+/g, "-");
+    const loreRecord = getLoreEntityBySlug(slug);
+
+    if (loreRecord) {
+      seenTerms.add(termLower);
+      const firstApp = loreRecord.first_appearance || (loreRecord.landmark_debuts?.[0]?.title) || `${entity.term} Debut Issue`;
+      const creators = loreRecord.creators || "Canonical Marvel / DC Creative Teams";
+      const era = firstApp.includes("196") ? "Silver Age" : firstApp.includes("197") ? "Bronze Age" : firstApp.includes("198") ? "Copper Age" : firstApp.includes("193") || firstApp.includes("194") ? "Golden Age" : "Modern Age";
+      const loreDesc = loreRecord.summary || `Canonical ${loreRecord.universe} character and publishing equity.`;
+
+      loreDeepDives.push({
+        term: loreRecord.title,
+        ticker: loreRecord.ticker || entity.ticker || "$EQUITY",
+        firstAppearance: firstApp,
+        creators,
+        era,
+        encyclopedicLore: loreDesc,
+      });
+    }
+  }
+
+  return loreDeepDives.slice(0, 6);
+}
+
+/**
+ * Universal dynamic resolver for the Market Butterfly Effect across any story.
  */
 function deriveMarketButterflyRipples(
   text: string,
-  entities: EntityWikiDef[]
+  entities: EntityWikiDef[],
+  loreDossiers: LoreDeepDiveEntry[]
 ): MarketButterflyRipple[] {
   const lower = text.toLowerCase();
   const ripples: MarketButterflyRipple[] = [];
+  const seenTickers = new Set<string>();
 
   // 1. Latverian Witches / Doctor Doom / Fantastic Four Multiverse Complexity
   if (lower.includes("latverian") || lower.includes("witches") || (lower.includes("doom") && lower.includes("villain"))) {
@@ -180,6 +455,8 @@ function deriveMarketButterflyRipples(
       projectedDelta: "+24.5% FMV Velocity",
       catalystCausality: "Narrative pivot positioning the Latverian Witches as co-conspirators immediately redirects speculative capital from standard Doom villain keys into ancestral sorcery debuts.",
     });
+    seenTickers.add("$DOOM:LATV");
+
     ripples.push({
       ticker: "$FF4",
       assetName: "Fantastic Four Silver Age Core Keys",
@@ -188,6 +465,8 @@ function deriveMarketButterflyRipples(
       projectedDelta: "+12.0% Bid Volume",
       catalystCausality: "Sue Storm's tactical investigation elevates First Family defensive leadership, increasing inquiry volume for high-grade Silver Age Fantastic Four keys.",
     });
+    seenTickers.add("$FF4");
+
     ripples.push({
       ticker: "$DOOM",
       assetName: "Doctor Doom Solo Key Index",
@@ -196,10 +475,11 @@ function deriveMarketButterflyRipples(
       projectedDelta: "-4.2% Short-Term Consolidation",
       catalystCausality: "Rumors questioning Doom's sole antagonist status temporarily cool over-leveraged speculation, allowing secondary prices to consolidate at historical support levels.",
     });
+    seenTickers.add("$DOOM");
   }
 
   // 2. Spider-Man: Brand New Day & Sony Theatrical Rerelease Catalyst
-  if (lower.includes("brand new day") || lower.includes("spider-man") || lower.includes("sony")) {
+  if (lower.includes("brand new day") || (lower.includes("spider-man") && lower.includes("rerelease")) || (lower.includes("sony") && lower.includes("spider-man"))) {
     ripples.push({
       ticker: "$SPDR:BND",
       assetName: "Brand New Day & Modern Rogues Debut Keys",
@@ -208,6 +488,8 @@ function deriveMarketButterflyRipples(
       projectedDelta: "+32.8% Liquidity Spike",
       catalystCausality: "Theatrical rerelease with restored footage directly spotlights Dan Slott's 2008 publishing era, accelerating accumulation of CGC 9.8 modern keys.",
     });
+    seenTickers.add("$SPDR:BND");
+
     ripples.push({
       ticker: "$NURSE",
       assetName: "Claire Temple / Night Nurse Heritage Keys",
@@ -216,6 +498,8 @@ function deriveMarketButterflyRipples(
       projectedDelta: "+28.4% Auction Escalation",
       catalystCausality: "Restoration of Rosario Dawson's cut cameo creates an immediate crossover bridge between Netflix Marvel street-level canon and theatrical Sony/MCU timelines.",
     });
+    seenTickers.add("$NURSE");
+
     ripples.push({
       ticker: "$PNSH",
       assetName: "Bronze Age Anti-Hero Key Index",
@@ -224,29 +508,31 @@ function deriveMarketButterflyRipples(
       projectedDelta: "+8.5% Capital Absorption",
       catalystCausality: "Jon Bernthal's attached ensemble casting reinforces physical demand for Bronze Age key debuts across certified census tiers.",
     });
+    seenTickers.add("$PNSH");
   }
 
-  // 3. Avengers: Endgame Encore / Avengers: Doomsday Box Office Boost
-  if (lower.includes("endgame") || lower.includes("doomsday") || lower.includes("encore") || lower.includes("avengers")) {
+  // 3. Dynamic generation for cast and lore dossiers
+  for (const lore of loreDossiers) {
+    if (seenTickers.has(lore.ticker)) continue;
+    seenTickers.add(lore.ticker);
+
+    const isSurge = lower.includes("cast") || lower.includes("villain") || lower.includes("rerelease") || lower.includes("return") || lower.includes("record") || lower.includes("trailer");
+    const delta = isSurge ? `+${(18 + (lore.term.length % 15)).toFixed(1)}% Liquidity Spike` : `+${(8 + (lore.term.length % 10)).toFixed(1)}% Clearing Spread`;
+    const dir: "surge" | "uptick" = isSurge ? "surge" : "uptick";
+
     ripples.push({
-      ticker: "$AVNG:ENDGAME",
-      assetName: "Infinity Saga & Modern Cosmic Event Keys",
-      landmarkKey: "The Infinity Gauntlet #1 / Avengers #1",
-      direction: "surge",
-      projectedDelta: "+16.2% Clearing Spread",
-      catalystCausality: "Weekend box office topping $26M reaffirms theatrical demand for ensemble Marvel events, lifting enthusiasm for Phase 6 tentpoles.",
+      ticker: lore.ticker,
+      assetName: `${lore.term} Key Issue Basket`,
+      landmarkKey: lore.firstAppearance,
+      direction: dir,
+      projectedDelta: delta,
+      catalystCausality: `High-visibility reporting directly spotlights ${lore.term}, accelerating collector inquiries and auction clearing velocity across certified ${lore.era} copies.`,
     });
-    ripples.push({
-      ticker: "$AVNG:DOOMSDAY",
-      assetName: "Secret Wars & Battleworld Key Equities",
-      landmarkKey: "Marvel Super Heroes Secret Wars #1 (1984)",
-      direction: "uptick",
-      projectedDelta: "+14.0% High-Grade Spread",
-      catalystCausality: "Direct narrative momentum towards December 18 Doomsday release establishes a multi-year floor for Jim Shooter and Jonathan Hickman crossover keys.",
-    });
+
+    if (ripples.length >= 6) break;
   }
 
-  // Fallback generic ripple if no specific franchise triggered
+  // 4. Fallback default if ripples still empty
   if (ripples.length === 0) {
     const primary = entities[0] || { term: "Benchmark Comic Equities", ticker: "$EQUITY" };
     ripples.push({
@@ -259,12 +545,11 @@ function deriveMarketButterflyRipples(
     });
   }
 
-  return ripples;
+  return ripples.slice(0, 6);
 }
 
 /**
- * Parses and synthesizes a complete 5-paragraph comprehensive market intelligence article
- * from breaking headlines and syndicated wire reporting.
+ * Universal dynamic parser and synthesizer for ALL news stories across the platform.
  */
 export function parseAndSynthesizeArticle(story: {
   headline: string;
@@ -280,104 +565,40 @@ export function parseAndSynthesizeArticle(story: {
   const entities = findNewsEntities(headline, rawSummary);
   const catalyst = analyzeStoryCatalyst(headline, rawSummary);
 
-  const lowerAll = `${headline} ${rawSummary}`.toLowerCase();
+  const fullText = `${headline} ${rawSummary}`;
 
-  // Extract all matched lore deep dive entries
-  const loreDeepDives: LoreDeepDiveEntry[] = [];
-  const seenLoreKeys = new Set<string>();
+  // Dynamically resolve Lore Deep Dives across the 210,000+ entity index
+  const loreDeepDives = resolveDynamicLoreDeepDives(fullText, entities);
 
-  for (const [key, lore] of Object.entries(CANONICAL_COMIC_BACKGROUNDS)) {
-    if (lowerAll.includes(key)) {
-      if (!seenLoreKeys.has(lore.term)) {
-        seenLoreKeys.add(lore.term);
-        loreDeepDives.push({
-          term: lore.term,
-          ticker: lore.ticker,
-          firstAppearance: lore.landmarkIssue,
-          creators: lore.creators,
-          era: lore.era,
-          encyclopedicLore: lore.description,
-        });
-      }
-    }
-  }
+  // Dynamically derive Superhero Market Ramifications for every character in the story
+  const superheroRamifications = deriveSuperheroMarketRamifications(fullText, entities, loreDeepDives);
 
-  // Derive the Market Butterfly Effect
-  const butterflyRipples = deriveMarketButterflyRipples(lowerAll, entities);
+  // Dynamically resolve Market Butterfly Effect ripples
+  const butterflyRipples = deriveMarketButterflyRipples(fullText, entities, loreDeepDives);
 
-  // Identify primary studio and corporate landscape
-  let studioName = "Marvel Studios";
-  let studioTicker = "$MRVL";
-  let studioDescription = "Walt Disney Company ($DIS) subsidiary Marvel Studios";
-  if (lowerAll.includes("sony") || lowerAll.includes("spider-man")) {
-    studioName = "Sony Pictures Entertainment ($SONY)";
-    studioTicker = "$SONY";
-    studioDescription = "Sony Group Corporation's motion picture division Sony Pictures Entertainment ($SONY)";
-  } else if (lowerAll.includes("warner") || lowerAll.includes("dc") || lowerAll.includes("batman") || lowerAll.includes("superman")) {
-    studioName = "Warner Bros. Discovery ($WBD) / DC Studios ($DC)";
-    studioTicker = "$WBD";
-    studioDescription = "Warner Bros. Discovery ($WBD) and James Gunn's DC Studios";
-  } else if (lowerAll.includes("paramount") || lowerAll.includes("transformers")) {
-    studioName = "Paramount Global ($PARA)";
-    studioTicker = "$PARA";
-    studioDescription = "Paramount Global ($PARA) theatrical division";
-  } else if (lowerAll.includes("disney") || lowerAll.includes("avengers") || lowerAll.includes("mcu")) {
-    studioName = "The Walt Disney Company ($DIS) / Marvel Studios ($MRVL)";
-    studioTicker = "$DIS";
-    studioDescription = "The Walt Disney Company ($DIS) and Marvel Studios ($MRVL)";
-  }
+  // Preserve authentic paragraphs
+  const authenticParagraphs = rawSummary
+    ? rawSummary.split(/\n\n+/).map((p) => p.trim()).filter(Boolean)
+    : [headline];
 
-  // Clean raw summary text to remove any existing bracketed artifacts for clean narrative insertion
-  const cleanSummary = rawSummary ? rawSummary.replace(/\[\/?.*?\]/g, "").replace(/\s+/g, " ").trim() : headline;
+  const sections = authenticParagraphs.map((body, i) => ({
+    heading: authenticParagraphs.length > 1 ? `Paragraph ${i + 1}` : "Original Reporting",
+    body,
+  }));
 
-  // Primary lore background
-  const primaryLore = loreDeepDives[0] || {
-    term: "Sovereign Superhero Publishing Canon",
-    ticker: "$EQUITY",
-    firstAppearance: "Canonical Landmark Issue",
-    creators: "Legendary Creative Teams",
-    era: "Historic Era",
-    encyclopedicLore: "Foundational sequential art publishing that underpins multi-billion dollar global entertainment franchises.",
-  };
-
-  // --- PARAGRAPH 1: Executive Catalyst & Theatrical / Publishing Development ---
-  const p1 = `${cleanSummary} This significant media development underscores tactical franchise positioning across ${studioDescription}. By orchestrating targeted theatrical releases, bonus-footage restorations, and high-profile casting attachments, studio executives are maximizing consumer engagement and creating synergistic narrative bridges across their cinematic universes.`;
-
-  // --- PARAGRAPH 2: Encyclopedic Canon Lore & Character Heritage ---
-  const p2 = `From an encyclopedic lore perspective, this reporting directly connects to ${primaryLore.term}, whose canonical lineage traces back to ${primaryLore.firstAppearance}, created by ${primaryLore.creators} in the ${primaryLore.era}. ${primaryLore.encyclopedicLore} When adaptations expand on or recontextualize these characters—such as exploring the mystical origins of Latverian sorcery, unearthing street-level Night Nurse alliances, or adapting sprawling event storylines—they spark immediate rediscovery of the original source material.`;
-
-  // --- PARAGRAPH 3: The Market Butterfly Effect & Asset Ripple Projections ---
-  const rippleHighlights = butterflyRipples
-    .map((r) => `${r.assetName} (${r.ticker}) projecting ${r.projectedDelta} due to ${r.catalystCausality.toLowerCase()}`)
-    .join(" ");
-  const p3 = `The market butterfly effect of this development triggers distinct cross-asset ripples across physical comic equities. Rather than affecting all issues uniformly, ${rippleHighlights} In historical trading cycles, when plot rumors introduce narrative complexity or theatrical rereleases validate character longevity, speculative capital rapidly rotates into specific key issues while over-leveraged secondary positions undergo healthy price consolidation.`;
-
-  // --- PARAGRAPH 4: Secondary Market Census Dynamics & Certified Liquidity ---
-  const p4 = `Across the secondary comic marketplace, historical registry metrics from third-party grading authorities (CGC and CBCS) indicate that high-grade census copies in 9.6 and 9.8 condition experience immediate spread compression and increased auction clearing frequency. Certified blue-chip slabs listed on premier exchange venues—including Heritage Auctions, ComicLink, ComicConnect, and GoCollect—see accelerated turnover. Meanwhile, unslabbed raw inventory in Fine to Near Mint condition commands heightened dealer premiums as collectors compete to acquire grading candidates ahead of final theatrical debuts.`;
-
-  // --- PARAGRAPH 5: Institutional Valuation Directive & Capital Boundary ---
-  const p5 = `For institutional collectors and portfolio managers, ${authorPersona.writingStyle.introStyle} it is critical to maintain a strict boundary between public corporate equities and sovereign physical comic assets: while studio stock prices (${studioTicker}) reflect broad corporate macroeconomic factors, physical comic equities trade on independent certified census scarcity, historical cultural provenance, and decades of transactional clearing data. ${authorPersona.writingStyle.implicationAngle} Investors are advised to maintain core positions in certified landmark keys and track weekly auction velocity before committing fresh liquidity to speculative breakout variants.`;
-
-  const paragraphs = [p1, p2, p3, p4, p5];
-  const sections = [
-    { heading: "I. Executive Catalyst & Studio Overview", body: p1 },
-    { heading: "II. Encyclopedic Canon Lore & Provenance", body: p2 },
-    { heading: "III. The Market Butterfly Effect (Asset Ripple Projection)", body: p3 },
-    { heading: "IV. Secondary Market Census Dynamics & Slabs", body: p4 },
-    { heading: "V. Institutional Valuation & Portfolio Directive", body: p5 },
-  ];
-
-  const wordCount = paragraphs.reduce((acc, p) => acc + p.split(/\s+/).length, 0);
+  const wordCount = authenticParagraphs.reduce((acc, p) => acc + p.split(/\s+/).length, 0);
 
   return {
-    paragraphs,
+    paragraphs: authenticParagraphs,
     sections,
     readingTimeMinutes: Math.max(1, Math.ceil(wordCount / 200)),
     wordCount,
     entities,
     loreDeepDives,
+    superheroRamifications,
     butterflyRipples,
     catalyst,
     author: authorPersona,
   };
 }
+
