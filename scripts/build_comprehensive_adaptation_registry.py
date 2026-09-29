@@ -1,4 +1,13 @@
-[
+#!/usr/bin/env python3
+import json
+import os
+import re
+
+REGISTRY_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../lib/news/adaptation-asset-registry.json"))
+
+# Base assets (including existing curated items + complete universal coverage)
+assets = [
+  # --- MCU PHASES 1-3 (THE INFINITY SAGA) ---
   {
     "title": "Iron Man",
     "slug": "iron-man-2008",
@@ -6,11 +15,7 @@
     "universe": "MARVEL",
     "franchise": "Marvel Cinematic Universe",
     "type": "equity",
-    "aliases": [
-      "Iron Man (2008)",
-      "Iron Man 1",
-      "Iron Man movie"
-    ],
+    "aliases": ["Iron Man (2008)", "Iron Man 1", "Iron Man movie"],
     "landmarkIssue": "Tales of Suspense #39",
     "landmarkIssues": [
       {
@@ -28,21 +33,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Iron Man",
-      "Tony Stark",
-      "War Machine",
-      "Pepper Potts",
-      "Obadiah Stane",
-      "Iron Monger"
-    ],
-    "creators": [
-      "Jon Favreau",
-      "Robert Downey Jr.",
-      "Stan Lee",
-      "Jack Kirby",
-      "Don Heck"
-    ],
+    "characters": ["Iron Man", "Tony Stark", "War Machine", "Pepper Potts", "Obadiah Stane", "Iron Monger"],
+    "creators": ["Jon Favreau", "Robert Downey Jr.", "Stan Lee", "Jack Kirby", "Don Heck"],
     "summary": "Iron Man (2008) is the foundational cornerstone of the Marvel Cinematic Universe, initiating the modern comic media investment era and driving multi-decade demand for Tales of Suspense #39."
   },
   {
@@ -52,10 +44,7 @@
     "universe": "MARVEL",
     "franchise": "Marvel Cinematic Universe",
     "type": "equity",
-    "aliases": [
-      "The Incredible Hulk (2008)",
-      "Incredible Hulk movie"
-    ],
+    "aliases": ["The Incredible Hulk (2008)", "Incredible Hulk movie"],
     "landmarkIssue": "The Incredible Hulk #1",
     "landmarkIssues": [
       {
@@ -73,19 +62,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Hulk",
-      "Bruce Banner",
-      "Abomination",
-      "General Ross",
-      "Betty Ross"
-    ],
-    "creators": [
-      "Louis Leterrier",
-      "Edward Norton",
-      "Stan Lee",
-      "Jack Kirby"
-    ],
+    "characters": ["Hulk", "Bruce Banner", "Abomination", "General Ross", "Betty Ross"],
+    "creators": ["Louis Leterrier", "Edward Norton", "Stan Lee", "Jack Kirby"],
     "summary": "The Incredible Hulk (2008) established Phase 1 cosmic gamma canon, introducing Abomination and tying into Nick Fury's Avengers Initiative."
   },
   {
@@ -95,9 +73,7 @@
     "universe": "MARVEL",
     "franchise": "Marvel Cinematic Universe",
     "type": "equity",
-    "aliases": [
-      "Iron Man 2"
-    ],
+    "aliases": ["Iron Man 2"],
     "landmarkIssue": "Tales of Suspense #52",
     "landmarkIssues": [
       {
@@ -115,21 +91,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Iron Man",
-      "Black Widow",
-      "War Machine",
-      "Whiplash",
-      "Justin Hammer",
-      "Nick Fury"
-    ],
-    "creators": [
-      "Jon Favreau",
-      "Robert Downey Jr.",
-      "Scarlett Johansson",
-      "Don Cheadle",
-      "Stan Lee"
-    ],
+    "characters": ["Iron Man", "Black Widow", "War Machine", "Whiplash", "Justin Hammer", "Nick Fury"],
+    "creators": ["Jon Favreau", "Robert Downey Jr.", "Scarlett Johansson", "Don Cheadle", "Stan Lee"],
     "summary": "Iron Man 2 marked the cinematic debut of Scarlett Johansson's Black Widow and War Machine's armored combat, catalyzing demand for Tales of Suspense #52."
   },
   {
@@ -139,10 +102,7 @@
     "universe": "MARVEL",
     "franchise": "Marvel Cinematic Universe",
     "type": "equity",
-    "aliases": [
-      "Thor (2011)",
-      "Thor movie"
-    ],
+    "aliases": ["Thor (2011)", "Thor movie"],
     "landmarkIssue": "Journey into Mystery #83",
     "landmarkIssues": [
       {
@@ -160,21 +120,8 @@
         "assetTier": "SOVEREIGN_BLUE_CHIP"
       }
     ],
-    "characters": [
-      "Thor",
-      "Loki",
-      "Odin",
-      "Jane Foster",
-      "Hawkeye",
-      "Heimdall"
-    ],
-    "creators": [
-      "Kenneth Branagh",
-      "Chris Hemsworth",
-      "Tom Hiddleston",
-      "Stan Lee",
-      "Jack Kirby"
-    ],
+    "characters": ["Thor", "Loki", "Odin", "Jane Foster", "Hawkeye", "Heimdall"],
+    "creators": ["Kenneth Branagh", "Chris Hemsworth", "Tom Hiddleston", "Stan Lee", "Jack Kirby"],
     "summary": "Kenneth Branagh's Thor brought the Asgardian pantheon into the MCU, introducing Chris Hemsworth's God of Thunder and Tom Hiddleston's Loki."
   },
   {
@@ -184,10 +131,7 @@
     "universe": "MARVEL",
     "franchise": "Marvel Cinematic Universe",
     "type": "equity",
-    "aliases": [
-      "Captain America The First Avenger",
-      "The First Avenger"
-    ],
+    "aliases": ["Captain America The First Avenger", "The First Avenger"],
     "landmarkIssue": "Captain America Comics #1",
     "landmarkIssues": [
       {
@@ -205,20 +149,8 @@
         "assetTier": "SOVEREIGN_BLUE_CHIP"
       }
     ],
-    "characters": [
-      "Captain America",
-      "Steve Rogers",
-      "Peggy Carter",
-      "Bucky Barnes",
-      "Red Skull",
-      "Howard Stark"
-    ],
-    "creators": [
-      "Joe Johnston",
-      "Chris Evans",
-      "Joe Simon",
-      "Jack Kirby"
-    ],
+    "characters": ["Captain America", "Steve Rogers", "Peggy Carter", "Bucky Barnes", "Red Skull", "Howard Stark"],
+    "creators": ["Joe Johnston", "Chris Evans", "Joe Simon", "Jack Kirby"],
     "summary": "Captain America: The First Avenger established Steve Rogers' WWII origin and the Tesseract/Space Stone, serving as a primary link to Golden Age comic heritage."
   },
   {
@@ -228,11 +160,7 @@
     "universe": "MARVEL",
     "franchise": "Marvel Cinematic Universe",
     "type": "equity",
-    "aliases": [
-      "The Avengers (2012)",
-      "Avengers Assemble",
-      "Marvel's The Avengers"
-    ],
+    "aliases": ["The Avengers (2012)", "Avengers Assemble", "Marvel's The Avengers"],
     "landmarkIssue": "The Avengers #1",
     "landmarkIssues": [
       {
@@ -250,21 +178,8 @@
         "assetTier": "SOVEREIGN_BLUE_CHIP"
       }
     ],
-    "characters": [
-      "Iron Man",
-      "Captain America",
-      "Thor",
-      "Hulk",
-      "Black Widow",
-      "Hawkeye",
-      "Loki",
-      "Thanos"
-    ],
-    "creators": [
-      "Joss Whedon",
-      "Stan Lee",
-      "Jack Kirby"
-    ],
+    "characters": ["Iron Man", "Captain America", "Thor", "Hulk", "Black Widow", "Hawkeye", "Loki", "Thanos"],
+    "creators": ["Joss Whedon", "Stan Lee", "Jack Kirby"],
     "summary": "The Avengers (2012) grossed $1.518 billion, proving the multi-franchise shared universe model and setting new historical records for Silver Age team debuts."
   },
   {
@@ -274,9 +189,7 @@
     "universe": "MARVEL",
     "franchise": "Marvel Cinematic Universe",
     "type": "equity",
-    "aliases": [
-      "Iron Man 3"
-    ],
+    "aliases": ["Iron Man 3"],
     "landmarkIssue": "Iron Man Vol 4 #1",
     "landmarkIssues": [
       {
@@ -294,20 +207,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Iron Man",
-      "Tony Stark",
-      "War Machine",
-      "Aldrich Killian",
-      "Pepper Potts",
-      "The Mandarin"
-    ],
-    "creators": [
-      "Shane Black",
-      "Robert Downey Jr.",
-      "Warren Ellis",
-      "Adi Granov"
-    ],
+    "characters": ["Iron Man", "Tony Stark", "War Machine", "Aldrich Killian", "Pepper Potts", "The Mandarin"],
+    "creators": ["Shane Black", "Robert Downey Jr.", "Warren Ellis", "Adi Granov"],
     "summary": "Iron Man 3 adapted the Extremis storyline, crossing $1.2 billion and proving the post-Avengers solo drawing power of Marvel tentpoles."
   },
   {
@@ -317,11 +218,7 @@
     "universe": "MARVEL",
     "franchise": "Marvel Cinematic Universe",
     "type": "equity",
-    "aliases": [
-      "Captain America The Winter Soldier",
-      "The Winter Soldier",
-      "Winter Soldier"
-    ],
+    "aliases": ["Captain America The Winter Soldier", "The Winter Soldier", "Winter Soldier"],
     "landmarkIssue": "Captain America Vol 5 #1",
     "landmarkIssues": [
       {
@@ -346,22 +243,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Captain America",
-      "Winter Soldier",
-      "Black Widow",
-      "Falcon",
-      "Nick Fury",
-      "Alexander Pierce",
-      "Crossbones"
-    ],
-    "creators": [
-      "Anthony Russo",
-      "Joe Russo",
-      "Ed Brubaker",
-      "Steve Epting",
-      "Chris Evans"
-    ],
+    "characters": ["Captain America", "Winter Soldier", "Black Widow", "Falcon", "Nick Fury", "Alexander Pierce", "Crossbones"],
+    "creators": ["Anthony Russo", "Joe Russo", "Ed Brubaker", "Steve Epting", "Chris Evans"],
     "summary": "Captain America: The Winter Soldier is widely praised as one of the MCU's pinnacle political thrillers, accelerating values for Ed Brubaker's modern Captain America keys."
   },
   {
@@ -371,10 +254,7 @@
     "universe": "MARVEL",
     "franchise": "Marvel Cinematic Universe",
     "type": "equity",
-    "aliases": [
-      "Guardians of the Galaxy Vol. 1",
-      "Guardians of the Galaxy (2014)"
-    ],
+    "aliases": ["Guardians of the Galaxy Vol. 1", "Guardians of the Galaxy (2014)"],
     "landmarkIssue": "Marvel Super-Heroes #18",
     "landmarkIssues": [
       {
@@ -399,22 +279,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Star-Lord",
-      "Gamora",
-      "Drax the Destroyer",
-      "Rocket Raccoon",
-      "Groot",
-      "Ronan the Accuser",
-      "Yondu"
-    ],
-    "creators": [
-      "James Gunn",
-      "Chris Pratt",
-      "Dan Abnett",
-      "Andy Lanning",
-      "Jim Starlin"
-    ],
+    "characters": ["Star-Lord", "Gamora", "Drax the Destroyer", "Rocket Raccoon", "Groot", "Ronan the Accuser", "Yondu"],
+    "creators": ["James Gunn", "Chris Pratt", "Dan Abnett", "Andy Lanning", "Jim Starlin"],
     "summary": "Guardians of the Galaxy (2014) transformed obscure cosmic Marvel characters into premier entertainment equities, driving massive runs on 1970s and 1980s bronze magazine keys."
   },
   {
@@ -424,10 +290,7 @@
     "universe": "MARVEL",
     "franchise": "Marvel Cinematic Universe",
     "type": "equity",
-    "aliases": [
-      "Avengers Age of Ultron",
-      "Age of Ultron movie"
-    ],
+    "aliases": ["Avengers Age of Ultron", "Age of Ultron movie"],
     "landmarkIssue": "The Avengers #54",
     "landmarkIssues": [
       {
@@ -452,24 +315,8 @@
         "assetTier": "SOVEREIGN_BLUE_CHIP"
       }
     ],
-    "characters": [
-      "Iron Man",
-      "Captain America",
-      "Thor",
-      "Hulk",
-      "Black Widow",
-      "Hawkeye",
-      "Ultron",
-      "Vision",
-      "Scarlet Witch",
-      "Quicksilver"
-    ],
-    "creators": [
-      "Joss Whedon",
-      "Roy Thomas",
-      "John Buscema",
-      "Stan Lee"
-    ],
+    "characters": ["Iron Man", "Captain America", "Thor", "Hulk", "Black Widow", "Hawkeye", "Ultron", "Vision", "Scarlet Witch", "Quicksilver"],
+    "creators": ["Joss Whedon", "Roy Thomas", "John Buscema", "Stan Lee"],
     "summary": "Avengers: Age of Ultron introduced Vision and Scarlet Witch to the MCU, propelling Avengers #57 into the sovereign blue-chip tier of Silver Age valuations."
   },
   {
@@ -479,10 +326,7 @@
     "universe": "MARVEL",
     "franchise": "Marvel Cinematic Universe",
     "type": "equity",
-    "aliases": [
-      "Captain America Civil War",
-      "Civil War"
-    ],
+    "aliases": ["Captain America Civil War", "Civil War"],
     "landmarkIssue": "Civil War #1",
     "landmarkIssues": [
       {
@@ -500,20 +344,8 @@
         "assetTier": "SOVEREIGN_BLUE_CHIP"
       }
     ],
-    "characters": [
-      "Captain America",
-      "Iron Man",
-      "Black Panther",
-      "Spider-Man",
-      "Winter Soldier",
-      "Zemo"
-    ],
-    "creators": [
-      "Anthony Russo",
-      "Joe Russo",
-      "Mark Millar",
-      "Steve McNiven"
-    ],
+    "characters": ["Captain America", "Iron Man", "Black Panther", "Spider-Man", "Winter Soldier", "Zemo"],
+    "creators": ["Anthony Russo", "Joe Russo", "Mark Millar", "Steve McNiven"],
     "summary": "Captain America: Civil War adapted Marvel's 2006 crossover event, introducing Tom Holland's Spider-Man and Chadwick Boseman's Black Panther into the Marvel Cinematic Universe while fracturing the Avengers over government oversight."
   },
   {
@@ -523,10 +355,7 @@
     "universe": "MARVEL",
     "franchise": "Marvel Cinematic Universe / Sony",
     "type": "equity",
-    "aliases": [
-      "Spider-Man Homecoming",
-      "Homecoming"
-    ],
+    "aliases": ["Spider-Man Homecoming", "Homecoming"],
     "landmarkIssue": "The Amazing Spider-Man #2",
     "landmarkIssues": [
       {
@@ -544,22 +373,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Spider-Man",
-      "Peter Parker",
-      "Vulture",
-      "Ned Leeds",
-      "Iron Man",
-      "Aunt May",
-      "Zendaya (MJ)"
-    ],
-    "creators": [
-      "Jon Watts",
-      "Tom Holland",
-      "Michael Keaton",
-      "Stan Lee",
-      "Steve Ditko"
-    ],
+    "characters": ["Spider-Man", "Peter Parker", "Vulture", "Ned Leeds", "Iron Man", "Aunt May", "Zendaya (MJ)"],
+    "creators": ["Jon Watts", "Tom Holland", "Michael Keaton", "Stan Lee", "Steve Ditko"],
     "summary": "Spider-Man: Homecoming launched Tom Holland's solo trilogy inside the MCU, establishing a groundbreaking co-production alliance between Sony Pictures and Marvel Studios."
   },
   {
@@ -569,10 +384,7 @@
     "universe": "MARVEL",
     "franchise": "Marvel Cinematic Universe",
     "type": "equity",
-    "aliases": [
-      "Thor Ragnarok",
-      "Ragnarok"
-    ],
+    "aliases": ["Thor Ragnarok", "Ragnarok"],
     "landmarkIssue": "The Incredible Hulk Vol 2 #92",
     "landmarkIssues": [
       {
@@ -590,22 +402,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Thor",
-      "Hulk",
-      "Loki",
-      "Hela",
-      "Valkyrie",
-      "Grandmaster",
-      "Korg"
-    ],
-    "creators": [
-      "Taika Waititi",
-      "Chris Hemsworth",
-      "Mark Ruffalo",
-      "Cate Blanchett",
-      "Greg Pak"
-    ],
+    "characters": ["Thor", "Hulk", "Loki", "Hela", "Valkyrie", "Grandmaster", "Korg"],
+    "creators": ["Taika Waititi", "Chris Hemsworth", "Mark Ruffalo", "Cate Blanchett", "Greg Pak"],
     "summary": "Thor: Ragnarok reinvented the Thor franchise with vibrant space-opera action, incorporating elements of Greg Pak's Planet Hulk storyline."
   },
   {
@@ -615,11 +413,7 @@
     "universe": "MARVEL",
     "franchise": "Marvel Cinematic Universe",
     "type": "equity",
-    "aliases": [
-      "Black Panther (2018)",
-      "Black Panther 1",
-      "Black Panther movie"
-    ],
+    "aliases": ["Black Panther (2018)", "Black Panther 1", "Black Panther movie"],
     "landmarkIssue": "Fantastic Four #52",
     "landmarkIssues": [
       {
@@ -637,22 +431,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Black Panther",
-      "T'Challa",
-      "Killmonger",
-      "Shuri",
-      "Okoye",
-      "Nakia",
-      "M'Baku"
-    ],
-    "creators": [
-      "Ryan Coogler",
-      "Chadwick Boseman",
-      "Michael B. Jordan",
-      "Stan Lee",
-      "Jack Kirby"
-    ],
+    "characters": ["Black Panther", "T'Challa", "Killmonger", "Shuri", "Okoye", "Nakia", "M'Baku"],
+    "creators": ["Ryan Coogler", "Chadwick Boseman", "Michael B. Jordan", "Stan Lee", "Jack Kirby"],
     "summary": "Black Panther became a historic cultural and box office phenomenon ($1.35 billion), earning three Academy Awards and establishing Fantastic Four #52 among the elite tier of comic investments."
   },
   {
@@ -662,10 +442,7 @@
     "universe": "MARVEL",
     "franchise": "Marvel Cinematic Universe",
     "type": "equity",
-    "aliases": [
-      "Avengers Infinity War",
-      "Infinity War"
-    ],
+    "aliases": ["Avengers Infinity War", "Infinity War"],
     "landmarkIssue": "The Infinity Gauntlet #1",
     "landmarkIssues": [
       {
@@ -676,19 +453,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Iron Man",
-      "Thanos",
-      "Thor",
-      "Captain America",
-      "Doctor Strange",
-      "Spider-Man"
-    ],
-    "creators": [
-      "Anthony Russo",
-      "Joe Russo",
-      "Jim Starlin"
-    ],
+    "characters": ["Iron Man", "Thanos", "Thor", "Captain America", "Doctor Strange", "Spider-Man"],
+    "creators": ["Anthony Russo", "Joe Russo", "Jim Starlin"],
     "summary": "Avengers: Infinity War brought together over sixty Marvel characters in a confrontation against Thanos for the Infinity Stones. Crossing $2.05 billion worldwide, it stands as one of the pivotal watershed media events in modern entertainment equity valuation."
   },
   {
@@ -698,13 +464,7 @@
     "universe": "MARVEL",
     "franchise": "Marvel Cinematic Universe",
     "type": "equity",
-    "aliases": [
-      "Avengers Endgame",
-      "Avengers: Endgame Encore",
-      "Avengers Endgame: Encore",
-      "Avengers Endgame Encore",
-      "Endgame"
-    ],
+    "aliases": ["Avengers Endgame", "Avengers: Endgame Encore", "Avengers Endgame: Encore", "Avengers Endgame Encore", "Endgame"],
     "landmarkIssue": "The Infinity Gauntlet #1",
     "landmarkIssues": [
       {
@@ -722,22 +482,8 @@
         "assetTier": "SOVEREIGN_BLUE_CHIP"
       }
     ],
-    "characters": [
-      "Iron Man",
-      "Captain America",
-      "Thor",
-      "Hulk",
-      "Black Widow",
-      "Hawkeye",
-      "Thanos"
-    ],
-    "creators": [
-      "Anthony Russo",
-      "Joe Russo",
-      "Jim Starlin",
-      "Stan Lee",
-      "Jack Kirby"
-    ],
+    "characters": ["Iron Man", "Captain America", "Thor", "Hulk", "Black Widow", "Hawkeye", "Thanos"],
+    "creators": ["Anthony Russo", "Joe Russo", "Jim Starlin", "Stan Lee", "Jack Kirby"],
     "summary": "Avengers: Endgame is the climax of Marvel Studios' 22-film Infinity Saga and one of the highest-grossing cinematic releases in history ($2.799 billion). The film acts as a massive asset catalyst for key Marvel Bronze, Copper, and Modern comic equities, accelerating global secondary market liquidity."
   },
   {
@@ -747,10 +493,7 @@
     "universe": "MARVEL",
     "franchise": "Marvel Cinematic Universe / Sony",
     "type": "equity",
-    "aliases": [
-      "Spider-Man Far From Home",
-      "Far From Home"
-    ],
+    "aliases": ["Spider-Man Far From Home", "Far From Home"],
     "landmarkIssue": "The Amazing Spider-Man #13",
     "landmarkIssues": [
       {
@@ -761,22 +504,12 @@
         "assetTier": "SOVEREIGN_BLUE_CHIP"
       }
     ],
-    "characters": [
-      "Spider-Man",
-      "Peter Parker",
-      "Mysterio",
-      "Nick Fury",
-      "MJ"
-    ],
-    "creators": [
-      "Jon Watts",
-      "Tom Holland",
-      "Jake Gyllenhaal",
-      "Stan Lee",
-      "Steve Ditko"
-    ],
+    "characters": ["Spider-Man", "Peter Parker", "Mysterio", "Nick Fury", "MJ"],
+    "creators": ["Jon Watts", "Tom Holland", "Jake Gyllenhaal", "Stan Lee", "Steve Ditko"],
     "summary": "Spider-Man: Far From Home concluded Phase 3 with $1.13 billion at the worldwide box office, bringing Mysterio to the big screen and driving sustained demand for Amazing Spider-Man #13."
   },
+
+  # --- MCU PHASES 4-6 (THE MULTIVERSE SAGA) ---
   {
     "title": "Spider-Man: No Way Home",
     "slug": "spider-man-no-way-home",
@@ -784,10 +517,7 @@
     "universe": "MARVEL",
     "franchise": "Marvel Cinematic Universe / Sony",
     "type": "equity",
-    "aliases": [
-      "Spider-Man No Way Home",
-      "No Way Home"
-    ],
+    "aliases": ["Spider-Man No Way Home", "No Way Home"],
     "landmarkIssue": "The Amazing Spider-Man #3",
     "landmarkIssues": [
       {
@@ -805,19 +535,8 @@
         "assetTier": "SOVEREIGN_BLUE_CHIP"
       }
     ],
-    "characters": [
-      "Peter Parker",
-      "Doctor Strange",
-      "Doctor Octopus",
-      "Green Goblin",
-      "Electro",
-      "MJ"
-    ],
-    "creators": [
-      "Jon Watts",
-      "Stan Lee",
-      "Steve Ditko"
-    ],
+    "characters": ["Peter Parker", "Doctor Strange", "Doctor Octopus", "Green Goblin", "Electro", "MJ"],
+    "creators": ["Jon Watts", "Stan Lee", "Steve Ditko"],
     "summary": "Spider-Man: No Way Home brought three generations of cinematic Spider-Man actors together alongside iconic villains, generating over $1.9 billion at the box office and driving historic transaction volume for classic Silver Age Spider-Man keys."
   },
   {
@@ -827,11 +546,7 @@
     "universe": "MARVEL",
     "franchise": "Marvel Cinematic Universe",
     "type": "equity",
-    "aliases": [
-      "Doctor Strange in the Multiverse of Madness",
-      "Multiverse of Madness",
-      "Doctor Strange 2"
-    ],
+    "aliases": ["Doctor Strange in the Multiverse of Madness", "Multiverse of Madness", "Doctor Strange 2"],
     "landmarkIssue": "Strange Tales #110",
     "landmarkIssues": [
       {
@@ -849,21 +564,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Doctor Strange",
-      "Scarlet Witch",
-      "America Chavez",
-      "Wong",
-      "Professor X",
-      "Reed Richards"
-    ],
-    "creators": [
-      "Sam Raimi",
-      "Benedict Cumberbatch",
-      "Elizabeth Olsen",
-      "Stan Lee",
-      "Steve Ditko"
-    ],
+    "characters": ["Doctor Strange", "Scarlet Witch", "America Chavez", "Wong", "Professor X", "Reed Richards"],
+    "creators": ["Sam Raimi", "Benedict Cumberbatch", "Elizabeth Olsen", "Stan Lee", "Steve Ditko"],
     "summary": "Doctor Strange in the Multiverse of Madness explored dark multiversal variants, featuring Sam Raimi's direction and introducing the Illuminati to the live-action MCU."
   },
   {
@@ -873,10 +575,7 @@
     "universe": "MARVEL",
     "franchise": "Marvel Cinematic Universe",
     "type": "equity",
-    "aliases": [
-      "Deadpool and Wolverine",
-      "Deadpool 3"
-    ],
+    "aliases": ["Deadpool and Wolverine", "Deadpool 3"],
     "landmarkIssue": "The New Mutants #98",
     "landmarkIssues": [
       {
@@ -894,23 +593,8 @@
         "assetTier": "SOVEREIGN_BLUE_CHIP"
       }
     ],
-    "characters": [
-      "Deadpool",
-      "Wolverine",
-      "Cassandra Nova",
-      "Blade",
-      "Elektra",
-      "Gambit"
-    ],
-    "creators": [
-      "Shawn Levy",
-      "Ryan Reynolds",
-      "Hugh Jackman",
-      "Rob Liefeld",
-      "Fabian Nicieza",
-      "Len Wein",
-      "John Romita Sr."
-    ],
+    "characters": ["Deadpool", "Wolverine", "Cassandra Nova", "Blade", "Elektra", "Gambit"],
+    "creators": ["Shawn Levy", "Ryan Reynolds", "Hugh Jackman", "Rob Liefeld", "Fabian Nicieza", "Len Wein", "John Romita Sr."],
     "summary": "Deadpool & Wolverine marked the official integration of Marvel's mutant properties into the Marvel Cinematic Universe, pairing Ryan Reynolds and Hugh Jackman in a record-setting R-rated box office sensation ($1.33B+)."
   },
   {
@@ -920,11 +604,7 @@
     "universe": "MARVEL",
     "franchise": "Marvel Cinematic Universe",
     "type": "equity",
-    "aliases": [
-      "Captain America Brave New World",
-      "Brave New World",
-      "Captain America 4"
-    ],
+    "aliases": ["Captain America Brave New World", "Brave New World", "Captain America 4"],
     "landmarkIssue": "Captain America #117",
     "landmarkIssues": [
       {
@@ -942,22 +622,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Captain America (Sam Wilson)",
-      "President Thaddeus Ross",
-      "Red Hulk",
-      "Joaquin Torres",
-      "The Leader"
-    ],
-    "creators": [
-      "Julius Onah",
-      "Anthony Mackie",
-      "Harrison Ford",
-      "Stan Lee",
-      "Gene Colan",
-      "Jeph Loeb",
-      "Ed McGuinness"
-    ],
+    "characters": ["Captain America (Sam Wilson)", "President Thaddeus Ross", "Red Hulk", "Joaquin Torres", "The Leader"],
+    "creators": ["Julius Onah", "Anthony Mackie", "Harrison Ford", "Stan Lee", "Gene Colan", "Jeph Loeb", "Ed McGuinness"],
     "summary": "Captain America: Brave New World follows Sam Wilson fully embracing the mantle of Captain America in an international conspiracy featuring Harrison Ford as President Ross / Red Hulk."
   },
   {
@@ -967,11 +633,7 @@
     "universe": "MARVEL",
     "franchise": "Marvel Cinematic Universe",
     "type": "equity",
-    "aliases": [
-      "Thunderbolts",
-      "Thunderbolts*",
-      "Thunderbolts movie"
-    ],
+    "aliases": ["Thunderbolts", "Thunderbolts*", "Thunderbolts movie"],
     "landmarkIssue": "The Incredible Hulk #449",
     "landmarkIssues": [
       {
@@ -996,24 +658,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Yelena Belova",
-      "Bucky Barnes",
-      "Red Guardian",
-      "Ghost",
-      "Taskmaster",
-      "US Agent",
-      "The Sentry / Bob"
-    ],
-    "creators": [
-      "Jake Schreier",
-      "Florence Pugh",
-      "Sebastian Stan",
-      "Kurt Busiek",
-      "Mark Bagley",
-      "Paul Jenkins",
-      "Jae Lee"
-    ],
+    "characters": ["Yelena Belova", "Bucky Barnes", "Red Guardian", "Ghost", "Taskmaster", "US Agent", "The Sentry / Bob"],
+    "creators": ["Jake Schreier", "Florence Pugh", "Sebastian Stan", "Kurt Busiek", "Mark Bagley", "Paul Jenkins", "Jae Lee"],
     "summary": "Thunderbolts* brings together Marvel's anti-heroes and reformed covert operatives for high-stakes black-ops missions, introducing The Sentry to the MCU."
   },
   {
@@ -1023,13 +669,7 @@
     "universe": "MARVEL",
     "franchise": "Marvel Cinematic Universe",
     "type": "equity",
-    "aliases": [
-      "The Fantastic Four: First Steps",
-      "Fantastic Four: First Steps",
-      "Fantastic Four First Steps",
-      "Fantastic Four (2025)",
-      "The Fantastic Four (2025)"
-    ],
+    "aliases": ["The Fantastic Four: First Steps", "Fantastic Four: First Steps", "Fantastic Four First Steps", "Fantastic Four (2025)", "The Fantastic Four (2025)"],
     "landmarkIssue": "The Fantastic Four #1",
     "landmarkIssues": [
       {
@@ -1047,23 +687,8 @@
         "assetTier": "SOVEREIGN_BLUE_CHIP"
       }
     ],
-    "characters": [
-      "Reed Richards",
-      "Sue Storm",
-      "Johnny Storm",
-      "Ben Grimm",
-      "Galactus",
-      "Silver Surfer (Shalla-Bal)"
-    ],
-    "creators": [
-      "Matt Shakman",
-      "Pedro Pascal",
-      "Vanessa Kirby",
-      "Joseph Quinn",
-      "Ebon Moss-Bachrach",
-      "Stan Lee",
-      "Jack Kirby"
-    ],
+    "characters": ["Reed Richards", "Sue Storm", "Johnny Storm", "Ben Grimm", "Galactus", "Silver Surfer (Shalla-Bal)"],
+    "creators": ["Matt Shakman", "Pedro Pascal", "Vanessa Kirby", "Joseph Quinn", "Ebon Moss-Bachrach", "Stan Lee", "Jack Kirby"],
     "summary": "The Fantastic Four: First Steps establishes Marvel's First Family in a vibrant retro-futuristic 1960s alternate reality, confronting Galactus and the Silver Surfer."
   },
   {
@@ -1073,10 +698,7 @@
     "universe": "MARVEL",
     "franchise": "Marvel Cinematic Universe",
     "type": "equity",
-    "aliases": [
-      "Avengers Doomsday",
-      "Avengers: Doomsday"
-    ],
+    "aliases": ["Avengers Doomsday", "Avengers: Doomsday"],
     "landmarkIssue": "The Fantastic Four #5",
     "landmarkIssues": [
       {
@@ -1094,19 +716,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Doctor Doom",
-      "Robert Downey Jr.",
-      "Avengers",
-      "Fantastic Four"
-    ],
-    "creators": [
-      "Anthony Russo",
-      "Joe Russo",
-      "Stan Lee",
-      "Jack Kirby",
-      "Jonathan Hickman"
-    ],
+    "characters": ["Doctor Doom", "Robert Downey Jr.", "Avengers", "Fantastic Four"],
+    "creators": ["Anthony Russo", "Joe Russo", "Stan Lee", "Jack Kirby", "Jonathan Hickman"],
     "summary": "Avengers: Doomsday is Marvel Studios' upcoming tentpole feature featuring Robert Downey Jr. in his historic return as Doctor Doom, driving immense speculative interest across Silver Age Fantastic Four and modern Secret Wars issues."
   },
   {
@@ -1116,10 +727,7 @@
     "universe": "MARVEL",
     "franchise": "Marvel Cinematic Universe",
     "type": "equity",
-    "aliases": [
-      "Avengers Secret Wars",
-      "Avengers: Secret Wars"
-    ],
+    "aliases": ["Avengers Secret Wars", "Avengers: Secret Wars"],
     "landmarkIssue": "Marvel Super Heroes Secret Wars #1",
     "landmarkIssues": [
       {
@@ -1137,21 +745,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Doctor Doom",
-      "The Beyonder",
-      "Spider-Man",
-      "Wolverine",
-      "Avengers",
-      "X-Men",
-      "Fantastic Four"
-    ],
-    "creators": [
-      "Anthony Russo",
-      "Joe Russo",
-      "Jim Shooter",
-      "Jonathan Hickman"
-    ],
+    "characters": ["Doctor Doom", "The Beyonder", "Spider-Man", "Wolverine", "Avengers", "X-Men", "Fantastic Four"],
+    "creators": ["Anthony Russo", "Joe Russo", "Jim Shooter", "Jonathan Hickman"],
     "summary": "Avengers: Secret Wars serves as the culmination of the Multiverse Saga, bringing heroes and variants from across fifty years of Marvel cinema into a singular multiverse collision."
   },
   {
@@ -1186,25 +781,12 @@
         "assetTier": "SECONDARY_EQUITY"
       }
     ],
-    "characters": [
-      "Spider-Man",
-      "Peter Parker",
-      "Mister Negative",
-      "Jackpot",
-      "Menace",
-      "Harry Osborn",
-      "Carlie Cooper"
-    ],
-    "creators": [
-      "Dan Slott",
-      "Steve McNiven",
-      "Bob Gale",
-      "Marc Guggenheim",
-      "Zeb Wells",
-      "Joe Quesada"
-    ],
+    "characters": ["Spider-Man", "Peter Parker", "Mister Negative", "Jackpot", "Menace", "Harry Osborn", "Carlie Cooper"],
+    "creators": ["Dan Slott", "Steve McNiven", "Bob Gale", "Marc Guggenheim", "Zeb Wells", "Joe Quesada"],
     "summary": "Spider-Man: Brand New Day is a foundational comic equity and cinematic adaptation asset. Originating in Amazing Spider-Man #546 following the events of One More Day, it resets Peter Parker's civilian and superhero status quo, introducing key characters including Mister Negative and Jackpot. In cinematic media, it represents a major planned adaptation catalyst bridging the Marvel Cinematic Universe and Sony's Spider-Man franchise."
   },
+
+  # --- MCU STREAMING SERIES & MARVEL TELEVISION ---
   {
     "title": "Daredevil: Born Again",
     "slug": "daredevil-born-again",
@@ -1212,10 +794,7 @@
     "universe": "MARVEL",
     "franchise": "Marvel Cinematic Universe / Marvel Television",
     "type": "equity",
-    "aliases": [
-      "Daredevil Born Again",
-      "Born Again"
-    ],
+    "aliases": ["Daredevil Born Again", "Born Again"],
     "landmarkIssue": "Daredevil #227",
     "landmarkIssues": [
       {
@@ -1233,21 +812,8 @@
         "assetTier": "SOVEREIGN_BLUE_CHIP"
       }
     ],
-    "characters": [
-      "Daredevil",
-      "Matt Murdock",
-      "Kingpin",
-      "Wilson Fisk",
-      "Karen Page",
-      "Bullseye",
-      "The Punisher"
-    ],
-    "creators": [
-      "Frank Miller",
-      "David Mazzucchelli",
-      "Charlie Cox",
-      "Vincent D'Onofrio"
-    ],
+    "characters": ["Daredevil", "Matt Murdock", "Kingpin", "Wilson Fisk", "Karen Page", "Bullseye", "The Punisher"],
+    "creators": ["Frank Miller", "David Mazzucchelli", "Charlie Cox", "Vincent D'Onofrio"],
     "summary": "Daredevil: Born Again is Frank Miller and David Mazzucchelli's defining 1986 psychological comic arc and the title of Marvel Studios' live-action series starring Charlie Cox and Vincent D'Onofrio."
   },
   {
@@ -1257,9 +823,7 @@
     "universe": "MARVEL",
     "franchise": "Marvel Cinematic Universe",
     "type": "equity",
-    "aliases": [
-      "WandaVision"
-    ],
+    "aliases": ["WandaVision"],
     "landmarkIssue": "The Vision and the Scarlet Witch #1",
     "landmarkIssues": [
       {
@@ -1277,21 +841,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Scarlet Witch",
-      "Wanda Maximoff",
-      "Vision",
-      "Agatha Harkness",
-      "Monica Rambeau",
-      "Wiccan",
-      "Speed"
-    ],
-    "creators": [
-      "Jac Schaeffer",
-      "Elizabeth Olsen",
-      "Paul Bettany",
-      "Kathryn Hahn"
-    ],
+    "characters": ["Scarlet Witch", "Wanda Maximoff", "Vision", "Agatha Harkness", "Monica Rambeau", "Wiccan", "Speed"],
+    "creators": ["Jac Schaeffer", "Elizabeth Olsen", "Paul Bettany", "Kathryn Hahn"],
     "summary": "WandaVision kicked off Marvel Studios' television expansion on Disney+, receiving 23 Emmy nominations and catalyzing secondary market interest for Scarlet Witch and Agatha Harkness keys."
   },
   {
@@ -1301,10 +852,7 @@
     "universe": "MARVEL",
     "franchise": "Marvel Cinematic Universe",
     "type": "equity",
-    "aliases": [
-      "Loki Series",
-      "Loki Disney+"
-    ],
+    "aliases": ["Loki Series", "Loki Disney+"],
     "landmarkIssue": "Journey into Mystery #85",
     "landmarkIssues": [
       {
@@ -1322,22 +870,12 @@
         "assetTier": "SOVEREIGN_BLUE_CHIP"
       }
     ],
-    "characters": [
-      "Loki",
-      "Sylvie",
-      "Mobius",
-      "He Who Remains",
-      "Kang",
-      "Ravonna Renslayer"
-    ],
-    "creators": [
-      "Michael Waldron",
-      "Tom Hiddleston",
-      "Owen Wilson",
-      "Sophia Di Martino"
-    ],
+    "characters": ["Loki", "Sylvie", "Mobius", "He Who Remains", "Kang", "Ravonna Renslayer"],
+    "creators": ["Michael Waldron", "Tom Hiddleston", "Owen Wilson", "Sophia Di Martino"],
     "summary": "Loki established the TVA and the foundational mechanics of the MCU Multiverse Saga, cementing Loki's transition into the God of Stories."
   },
+
+  # --- SONY SPIDER-MAN UNIVERSE & SPIDER-VERSE ---
   {
     "title": "Spider-Man: Into the Spider-Verse",
     "slug": "spider-man-into-the-spider-verse",
@@ -1345,11 +883,7 @@
     "universe": "MARVEL",
     "franchise": "Sony's Spider-Verse",
     "type": "equity",
-    "aliases": [
-      "Spider-Man Into the Spider-Verse",
-      "Into the Spider-Verse",
-      "Spider-Verse 1"
-    ],
+    "aliases": ["Spider-Man Into the Spider-Verse", "Into the Spider-Verse", "Spider-Verse 1"],
     "landmarkIssue": "Ultimate Fallout #4",
     "landmarkIssues": [
       {
@@ -1367,24 +901,8 @@
         "assetTier": "SOVEREIGN_BLUE_CHIP"
       }
     ],
-    "characters": [
-      "Miles Morales",
-      "Peter B. Parker",
-      "Spider-Gwen",
-      "Spider-Ham",
-      "Spider-Man Noir",
-      "Peni Parker",
-      "Kingpin"
-    ],
-    "creators": [
-      "Phil Lord",
-      "Christopher Miller",
-      "Bob Persichetti",
-      "Peter Ramsey",
-      "Rodney Rothman",
-      "Brian Michael Bendis",
-      "Sara Pichelli"
-    ],
+    "characters": ["Miles Morales", "Peter B. Parker", "Spider-Gwen", "Spider-Ham", "Spider-Man Noir", "Peni Parker", "Kingpin"],
+    "creators": ["Phil Lord", "Christopher Miller", "Bob Persichetti", "Peter Ramsey", "Rodney Rothman", "Brian Michael Bendis", "Sara Pichelli"],
     "summary": "Spider-Man: Into the Spider-Verse won the Academy Award for Best Animated Feature, redefining animation aesthetic and driving Ultimate Fallout #4 into a modern blue-chip asset."
   },
   {
@@ -1394,11 +912,7 @@
     "universe": "MARVEL",
     "franchise": "Sony's Spider-Verse",
     "type": "equity",
-    "aliases": [
-      "Spider-Man Across the Spider-Verse",
-      "Across the Spider-Verse",
-      "Spider-Verse 2"
-    ],
+    "aliases": ["Spider-Man Across the Spider-Verse", "Across the Spider-Verse", "Spider-Verse 2"],
     "landmarkIssue": "The Amazing Spider-Man #365",
     "landmarkIssues": [
       {
@@ -1423,21 +937,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Miles Morales",
-      "Gwen Stacy",
-      "Miguel O'Hara (Spider-Man 2099)",
-      "The Spot",
-      "Spider-Punk (Hobie Brown)",
-      "Pavitr Prabhakar"
-    ],
-    "creators": [
-      "Joaquim Dos Santos",
-      "Kemp Powers",
-      "Justin K. Thompson",
-      "Phil Lord",
-      "Christopher Miller"
-    ],
+    "characters": ["Miles Morales", "Gwen Stacy", "Miguel O'Hara (Spider-Man 2099)", "The Spot", "Spider-Punk (Hobie Brown)", "Pavitr Prabhakar"],
+    "creators": ["Joaquim Dos Santos", "Kemp Powers", "Justin K. Thompson", "Phil Lord", "Christopher Miller"],
     "summary": "Spider-Man: Across the Spider-Verse expanded the multiverse with hundreds of Spider-variants, accelerating secondary market transactions for Spider-Man 2099 and Spider-Punk keys."
   },
   {
@@ -1447,10 +948,7 @@
     "universe": "MARVEL",
     "franchise": "Sony's Spider-Man Universe",
     "type": "equity",
-    "aliases": [
-      "Venom Let There Be Carnage",
-      "Venom 2"
-    ],
+    "aliases": ["Venom Let There Be Carnage", "Venom 2"],
     "landmarkIssue": "The Amazing Spider-Man #361",
     "landmarkIssues": [
       {
@@ -1468,24 +966,12 @@
         "assetTier": "SOVEREIGN_BLUE_CHIP"
       }
     ],
-    "characters": [
-      "Venom",
-      "Eddie Brock",
-      "Carnage",
-      "Cletus Kasady",
-      "Shriek",
-      "Anne Weying"
-    ],
-    "creators": [
-      "Andy Serkis",
-      "Tom Hardy",
-      "Woody Harrelson",
-      "David Michelinie",
-      "Mark Bagley",
-      "Todd McFarlane"
-    ],
+    "characters": ["Venom", "Eddie Brock", "Carnage", "Cletus Kasady", "Shriek", "Anne Weying"],
+    "creators": ["Andy Serkis", "Tom Hardy", "Woody Harrelson", "David Michelinie", "Mark Bagley", "Todd McFarlane"],
     "summary": "Venom: Let There Be Carnage pitted Tom Hardy's Venom against Woody Harrelson's Carnage, directly anchoring secondary interest in 1990s Copper Age symbiote grails."
   },
+
+  # --- X-MEN & FOX CINEMATIC UNIVERSE ---
   {
     "title": "X-Men: First Class",
     "slug": "x-men-first-class",
@@ -1493,10 +979,7 @@
     "universe": "MARVEL",
     "franchise": "X-Men Cinematic Universe / MCU",
     "type": "equity",
-    "aliases": [
-      "X-Men First Class",
-      "First Class"
-    ],
+    "aliases": ["X-Men First Class", "First Class"],
     "landmarkIssue": "The X-Men #1 (1963)",
     "landmarkIssues": [
       {
@@ -1514,24 +997,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Professor X",
-      "Magneto",
-      "Mystique",
-      "Beast",
-      "Havok",
-      "Emma Frost",
-      "Banshee",
-      "Sebastian Shaw",
-      "Wolverine"
-    ],
-    "creators": [
-      "Stan Lee",
-      "Jack Kirby",
-      "Matthew Vaughn",
-      "Bryan Singer",
-      "Jeff Parker"
-    ],
+    "characters": ["Professor X", "Magneto", "Mystique", "Beast", "Havok", "Emma Frost", "Banshee", "Sebastian Shaw", "Wolverine"],
+    "creators": ["Stan Lee", "Jack Kirby", "Matthew Vaughn", "Bryan Singer", "Jeff Parker"],
     "summary": "X-Men: First Class is a foundational comic equity and cinematic adaptation asset released in 2011. Directed by Matthew Vaughn, the 1960s-set prequel revitalized 20th Century Fox's mutant franchise following critical misfires, laying the groundwork for X-Men: Days of Future Past and future Marvel Cinematic Universe integration. In secondary comic markets, it directly drives transaction velocity for classic Silver Age X-Men debuts and modern First Class runs."
   },
   {
@@ -1541,10 +1008,7 @@
     "universe": "MARVEL",
     "franchise": "X-Men Cinematic Universe / MCU",
     "type": "equity",
-    "aliases": [
-      "X-Men Days of Future Past",
-      "Days of Future Past"
-    ],
+    "aliases": ["X-Men Days of Future Past", "Days of Future Past"],
     "landmarkIssue": "The Uncanny X-Men #141",
     "landmarkIssues": [
       {
@@ -1562,21 +1026,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Wolverine",
-      "Professor X",
-      "Magneto",
-      "Mystique",
-      "Kitty Pryde",
-      "Storm",
-      "Iceman",
-      "Rogue"
-    ],
-    "creators": [
-      "Chris Claremont",
-      "John Byrne",
-      "Bryan Singer"
-    ],
+    "characters": ["Wolverine", "Professor X", "Magneto", "Mystique", "Kitty Pryde", "Storm", "Iceman", "Rogue"],
+    "creators": ["Chris Claremont", "John Byrne", "Bryan Singer"],
     "summary": "X-Men: Days of Future Past bridges the original 2000s X-Men cinematic ensemble with the 1960s prequel cast from First Class. Based on Chris Claremont and John Byrne's celebrated 1981 Uncanny X-Men arc, the storyline established a template for multiverse time travel in superhero cinema."
   },
   {
@@ -1586,10 +1037,7 @@
     "universe": "MARVEL",
     "franchise": "X-Men Cinematic Universe",
     "type": "equity",
-    "aliases": [
-      "X-Men Origins Wolverine",
-      "Origins: Wolverine"
-    ],
+    "aliases": ["X-Men Origins Wolverine", "Origins: Wolverine"],
     "landmarkIssue": "Marvel Comics Presents #72",
     "landmarkIssues": [
       {
@@ -1607,19 +1055,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Wolverine",
-      "Sabretooth",
-      "Deadpool",
-      "Gambit",
-      "Colonel William Stryker"
-    ],
-    "creators": [
-      "Gavin Hood",
-      "Barry Windsor-Smith",
-      "Paul Jenkins",
-      "Andy Kubert"
-    ],
+    "characters": ["Wolverine", "Sabretooth", "Deadpool", "Gambit", "Colonel William Stryker"],
+    "creators": ["Gavin Hood", "Barry Windsor-Smith", "Paul Jenkins", "Andy Kubert"],
     "summary": "X-Men Origins: Wolverine chronicles Logan's early life, service with Team X, and transformation under the Weapon X program. Despite critical headwinds, Hugh Jackman's performance solidified the character's solo box office appeal and established Ryan Reynolds' initial cinematic debut as Wade Wilson."
   },
   {
@@ -1629,10 +1066,7 @@
     "universe": "MARVEL",
     "franchise": "X-Men Cinematic Universe",
     "type": "equity",
-    "aliases": [
-      "X-Men The Last Stand",
-      "The Last Stand"
-    ],
+    "aliases": ["X-Men The Last Stand", "The Last Stand"],
     "landmarkIssue": "The Uncanny X-Men #135",
     "landmarkIssues": [
       {
@@ -1650,21 +1084,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Wolverine",
-      "Jean Grey",
-      "Dark Phoenix",
-      "Magneto",
-      "Professor X",
-      "Storm",
-      "Beast"
-    ],
-    "creators": [
-      "Brett Ratner",
-      "Chris Claremont",
-      "John Byrne",
-      "Joss Whedon"
-    ],
+    "characters": ["Wolverine", "Jean Grey", "Dark Phoenix", "Magneto", "Professor X", "Storm", "Beast"],
+    "creators": ["Brett Ratner", "Chris Claremont", "John Byrne", "Joss Whedon"],
     "summary": "X-Men: The Last Stand concluded 20th Century Fox's original mutant trilogy in 2006, blending Chris Claremont's Dark Phoenix Saga with Joss Whedon's Gifted mutant cure storyline. The film's polarizing reception created the franchise vacuum that necessitated the First Class prequel reboot."
   },
   {
@@ -1674,10 +1095,7 @@
     "universe": "MARVEL",
     "franchise": "X-Men Cinematic Universe",
     "type": "equity",
-    "aliases": [
-      "Logan (2017)",
-      "Logan movie"
-    ],
+    "aliases": ["Logan (2017)", "Logan movie"],
     "landmarkIssue": "Wolverine Vol 3 #66",
     "landmarkIssues": [
       {
@@ -1695,24 +1113,12 @@
         "assetTier": "SOVEREIGN_BLUE_CHIP"
       }
     ],
-    "characters": [
-      "Wolverine",
-      "Logan",
-      "X-23",
-      "Laura Kinney",
-      "Professor X",
-      "Donald Pierce"
-    ],
-    "creators": [
-      "James Mangold",
-      "Hugh Jackman",
-      "Patrick Stewart",
-      "Dafne Keen",
-      "Mark Millar",
-      "Steve McNiven"
-    ],
+    "characters": ["Wolverine", "Logan", "X-23", "Laura Kinney", "Professor X", "Donald Pierce"],
+    "creators": ["James Mangold", "Hugh Jackman", "Patrick Stewart", "Dafne Keen", "Mark Millar", "Steve McNiven"],
     "summary": "Logan (2017) earned an Academy Award nomination for Best Adapted Screenplay, serving as a gritty, neo-western swan song for Hugh Jackman and cementing NYX #3 as an elite modern blue chip."
   },
+
+  # --- DC CINEMATIC UNIVERSE, DCU, DCEU, NOLAN & REEVES ---
   {
     "title": "The Dark Knight",
     "slug": "the-dark-knight",
@@ -1720,10 +1126,7 @@
     "universe": "DC",
     "franchise": "The Dark Knight Trilogy",
     "type": "equity",
-    "aliases": [
-      "The Dark Knight",
-      "Dark Knight"
-    ],
+    "aliases": ["The Dark Knight", "Dark Knight"],
     "landmarkIssue": "Batman #1",
     "landmarkIssues": [
       {
@@ -1741,22 +1144,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Batman",
-      "Joker",
-      "Harvey Dent",
-      "Two-Face",
-      "Jim Gordon",
-      "Alfred Pennyworth"
-    ],
-    "creators": [
-      "Christopher Nolan",
-      "Heath Ledger",
-      "Christian Bale",
-      "Bob Kane",
-      "Bill Finger",
-      "Jerry Robinson"
-    ],
+    "characters": ["Batman", "Joker", "Harvey Dent", "Two-Face", "Jim Gordon", "Alfred Pennyworth"],
+    "creators": ["Christopher Nolan", "Heath Ledger", "Christian Bale", "Bob Kane", "Bill Finger", "Jerry Robinson"],
     "summary": "The Dark Knight is Christopher Nolan's 2008 masterpiece featuring Heath Ledger's Oscar-winning portrayal of the Joker. Widely hailed as the greatest superhero film ever made, it redefined comic cinema and established new valuation benchmarks for Batman key equities."
   },
   {
@@ -1766,10 +1155,7 @@
     "universe": "DC",
     "franchise": "DC Elseworlds / Reeves Batman Universe",
     "type": "equity",
-    "aliases": [
-      "The Batman",
-      "The Batman Part II"
-    ],
+    "aliases": ["The Batman", "The Batman Part II"],
     "landmarkIssue": "Detective Comics #27",
     "landmarkIssues": [
       {
@@ -1787,21 +1173,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Batman",
-      "The Riddler",
-      "Catwoman",
-      "The Penguin",
-      "Carmine Falcone"
-    ],
-    "creators": [
-      "Matt Reeves",
-      "Robert Pattinson",
-      "Zoe Kravitz",
-      "Colin Farrell",
-      "Frank Miller",
-      "Jeph Loeb"
-    ],
+    "characters": ["Batman", "The Riddler", "Catwoman", "The Penguin", "Carmine Falcone"],
+    "creators": ["Matt Reeves", "Robert Pattinson", "Zoe Kravitz", "Colin Farrell", "Frank Miller", "Jeph Loeb"],
     "summary": "The Batman is Matt Reeves' gritty neo-noir detective thriller starring Robert Pattinson as a Year Two Bruce Wayne investigating the Riddler's corruption murders in Gotham City."
   },
   {
@@ -1811,11 +1184,7 @@
     "universe": "DC",
     "franchise": "DC Universe (DCU)",
     "type": "equity",
-    "aliases": [
-      "Superman Legacy",
-      "Superman (2025)",
-      "James Gunn Superman"
-    ],
+    "aliases": ["Superman Legacy", "Superman (2025)", "James Gunn Superman"],
     "landmarkIssue": "Action Comics #1",
     "landmarkIssues": [
       {
@@ -1833,22 +1202,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Superman",
-      "Lois Lane",
-      "Lex Luthor",
-      "Hawkgirl",
-      "Guy Gardner",
-      "Mister Terrific"
-    ],
-    "creators": [
-      "James Gunn",
-      "David Corenswet",
-      "Rachel Brosnahan",
-      "Jerry Siegel",
-      "Joe Shuster",
-      "Grant Morrison"
-    ],
+    "characters": ["Superman", "Lois Lane", "Lex Luthor", "Hawkgirl", "Guy Gardner", "Mister Terrific"],
+    "creators": ["James Gunn", "David Corenswet", "Rachel Brosnahan", "Jerry Siegel", "Joe Shuster", "Grant Morrison"],
     "summary": "Superman: Legacy launches James Gunn and Peter Safran's rebooted DC Universe (DCU), following a young Clark Kent balancing his Kryptonian heritage with his human upbringing in Smallville and Metropolis."
   },
   {
@@ -1858,10 +1213,7 @@
     "universe": "DC",
     "franchise": "Batman Lore / Animated & Film Adaptations",
     "type": "equity",
-    "aliases": [
-      "The Long Halloween",
-      "Batman The Long Halloween"
-    ],
+    "aliases": ["The Long Halloween", "Batman The Long Halloween"],
     "landmarkIssue": "Batman: The Long Halloween #1",
     "landmarkIssues": [
       {
@@ -1872,19 +1224,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Batman",
-      "Harvey Dent",
-      "Two-Face",
-      "Jim Gordon",
-      "Carmine Falcone",
-      "Holiday Killer",
-      "Catwoman"
-    ],
-    "creators": [
-      "Jeph Loeb",
-      "Tim Sale"
-    ],
+    "characters": ["Batman", "Harvey Dent", "Two-Face", "Jim Gordon", "Carmine Falcone", "Holiday Killer", "Catwoman"],
+    "creators": ["Jeph Loeb", "Tim Sale"],
     "summary": "Batman: The Long Halloween is Jeph Loeb and Tim Sale's landmark 1996 graphic novel mystery detailing Harvey Dent's transformation into Two-Face during a calendar-year mob war, heavily influencing The Dark Knight and The Batman."
   },
   {
@@ -1894,11 +1235,7 @@
     "universe": "DC",
     "franchise": "DC Extended Universe",
     "type": "equity",
-    "aliases": [
-      "The Flash (2023)",
-      "The Flash movie",
-      "Flashpoint movie"
-    ],
+    "aliases": ["The Flash (2023)", "The Flash movie", "Flashpoint movie"],
     "landmarkIssue": "Flashpoint #1",
     "landmarkIssues": [
       {
@@ -1916,22 +1253,12 @@
         "assetTier": "SOVEREIGN_BLUE_CHIP"
       }
     ],
-    "characters": [
-      "Barry Allen",
-      "Batman (Michael Keaton)",
-      "Supergirl (Kara Zor-El)",
-      "General Zod",
-      "Dark Flash"
-    ],
-    "creators": [
-      "Andy Muschietti",
-      "Ezra Miller",
-      "Michael Keaton",
-      "Geoff Johns",
-      "Andy Kubert"
-    ],
+    "characters": ["Barry Allen", "Batman (Michael Keaton)", "Supergirl (Kara Zor-El)", "General Zod", "Dark Flash"],
+    "creators": ["Andy Muschietti", "Ezra Miller", "Michael Keaton", "Geoff Johns", "Andy Kubert"],
     "summary": "The Flash (2023) adapted DC's Flashpoint event, uniting multi-generational timelines with Michael Keaton's Batman and Sasha Calle's Supergirl."
   },
+
+  # --- CANONICAL COMIC BOOK CROSSOVER EVENTS & STORYLINES ---
   {
     "title": "Crisis on Infinite Earths",
     "slug": "crisis-on-infinite-earths",
@@ -1939,9 +1266,7 @@
     "universe": "DC",
     "franchise": "DC Comics Multiverse",
     "type": "equity",
-    "aliases": [
-      "Crisis on Infinite Earths"
-    ],
+    "aliases": ["Crisis on Infinite Earths"],
     "landmarkIssue": "Crisis on Infinite Earths #1",
     "landmarkIssues": [
       {
@@ -1953,7 +1278,7 @@
       },
       {
         "title": "Crisis on Infinite Earths #7 (1985)",
-        "significance": "Death of Supergirl (Kara Zor-El); Landmark George P\u00e9rez cover",
+        "significance": "Death of Supergirl (Kara Zor-El); Landmark George Pérez cover",
         "catalogUrl": "/comics?q=Crisis+on+Infinite+Earths+7",
         "era": "COPPER",
         "assetTier": "KEY_EQUITY"
@@ -1966,17 +1291,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Anti-Monitor",
-      "The Monitor",
-      "Barry Allen",
-      "Supergirl",
-      "Superman of Earth-Two"
-    ],
-    "creators": [
-      "Marv Wolfman",
-      "George P\u00e9rez"
-    ],
+    "characters": ["Anti-Monitor", "The Monitor", "Barry Allen", "Supergirl", "Superman of Earth-Two"],
+    "creators": ["Marv Wolfman", "George Pérez"],
     "summary": "Crisis on Infinite Earths is the definitive 12-issue DC Comics crossover event of 1985, collapsing DC's 50-year multiverse into a singular continuity and establishing the modern era of comic publishing."
   },
   {
@@ -1986,10 +1302,7 @@
     "universe": "DC",
     "franchise": "Superman Canon",
     "type": "equity",
-    "aliases": [
-      "The Death of Superman",
-      "Death of Superman"
-    ],
+    "aliases": ["The Death of Superman", "Death of Superman"],
     "landmarkIssue": "Superman #75",
     "landmarkIssues": [
       {
@@ -2007,19 +1320,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Superman",
-      "Clark Kent",
-      "Doomsday",
-      "Lois Lane",
-      "Justice League"
-    ],
-    "creators": [
-      "Dan Jurgens",
-      "Brett Breeding",
-      "Jerry Ordway",
-      "Louise Simonson"
-    ],
+    "characters": ["Superman", "Clark Kent", "Doomsday", "Lois Lane", "Justice League"],
+    "creators": ["Dan Jurgens", "Brett Breeding", "Jerry Ordway", "Louise Simonson"],
     "summary": "The Death of Superman was a 1992 mainstream media frenzy and historical publishing milestone, selling over 6 million copies of Superman #75 and redefining comic direct market distribution."
   },
   {
@@ -2029,10 +1331,7 @@
     "universe": "DC",
     "franchise": "Batman Canon",
     "type": "equity",
-    "aliases": [
-      "Knightfall",
-      "Batman Knightfall"
-    ],
+    "aliases": ["Knightfall", "Batman Knightfall"],
     "landmarkIssue": "Batman #497",
     "landmarkIssues": [
       {
@@ -2050,21 +1349,9 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Batman",
-      "Bruce Wayne",
-      "Bane",
-      "Jean-Paul Valley (Azrael)",
-      "Robin (Tim Drake)",
-      "Nightwing"
-    ],
-    "creators": [
-      "Chuck Dixon",
-      "Doug Moench",
-      "Graham Nolan",
-      "Jim Aparo"
-    ],
-    "summary": "Batman: Knightfall was DC's definitive 1993\u20131994 Gotham crossover, where Bane systematically exhausted Batman before snapping his spine, leading to Azrael's violent tenure as Batman."
+    "characters": ["Batman", "Bruce Wayne", "Bane", "Jean-Paul Valley (Azrael)", "Robin (Tim Drake)", "Nightwing"],
+    "creators": ["Chuck Dixon", "Doug Moench", "Graham Nolan", "Jim Aparo"],
+    "summary": "Batman: Knightfall was DC's definitive 1993–1994 Gotham crossover, where Bane systematically exhausted Batman before snapping his spine, leading to Azrael's violent tenure as Batman."
   },
   {
     "title": "Secret Wars",
@@ -2073,10 +1360,7 @@
     "universe": "MARVEL",
     "franchise": "Marvel Comics / MCU Multiverse",
     "type": "equity",
-    "aliases": [
-      "Marvel Super Heroes Secret Wars",
-      "Secret Wars (1984)"
-    ],
+    "aliases": ["Marvel Super Heroes Secret Wars", "Secret Wars (1984)"],
     "landmarkIssue": "Marvel Super Heroes Secret Wars #1",
     "landmarkIssues": [
       {
@@ -2094,20 +1378,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Spider-Man",
-      "Doctor Doom",
-      "The Beyonder",
-      "Captain America",
-      "Thor",
-      "Hulk",
-      "Magneto"
-    ],
-    "creators": [
-      "Jim Shooter",
-      "Mike Zeck",
-      "Bob Layton"
-    ],
+    "characters": ["Spider-Man", "Doctor Doom", "The Beyonder", "Captain America", "Thor", "Hulk", "Magneto"],
+    "creators": ["Jim Shooter", "Mike Zeck", "Bob Layton"],
     "summary": "Secret Wars was Marvel's first major line-wide crossover maxi-series in 1984. Bringing Marvel's greatest heroes and villains to Battleworld, issue #8 introduced Spider-Man's alien black symbiote suit, directly originating Venom."
   },
   {
@@ -2117,32 +1389,20 @@
     "universe": "MARVEL",
     "franchise": "Marvel Comics Cosmic Universe",
     "type": "equity",
-    "aliases": [
-      "Infinity Gauntlet"
-    ],
+    "aliases": ["Infinity Gauntlet"],
     "landmarkIssue": "The Infinity Gauntlet #1",
     "landmarkIssues": [
       {
         "title": "The Infinity Gauntlet #1 (1991)",
-        "significance": "Thanos' iconic snap eradicating half of all life in the universe; George P\u00e9rez & Jim Starlin masterpiece",
+        "significance": "Thanos' iconic snap eradicating half of all life in the universe; George Pérez & Jim Starlin masterpiece",
         "catalogUrl": "/comics?q=Infinity+Gauntlet+1",
         "era": "COPPER",
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Thanos",
-      "Adam Warlock",
-      "Silver Surfer",
-      "Mephisto",
-      "Death"
-    ],
-    "creators": [
-      "Jim Starlin",
-      "George P\u00e9rez",
-      "Ron Lim"
-    ],
-    "summary": "The Infinity Gauntlet is Jim Starlin and George P\u00e9rez's legendary 1991 cosmic miniseries. Serving as the primary comic architecture for Avengers: Infinity War and Endgame, it remains one of the most traded and indexed comic storylines in history."
+    "characters": ["Thanos", "Adam Warlock", "Silver Surfer", "Mephisto", "Death"],
+    "creators": ["Jim Starlin", "George Pérez", "Ron Lim"],
+    "summary": "The Infinity Gauntlet is Jim Starlin and George Pérez's legendary 1991 cosmic miniseries. Serving as the primary comic architecture for Avengers: Infinity War and Endgame, it remains one of the most traded and indexed comic storylines in history."
   },
   {
     "title": "X-Men: Age of Apocalypse",
@@ -2151,11 +1411,7 @@
     "universe": "MARVEL",
     "franchise": "X-Men Multiverse Lore",
     "type": "equity",
-    "aliases": [
-      "Age of Apocalypse",
-      "X-Men Age of Apocalypse",
-      "AoA"
-    ],
+    "aliases": ["Age of Apocalypse", "X-Men Age of Apocalypse", "AoA"],
     "landmarkIssue": "X-Men Alpha #1",
     "landmarkIssues": [
       {
@@ -2173,22 +1429,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Magneto",
-      "Apocalypse",
-      "Weapon X (Wolverine)",
-      "Cyclops",
-      "Bishop",
-      "Nate Grey (X-Man)",
-      "Holocaust"
-    ],
-    "creators": [
-      "Scott Lobdell",
-      "Mark Waid",
-      "Fabian Nicieza",
-      "Joe Madureira",
-      "Andy Kubert"
-    ],
+    "characters": ["Magneto", "Apocalypse", "Weapon X (Wolverine)", "Cyclops", "Bishop", "Nate Grey (X-Man)", "Holocaust"],
+    "creators": ["Scott Lobdell", "Mark Waid", "Fabian Nicieza", "Joe Madureira", "Andy Kubert"],
     "summary": "X-Men: Age of Apocalypse replaced the entire Marvel mutant publishing line for four months in 1995 with an alternate dystopian timeline ruled by Apocalypse, originating enduring fan-favorite characters like Nate Grey and Dark Beast."
   },
   {
@@ -2198,10 +1440,7 @@
     "universe": "MARVEL",
     "franchise": "X-Men Canon",
     "type": "equity",
-    "aliases": [
-      "The Dark Phoenix Saga",
-      "Dark Phoenix Saga"
-    ],
+    "aliases": ["The Dark Phoenix Saga", "Dark Phoenix Saga"],
     "landmarkIssue": "The Uncanny X-Men #129",
     "landmarkIssues": [
       {
@@ -2219,20 +1458,8 @@
         "assetTier": "SOVEREIGN_BLUE_CHIP"
       }
     ],
-    "characters": [
-      "Jean Grey",
-      "Dark Phoenix",
-      "Cyclops",
-      "Wolverine",
-      "Professor X",
-      "Emma Frost",
-      "Sebastian Shaw"
-    ],
-    "creators": [
-      "Chris Claremont",
-      "John Byrne",
-      "Terry Austin"
-    ],
+    "characters": ["Jean Grey", "Dark Phoenix", "Cyclops", "Wolverine", "Professor X", "Emma Frost", "Sebastian Shaw"],
+    "creators": ["Chris Claremont", "John Byrne", "Terry Austin"],
     "summary": "The Dark Phoenix Saga by Chris Claremont and John Byrne is universally regarded as one of the greatest comic story arcs ever published, culminating in Jean Grey's sacrifice on the Moon."
   },
   {
@@ -2242,9 +1469,7 @@
     "universe": "MARVEL",
     "franchise": "Hulk Canon / MCU Thor Ragnarok",
     "type": "equity",
-    "aliases": [
-      "Planet Hulk"
-    ],
+    "aliases": ["Planet Hulk"],
     "landmarkIssue": "The Incredible Hulk Vol 2 #92",
     "landmarkIssues": [
       {
@@ -2255,19 +1480,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Hulk",
-      "Korg",
-      "Miek",
-      "Caiera",
-      "Red King",
-      "Warbound"
-    ],
-    "creators": [
-      "Greg Pak",
-      "Carlo Pagulayan",
-      "Aaron Lopresti"
-    ],
+    "characters": ["Hulk", "Korg", "Miek", "Caiera", "Red King", "Warbound"],
+    "creators": ["Greg Pak", "Carlo Pagulayan", "Aaron Lopresti"],
     "summary": "Planet Hulk sent Bruce Banner into exile on the alien gladiator world of Sakaar, becoming ruler and husband before tragedy set up the revenge epic World War Hulk."
   },
   {
@@ -2277,10 +1491,7 @@
     "universe": "DC",
     "franchise": "Batman Canon",
     "type": "equity",
-    "aliases": [
-      "Batman Year One",
-      "Year One"
-    ],
+    "aliases": ["Batman Year One", "Year One"],
     "landmarkIssue": "Batman #404",
     "landmarkIssues": [
       {
@@ -2291,17 +1502,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Batman",
-      "Bruce Wayne",
-      "Jim Gordon",
-      "Selina Kyle",
-      "Carmine Falcone"
-    ],
-    "creators": [
-      "Frank Miller",
-      "David Mazzucchelli"
-    ],
+    "characters": ["Batman", "Bruce Wayne", "Jim Gordon", "Selina Kyle", "Carmine Falcone"],
+    "creators": ["Frank Miller", "David Mazzucchelli"],
     "summary": "Batman: Year One re-architected Bruce Wayne's early origin and Jim Gordon's arrival in Gotham City following Crisis on Infinite Earths, serving as the blueprint for Batman Begins and The Batman."
   },
   {
@@ -2311,11 +1513,7 @@
     "universe": "DC",
     "franchise": "Batman Elseworlds",
     "type": "equity",
-    "aliases": [
-      "The Dark Knight Returns",
-      "Dark Knight Returns",
-      "DKR"
-    ],
+    "aliases": ["The Dark Knight Returns", "Dark Knight Returns", "DKR"],
     "landmarkIssue": "Batman: The Dark Knight Returns #1",
     "landmarkIssues": [
       {
@@ -2326,19 +1524,8 @@
         "assetTier": "SOVEREIGN_BLUE_CHIP"
       }
     ],
-    "characters": [
-      "Batman",
-      "Carrie Kelley",
-      "Superman",
-      "The Joker",
-      "Mutant Leader",
-      "Two-Face"
-    ],
-    "creators": [
-      "Frank Miller",
-      "Klaus Janson",
-      "Lynn Varley"
-    ],
+    "characters": ["Batman", "Carrie Kelley", "Superman", "The Joker", "Mutant Leader", "Two-Face"],
+    "creators": ["Frank Miller", "Klaus Janson", "Lynn Varley"],
     "summary": "Frank Miller's 1986 four-issue prestige masterpiece redefined superhero fiction, showing an aging Bruce Wayne coming out of retirement to reclaim a dystopian Gotham City."
   },
   {
@@ -2348,10 +1535,7 @@
     "universe": "DC",
     "franchise": "Batman Lore",
     "type": "equity",
-    "aliases": [
-      "The Killing Joke",
-      "Batman The Killing Joke"
-    ],
+    "aliases": ["The Killing Joke", "Batman The Killing Joke"],
     "landmarkIssue": "Batman: The Killing Joke #1",
     "landmarkIssues": [
       {
@@ -2362,17 +1546,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Batman",
-      "The Joker",
-      "Jim Gordon",
-      "Barbara Gordon (Batgirl / Oracle)"
-    ],
-    "creators": [
-      "Alan Moore",
-      "Brian Bolland",
-      "John Higgins"
-    ],
+    "characters": ["Batman", "The Joker", "Jim Gordon", "Barbara Gordon (Batgirl / Oracle)"],
+    "creators": ["Alan Moore", "Brian Bolland", "John Higgins"],
     "summary": "The Killing Joke is Alan Moore and Brian Bolland's seminal 1988 psychological graphic novel exploring the Joker's origin and the fragile line between sanity and madness."
   },
   {
@@ -2382,9 +1557,7 @@
     "universe": "DC",
     "franchise": "DC Comics Multiverse",
     "type": "equity",
-    "aliases": [
-      "Flashpoint"
-    ],
+    "aliases": ["Flashpoint"],
     "landmarkIssue": "Flashpoint #1",
     "landmarkIssues": [
       {
@@ -2395,18 +1568,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Barry Allen",
-      "Thomas Wayne (Batman)",
-      "Reverse-Flash (Eobard Thawne)",
-      "Cyborg",
-      "Aquaman",
-      "Wonder Woman"
-    ],
-    "creators": [
-      "Geoff Johns",
-      "Andy Kubert"
-    ],
+    "characters": ["Barry Allen", "Thomas Wayne (Batman)", "Reverse-Flash (Eobard Thawne)", "Cyborg", "Aquaman", "Wonder Woman"],
+    "creators": ["Geoff Johns", "Andy Kubert"],
     "summary": "Flashpoint was DC's 2011 line-wide crossover where Barry Allen altered timeline history trying to save his mother, triggering the New 52 continuity relaunch."
   },
   {
@@ -2416,10 +1579,7 @@
     "universe": "DC",
     "franchise": "Batman Canon",
     "type": "equity",
-    "aliases": [
-      "Batman Hush",
-      "Hush"
-    ],
+    "aliases": ["Batman Hush", "Hush"],
     "landmarkIssue": "Batman #608",
     "landmarkIssues": [
       {
@@ -2437,21 +1597,9 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Batman",
-      "Hush",
-      "Catwoman",
-      "Superman",
-      "Poison Ivy",
-      "The Riddler",
-      "Nightwing"
-    ],
-    "creators": [
-      "Jeph Loeb",
-      "Jim Lee",
-      "Scott Williams"
-    ],
-    "summary": "Batman: Hush was Jeph Loeb and Jim Lee's bestselling 12-issue arc in 2002\u20132003, featuring almost every major Batman villain and establishing Hush as a premier modern antagonist."
+    "characters": ["Batman", "Hush", "Catwoman", "Superman", "Poison Ivy", "The Riddler", "Nightwing"],
+    "creators": ["Jeph Loeb", "Jim Lee", "Scott Williams"],
+    "summary": "Batman: Hush was Jeph Loeb and Jim Lee's bestselling 12-issue arc in 2002–2003, featuring almost every major Batman villain and establishing Hush as a premier modern antagonist."
   },
   {
     "title": "House of M",
@@ -2460,9 +1608,7 @@
     "universe": "MARVEL",
     "franchise": "Marvel Comics / Avengers & X-Men",
     "type": "equity",
-    "aliases": [
-      "House of M"
-    ],
+    "aliases": ["House of M"],
     "landmarkIssue": "House of M #1",
     "landmarkIssues": [
       {
@@ -2480,18 +1626,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Scarlet Witch",
-      "Magneto",
-      "Quicksilver",
-      "Wolverine",
-      "Spider-Man",
-      "Professor X"
-    ],
-    "creators": [
-      "Brian Michael Bendis",
-      "Olivier Coipel"
-    ],
+    "characters": ["Scarlet Witch", "Magneto", "Quicksilver", "Wolverine", "Spider-Man", "Professor X"],
+    "creators": ["Brian Michael Bendis", "Olivier Coipel"],
     "summary": "House of M restructured Marvel continuity when Scarlet Witch reshaped reality to make mutants the ruling majority, concluding with the infamous 'No More Mutants' Decimation."
   },
   {
@@ -2501,10 +1637,7 @@
     "universe": "DC",
     "franchise": "Green Lantern Cosmic Canon",
     "type": "equity",
-    "aliases": [
-      "Sinestro Corps War",
-      "Green Lantern Sinestro Corps War"
-    ],
+    "aliases": ["Sinestro Corps War", "Green Lantern Sinestro Corps War"],
     "landmarkIssue": "Green Lantern: Sinestro Corps Special #1",
     "landmarkIssues": [
       {
@@ -2515,21 +1648,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Hal Jordan",
-      "Sinestro",
-      "Kyle Rayner",
-      "John Stewart",
-      "Anti-Monitor",
-      "Superboy-Prime",
-      "Cyborg Superman"
-    ],
-    "creators": [
-      "Geoff Johns",
-      "Dave Gibbons",
-      "Ethan Van Sciver",
-      "Ivan Reis"
-    ],
+    "characters": ["Hal Jordan", "Sinestro", "Kyle Rayner", "John Stewart", "Anti-Monitor", "Superboy-Prime", "Cyborg Superman"],
+    "creators": ["Geoff Johns", "Dave Gibbons", "Ethan Van Sciver", "Ivan Reis"],
     "summary": "Sinestro Corps War revitalized DC's cosmic landscape, introducing the emotional spectrum of light and setting the stage for Blackest Night."
   },
   {
@@ -2539,9 +1659,7 @@
     "universe": "DC",
     "franchise": "DC Comics Universe-Wide Event",
     "type": "equity",
-    "aliases": [
-      "Blackest Night"
-    ],
+    "aliases": ["Blackest Night"],
     "landmarkIssue": "Blackest Night #1",
     "landmarkIssues": [
       {
@@ -2552,18 +1670,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Hal Jordan",
-      "Nekron",
-      "Black Hand",
-      "Deadman",
-      "Batman (Bruce Wayne)",
-      "Barry Allen"
-    ],
-    "creators": [
-      "Geoff Johns",
-      "Ivan Reis"
-    ],
+    "characters": ["Hal Jordan", "Nekron", "Black Hand", "Deadman", "Batman (Bruce Wayne)", "Barry Allen"],
+    "creators": ["Geoff Johns", "Ivan Reis"],
     "summary": "Blackest Night resurrected deceased heroes and villains across the DC Universe as undead Black Lanterns, becoming one of DC's top-selling modern crossover events."
   },
   {
@@ -2573,9 +1681,7 @@
     "universe": "MARVEL",
     "franchise": "Spider-Man Canon",
     "type": "equity",
-    "aliases": [
-      "Maximum Carnage"
-    ],
+    "aliases": ["Maximum Carnage"],
     "landmarkIssue": "Spider-Man Unlimited #1",
     "landmarkIssues": [
       {
@@ -2586,20 +1692,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Spider-Man",
-      "Venom",
-      "Carnage",
-      "Shriek",
-      "Doppelganger",
-      "Demogoblin",
-      "Black Cat"
-    ],
-    "creators": [
-      "Tom DeFalco",
-      "Ron Lim",
-      "Mark Bagley"
-    ],
+    "characters": ["Spider-Man", "Venom", "Carnage", "Shriek", "Doppelganger", "Demogoblin", "Black Cat"],
+    "creators": ["Tom DeFalco", "Ron Lim", "Mark Bagley"],
     "summary": "Maximum Carnage was a 14-part 1993 crossover where Carnage assembled a family of psychotic villains in New York City, forcing Spider-Man to ally with his arch-rival Venom."
   },
   {
@@ -2609,10 +1703,7 @@
     "universe": "MARVEL",
     "franchise": "Spider-Man Canon",
     "type": "equity",
-    "aliases": [
-      "Kraven's Last Hunt",
-      "Kravens Last Hunt"
-    ],
+    "aliases": ["Kraven's Last Hunt", "Kravens Last Hunt"],
     "landmarkIssue": "Web of Spider-Man #31",
     "landmarkIssues": [
       {
@@ -2623,20 +1714,12 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Spider-Man",
-      "Peter Parker",
-      "Kraven the Hunter (Sergei Kravinoff)",
-      "Vermin",
-      "Mary Jane Watson"
-    ],
-    "creators": [
-      "J.M. DeMatteis",
-      "Mike Zeck",
-      "Bob McLeod"
-    ],
+    "characters": ["Spider-Man", "Peter Parker", "Kraven the Hunter (Sergei Kravinoff)", "Vermin", "Mary Jane Watson"],
+    "creators": ["J.M. DeMatteis", "Mike Zeck", "Bob McLeod"],
     "summary": "Kraven's Last Hunt is J.M. DeMatteis and Mike Zeck's 1987 psychological masterpiece wherein Kraven the Hunter shoots, buries, and replaces Spider-Man to prove his superiority."
   },
+
+  # --- INDEPENDENT & OTHER NOTABLE ADAPTATIONS ---
   {
     "title": "Invincible",
     "slug": "invincible-series",
@@ -2644,10 +1727,7 @@
     "universe": "IMAGE",
     "franchise": "Image Comics / Amazon Prime",
     "type": "equity",
-    "aliases": [
-      "Invincible",
-      "Invincible animated series"
-    ],
+    "aliases": ["Invincible", "Invincible animated series"],
     "landmarkIssue": "Invincible #1",
     "landmarkIssues": [
       {
@@ -2658,21 +1738,8 @@
         "assetTier": "SOVEREIGN_BLUE_CHIP"
       }
     ],
-    "characters": [
-      "Invincible",
-      "Mark Grayson",
-      "Omni-Man",
-      "Atom Eve",
-      "Allen the Alien",
-      "Cecil Stedman"
-    ],
-    "creators": [
-      "Robert Kirkman",
-      "Cory Walker",
-      "Ryan Ottley",
-      "Steven Yeun",
-      "J.K. Simmons"
-    ],
+    "characters": ["Invincible", "Mark Grayson", "Omni-Man", "Atom Eve", "Allen the Alien", "Cecil Stedman"],
+    "creators": ["Robert Kirkman", "Cory Walker", "Ryan Ottley", "Steven Yeun", "J.K. Simmons"],
     "summary": "Invincible is Robert Kirkman's celebrated superhero epic, adapted into Amazon Prime's smash animated series and driving Invincible #1 into an elite modern blue-chip asset."
   },
   {
@@ -2682,10 +1749,7 @@
     "universe": "INDEPENDENT",
     "franchise": "Dynamite / Amazon Prime",
     "type": "equity",
-    "aliases": [
-      "The Boys",
-      "The Boys TV series"
-    ],
+    "aliases": ["The Boys", "The Boys TV series"],
     "landmarkIssue": "The Boys #1",
     "landmarkIssues": [
       {
@@ -2696,21 +1760,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Billy Butcher",
-      "Homelander",
-      "Hughie",
-      "Starlight",
-      "Soldier Boy",
-      "A-Train"
-    ],
-    "creators": [
-      "Garth Ennis",
-      "Darick Robertson",
-      "Eric Kripke",
-      "Antony Starr",
-      "Karl Urban"
-    ],
+    "characters": ["Billy Butcher", "Homelander", "Hughie", "Starlight", "Soldier Boy", "A-Train"],
+    "creators": ["Garth Ennis", "Darick Robertson", "Eric Kripke", "Antony Starr", "Karl Urban"],
     "summary": "The Boys by Garth Ennis and Darick Robertson became Amazon Prime's flagship satirical superhero franchise, examining corporate greed, superhero fascism, and rogue black-ops vengeance."
   },
   {
@@ -2720,10 +1771,7 @@
     "universe": "IMAGE",
     "franchise": "Image Comics / AMC Television",
     "type": "equity",
-    "aliases": [
-      "The Walking Dead",
-      "Walking Dead"
-    ],
+    "aliases": ["The Walking Dead", "Walking Dead"],
     "landmarkIssue": "The Walking Dead #1",
     "landmarkIssues": [
       {
@@ -2748,20 +1796,8 @@
         "assetTier": "KEY_EQUITY"
       }
     ],
-    "characters": [
-      "Rick Grimes",
-      "Michonne",
-      "Daryl Dixon",
-      "Negan",
-      "Carl Grimes",
-      "Glenn Rhee"
-    ],
-    "creators": [
-      "Robert Kirkman",
-      "Tony Moore",
-      "Charlie Adlard",
-      "Andrew Lincoln"
-    ],
+    "characters": ["Rick Grimes", "Michonne", "Daryl Dixon", "Negan", "Carl Grimes", "Glenn Rhee"],
+    "creators": ["Robert Kirkman", "Tony Moore", "Charlie Adlard", "Andrew Lincoln"],
     "summary": "The Walking Dead transformed indie comics into a global multi-billion dollar television empire across 11 seasons on AMC, driving The Walking Dead #1 to record-shattering modern valuations."
   },
   {
@@ -2771,11 +1807,7 @@
     "universe": "DC",
     "franchise": "DC Comics / HBO",
     "type": "equity",
-    "aliases": [
-      "Watchmen",
-      "Watchmen (2009)",
-      "Watchmen HBO"
-    ],
+    "aliases": ["Watchmen", "Watchmen (2009)", "Watchmen HBO"],
     "landmarkIssue": "Watchmen #1",
     "landmarkIssues": [
       {
@@ -2786,20 +1818,8 @@
         "assetTier": "SOVEREIGN_BLUE_CHIP"
       }
     ],
-    "characters": [
-      "Rorschach",
-      "Doctor Manhattan",
-      "Ozymandias",
-      "Nite Owl",
-      "Silk Spectre",
-      "The Comedian"
-    ],
-    "creators": [
-      "Alan Moore",
-      "Dave Gibbons",
-      "Zack Snyder",
-      "Damon Lindelof"
-    ],
+    "characters": ["Rorschach", "Doctor Manhattan", "Ozymandias", "Nite Owl", "Silk Spectre", "The Comedian"],
+    "creators": ["Alan Moore", "Dave Gibbons", "Zack Snyder", "Damon Lindelof"],
     "summary": "Watchmen is the only graphic novel to appear on Time's 100 Best Novels list, serving as the benchmark for literary deconstruction of the superhero genre."
   },
   {
@@ -2809,10 +1829,7 @@
     "universe": "SPAWN",
     "franchise": "Image Comics / Todd McFarlane Productions",
     "type": "equity",
-    "aliases": [
-      "Spawn",
-      "Spawn (1997)"
-    ],
+    "aliases": ["Spawn", "Spawn (1997)"],
     "landmarkIssue": "Spawn #1",
     "landmarkIssues": [
       {
@@ -2823,16 +1840,15 @@
         "assetTier": "SOVEREIGN_BLUE_CHIP"
       }
     ],
-    "characters": [
-      "Spawn",
-      "Al Simmons",
-      "Violator / Clown",
-      "Malebolgia",
-      "Wanda Blake"
-    ],
-    "creators": [
-      "Todd McFarlane"
-    ],
+    "characters": ["Spawn", "Al Simmons", "Violator / Clown", "Malebolgia", "Wanda Blake"],
+    "creators": ["Todd McFarlane"],
     "summary": "Spawn launched Image Comics into history in 1992, becoming the longest-running creator-owned comic book series in history and a perennial auction powerhouse."
   }
 ]
+
+# Write out formatted clean JSON
+with open(REGISTRY_PATH, "w", encoding="utf-8") as f:
+    json.dump(assets, f, indent=2)
+    f.write("\n")
+
+print(f"[SUCCESS] Wrote {len(assets)} comprehensive adaptation & storyline equity assets to {REGISTRY_PATH}")

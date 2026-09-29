@@ -263,4 +263,50 @@ describe("newsroom relevance gate", () => {
     // All words should remain plain text strings, not hover card badges
     expect(parsedNodes.every((n) => typeof n === "string")).toBe(true);
   });
+
+  it("universally recognizes media adaptations and comic storylines across MCU, DC, Sony, X-Men, Image, and classic crossovers", async () => {
+    const { findNewsEntities } = await import("@/lib/news/entities");
+    const { getLoreEntityBySlug } = await import("@/lib/wiki/lore-search");
+
+    const sampleStory =
+      "Following the critical acclaim of Captain America: Brave New World and Thunderbolts*, Marvel Studios announced Avengers: Secret Wars. " +
+      "Meanwhile, Sony Pictures promoted Venom: Let There Be Carnage and Spider-Man: Across the Spider-Verse, while DC Studios highlighted " +
+      "Batman: The Long Halloween and The Death of Superman alongside Image Comics' Invincible.";
+
+    const entities = findNewsEntities("Universal Entertainment Assets", sampleStory);
+    const entityTerms = new Map(entities.map((e) => [e.term, e]));
+
+    // 1. MCU Phase 5 & 6 equities
+    expect(entityTerms.has("Captain America: Brave New World") || entityTerms.has("Captain America Brave New World")).toBe(true);
+    expect(entityTerms.has("Thunderbolts*") || entityTerms.has("Thunderbolts")).toBe(true);
+    expect(entityTerms.has("Avengers: Secret Wars") || entityTerms.has("Avengers Secret Wars")).toBe(true);
+
+    // 2. Sony Spider-Verse & Symbiote equities
+    expect(entityTerms.has("Venom: Let There Be Carnage") || entityTerms.has("Venom Let There Be Carnage")).toBe(true);
+    expect(entityTerms.has("Spider-Man: Across the Spider-Verse") || entityTerms.has("Spider-Man Across the Spider-Verse")).toBe(true);
+
+    // 3. DC Landmark Lore & Storylines
+    expect(entityTerms.has("Batman: The Long Halloween") || entityTerms.has("The Long Halloween")).toBe(true);
+    expect(entityTerms.has("The Death of Superman") || entityTerms.has("Death of Superman")).toBe(true);
+
+    // 4. Image Sovereign Blue Chip
+    expect(entityTerms.has("Invincible")).toBe(true);
+
+    // 5. Verify Dossier retrieval for diverse assets
+    const carnageDossier = getLoreEntityBySlug("venom-let-there-be-carnage");
+    expect(carnageDossier).not.toBeNull();
+    expect(carnageDossier?.ticker).toBe("$SPDR:CARNAGE");
+    expect(carnageDossier?.landmark_debuts?.length).toBeGreaterThanOrEqual(1);
+
+    const longHalloweenDossier = getLoreEntityBySlug("batman-the-long-halloween");
+    expect(longHalloweenDossier).not.toBeNull();
+    expect(longHalloweenDossier?.ticker).toBe("$BAT:LONG-HALLOWEEN");
+
+    const deathOfSupermanDossier = getLoreEntityBySlug("the-death-of-superman");
+    expect(deathOfSupermanDossier).not.toBeNull();
+    expect(deathOfSupermanDossier?.ticker).toBe("$SUPR:DEATH");
+
+    const invincibleDossier = getLoreEntityBySlug("invincible-series") || getLoreEntityBySlug("invincible");
+    expect(invincibleDossier).not.toBeNull();
+  });
 });

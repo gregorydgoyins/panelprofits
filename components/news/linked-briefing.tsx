@@ -40,13 +40,20 @@ export function parseTextWithEntities(text: string, entities?: EntityWikiDef[]):
 
   // Sort entities by term length descending so longer phrases match first (e.g. "Bruce Wayne" before "Bruce")
   const sorted = [...activeEntities].sort((a, b) => b.term.length - a.term.length);
-  const escapedTerms = sorted.map((e) => e.term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  const escapedTerms = sorted.map((e) => {
+    const esc = e.term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const startsWithWord = /^\w/.test(e.term);
+    const endsWithWord = /\w$/.test(e.term);
+    const prefix = startsWithWord ? "\\b" : "(?<=^|\\s|[^\\w])";
+    const suffix = endsWithWord ? "\\b" : "(?=$|\\s|[^\\w])";
+    return `${prefix}${esc}${suffix}`;
+  });
   
   if (escapedTerms.length === 0) {
     return [cleanText];
   }
 
-  const pattern = new RegExp(`\\b(${escapedTerms.join("|")})\\b`, "gi");
+  const pattern = new RegExp(`(${escapedTerms.join("|")})`, "gi");
   const nodes: React.ReactNode[] = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;

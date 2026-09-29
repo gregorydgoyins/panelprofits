@@ -164,6 +164,67 @@ export const TOP_TIER_HERO_WHITELIST = new Set([
 let cachedIndex: LoreIndexData | null = null;
 let cachedSlugMap: Map<string, LoreEntitySummary> | null = null;
 let cachedTitleMap: Map<string, LoreEntitySummary> | null = null;
+export const KNOWN_HERO_TICKERS: Record<string, string> = {
+  "spider-man": "$SPDR",
+  "spiderman": "$SPDR",
+  "batman": "$BAT",
+  "superman": "$SUPR",
+  "wolverine": "$WOLV",
+  "hulk": "$HULK",
+  "thor": "$THOR",
+  "iron man": "$IRON",
+  "captain america": "$CAP",
+  "deadpool": "$DP",
+  "daredevil": "$DD",
+  "punisher": "$PUN",
+  "the punisher": "$PUN",
+  "wonder woman": "$WW",
+  "the flash": "$FLSH",
+  "flash": "$FLSH",
+  "green lantern": "$GL",
+  "aquaman": "$AQM",
+  "magneto": "$MGN",
+  "doctor strange": "$STRG",
+  "black panther": "$BP",
+  "black widow": "$BW",
+  "hawkeye": "$HAWK",
+  "venom": "$VENOM",
+  "carnage": "$CARNAGE",
+  "spawn": "$SPWN",
+  "hellboy": "$HELLBOY",
+  "thanos": "$THANOS",
+  "galactus": "$GALACTUS",
+  "silver surfer": "$SURFER",
+  "cyclops": "$CYC",
+  "storm": "$STORM",
+  "jean grey": "$PHOENIX",
+  "rogue": "$ROGUE",
+  "gambit": "$GAMBIT",
+  "nightcrawler": "$NIGHT",
+  "beast": "$BEAST",
+  "professor x": "$PROFX",
+  "avengers": "$AVNG",
+  "x-men": "$XMEN",
+  "fantastic four": "$FF",
+  "justice league": "$JL",
+};
+
+export function deriveEntityTicker(title: string, universe: string): string {
+  const clean = title.trim().toLowerCase();
+  if (KNOWN_HERO_TICKERS[clean]) return KNOWN_HERO_TICKERS[clean];
+
+  const uni = (universe || "MARVEL").toUpperCase();
+  const uniPrefix = uni === "MARVEL" ? "MRVL" : uni === "DC" ? "DC" : uni === "STAR_WARS" ? "SW" : uni === "IMAGE" ? "IMG" : uni === "DARK_HORSE" ? "DH" : uni === "SPAWN" ? "SPWN" : uni;
+
+  const cleanTitle = title.replace(/[^a-zA-Z0-9\s]/g, "").trim();
+  const words = cleanTitle.split(/\s+/).filter(Boolean);
+  if (words.length === 1) {
+    const single = words[0].toUpperCase();
+    return `$${uniPrefix}:${single.slice(0, 8)}`;
+  }
+  const acronym = words.map((w) => w[0].toUpperCase()).join("");
+  return `$${uniPrefix}:${acronym}`;
+}
 
 function loadLoreIndex(): LoreIndexData {
   if (cachedIndex) return cachedIndex;
@@ -231,6 +292,18 @@ function loadLoreIndex(): LoreIndexData {
 
     for (const [uni, chars] of Object.entries(cachedIndex.universes || {})) {
       for (const ch of chars) {
+        const derivedTicker = deriveEntityTicker(ch.title, ch.universe || uni);
+        const debuts = [];
+        if (ch.first_appearance && typeof ch.first_appearance === "string") {
+          const faClean = ch.first_appearance.replace(/\bVol\s*\d+\b/gi, "").replace(/\s+/g, " ").trim();
+          debuts.push({
+            title: faClean,
+            significance: `1st Canonical Appearance of ${ch.title}`,
+            catalogUrl: `/comics?q=${encodeURIComponent(faClean)}`,
+            era: faClean.includes("196") ? "SILVER" : faClean.includes("197") ? "BRONZE" : faClean.includes("198") ? "COPPER" : "MODERN",
+            assetTier: "KEY_EQUITY",
+          });
+        }
         const itemSummary: LoreEntitySummary = {
           slug: ch.slug,
           title: ch.title,
@@ -241,6 +314,8 @@ function loadLoreIndex(): LoreIndexData {
           creators: ch.creators,
           first_appearance: ch.first_appearance,
           summary: ch.summary,
+          ticker: derivedTicker,
+          landmark_debuts: debuts,
         };
         cachedSlugMap.set(ch.slug, itemSummary);
         registerTitle(ch.title, itemSummary);
@@ -257,6 +332,7 @@ function loadLoreIndex(): LoreIndexData {
         creators: it.creators,
         first_appearance: it.first_appearance,
         summary: it.summary,
+        ticker: deriveEntityTicker(it.title, it.universe),
       };
       cachedSlugMap.set(it.slug, itemSummary);
       registerTitle(it.title, itemSummary);
@@ -272,6 +348,7 @@ function loadLoreIndex(): LoreIndexData {
         creators: loc.creators,
         first_appearance: loc.first_appearance,
         summary: loc.summary,
+        ticker: deriveEntityTicker(loc.title, loc.universe),
       };
       cachedSlugMap.set(loc.slug, itemSummary);
       registerTitle(loc.title, itemSummary);
@@ -287,6 +364,7 @@ function loadLoreIndex(): LoreIndexData {
         creators: tm.creators,
         first_appearance: tm.first_appearance,
         summary: tm.summary,
+        ticker: deriveEntityTicker(tm.title, tm.universe),
       };
       cachedSlugMap.set(tm.slug, itemSummary);
       registerTitle(tm.title, itemSummary);

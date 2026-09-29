@@ -729,7 +729,8 @@ export function extractEntitiesFromContext(text: string): EntityWikiDef[] {
         seenTerms.add(loreTitleLower);
         baseMatches.push({
           term: lore.title,
-          type: lore.type === "character" ? "character" : "lexicon",
+          ticker: lore.ticker,
+          type: lore.type === "character" ? "character" : lore.type === "equity" ? "equity" : "lexicon",
           target: "intelligence",
           wikiPath: `/wiki/entry/${lore.slug}`,
         });
