@@ -3,6 +3,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getNewsStory, shortNewsSource } from "@/lib/news/feed";
 import { getDynamicEntitiesForText } from "@/lib/news/entities";
+import { getRelatedDossiersForText } from "@/lib/news/related-dossiers";
+import { RelatedDossiersRail } from "@/components/news/RelatedDossiersRail";
 import { NewsBriefing } from "@/components/news/news-briefing";
 import { AuthenticVideoEmbed, extractAuthenticVideo } from "@/components/news/authentic-video-embed";
 import { PresenterPlayer } from "@/components/news/PresenterPlayer";
@@ -22,9 +24,11 @@ export default async function NewsStoryPage({ params }: { params: Promise<{ id: 
   // Real, live-queried entity matching across all 7 ingested wiki universes
   // (Marvel, DC, Star Wars, Image, Dark Horse, Spawn, Transformers) via
   // public.ppcf_wiki_pages -- not the capped local JSON sample.
-  const [relatedEntities, videoReel] = await Promise.all([
-    getDynamicEntitiesForText(`${story.headline} ${story.summary || ""}`),
+  const storyText = `${story.headline} ${story.summary || ""}`;
+  const [relatedEntities, videoReel, relatedDossiers] = await Promise.all([
+    getDynamicEntitiesForText(storyText),
     getStoryVideoReel(story.id),
+    getRelatedDossiersForText(storyText),
   ]);
   const authenticVideo = !videoReel ? extractAuthenticVideo(story.summary, story.url) : null;
   const hasEditorialImage = Boolean(story.imageUrl && !story.imageUrl.includes("google.com/s2/favicons"));
@@ -112,6 +116,10 @@ export default async function NewsStoryPage({ params }: { params: Promise<{ id: 
               publishedAt={story.publishedAt}
               entities={relatedEntities}
             />
+          </div>
+
+          <div className="mt-8">
+            <RelatedDossiersRail data={relatedDossiers} />
           </div>
 
           <div className="mt-8 max-w-3xl">
