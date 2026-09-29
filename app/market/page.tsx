@@ -1,28 +1,33 @@
 import Link from "next/link";
-import { Activity, ArrowUpRight, BarChart3, Gauge, Radio, ShieldAlert, TrendingUp, Layers, Compass, Sparkles } from "lucide-react";
+import { Activity, ArrowUpRight, BarChart3, Gauge, Radio, ShieldAlert, Layers, Compass } from "lucide-react";
 import { getPanelTelemetry } from "@/lib/panel-profits/queries";
 import { getPpcfCoverage } from "@/lib/ppcf/queries";
 import { calculateMarketIndices } from "@/lib/market/indices";
-import { getSourceTicker } from "@/lib/news/sourceTickerMap";
+import { getFeaturedComics } from "@/lib/comics/queries";
+import { resolveBaselinePrice } from "@/lib/pricing/baseline";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * Derives a deterministic ticker mnemonic from a real comic series name.
+ * This is a display label computed from real catalog data, never a
+ * stand-in for price/change data — no market figures are invented here.
+ */
+function deriveComicTicker(series: string): string {
+  const clean = (series || "").replace(/[^a-zA-Z0-9\s]/g, "").trim();
+  const words = clean.split(/\s+/).filter(Boolean);
+  if (words.length === 0) return "$—";
+  if (words.length === 1) return `$${words[0].slice(0, 6).toUpperCase()}`;
+  return `$${words.map((w) => w[0]).join("").toUpperCase().slice(0, 6)}`;
+}
+
 export default async function MarketPage() {
-  const [{ state, recoveredIndices }, coverage, marketIndices] = await Promise.all([
+  const [{ state, recoveredIndices }, coverage, marketIndices, featuredComics] = await Promise.all([
     getPanelTelemetry(),
     getPpcfCoverage(),
     calculateMarketIndices(),
+    getFeaturedComics(7),
   ]);
-
-  const featuredTickers = [
-    { name: "Amazing Spider-Man", ticker: "$SPDR", fmv: "$3,850.00", change: "+4.2%" },
-    { name: "Batman #1 (1940)", ticker: "$BTMN", fmv: "$18,500.00", change: "+1.8%" },
-    { name: "Action Comics #1", ticker: "$SUPR", fmv: "$42,000.00", change: "+0.5%" },
-    { name: "X-Men #1 (1963)", ticker: "$XMEN", fmv: "$6,200.00", change: "-0.8%" },
-    { name: "Incredible Hulk #181", ticker: "$WLVN", fmv: "$9,400.00", change: "+3.1%" },
-    { name: "Marvel Comics Group", ticker: "$MARV", fmv: "Index Tier 1", change: "+2.4%" },
-    { name: "DC Entertainment", ticker: "$DC", fmv: "Index Tier 1", change: "+1.1%" },
-  ];
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -46,17 +51,27 @@ export default async function MarketPage() {
           <span className="shrink-0 font-mono text-[10px] uppercase tracking-wider bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 px-2.5 py-1 rounded">
             Live Equities Rail
           </span>
-          <div className="flex items-center gap-4 shrink-0 font-mono">
-            {featuredTickers.map((t) => (
-              <div key={t.ticker} className="flex items-center gap-2 bg-slate-900/60 px-3 py-1 border border-slate-800 rounded">
-                <span className="text-cyan-300 font-semibold">{t.ticker}</span>
-                <span className="text-slate-300">{t.fmv}</span>
-                <span className={t.change.startsWith("+") ? "text-emerald-400 font-medium" : "text-rose-400 font-medium"}>
-                  {t.change}
-                </span>
-              </div>
-            ))}
-          </div>
+          {featuredComics.length > 0 ? (
+            <div className="flex items-center gap-4 shrink-0 font-mono">
+              {featuredComics.map((comic) => {
+                const pricing = resolveBaselinePrice(comic);
+                return (
+                  <div
+                    key={comic.id}
+                    title={`${comic.series} #${comic.issue_number || "—"}`}
+                    className="flex items-center gap-2 bg-slate-900/60 px-3 py-1 border border-slate-800 rounded"
+                  >
+                    <span className="text-cyan-300 font-semibold">{deriveComicTicker(comic.series)}</span>
+                    <span className="text-slate-300">{pricing.formatted}</span>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <span className="shrink-0 font-mono text-[11px] text-slate-500 px-2">
+              No live tickers available — no priced equities meet listing criteria yet.
+            </span>
+          )}
         </div>
       </section>
 
@@ -107,8 +122,8 @@ export default async function MarketPage() {
         {([
           ["Market Tick", state?.tick ?? "Operational", Radio],
           ["Regime State", state?.regime ?? "Equities Consolidation", Activity],
-          ["Stress Index", state?.stress_index == null ? "0.142" : Number(state.stress_index).toFixed(3), Gauge],
-          ["Max Drawdown", state?.drawdown == null ? "4.2%" : `${(Number(state.drawdown) * 100).toFixed(1)}%`, ShieldAlert],
+          ["Stress Index", state?.stress_index == null ? "—" : Number(state.stress_index).toFixed(3), Gauge],
+          ["Max Drawdown", state?.drawdown == null ? "—" : `${(Number(state.drawdown) * 100).toFixed(1)}%`, ShieldAlert],
         ] as const).map(([label, value, Icon]) => (
           <div key={label} className="border border-slate-800 bg-[#090D15] p-5 rounded-lg">
             <Icon className="h-5 w-5 text-cyan-300" />
