@@ -5,7 +5,7 @@ export interface LoreEntitySummary {
   slug: string;
   title: string;
   universe: "MARVEL" | "DC" | "STAR_WARS" | "IMAGE" | "DARK_HORSE" | "SPAWN" | "TRANSFORMERS" | string;
-  type: "character" | "item" | "location" | "team";
+  type: "character" | "item" | "location" | "team" | "equity";
   reality?: string;
   alignment?: string;
   creators?: string;
@@ -322,6 +322,42 @@ function loadLoreIndex(): LoreIndexData {
           registerTitle(actor.name, actorSummary);
           for (const alias of actor.aliases || []) {
             registerTitle(alias, actorSummary);
+          }
+        }
+      }
+    } catch {
+      // Safe fallback
+    }
+
+    // Register adaptation asset registry (cinematic & storyline equities)
+    try {
+      const assetPath = path.join(process.cwd(), "lib/news/adaptation-asset-registry.json");
+      if (fs.existsSync(assetPath)) {
+        const assetRaw = fs.readFileSync(assetPath, "utf-8");
+        const assetList = JSON.parse(assetRaw);
+        for (const asset of assetList) {
+          const assetSummary: LoreEntitySummary = {
+            slug: asset.slug,
+            title: asset.title,
+            universe: asset.universe,
+            type: "equity",
+            creators: (asset.creators || []).join(", "),
+            first_appearance: asset.landmarkIssue || "Key Issue",
+            ticker: asset.ticker,
+            summary: asset.summary || `Canonical ${asset.franchise} equity asset.`,
+            landmark_debuts: (asset.landmarkIssues || []).map((li: any) => ({
+              title: li.title,
+              significance: li.significance,
+              catalogUrl: li.catalogUrl,
+              era: li.era,
+              assetTier: li.assetTier,
+            })),
+            super_teams: asset.characters || [],
+          };
+          cachedSlugMap.set(asset.slug, assetSummary);
+          registerTitle(asset.title, assetSummary);
+          for (const alias of asset.aliases || []) {
+            registerTitle(alias, assetSummary);
           }
         }
       }

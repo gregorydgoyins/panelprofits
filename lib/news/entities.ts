@@ -1,6 +1,7 @@
 import { createAdminServerClient } from "@/lib/supabase/admin";
 import { findLoreEntitiesInText, GENERIC_REAL_WORLD_LOCATIONS, LORE_OBSCURE_COLLISION_BLOCKLIST } from "@/lib/wiki/lore-search";
 import adaptationCastData from "./adaptation-cast-registry.json";
+import adaptationAssetData from "./adaptation-asset-registry.json";
 
 export interface EntityWikiDef {
   term: string;
@@ -31,7 +32,33 @@ interface AdaptationActor {
   imdbId?: string;
 }
 
+interface AdaptationAsset {
+  title: string;
+  slug: string;
+  ticker: string;
+  universe: string;
+  franchise: string;
+  type: string;
+  aliases: string[];
+  landmarkIssue?: string;
+  characters?: string[];
+  creators?: string[];
+  summary?: string;
+}
+
 const ADAPTATION_ACTORS: AdaptationActor[] = adaptationCastData as AdaptationActor[];
+const ADAPTATION_ASSETS: AdaptationAsset[] = adaptationAssetData as AdaptationAsset[];
+
+export const ADAPTATION_ASSET_ENTITIES: EntityWikiDef[] = ADAPTATION_ASSETS.flatMap((asset) => {
+  const terms = [asset.title, ...(asset.aliases || [])];
+  return terms.map((t) => ({
+    term: t,
+    ticker: asset.ticker,
+    type: "equity" as const,
+    target: "intelligence" as const,
+    wikiPath: `/wiki/entry/${asset.slug}`,
+  }));
+});
 
 /**
  * Decomposes role character names like "Claire Temple (Night Nurse)" or "The Punisher (Frank Castle)"
@@ -343,46 +370,8 @@ export const KNOWN_NEWS_ENTITIES_MAP: EntityWikiDef[] = [
   { term: "Ahoy Comics", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Ahoy+Comics" },
   { term: "Titan Comics", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Titan+Comics" },
 
-  // --- COMPOUND STORYLINES, RUNS & MAJOR ADAPTATION TITLES ---
-  { term: "Spider-Man: Brand New Day", ticker: "$SPDR", type: "character", target: "intelligence", wikiPath: "/comics?q=Spider-Man+Brand+New+Day" },
-  { term: "Spider-Man Brand New Day", ticker: "$SPDR", type: "character", target: "intelligence", wikiPath: "/comics?q=Spider-Man+Brand+New+Day" },
-  { term: "Spider-man: Brand New Day", ticker: "$SPDR", type: "character", target: "intelligence", wikiPath: "/comics?q=Spider-Man+Brand+New+Day" },
-  { term: "Spider-man Brand New Day", ticker: "$SPDR", type: "character", target: "intelligence", wikiPath: "/comics?q=Spider-Man+Brand+New+Day" },
-  { term: "Spider-Man: BrandNew Day", ticker: "$SPDR", type: "character", target: "intelligence", wikiPath: "/comics?q=Spider-Man+Brand+New+Day" },
-  { term: "Spider-Man BrandNew Day", ticker: "$SPDR", type: "character", target: "intelligence", wikiPath: "/comics?q=Spider-Man+Brand+New+Day" },
-  { term: "Spider-man: BrandNew Day", ticker: "$SPDR", type: "character", target: "intelligence", wikiPath: "/comics?q=Spider-Man+Brand+New+Day" },
-  { term: "Spider-man BrandNew Day", ticker: "$SPDR", type: "character", target: "intelligence", wikiPath: "/comics?q=Spider-Man+Brand+New+Day" },
-  { term: "Spider-Man: No Way Home", ticker: "$SPDR", type: "character", target: "intelligence", wikiPath: "/wiki/entry/spider-man" },
-  { term: "Spider-Man: Across the Spider-Verse", ticker: "$SPDR", type: "character", target: "intelligence", wikiPath: "/wiki/entry/spider-man" },
-  { term: "Spider-Man: Into the Spider-Verse", ticker: "$SPDR", type: "character", target: "intelligence", wikiPath: "/wiki/entry/spider-man" },
-  { term: "Avengers: Endgame: Encore", ticker: "$AVNG", type: "character", target: "intelligence", wikiPath: "/comics?q=Avengers+Endgame" },
-  { term: "Avengers Endgame: Encore", ticker: "$AVNG", type: "character", target: "intelligence", wikiPath: "/comics?q=Avengers+Endgame" },
-  { term: "Avengers: Endgame Encore", ticker: "$AVNG", type: "character", target: "intelligence", wikiPath: "/comics?q=Avengers+Endgame" },
-  { term: "Avengers Endgame Encore", ticker: "$AVNG", type: "character", target: "intelligence", wikiPath: "/comics?q=Avengers+Endgame" },
-  { term: "Avengers: Endgame", ticker: "$AVNG", type: "character", target: "intelligence", wikiPath: "/comics?q=Avengers+Endgame" },
-  { term: "Avengers Endgame", ticker: "$AVNG", type: "character", target: "intelligence", wikiPath: "/comics?q=Avengers+Endgame" },
-  { term: "Avengers: Infinity War", ticker: "$AVNG", type: "character", target: "intelligence", wikiPath: "/comics?q=Avengers+Infinity+War" },
-  { term: "Avengers Infinity War", ticker: "$AVNG", type: "character", target: "intelligence", wikiPath: "/comics?q=Avengers+Infinity+War" },
-  { term: "Avengers: Secret Wars", ticker: "$AVNG", type: "character", target: "intelligence", wikiPath: "/comics?q=Avengers+Secret+Wars" },
-  { term: "Avengers Secret Wars", ticker: "$AVNG", type: "character", target: "intelligence", wikiPath: "/comics?q=Avengers+Secret+Wars" },
-  { term: "Avengers: Doomsday", ticker: "$AVNG", type: "character", target: "intelligence", wikiPath: "/comics?q=Avengers+Doomsday" },
-  { term: "Avengers Doomsday", ticker: "$AVNG", type: "character", target: "intelligence", wikiPath: "/comics?q=Avengers+Doomsday" },
-  { term: "Captain America: Brave New World", ticker: "$CAP", type: "character", target: "intelligence", wikiPath: "/comics?q=Captain+America+Brave+New+World" },
-  { term: "Captain America Brave New World", ticker: "$CAP", type: "character", target: "intelligence", wikiPath: "/comics?q=Captain+America+Brave+New+World" },
-  { term: "Captain America: Civil War", ticker: "$CAP", type: "character", target: "intelligence", wikiPath: "/comics?q=Captain+America+Civil+War" },
-  { term: "Captain America: The Winter Soldier", ticker: "$CAP", type: "character", target: "intelligence", wikiPath: "/comics?q=Captain+America+The+Winter+Soldier" },
-  { term: "Daredevil: Born Again", ticker: "$DD", type: "character", target: "intelligence", wikiPath: "/comics?q=Daredevil+Born+Again" },
-  { term: "Batman: The Brave and the Bold", ticker: "$BAT", type: "character", target: "intelligence", wikiPath: "/comics?q=Batman+The+Brave+and+the+Bold" },
-  { term: "Batman: Year One", ticker: "$BAT", type: "character", target: "intelligence", wikiPath: "/comics?q=Batman+Year+One" },
-  { term: "Batman: The Dark Knight Returns", ticker: "$BAT", type: "character", target: "intelligence", wikiPath: "/comics?q=Batman+The+Dark+Knight+Returns" },
-  { term: "Batman: The Killing Joke", ticker: "$BAT", type: "character", target: "intelligence", wikiPath: "/comics?q=Batman+The+Killing+Joke" },
-  { term: "Batman: The Long Halloween", ticker: "$BAT", type: "character", target: "intelligence", wikiPath: "/comics?q=Batman+The+Long+Halloween" },
-  { term: "Superman: Legacy", ticker: "$SUPR", type: "character", target: "intelligence", wikiPath: "/comics?q=Superman+Legacy" },
-  { term: "The Dark Knight", ticker: "$BAT", type: "character", target: "intelligence", wikiPath: "/comics?q=The+Dark+Knight" },
-  { term: "Crisis on Infinite Earths", ticker: "$DC", type: "character", target: "intelligence", wikiPath: "/comics?q=Crisis+on+Infinite+Earths" },
-  { term: "Secret Wars", ticker: "$MRVL", type: "character", target: "intelligence", wikiPath: "/comics?q=Secret+Wars" },
-  { term: "Infinity Gauntlet", ticker: "$MRVL", type: "character", target: "intelligence", wikiPath: "/comics?q=Infinity+Gauntlet" },
-  { term: "Civil War", ticker: "$MRVL", type: "character", target: "intelligence", wikiPath: "/comics?q=Civil+War" },
+  // --- CINEMATIC ADAPTATION & STORYLINE EQUITIES (First-Class Tradeable Assets) ---
+  ...ADAPTATION_ASSET_ENTITIES,
 
   // --- CHARACTERS & LORE (Direct Dossier Routes) ---
   { term: "Spider-M", ticker: "$SPDR", type: "character", target: "intelligence", wikiPath: "/wiki/entry/spider-man" },

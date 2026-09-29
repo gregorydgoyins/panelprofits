@@ -1,0 +1,561 @@
+[
+  {
+    "title": "Spider-Man: Brand New Day",
+    "slug": "spider-man-brand-new-day",
+    "ticker": "$SPDR:BND",
+    "universe": "MARVEL",
+    "franchise": "Marvel Cinematic Universe / Amazing Spider-Man",
+    "type": "equity",
+    "aliases": [
+      "Spider-Man Brand New Day",
+      "Spider-man: Brand New Day",
+      "Spider-man Brand New Day",
+      "Spider-man: BrandNew Day",
+      "Spider-Man: BrandNew Day",
+      "Brand New Day"
+    ],
+    "landmarkIssue": "The Amazing Spider-Man #546",
+    "landmarkIssues": [
+      {
+        "title": "The Amazing Spider-Man #546",
+        "significance": "1st Appearance of Brand New Day; First appearance of Mister Negative, Jackpot, and Overdrive",
+        "catalogUrl": "/comics?q=Amazing+Spider-Man+546",
+        "era": "MODERN",
+        "assetTier": "KEY_EQUITY"
+      },
+      {
+        "title": "The Amazing Spider-Man #547",
+        "significance": "First cover appearance of Jackpot; Mister Negative syndicate expansion",
+        "catalogUrl": "/comics?q=Amazing+Spider-Man+547",
+        "era": "MODERN",
+        "assetTier": "SECONDARY_EQUITY"
+      }
+    ],
+    "characters": ["Spider-Man", "Peter Parker", "Mister Negative", "Jackpot", "Menace", "Harry Osborn", "Carlie Cooper"],
+    "creators": ["Dan Slott", "Steve McNiven", "Bob Gale", "Marc Guggenheim", "Zeb Wells", "Joe Quesada"],
+    "summary": "Spider-Man: Brand New Day is a foundational comic equity and cinematic adaptation asset. Originating in Amazing Spider-Man #546 following the events of One More Day, it resets Peter Parker's civilian and superhero status quo, introducing key characters including Mister Negative and Jackpot. In cinematic media, it represents a major planned adaptation catalyst bridging the Marvel Cinematic Universe and Sony's Spider-Man franchise."
+  },
+  {
+    "title": "X-Men: First Class",
+    "slug": "x-men-first-class",
+    "ticker": "$XMEN:FIRST-CLASS",
+    "universe": "MARVEL",
+    "franchise": "X-Men Cinematic Universe / MCU",
+    "type": "equity",
+    "aliases": [
+      "X-Men First Class",
+      "First Class"
+    ],
+    "landmarkIssue": "The X-Men #1 (1963)",
+    "landmarkIssues": [
+      {
+        "title": "The X-Men #1 (1963)",
+        "significance": "1st Canonical Appearance of the X-Men (Professor X, Cyclops, Marvel Girl, Beast, Angel, Iceman) & Magneto",
+        "catalogUrl": "/comics?q=X-Men+1",
+        "era": "SILVER",
+        "assetTier": "SOVEREIGN_BLUE_CHIP"
+      },
+      {
+        "title": "X-Men: First Class #1 (2006)",
+        "significance": "Jeff Parker retro-continuity series detailing the early formation and missions of the original team",
+        "catalogUrl": "/comics?q=X-Men+First+Class+1",
+        "era": "MODERN",
+        "assetTier": "KEY_EQUITY"
+      }
+    ],
+    "characters": ["Professor X", "Magneto", "Mystique", "Beast", "Havok", "Emma Frost", "Banshee", "Sebastian Shaw", "Wolverine"],
+    "creators": ["Stan Lee", "Jack Kirby", "Matthew Vaughn", "Bryan Singer", "Jeff Parker"],
+    "summary": "X-Men: First Class is a foundational comic equity and cinematic adaptation asset released in 2011. Directed by Matthew Vaughn, the 1960s-set prequel revitalized 20th Century Fox's mutant franchise following critical misfires, laying the groundwork for X-Men: Days of Future Past and future Marvel Cinematic Universe integration. In secondary comic markets, it directly drives transaction velocity for classic Silver Age X-Men debuts and modern First Class runs."
+  },
+  {
+    "title": "Avengers: Endgame",
+    "slug": "avengers-endgame",
+    "ticker": "$AVNG:ENDGAME",
+    "universe": "MARVEL",
+    "franchise": "Marvel Cinematic Universe",
+    "type": "equity",
+    "aliases": [
+      "Avengers Endgame",
+      "Avengers: Endgame Encore",
+      "Avengers Endgame: Encore",
+      "Avengers Endgame Encore",
+      "Endgame"
+    ],
+    "landmarkIssue": "The Infinity Gauntlet #1",
+    "landmarkIssues": [
+      {
+        "title": "The Infinity Gauntlet #1 (1991)",
+        "significance": "Key historical comic source for Thanos' cosmic snap and the Avengers' counter-offensive",
+        "catalogUrl": "/comics?q=Infinity+Gauntlet+1",
+        "era": "COPPER",
+        "assetTier": "KEY_EQUITY"
+      },
+      {
+        "title": "The Avengers #1 (1963)",
+        "significance": "1st Appearance of the Avengers (Thor, Iron Man, Hulk, Ant-Man, Wasp) & Loki",
+        "catalogUrl": "/comics?q=Avengers+1",
+        "era": "SILVER",
+        "assetTier": "SOVEREIGN_BLUE_CHIP"
+      }
+    ],
+    "characters": ["Iron Man", "Captain America", "Thor", "Hulk", "Black Widow", "Hawkeye", "Thanos"],
+    "creators": ["Anthony Russo", "Joe Russo", "Jim Starlin", "Stan Lee", "Jack Kirby"],
+    "summary": "Avengers: Endgame is the climax of Marvel Studios' 22-film Infinity Saga and one of the highest-grossing cinematic releases in history ($2.799 billion). The film acts as a massive asset catalyst for key Marvel Bronze, Copper, and Modern comic equities, accelerating global secondary market liquidity."
+  },
+  {
+    "title": "X-Men: Days of Future Past",
+    "slug": "x-men-days-of-future-past",
+    "ticker": "$XMEN:DAYS-OF-FUTURE-PAST",
+    "universe": "MARVEL",
+    "franchise": "X-Men Cinematic Universe / MCU",
+    "type": "equity",
+    "aliases": [
+      "X-Men Days of Future Past",
+      "Days of Future Past"
+    ],
+    "landmarkIssue": "The Uncanny X-Men #141",
+    "landmarkIssues": [
+      {
+        "title": "The Uncanny X-Men #141 (1981)",
+        "significance": "1st Appearance of Rachel Summers, Avalanche, Pyro, Destiny; Beginning of iconic Days of Future Past story arc",
+        "catalogUrl": "/comics?q=Uncanny+X-Men+141",
+        "era": "BRONZE",
+        "assetTier": "KEY_EQUITY"
+      },
+      {
+        "title": "The Uncanny X-Men #142 (1981)",
+        "significance": "Days of Future Past Part 2; Death of future Wolverine and landmark dystopian timeline conclusion",
+        "catalogUrl": "/comics?q=Uncanny+X-Men+142",
+        "era": "BRONZE",
+        "assetTier": "KEY_EQUITY"
+      }
+    ],
+    "characters": ["Wolverine", "Professor X", "Magneto", "Mystique", "Kitty Pryde", "Storm", "Iceman", "Rogue"],
+    "creators": ["Chris Claremont", "John Byrne", "Bryan Singer"],
+    "summary": "X-Men: Days of Future Past bridges the original 2000s X-Men cinematic ensemble with the 1960s prequel cast from First Class. Based on Chris Claremont and John Byrne's celebrated 1981 Uncanny X-Men arc, the storyline established a template for multiverse time travel in superhero cinema."
+  },
+  {
+    "title": "X-Men Origins: Wolverine",
+    "slug": "x-men-origins-wolverine",
+    "ticker": "$WLVN:ORIGINS",
+    "universe": "MARVEL",
+    "franchise": "X-Men Cinematic Universe",
+    "type": "equity",
+    "aliases": [
+      "X-Men Origins Wolverine",
+      "Origins: Wolverine"
+    ],
+    "landmarkIssue": "Marvel Comics Presents #72",
+    "landmarkIssues": [
+      {
+        "title": "Marvel Comics Presents #72 (1991)",
+        "significance": "Barry Windsor-Smith's landmark Weapon X origin depicting Logan's adamantium bonding process",
+        "catalogUrl": "/comics?q=Marvel+Comics+Presents+72",
+        "era": "COPPER",
+        "assetTier": "KEY_EQUITY"
+      },
+      {
+        "title": "Wolverine: The Origin #1 (2001)",
+        "significance": "1st Appearance of young James Howlett, Rose, and Dog Logan",
+        "catalogUrl": "/comics?q=Wolverine+Origin+1",
+        "era": "MODERN",
+        "assetTier": "KEY_EQUITY"
+      }
+    ],
+    "characters": ["Wolverine", "Sabretooth", "Deadpool", "Gambit", "Colonel William Stryker"],
+    "creators": ["Gavin Hood", "Barry Windsor-Smith", "Paul Jenkins", "Andy Kubert"],
+    "summary": "X-Men Origins: Wolverine chronicles Logan's early life, service with Team X, and transformation under the Weapon X program. Despite critical headwinds, Hugh Jackman's performance solidified the character's solo box office appeal and established Ryan Reynolds' initial cinematic debut as Wade Wilson."
+  },
+  {
+    "title": "X-Men: The Last Stand",
+    "slug": "x-men-the-last-stand",
+    "ticker": "$XMEN:THE-LAST-STAND",
+    "universe": "MARVEL",
+    "franchise": "X-Men Cinematic Universe",
+    "type": "equity",
+    "aliases": [
+      "X-Men The Last Stand",
+      "The Last Stand"
+    ],
+    "landmarkIssue": "The Uncanny X-Men #135",
+    "landmarkIssues": [
+      {
+        "title": "The Uncanny X-Men #135 (1980)",
+        "significance": "1st Appearance of Dark Phoenix; Iconic cosmic destruction of the D'Bari solar system",
+        "catalogUrl": "/comics?q=Uncanny+X-Men+135",
+        "era": "BRONZE",
+        "assetTier": "KEY_EQUITY"
+      },
+      {
+        "title": "Astonishing X-Men #1 (2004)",
+        "significance": "Joss Whedon & John Cassaday debut featuring the Mutant Cure storyline",
+        "catalogUrl": "/comics?q=Astonishing+X-Men+1",
+        "era": "MODERN",
+        "assetTier": "KEY_EQUITY"
+      }
+    ],
+    "characters": ["Wolverine", "Jean Grey", "Dark Phoenix", "Magneto", "Professor X", "Storm", "Beast"],
+    "creators": ["Brett Ratner", "Chris Claremont", "John Byrne", "Joss Whedon"],
+    "summary": "X-Men: The Last Stand concluded 20th Century Fox's original mutant trilogy in 2006, blending Chris Claremont's Dark Phoenix Saga with Joss Whedon's Gifted mutant cure storyline. The film's polarizing reception created the franchise vacuum that necessitated the First Class prequel reboot."
+  },
+  {
+    "title": "Avengers: Infinity War",
+    "slug": "avengers-infinity-war",
+    "ticker": "$AVNG:INFINITY-WAR",
+    "universe": "MARVEL",
+    "franchise": "Marvel Cinematic Universe",
+    "type": "equity",
+    "aliases": [
+      "Avengers Infinity War",
+      "Infinity War"
+    ],
+    "landmarkIssue": "The Infinity Gauntlet #1",
+    "landmarkIssues": [
+      {
+        "title": "The Infinity Gauntlet #1 (1991)",
+        "significance": "Key historical comic source for Thanos' cosmic decimation",
+        "catalogUrl": "/comics?q=Infinity+Gauntlet+1",
+        "era": "COPPER",
+        "assetTier": "KEY_EQUITY"
+      }
+    ],
+    "characters": ["Iron Man", "Thanos", "Thor", "Captain America", "Doctor Strange", "Spider-Man"],
+    "creators": ["Anthony Russo", "Joe Russo", "Jim Starlin"],
+    "summary": "Avengers: Infinity War brought together over sixty Marvel characters in a confrontation against Thanos for the Infinity Stones. Crossing $2.05 billion worldwide, it stands as one of the pivotal watershed media events in modern entertainment equity valuation."
+  },
+  {
+    "title": "Captain America: Civil War",
+    "slug": "captain-america-civil-war",
+    "ticker": "$CAP:CIVIL-WAR",
+    "universe": "MARVEL",
+    "franchise": "Marvel Cinematic Universe",
+    "type": "equity",
+    "aliases": [
+      "Captain America Civil War",
+      "Civil War"
+    ],
+    "landmarkIssue": "Civil War #1",
+    "landmarkIssues": [
+      {
+        "title": "Civil War #1 (2006)",
+        "significance": "Mark Millar & Steve McNiven's superhero registration event; First appearance of Nitro's Stamford explosion",
+        "catalogUrl": "/comics?q=Civil+War+1",
+        "era": "MODERN",
+        "assetTier": "KEY_EQUITY"
+      }
+    ],
+    "characters": ["Captain America", "Iron Man", "Black Panther", "Spider-Man", "Winter Soldier"],
+    "creators": ["Anthony Russo", "Joe Russo", "Mark Millar", "Steve McNiven"],
+    "summary": "Captain America: Civil War adapted Marvel's 2006 crossover event, introducing Tom Holland's Spider-Man and Chadwick Boseman's Black Panther into the Marvel Cinematic Universe while fracturing the Avengers over government oversight."
+  },
+  {
+    "title": "Spider-Man: No Way Home",
+    "slug": "spider-man-no-way-home",
+    "ticker": "$SPDR:NO-WAY-HOME",
+    "universe": "MARVEL",
+    "franchise": "Marvel Cinematic Universe / Sony",
+    "type": "equity",
+    "aliases": [
+      "Spider-Man No Way Home",
+      "No Way Home"
+    ],
+    "landmarkIssue": "The Amazing Spider-Man #3",
+    "landmarkIssues": [
+      {
+        "title": "The Amazing Spider-Man #3 (1963)",
+        "significance": "1st Canonical Appearance of Doctor Octopus (Otto Octavius)",
+        "catalogUrl": "/comics?q=Amazing+Spider-Man+3",
+        "era": "SILVER",
+        "assetTier": "SOVEREIGN_BLUE_CHIP"
+      },
+      {
+        "title": "The Amazing Spider-Man #14 (1964)",
+        "significance": "1st Appearance of Green Goblin (Norman Osborn)",
+        "catalogUrl": "/comics?q=Amazing+Spider-Man+14",
+        "era": "SILVER",
+        "assetTier": "SOVEREIGN_BLUE_CHIP"
+      }
+    ],
+    "characters": ["Peter Parker", "Doctor Strange", "Doctor Octopus", "Green Goblin", "Electro", "MJ"],
+    "creators": ["Jon Watts", "Stan Lee", "Steve Ditko"],
+    "summary": "Spider-Man: No Way Home brought three generations of cinematic Spider-Man actors together alongside iconic villains, generating over $1.9 billion at the box office and driving historic transaction volume for classic Silver Age Spider-Man keys."
+  },
+  {
+    "title": "Deadpool & Wolverine",
+    "slug": "deadpool-and-wolverine",
+    "ticker": "$DP:WOLVERINE",
+    "universe": "MARVEL",
+    "franchise": "Marvel Cinematic Universe",
+    "type": "equity",
+    "aliases": [
+      "Deadpool and Wolverine",
+      "Deadpool 3"
+    ],
+    "landmarkIssue": "The New Mutants #98",
+    "landmarkIssues": [
+      {
+        "title": "The New Mutants #98 (1991)",
+        "significance": "1st Appearance of Deadpool (Wade Wilson), Gideon, and Domino (Vanessa Carlysle)",
+        "catalogUrl": "/comics?q=New+Mutants+98",
+        "era": "COPPER",
+        "assetTier": "KEY_EQUITY"
+      },
+      {
+        "title": "The Incredible Hulk #181 (1974)",
+        "significance": "1st Full Appearance of Wolverine (Logan)",
+        "catalogUrl": "/comics?q=Incredible+Hulk+181",
+        "era": "BRONZE",
+        "assetTier": "SOVEREIGN_BLUE_CHIP"
+      }
+    ],
+    "characters": ["Deadpool", "Wolverine", "Cassandra Nova", "Blade", "Elektra", "Gambit"],
+    "creators": ["Shawn Levy", "Ryan Reynolds", "Rob Liefeld", "Fabian Nicieza", "Len Wein", "John Romita Sr."],
+    "summary": "Deadpool & Wolverine marked the official integration of Marvel's mutant properties into the Marvel Cinematic Universe, pairing Ryan Reynolds and Hugh Jackman in a record-setting R-rated box office sensation ($1.33B+)."
+  },
+  {
+    "title": "Avengers: Doomsday",
+    "slug": "avengers-doomsday",
+    "ticker": "$AVNG:DOOMSDAY",
+    "universe": "MARVEL",
+    "franchise": "Marvel Cinematic Universe",
+    "type": "equity",
+    "aliases": [
+      "Avengers Doomsday"
+    ],
+    "landmarkIssue": "The Fantastic Four #5",
+    "landmarkIssues": [
+      {
+        "title": "The Fantastic Four #5 (1962)",
+        "significance": "1st Canonical Appearance of Doctor Doom (Victor Von Doom)",
+        "catalogUrl": "/comics?q=Fantastic+Four+5",
+        "era": "SILVER",
+        "assetTier": "SOVEREIGN_BLUE_CHIP"
+      },
+      {
+        "title": "Secret Wars #1 (2015)",
+        "significance": "Jonathan Hickman & Esad Ribic crossover establishing God Emperor Doom and Battleworld",
+        "catalogUrl": "/comics?q=Secret+Wars+1",
+        "era": "MODERN",
+        "assetTier": "KEY_EQUITY"
+      }
+    ],
+    "characters": ["Doctor Doom", "Robert Downey Jr.", "Avengers", "Fantastic Four"],
+    "creators": ["Anthony Russo", "Joe Russo", "Stan Lee", "Jack Kirby", "Jonathan Hickman"],
+    "summary": "Avengers: Doomsday is Marvel Studios' upcoming tentpole feature featuring Robert Downey Jr. in his historic return as Doctor Doom, driving immense speculative interest across Silver Age Fantastic Four and modern Secret Wars issues."
+  },
+  {
+    "title": "The Dark Knight",
+    "slug": "the-dark-knight",
+    "ticker": "$BAT:DARK-KNIGHT",
+    "universe": "DC",
+    "franchise": "DC Universe / The Dark Knight Trilogy",
+    "type": "equity",
+    "aliases": [
+      "The Dark Knight",
+      "Dark Knight"
+    ],
+    "landmarkIssue": "Batman #1 (1940)",
+    "landmarkIssues": [
+      {
+        "title": "Batman #1 (1940)",
+        "significance": "1st Appearance of the Joker and Catwoman",
+        "catalogUrl": "/comics?q=Batman+1",
+        "era": "GOLDEN",
+        "assetTier": "SOVEREIGN_BLUE_CHIP"
+      },
+      {
+        "title": "Batman: The Long Halloween #1 (1996)",
+        "significance": "Jeph Loeb & Tim Sale series establishing Harvey Dent's tragic fall into Two-Face",
+        "catalogUrl": "/comics?q=Long+Halloween+1",
+        "era": "MODERN",
+        "assetTier": "KEY_EQUITY"
+      }
+    ],
+    "characters": ["Batman", "Joker", "Harvey Dent", "Two-Face", "Jim Gordon", "Alfred Pennyworth"],
+    "creators": ["Christopher Nolan", "Heath Ledger", "Christian Bale", "Bob Kane", "Bill Finger", "Jerry Robinson"],
+    "summary": "The Dark Knight is Christopher Nolan's 2008 masterpiece featuring Heath Ledger's Oscar-winning portrayal of the Joker. Widely hailed as the greatest superhero film ever made, it redefined comic cinema and established new valuation benchmarks for Batman key equities."
+  },
+  {
+    "title": "The Batman",
+    "slug": "the-batman",
+    "ticker": "$BAT:THE-BATMAN",
+    "universe": "DC",
+    "franchise": "DC Elseworlds / Reeves Batman Universe",
+    "type": "equity",
+    "aliases": [
+      "The Batman",
+      "The Batman Part II"
+    ],
+    "landmarkIssue": "Detective Comics #27",
+    "landmarkIssues": [
+      {
+        "title": "Detective Comics #27 (1939)",
+        "significance": "1st Canonical Appearance of Batman (Bruce Wayne) & Commissioner Gordon",
+        "catalogUrl": "/comics?q=Detective+Comics+27",
+        "era": "GOLDEN",
+        "assetTier": "SOVEREIGN_BLUE_CHIP"
+      },
+      {
+        "title": "Batman #404 (1987)",
+        "significance": "Batman: Year One Part 1 by Frank Miller & David Mazzucchelli",
+        "catalogUrl": "/comics?q=Batman+404",
+        "era": "COPPER",
+        "assetTier": "KEY_EQUITY"
+      }
+    ],
+    "characters": ["Batman", "The Riddler", "Catwoman", "The Penguin", "Carmine Falcone"],
+    "creators": ["Matt Reeves", "Robert Pattinson", "Zoe Kravitz", "Colin Farrell", "Frank Miller", "Jeph Loeb"],
+    "summary": "The Batman is Matt Reeves' gritty neo-noir detective thriller starring Robert Pattinson as a Year Two Bruce Wayne investigating the Riddler's corruption murders in Gotham City."
+  },
+  {
+    "title": "Superman: Legacy",
+    "slug": "superman-legacy",
+    "ticker": "$SUPR:LEGACY",
+    "universe": "DC",
+    "franchise": "DC Universe (DCU)",
+    "type": "equity",
+    "aliases": [
+      "Superman Legacy",
+      "Superman (2025)",
+      "James Gunn Superman"
+    ],
+    "landmarkIssue": "Action Comics #1",
+    "landmarkIssues": [
+      {
+        "title": "Action Comics #1 (1938)",
+        "significance": "1st Canonical Appearance of Superman (Clark Kent) & Lois Lane",
+        "catalogUrl": "/comics?q=Action+Comics+1",
+        "era": "GOLDEN",
+        "assetTier": "SOVEREIGN_BLUE_CHIP"
+      },
+      {
+        "title": "All-Star Superman #1 (2006)",
+        "significance": "Grant Morrison & Frank Quitely masterpiece serving as primary inspiration for the DCU film",
+        "catalogUrl": "/comics?q=All-Star+Superman+1",
+        "era": "MODERN",
+        "assetTier": "KEY_EQUITY"
+      }
+    ],
+    "characters": ["Superman", "Lois Lane", "Lex Luthor", "Hawkgirl", "Guy Gardner", "Mister Terrific"],
+    "creators": ["James Gunn", "David Corenswet", "Rachel Brosnahan", "Jerry Siegel", "Joe Shuster", "Grant Morrison"],
+    "summary": "Superman: Legacy launches James Gunn and Peter Safran's rebooted DC Universe (DCU), following a young Clark Kent balancing his Kryptonian heritage with his human upbringing in Smallville and Metropolis."
+  },
+  {
+    "title": "Crisis on Infinite Earths",
+    "slug": "crisis-on-infinite-earths",
+    "ticker": "$DC:CRISIS",
+    "universe": "DC",
+    "franchise": "DC Comics Multiverse",
+    "type": "equity",
+    "aliases": [
+      "Crisis on Infinite Earths"
+    ],
+    "landmarkIssue": "Crisis on Infinite Earths #1",
+    "landmarkIssues": [
+      {
+        "title": "Crisis on Infinite Earths #1 (1985)",
+        "significance": "1st Appearance of the Anti-Monitor; Pariah debut; Beginning of DC's ultimate continuity reset",
+        "catalogUrl": "/comics?q=Crisis+on+Infinite+Earths+1",
+        "era": "COPPER",
+        "assetTier": "KEY_EQUITY"
+      },
+      {
+        "title": "Crisis on Infinite Earths #7 (1985)",
+        "significance": "Death of Supergirl (Kara Zor-El); Landmark George Pérez cover",
+        "catalogUrl": "/comics?q=Crisis+on+Infinite+Earths+7",
+        "era": "COPPER",
+        "assetTier": "KEY_EQUITY"
+      },
+      {
+        "title": "Crisis on Infinite Earths #8 (1985)",
+        "significance": "Death of the Flash (Barry Allen) saving the multiverse",
+        "catalogUrl": "/comics?q=Crisis+on+Infinite+Earths+8",
+        "era": "COPPER",
+        "assetTier": "KEY_EQUITY"
+      }
+    ],
+    "characters": ["Anti-Monitor", "The Monitor", "Barry Allen", "Supergirl", "Superman of Earth-Two"],
+    "creators": ["Marv Wolfman", "George Pérez"],
+    "summary": "Crisis on Infinite Earths is the definitive 12-issue DC Comics crossover event of 1985, collapsing DC's 50-year multiverse into a singular continuity and establishing the modern era of comic publishing."
+  },
+  {
+    "title": "Secret Wars",
+    "slug": "secret-wars",
+    "ticker": "$MRVL:SECRET-WARS",
+    "universe": "MARVEL",
+    "franchise": "Marvel Comics / MCU Multiverse",
+    "type": "equity",
+    "aliases": [
+      "Marvel Super Heroes Secret Wars"
+    ],
+    "landmarkIssue": "Marvel Super Heroes Secret Wars #1",
+    "landmarkIssues": [
+      {
+        "title": "Marvel Super Heroes Secret Wars #1 (1984)",
+        "significance": "1st Appearance of the Beyonder; Jim Shooter & Mike Zeck event debut",
+        "catalogUrl": "/comics?q=Secret+Wars+1",
+        "era": "COPPER",
+        "assetTier": "KEY_EQUITY"
+      },
+      {
+        "title": "Marvel Super Heroes Secret Wars #8 (1984)",
+        "significance": "Origin of the Alien Black Symbiote Costume (later Venom)",
+        "catalogUrl": "/comics?q=Secret+Wars+8",
+        "era": "COPPER",
+        "assetTier": "KEY_EQUITY"
+      }
+    ],
+    "characters": ["Spider-Man", "Doctor Doom", "The Beyonder", "Captain America", "Thor", "Hulk", "Magneto"],
+    "creators": ["Jim Shooter", "Mike Zeck", "Bob Layton"],
+    "summary": "Secret Wars was Marvel's first major line-wide crossover maxi-series in 1984. Bringing Marvel's greatest heroes and villains to Battleworld, issue #8 introduced Spider-Man's alien black symbiote suit, directly originating Venom."
+  },
+  {
+    "title": "The Infinity Gauntlet",
+    "slug": "the-infinity-gauntlet",
+    "ticker": "$MRVL:INFINITY-GAUNTLET",
+    "universe": "MARVEL",
+    "franchise": "Marvel Comics Cosmic Universe",
+    "type": "equity",
+    "aliases": [
+      "Infinity Gauntlet"
+    ],
+    "landmarkIssue": "The Infinity Gauntlet #1",
+    "landmarkIssues": [
+      {
+        "title": "The Infinity Gauntlet #1 (1991)",
+        "significance": "Thanos' iconic snap eradicating half of all life in the universe; George Pérez & Jim Starlin masterpiece",
+        "catalogUrl": "/comics?q=Infinity+Gauntlet+1",
+        "era": "COPPER",
+        "assetTier": "KEY_EQUITY"
+      }
+    ],
+    "characters": ["Thanos", "Adam Warlock", "Silver Surfer", "Mephisto", "Death"],
+    "creators": ["Jim Starlin", "George Pérez", "Ron Lim"],
+    "summary": "The Infinity Gauntlet is Jim Starlin and George Pérez's legendary 1991 cosmic miniseries. Serving as the primary comic architecture for Avengers: Infinity War and Endgame, it remains one of the most traded and indexed comic storylines in history."
+  },
+  {
+    "title": "Daredevil: Born Again",
+    "slug": "daredevil-born-again",
+    "ticker": "$DD:BORN-AGAIN",
+    "universe": "MARVEL",
+    "franchise": "Marvel Cinematic Universe / Marvel Television",
+    "type": "equity",
+    "aliases": [
+      "Daredevil Born Again",
+      "Born Again"
+    ],
+    "landmarkIssue": "Daredevil #227",
+    "landmarkIssues": [
+      {
+        "title": "Daredevil #227 (1986)",
+        "significance": "Beginning of Frank Miller & David Mazzucchelli's Born Again masterpiece; Karen Page sells Matt Murdock's identity",
+        "catalogUrl": "/comics?q=Daredevil+227",
+        "era": "COPPER",
+        "assetTier": "KEY_EQUITY"
+      }
+    ],
+    "characters": ["Daredevil", "Matt Murdock", "Kingpin", "Wilson Fisk", "Karen Page", "Bullseye", "The Punisher"],
+    "creators": ["Frank Miller", "David Mazzucchelli", "Charlie Cox", "Vincent D'Onofrio"],
+    "summary": "Daredevil: Born Again is Frank Miller and David Mazzucchelli's defining 1986 psychological comic arc and the title of Marvel Studios' live-action series starring Charlie Cox and Vincent D'Onofrio."
+  }
+]

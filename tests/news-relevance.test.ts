@@ -209,4 +209,58 @@ describe("newsroom relevance gate", () => {
     expect(rawStrings.some((s) => s.includes(": BrandNew Day"))).toBe(false);
     expect(rawStrings.some((s) => s.includes("Cinematic Universe"))).toBe(false);
   });
+
+  it("recognizes cinematic and storyline adaptation assets as first-class equities with tickers and dossiers", async () => {
+    const { findNewsEntities } = await import("@/lib/news/entities");
+    const { parseTextWithEntities } = await import("@/components/news/linked-briefing");
+    const { getLoreEntityBySlug } = await import("@/lib/wiki/lore-search");
+
+    const text =
+      "In 2011, X-Men: First Class revitalized the franchise and paved the way for X-Men: Days of Future Past. " +
+      "Meanwhile, Marvel Studios is reportedly developing Spider-Man: Brand New Day alongside Avengers: Doomsday.";
+
+    const entities = findNewsEntities("MCU & X-Men Asset Overview", text);
+
+    // 1. Spider-Man: Brand New Day is an equity asset
+    const bnd = entities.find((e) => e.term === "Spider-Man: Brand New Day");
+    expect(bnd).toBeDefined();
+    expect(bnd?.type).toBe("equity");
+    expect(bnd?.ticker).toBe("$SPDR:BND");
+    expect(bnd?.wikiPath).toBe("/wiki/entry/spider-man-brand-new-day");
+
+    // 2. X-Men: First Class is an equity asset
+    const fc = entities.find((e) => e.term === "X-Men: First Class");
+    expect(fc).toBeDefined();
+    expect(fc?.type).toBe("equity");
+    expect(fc?.ticker).toBe("$XMEN:FIRST-CLASS");
+    expect(fc?.wikiPath).toBe("/wiki/entry/x-men-first-class");
+
+    // 3. X-Men: Days of Future Past is an equity asset
+    const dofp = entities.find((e) => e.term === "X-Men: Days of Future Past");
+    expect(dofp).toBeDefined();
+    expect(dofp?.type).toBe("equity");
+    expect(dofp?.ticker).toBe("$XMEN:DAYS-OF-FUTURE-PAST");
+
+    // 4. Dossier resolution for Brand New Day
+    const bndDossier = getLoreEntityBySlug("spider-man-brand-new-day");
+    expect(bndDossier).not.toBeNull();
+    expect(bndDossier?.type).toBe("equity");
+    expect(bndDossier?.ticker).toBe("$SPDR:BND");
+    expect(bndDossier?.first_appearance).toBe("The Amazing Spider-Man #546");
+    expect(bndDossier?.landmark_debuts?.length).toBeGreaterThanOrEqual(1);
+
+    // 5. Dossier resolution for First Class
+    const fcDossier = getLoreEntityBySlug("x-men-first-class");
+    expect(fcDossier).not.toBeNull();
+    expect(fcDossier?.type).toBe("equity");
+    expect(fcDossier?.ticker).toBe("$XMEN:FIRST-CLASS");
+    expect(fcDossier?.landmark_debuts?.length).toBeGreaterThanOrEqual(1);
+
+    // 6. Generic lexicon concepts are not rendered as inline hover badge spam
+    const jargonText = "From an equity valuation perspective, high-grade certified census slabs and uncertified raw inventory see narrowing bid-ask spreads.";
+    const jargonEntities = findNewsEntities("Market Update", jargonText);
+    const parsedNodes = parseTextWithEntities(jargonText, jargonEntities);
+    // All words should remain plain text strings, not hover card badges
+    expect(parsedNodes.every((n) => typeof n === "string")).toBe(true);
+  });
 });

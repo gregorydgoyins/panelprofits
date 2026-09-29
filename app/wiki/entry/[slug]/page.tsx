@@ -56,6 +56,8 @@ export default async function LoreEntityPage({ params }: { params: Promise<{ slu
 
   const renderIcon = () => {
     switch (entity.type) {
+      case "equity":
+        return <Layers className="h-6 w-6 text-amber-400" />;
       case "item":
         return <Shield className="h-6 w-6 text-emerald-400" />;
       case "location":
@@ -103,7 +105,9 @@ export default async function LoreEntityPage({ params }: { params: Promise<{ slu
           <div className="flex items-center gap-2.5">
             {renderIcon()}
             <span className="text-[10px] font-mono uppercase tracking-[0.24em] text-slate-400">
-              Canonical Multi-Universe Character Dossier
+              {entity.type === "equity"
+                ? "Canonical Media Adaptation & Storyline Equity Dossier"
+                : "Canonical Multi-Universe Character Dossier"}
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -134,8 +138,11 @@ export default async function LoreEntityPage({ params }: { params: Promise<{ slu
               </p>
             )}
             <p className="mt-1 text-xs font-mono text-slate-400 uppercase tracking-widest">
-              Multiverse Reality: {entity.reality || "Prime Reality / Earth-616"} · Alignment:{" "}
-              <span className="text-emerald-400 font-semibold">{entity.alignment || "Good"}</span>
+              {entity.type === "equity" ? (
+                <>Asset Class: <span className="text-amber-400 font-semibold">Cinematic & Comic Equity</span> · Reality: {entity.reality || "Canonical Universe"}</>
+              ) : (
+                <>Multiverse Reality: {entity.reality || "Prime Reality / Earth-616"} · Alignment: <span className="text-emerald-400 font-semibold">{entity.alignment || "Good"}</span></>
+              )}
             </p>
           </div>
 
@@ -343,16 +350,18 @@ export default async function LoreEntityPage({ params }: { params: Promise<{ slu
       {entity.super_teams && entity.super_teams.length > 0 && (
         <section className="mt-6 border border-slate-800 bg-[#0A0D16] p-6 rounded-lg shadow-xl">
           <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-blue-400 border-b border-slate-800/80 pb-3 mb-4">
-            <Users className="h-4 w-4 text-blue-400" /> Super-Teams & Major Alliances
+            <Users className="h-4 w-4 text-blue-400" />{" "}
+            {entity.type === "equity" ? "Key Asset Characters & Ensemble Cast" : "Super-Teams & Major Alliances"}
           </div>
           <div className="flex flex-wrap gap-2.5">
             {entity.super_teams.map((team) => (
-              <span
+              <Link
                 key={team}
-                className="rounded border border-blue-900/60 bg-blue-950/30 px-3 py-1 text-xs font-medium text-blue-200"
+                href={`/wiki/entry/${team.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`}
+                className="rounded border border-blue-900/60 bg-blue-950/30 px-3 py-1 text-xs font-medium text-blue-200 hover:border-blue-500/60 hover:text-blue-100 transition-colors"
               >
                 👥 {team}
-              </span>
+              </Link>
             ))}
           </div>
         </section>

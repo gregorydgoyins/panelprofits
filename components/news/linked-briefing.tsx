@@ -31,7 +31,7 @@ export function parseTextWithEntities(text: string, entities?: EntityWikiDef[]):
   const cleanText = text.replace(/<[^>]+>/g, "");
 
   const activeEntities = (entities || []).filter(
-    (e) => !BLOCKED_TERMS.has(e.term.toLowerCase())
+    (e) => !BLOCKED_TERMS.has(e.term.toLowerCase()) && e.type !== "market-concept" && e.type !== "grading" && e.type !== "lexicon"
   );
 
   if (activeEntities.length === 0) {
@@ -64,13 +64,16 @@ export function parseTextWithEntities(text: string, entities?: EntityWikiDef[]):
       const isCharacter = entity.type === "character";
       const isCreatorOrTalent = entity.type === "creator";
       const isStudio = entity.type === "publisher";
+      const isEquity = entity.type === "equity";
 
       nodes.push(
         <EntityHoverCard
           key={`${start}-${matchedTerm}`}
           entity={entity}
           className={`inline-flex items-baseline font-medium rounded px-1.5 py-0.5 mx-0.5 transition-all text-xs sm:text-sm ${
-            isCharacter
+            isEquity
+              ? "text-amber-300 hover:text-amber-100 bg-amber-950/40 hover:bg-amber-900/60 border border-amber-500/40 font-semibold shadow-sm"
+              : isCharacter
               ? "text-cyan-300 hover:text-cyan-100 bg-cyan-950/40 hover:bg-cyan-900/60 border border-cyan-500/40"
               : isCreatorOrTalent
               ? "text-emerald-300 hover:text-emerald-100 bg-emerald-950/30 hover:bg-emerald-900/50 border border-emerald-500/40"
@@ -81,7 +84,11 @@ export function parseTextWithEntities(text: string, entities?: EntityWikiDef[]):
         >
           <span>{matchedTerm}</span>
           {entity.ticker && (
-            <span className="ml-1 text-[9px] font-mono opacity-80 uppercase tracking-tighter text-cyan-400">
+            <span
+              className={`ml-1 text-[9px] font-mono opacity-90 uppercase tracking-tighter ${
+                isEquity ? "text-amber-300 font-bold" : "text-cyan-400"
+              }`}
+            >
               {entity.ticker}
             </span>
           )}
