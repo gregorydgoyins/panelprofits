@@ -42,9 +42,10 @@ export async function getPanelTelemetry(): Promise<{
   recoveredIndices: RecoveredIndexContract[];
 }> {
   const cleanDb = createCleanReadOnlyServerClient();
-  
+  const adminDb = createAdminServerClient();
+
   try {
-    const [{ data: recoveredIndices, error: contractErr }, { data: observations, error: obsErr }] = await Promise.all([
+    const [{ data: recoveredIndices, error: contractErr }, { data: observations, error: obsErr }, { data: marketState, error: stateErr }] = await Promise.all([
       cleanDb
         .from("recovered_index_contracts")
         .select("index_code,display_name,methodology_version,expected_constituent_count,production_status,historical_status,current_value:production_status,notes")
@@ -54,6 +55,14 @@ export async function getPanelTelemetry(): Promise<{
         .select("index_code,index_value,base_value,constituent_count,observation_date")
         .order("observation_date", { ascending: false })
         .limit(100),
+      // Same real market_state row (id=1) that lib/dashboard/queries.ts::getMarketTelemetry
+      // reads. This is the ONLY source for regime/stress/drawdown/ce50 below — no literal
+      // fallback numbers. If the row or table is absent, state/ce50 come back null.
+      adminDb
+        .from("market_state")
+        .select("tick, ce50_last, regime, drawdown, stress_index, tectonic_tier")
+        .eq("id", 1)
+        .maybeSingle(),
     ]);
 
     if (contractErr && isMissingTableError(contractErr)) {
@@ -81,10 +90,14 @@ export async function getPanelTelemetry(): Promise<{
       }
     }
 
+    // Index identity (id/name/type) is static system labeling, not market data.
+    // Base/current values and constituent counts come ONLY from a matching real
+    // observation row; an index with no observation stays unpriced (null) rather
+    // than showing a fabricated number.
     const indexConfigs = [
-      { id: "CE70", name: "CE70 Constitutional Benchmark", type: "Constitutional Weight", defaultBase: 2450.80, defaultCount: 70 },
-      { id: "PPIX60", name: "PPIX-60 Capitalization Benchmark", type: "Cap-Weighted (FMV x Census)", defaultBase: 1820.45, defaultCount: 60 },
-      { id: "PPIX100", name: "PPIX-100 Liquidity-Weighted Pulse", type: "Liquidity Pulse", defaultBase: 1140.20, defaultCount: 100 },
+      { id: "CE70", name: "CE70 Constitutional Benchmark", type: "Constitutional Weight" },
+      { id: "PPIX60", name: "PPIX-60 Capitalization Benchmark", type: "Cap-Weighted (FMV x Census)" },
+      { id: "PPIX100", name: "PPIX-100 Liquidity-Weighted Pulse", type: "Liquidity Pulse" },
     ];
 
     const indices: PanelMarketIndex[] = indexConfigs.map((cfg) => {
@@ -93,29 +106,31 @@ export async function getPanelTelemetry(): Promise<{
         index_id: cfg.id,
         index_name: cfg.name,
         index_type: cfg.type,
-        base_value: obs?.base_value ?? cfg.defaultBase,
-        current_value: obs?.index_value ?? cfg.defaultBase,
-        constituent_count: obs?.constituent_count ?? cfg.defaultCount,
+        base_value: obs?.base_value ?? null,
+        current_value: obs?.index_value ?? null,
+        constituent_count: obs?.constituent_count ?? null,
       };
     });
 
-    const latestObservation = observations?.[0];
-    const tickTime = latestObservation ? new Date(latestObservation.observation_date).getTime() : Date.now();
-    const tickNumber = Math.floor(tickTime / 1000) % 1000000;
+    // Regime/stress/drawdown/tectonic tier and CE50 come only from the real
+    // market_state row. There is no real 4-state regime classification in the
+    // schema, so market_regime_4state stays null rather than an invented label.
+    const state: PanelMarketState | null =
+      !stateErr && marketState
+        ? {
+            tick: marketState.tick === null || marketState.tick === undefined ? null : Number(marketState.tick),
+            regime: marketState.regime ?? null,
+            market_regime_4state: null,
+            stress_index: marketState.stress_index === null ? null : Number(marketState.stress_index),
+            drawdown: marketState.drawdown === null ? null : Number(marketState.drawdown),
+            tectonic_tier: marketState.tectonic_tier === null ? null : Number(marketState.tectonic_tier),
+          }
+        : null;
 
-    const state: PanelMarketState = {
-      tick: tickNumber,
-      regime: "BULL_ACCELERATION",
-      market_regime_4state: "ORDERLY_ACCUMULATION",
-      stress_index: 0.14,
-      drawdown: 0.024,
-      tectonic_tier: 2,
-    };
-
-    const ce50: Ce50Reference = {
-      raw_value: 1485.50,
-      set_at: "2026-09-08T04:00:00.000Z",
-    };
+    const ce50: Ce50Reference | null =
+      !stateErr && marketState && marketState.ce50_last !== null && marketState.ce50_last !== undefined
+        ? { raw_value: Number(marketState.ce50_last), set_at: null }
+        : null;
 
     // Enhance contracts with live values if available
     const enrichedContracts = (recoveredIndices || []).map((contract) => {

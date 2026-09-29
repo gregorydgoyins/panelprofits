@@ -9,21 +9,21 @@ export function GameShell({ profile, firmContext }: { profile: Profile; firmCont
     {
       icon: Briefcase,
       label: "Institutional Desk",
-      value: firmContext.firmName,
-      subtitle: `${firmContext.roleTitle} · Level ${firmContext.careerLevel}`,
-      copy: `${firmContext.deskType} assignment active with authorized execution authority.`,
+      value: firmContext.firmName ?? "Unassigned",
+      subtitle: `${firmContext.roleTitle ?? "No career on file"} · Level ${firmContext.careerLevel ?? "—"}`,
+      copy: `${firmContext.deskType ?? "No desk"} assignment active with authorized execution authority.`,
     },
     {
       icon: DollarSign,
       label: "Capital & Liquid Reserves",
-      value: `$${firmContext.cashUsd.toLocaleString()}`,
-      subtitle: `Total AUM: $${firmContext.totalAumUsd.toLocaleString()}`,
+      value: firmContext.cashUsd == null ? "Unavailable" : `$${firmContext.cashUsd.toLocaleString()}`,
+      subtitle: `Total AUM: ${firmContext.totalAumUsd == null ? "Unavailable" : `$${firmContext.totalAumUsd.toLocaleString()}`}`,
       copy: `Liquid balance allocated for sovereign comic equity acquisitions and block trades.`,
     },
     {
       icon: TrendingUp,
       label: "Portfolio PnL / Yield",
-      value: `${firmContext.totalPnlUsd >= 0 ? "+" : ""}$${firmContext.totalPnlUsd.toLocaleString()}`,
+      value: firmContext.totalPnlUsd == null ? "Unavailable" : `${firmContext.totalPnlUsd >= 0 ? "+" : ""}$${firmContext.totalPnlUsd.toLocaleString()}`,
       subtitle: `${firmContext.positions.length} Active Sovereign Positions`,
       copy: `Real-time yield tracked against clean historical reference benchmarks.`,
     },
@@ -44,7 +44,7 @@ export function GameShell({ profile, firmContext }: { profile: Profile; firmCont
             Terminal Ready, {profile.display_name || "Operator"}.
           </h1>
           <p className="mt-2 max-w-xl text-sm leading-6 text-slate-400">
-            Assigned to <span className="text-cyan-300 font-semibold">{firmContext.firmName}</span>. Your active portfolio positions and market execution desk are synchronized.
+            Assigned to <span className="text-cyan-300 font-semibold">{firmContext.firmName ?? "an unassigned desk"}</span>. Your active portfolio positions and market execution desk are synchronized.
           </p>
         </div>
         <div className="flex items-center gap-3 text-xs text-slate-400">
@@ -112,6 +112,13 @@ export function GameShell({ profile, firmContext }: { profile: Profile; firmCont
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/40">
+              {firmContext.positions.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="py-6 text-center text-slate-500">
+                    No positions on file for this account yet.
+                  </td>
+                </tr>
+              )}
               {firmContext.positions.map((pos) => (
                 <tr key={pos.id} className="hover:bg-slate-800/20 transition-colors">
                   <td className="py-3 font-sans font-medium text-slate-200">
@@ -121,11 +128,13 @@ export function GameShell({ profile, firmContext }: { profile: Profile; firmCont
                   </td>
                   <td className="py-3 text-cyan-300 font-semibold">{pos.grade}</td>
                   <td className="py-3 text-slate-300">{pos.quantity}</td>
-                  <td className="py-3 text-slate-400">${pos.entryPriceUsd.toLocaleString()}</td>
-                  <td className="py-3 text-emerald-300 font-semibold">${pos.currentFmvUsd.toLocaleString()}</td>
-                  <td className="py-3 text-slate-100 font-bold">${pos.totalMarketValue.toLocaleString()}</td>
-                  <td className={`py-3 text-right font-bold ${pos.unrealizedPnlUsd >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
-                    {pos.unrealizedPnlUsd >= 0 ? "+" : ""}${pos.unrealizedPnlUsd.toLocaleString()} ({pos.unrealizedPnlPercent >= 0 ? "+" : ""}{pos.unrealizedPnlPercent}%)
+                  <td className="py-3 text-slate-400">{pos.entryPriceUsd == null ? "Not tracked" : `$${pos.entryPriceUsd.toLocaleString()}`}</td>
+                  <td className="py-3 text-emerald-300 font-semibold">{pos.currentFmvUsd == null ? "Unpriced" : `$${pos.currentFmvUsd.toLocaleString()}`}</td>
+                  <td className="py-3 text-slate-100 font-bold">{pos.totalMarketValue == null ? "—" : `$${pos.totalMarketValue.toLocaleString()}`}</td>
+                  <td className={`py-3 text-right font-bold ${pos.unrealizedPnlUsd == null ? "text-slate-500" : pos.unrealizedPnlUsd >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                    {pos.unrealizedPnlUsd == null || pos.unrealizedPnlPercent == null
+                      ? "Not tracked"
+                      : `${pos.unrealizedPnlUsd >= 0 ? "+" : ""}$${pos.unrealizedPnlUsd.toLocaleString()} (${pos.unrealizedPnlPercent >= 0 ? "+" : ""}${pos.unrealizedPnlPercent}%)`}
                   </td>
                 </tr>
               ))}
