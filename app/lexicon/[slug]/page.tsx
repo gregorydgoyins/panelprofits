@@ -2,7 +2,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, BookOpen, Scale, Sparkles, TrendingUp, ShieldAlert, ArrowUpRight, Calculator, ExternalLink } from "lucide-react";
 import { getCbrTermBySlug, searchCbrTerms } from "@/lib/lexicon/cbr-lexicon";
-import { COMIC_FINANCIAL_GLOSSARY } from "@/lib/wiki/entity-extractor";
 
 export const dynamic = "force-dynamic";
 
@@ -10,32 +9,26 @@ export default async function LexiconTermPage({ params }: { params: Promise<{ sl
   const { slug } = await params;
   const cleanSlug = slug.toLowerCase().trim();
 
-  // 1. Check CBR Market Lexicon Dictionary (4,654 terms)
+  // CBR Market Lexicon Dictionary (4,653 terms) is the sole source for lexicon pages.
   const cbrEntry = getCbrTermBySlug(cleanSlug);
 
-  // 2. Fallback to base glossary
-  const legacyEntry = COMIC_FINANCIAL_GLOSSARY[cleanSlug];
-
-  if (!cbrEntry && !legacyEntry) {
+  if (!cbrEntry) {
     notFound();
   }
 
-  const termTitle = cbrEntry ? cbrEntry.term : legacyEntry.term;
-  const category = cbrEntry ? cbrEntry.category : legacyEntry.category;
-  const investopediaDef = cbrEntry ? cbrEntry.investopedia_definition : legacyEntry.definition;
-  const panelProfitsTranslation = cbrEntry ? cbrEntry.panel_profits_translation : legacyEntry.definition;
-  const formula = cbrEntry?.canonical_formula;
-  const comicExample = cbrEntry?.comic_example;
-  const antiPatterns = cbrEntry?.anti_patterns;
-  const investopediaUrl = cbrEntry?.investopedia_url;
+  const termTitle = cbrEntry.term;
+  const category = cbrEntry.category;
+  const investopediaDef = cbrEntry.investopedia_definition;
+  const panelProfitsTranslation = cbrEntry.panel_profits_translation;
+  const formula = cbrEntry.canonical_formula;
+  const comicExample = cbrEntry.comic_example;
+  const antiPatterns = cbrEntry.anti_patterns;
+  const investopediaUrl = cbrEntry.investopedia_url;
 
   // Related terms from the same category
-  const relatedTerms = cbrEntry
-    ? searchCbrTerms(category, 6).filter((t) => t.slug !== cbrEntry.slug).slice(0, 4)
-    : Object.entries(COMIC_FINANCIAL_GLOSSARY)
-        .filter(([k, v]) => k !== cleanSlug && v.category === legacyEntry.category)
-        .map(([k, v]) => ({ slug: k, term: v.term, category: v.category }))
-        .slice(0, 4);
+  const relatedTerms = searchCbrTerms(category, 6)
+    .filter((t) => t.slug !== cbrEntry.slug)
+    .slice(0, 4);
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">

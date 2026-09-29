@@ -1020,42 +1020,35 @@ const LORE_STOP_WORDS = new Set([
   "characters", "equity", "valuation", "slab", "slabs", "inventory", "spread", "spreads"
 ]);
 
-/**
- * Rapidly extracts lore entities mentioned inside unstructured text
- * using n-gram exact tokenization against indexed characters, items, locations, and teams.
- */
-export function findLoreEntitiesInText(text: string, limit = 6): LoreEntitySummary[] {
-  if (!text || !text.trim()) return [];
-  loadLoreIndex();
-  if (!cachedTitleMap) return [];
+interface CandidatePhrase {
+  phrase: string;
+  isSingleWord: boolean;
+}
 
+/**
+ * Shared n-gram tokenizer used by both the synchronous (local JSON index) and
+ * asynchronous (Supabase-backed) lore matchers, so the two paths apply the
+ * exact same capitalization / stopword / blocklist filtering and only differ
+ * in which title map they look each candidate phrase up against.
+ */
+function* generateCandidatePhrases(text: string): Generator<CandidatePhrase> {
   const rawWords = text
     .replace(/[^\w\s-]/g, " ")
     .split(/\s+/)
     .filter(Boolean);
 
-  if (rawWords.length === 0) return [];
-
-  const matched: LoreEntitySummary[] = [];
-  const seenSlugs = new Set<string>();
+  if (rawWords.length === 0) return;
 
   // Check 4-grams down to 1-grams to prioritize longest matches
   for (let n = 4; n >= 1; n--) {
     for (let i = 0; i <= rawWords.length - n; i++) {
-      if (matched.length >= limit) break;
-
       const slice = rawWords.slice(i, i + n);
       const phrase = slice.join(" ").toLowerCase();
 
-      // Filter out 1-word stop words, short words, or unwhitelisted 1-grams
       if (n === 1) {
-        if (phrase.length < 4 || LORE_STOP_WORDS.has(phrase) || !TOP_TIER_HERO_WHITELIST.has(phrase)) {
-          continue;
-        }
+        if (phrase.length < 4 || LORE_STOP_WORDS.has(phrase)) continue;
         // Require proper capitalization in the original text (e.g. "Batman", not "been")
-        if (slice[0][0] !== slice[0][0].toUpperCase()) {
-          continue;
-        }
+        if (slice[0][0] !== slice[0][0].toUpperCase()) continue;
       } else {
         // Multi-word entities must start with a capital letter and end with a capital letter or digit
         if (slice[0][0] !== slice[0][0].toUpperCase() || !/^[A-Z0-9]/.test(slice[n - 1])) {
@@ -1066,17 +1059,176 @@ export function findLoreEntitiesInText(text: string, limit = 6): LoreEntitySumma
       if (GENERIC_REAL_WORLD_LOCATIONS.has(phrase)) continue;
       if (LORE_OBSCURE_COLLISION_BLOCKLIST.has(phrase)) continue;
 
-      const entity = cachedTitleMap.get(phrase);
-      if (entity && !seenSlugs.has(entity.slug)) {
-        if (entity.type === "location" && GENERIC_REAL_WORLD_LOCATIONS.has(entity.title.toLowerCase())) {
-          continue;
-        }
-        seenSlugs.add(entity.slug);
-        matched.push(entity);
-      }
+      yield { phrase, isSingleWord: n === 1 };
     }
+  }
+}
+
+/**
+ * Rapidly extracts lore entities mentioned inside unstructured text
+ * using n-gram exact tokenization against the local (capped) JSON index.
+ * Synchronous by design -- used by page components and unit tests that
+ * cannot await a database round trip. Marvel coverage here is limited to
+ * whatever made it into lib/wiki/multi_universe_character_index.json (a
+ * fixed sample); for full Marvel coverage against the real ~132k-entity
+ * ingested corpus, use findLoreEntitiesInTextAsync instead.
+ */
+export function findLoreEntitiesInText(text: string, limit = 6): LoreEntitySummary[] {
+  if (!text || !text.trim()) return [];
+  loadLoreIndex();
+  if (!cachedTitleMap) return [];
+
+  const matched: LoreEntitySummary[] = [];
+  const seenSlugs = new Set<string>();
+
+  for (const { phrase, isSingleWord } of generateCandidatePhrases(text)) {
     if (matched.length >= limit) break;
+    // 1-grams stay gated behind the curated whitelist -- a single common
+    // word (e.g. "Storm", "Doom") is too collision-prone against ordinary
+    // news vocabulary to trust on presence-in-index alone.
+    if (isSingleWord && !TOP_TIER_HERO_WHITELIST.has(phrase)) continue;
+
+    const entity = cachedTitleMap.get(phrase);
+    if (entity && !seenSlugs.has(entity.slug)) {
+      if (entity.type === "location" && GENERIC_REAL_WORLD_LOCATIONS.has(entity.title.toLowerCase())) {
+        continue;
+      }
+      seenSlugs.add(entity.slug);
+      matched.push(entity);
+    }
   }
 
   return matched;
+}
+
+// ---------------------------------------------------------------------------
+// Supabase-backed Marvel wiki index (real, ingested public.ppcf_wiki_pages
+// rows -- see scripts/ingest_marvel_wiki.cjs). Loaded once per process via a
+// small number of paginated, indexed bulk queries (universe = 'MARVEL' hits
+// the ppcf_wiki_pages_universe_type_idx index from the
+// 20260928130000_ppcf_wiki_lore_and_artifacts.sql migration), then matched
+// entirely in memory -- the same architecture as the local JSON index, so a
+// news article's entity extraction never issues one query per candidate
+// n-gram or table-scans per word.
+// ---------------------------------------------------------------------------
+
+const MARVEL_DB_PAGE_TYPE_TO_LORE_TYPE: Record<string, LoreEntitySummary["type"]> = {
+  CHARACTER: "character",
+  CREATOR: "character",
+  TEAM: "team",
+  ITEM: "item",
+  VEHICLE: "item",
+  LOCATION: "location",
+};
+
+interface MarvelDbIndex {
+  titleMap: Map<string, LoreEntitySummary>;
+  slugMap: Map<string, LoreEntitySummary>;
+}
+
+let marvelDbIndexPromise: Promise<MarvelDbIndex> | null = null;
+
+async function loadMarvelWikiFromDb(): Promise<MarvelDbIndex> {
+  if (marvelDbIndexPromise) return marvelDbIndexPromise;
+
+  marvelDbIndexPromise = (async () => {
+    const titleMap = new Map<string, LoreEntitySummary>();
+    const slugMap = new Map<string, LoreEntitySummary>();
+
+    try {
+      const { createAdminServerClient } = await import("@/lib/supabase/admin");
+      const supabase = createAdminServerClient();
+      const pageSize = 1000;
+      let from = 0;
+
+      for (;;) {
+        const { data, error } = await supabase
+          .from("ppcf_wiki_pages")
+          .select("slug, display_title, page_type, summary, creators, first_appearance, reality")
+          .eq("universe", "MARVEL")
+          .range(from, from + pageSize - 1);
+
+        if (error || !data || data.length === 0) break;
+
+        for (const row of data) {
+          const type = MARVEL_DB_PAGE_TYPE_TO_LORE_TYPE[row.page_type as string] || "character";
+          const clean = (row.display_title || "").trim().toLowerCase();
+          if (!clean) continue;
+          if (LORE_OBSCURE_COLLISION_BLOCKLIST.has(clean)) continue;
+
+          const entity: LoreEntitySummary = {
+            slug: row.slug,
+            title: row.display_title,
+            universe: "MARVEL",
+            type,
+            reality: row.reality || undefined,
+            creators: row.creators || undefined,
+            first_appearance: row.first_appearance || undefined,
+            summary: row.summary || "",
+            ticker: deriveEntityTicker(row.display_title, "MARVEL"),
+          };
+
+          slugMap.set(row.slug, entity);
+          if (clean.length >= 3 && !titleMap.has(clean)) {
+            titleMap.set(clean, entity);
+          }
+        }
+
+        if (data.length < pageSize) break;
+        from += pageSize;
+      }
+    } catch {
+      // Network/DB unavailable -- return whatever (possibly empty) maps we
+      // built so far. Callers fall back to the local JSON-only matches.
+    }
+
+    return { titleMap, slugMap };
+  })();
+
+  return marvelDbIndexPromise;
+}
+
+/**
+ * Same as findLoreEntitiesInText, but supplements the local (capped) JSON
+ * matches with lookups against the full, real Marvel corpus ingested into
+ * public.ppcf_wiki_pages (~132k characters/teams/creators/items/locations/
+ * vehicles, vs. the ~5,000-per-universe sample baked into the local JSON
+ * index). Use this from any already-async caller -- e.g. the real news
+ * ingestion pipeline in getDynamicEntitiesForText -- instead of the sync
+ * version. DC, Star Wars, Image, Dark Horse, and indie publishers are not
+ * yet ingested into the DB and keep coming from the local JSON index only.
+ */
+export async function findLoreEntitiesInTextAsync(text: string, limit = 6): Promise<LoreEntitySummary[]> {
+  const matched = findLoreEntitiesInText(text, limit);
+  if (!text || !text.trim() || matched.length >= limit) return matched;
+
+  const { titleMap } = await loadMarvelWikiFromDb();
+  if (titleMap.size === 0) return matched;
+
+  const seenSlugs = new Set(matched.map((m) => m.slug));
+  for (const { phrase, isSingleWord } of generateCandidatePhrases(text)) {
+    if (matched.length >= limit) break;
+    if (isSingleWord && !TOP_TIER_HERO_WHITELIST.has(phrase)) continue;
+
+    const entity = titleMap.get(phrase);
+    if (entity && !seenSlugs.has(entity.slug)) {
+      seenSlugs.add(entity.slug);
+      matched.push(entity);
+    }
+  }
+
+  return matched;
+}
+
+/**
+ * Same as getLoreEntityBySlug, but falls back to the full ingested Marvel
+ * corpus in public.ppcf_wiki_pages when the slug isn't in the local JSON
+ * index or the hardcoded premier-entity table.
+ */
+export async function getLoreEntityBySlugAsync(slug: string): Promise<LoreEntitySummary | null> {
+  const local = getLoreEntityBySlug(slug);
+  if (local) return local;
+  if (!slug) return null;
+  const { slugMap } = await loadMarvelWikiFromDb();
+  return slugMap.get(slug.toLowerCase().trim()) || null;
 }

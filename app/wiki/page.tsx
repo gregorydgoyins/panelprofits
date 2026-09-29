@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { BookOpen, Search, Sparkles, TrendingUp, Cpu, User, Shield, MapPin, Users } from "lucide-react";
 import { searchPpcfComics } from "@/lib/ppcf/queries";
-import { COMIC_FINANCIAL_GLOSSARY } from "@/lib/wiki/entity-extractor";
+import { searchCbrTerms, getFeaturedCbrTerms } from "@/lib/lexicon/cbr-lexicon";
 import { queryPineconeVectorIndex } from "@/lib/wiki/pinecone";
 import { searchLoreEntities, getFeaturedLoreEntities, type LoreEntitySummary } from "@/lib/wiki/lore-search";
 import { createPublicServerClient } from "@/lib/supabase/server";
@@ -58,6 +58,9 @@ export default async function WikiPage({ searchParams }: { searchParams: Promise
   } else {
     loreEntities = getFeaturedLoreEntities();
   }
+
+  // Real 4,653-term CBR Market Lexicon (Investopedia-grounded, comic-domain translated).
+  const glossaryTerms = queryText ? searchCbrTerms(queryText, 24) : getFeaturedCbrTerms(24);
 
   const renderLoreIcon = (type: string) => {
     switch (type) {
@@ -171,22 +174,16 @@ export default async function WikiPage({ searchParams }: { searchParams: Promise
           Comic Equity & Investment Fundamentals
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {Object.entries(COMIC_FINANCIAL_GLOSSARY)
-            .sort(([keyA, objA], [keyB, objB]) => {
-              if (!queryText) return 0;
-              const qLower = queryText.toLowerCase();
-              const matchA = objA.term.toLowerCase().includes(qLower) || keyA.includes(qLower);
-              const matchB = objB.term.toLowerCase().includes(qLower) || keyB.includes(qLower);
-              if (matchA && !matchB) return -1;
-              if (!matchA && matchB) return 1;
-              return 0;
-            })
-            .map(([key, termObj]) => {
-              const isMatch = queryText && (termObj.term.toLowerCase().includes(queryText.toLowerCase()) || key.includes(queryText.toLowerCase()));
+          {glossaryTerms.map((termObj) => {
+              const isMatch = Boolean(
+                queryText &&
+                  (termObj.term.toLowerCase().includes(queryText.toLowerCase()) ||
+                    termObj.slug.includes(queryText.toLowerCase()))
+              );
               return (
                 <div
-                  key={key}
-                  id={key}
+                  key={termObj.slug}
+                  id={termObj.slug}
                   className={`border ${
                     isMatch
                       ? "border-cyan-400 bg-[#0C1626] shadow-[0_0_20px_rgba(6,182,212,0.2)]"
@@ -207,11 +204,11 @@ export default async function WikiPage({ searchParams }: { searchParams: Promise
                       )}
                     </div>
                     <h3 className="mt-3 text-base font-semibold text-slate-100">{termObj.term}</h3>
-                    <p className="mt-2 text-xs text-slate-400 leading-relaxed">{termObj.definition}</p>
+                    <p className="mt-2 text-xs text-slate-400 leading-relaxed">{termObj.panel_profits_translation}</p>
                   </div>
                   <div className="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-between text-[10px] font-mono text-slate-500">
                     <span>PPCF STANDARD</span>
-                    <Link href={`/lexicon/${key}`} className="text-cyan-400 hover:text-cyan-300">
+                    <Link href={`/lexicon/${termObj.slug}`} className="text-cyan-400 hover:text-cyan-300">
                       Explore Lexicon &rarr;
                     </Link>
                   </div>

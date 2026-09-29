@@ -1,5 +1,6 @@
 import { createAdminServerClient } from "@/lib/supabase/admin";
-import { findLoreEntitiesInText, GENERIC_REAL_WORLD_LOCATIONS, LORE_OBSCURE_COLLISION_BLOCKLIST } from "@/lib/wiki/lore-search";
+import { findLoreEntitiesInText, findLoreEntitiesInTextAsync, GENERIC_REAL_WORLD_LOCATIONS, LORE_OBSCURE_COLLISION_BLOCKLIST } from "@/lib/wiki/lore-search";
+import { findCbrTermsInText } from "@/lib/lexicon/cbr-lexicon";
 import adaptationCastData from "./adaptation-cast-registry.json";
 import adaptationAssetData from "./adaptation-asset-registry.json";
 
@@ -251,30 +252,6 @@ export const KNOWN_NEWS_ENTITIES_MAP: EntityWikiDef[] = [
   { term: "Remington Cole", type: "creator", target: "intelligence", wikiPath: "/news/authors/remington-cole" },
   { term: "Nadia Sterling", type: "creator", target: "intelligence", wikiPath: "/news/authors/nadia-sterling" },
 
-  // --- PANEL PROFITS FINANCIAL INSTRUMENTS & DERIVATIVES ---
-  { term: "Synthetic Forward Contracts", ticker: "$SFC", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/synthetic-forward-contracts" },
-  { term: "Comic Futures", ticker: "$CMF", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/comic-futures" },
-  { term: "Call Options", ticker: "$CALL", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/call-options" },
-  { term: "Put Options", ticker: "$PUT", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/put-options" },
-  { term: "Derivative Contracts", ticker: "$DERIV", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/derivative-contracts" },
-  { term: "Spread Contracts", ticker: "$SPRD", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/spread-contracts" },
-  { term: "Straddle Options", ticker: "$STRD", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/straddle-options" },
-  { term: "Comic Swaps", ticker: "$CSWP", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/comic-swaps" },
-
-  // --- PANEL PROFITS CRYPTO & DIGITAL ASSETS ---
-  { term: "Comic Tokenization", ticker: "$TOKN", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/comic-tokenization" },
-  { term: "Digital Ledger Provenance", ticker: "$DLP", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/digital-ledger-provenance" },
-  { term: "Blockchain Minting", ticker: "$MINT", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/blockchain-minting" },
-  { term: "NFT Comic Assets", ticker: "$NFTC", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/nft-comic-assets" },
-  { term: "On-Chain Grading Verification", ticker: "$OGV", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/on-chain-grading-verification" },
-  { term: "Digital Slab Custody", ticker: "$DSC", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/digital-slab-custody" },
-
-  // --- PANEL PROFITS BONDS & FIXED INCOME ---
-  { term: "Anchor Bonds", ticker: "$BOND", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/anchor-bonds" },
-  { term: "Securitized Comic Yield", ticker: "$YIELD", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/securitized-comic-yield" },
-  { term: "Fixed-Income Comic Notes", ticker: "$FICN", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/fixed-income-comic-notes" },
-  { term: "Sovereign Bond Vault", ticker: "$SBV", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/sovereign-bond-vault" },
-
   // --- PANEL PROFITS FUNDS, BASKETS & INDICES ---
   { term: "CE70 Sovereign Comic Equity Index", ticker: "$CE70", type: "equity", target: "lexicon", wikiPath: "/indices?q=CE70" },
   { term: "PPIX-60 Capitalization Benchmark", ticker: "$PPIX60", type: "equity", target: "lexicon", wikiPath: "/indices?q=PPIX60" },
@@ -285,47 +262,6 @@ export const KNOWN_NEWS_ENTITIES_MAP: EntityWikiDef[] = [
   { term: "Silver Age ETF", ticker: "$SLVR", type: "equity", target: "lexicon", wikiPath: "/indices?q=SLVR" },
   { term: "Modern High-Grade Fund", ticker: "$MODF", type: "equity", target: "lexicon", wikiPath: "/indices?q=MODF" },
   { term: "Bronze Age Liquidity Pool", ticker: "$BRNZ", type: "equity", target: "lexicon", wikiPath: "/indices?q=BRNZ" },
-
-  // --- CBR & PANEL PROFITS MARKET THESAURUS & COMIC EQUITY MECHANICS ---
-  { term: "Equity Valuation", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/equity-valuation" },
-  { term: "Secondary Market Velocity", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/secondary-market-velocity" },
-  { term: "Secondary Market", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/secondary-market" },
-  { term: "Key Appearances", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/first-appearance" },
-  { term: "Key Appearance", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/first-appearance" },
-  { term: "Key Issue", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/first-appearance" },
-  { term: "Early Printings", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/first-printing" },
-  { term: "Early Printing", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/first-printing" },
-  { term: "First Printing", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/first-printing" },
-  { term: "High-Grade", type: "grading", target: "lexicon", wikiPath: "/lexicon/high-grade" },
-  { term: "High Grade", type: "grading", target: "lexicon", wikiPath: "/lexicon/high-grade" },
-  { term: "Certified Census Slabs", type: "grading", target: "lexicon", wikiPath: "/lexicon/census-slabs" },
-  { term: "Census Slabs", type: "grading", target: "lexicon", wikiPath: "/lexicon/census-slabs" },
-  { term: "Certified Slabs", type: "grading", target: "lexicon", wikiPath: "/lexicon/census-slabs" },
-  { term: "Uncertified Raw Inventory", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/raw-copies" },
-  { term: "Raw Inventory", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/raw-copies" },
-  { term: "Raw Copies", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/raw-copies" },
-  { term: "Bid-Ask Spreads", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/bid-ask-spread" },
-  { term: "Bid-Ask Spread", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/bid-ask-spread" },
-  { term: "Auction Channels", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/auction-velocity" },
-  { term: "Auction Velocity", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/auction-velocity" },
-  { term: "Liquidity Floor", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/liquidity-floor" },
-  { term: "Asset Catalyst", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/asset-catalysts" },
-  { term: "CGC", ticker: "$CGC", type: "grading", target: "lexicon", wikiPath: "/lexicon/cgc" },
-  { term: "CBCS", ticker: "$CBCS", type: "grading", target: "lexicon", wikiPath: "/lexicon/cbcs" },
-  { term: "PGX", ticker: "$PGX", type: "grading", target: "lexicon", wikiPath: "/lexicon/pgx" },
-  { term: "9.8 Census", type: "grading", target: "lexicon", wikiPath: "/lexicon/9-8-census" },
-  { term: "Census Float", type: "grading", target: "lexicon", wikiPath: "/lexicon/census-float" },
-  { term: "Fair Market Value", ticker: "$FMV", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/fair-market-value" },
-  { term: "FMV", ticker: "$FMV", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/fair-market-value" },
-  { term: "Pedigree Provenance", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/pedigree-provenance" },
-  { term: "Key Issue Premium", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/key-issue-premium" },
-  { term: "First Appearance", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/first-appearance" },
-  { term: "Ratio Variant", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/ratio-variant" },
-  { term: "Final Order Cutoff", ticker: "$FOC", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/final-order-cutoff" },
-  { term: "Signature Series", type: "grading", target: "lexicon", wikiPath: "/lexicon/signature-series" },
-  { term: "Overprint", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/overprint" },
-  { term: "Box Office Haul", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/box-office" },
-  { term: "Box Office", type: "market-concept", target: "lexicon", wikiPath: "/lexicon/box-office" },
 
   // --- PUBLISHERS & STUDIOS (Grounded in ppcf_gcd_publishers & Hollywood Studios) ---
   { term: "Sony Pictures Entertainment", ticker: "$SONY", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Sony+Pictures" },
@@ -596,6 +532,26 @@ export const KNOWN_NEWS_ENTITIES_MAP: EntityWikiDef[] = [
 const entityCache = new Map<string, EntityWikiDef[]>();
 
 /**
+ * Matches financial & market-concept terminology against the real 4,653-term CBR market
+ * lexicon (lib/lexicon/cbr_market_lexicon.json, via lib/lexicon/cbr-lexicon.ts), replacing
+ * what used to be a ~47-entry hardcoded list here. Matching is O(words * 12) via
+ * findCbrTermsInText's n-gram index, not a per-term regex scan, so this stays cheap per
+ * news story regardless of the lexicon's size.
+ */
+function matchCbrLexiconEntities(text: string): EntityWikiDef[] {
+  try {
+    return findCbrTermsInText(text, 12).map(({ entry, matchedText }) => ({
+      term: matchedText,
+      type: "market-concept" as const,
+      target: "lexicon" as const,
+      wikiPath: `/lexicon/${entry.slug}`,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+/**
  * Dynamically resolves entities mentioned in text by combining:
  * 1. Pre-indexed canonical finance, creator, publisher, and lore entities with contextual role disambiguation.
  * 2. On-demand dynamic database lookup in `ppcf_gcd_creators`, `ppcf_gcd_publishers`, `ppcf_gcd_series`, `recovered_index_contracts`.
@@ -647,9 +603,13 @@ export async function getDynamicEntitiesForText(text: string): Promise<EntityWik
     }
   }
 
-  // Match multi-universe lore entities (characters, items, locations, teams)
+  // Match multi-universe lore entities (characters, items, locations, teams).
+  // Async DB-backed variant: supplements the capped local JSON index with
+  // the full ~132k-entity Marvel corpus ingested into public.ppcf_wiki_pages
+  // (scripts/ingest_marvel_wiki.cjs). Safe to use here because this function
+  // is already async and already performs its own Supabase queries below.
   try {
-    const loreMatches = findLoreEntitiesInText(text, 20);
+    const loreMatches = await findLoreEntitiesInTextAsync(text, 20);
     for (const lore of loreMatches) {
       const loreTitleLower = lore.title.toLowerCase();
       if (GENERIC_REAL_WORLD_LOCATIONS.has(loreTitleLower)) continue;
@@ -667,6 +627,15 @@ export async function getDynamicEntitiesForText(text: string): Promise<EntityWik
     }
   } catch {
     // Graceful fallback if lore index unavailable
+  }
+
+  // Match financial & market-concept terms against the real 4,653-term CBR lexicon
+  for (const cbrMatch of matchCbrLexiconEntities(text)) {
+    const termLower = cbrMatch.term.toLowerCase();
+    if (GENERIC_REAL_WORLD_LOCATIONS.has(termLower)) continue;
+    if (seenTerms.has(termLower)) continue;
+    seenTerms.add(termLower);
+    matchedEntities.push(cbrMatch);
   }
 
   // Dynamic Supabase Database Query for unrecognized terms
@@ -804,6 +773,15 @@ export function extractEntitiesFromContext(text: string): EntityWikiDef[] {
     }
   } catch {
     // Safe fallback
+  }
+
+  // Match financial & market-concept terms against the real 4,653-term CBR lexicon
+  for (const cbrMatch of matchCbrLexiconEntities(text)) {
+    const termLower = cbrMatch.term.toLowerCase();
+    if (GENERIC_REAL_WORLD_LOCATIONS.has(termLower)) continue;
+    if (seenTerms.has(termLower)) continue;
+    seenTerms.add(termLower);
+    baseMatches.push(cbrMatch);
   }
 
   // Cross-link character roles for matched adaptation actors

@@ -145,7 +145,7 @@ describe("newsroom relevance gate", () => {
       "The studio is reportedly adding new footage to the film, which will include at least one cut cameo from Spider-man: BrandNew Day that connects to the Marvel Cinematic Universe. " +
       "The rerelease will feature extra footage featuring Rosario Dawson's character Claire Temple, aka Night Nurse. " +
       "This is not the first time Sony has rereleased one of its Tom Holland-starring Spider-M movies in theaters. " +
-      "The reported rerelease could add another $50M to its worldwide box office haul.";
+      "The reported rerelease could add another $50M in fair market value once secondary demand catches up.";
 
     const entities = findNewsEntities(
       "Spider-Man: Brand New Day Getting Official New Version, Report Says",
@@ -196,8 +196,12 @@ describe("newsroom relevance gate", () => {
     const spidM = entities.find((e) => e.term === "Spider-M");
     expect(spidM?.ticker).toBe("$SPDR");
 
-    // 9. Market concepts: Box Office Haul
-    expect(termSet.has("Box Office Haul") || termSet.has("Box Office")).toBe(true);
+    // 9. Market concepts resolved against the real 4,653-term CBR lexicon (replaces the
+    // deleted comic-specific "Box Office Haul" hardcoded-glossary entry)
+    expect(termSet.has("fair market value")).toBe(true);
+    const fmv = entities.find((e) => e.term === "fair market value");
+    expect(fmv?.type).toBe("market-concept");
+    expect(fmv?.wikiPath).toBe("/lexicon/fair-market-value-fmv-benchmark");
 
     // 10. Verify parseTextWithEntities does not truncate compound phrases into orphaned substrings
     const nodes = parseTextWithEntities(text, entities);
@@ -256,10 +260,13 @@ describe("newsroom relevance gate", () => {
     expect(fcDossier?.ticker).toBe("$XMEN:FIRST-CLASS");
     expect(fcDossier?.landmark_debuts?.length).toBeGreaterThanOrEqual(1);
 
-    // 6. Financial & grading glossary concepts ARE rendered as inline hover-linked badges.
+    // 6. Financial & market-concept glossary terms ARE rendered as inline hover-linked
+    // badges, resolved against the real 4,653-term CBR market lexicon (lib/lexicon/
+    // cbr_market_lexicon.json via lib/lexicon/cbr-lexicon.ts) rather than a hardcoded list.
     // These are the site's "Investopedia" glossary terms -- they must link through to a real
     // /lexicon/<slug> page just like character and equity entities link to their own pages.
-    const jargonText = "From an equity valuation perspective, high-grade certified census slabs and uncertified raw inventory see narrowing bid-ask spreads.";
+    const jargonText =
+      "From a fair market value perspective, rising market capitalization and disciplined cost basis accounting narrowed the bid-ask spread industry-wide.";
     const jargonEntities = findNewsEntities("Market Update", jargonText);
     const parsedNodes = parseTextWithEntities(jargonText, jargonEntities);
     const badgeNodes = parsedNodes.filter((n) => typeof n !== "string");
@@ -268,9 +275,18 @@ describe("newsroom relevance gate", () => {
     const glossaryEntities = jargonEntities.filter(
       (e) => e.type === "market-concept" || e.type === "grading" || e.type === "lexicon"
     );
-    expect(glossaryEntities.length).toBeGreaterThan(0);
+    expect(glossaryEntities.length).toBeGreaterThanOrEqual(4);
     for (const entity of glossaryEntities) {
       expect(entity.wikiPath.startsWith("/lexicon/")).toBe(true);
+    }
+
+    // Spot-check that the matched slugs are real, resolvable lexicon entries (not
+    // fabricated placeholders) by looking them up in the same dictionary the
+    // /lexicon/[slug] page renders from.
+    const { getCbrTermBySlug } = await import("@/lib/lexicon/cbr-lexicon");
+    for (const entity of glossaryEntities) {
+      const slug = entity.wikiPath.replace("/lexicon/", "");
+      expect(getCbrTermBySlug(slug)).not.toBeNull();
     }
   });
 
