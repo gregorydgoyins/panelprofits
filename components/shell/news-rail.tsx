@@ -48,19 +48,24 @@ export function NewsRail({ initialStories }: NewsRailProps) {
         </div>
         <div className="news-marquee min-w-0 flex-1 overflow-hidden py-0.5" role="region" aria-label="Current national and international news">
           <div className="news-marquee-track flex w-max items-center gap-3 hover:[animation-play-state:paused] motion-reduce:animate-none">
-            {[...stories, ...stories].map((story, index) => (
-            <a key={`${story.id}-${index}`} href={`/news/${story.id}`} className="group flex min-w-[260px] max-w-[420px] shrink-0 items-center gap-2 border border-slate-800/70 bg-[#0E111A] px-2.5 py-1 transition-colors hover:border-cyan-400/80 hover:bg-[#141824]">
-              {story.imageUrl ? (
-                  <img src={story.imageUrl} alt="" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/newsroom-default.svg"; }} className="h-7 w-10 shrink-0 object-cover opacity-75" />
-              ) : null}
-              <span className="shrink-0 text-[9px] uppercase tracking-[0.12em] font-mono text-cyan-300 bg-[#0C1626] px-1.5 py-0.5 border border-cyan-500/40 rounded">
-                ${getSourceTicker(story.source)}
-              </span>
-              <span className="shrink-0 text-[9px] uppercase tracking-[0.12em] text-slate-400">{shortNewsSource(story.source)}</span>
-              <span className="min-w-0 truncate text-[11px] text-slate-200 group-hover:text-cyan-200">{story.headline}</span>
-              <ArrowRight className="h-3 w-3 shrink-0 text-slate-600 group-hover:text-cyan-400" />
-            </a>
-          ))}
+            {[...stories, ...stories].map((story, index) => {
+              const corpTicker = getSourceTicker(story.source);
+              return (
+                <a key={`${story.id}-${index}`} href={`/news/${story.id}`} className="group flex min-w-[260px] max-w-[420px] shrink-0 items-center gap-2 border border-slate-800/70 bg-[#0E111A] px-2.5 py-1 transition-colors hover:border-cyan-400/80 hover:bg-[#141824]">
+                  {story.imageUrl ? (
+                      <img src={story.imageUrl} alt="" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/newsroom-default.svg"; }} className="h-7 w-10 shrink-0 object-cover opacity-75" />
+                  ) : null}
+                  {corpTicker ? (
+                    <span className="shrink-0 text-[9px] uppercase tracking-[0.12em] font-mono text-cyan-300 bg-[#0C1626] px-1.5 py-0.5 border border-cyan-500/40 rounded">
+                      ${corpTicker}
+                    </span>
+                  ) : null}
+                  <span className="shrink-0 text-[9px] uppercase tracking-[0.12em] text-slate-400">{shortNewsSource(story.source)}</span>
+                  <span className="min-w-0 truncate text-[11px] text-slate-200 group-hover:text-cyan-200">{story.headline}</span>
+                  <ArrowRight className="h-3 w-3 shrink-0 text-slate-600 group-hover:text-cyan-400" />
+                </a>
+              );
+            })}
           </div>
         </div>
       </div>

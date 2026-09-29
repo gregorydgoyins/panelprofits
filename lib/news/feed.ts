@@ -393,7 +393,7 @@ export async function getNewsStories(limit = 24, includeArchive = false): Promis
     .select("id,source,source_url,category,headline,author,summary,url,image_url,published_at,ingested_at,archived_at")
     .order("published_at", { ascending: false, nullsFirst: false })
     .order("ingested_at", { ascending: false })
-    .limit(limit);
+    .limit(limit * 3); // Over-fetch to apply strict filtering against stale/junk records
 
   const { data, error } = includeArchive
     ? await query.not("archived_at", "is", null)
@@ -407,7 +407,11 @@ export async function getNewsStories(limit = 24, includeArchive = false): Promis
   }
 
   if (!data) return [];
-  return data.map(mapStory);
+  const stories = data.map(mapStory);
+  // Guarantee only verified relevant sequential art & market stories pass through
+  return stories
+    .filter((s) => isRelevantComicStory(s.source, s.headline, s.summary))
+    .slice(0, limit);
 }
 
 export async function getNewsStory(id: string): Promise<NewsStory | null> {
@@ -422,5 +426,11 @@ export async function getNewsStory(id: string): Promise<NewsStory | null> {
     return null;
   }
 
-  return mapStory(data);
+  const story = mapStory(data);
+  // If story is disqualified by negative filters (e.g. legacy AC/DC or non-comic noise), reject it
+  if (!isRelevantComicStory(story.source, story.headline, story.summary)) {
+    return null;
+  }
+
+  return story;
 }

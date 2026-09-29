@@ -48,6 +48,7 @@ export function TopTicker({ stories, activeId, onSelect }: TopTickerProps) {
         {stories.slice(0, 30).map((story) => {
           const isActive = story.id === activeId;
           const accent = getSourceAccent(story.source);
+          const corpTicker = getSourceTicker(story.source);
 
           return (
             <button
@@ -63,9 +64,15 @@ export function TopTicker({ stories, activeId, onSelect }: TopTickerProps) {
               <span className="max-w-[240px] truncate text-xs text-slate-200 group-hover:text-cyan-100 font-medium">
                 {story.headline}
               </span>
-              <span className="text-[9px] font-mono font-semibold tracking-wider shrink-0" style={{ color: accent }}>
-                {getSourceTicker(story.source)}
-              </span>
+              {corpTicker ? (
+                <span className="text-[9px] font-mono font-semibold tracking-wider shrink-0" style={{ color: accent }}>
+                  ${corpTicker}
+                </span>
+              ) : (
+                <span className="text-[9px] font-mono opacity-60 uppercase tracking-wider shrink-0 text-slate-400">
+                  {shortNewsSource(story.source)}
+                </span>
+              )}
             </button>
           );
         })}

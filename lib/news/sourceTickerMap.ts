@@ -1,186 +1,42 @@
-export const SOURCE_TICKER: Record<string, string> = {
-  // Publishers & Corporate Media Parents
-  MARVEL: "MARV",
-  MARVELCOMICS: "MARV",
-  DC: "DC",
-  DCCOMICS: "DC",
-  IMAGECOMICS: "IMGC",
-  IMAGE: "IMGC",
-  DARKHORSE: "DKHS",
-  DARKHORSECOMICS: "DKHS",
-  IDW: "IDW",
-  IDWPUBLISHING: "IDW",
-  BOOMSTUDIOS: "BOOM",
-  BOOMSTUDIO: "BOOM",
-  VIZMEDIA: "VIZ",
-  VIZ: "VIZ",
-  VALIANT: "VALT",
-  VALIANTCOMICS: "VALT",
+// Authentic Corporate / Studio Public Equities (Stocks)
+export const CORPORATE_PUBLIC_TICKERS: Record<string, string> = {
   DISNEY: "DIS",
+  THEWALTDISNEYCOMPANY: "DIS",
+  WALTDISNEY: "DIS",
+  SONY: "SONY",
+  SONYPICTURES: "SONY",
+  SONYPICTURESENTERTAINMENT: "SONY",
   WARNERBROS: "WBD",
   WARNERBROSDISCOVERY: "WBD",
-  SONY: "SONY",
+  WBD: "WBD",
   PARAMOUNT: "PARA",
-  SKYDANCE: "SKYD",
-  UNIVERSAL: "UVL",
-  CRUNCHYROLL: "CRUN",
-
-  // Iconic Characters & Franchises
-  SPIDERMAN: "SPDR",
-  BATMAN: "BTMN",
-  SUPERMAN: "SUPR",
-  WOLVERINE: "WLVN",
-  DEADPOOL: "DPOL",
-  IRONMAN: "IRON",
-  CAPTAINAMERICA: "CAPA",
-  THOR: "THOR",
-  HULK: "HULK",
-  WONDERWOMAN: "WNDR",
-  FLASH: "FLSH",
-  GREENLANTERN: "GLNT",
-  VENOM: "VNOM",
-  PUNISHER: "PNSH",
-  DAREDEVIL: "DDVL",
-  DOCTORSTRANGE: "STRG",
-  BLACKPANTHER: "BPAN",
-  SPAWN: "SPWN",
-  HELLBOY: "HBY",
-  MAGNETO: "MGNT",
-  JOKER: "JKR",
-  DOCTORDOOM: "DOOM",
-  THANOS: "THNS",
-  AVENGERS: "AVNG",
-  XMEN: "XMEN",
-  FANTASTICFOUR: "FF4",
-  JUSTICELEAGUE: "JLA",
-  TEENTITANS: "TTNS",
-
-  // Industry Wires & Outlets
-  CBR: "CBR",
-  BLEEDINGCOOL: "BCCL",
-  THEBEAT: "BEAT",
-  AIPTCOMICS: "AIPT",
-  AIPT: "AIPT",
-  ICV2: "ICV2",
-  NEWSARAMA: "NRAM",
-  CGC: "CGC",
-  CBCS: "CBCS",
-  PSA: "PSA",
-  HERITAGE: "HRTG",
-  COMICBOOKCOM: "CMKB",
-  COMICBOOK: "CMKB",
-  COMICBOOKMOVIE: "CBM",
-  COMICBOOKMOVIES: "CBM",
-  SUPERHEROHYPE: "SHHP",
-  SCREENRANT: "SCRN",
-  IGN: "IGN",
-  POLYGON: "PLGN",
-  VARIETY: "VRTY",
-  DEADLINE: "DLNE",
-  HOLLYWOODREPORTER: "HWR",
-  COMICHRON: "CHRN",
-  GOCOLLECT: "GOCL",
-  MULTIVERSITYCOMICS: "MVST",
-  MAJORSPOILERS: "MJSP",
-  BROKENFRONTIER: "BKFR",
-  ANIMENEWSNETWORK: "ANN",
-  ANN: "ANN",
-  COMICBOOKHERALD: "CBH",
-  "13THDIMENSION": "13D",
-  NERDSYNC: "NRDS",
-  WEIRDSCIENCEDC: "WSDC",
-  WEIRDSCIENCE: "WSDC",
-  DCCOMICSNEWS: "DCCN",
-  COMICSBEAT: "CMSB",
-  NERDIST: "NRDT",
-  WATCHCULTURE: "WHTC",
-  WHATCULTURECOMICS: "WHTC",
-  DENOFGEEK: "GEEK",
-  WOMENWRITEABOUTCOMICS: "WWAC",
-  WWAC: "WWAC",
-  MINDLESSONES: "MNLS",
-  BOOKRIOTCOMICS: "BKRT",
-  BIGCOMICPAGE: "BGCP",
-  DARKHORSEBLOG: "DKHS",
-  DOWNTHETUBES: "DNTB",
-  THEMARYSUE: "TMSU",
-  LOOPER: "LPER",
-  INVERSE: "INVS",
-  POPVERSE: "POPV",
-  THEPOPVERSE: "POPV",
-  GIZMODO: "GZMD",
-  LEAGUEOFCOMICGEEKS: "LCOG",
-  COMICBOOKINVEST: "CBIV",
-  GOCOLLECTBLOG: "GOCL",
-  KEYCOLLECTORCOMICS: "KEYC",
-  NEARMINTCONDITION: "NMC",
-  PREVIEWSWORLD: "PRVW",
-  PREVIEWS: "PRVW",
-  THEWRAP: "WRAP",
-  COLLIDER: "CLDR",
-  EMPIREONLINE: "EMPR",
-  EMPIRE: "EMPR",
-  INDIEWIRE: "INDW",
-  COMICCONNECT: "CNCN",
-  GOLDIN: "GLDN",
-  MYCOMICSHOP: "MCS",
-  MANGAMOGURA: "MGMG",
-  MANGAMOGURARE: "MGMG",
-  TOYARK: "TARK",
-  THETOYARK: "TARK",
-  HERITAGEAUCTIONS: "HRTG",
-  HERITAGEAUCTIONCOMICS: "HRTG",
-  GRAPHICPOLICY: "GRPH",
-  FIRSTCOMICSNEWS: "FCSN",
-  BOUNDINGINTOCOMICS: "BTIC",
-  MONKEYSFIGHTINGROBOTS: "MFR",
-  NEWSWEEK: "NWWK",
-  ENTERTAINMENTWEEKLY: "EW",
-  EW: "EW",
-  COMINGSOON: "CMSN",
-  SYFY: "SYFY",
-  SYFYWIRE: "SYFY",
-  GAMESRADAR: "GMRD",
-  FANDOM: "FDMN",
-  EMPIREONLINEUK: "EMPR",
-  WEGOTTHISCOVERED: "WGTC",
-  MOVIESWEB: "MVWB",
-  CBRMEDIA: "CBR",
-  CBRCOMICS: "CBR",
-  COMICSBEATNET: "CMSB",
-  ICONSVSALIENS: "IVA",
-  NERDREACTOR: "NRDR",
-  NEWSDATA: "NDIO",
-  HERITAGEAUCTIONSBLOG: "HRTG",
-  BLOGHA: "HRTG",
-  ICVA: "IVA",
-  OTAKUUSA: "OTKU",
-  ANIMEHERALD: "ANHD",
-  ANIMETRENDING: "ANTD",
-  COMICSJOURNAL: "TCJ",
-  COMICSXF: "CXF",
-  PUBLISHERSWEEKLY: "PWKL",
-  BBCNEWS: "BBCN",
-  ASKNEWS: "ASKN",
-  NEWSAPI: "NAPI",
-  PERIGON: "PERG",
-  THENEWSAPI: "TNAPI",
+  PARAMOUNTGLOBAL: "PARA",
+  PARAMOUNTPICTURES: "PARA",
+  COMCAST: "CMCSA",
+  UNIVERSALPICTURES: "CMCSA",
+  UNIVERSAL: "CMCSA",
+  LIONSGATE: "LGF",
+  LIONSGATEENTERTAINMENT: "LGF",
 };
+
+/**
+ * Returns a corporate public ticker ONLY if the entity represents an actual public corporate holding
+ * (e.g. Disney -> $DIS, Sony -> $SONY, Warner Bros -> $WBD, Paramount -> $PARA, Comcast -> $CMCSA).
+ * Returns null for journalism outlets, RSS feeds, review blogs, and syndication wires
+ * so we do NOT assign fake pseudo-tickers to non-public news publishers.
+ */
+export function getCorporateStockTicker(raw: string): string | null {
+  const key = normalize(raw);
+  return CORPORATE_PUBLIC_TICKERS[key] ?? null;
+}
 
 function normalize(raw: string): string {
   return raw.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
 }
 
-function hashFallback(normalized: string): string {
-  const consonants = normalized.replace(/[AEIOU]/g, "");
-  const first2 = consonants.slice(0, 2);
-  const last2 = normalized.slice(-2);
-  const candidate = (first2 + last2).toUpperCase();
-  return (candidate + normalized).slice(0, 4).padEnd(4, "X");
-}
-
-export function getSourceTicker(raw: string): string {
-  const key = normalize(raw);
-  const code = SOURCE_TICKER[key] ?? hashFallback(key || "NEWS");
-  return code.slice(0, 4);
+/**
+ * Legacy compatibility helper. If not a corporate stock, returns a clean short source badge name (no pseudo ticker).
+ */
+export function getSourceTicker(raw: string): string | null {
+  return getCorporateStockTicker(raw);
 }
