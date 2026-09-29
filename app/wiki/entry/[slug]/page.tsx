@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { getLoreEntityBySlug, type LoreEntitySummary } from "@/lib/wiki/lore-search";
 import { createPublicServerClient } from "@/lib/supabase/server";
+import { extractEntitiesFromContext } from "@/lib/news/entities";
+import { LinkedBriefing } from "@/components/news/linked-briefing";
 
 export const dynamic = "force-dynamic";
 
@@ -53,6 +55,8 @@ export default async function LoreEntityPage({ params }: { params: Promise<{ slu
   if (!entity) {
     notFound();
   }
+
+  const summaryEntities = entity.summary ? extractEntitiesFromContext(entity.summary) : [];
 
   const renderIcon = () => {
     switch (entity.type) {
@@ -373,7 +377,7 @@ export default async function LoreEntityPage({ params }: { params: Promise<{ slu
           <Compass className="h-4 w-4 text-cyan-400" /> Encyclopedia Dossier & Character Lineage
         </div>
         <div className="mt-4 text-sm sm:text-base text-slate-300 leading-relaxed whitespace-pre-line">
-          {entity.summary}
+          <LinkedBriefing text={entity.summary} entities={summaryEntities} />
         </div>
       </section>
     </main>

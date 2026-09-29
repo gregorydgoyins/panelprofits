@@ -10,6 +10,8 @@ import {
   type AuthorMarketPrediction,
 } from "@/lib/news/authors";
 import type { CatalystAnalysis } from "@/lib/news/catalyst";
+import { extractEntitiesFromContext, type EntityWikiDef } from "@/lib/news/entities";
+import { LinkedBriefing } from "@/components/news/linked-briefing";
 
 interface AnalystDeskMemoProps {
   storyId: string;
@@ -95,6 +97,12 @@ export function AnalystDeskMemo({
     };
   }, [catalyst, author]);
 
+  const memoEntities: EntityWikiDef[] = React.useMemo(() => {
+    return extractEntitiesFromContext(
+      [memoPoints.thesis, memoPoints.secondaryImplication, memoPoints.directive.guidance].join(" \n ")
+    );
+  }, [memoPoints]);
+
   return (
     <div className="mt-6 rounded-lg border border-slate-800 bg-[#06080F] p-5 shadow-xl">
       {/* Analyst Desk Header */}
@@ -143,7 +151,9 @@ export function AnalystDeskMemo({
             <Target className="h-3.5 w-3.5 text-cyan-400" />
             <span>Point 1: Catalyst & Narrative Thesis</span>
           </div>
-          <p className="text-xs leading-relaxed text-slate-300">{memoPoints.thesis}</p>
+          <p className="text-xs leading-relaxed text-slate-300">
+            <LinkedBriefing text={memoPoints.thesis} entities={memoEntities} />
+          </p>
         </div>
 
         {/* Point 2: Secondary Market & Census Implication */}
@@ -152,7 +162,9 @@ export function AnalystDeskMemo({
             <Compass className="h-3.5 w-3.5 text-cyan-400" />
             <span>Point 2: Secondary Market & Census Implication</span>
           </div>
-          <p className="text-xs leading-relaxed text-slate-300">{memoPoints.secondaryImplication}</p>
+          <p className="text-xs leading-relaxed text-slate-300">
+            <LinkedBriefing text={memoPoints.secondaryImplication} entities={memoEntities} />
+          </p>
         </div>
 
         {/* Point 3: Institutional Execution Directive */}
@@ -168,7 +180,9 @@ export function AnalystDeskMemo({
               {memoPoints.directive.action}
             </span>
           </div>
-          <p className="text-xs leading-relaxed text-slate-300">{memoPoints.directive.guidance}</p>
+          <p className="text-xs leading-relaxed text-slate-300">
+            <LinkedBriefing text={memoPoints.directive.guidance} entities={memoEntities} />
+          </p>
         </div>
       </div>
 

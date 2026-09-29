@@ -167,13 +167,13 @@ export function StoryPanel({ story }: { story: NewsStory }) {
 
                     <div className="mt-2 text-xs text-slate-300 leading-relaxed">
                       <strong className="text-amber-200 text-[11px] block font-mono">Story Ramification:</strong>
-                      {ram.directStoryRamification}
+                      <LinkedBriefing text={ram.directStoryRamification} entities={allEntities} />
                     </div>
                   </div>
 
                   <div className="mt-2.5 pt-2 border-t border-amber-900/20 text-[11px] text-slate-400 leading-snug">
                     <strong className="text-cyan-400 text-[10px] block font-mono">Census & Pricing Dynamic:</strong>
-                    {ram.censusAndPricingImpact}
+                    <LinkedBriefing text={ram.censusAndPricingImpact} entities={allEntities} />
                   </div>
                 </div>
               ))}
@@ -219,7 +219,7 @@ export function StoryPanel({ story }: { story: NewsStory }) {
                     </div>
                   </div>
                   <p className="mt-2 text-[11px] text-slate-400 leading-snug">
-                    {ripple.catalystCausality}
+                    <LinkedBriefing text={ripple.catalystCausality} entities={allEntities} />
                   </p>
                 </div>
               ))}
@@ -251,7 +251,7 @@ export function StoryPanel({ story }: { story: NewsStory }) {
                     Landmark Debut: <Link href={`/comics?q=${encodeURIComponent(lore.firstAppearance)}`} className="underline hover:text-cyan-200">{lore.firstAppearance}</Link>
                   </div>
                   <p className="mt-1.5 text-xs text-slate-300 leading-relaxed">
-                    {lore.encyclopedicLore}
+                    <LinkedBriefing text={lore.encyclopedicLore} entities={allEntities} />
                   </p>
                 </div>
               ))}
