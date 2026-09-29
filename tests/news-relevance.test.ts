@@ -441,4 +441,46 @@ describe("newsroom relevance gate", () => {
     expect(badgeEntities).toContain("Peggy Carter");
     expect(badgeEntities).toContain("Avengers: Secret Wars");
   });
+
+  it("synthesizes comprehensive 5-paragraph intelligence briefs with encyclopedic lore dossiers and Market Butterfly Effect asset ripples", async () => {
+    const { parseAndSynthesizeArticle } = await import("@/lib/news/article-parser");
+
+    const story = {
+      headline: "Avengers: Doomsday Rumor Reveals Doctor Doom May Not Be MCU Movie's 'Real' Villain",
+      summary:
+        "Marvel insider MyTimeToShine has revealed that Doctor Doom may not be the main villain in Avengers: Doomsday, due to a new rumor that Sue Storm suspects that the Latverian Witches are the real villains, not Doom. In the upcoming movie, Robert Downey Jr. is set to make an MCU comeback with Doctor Doom. The cast includes Vanessa Kirby, Chris Evans, Chris Hemsworth, and Pedro Pascal.",
+      source: "PERIGON: MANDATORY.COM",
+      author: "Mandatory Insider",
+      id: "doomsday-latveria-101",
+    };
+
+    const synthesized = parseAndSynthesizeArticle(story);
+
+    // 1. Full 5-paragraph structure with section headings
+    expect(synthesized.paragraphs.length).toBe(5);
+    expect(synthesized.sections.length).toBe(5);
+    expect(synthesized.wordCount).toBeGreaterThan(400);
+    expect(synthesized.readingTimeMinutes).toBeGreaterThanOrEqual(2);
+
+    // 2. Encyclopedic Lore Dossiers identified
+    const loreTerms = synthesized.loreDeepDives.map((l) => l.term);
+    expect(loreTerms.some((t) => t.includes("Latverian Witches"))).toBe(true);
+    expect(loreTerms.some((t) => t.includes("Doctor Doom"))).toBe(true);
+
+    const latveriaLore = synthesized.loreDeepDives.find((l) => l.term.includes("Latverian Witches"));
+    expect(latveriaLore?.firstAppearance).toContain("Astonishing Tales #8");
+    expect(latveriaLore?.creators).toContain("Roger Stern");
+
+    // 3. The Market Butterfly Effect Asset Ripple Projections
+    expect(synthesized.butterflyRipples.length).toBeGreaterThanOrEqual(3);
+
+    const latvRipple = synthesized.butterflyRipples.find((r) => r.ticker === "$DOOM:LATV");
+    expect(latvRipple).toBeDefined();
+    expect(latvRipple?.direction).toBe("surge");
+    expect(latvRipple?.landmarkKey).toContain("Astonishing Tales #8");
+
+    const doomRipple = synthesized.butterflyRipples.find((r) => r.ticker === "$DOOM");
+    expect(doomRipple).toBeDefined();
+    expect(doomRipple?.direction).toBe("cooling");
+  });
 });

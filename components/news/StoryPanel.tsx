@@ -12,6 +12,21 @@ import { CatalystKeyRail } from "@/components/news/CatalystKeyRail";
 import { AudioBriefingPlayer } from "@/components/news/AudioBriefingPlayer";
 import { AnalystDeskMemo } from "@/components/news/AnalystDeskMemo";
 
+"use client";
+
+import * as React from "react";
+import Link from "next/link";
+import { ArrowUpRight, Newspaper, Calendar, ExternalLink, Activity, BookOpen, Layers, TrendingUp, TrendingDown, Sparkles } from "lucide-react";
+import { findNewsEntities, type EntityWikiDef } from "@/lib/news/entities";
+import { LinkedBriefing } from "@/components/news/linked-briefing";
+import { shortNewsSource, type NewsStory } from "@/lib/news/types";
+import { AuthenticVideoEmbed, extractAuthenticVideo } from "@/components/news/authentic-video-embed";
+import { analyzeStoryCatalyst } from "@/lib/news/catalyst";
+import { CatalystKeyRail } from "@/components/news/CatalystKeyRail";
+import { AudioBriefingPlayer } from "@/components/news/AudioBriefingPlayer";
+import { AnalystDeskMemo } from "@/components/news/AnalystDeskMemo";
+import { parseAndSynthesizeArticle } from "@/lib/news/article-parser";
+
 function relativeTime(d: string | null) {
   if (!d) return "Recently";
   const parsed = new Date(d);
@@ -28,14 +43,19 @@ function relativeTime(d: string | null) {
 export function StoryPanel({ story }: { story: NewsStory }) {
   if (!story) return null;
 
-  const entities = findNewsEntities(story.headline, story.summary);
+  const article = React.useMemo(() => {
+    return parseAndSynthesizeArticle({
+      headline: story.headline,
+      summary: story.summary,
+      source: story.source,
+      author: story.author,
+      id: story.id,
+    });
+  }, [story]);
+
+  const entities = article.entities;
   const authenticVideo = extractAuthenticVideo(story.summary, story.url);
-  const rawSummary = story.summary || "";
-  const catalyst = analyzeStoryCatalyst(story.headline, rawSummary);
-  const paragraphs = rawSummary
-    .split(/\n\n+/)
-    .map((p) => p.trim())
-    .filter(Boolean);
+  const catalyst = article.catalyst;
   const allEntities = entities;
 
   const hasEditorialImage = Boolean(story.imageUrl && !story.imageUrl.includes("google.com/s2/favicons"));
@@ -54,6 +74,10 @@ export function StoryPanel({ story }: { story: NewsStory }) {
             <span className="text-[10px] font-mono text-slate-400 flex items-center gap-1">
               <Calendar className="h-3 w-3 text-slate-500" />
               {relativeTime(story.publishedAt)}
+            </span>
+            <span className="text-slate-600 font-mono">|</span>
+            <span className="text-[10px] font-mono text-cyan-400/90 font-medium">
+              {article.readingTimeMinutes} MIN READ · {article.wordCount} WORDS
             </span>
             {authenticVideo && (
               <span className="px-1.5 py-0.5 rounded bg-red-950/60 border border-red-500/40 text-[9px] font-mono text-red-400 font-semibold uppercase">
@@ -94,26 +118,103 @@ export function StoryPanel({ story }: { story: NewsStory }) {
         {/* In-Browser Text-to-Speech Audio Briefing Player */}
         <AudioBriefingPlayer
           headline={story.headline}
-          summary={story.summary}
+          summary={article.paragraphs.join(" ")}
           source={story.source}
         />
 
         {/* Market Catalyst Engine Rail */}
         <CatalystKeyRail analysis={catalyst} />
 
-        {/* Story Body with Live Entity Tokenization */}
-        <div className="mt-6 space-y-4 text-sm sm:text-base leading-relaxed text-slate-300">
-          {paragraphs.length > 0 ? (
-            paragraphs.map((p, idx) => (
-              <p key={idx}>
-                <LinkedBriefing text={p} entities={allEntities} />
-              </p>
-            ))
-          ) : (
-            <p className="text-slate-400 italic">
-              Original report metadata ingested from {story.source}. Read the complete story at the source link below.
+        {/* --- THE MARKET BUTTERFLY EFFECT (ASSET RIPPLE PROJECTIONS) --- */}
+        {article.butterflyRipples.length > 0 && (
+          <div className="mt-6 rounded-lg border border-cyan-900/60 bg-[#080d1a] p-4 shadow-lg">
+            <div className="flex items-center gap-2 border-b border-cyan-900/40 pb-2.5">
+              <Activity className="h-4 w-4 text-cyan-400" />
+              <h2 className="text-[11px] font-mono uppercase tracking-[0.16em] text-cyan-300 font-semibold">
+                THE MARKET BUTTERFLY EFFECT · ASSET RIPPLE PROJECTIONS
+              </h2>
+            </div>
+            <p className="mt-2 text-xs text-slate-400 leading-relaxed">
+              How the narrative complexity, studio maneuvers, and casting attachments in this report trigger downstream price shocks across physical comic equities:
             </p>
-          )}
+            <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {article.butterflyRipples.map((ripple, idx) => (
+                <div key={idx} className="rounded border border-slate-800 bg-[#0c1322] p-3 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-mono text-[10px] text-cyan-400 font-semibold">
+                        {ripple.ticker}
+                      </span>
+                      <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border uppercase ${
+                        ripple.direction === "surge"
+                          ? "bg-emerald-950/80 border-emerald-500/60 text-emerald-300"
+                          : ripple.direction === "uptick"
+                          ? "bg-cyan-950/80 border-cyan-500/60 text-cyan-300"
+                          : "bg-rose-950/80 border-rose-500/60 text-rose-300"
+                      }`}>
+                        {ripple.projectedDelta}
+                      </span>
+                    </div>
+                    <div className="mt-1 text-xs font-medium text-slate-200">
+                      {ripple.assetName}
+                    </div>
+                    <div className="mt-0.5 text-[10px] text-slate-400 font-mono">
+                      Key: {ripple.landmarkKey}
+                    </div>
+                  </div>
+                  <p className="mt-2 text-[11px] text-slate-400 leading-snug">
+                    {ripple.catalystCausality}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* --- ENCYCLOPEDIC LORE DEEP-DIVES --- */}
+        {article.loreDeepDives.length > 0 && (
+          <div className="mt-6 rounded-lg border border-purple-900/60 bg-[#0e0a1a] p-4 shadow-lg">
+            <div className="flex items-center gap-2 border-b border-purple-900/40 pb-2.5">
+              <BookOpen className="h-4 w-4 text-purple-400" />
+              <h2 className="text-[11px] font-mono uppercase tracking-[0.16em] text-purple-300 font-semibold">
+                ENCYCLOPEDIC LORE DOSSIERS · CANON PROVENANCE
+              </h2>
+            </div>
+            <div className="mt-3 space-y-3">
+              {article.loreDeepDives.map((lore, idx) => (
+                <div key={idx} className="rounded border border-purple-900/40 bg-[#140f24] p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-semibold text-xs text-purple-200">
+                      {lore.term} <span className="font-mono text-[10px] text-purple-400 font-normal">({lore.ticker})</span>
+                    </span>
+                    <span className="text-[10px] font-mono text-slate-400">
+                      {lore.era} · Creators: <strong className="text-slate-300">{lore.creators}</strong>
+                    </span>
+                  </div>
+                  <div className="mt-1 text-[11px] font-mono text-cyan-400">
+                    Landmark Debut: <Link href={`/comics?q=${encodeURIComponent(lore.firstAppearance)}`} className="underline hover:text-cyan-200">{lore.firstAppearance}</Link>
+                  </div>
+                  <p className="mt-1.5 text-xs text-slate-300 leading-relaxed">
+                    {lore.encyclopedicLore}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Multi-Paragraph Comprehensive Intelligence Body with Live Entity Tokenization */}
+        <div className="mt-6 space-y-5 text-sm sm:text-base leading-relaxed text-slate-300">
+          {article.sections.map((sec, idx) => (
+            <div key={idx} className="space-y-2">
+              <h3 className="text-[11px] font-mono uppercase tracking-[0.16em] text-cyan-400/90 font-semibold border-b border-slate-800/40 pb-1">
+                {sec.heading}
+              </h3>
+              <p className="leading-relaxed text-slate-300 text-sm sm:text-[15px]">
+                <LinkedBriefing text={sec.body} entities={allEntities} />
+              </p>
+            </div>
+          ))}
         </div>
 
         {/* 3-Point Institutional Analyst Desk Memo */}
@@ -124,7 +225,6 @@ export function StoryPanel({ story }: { story: NewsStory }) {
           summary={story.summary}
           catalyst={catalyst}
         />
-
 
         {/* Entity Cross-References Bar */}
         {allEntities.length > 0 && (
