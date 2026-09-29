@@ -151,6 +151,43 @@ function loadLoreIndex(): LoreIndexData {
       cachedSlugMap.set(tm.slug, itemSummary);
       registerTitle(tm.title, itemSummary);
     }
+
+    // Register adaptation cast & talent registry
+    try {
+      const castPath = path.join(process.cwd(), "lib/news/adaptation-cast-registry.json");
+      if (fs.existsSync(castPath)) {
+        const castRaw = fs.readFileSync(castPath, "utf-8");
+        const castList = JSON.parse(castRaw);
+        for (const actor of castList) {
+          const slug = `actor-${actor.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`;
+          const primaryRole = actor.roles[0];
+          const actorSummary: LoreEntitySummary = {
+            slug,
+            title: actor.name,
+            universe: primaryRole?.universe || "MARVEL",
+            type: "character",
+            alter_ego: actor.roles.map((r: any) => r.character).join(" / "),
+            creators: `Film & TV Portrayals: ${actor.franchises.join(", ")}`,
+            first_appearance: primaryRole?.landmarkIssue || "Comic Debut Issue",
+            ticker: primaryRole?.comicTicker || "$EQUITY",
+            summary: `Prominent adaptation actor portraying ${actor.roles.map((r: any) => `${r.character} (${r.universe})`).join(", ")}. Direct secondary market catalyst for ${actor.roles.map((r: any) => r.landmarkIssue).join(", ")}.`,
+            landmark_debuts: actor.roles.map((r: any) => ({
+              title: r.landmarkIssue,
+              significance: `Portrayed ${r.character}`,
+              catalogUrl: `/comics?q=${encodeURIComponent(r.landmarkIssue)}`,
+              assetTier: "BLUE_CHIP_KEY",
+            })),
+          };
+          cachedSlugMap.set(slug, actorSummary);
+          registerTitle(actor.name, actorSummary);
+          for (const alias of actor.aliases || []) {
+            registerTitle(alias, actorSummary);
+          }
+        }
+      }
+    } catch {
+      // Safe fallback
+    }
   }
 
   return cachedIndex || {

@@ -1,0 +1,836 @@
+[
+  {
+    "name": "Zendaya",
+    "aliases": [
+      "Zendaya Coleman"
+    ],
+    "roles": [
+      {
+        "character": "Michelle Jones (MJ)",
+        "universe": "MARVEL",
+        "landmarkIssue": "The Amazing Spider-Man #42",
+        "comicTicker": "$SPDR"
+      }
+    ],
+    "franchises": [
+      "Marvel Cinematic Universe",
+      "Sony Spider-Man Universe"
+    ],
+    "imdbId": "nm3918035"
+  },
+  {
+    "name": "Sadie Sink",
+    "aliases": [],
+    "roles": [
+      {
+        "character": "Songbird (Melissa Gold) / MCU Casting",
+        "universe": "MARVEL",
+        "landmarkIssue": "The Incredible Hulk #449",
+        "comicTicker": "$THUN"
+      },
+      {
+        "character": "Jean Grey (Marvel Speculation)",
+        "universe": "MARVEL",
+        "landmarkIssue": "The X-Men #1",
+        "comicTicker": "$XMEN"
+      }
+    ],
+    "franchises": [
+      "Marvel Cinematic Universe"
+    ],
+    "imdbId": "nm5584750"
+  },
+  {
+    "name": "Jon Bernthal",
+    "aliases": [
+      "Jonathan Edward Bernthal"
+    ],
+    "roles": [
+      {
+        "character": "The Punisher (Frank Castle)",
+        "universe": "MARVEL",
+        "landmarkIssue": "The Amazing Spider-Man #129",
+        "comicTicker": "$PNSH"
+      }
+    ],
+    "franchises": [
+      "Marvel Cinematic Universe",
+      "Marvel Television"
+    ],
+    "imdbId": "nm1256532"
+  },
+  {
+    "name": "Rosario Dawson",
+    "aliases": [
+      "Rosario Isabel Dawson"
+    ],
+    "roles": [
+      {
+        "character": "Ahsoka Tano",
+        "universe": "STAR_WARS",
+        "landmarkIssue": "Star Wars: The Clone Wars #1",
+        "comicTicker": "$AHSOKA"
+      },
+      {
+        "character": "Claire Temple (Night Nurse)",
+        "universe": "MARVEL",
+        "landmarkIssue": "Hero for Hire #2",
+        "comicTicker": "$NURSE"
+      },
+      {
+        "character": "Gail",
+        "universe": "DARK_HORSE",
+        "landmarkIssue": "Sin City: The Big Fat Kill #1",
+        "comicTicker": "$SINCITY"
+      }
+    ],
+    "franchises": [
+      "Marvel Cinematic Universe",
+      "Star Wars",
+      "Sin City"
+    ],
+    "imdbId": "nm0206257"
+  },
+  {
+    "name": "Tom Holland",
+    "aliases": [
+      "Thomas Stanley Holland"
+    ],
+    "roles": [
+      {
+        "character": "Spider-Man (Peter Parker)",
+        "universe": "MARVEL",
+        "landmarkIssue": "Amazing Fantasy #15",
+        "comicTicker": "$SPDR"
+      }
+    ],
+    "franchises": [
+      "Marvel Cinematic Universe",
+      "Sony Spider-Man Universe"
+    ],
+    "imdbId": "nm4043618"
+  },
+  {
+    "name": "Pedro Pascal",
+    "aliases": [
+      "Jose Pedro Balmaceda Pascal"
+    ],
+    "roles": [
+      {
+        "character": "Mister Fantastic (Reed Richards)",
+        "universe": "MARVEL",
+        "landmarkIssue": "Fantastic Four #1",
+        "comicTicker": "$FF4"
+      },
+      {
+        "character": "The Mandalorian (Din Djarin)",
+        "universe": "STAR_WARS",
+        "landmarkIssue": "Star Wars: The Mandalorian #1",
+        "comicTicker": "$MANDO"
+      },
+      {
+        "character": "Maxwell Lord",
+        "universe": "DC",
+        "landmarkIssue": "Justice League #1",
+        "comicTicker": "$DC"
+      }
+    ],
+    "franchises": [
+      "Marvel Cinematic Universe",
+      "Star Wars",
+      "DC Universe"
+    ],
+    "imdbId": "nm0050959"
+  },
+  {
+    "name": "Robert Downey Jr.",
+    "aliases": [
+      "Robert Downey Jr",
+      "RDJ"
+    ],
+    "roles": [
+      {
+        "character": "Iron Man (Tony Stark)",
+        "universe": "MARVEL",
+        "landmarkIssue": "Tales of Suspense #39",
+        "comicTicker": "$IMAN"
+      },
+      {
+        "character": "Doctor Doom (Victor Von Doom)",
+        "universe": "MARVEL",
+        "landmarkIssue": "Fantastic Four #5",
+        "comicTicker": "$DOOM"
+      }
+    ],
+    "franchises": [
+      "Marvel Cinematic Universe"
+    ],
+    "imdbId": "nm0000375"
+  },
+  {
+    "name": "Hugh Jackman",
+    "aliases": [
+      "Hugh Michael Jackman"
+    ],
+    "roles": [
+      {
+        "character": "Wolverine (Logan)",
+        "universe": "MARVEL",
+        "landmarkIssue": "The Incredible Hulk #181",
+        "comicTicker": "$WLVN"
+      }
+    ],
+    "franchises": [
+      "Marvel Cinematic Universe",
+      "20th Century Fox X-Men"
+    ],
+    "imdbId": "nm0413168"
+  },
+  {
+    "name": "Ryan Reynolds",
+    "aliases": [
+      "Ryan Rodney Reynolds"
+    ],
+    "roles": [
+      {
+        "character": "Deadpool (Wade Wilson)",
+        "universe": "MARVEL",
+        "landmarkIssue": "The New Mutants #98",
+        "comicTicker": "$DEAD"
+      },
+      {
+        "character": "Green Lantern (Hal Jordan)",
+        "universe": "DC",
+        "landmarkIssue": "Showcase #22",
+        "comicTicker": "$GLAN"
+      }
+    ],
+    "franchises": [
+      "Marvel Cinematic Universe",
+      "DC Universe"
+    ],
+    "imdbId": "nm0005351"
+  },
+  {
+    "name": "Charlie Cox",
+    "aliases": [
+      "Charlie Thomas Cox"
+    ],
+    "roles": [
+      {
+        "character": "Daredevil (Matt Murdock)",
+        "universe": "MARVEL",
+        "landmarkIssue": "Daredevil #1",
+        "comicTicker": "$DDVL"
+      }
+    ],
+    "franchises": [
+      "Marvel Cinematic Universe",
+      "Marvel Television"
+    ],
+    "imdbId": "nm1214435"
+  },
+  {
+    "name": "Vincent D'Onofrio",
+    "aliases": [
+      "Vincent Philip D'Onofrio",
+      "Vincent DOnofrio"
+    ],
+    "roles": [
+      {
+        "character": "Kingpin (Wilson Fisk)",
+        "universe": "MARVEL",
+        "landmarkIssue": "The Amazing Spider-Man #50",
+        "comicTicker": "$KPIN"
+      }
+    ],
+    "franchises": [
+      "Marvel Cinematic Universe",
+      "Marvel Television"
+    ],
+    "imdbId": "nm0000352"
+  },
+  {
+    "name": "David Corenswet",
+    "aliases": [
+      "David Packard Corenswet"
+    ],
+    "roles": [
+      {
+        "character": "Superman (Clark Kent)",
+        "universe": "DC",
+        "landmarkIssue": "Action Comics #1",
+        "comicTicker": "$SUPR"
+      }
+    ],
+    "franchises": [
+      "DC Universe"
+    ],
+    "imdbId": "nm6377708"
+  },
+  {
+    "name": "Rachel Brosnahan",
+    "aliases": [],
+    "roles": [
+      {
+        "character": "Lois Lane",
+        "universe": "DC",
+        "landmarkIssue": "Action Comics #1",
+        "comicTicker": "$SUPR"
+      }
+    ],
+    "franchises": [
+      "DC Universe"
+    ],
+    "imdbId": "nm3014078"
+  },
+  {
+    "name": "Nicholas Hoult",
+    "aliases": [
+      "Nicholas Caradoc Hoult"
+    ],
+    "roles": [
+      {
+        "character": "Lex Luthor",
+        "universe": "DC",
+        "landmarkIssue": "Action Comics #23",
+        "comicTicker": "$LUTHR"
+      },
+      {
+        "character": "Beast (Hank McCoy)",
+        "universe": "MARVEL",
+        "landmarkIssue": "The X-Men #1",
+        "comicTicker": "$XMEN"
+      }
+    ],
+    "franchises": [
+      "DC Universe",
+      "20th Century Fox X-Men"
+    ],
+    "imdbId": "nm0396559"
+  },
+  {
+    "name": "Christian Bale",
+    "aliases": [
+      "Christian Charles Philip Bale"
+    ],
+    "roles": [
+      {
+        "character": "Batman (Bruce Wayne)",
+        "universe": "DC",
+        "landmarkIssue": "Detective Comics #27",
+        "comicTicker": "$BTMN"
+      },
+      {
+        "character": "Gorr the God Butcher",
+        "universe": "MARVEL",
+        "landmarkIssue": "Thor: God of Thunder #2",
+        "comicTicker": "$THOR"
+      }
+    ],
+    "franchises": [
+      "The Dark Knight Trilogy",
+      "Marvel Cinematic Universe"
+    ],
+    "imdbId": "nm0000288"
+  },
+  {
+    "name": "Robert Pattinson",
+    "aliases": [
+      "Robert Douglas Thomas Pattinson"
+    ],
+    "roles": [
+      {
+        "character": "Batman (Bruce Wayne)",
+        "universe": "DC",
+        "landmarkIssue": "Detective Comics #27",
+        "comicTicker": "$BTMN"
+      }
+    ],
+    "franchises": [
+      "DC Elseworlds",
+      "The Batman"
+    ],
+    "imdbId": "nm1500155"
+  },
+  {
+    "name": "Zoe Kravitz",
+    "aliases": [
+      "Zoë Kravitz"
+    ],
+    "roles": [
+      {
+        "character": "Catwoman (Selina Kyle)",
+        "universe": "DC",
+        "landmarkIssue": "Batman #1",
+        "comicTicker": "$CATW"
+      }
+    ],
+    "franchises": [
+      "DC Elseworlds",
+      "The Batman"
+    ],
+    "imdbId": "nm2368789"
+  },
+  {
+    "name": "Colin Farrell",
+    "aliases": [
+      "Colin James Farrell"
+    ],
+    "roles": [
+      {
+        "character": "The Penguin (Oz Cobb)",
+        "universe": "DC",
+        "landmarkIssue": "Detective Comics #58",
+        "comicTicker": "$PENG"
+      },
+      {
+        "character": "Bullseye",
+        "universe": "MARVEL",
+        "landmarkIssue": "Daredevil #131",
+        "comicTicker": "$BULLS"
+      }
+    ],
+    "franchises": [
+      "DC Elseworlds",
+      "The Penguin"
+    ],
+    "imdbId": "nm0268199"
+  },
+  {
+    "name": "Florence Pugh",
+    "aliases": [],
+    "roles": [
+      {
+        "character": "Yelena Belova (Black Widow)",
+        "universe": "MARVEL",
+        "landmarkIssue": "Inhumans #5",
+        "comicTicker": "$THUN"
+      }
+    ],
+    "franchises": [
+      "Marvel Cinematic Universe"
+    ],
+    "imdbId": "nm6073955"
+  },
+  {
+    "name": "Vanessa Kirby",
+    "aliases": [],
+    "roles": [
+      {
+        "character": "Invisible Woman (Sue Storm)",
+        "universe": "MARVEL",
+        "landmarkIssue": "Fantastic Four #1",
+        "comicTicker": "$FF4"
+      }
+    ],
+    "franchises": [
+      "Marvel Cinematic Universe"
+    ],
+    "imdbId": "nm4274768"
+  },
+  {
+    "name": "Joseph Quinn",
+    "aliases": [],
+    "roles": [
+      {
+        "character": "Human Torch (Johnny Storm)",
+        "universe": "MARVEL",
+        "landmarkIssue": "Fantastic Four #1",
+        "comicTicker": "$FF4"
+      }
+    ],
+    "franchises": [
+      "Marvel Cinematic Universe"
+    ],
+    "imdbId": "nm7495094"
+  },
+  {
+    "name": "Ebon Moss-Bachrach",
+    "aliases": [],
+    "roles": [
+      {
+        "character": "The Thing (Ben Grimm)",
+        "universe": "MARVEL",
+        "landmarkIssue": "Fantastic Four #1",
+        "comicTicker": "$FF4"
+      },
+      {
+        "character": "Micro (David Lieberman)",
+        "universe": "MARVEL",
+        "landmarkIssue": "The Punisher #4",
+        "comicTicker": "$PNSH"
+      }
+    ],
+    "franchises": [
+      "Marvel Cinematic Universe"
+    ],
+    "imdbId": "nm0609114"
+  },
+  {
+    "name": "Chris Evans",
+    "aliases": [
+      "Christopher Robert Evans"
+    ],
+    "roles": [
+      {
+        "character": "Captain America (Steve Rogers)",
+        "universe": "MARVEL",
+        "landmarkIssue": "Captain America Comics #1",
+        "comicTicker": "$CAPA"
+      },
+      {
+        "character": "Human Torch (Johnny Storm)",
+        "universe": "MARVEL",
+        "landmarkIssue": "Fantastic Four #1",
+        "comicTicker": "$FF4"
+      }
+    ],
+    "franchises": [
+      "Marvel Cinematic Universe"
+    ],
+    "imdbId": "nm0262635"
+  },
+  {
+    "name": "Chris Hemsworth",
+    "aliases": [],
+    "roles": [
+      {
+        "character": "Thor Odinson",
+        "universe": "MARVEL",
+        "landmarkIssue": "Journey into Mystery #83",
+        "comicTicker": "$THOR"
+      }
+    ],
+    "franchises": [
+      "Marvel Cinematic Universe"
+    ],
+    "imdbId": "nm1165110"
+  },
+  {
+    "name": "Scarlett Johansson",
+    "aliases": [
+      "Scarlett Ingrid Johansson"
+    ],
+    "roles": [
+      {
+        "character": "Black Widow (Natasha Romanoff)",
+        "universe": "MARVEL",
+        "landmarkIssue": "Tales of Suspense #52",
+        "comicTicker": "$BWID"
+      }
+    ],
+    "franchises": [
+      "Marvel Cinematic Universe"
+    ],
+    "imdbId": "nm0424060"
+  },
+  {
+    "name": "Mark Ruffalo",
+    "aliases": [],
+    "roles": [
+      {
+        "character": "Hulk (Bruce Banner)",
+        "universe": "MARVEL",
+        "landmarkIssue": "The Incredible Hulk #1",
+        "comicTicker": "$HULK"
+      }
+    ],
+    "franchises": [
+      "Marvel Cinematic Universe"
+    ],
+    "imdbId": "nm0749263"
+  },
+  {
+    "name": "Benedict Cumberbatch",
+    "aliases": [
+      "Benedict Timothy Carlton Cumberbatch"
+    ],
+    "roles": [
+      {
+        "character": "Doctor Strange (Stephen Strange)",
+        "universe": "MARVEL",
+        "landmarkIssue": "Strange Tales #110",
+        "comicTicker": "$STRNG"
+      }
+    ],
+    "franchises": [
+      "Marvel Cinematic Universe"
+    ],
+    "imdbId": "nm1212722"
+  },
+  {
+    "name": "Elizabeth Olsen",
+    "aliases": [
+      "Elizabeth Chase Olsen"
+    ],
+    "roles": [
+      {
+        "character": "Scarlet Witch (Wanda Maximoff)",
+        "universe": "MARVEL",
+        "landmarkIssue": "The X-Men #4",
+        "comicTicker": "$SWTCH"
+      }
+    ],
+    "franchises": [
+      "Marvel Cinematic Universe"
+    ],
+    "imdbId": "nm0647634"
+  },
+  {
+    "name": "Chadwick Boseman",
+    "aliases": [
+      "Chadwick Aaron Boseman"
+    ],
+    "roles": [
+      {
+        "character": "Black Panther (T'Challa)",
+        "universe": "MARVEL",
+        "landmarkIssue": "Fantastic Four #52",
+        "comicTicker": "$BPAN"
+      }
+    ],
+    "franchises": [
+      "Marvel Cinematic Universe"
+    ],
+    "imdbId": "nm1569276"
+  },
+  {
+    "name": "Anthony Mackie",
+    "aliases": [
+      "Anthony Dwane Mackie"
+    ],
+    "roles": [
+      {
+        "character": "Captain America (Sam Wilson / Falcon)",
+        "universe": "MARVEL",
+        "landmarkIssue": "Captain America #117",
+        "comicTicker": "$FALC"
+      }
+    ],
+    "franchises": [
+      "Marvel Cinematic Universe"
+    ],
+    "imdbId": "nm1107001"
+  },
+  {
+    "name": "Sebastian Stan",
+    "aliases": [],
+    "roles": [
+      {
+        "character": "Winter Soldier (Bucky Barnes)",
+        "universe": "MARVEL",
+        "landmarkIssue": "Captain America Comics #1",
+        "comicTicker": "$WSOLD"
+      }
+    ],
+    "franchises": [
+      "Marvel Cinematic Universe"
+    ],
+    "imdbId": "nm1659221"
+  },
+  {
+    "name": "Tom Hiddleston",
+    "aliases": [
+      "Thomas William Hiddleston"
+    ],
+    "roles": [
+      {
+        "character": "Loki Laufeyson",
+        "universe": "MARVEL",
+        "landmarkIssue": "Journey into Mystery #85",
+        "comicTicker": "$LOKI"
+      }
+    ],
+    "franchises": [
+      "Marvel Cinematic Universe"
+    ],
+    "imdbId": "nm1089991"
+  },
+  {
+    "name": "Krysten Ritter",
+    "aliases": [],
+    "roles": [
+      {
+        "character": "Jessica Jones",
+        "universe": "MARVEL",
+        "landmarkIssue": "Alias #1",
+        "comicTicker": "$JJON"
+      }
+    ],
+    "franchises": [
+      "Marvel Cinematic Universe",
+      "Marvel Television"
+    ],
+    "imdbId": "nm1269983"
+  },
+  {
+    "name": "Mike Colter",
+    "aliases": [],
+    "roles": [
+      {
+        "character": "Luke Cage (Power Man)",
+        "universe": "MARVEL",
+        "landmarkIssue": "Hero for Hire #1",
+        "comicTicker": "$CAGE"
+      }
+    ],
+    "franchises": [
+      "Marvel Cinematic Universe",
+      "Marvel Television"
+    ],
+    "imdbId": "nm1441459"
+  },
+  {
+    "name": "Margot Robbie",
+    "aliases": [
+      "Margot Elise Robbie"
+    ],
+    "roles": [
+      {
+        "character": "Harley Quinn (Dr. Harleen Quinzel)",
+        "universe": "DC",
+        "landmarkIssue": "The Batman Adventures #12",
+        "comicTicker": "$HQUINN"
+      }
+    ],
+    "franchises": [
+      "DC Universe"
+    ],
+    "imdbId": "nm3053338"
+  },
+  {
+    "name": "Joaquin Phoenix",
+    "aliases": [
+      "Joaquin Rafael Phoenix"
+    ],
+    "roles": [
+      {
+        "character": "The Joker (Arthur Fleck)",
+        "universe": "DC",
+        "landmarkIssue": "Batman #1",
+        "comicTicker": "$JOKR"
+      }
+    ],
+    "franchises": [
+      "DC Elseworlds"
+    ],
+    "imdbId": "nm0001618"
+  },
+  {
+    "name": "Heath Ledger",
+    "aliases": [
+      "Heathcliff Andrew Ledger"
+    ],
+    "roles": [
+      {
+        "character": "The Joker",
+        "universe": "DC",
+        "landmarkIssue": "Batman #1",
+        "comicTicker": "$JOKR"
+      }
+    ],
+    "franchises": [
+      "The Dark Knight Trilogy"
+    ],
+    "imdbId": "nm0005132"
+  },
+  {
+    "name": "Tom Hardy",
+    "aliases": [
+      "Edward Thomas Hardy"
+    ],
+    "roles": [
+      {
+        "character": "Venom (Eddie Brock)",
+        "universe": "MARVEL",
+        "landmarkIssue": "The Amazing Spider-Man #300",
+        "comicTicker": "$VNOM"
+      },
+      {
+        "character": "Bane",
+        "universe": "DC",
+        "landmarkIssue": "Batman: Vengeance of Bane #1",
+        "comicTicker": "$BANE"
+      }
+    ],
+    "franchises": [
+      "Sony Spider-Man Universe",
+      "The Dark Knight Trilogy"
+    ],
+    "imdbId": "nm0362762"
+  },
+  {
+    "name": "Karl Urban",
+    "aliases": [
+      "Karl-Heinz Urban"
+    ],
+    "roles": [
+      {
+        "character": "Billy Butcher",
+        "universe": "IMAGE",
+        "landmarkIssue": "The Boys #1",
+        "comicTicker": "$BOYS"
+      },
+      {
+        "character": "Judge Dredd",
+        "universe": "2000_AD",
+        "landmarkIssue": "2000 AD #2",
+        "comicTicker": "$DREDD"
+      },
+      {
+        "character": "Skurge the Executioner",
+        "universe": "MARVEL",
+        "landmarkIssue": "Journey into Mystery #103",
+        "comicTicker": "$THOR"
+      }
+    ],
+    "franchises": [
+      "The Boys",
+      "2000 AD",
+      "Marvel Cinematic Universe"
+    ],
+    "imdbId": "nm0881631"
+  },
+  {
+    "name": "Antony Starr",
+    "aliases": [],
+    "roles": [
+      {
+        "character": "Homelander",
+        "universe": "IMAGE",
+        "landmarkIssue": "The Boys #1",
+        "comicTicker": "$BOYS"
+      }
+    ],
+    "franchises": [
+      "The Boys"
+    ],
+    "imdbId": "nm0823563"
+  },
+  {
+    "name": "Jack Quaid",
+    "aliases": [
+      "Jack Henry Quaid"
+    ],
+    "roles": [
+      {
+        "character": "Hughie Campbell",
+        "universe": "IMAGE",
+        "landmarkIssue": "The Boys #1",
+        "comicTicker": "$BOYS"
+      },
+      {
+        "character": "Superman (Clark Kent) [Voice]",
+        "universe": "DC",
+        "landmarkIssue": "Action Comics #1",
+        "comicTicker": "$SUPR"
+      }
+    ],
+    "franchises": [
+      "The Boys",
+      "My Adventures with Superman"
+    ],
+    "imdbId": "nm4460599"
+  }
+]

@@ -1,5 +1,6 @@
 import { createAdminServerClient } from "@/lib/supabase/admin";
 import { findLoreEntitiesInText } from "@/lib/wiki/lore-search";
+import adaptationCastData from "./adaptation-cast-registry.json";
 
 export interface EntityWikiDef {
   term: string;
@@ -7,7 +8,51 @@ export interface EntityWikiDef {
   type: "character" | "publisher" | "equity" | "creator" | "market-concept" | "grading" | "lexicon";
   target: "intelligence" | "lexicon";
   wikiPath: string;
+  roleDetails?: {
+    character: string;
+    universe: string;
+    landmarkIssue: string;
+    comicTicker: string;
+  };
 }
+
+interface AdaptationRole {
+  character: string;
+  universe: string;
+  landmarkIssue: string;
+  comicTicker: string;
+}
+
+interface AdaptationActor {
+  name: string;
+  aliases: string[];
+  roles: AdaptationRole[];
+  franchises: string[];
+  imdbId?: string;
+}
+
+const ADAPTATION_ACTORS: AdaptationActor[] = adaptationCastData as AdaptationActor[];
+
+export const ADAPTATION_ACTOR_ENTITIES: EntityWikiDef[] = ADAPTATION_ACTORS.flatMap((actor) => {
+  const primaryRole = actor.roles[0];
+  const main: EntityWikiDef = {
+    term: actor.name,
+    ticker: primaryRole?.comicTicker,
+    type: "creator",
+    target: "intelligence",
+    wikiPath: `/wiki?q=${encodeURIComponent(actor.name)}`,
+    roleDetails: primaryRole,
+  };
+  const aliasDefs: EntityWikiDef[] = actor.aliases.map((alias) => ({
+    term: alias,
+    ticker: primaryRole?.comicTicker,
+    type: "creator",
+    target: "intelligence",
+    wikiPath: `/wiki?q=${encodeURIComponent(actor.name)}`,
+    roleDetails: primaryRole,
+  }));
+  return [main, ...aliasDefs];
+});
 
 /**
  * Dynamic Canonical Grounded Entity Registry
@@ -279,6 +324,8 @@ export const KNOWN_NEWS_ENTITIES_MAP: EntityWikiDef[] = [
   { term: "Bruce Timm", type: "creator", target: "intelligence", wikiPath: "/wiki?q=Bruce+Timm" },
   { term: "Robert Kirkman", type: "creator", target: "intelligence", wikiPath: "/wiki?q=Robert+Kirkman" },
   { term: "Mike Mignola", type: "creator", target: "intelligence", wikiPath: "/wiki?q=Mike+Mignola" },
+  // --- ADAPTATION ACTORS & HOLLYWOOD ADAPTATION TALENT ---
+  ...ADAPTATION_ACTOR_ENTITIES,
 ];
 
 // In-memory cache for dynamic text lookups
@@ -390,6 +437,23 @@ export function extractEntitiesFromContext(text: string): EntityWikiDef[] {
     }
   } catch {
     // Safe fallback
+  }
+
+  // Cross-link character roles for matched adaptation actors
+  for (const match of [...baseMatches]) {
+    if (match.roleDetails) {
+      const charTerm = match.roleDetails.character;
+      if (!baseMatches.some((e) => e.term.toLowerCase() === charTerm.toLowerCase())) {
+        baseMatches.push({
+          term: charTerm,
+          ticker: match.roleDetails.comicTicker,
+          type: "character",
+          target: "intelligence",
+          wikiPath: `/wiki/entry/${charTerm.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`,
+          roleDetails: match.roleDetails,
+        });
+      }
+    }
   }
 
   return baseMatches;

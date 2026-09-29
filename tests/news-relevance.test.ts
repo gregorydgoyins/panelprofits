@@ -54,4 +54,34 @@ describe("newsroom relevance gate", () => {
     expect(video?.provider).toBe("youtube");
     expect(video?.embedUrl).toBe("https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ");
   });
+
+  it("admits entertainment wire reports referencing major comic adaptation actors", () => {
+    // Tests for user-audited actors: Zendaya, Sadie Sink, Jon Bernthal, Rosario Dawson
+    expect(isRelevantComicStory("VARIETY", "Zendaya speaks on future projects in Hollywood", "Exclusive interview on career trajectories.")).toBe(true);
+    expect(isRelevantComicStory("DEADLINE", "Sadie Sink joins high-profile ensemble cast", "Production slated to begin next quarter.")).toBe(true);
+    expect(isRelevantComicStory("THR", "Jon Bernthal discusses physical preparation for upcoming shoot", "The actor prepares for his iconic gritty role.")).toBe(true);
+    expect(isRelevantComicStory("PERIGON", "Rosario Dawson gives schedule update for upcoming season", "Filming timeline confirmed by production team.")).toBe(true);
+  });
+
+  it("extracts adaptation actors and bridges them to canonical characters and tickers", async () => {
+    const { findNewsEntities } = await import("@/lib/news/entities");
+
+    const zendayaEntities = findNewsEntities("Zendaya spotted at screening alongside cast", "Entertainment news bulletin");
+    expect(zendayaEntities.map((e) => e.term)).toContain("Zendaya");
+    expect(zendayaEntities.some((e) => e.ticker === "$SPDR")).toBe(true);
+
+    const bernthalEntities = findNewsEntities("Jon Bernthal confirms appearance at fan convention", "Actor discusses franchise legacy");
+    expect(bernthalEntities.map((e) => e.term)).toContain("Jon Bernthal");
+    expect(bernthalEntities.some((e) => e.term.includes("The Punisher"))).toBe(true);
+    expect(bernthalEntities.some((e) => e.ticker === "$PNSH")).toBe(true);
+
+    const dawsonEntities = findNewsEntities("Rosario Dawson discusses character journey across multiple franchises", "Media spotlight");
+    expect(dawsonEntities.map((e) => e.term)).toContain("Rosario Dawson");
+    expect(dawsonEntities.some((e) => e.term.includes("Ahsoka Tano"))).toBe(true);
+    expect(dawsonEntities.some((e) => e.ticker === "$AHSOKA")).toBe(true);
+
+    const sinkEntities = findNewsEntities("Sadie Sink in advanced talks for mysterious comic studio role", "Industry rumors");
+    expect(sinkEntities.map((e) => e.term)).toContain("Sadie Sink");
+    expect(sinkEntities.some((e) => e.term.includes("Songbird"))).toBe(true);
+  });
 });

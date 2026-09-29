@@ -97,6 +97,16 @@ const EXCLUDE_NON_COMIC = /\b(gameplay|playstation\s*5|ps5|xbox|nintendo switch|
 
 const DEDICATED_COMIC_SOURCES = /lords of the long box|near mint condition|comictom101|cartoonist kayfabe|variant comics|gem mint collectibles|bleeding cool|the beat|aipt|cbr|comicbook invest|comics journal|comicsxf|multiversity|first comics news|comic crusaders|major spoilers|comic book herald|gocollect|covrprice|comichron|previewsworld|2000 ad|dark horse|image comics|marvel comics|dc comics|idw|boom studios|dynamite|valiant|archie comics|fantagraphics|kodansha|viz media|heritage comic|comiclink|comicconnect|shortboxed|key collector|comic tropes|comicpop|comics explained|casually comics|automatic comics|swagglehaus/i;
 
+import adaptationCastData from "./adaptation-cast-registry.json";
+
+const ADAPTATION_ACTOR_NAMES = (adaptationCastData as Array<{ name: string; aliases: string[] }>).flatMap(
+  (a) => [a.name, ...a.aliases]
+);
+const ADAPTATION_ACTOR_REGEX = new RegExp(
+  `\\b(${ADAPTATION_ACTOR_NAMES.map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})\\b`,
+  "i"
+);
+
 export function isRelevantComicStory(source: string, headline: string, summary: string | null): boolean {
   if (DEDICATED_COMIC_SOURCES.test(source)) {
     return true;
@@ -107,7 +117,8 @@ export function isRelevantComicStory(source: string, headline: string, summary: 
   }
   const isComicOrManga = COMIC_TERMS.test(text);
   const isCompanyFinance = COMPANY_TERMS.test(text) && FINANCIAL_TERMS.test(text);
-  return isComicOrManga || isCompanyFinance;
+  const isAdaptationActor = ADAPTATION_ACTOR_REGEX.test(text);
+  return isComicOrManga || isCompanyFinance || isAdaptationActor;
 }
 
 function decodeEntities(value: string): string {
