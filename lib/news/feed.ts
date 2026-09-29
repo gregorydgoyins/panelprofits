@@ -248,8 +248,8 @@ export async function fetchFeedSource(source: NewsSource): Promise<Array<{
 
     return items
       .filter((item) => {
-        if (!isRelevantComicStory(source.name, item.title, item.summary)) return false;
-        return evaluateArticleQuality(item.title, item.summary).admit;
+        if (!isRelevantComicStory(source.name, item.title, item.summary, true)) return false;
+        return evaluateArticleQuality(item.title, item.summary, true).admit;
       })
       .map((item) => ({
         story_key: generateStoryKey(source.url, item.url, item.title),
@@ -386,6 +386,97 @@ function mapStory(row: Record<string, unknown>): NewsStory {
   };
 }
 
+const DEDUP_STOP_WORDS = new Set([
+  "a", "about", "after", "all", "an", "and", "are", "as", "at", "be", "been", "before", "but", "by",
+  "can", "could", "did", "do", "does", "for", "from", "get", "gets", "getting", "had", "has", "have",
+  "he", "her", "here", "him", "his", "how", "i", "if", "in", "into", "is", "it", "its", "just", "like",
+  "may", "me", "more", "most", "my", "no", "not", "now", "of", "off", "on", "once", "one", "only", "or",
+  "other", "our", "out", "over", "report", "reports", "reveals", "revealed", "said", "say", "says",
+  "see", "she", "should", "so", "some", "than", "that", "the", "their", "them", "then", "there", "these",
+  "they", "this", "those", "through", "to", "too", "under", "up", "us", "was", "we", "were", "what",
+  "when", "where", "which", "while", "who", "whom", "why", "will", "with", "would", "you", "your",
+  "know", "everything", "things", "news", "official", "look", "looks", "first"
+]);
+
+function normalizeDedupWord(word: string): string {
+  return word
+    .replace(/^re-?release[s]?$/, "rerelease")
+    .replace(/^scene[s]?$/, "scene")
+    .replace(/^movie[s]?$/, "movie")
+    .replace(/^film[s]?$/, "film")
+    .replace(/^trailer[s]?$/, "trailer");
+}
+
+export function tokenizeHeadline(title: string): Set<string> {
+  const norm = title
+    .toLowerCase()
+    .replace(/['’‘"`]/g, "")
+    .replace(/[^a-z0-9]+/g, " ");
+  return new Set(
+    norm
+      .split(/\s+/)
+      .map(normalizeDedupWord)
+      .filter((w) => w.length > 2 && !DEDUP_STOP_WORDS.has(w))
+  );
+}
+
+export function areDuplicateStories(
+  t1: string,
+  d1: string | null | undefined,
+  t2: string,
+  d2: string | null | undefined
+): boolean {
+  if (d1 && d2) {
+    const diff = Math.abs(new Date(d1).getTime() - new Date(d2).getTime());
+    if (diff > 72 * 60 * 60 * 1000) return false;
+  }
+  const s1 = tokenizeHeadline(t1);
+  const s2 = tokenizeHeadline(t2);
+  if (s1.size === 0 || s2.size === 0) return false;
+
+  let intersection = 0;
+  for (const w of s1) {
+    if (s2.has(w)) intersection++;
+  }
+
+  const minSize = Math.min(s1.size, s2.size);
+  const overlap = minSize > 0 ? intersection / minSize : 0;
+  const union = new Set([...s1, ...s2]).size;
+  const jaccard = union > 0 ? intersection / union : 0;
+
+  return (overlap >= 0.55 && intersection >= 3) || jaccard >= 0.45;
+}
+
+const PREMIER_AUTHORITY_SOURCES = /variety|hollywood reporter|deadline|bleeding cool|cbr|comics beat|the beat|aipt|image comics|marvel|dc comics|dark horse|tcj|comics journal|polygon|ign/i;
+
+function getStoryQualityScore(story: NewsStory): number {
+  let score = 0;
+  if (PREMIER_AUTHORITY_SOURCES.test(story.source)) score += 50;
+  if (story.imageUrl && !story.imageUrl.includes("favicon") && !story.imageUrl.includes("google.com/s2/favicons")) score += 30;
+  if (story.summary && story.summary.length > 100) score += 20;
+  if (story.author) score += 10;
+  return score;
+}
+
+export function deduplicateNewsStories(stories: NewsStory[]): NewsStory[] {
+  const result: NewsStory[] = [];
+  for (const candidate of stories) {
+    const existingIndex = result.findIndex((existing) =>
+      areDuplicateStories(existing.headline, existing.publishedAt, candidate.headline, candidate.publishedAt)
+    );
+    if (existingIndex === -1) {
+      result.push(candidate);
+    } else {
+      const existingScore = getStoryQualityScore(result[existingIndex]);
+      const candidateScore = getStoryQualityScore(candidate);
+      if (candidateScore > existingScore) {
+        result[existingIndex] = candidate;
+      }
+    }
+  }
+  return result;
+}
+
 export async function getNewsStories(limit = 24, includeArchive = false): Promise<NewsStory[]> {
   const db = createAdminServerClient();
   const query = db
@@ -393,7 +484,7 @@ export async function getNewsStories(limit = 24, includeArchive = false): Promis
     .select("id,source,source_url,category,headline,author,summary,url,image_url,published_at,ingested_at,archived_at")
     .order("published_at", { ascending: false, nullsFirst: false })
     .order("ingested_at", { ascending: false })
-    .limit(limit * 3); // Over-fetch to apply strict filtering against stale/junk records
+    .limit(Math.max(limit * 4, 100)); // Over-fetch to apply strict filtering & topic deduplication
 
   const { data, error } = includeArchive
     ? await query.not("archived_at", "is", null)
@@ -409,9 +500,9 @@ export async function getNewsStories(limit = 24, includeArchive = false): Promis
   if (!data) return [];
   const stories = data.map(mapStory);
   // Guarantee only verified relevant sequential art & market stories pass through
-  return stories
-    .filter((s) => isRelevantComicStory(s.source, s.headline, s.summary))
-    .slice(0, limit);
+  const relevantStories = stories.filter((s) => isRelevantComicStory(s.source, s.headline, s.summary));
+  // Deduplicate syndicated duplicate reporting across outlets
+  return deduplicateNewsStories(relevantStories).slice(0, limit);
 }
 
 export async function getNewsStory(id: string): Promise<NewsStory | null> {

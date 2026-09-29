@@ -1,11 +1,4 @@
-import { LinkedBriefing } from "@/components/news/linked-briefing";
-import Link from "next/link";
-import { type EntityWikiDef } from "@/lib/news/entities";
-
-function dateLabel(value: string | null) {
-  if (!value) return "Publication date unavailable";
-  return new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
-}
+"use client";
 
 import * as React from "react";
 import Link from "next/link";
@@ -38,15 +31,17 @@ export function NewsBriefing({
   publishedAt: string | null;
   entities?: EntityWikiDef[];
 }) {
-  const article = parseAndSynthesizeArticle({
-    headline,
-    summary,
-    source,
-    author,
-    id,
-  });
+  const article = React.useMemo(() => {
+    return parseAndSynthesizeArticle({
+      headline,
+      summary,
+      source,
+      author,
+      id,
+    });
+  }, [headline, summary, source, author, id]);
 
-  const activeEntities = article.entities;
+  const activeEntities = initialEntities && initialEntities.length > 0 ? initialEntities : article.entities;
 
   return (
     <div className="mt-8 space-y-6 border-l-2 border-cyan-500/60 bg-cyan-950/15 px-5 py-6 sm:px-7 rounded-r">
@@ -70,9 +65,18 @@ export function NewsBriefing({
         </div>
       </div>
 
+      {/* --- AUTHENTIC REPORTING BODY WITH LIVE TOKENIZATION --- */}
+      <section className="space-y-4">
+        {article.paragraphs.map((para, idx) => (
+          <p key={idx} className="text-base leading-8 text-slate-200">
+            <LinkedBriefing text={para} entities={activeEntities} />
+          </p>
+        ))}
+      </section>
+
       {/* --- THE MARKET BUTTERFLY EFFECT (ASSET RIPPLE PROJECTIONS) --- */}
       {article.butterflyRipples.length > 0 && (
-        <div className="rounded-lg border border-cyan-900/60 bg-[#080d1a] p-4 shadow-lg">
+        <div className="mt-6 rounded-lg border border-cyan-900/60 bg-[#080d1a] p-4 shadow-lg">
           <div className="flex items-center gap-2 border-b border-cyan-900/40 pb-2.5">
             <Activity className="h-4 w-4 text-cyan-400" />
             <h2 className="text-[11px] font-mono uppercase tracking-[0.16em] text-cyan-300 font-semibold">
@@ -80,7 +84,7 @@ export function NewsBriefing({
             </h2>
           </div>
           <p className="mt-2 text-xs text-slate-400 leading-relaxed">
-            How plot complexity, studio announcements, and theatrical shifts trigger downstream price movements across physical comic equities:
+            How narrative complexity, studio maneuvers, and casting attachments in this report trigger downstream price shocks across physical comic equities:
           </p>
           <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {article.butterflyRipples.map((ripple, idx) => (
@@ -118,7 +122,7 @@ export function NewsBriefing({
 
       {/* --- ENCYCLOPEDIC LORE DEEP-DIVES --- */}
       {article.loreDeepDives.length > 0 && (
-        <div className="rounded-lg border border-purple-900/60 bg-[#0e0a1a] p-4 shadow-lg">
+        <div className="mt-6 rounded-lg border border-purple-900/60 bg-[#0e0a1a] p-4 shadow-lg">
           <div className="flex items-center gap-2 border-b border-purple-900/40 pb-2.5">
             <BookOpen className="h-4 w-4 text-purple-400" />
             <h2 className="text-[11px] font-mono uppercase tracking-[0.16em] text-purple-300 font-semibold">
@@ -147,19 +151,6 @@ export function NewsBriefing({
           </div>
         </div>
       )}
-
-      <section className="space-y-6">
-        {article.sections.map((section, idx) => (
-          <div key={idx} className="space-y-2">
-            <h2 className="text-[11px] font-mono uppercase tracking-[0.16em] text-cyan-400/90 font-semibold border-b border-slate-800/40 pb-1">
-              {section.heading}
-            </h2>
-            <p className="text-base leading-8 text-slate-300">
-              <LinkedBriefing text={section.body} entities={activeEntities} />
-            </p>
-          </div>
-        ))}
-      </section>
     </div>
   );
 }

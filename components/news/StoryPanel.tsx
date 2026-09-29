@@ -2,20 +2,6 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowUpRight, Newspaper, Calendar, ExternalLink } from "lucide-react";
-import { findNewsEntities, type EntityWikiDef } from "@/lib/news/entities";
-import { LinkedBriefing } from "@/components/news/linked-briefing";
-import { shortNewsSource, type NewsStory } from "@/lib/news/types";
-import { AuthenticVideoEmbed, extractAuthenticVideo } from "@/components/news/authentic-video-embed";
-import { analyzeStoryCatalyst } from "@/lib/news/catalyst";
-import { CatalystKeyRail } from "@/components/news/CatalystKeyRail";
-import { AudioBriefingPlayer } from "@/components/news/AudioBriefingPlayer";
-import { AnalystDeskMemo } from "@/components/news/AnalystDeskMemo";
-
-"use client";
-
-import * as React from "react";
-import Link from "next/link";
 import { ArrowUpRight, Newspaper, Calendar, ExternalLink, Activity, BookOpen, Layers, TrendingUp, TrendingDown, Sparkles } from "lucide-react";
 import { findNewsEntities, type EntityWikiDef } from "@/lib/news/entities";
 import { LinkedBriefing } from "@/components/news/linked-briefing";
@@ -125,6 +111,15 @@ export function StoryPanel({ story }: { story: NewsStory }) {
         {/* Market Catalyst Engine Rail */}
         <CatalystKeyRail analysis={catalyst} />
 
+        {/* Authentic Story Body with Live Entity Tokenization */}
+        <div className="mt-6 space-y-4 text-sm sm:text-base leading-relaxed text-slate-200">
+          {article.paragraphs.map((p, idx) => (
+            <p key={idx} className="leading-relaxed">
+              <LinkedBriefing text={p} entities={allEntities} />
+            </p>
+          ))}
+        </div>
+
         {/* --- THE MARKET BUTTERFLY EFFECT (ASSET RIPPLE PROJECTIONS) --- */}
         {article.butterflyRipples.length > 0 && (
           <div className="mt-6 rounded-lg border border-cyan-900/60 bg-[#080d1a] p-4 shadow-lg">
@@ -202,20 +197,6 @@ export function StoryPanel({ story }: { story: NewsStory }) {
             </div>
           </div>
         )}
-
-        {/* Multi-Paragraph Comprehensive Intelligence Body with Live Entity Tokenization */}
-        <div className="mt-6 space-y-5 text-sm sm:text-base leading-relaxed text-slate-300">
-          {article.sections.map((sec, idx) => (
-            <div key={idx} className="space-y-2">
-              <h3 className="text-[11px] font-mono uppercase tracking-[0.16em] text-cyan-400/90 font-semibold border-b border-slate-800/40 pb-1">
-                {sec.heading}
-              </h3>
-              <p className="leading-relaxed text-slate-300 text-sm sm:text-[15px]">
-                <LinkedBriefing text={sec.body} entities={allEntities} />
-              </p>
-            </div>
-          ))}
-        </div>
 
         {/* 3-Point Institutional Analyst Desk Memo */}
         <AnalystDeskMemo

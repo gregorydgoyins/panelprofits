@@ -185,17 +185,22 @@ const FINANCIAL_TERMS = /earnings|revenue|profit|loss|shares|stock|investor|acqu
  * Strict negative filter: unequivocally disqualifies sports wires, college athletics,
  * local civic/crime blotters, municipal politics, and irrelevant consumer lifestyle noise.
  */
-export const STRICT_NEGATIVE_FILTER = /\b(ac\/dc\b|mayor\s+bowser|ribbon-cutting|washington,?\s*d\.?c\.?|(?:dc|d\.c\.)\s+(?:mayor|council|police|government|politics|statehood|attorney|public\s+schools)|florida\s+state|seminoles|fsu\b|gators\b|college\s+football|high\s+school\s+football|wrestling|pwi 500|wwe|aew|nfl|nba|mlb|nhl|ncaa|quarterback|touchdown|football|basketball|baseball|soccer|hockey|premier league|champions league|mls|inter miami|acc\b|sec\b|big ten|big 12|pac-12|touchdowns|linebacker|interception|puck|formula 1|\bf1\b|nascar|tennis|wimbledon|golf|\bpga\b|boxing|\bmma\b|\bufc\b|martial arts film|martial arts films|martial arts movie|martial arts movies|kung fu hustle|action filmmaking|super bowl|earphones|smartwatch|airpods|vacuum cleaner|casino|crypto casino|slot machine|weight loss|celebrity gossip|love island|bachelor|real housewives|dc council|trayon white|city council|county commissioner|zoning board|police blotter|homicide|shooting incident|car crash|traffic accident|terror suspects|bribery trial|bribery mistrial|bribery case|politico caught|local election|mayoral election|gubernatorial|senate seat|congressional district|tax hike|affordable housing|mortgage rates|gameplay|playstation\s*5|ps5|xbox|nintendo switch|platinum trophy|found footage|horror movie|blair witch)\b/i;
+export const STRICT_NEGATIVE_FILTER = /\b(ac\/dc\b|mayor\s+bowser|ribbon-cutting|washington,?\s*d\.?c\.?|(?:dc|d\.c\.)\s+(?:mayor|council|police|government|politics|statehood|attorney|public\s+schools)|florida\s+state|seminoles|fsu\b|gators\b|college\s+football|high\s+school\s+football|fantasy\s+football|nfl\b|nba\b|mlb\b|nhl\b|ncaa\b|quarterback|touchdown|touchdowns|linebacker|interception|puck|formula 1|\bf1\b|nascar|tennis|wimbledon|golf|\bpga\b|boxing|\bmma\b|\bufc\b|wrestling|pwi 500|wwe|aew|soccer|premier league|champions league|mls|inter miami|acc\b|sec\b|big ten|big 12|pac-12|martial arts film|martial arts films|martial arts movie|martial arts movies|kung fu hustle|action filmmaking|super bowl|earphones|smartwatch|airpods|vacuum cleaner|casino|crypto casino|slot machine|weight loss|celebrity gossip|love island|bachelor|real housewives|dc council|trayon white|city council|county commissioner|zoning board|police blotter|homicide|shooting incident|car crash|traffic accident|terror suspects|bribery trial|bribery mistrial|bribery case|politico caught|local election|mayoral election|gubernatorial|senate seat|congressional district|tax hike|affordable housing|mortgage rates|etfs?|funds\s+under\s+management|childcare\s+centers?|gameplay|playstation\s*5|ps5|xbox|nintendo switch|platinum trophy|found footage|horror movie|blair witch)\b/i;
 
-export const CORE_COMIC_SIGNALS = /\b(comic|comics|graphic novel|manga|mangaka|omnibus|superhero|marvel|dc comics|dc studios|dc universe|dcu|dceu|batman|superman|spider-man|x-men|avengers|spawn|dark horse|image comics|idw|boom studios|cgc|cbcs|slabbed|stan lee|jack kirby|will eisner|alan moore|neil gaiman|grant morrison|cbr|comicbook|gocollect|covrprice|comichron|auction|first appearance|key issue)\b/i;
+export const CORE_COMIC_SIGNALS = /\b(comics?|comic\s+books?|graphic\s+novels?|manga|mangaka|omnibus|omnibuses|superhero(?:es)?|marvel(?:man)?|miracleman|dc comics|dc studios|dc universe|dcu|dceu|dc lore|marvel lore|batman|superman|spider-man|spiderman|x-men|avengers|spawn|dark horse|image comics|idw|boom studios|cgc|cbcs|slabbed|stan lee|jack kirby|will eisner|alan moore|neil gaiman|grant morrison|cbr|comicbook|gocollect|covrprice|comichron|auction|first appearance|key issue|green lantern|lanterns|hal jordan|sinestro|justice league|daredevil|punisher|fantastic four|iron man|captain america|thor|hulk|deadpool|wolverine|wonder woman|aquaman|flash|joker|harley quinn|clayface|sandman|hellboy|tmnt|ninja turtles|transformers|invincible|judge dredd|sequential art|webtoon|manhwa|collector(?:'s)?\s+market)\b/i;
 
-export function isRelevantComicStory(source: string, headline: string, summary: string | null): boolean {
+export function isRelevantComicStory(
+  source: string,
+  headline: string,
+  summary: string | null,
+  isDedicatedComicSource = false
+): boolean {
   const text = `${headline} ${summary || ""}`;
   // Hard negative check always runs first
   if (STRICT_NEGATIVE_FILTER.test(text)) {
     return false;
   }
-  if (DEDICATED_COMIC_SOURCES.test(source)) {
+  if (isDedicatedComicSource || DEDICATED_COMIC_SOURCES.test(source)) {
     return true;
   }
   const isComicOrManga = CORE_COMIC_SIGNALS.test(text);
@@ -204,7 +209,11 @@ export function isRelevantComicStory(source: string, headline: string, summary: 
   return isComicOrManga || isCompanyFinance || isAdaptationActor;
 }
 
-export function evaluateArticleQuality(headline: string, summary: string | null): {
+export function evaluateArticleQuality(
+  headline: string,
+  summary: string | null,
+  isDedicatedComicSource = false
+): {
   admit: boolean;
   reason: string;
 } {
@@ -218,6 +227,10 @@ export function evaluateArticleQuality(headline: string, summary: string | null)
   // Reject explicit junk / spam / sports / politics / non-comic wires
   if (STRICT_NEGATIVE_FILTER.test(combined)) {
     return { admit: false, reason: "Disallowed topic, sports wire, or non-comic noise matched" };
+  }
+
+  if (isDedicatedComicSource) {
+    return { admit: true, reason: "Verified dedicated sequential art source" };
   }
 
   // Verify substantive comic, graphic literature, or equity signal

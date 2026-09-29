@@ -414,6 +414,73 @@
     "imdbId": "nm6073955"
   },
   {
+    "name": "Simu Liu",
+    "aliases": [],
+    "roles": [
+      {
+        "character": "Shang-Chi",
+        "universe": "MARVEL",
+        "landmarkIssue": "Special Marvel Edition #15",
+        "comicTicker": "$SHNG"
+      }
+    ],
+    "franchises": [
+      "Marvel Cinematic Universe"
+    ],
+    "imdbId": "nm4867161"
+  },
+  {
+    "name": "Channing Tatum",
+    "aliases": [],
+    "roles": [
+      {
+        "character": "Gambit (Remy LeBeau)",
+        "universe": "MARVEL",
+        "landmarkIssue": "Uncanny X-Men #266",
+        "comicTicker": "$GMBT"
+      }
+    ],
+    "franchises": [
+      "Marvel Cinematic Universe",
+      "X-Men Cinematic Universe"
+    ],
+    "imdbId": "nm1475594"
+  },
+  {
+    "name": "Ian McKellen",
+    "aliases": ["Sir Ian McKellen"],
+    "roles": [
+      {
+        "character": "Magneto (Erik Lehnsherr)",
+        "universe": "MARVEL",
+        "landmarkIssue": "The X-Men #1",
+        "comicTicker": "$MGNT"
+      }
+    ],
+    "franchises": [
+      "X-Men Cinematic Universe",
+      "Marvel Cinematic Universe"
+    ],
+    "imdbId": "nm0005212"
+  },
+  {
+    "name": "James Marsden",
+    "aliases": [],
+    "roles": [
+      {
+        "character": "Cyclops (Scott Summers)",
+        "universe": "MARVEL",
+        "landmarkIssue": "The X-Men #1",
+        "comicTicker": "$CYCL"
+      }
+    ],
+    "franchises": [
+      "X-Men Cinematic Universe",
+      "Marvel Cinematic Universe"
+    ],
+    "imdbId": "nm0005188"
+  },
+  {
     "name": "Vanessa Kirby",
     "aliases": [],
     "roles": [

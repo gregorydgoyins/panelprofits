@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { getSourceTicker } from "@/lib/news/sourceTickerMap";
-import type { NewsStory } from "@/lib/news/types";
+import { shortNewsSource, type NewsStory } from "@/lib/news/types";
 
 const SOURCE_COLORS: Record<string, string> = {
   CBR: "#06B6D4",
