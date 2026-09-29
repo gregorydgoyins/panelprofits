@@ -41,7 +41,26 @@ export function NewsBriefing({
     });
   }, [headline, summary, source, author, id]);
 
-  const activeEntities = initialEntities && initialEntities.length > 0 ? initialEntities : article.entities;
+  // `initialEntities` comes from the server page's async, Supabase-backed match
+  // (getDynamicEntitiesForText) but only against the raw headline/summary text.
+  // `article.entities` is the synchronous match computed above against the FULL rendered
+  // article body -- the analytical paragraphs, ramification/ripple cards, and lore dossier
+  // blurbs below, none of which the server-side text covers. Merge both (deduping by
+  // term, case-insensitively) rather than picking one exclusively, so every section below
+  // gets full linking coverage instead of only whichever text the DB-backed pass saw.
+  const activeEntities = React.useMemo(() => {
+    const merged: EntityWikiDef[] = [];
+    const seen = new Set<string>();
+    for (const list of [initialEntities || [], article.entities]) {
+      for (const entity of list) {
+        const key = entity.term.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        merged.push(entity);
+      }
+    }
+    return merged;
+  }, [initialEntities, article.entities]);
 
   return (
     <div className="mt-8 space-y-6 border-l-2 border-cyan-500/60 bg-cyan-950/15 px-5 py-6 sm:px-7 rounded-r">
@@ -121,13 +140,13 @@ export function NewsBriefing({
 
                   <div className="mt-2 text-xs text-slate-300 leading-relaxed">
                     <strong className="text-amber-200 text-[11px] block font-mono">Story Ramification:</strong>
-                    {ram.directStoryRamification}
+                    <LinkedBriefing text={ram.directStoryRamification} entities={activeEntities} />
                   </div>
                 </div>
 
                 <div className="mt-2.5 pt-2 border-t border-amber-900/20 text-[11px] text-slate-400 leading-snug">
                   <strong className="text-cyan-400 text-[10px] block font-mono">Census & Pricing Dynamic:</strong>
-                  {ram.censusAndPricingImpact}
+                  <LinkedBriefing text={ram.censusAndPricingImpact} entities={activeEntities} />
                 </div>
               </div>
             ))}
@@ -173,7 +192,7 @@ export function NewsBriefing({
                   </div>
                 </div>
                 <p className="mt-2 text-[11px] text-slate-400 leading-snug">
-                  {ripple.catalystCausality}
+                  <LinkedBriefing text={ripple.catalystCausality} entities={activeEntities} />
                 </p>
               </div>
             ))}
@@ -205,7 +224,7 @@ export function NewsBriefing({
                   Landmark Debut: <Link href={`/comics?q=${encodeURIComponent(lore.firstAppearance)}`} className="underline hover:text-cyan-200">{lore.firstAppearance}</Link>
                 </div>
                 <p className="mt-1.5 text-xs text-slate-300 leading-relaxed">
-                  {lore.encyclopedicLore}
+                  <LinkedBriefing text={lore.encyclopedicLore} entities={activeEntities} />
                 </p>
               </div>
             ))}

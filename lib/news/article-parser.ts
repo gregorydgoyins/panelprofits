@@ -1,4 +1,4 @@
-import { findNewsEntities, type EntityWikiDef } from "./entities";
+import { findNewsEntities, extractEntitiesFromContext, type EntityWikiDef } from "./entities";
 import { analyzeStoryCatalyst, type CatalystAnalysis } from "./catalyst";
 import { selectAuthorForStory, type AuthorPersona } from "./authors";
 import { getLoreEntityBySlug, type LoreEntitySummary } from "@/lib/wiki/lore-search";
@@ -650,19 +650,22 @@ export function parseAndSynthesizeArticle(story: {
   const rawSummary = (story.summary || "").trim();
   const source = story.source;
   const authorPersona = selectAuthorForStory(source, story.id || headline);
-  const entities = findNewsEntities(headline, rawSummary);
+  // Entities matched against only the raw headline/summary. This stays the input to the
+  // content-generation functions below (loreDeepDives/superheroRamifications/butterflyRipples)
+  // exactly as before -- that generation logic is unchanged.
+  const baseEntities = findNewsEntities(headline, rawSummary);
   const catalyst = analyzeStoryCatalyst(headline, rawSummary);
 
   const fullText = `${headline} ${rawSummary}`;
 
   // Dynamically resolve Lore Deep Dives across the 210,000+ entity index
-  const loreDeepDives = resolveDynamicLoreDeepDives(fullText, entities);
+  const loreDeepDives = resolveDynamicLoreDeepDives(fullText, baseEntities);
 
   // Dynamically derive Superhero Market Ramifications for every character in the story
-  const superheroRamifications = deriveSuperheroMarketRamifications(fullText, entities, loreDeepDives);
+  const superheroRamifications = deriveSuperheroMarketRamifications(fullText, baseEntities, loreDeepDives);
 
   // Dynamically resolve Market Butterfly Effect ripples
-  const butterflyRipples = deriveMarketButterflyRipples(fullText, entities, loreDeepDives);
+  const butterflyRipples = deriveMarketButterflyRipples(fullText, baseEntities, loreDeepDives);
 
   // Preserve authentic paragraphs from the original source reporting
   const authenticParagraphs = rawSummary
@@ -685,6 +688,24 @@ export function parseAndSynthesizeArticle(story: {
   }));
 
   const wordCount = paragraphs.reduce((acc, p) => acc + p.split(/\s+/).length, 0);
+
+  // Broaden entity/lexicon linking coverage to the FULL rendered article body -- not just
+  // the raw headline/summary. The analytical paragraphs, superhero ramification cards,
+  // butterfly-effect ripple cards, and lore dossier blurbs above are all real computed
+  // narrative text (never invented filler), but until now nothing re-ran entity/lexicon
+  // matching against that text, so links only ever appeared in the lede paragraph. Reuses
+  // the same synchronous matcher (extractEntitiesFromContext, the same function powering
+  // `baseEntities` above) against the concatenation of every narrative text block on the
+  // page -- no second/simplified matching approach, and no change to what content gets
+  // generated above.
+  const narrativeMatchText = [
+    fullText,
+    ...analyticalParagraphs,
+    ...superheroRamifications.flatMap((r) => [r.directStoryRamification, r.censusAndPricingImpact]),
+    ...butterflyRipples.map((r) => r.catalystCausality),
+    ...loreDeepDives.map((l) => l.encyclopedicLore),
+  ].join(" \n ");
+  const entities = extractEntitiesFromContext(narrativeMatchText);
 
   return {
     paragraphs,

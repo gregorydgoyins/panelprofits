@@ -556,6 +556,86 @@ describe("newsroom relevance gate", () => {
     expect(doomRipple?.direction).toBe("cooling");
   });
 
+  it("widens entity/lexicon matching to the FULL generated article body, not just the raw headline/summary", async () => {
+    const { parseAndSynthesizeArticle } = await import("@/lib/news/article-parser");
+    const { extractEntitiesFromContext } = await import("@/lib/news/entities");
+
+    const story = {
+      headline: "Avengers: Doomsday Rumor Reveals Doctor Doom May Not Be MCU Movie's 'Real' Villain",
+      summary:
+        "Marvel insider MyTimeToShine has revealed that Doctor Doom may not be the main villain in Avengers: Doomsday, due to a new rumor that Sue Storm suspects that the Latverian Witches are the real villains, not Doom.\n\nIn the upcoming movie, Robert Downey Jr. is set to make an MCU comeback with Doctor Doom.\n\nThe cast includes Vanessa Kirby, Chris Evans, Chris Hemsworth, and Pedro Pascal.",
+      source: "PERIGON: MANDATORY.COM",
+      author: "Mandatory Insider",
+      id: "doomsday-latveria-101",
+    };
+
+    // "Cynthia Von Doom" never appears in the raw headline/summary -- only inside the
+    // generated Encyclopedic Lore Dossier blurb for the Latverian Witches -- so the old,
+    // headline/summary-only match must NOT find her.
+    const headlineSummaryOnly = extractEntitiesFromContext(`${story.headline} ${story.summary}`);
+    expect(headlineSummaryOnly.some((e) => e.term === "Cynthia Von Doom")).toBe(false);
+
+    const synthesized = parseAndSynthesizeArticle(story);
+    const widenedTerms = synthesized.entities.map((e) => e.term);
+
+    // 1. A character who only shows up in generated lore/ramification prose is now matched.
+    expect(widenedTerms).toContain("Cynthia Von Doom");
+    const cynthia = synthesized.entities.find((e) => e.term === "Cynthia Von Doom");
+    expect(cynthia?.wikiPath).toBe("/wiki/entry/cynthia-von-doom");
+
+    // 2. Real, verified CBR financial-lexicon slugs (checked directly against
+    // lib/lexicon/cbr_market_lexicon.json: "Secondary Market" -> secondary-market,
+    // "First Appearance" -> first-appearance-key-issue-premium) that only occur inside the
+    // generated catalyst/ramification narrative -- not the raw headline/summary -- now
+    // resolve too, proving lexicon linking (not just character linking) was widened.
+    const lowerWidened = widenedTerms.map((t) => t.toLowerCase());
+    expect(lowerWidened).toEqual(expect.arrayContaining(["secondary market", "first appearance"]));
+    const secondaryMarket = synthesized.entities.find((e) => e.term.toLowerCase() === "secondary market");
+    expect(secondaryMarket?.type).toBe("market-concept");
+    expect(secondaryMarket?.wikiPath).toBe("/lexicon/secondary-market");
+
+    // 3. Every superhero-ramification and butterfly-ripple narrative field is included in
+    // what got scanned (not just the table's structured fields like ticker/characterName).
+    const ram = synthesized.superheroRamifications.find((r) => r.ticker === "$DOOM:LATV");
+    expect(ram).toBeDefined();
+    expect(widenedTerms.some((t) => ram!.directStoryRamification.includes(t))).toBe(true);
+  });
+
+  it("renders real entity and lexicon links across every article section -- not only the lede paragraph -- given only the widened article.entities fallback (no server-side DB entities)", async () => {
+    const React = (await import("react")).default;
+    const { renderToString } = await import("react-dom/server");
+    const { NewsBriefing } = await import("@/components/news/news-briefing");
+
+    const story = {
+      headline: "Avengers: Doomsday Rumor Reveals Doctor Doom May Not Be MCU Movie's 'Real' Villain",
+      summary:
+        "Marvel insider MyTimeToShine has revealed that Doctor Doom may not be the main villain in Avengers: Doomsday, due to a new rumor that Sue Storm suspects that the Latverian Witches are the real villains, not Doom.\n\nIn the upcoming movie, Robert Downey Jr. is set to make an MCU comeback with Doctor Doom.\n\nThe cast includes Vanessa Kirby, Chris Evans, Chris Hemsworth, and Pedro Pascal.",
+      source: "PERIGON: MANDATORY.COM",
+      author: "Mandatory Insider",
+      id: "doomsday-latveria-101",
+    };
+
+    // entities: [] simulates the server's headline/summary-only DB pass finding nothing
+    // relevant to the generated body, isolating the client-side `article.entities` fallback.
+    const markup = renderToString(
+      React.createElement(NewsBriefing, {
+        id: story.id,
+        headline: story.headline,
+        summary: story.summary,
+        source: story.source,
+        sourceUrl: "https://mandatory.com/example",
+        author: story.author,
+        publishedAt: null,
+        entities: [],
+      })
+    );
+
+    // Encyclopedic Lore Dossiers blurb (previously bare text) now links out to the wiki.
+    expect(markup).toContain('href="/wiki/entry/cynthia-von-doom"');
+    // At least one real financial-lexicon term inside the generated prose links to /lexicon/.
+    expect(markup).toMatch(/href="\/lexicon\//);
+  });
+
   it("deduplicates syndicated clone rewrites across outlets while preserving distinct breaking stories", async () => {
     const { deduplicateNewsStories, areDuplicateStories } = await import("@/lib/news/feed");
 
