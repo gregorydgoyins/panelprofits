@@ -309,4 +309,44 @@ describe("newsroom relevance gate", () => {
     const invincibleDossier = getLoreEntityBySlug("invincible-series") || getLoreEntityBySlug("invincible");
     expect(invincibleDossier).not.toBeNull();
   });
+
+  it("extracts studio tickers ($SONY, $WBD, $DIS, $PARA, $CMCSA) and legendary directors", async () => {
+    const { findNewsEntities } = await import("@/lib/news/entities");
+
+    const text =
+      "Warner Bros. Discovery ($WBD) CEO and DC Studios co-head James Gunn outlined new cinematic strategy, while Disney ($DIS) and Marvel Studios tapped the Russo Brothers for Avengers: Doomsday. Meanwhile, Sony ($SONY) is preparing Spider-Man 4 and Paramount ($PARA) is exploring Transformers crossovers.";
+
+    const entities = findNewsEntities("Studio Execs & Directors", text);
+    const tickerMap = new Map(entities.map((e) => [e.ticker, e]));
+
+    expect(tickerMap.has("$WBD")).toBe(true);
+    expect(tickerMap.has("$DIS")).toBe(true);
+    expect(tickerMap.has("$SONY")).toBe(true);
+    expect(tickerMap.has("$PARA")).toBe(true);
+    expect(tickerMap.has("$AVNG:DOOMSDAY")).toBe(true);
+
+    const gunn = entities.find((e) => e.term === "James Gunn");
+    expect(gunn).toBeDefined();
+    expect(gunn?.type).toBe("creator");
+
+    const russos = entities.find((e) => e.term === "Russo Brothers");
+    expect(russos).toBeDefined();
+    expect(russos?.type).toBe("creator");
+  });
+
+  it("strictly suppresses ambiguous civic DC news and AC/DC band mentions without matching comic DC tickers", async () => {
+    const { findNewsEntities } = await import("@/lib/news/entities");
+
+    // AC/DC rock concert
+    const acdcEntities = findNewsEntities("AC/DC European Tour 2026 announced", "The legendary rock band AC/DC announces 20 new stadium dates.");
+    expect(acdcEntities.some((e) => e.ticker === "$DC")).toBe(false);
+
+    // Washington DC civic news
+    const dcCivicEntities = findNewsEntities("Washington, DC Mayor Bowser announces budget", "The DC Council and Mayor Bowser unveiled new urban transit funding in Washington, DC.");
+    expect(dcCivicEntities.some((e) => e.ticker === "$DC")).toBe(false);
+
+    // Comic DC Studios is recognized
+    const comicDcEntities = findNewsEntities("DC Studios reveals upcoming Gods and Monsters slate", "DC Studios co-heads announce new Superman and Batman films.");
+    expect(comicDcEntities.some((e) => e.ticker === "$DC")).toBe(true);
+  });
 });

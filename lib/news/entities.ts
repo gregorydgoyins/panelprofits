@@ -335,15 +335,21 @@ export const KNOWN_NEWS_ENTITIES_MAP: EntityWikiDef[] = [
   { term: "Warner Bros. Pictures", ticker: "$WBD", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Warner+Bros" },
   { term: "Warner Bros.", ticker: "$WBD", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Warner+Bros" },
   { term: "Warner Bros", ticker: "$WBD", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Warner+Bros" },
+  { term: "WBD", ticker: "$WBD", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Warner+Bros" },
   { term: "Universal Pictures", ticker: "$CMCSA", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Universal+Pictures" },
   { term: "Universal", ticker: "$CMCSA", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Universal" },
+  { term: "Comcast", ticker: "$CMCSA", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Comcast" },
   { term: "Paramount Pictures", ticker: "$PARA", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Paramount" },
   { term: "Paramount", ticker: "$PARA", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Paramount" },
+  { term: "Skydance Media", ticker: "$PARA", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Skydance" },
+  { term: "Skydance", ticker: "$PARA", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Skydance" },
   { term: "Walt Disney Studios", ticker: "$DIS", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Disney" },
   { term: "Walt Disney", ticker: "$DIS", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Disney" },
   { term: "Disney", ticker: "$DIS", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Disney" },
   { term: "Lucasfilm", ticker: "$DIS", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Lucasfilm" },
   { term: "20th Century Studios", ticker: "$DIS", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=20th+Century+Studios" },
+  { term: "20th Century Fox", ticker: "$DIS", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=20th+Century+Fox" },
+  { term: "Lionsgate Studios", ticker: "$LGF", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Lionsgate" },
   { term: "Lionsgate", ticker: "$LGF", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Lionsgate" },
 
   // --- MEGA-FRANCHISES & CINEMATIC UNIVERSES ---
@@ -372,6 +378,24 @@ export const KNOWN_NEWS_ENTITIES_MAP: EntityWikiDef[] = [
 
   // --- CINEMATIC ADAPTATION & STORYLINE EQUITIES (First-Class Tradeable Assets) ---
   ...ADAPTATION_ASSET_ENTITIES,
+
+  // --- KEY MOVIE TITLES & FIRST-CLASS STORYLINE EQUITIES ---
+  { term: "Avengers: Endgame", ticker: "$AVNG:ENDGAME", type: "equity", target: "intelligence", wikiPath: "/wiki/entry/avengers-endgame" },
+  { term: "Avengers: Doomsday", ticker: "$AVNG:DOOMSDAY", type: "equity", target: "intelligence", wikiPath: "/wiki/entry/avengers-doomsday" },
+  { term: "Avengers: Secret Wars", ticker: "$AVNG:SECRETWARS", type: "equity", target: "intelligence", wikiPath: "/wiki/entry/avengers-secret-wars" },
+  { term: "Spider-Man: Brand New Day", ticker: "$SPDR:BND", type: "equity", target: "intelligence", wikiPath: "/wiki/entry/spider-man-brand-new-day" },
+  { term: "Spider-Man: Beyond the Spider-Verse", ticker: "$SPDR:BTSV", type: "equity", target: "intelligence", wikiPath: "/wiki/entry/spider-man-beyond-the-spider-verse" },
+  { term: "The Batman Part II", ticker: "$BAT:PART2", type: "equity", target: "intelligence", wikiPath: "/wiki/entry/the-batman-part-ii" },
+  { term: "Superman: Legacy", ticker: "$SUPR:LEGACY", type: "equity", target: "intelligence", wikiPath: "/wiki/entry/superman-legacy" },
+  { term: "Deadpool & Wolverine", ticker: "$DP:WOLV", type: "equity", target: "intelligence", wikiPath: "/wiki/entry/deadpool-wolverine" },
+  { term: "Captain America: Brave New World", ticker: "$CAP:BNW", type: "equity", target: "intelligence", wikiPath: "/wiki/entry/captain-america-brave-new-world" },
+  { term: "Thunderbolts*", ticker: "$TBOLTS:2025", type: "equity", target: "intelligence", wikiPath: "/wiki/entry/thunderbolts" },
+  { term: "Fantastic Four: First Steps", ticker: "$FF:STEPS", type: "equity", target: "intelligence", wikiPath: "/wiki/entry/fantastic-four-first-steps" },
+  { term: "Joker: Folie à Deux", ticker: "$JKR:FOLIE", type: "equity", target: "intelligence", wikiPath: "/wiki/entry/joker-folie-a-deux" },
+  { term: "Spider-Man: No Way Home", ticker: "$SPDR:NWH", type: "equity", target: "intelligence", wikiPath: "/wiki/entry/spider-man-no-way-home" },
+  { term: "Spider-Man: Across the Spider-Verse", ticker: "$SPDR:ATSV", type: "equity", target: "intelligence", wikiPath: "/wiki/entry/spider-man-across-the-spider-verse" },
+  { term: "The Dark Knight", ticker: "$BAT:TDK", type: "equity", target: "intelligence", wikiPath: "/wiki/entry/the-dark-knight" },
+  { term: "Avengers: Infinity War", ticker: "$AVNG:INFWAR", type: "equity", target: "intelligence", wikiPath: "/wiki/entry/avengers-infinity-war" },
 
   // --- CHARACTERS & LORE (Direct Dossier Routes) ---
   { term: "Spider-M", ticker: "$SPDR", type: "character", target: "intelligence", wikiPath: "/wiki/entry/spider-man" },
@@ -470,6 +494,9 @@ export const KNOWN_NEWS_ENTITIES_MAP: EntityWikiDef[] = [
   { term: "Star Wars", ticker: "$SW", type: "character", target: "intelligence", wikiPath: "/wiki/entry/star-wars" },
 
   // --- HOLLYWOOD TALENT, DIRECTORS & KEY CREATORS ---
+  { term: "Russo Brothers", type: "creator", target: "intelligence", wikiPath: "/news?q=Russo+Brothers" },
+  { term: "Anthony Russo", type: "creator", target: "intelligence", wikiPath: "/news?q=Anthony+Russo" },
+  { term: "Joe Russo", type: "creator", target: "intelligence", wikiPath: "/news?q=Joe+Russo" },
   { term: "Robert Pattinson", type: "creator", target: "intelligence", wikiPath: "/news?q=Robert+Pattinson" },
   { term: "James Gunn", type: "creator", target: "intelligence", wikiPath: "/news?q=James+Gunn" },
   { term: "Matt Reeves", type: "creator", target: "intelligence", wikiPath: "/news?q=Matt+Reeves" },
@@ -477,6 +504,9 @@ export const KNOWN_NEWS_ENTITIES_MAP: EntityWikiDef[] = [
   { term: "Christopher Nolan", type: "creator", target: "intelligence", wikiPath: "/news?q=Christopher+Nolan" },
   { term: "Kevin Feige", type: "creator", target: "intelligence", wikiPath: "/news?q=Kevin+Feige" },
   { term: "Robert Downey Jr.", type: "creator", target: "intelligence", wikiPath: "/news?q=Robert+Downey+Jr" },
+  { term: "Ryan Coogler", type: "creator", target: "intelligence", wikiPath: "/news?q=Ryan+Coogler" },
+  { term: "Sam Raimi", type: "creator", target: "intelligence", wikiPath: "/news?q=Sam+Raimi" },
+  { term: "Jon Favreau", type: "creator", target: "intelligence", wikiPath: "/news?q=Jon+Favreau" },
   { term: "David Corenswet", type: "creator", target: "intelligence", wikiPath: "/news?q=David+Corenswet" },
   { term: "Hugh Jackman", type: "creator", target: "intelligence", wikiPath: "/news?q=Hugh+Jackman" },
   { term: "Ryan Reynolds", type: "creator", target: "intelligence", wikiPath: "/news?q=Ryan+Reynolds" },

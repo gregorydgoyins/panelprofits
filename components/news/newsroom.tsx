@@ -43,29 +43,34 @@ function timeAgo(d: string | null) {
 
 type AngleFilter = "all" | "market" | "scholarly" | "creator" | "video" | "publisher" | "wire" | "holdings";
 
+const STRICT_CLIENT_NEGATIVE_FILTER = /\b(ac\/dc\b|mayor\s+bowser|ribbon-cutting|washington,?\s*d\.?c\.?|(?:dc|d\.c\.)\s+(?:mayor|council|police|government|politics|statehood|attorney|public\s+schools)|florida\s+state|seminoles|fsu\b|gators\b|college\s+football|high\s+school\s+football|wrestling|pwi 500|wwe|aew|nfl|nba|mlb|nhl|ncaa|quarterback|touchdown|football|basketball|baseball|soccer|hockey|premier league|champions league|mls|inter miami|acc\b|sec\b|big ten|big 12|pac-12|touchdowns|linebacker|interception|puck|formula 1|\bf1\b|nascar|tennis|wimbledon|golf|\bpga\b|boxing|\bmma\b|\bufc\b|super bowl|earphones|smartwatch|airpods|vacuum cleaner|casino|crypto casino|slot machine|weight loss|celebrity gossip|love island|bachelor|real housewives|dc council|trayon white|city council|county commissioner|zoning board|police blotter|homicide|shooting incident|car crash|traffic accident|terror suspects|bribery trial|bribery mistrial|bribery case|politico caught|local election|mayoral election|gubernatorial|senate seat|congressional district|tax hike|affordable housing|mortgage rates|gameplay|playstation\s*5|ps5|xbox|nintendo switch|platinum trophy)\b/i;
+
 const ANGLE_MATCHERS: Record<AngleFilter, (s: NewsStory) => boolean> = {
   all: () => true,
   market: (s) =>
-    /heritage|comiclink|comicconnect|shortboxed|key collector|gocollect|covrprice|comicbook invest|cgc|cbcs|comichron|overstreet|hakes|auction|slab|cbsi/i.test(
-      `${s.source} ${s.sourceUrl} ${s.headline}`
+    /heritage|comiclink|comicconnect|shortboxed|key collector|gocollect|covrprice|comicbook invest|cgc|cbcs|comichron|overstreet|hakes|auction|slab|cbsi|pricing|sales|graded|market|valuation|fmv|record price|box office|gross|previews|revenue/i.test(
+      `${s.source} ${s.sourceUrl || ""} ${s.headline} ${s.summary || ""}`
     ),
   scholarly: (s) =>
-    /tcj|comics journal|solrad|comics grid|image text|gutter review|panel patter|sequential tart|broken frontier|graphic medicine|daily cartoonist|women write|scholarly|academic|review|essay/i.test(
-      `${s.source} ${s.sourceUrl} ${s.headline}`
+    /tcj|comics journal|solrad|comics grid|image text|gutter review|panel patter|sequential tart|broken frontier|graphic medicine|daily cartoonist|women write|scholarly|academic|review|essay|analysis|history|origin|retrospective|critic|deep dive/i.test(
+      `${s.source} ${s.sourceUrl || ""} ${s.headline} ${s.summary || ""}`
     ),
   creator: (s) =>
-    /bendis|tynion|hickman|brubaker|deconnick|zdarsky|skottie young|tom king|lemire|millar|gillen|cates|duggan|soule|substack/i.test(
-      `${s.source} ${s.sourceUrl} ${s.headline}`
+    /bendis|tynion|hickman|brubaker|deconnick|zdarsky|skottie young|tom king|lemire|millar|gillen|cates|duggan|soule|substack|writer|artist|creator|interview|director|actor|stan lee|jack kirby|alan moore|neil gaiman|grant morrison|russo|gunn|pattinson|downey|feige/i.test(
+      `${s.source} ${s.sourceUrl || ""} ${s.headline} ${s.summary || ""}`
     ),
   video: (s) =>
-    /youtube|strip panel naked|matt draper|comic tropes|kayfabe|comicpop|near mint condition|swagglehaus|automatic comics|lords of the long box|variant comics|tom101|gem mint|comics explained|casually comics|nerdsync/i.test(
-      `${s.source} ${s.sourceUrl} ${s.headline}`
+    /youtube|video|trailer|teaser|clip|strip panel naked|matt draper|comic tropes|kayfabe|comicpop|near mint condition|swagglehaus|automatic comics|lords of the long box|variant comics|tom101|gem mint|comics explained|casually comics|nerdsync/i.test(
+      `${s.source} ${s.sourceUrl || ""} ${s.headline} ${s.summary || ""}`
     ),
   publisher: (s) =>
-    /marvel|dc comics|image comics|dark horse|2000 ad|idw|boom studios|dynamite|fantagraphics|drawn and quarterly|kodansha|viz media|yen press|seven seas|oni press|vault comics/i.test(
-      `${s.source} ${s.sourceUrl} ${s.headline}`
+    /marvel|dc|image|dark horse|2000 ad|idw|boom|dynamite|fantagraphics|drawn and quarterly|kodansha|viz|yen press|seven seas|oni press|vault|aipt|cbr|comicbook|bleeding cool|screenrant/i.test(
+      `${s.source} ${s.sourceUrl || ""} ${s.headline} ${s.summary || ""}`
     ),
-  wire: (s) => /^newsdata|^perigon|^thenewsapi|^newsapi|^asknews/i.test(s.source),
+  wire: (s) =>
+    /^newsdata|^perigon|^thenewsapi|^newsapi|^asknews|variety|deadline|hollywood reporter|thr|ign|polygon/i.test(
+      s.source
+    ),
   holdings: (s) => {
     // Matches active portfolio holdings & watchlist sovereign tickers
     const text = `${s.headline} ${s.summary || ""}`.toLowerCase();
@@ -77,15 +82,22 @@ const ANGLE_MATCHERS: Record<AngleFilter, (s: NewsStory) => boolean> = {
       text.includes("ahsoka") ||
       text.includes("daredevil") ||
       text.includes("x-men") ||
-      text.includes("batman")
+      text.includes("batman") ||
+      text.includes("avengers") ||
+      text.includes("iron man") ||
+      text.includes("superman") ||
+      text.includes("fantastic four") ||
+      text.includes("doom")
     );
   },
 };
 
 export function Newsroom({ stories: initialStories }: NewsroomProps) {
   const router = useRouter();
-  const [stories, setStories] = React.useState<NewsStory[]>(initialStories);
-  const [activeStoryId, setActiveStoryId] = React.useState<string>(initialStories[0]?.id || "");
+  const [stories, setStories] = React.useState<NewsStory[]>(() =>
+    initialStories.filter((s) => !STRICT_CLIENT_NEGATIVE_FILTER.test(`${s.headline} ${s.summary || ""}`))
+  );
+  const [activeStoryId, setActiveStoryId] = React.useState<string>(stories[0]?.id || "");
   const [searchQuery, setSearchQuery] = React.useState<string>("");
   const [activeAngle, setActiveAngle] = React.useState<AngleFilter>("all");
   const [viewMode, setViewMode] = React.useState<"terminal" | "feed">("terminal");
@@ -111,7 +123,11 @@ export function Newsroom({ stories: initialStories }: NewsroomProps) {
           if (parsed && Array.isArray(parsed.stories) && parsed.stories.length > 0) {
             setStories((prev) => {
               const existingIds = new Set(prev.map((s) => s.id));
-              const fresh = parsed.stories.filter((s: NewsStory) => !existingIds.has(s.id));
+              const fresh = parsed.stories.filter(
+                (s: NewsStory) =>
+                  !existingIds.has(s.id) &&
+                  !STRICT_CLIENT_NEGATIVE_FILTER.test(`${s.headline} ${s.summary || ""}`)
+              );
               if (fresh.length === 0) return prev;
               return [...fresh, ...prev];
             });
@@ -137,7 +153,7 @@ export function Newsroom({ stories: initialStories }: NewsroomProps) {
 
   // 2. Filter stories by Angle & Search query
   const filteredStories = React.useMemo(() => {
-    let result = stories;
+    let result = stories.filter((s) => !STRICT_CLIENT_NEGATIVE_FILTER.test(`${s.headline} ${s.summary || ""}`));
     if (activeAngle !== "all") {
       const matcher = ANGLE_MATCHERS[activeAngle];
       result = result.filter(matcher);
