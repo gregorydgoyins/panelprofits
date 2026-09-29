@@ -3,10 +3,59 @@ import { BookOpen, Search, Sparkles, TrendingUp, Cpu, User, Shield, MapPin, User
 import { searchPpcfComics } from "@/lib/ppcf/queries";
 import { searchCbrTerms, getFeaturedCbrTerms } from "@/lib/lexicon/cbr-lexicon";
 import { queryPineconeVectorIndex } from "@/lib/wiki/pinecone";
-import { searchLoreEntities, getFeaturedLoreEntities, type LoreEntitySummary } from "@/lib/wiki/lore-search";
+import { searchLoreEntities, type LoreEntitySummary } from "@/lib/wiki/lore-search";
 import { createPublicServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
+
+// Real universes present in public.ppcf_wiki_pages, excluding the unrelated
+// FINANCIAL market-lexicon mirror. The indie universes' stored strings have
+// been inconsistent across ingestion passes (e.g. "IMAGE" vs "IMAGECOMICS",
+// "DARK_HORSE" vs "DARKHORSE"), so each entry lists candidate spellings to
+// try in order -- the first one that returns rows wins for that universe.
+const FEATURED_WIKI_UNIVERSE_CANDIDATES: string[][] = [
+  ["MARVEL"],
+  ["DC"],
+  ["STAR_WARS"],
+  ["IMAGECOMICS", "IMAGE"],
+  ["DARK_HORSE", "DARKHORSE"],
+  ["SPAWN"],
+  ["TRANSFORMERS"],
+];
+
+async function getFeaturedLoreEntitiesFromDb(
+  supabase: ReturnType<typeof createPublicServerClient>
+): Promise<LoreEntitySummary[]> {
+  const perUniverse = await Promise.all(
+    FEATURED_WIKI_UNIVERSE_CANDIDATES.map(async (candidates) => {
+      for (const uni of candidates) {
+        try {
+          const { data } = await supabase
+            .from("ppcf_wiki_pages")
+            .select("slug, display_title, universe, page_type, summary, creators, first_appearance, reality")
+            .eq("universe", uni)
+            .eq("page_type", "CHARACTER")
+            .limit(4);
+          if (data && data.length > 0) return data;
+        } catch {
+          // Try the next candidate spelling for this universe.
+        }
+      }
+      return [];
+    })
+  );
+
+  return perUniverse.flat().map((page) => ({
+    slug: page.slug,
+    title: page.display_title,
+    universe: page.universe,
+    type: "character" as const,
+    reality: page.reality || undefined,
+    creators: page.creators || undefined,
+    first_appearance: page.first_appearance || undefined,
+    summary: page.summary || `Canonical ${page.universe} entry in Panel Profits knowledge database.`,
+  }));
+}
 
 export default async function WikiPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const params = await searchParams;
@@ -56,7 +105,16 @@ export default async function WikiPage({ searchParams }: { searchParams: Promise
       }
     } catch {}
   } else {
-    loreEntities = getFeaturedLoreEntities();
+    try {
+      const supabase = createPublicServerClient();
+      loreEntities = await getFeaturedLoreEntitiesFromDb(supabase);
+    } catch {
+      // Live query failed -- leave loreEntities empty rather than falling
+      // back to the stale, capped local JSON sample. The UI renders an
+      // honest empty state (see the `!loreEntities.length` branch below)
+      // instead of standing in fabricated/stale content for a real outage.
+      loreEntities = [];
+    }
   }
 
   // Real 4,653-term CBR Market Lexicon (Investopedia-grounded, comic-domain translated).
@@ -162,6 +220,14 @@ export default async function WikiPage({ searchParams }: { searchParams: Promise
           <div className="border border-slate-800 bg-[#090C14] px-4 py-8 text-center rounded">
             <p className="text-xs text-slate-400 font-mono">
               No direct lore entities matched &ldquo;{queryText}&rdquo;. Check canonical comic editions below.
+            </p>
+          </div>
+        )}
+
+        {!loreEntities.length && !queryText && (
+          <div className="border border-slate-800 bg-[#090C14] px-4 py-8 text-center rounded">
+            <p className="text-xs text-slate-400 font-mono">
+              Lore database temporarily unavailable. Try a search above or check back shortly.
             </p>
           </div>
         )}

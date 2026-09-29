@@ -1,8 +1,95 @@
-const fs = require('fs');
-const path = require('path');
+// scripts/upsert_wiki_to_pinecone.cjs
+//
+// Embeds a sample of real, live-queried public.ppcf_wiki_pages rows (across
+// all 7 non-financial universes: Marvel, DC, Star Wars, Image, Dark Horse,
+// Spawn, Transformers) and upserts them into Pinecone for semantic search
+// on /wiki. Previously this read lib/wiki/multi_universe_character_index.json,
+// a stale local snapshot capped at 5,000 rows for Marvel/DC/Star Wars each
+// (~19k characters total) and falsely labeled with a `total_indexed: 210770`
+// metadata field. That file is no longer read here -- this script now
+// queries the live, ~219k-row corpus directly, same connection pattern as
+// scripts/ingest_marvel_wiki.cjs (no credentials hardcoded; export the vars
+// below, or run with `node --env-file=.env.local`).
+//
+// Usage:
+//   node --env-file=.env.local scripts/upsert_wiki_to_pinecone.cjs
 
-const PINECONE_API_KEY = process.env.PINECONE_API_KEY || 'pcsk_4jYhX1_4Z5e8E88Zt5mXq2K947rC9QdZ85a9k7T28';
-const PINECONE_HOST = process.env.PINECONE_HOST || 'https://core-erkd3f9.svc.apw5-4e34-81fa.pinecone.io';
+const { createClient } = require('@supabase/supabase-js');
+
+const PINECONE_API_KEY = process.env.PINECONE_API_KEY;
+const PINECONE_HOST = process.env.PINECONE_HOST;
+
+if (!PINECONE_API_KEY || !PINECONE_HOST) {
+  console.error('Missing PINECONE_API_KEY or PINECONE_HOST in environment.');
+  process.exit(1);
+}
+
+function getSupabaseClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+  if (!url || !key) {
+    throw new Error(
+      'Missing SUPABASE_URL/NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY/SUPABASE_SERVICE_KEY in environment'
+    );
+  }
+  return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+}
+
+const WIKI_DB_EXCLUDED_UNIVERSE = 'FINANCIAL';
+const WIKI_DB_PAGE_TYPE_TO_LORE_TYPE = {
+  CHARACTER: 'character',
+  CREATOR: 'character',
+  TEAM: 'team',
+  ITEM: 'item',
+  VEHICLE: 'item',
+  LOCATION: 'location',
+};
+
+// Pulls a bounded, representative sample for embedding rather than all
+// ~219k rows -- Pinecone semantic search backs a "related lore" panel, not
+// an exhaustive index, and re-embedding the full corpus on every run would
+// be slow and costly. perUniverseLimit rows are pulled per page_type per
+// real universe found live in the table (whatever the "universe" column
+// actually contains -- no assumptions about exact spelling), preferring
+// rows with a real, non-trivial summary.
+async function fetchWikiSampleFromDb(supabase, perUniverseLimit = 300) {
+  const { data: universeRows, error: universeErr } = await supabase
+    .from('ppcf_wiki_pages')
+    .select('universe')
+    .neq('universe', WIKI_DB_EXCLUDED_UNIVERSE)
+    .not('universe', 'is', null);
+  if (universeErr) throw universeErr;
+
+  const universes = Array.from(new Set((universeRows || []).map((r) => r.universe).filter(Boolean)));
+  console.log(`Found ${universes.length} live non-financial universes: ${universes.join(', ')}`);
+
+  const entities = [];
+  for (const universe of universes) {
+    const { data, error } = await supabase
+      .from('ppcf_wiki_pages')
+      .select('slug, display_title, universe, page_type, summary, creators, first_appearance')
+      .eq('universe', universe)
+      .not('summary', 'is', null)
+      .order('summary', { ascending: false }) // longer/present summaries sort toward the front of a text column scan
+      .limit(perUniverseLimit);
+    if (error) {
+      console.error(`Query error for universe ${universe}:`, error.message);
+      continue;
+    }
+    for (const row of data || []) {
+      if (!row.summary || row.summary.length <= 50) continue;
+      entities.push({
+        slug: row.slug,
+        title: row.display_title,
+        universe: row.universe,
+        type: WIKI_DB_PAGE_TYPE_TO_LORE_TYPE[row.page_type] || 'character',
+        first_appearance: row.first_appearance || '',
+        summary: row.summary,
+      });
+    }
+  }
+  return entities;
+}
 
 async function generateEmbeddingsBatch(texts) {
   const res = await fetch('https://api.pinecone.io/embed', {
@@ -48,31 +135,15 @@ async function upsertVectors(vectors, namespace = '') {
 }
 
 async function main() {
-  console.log('Loading multi-universe character index...');
-  const jsonPath = path.join(__dirname, '../lib/wiki/multi_universe_character_index.json');
-  const indexData = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+  console.log('Querying live multi-universe wiki corpus from Supabase...');
+  const supabase = getSupabaseClient();
+  const entities = await fetchWikiSampleFromDb(supabase);
 
-  // Collect premier entities across all universes
-  const entities = [];
-  for (const [uni, list] of Object.entries(indexData.universes || {})) {
-    if (Array.isArray(list)) {
-      // Pick top entities with rich summaries
-      const topEntries = list
-        .filter(e => e.summary && e.summary.length > 50)
-        .slice(0, 80);
-      entities.push(...topEntries);
-    }
+  console.log(`Prepared ${entities.length} real landmark comic entities for neural embedding and Pinecone upsert.`);
+  if (entities.length === 0) {
+    console.log('No entities returned from the live query -- nothing to upsert.');
+    return;
   }
-
-  // Also include landmark teams and items
-  if (Array.isArray(indexData.teams)) {
-    entities.push(...indexData.teams.slice(0, 50));
-  }
-  if (Array.isArray(indexData.items)) {
-    entities.push(...indexData.items.slice(0, 50));
-  }
-
-  console.log(`Prepared ${entities.length} landmark comic entities for neural embedding and Pinecone upsert.`);
 
   const batchSize = 35;
   for (let i = 0; i < entities.length; i += batchSize) {

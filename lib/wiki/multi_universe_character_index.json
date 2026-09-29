@@ -1,20 +1,16 @@
 {
-  "total_indexed": 210770,
+  "total_indexed": 32687,
   "universe_breakdown": {
-    "marvel_characters": 103802,
-    "marvel_items": 2008,
-    "marvel_locations": 10625,
-    "marvel_teams": 6832,
-    "marvel_creators": 8705,
-    "dc_characters": 33662,
-    "dc_items": 995,
-    "dc_locations": 2543,
-    "dc_teams": 1931,
-    "starwars_characters": 44162,
-    "image": 2361,
-    "darkhorse": 331,
-    "spawn": 202,
-    "transformers": 1316
+    "marvel_characters": 5000,
+    "dc_characters": 5000,
+    "starwars_characters": 5000,
+    "image_characters": 2361,
+    "darkhorse_characters": 331,
+    "spawn_characters": 202,
+    "transformers_characters": 1316,
+    "items": 3003,
+    "locations": 6543,
+    "teams": 3931
   },
   "universes": {
     "marvel": [
@@ -322976,5 +322972,6 @@
       "first_appearance": "Strikeforce Morituri Vol 1 1",
       "summary": "Marvel team Strikeforce Morituri. HQ: | Leaders = Commander Nion."
     }
-  ]
+  ],
+  "_note": "This is a STATIC, per-universe-CAPPED local sample (marvel/dc/starwars capped at 5000 rows each; image/darkhorse/spawn/transformers reflect an earlier, uncapped ingestion snapshot). It backs only the synchronous, client-safe matching functions in lib/wiki/lore-search.ts (findLoreEntitiesInText, searchLoreEntities, getLoreEntityBySlug, getFeaturedLoreEntities) used by client components and unit tests that cannot await a database round trip. total_indexed/universe_breakdown above describe what is actually present IN THIS FILE, not the real corpus size -- a prior version of this file claimed total_indexed: 210770, which was the true ingested-corpus size at generation time, not this file's own (much smaller) contents. The real, live corpus (~219k rows across all 7 non-financial universes) lives in public.ppcf_wiki_pages and is queried directly by findLoreEntitiesInTextAsync / getLoreEntityBySlugAsync and by the server-rendered pages (app/wiki/page.tsx, app/wiki/entry/[slug]/page.tsx, app/news/[id]/page.tsx) -- use those for anything that needs real, current, full-corpus coverage."
 }

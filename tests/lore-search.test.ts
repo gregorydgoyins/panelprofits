@@ -37,8 +37,8 @@ describe("multi-universe lore search engine", () => {
     expect(entity?.creators).toContain("Bill Finger");
   });
 
-  it("returns featured premier dossiers for initial view", () => {
-    const featured = getFeaturedLoreEntities();
+  it("returns featured dossiers for initial view, live-queried (falling back to the local sample when the DB is unreachable, as in this offline test run)", async () => {
+    const featured = await getFeaturedLoreEntities();
     expect(featured.length).toBeGreaterThan(0);
     expect(featured.some((f) => f.type === "character")).toBe(true);
   });

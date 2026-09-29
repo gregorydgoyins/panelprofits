@@ -2,7 +2,7 @@ import { ArrowLeft, Newspaper } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getNewsStory, shortNewsSource } from "@/lib/news/feed";
-import { findNewsEntities } from "@/lib/news/entities";
+import { getDynamicEntitiesForText } from "@/lib/news/entities";
 import { NewsBriefing } from "@/components/news/news-briefing";
 import { AuthenticVideoEmbed, extractAuthenticVideo } from "@/components/news/authentic-video-embed";
 import { PresenterPlayer } from "@/components/news/PresenterPlayer";
@@ -19,8 +19,11 @@ export default async function NewsStoryPage({ params }: { params: Promise<{ id: 
   const story = await getNewsStory(id);
   if (!story) redirect("/news");
 
+  // Real, live-queried entity matching across all 7 ingested wiki universes
+  // (Marvel, DC, Star Wars, Image, Dark Horse, Spawn, Transformers) via
+  // public.ppcf_wiki_pages -- not the capped local JSON sample.
   const [relatedEntities, videoReel] = await Promise.all([
-    Promise.resolve(findNewsEntities(story.headline, story.summary)),
+    getDynamicEntitiesForText(`${story.headline} ${story.summary || ""}`),
     getStoryVideoReel(story.id),
   ]);
   const authenticVideo = !videoReel ? extractAuthenticVideo(story.summary, story.url) : null;

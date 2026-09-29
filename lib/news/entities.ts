@@ -605,9 +605,10 @@ export async function getDynamicEntitiesForText(text: string): Promise<EntityWik
 
   // Match multi-universe lore entities (characters, items, locations, teams).
   // Async DB-backed variant: supplements the capped local JSON index with
-  // the full ~132k-entity Marvel corpus ingested into public.ppcf_wiki_pages
-  // (scripts/ingest_marvel_wiki.cjs). Safe to use here because this function
-  // is already async and already performs its own Supabase queries below.
+  // the full ~219k-entity corpus (Marvel, DC, Star Wars, Image, Dark Horse,
+  // Spawn, Transformers) ingested into public.ppcf_wiki_pages. Safe to use
+  // here because this function is already async and already performs its
+  // own Supabase queries below.
   try {
     const loreMatches = await findLoreEntitiesInTextAsync(text, 20);
     for (const lore of loreMatches) {

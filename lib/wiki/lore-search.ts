@@ -576,323 +576,16 @@ export function searchLoreEntities(query: string, limit = 18): LoreEntitySummary
   return results.slice(0, limit);
 }
 
-export const CANONICAL_PREMIER_ENTITIES: Record<string, LoreEntitySummary> = {
-  "doctor-doom": {
-    slug: "doctor-doom",
-    title: "Doctor Doom (Victor von Doom)",
-    universe: "MARVEL",
-    type: "character",
-    reality: "Earth-616",
-    alignment: "Neutral / Villain",
-    creators: "Stan Lee; Jack Kirby",
-    first_appearance: "Fantastic Four Vol 1 5",
-    summary: "Victor von Doom is the sovereign monarch of Latveria, supreme scientific genius, and master sorcerer. Eternal arch-nemesis of the Fantastic Four and one of the most formidable entities in the Marvel Universe.",
-    ticker: "$DOOM",
-    landmark_debuts: [
-      {
-        title: "The Fantastic Four #5 (1962)",
-        significance: "1st Canonical Appearance of Doctor Doom (Victor Von Doom)",
-        catalogUrl: "/comics?q=Fantastic+Four+5",
-        era: "SILVER",
-        assetTier: "SOVEREIGN_BLUE_CHIP",
-      },
-      {
-        title: "Secret Wars #1 (2015)",
-        significance: "Jonathan Hickman & Esad Ribic crossover establishing God Emperor Doom",
-        catalogUrl: "/comics?q=Secret+Wars+1",
-        era: "MODERN",
-        assetTier: "KEY_EQUITY",
-      },
-    ],
-  },
-  "bruce-banner": {
-    slug: "bruce-banner",
-    title: "Bruce Banner (The Incredible Hulk)",
-    universe: "MARVEL",
-    type: "character",
-    reality: "Earth-616",
-    alignment: "Good / Complex",
-    creators: "Stan Lee; Jack Kirby",
-    first_appearance: "The Incredible Hulk Vol 1 1",
-    summary: "Dr. Robert Bruce Banner is a brilliant nuclear physicist irradiated by gamma radiation during an experimental bomb detonation, transforming into the green behemoth known as the Incredible Hulk.",
-    ticker: "$HULK",
-    landmark_debuts: [
-      {
-        title: "The Incredible Hulk #1 (1962)",
-        significance: "1st Canonical Appearance of Bruce Banner and the Incredible Hulk",
-        catalogUrl: "/comics?q=Incredible+Hulk+1",
-        era: "SILVER",
-        assetTier: "SOVEREIGN_BLUE_CHIP",
-      },
-      {
-        title: "The Incredible Hulk #181 (1974)",
-        significance: "Hulk battles Wolverine in iconic 1st full appearance of Wolverine",
-        catalogUrl: "/comics?q=Incredible+Hulk+181",
-        era: "BRONZE",
-        assetTier: "SOVEREIGN_BLUE_CHIP",
-      },
-    ],
-  },
-  "steve-rogers": {
-    slug: "steve-rogers",
-    title: "Steve Rogers (Captain America)",
-    universe: "MARVEL",
-    type: "character",
-    reality: "Earth-616",
-    alignment: "Good",
-    creators: "Joe Simon; Jack Kirby",
-    first_appearance: "Captain America Comics Vol 1 1",
-    summary: "Steven Grant Rogers is a World War II supersoldier enhanced to human physical perfection by the Super-Soldier Serum. Armed with an indestructible Vibranium shield, he serves as Captain America, the Sentinel of Liberty.",
-    ticker: "$CAP",
-    landmark_debuts: [
-      {
-        title: "Captain America Comics #1 (1941)",
-        significance: "1st Canonical Appearance of Steve Rogers (Captain America) punching Adolf Hitler",
-        catalogUrl: "/comics?q=Captain+America+Comics+1",
-        era: "GOLDEN",
-        assetTier: "SOVEREIGN_BLUE_CHIP",
-      },
-      {
-        title: "The Avengers #4 (1964)",
-        significance: "Silver Age Revival of Captain America unfrozen from ice; joins the Avengers",
-        catalogUrl: "/comics?q=Avengers+4",
-        era: "SILVER",
-        assetTier: "SOVEREIGN_BLUE_CHIP",
-      },
-    ],
-  },
-  "peggy-carter": {
-    slug: "peggy-carter",
-    title: "Peggy Carter (Agent Carter)",
-    universe: "MARVEL",
-    type: "character",
-    reality: "Earth-616",
-    alignment: "Good",
-    creators: "Stan Lee; Jack Kirby",
-    first_appearance: "Tales of Suspense Vol 1 75",
-    summary: "Margaret 'Peggy' Carter is a top-tier Allied intelligence officer, French Resistance fighter, founding leader of S.H.I.E.L.D., and the wartime love of Steve Rogers.",
-    ticker: "$CARTER",
-    landmark_debuts: [
-      {
-        title: "Tales of Suspense #75 (1966)",
-        significance: "1st Canonical Appearance of Peggy Carter",
-        catalogUrl: "/comics?q=Tales+of+Suspense+75",
-        era: "SILVER",
-        assetTier: "KEY_EQUITY",
-      },
-    ],
-  },
-  "franklin-richards": {
-    slug: "franklin-richards",
-    title: "Franklin Richards (Psi-Lord)",
-    universe: "MARVEL",
-    type: "character",
-    reality: "Earth-616",
-    alignment: "Good",
-    creators: "Stan Lee; Jack Kirby",
-    first_appearance: "Fantastic Four Annual Vol 1 6",
-    summary: "Franklin Benjamin Richards is the Beyond-Omega level reality-warping mutant son of Mister Fantastic (Reed Richards) and the Invisible Woman (Sue Storm), capable of creating pocket universes.",
-    ticker: "$FF:FRANKLIN",
-    landmark_debuts: [
-      {
-        title: "Fantastic Four Annual #6 (1968)",
-        significance: "1st Canonical Appearance and birth of Franklin Richards",
-        catalogUrl: "/comics?q=Fantastic+Four+Annual+6",
-        era: "SILVER",
-        assetTier: "KEY_EQUITY",
-      },
-    ],
-  },
-  "thor": {
-    slug: "thor",
-    title: "Thor (Odinson)",
-    universe: "MARVEL",
-    type: "character",
-    reality: "Earth-616",
-    alignment: "Good",
-    creators: "Stan Lee; Jack Kirby; Larry Lieber",
-    first_appearance: "Journey into Mystery Vol 1 83",
-    summary: "Thor Odinson is the Asgardian God of Thunder, prince of Asgard, founding member of the Avengers, and wielder of the enchanted uru hammer Mjolnir.",
-    ticker: "$THOR",
-    landmark_debuts: [
-      {
-        title: "Journey into Mystery #83 (1962)",
-        significance: "1st Canonical Appearance of Thor (Odinson)",
-        catalogUrl: "/comics?q=Journey+into+Mystery+83",
-        era: "SILVER",
-        assetTier: "SOVEREIGN_BLUE_CHIP",
-      },
-      {
-        title: "Journey into Mystery #85 (1962)",
-        significance: "1st Appearance of Loki, Odin, Heimdall, Balder, and Asgard",
-        catalogUrl: "/comics?q=Journey+into+Mystery+85",
-        era: "SILVER",
-        assetTier: "SOVEREIGN_BLUE_CHIP",
-      },
-    ],
-  },
-  "avengers": {
-    slug: "avengers",
-    title: "The Avengers",
-    universe: "MARVEL",
-    type: "team",
-    reality: "Earth-616",
-    alignment: "Good",
-    creators: "Stan Lee; Jack Kirby",
-    first_appearance: "The Avengers Vol 1 1",
-    summary: "Earth's Mightiest Heroes assembled to fight the foes no single superhero could withstand. Founding roster: Iron Man, Thor, Hulk, Ant-Man, and the Wasp.",
-    ticker: "$AVNG",
-    landmark_debuts: [
-      {
-        title: "The Avengers #1 (1963)",
-        significance: "1st Appearance of the Avengers and battle against Loki",
-        catalogUrl: "/comics?q=Avengers+1",
-        era: "SILVER",
-        assetTier: "SOVEREIGN_BLUE_CHIP",
-      },
-    ],
-  },
-  "marvel-cinematic-universe": {
-    slug: "marvel-cinematic-universe",
-    title: "Marvel Cinematic Universe (MCU)",
-    universe: "MARVEL",
-    type: "equity",
-    reality: "Earth-199999",
-    alignment: "Good",
-    creators: "Kevin Feige; Marvel Studios",
-    first_appearance: "Iron Man (2008)",
-    summary: "The highest-grossing media franchise in history, spanning Phases 1 through 6, interconnecting superhero features, streaming series, and secondary market comic equities.",
-    ticker: "$MCU",
-    landmark_debuts: [
-      {
-        title: "Tales of Suspense #39 (1963)",
-        significance: "1st Appearance of Iron Man (Genesis of the Cinematic Universe)",
-        catalogUrl: "/comics?q=Tales+of+Suspense+39",
-        era: "SILVER",
-        assetTier: "SOVEREIGN_BLUE_CHIP",
-      },
-      {
-        title: "The Avengers #1 (1963)",
-        significance: "1st Team Debut of Earth's Mightiest Heroes",
-        catalogUrl: "/comics?q=Avengers+1",
-        era: "SILVER",
-        assetTier: "SOVEREIGN_BLUE_CHIP",
-      },
-    ],
-  },
-  "claire-temple": {
-    slug: "claire-temple",
-    title: "Claire Temple (Night Nurse)",
-    universe: "MARVEL",
-    type: "character",
-    reality: "Earth-616",
-    alignment: "Good",
-    creators: "Archie Goodwin; George Tuska",
-    first_appearance: "Hero for Hire Vol 1 2",
-    summary: "Dr. Claire Temple is an elite medical doctor specializing in providing underground trauma care for street-level vigilantes and superheroes across New York City.",
-    ticker: "$NURSE",
-    landmark_debuts: [
-      {
-        title: "Hero for Hire #2 (1972)",
-        significance: "1st Canonical Appearance of Claire Temple",
-        catalogUrl: "/comics?q=Hero+for+Hire+2",
-        era: "BRONZE",
-        assetTier: "KEY_EQUITY",
-      },
-      {
-        title: "Night Nurse #1 (1972)",
-        significance: "1st Issue of Linda Carter, establishing the Night Nurse mantle",
-        catalogUrl: "/comics?q=Night+Nurse+1",
-        era: "BRONZE",
-        assetTier: "KEY_EQUITY",
-      },
-    ],
-  },
-  "night-nurse": {
-    slug: "night-nurse",
-    title: "Night Nurse (Claire Temple / Linda Carter)",
-    universe: "MARVEL",
-    type: "character",
-    reality: "Earth-616",
-    alignment: "Good",
-    creators: "Jean Thomas; Win Mortimer; Archie Goodwin",
-    first_appearance: "Night Nurse Vol 1 1",
-    summary: "The Night Nurse mantle represents the clandestine medical lifeline for New York City's superhero community, pioneered by Linda Carter and popularized by Claire Temple.",
-    ticker: "$NURSE",
-    landmark_debuts: [
-      {
-        title: "Night Nurse #1 (1972)",
-        significance: "1st Appearance of the Night Nurse mantle",
-        catalogUrl: "/comics?q=Night+Nurse+1",
-        era: "BRONZE",
-        assetTier: "KEY_EQUITY",
-      },
-      {
-        title: "Hero for Hire #2 (1972)",
-        significance: "1st Appearance of Claire Temple",
-        catalogUrl: "/comics?q=Hero+for+Hire+2",
-        era: "BRONZE",
-        assetTier: "KEY_EQUITY",
-      },
-    ],
-  },
-  "iron-man": {
-    slug: "iron-man",
-    title: "Iron Man (Tony Stark)",
-    universe: "MARVEL",
-    type: "character",
-    reality: "Earth-616",
-    alignment: "Good",
-    creators: "Stan Lee; Larry Lieber; Don Heck; Jack Kirby",
-    first_appearance: "Tales of Suspense Vol 1 39",
-    summary: "Anthony Edward 'Tony' Stark is a visionary industrialist, inventor, founding Avenger, and CEO of Stark Industries who constructed the invincible Iron Man powered armor.",
-    ticker: "$IRON",
-    landmark_debuts: [
-      {
-        title: "Tales of Suspense #39 (1963)",
-        significance: "1st Canonical Appearance and Origin of Iron Man (Tony Stark)",
-        catalogUrl: "/comics?q=Tales+of+Suspense+39",
-        era: "SILVER",
-        assetTier: "SOVEREIGN_BLUE_CHIP",
-      },
-      {
-        title: "Tales of Suspense #52 (1964)",
-        significance: "1st Appearance of Black Widow (Natasha Romanoff)",
-        catalogUrl: "/comics?q=Tales+of+Suspense+52",
-        era: "SILVER",
-        assetTier: "SOVEREIGN_BLUE_CHIP",
-      },
-    ],
-  },
-  "spider-man": {
-    slug: "spider-man",
-    title: "Spider-Man (Peter Parker)",
-    universe: "MARVEL",
-    type: "character",
-    reality: "Earth-616",
-    alignment: "Good",
-    creators: "Stan Lee; Steve Ditko",
-    first_appearance: "Amazing Fantasy Vol 1 15",
-    summary: "Peter Benjamin Parker was bitten by a radioactive spider as a high school student, gaining arachnid abilities and dedicating his life to the ethos: 'With great power there must also come great responsibility.'",
-    ticker: "$SPDR",
-    landmark_debuts: [
-      {
-        title: "Amazing Fantasy #15 (1962)",
-        significance: "1st Canonical Appearance of Spider-Man (Peter Parker), Uncle Ben, Aunt May",
-        catalogUrl: "/comics?q=Amazing+Fantasy+15",
-        era: "SILVER",
-        assetTier: "SOVEREIGN_BLUE_CHIP",
-      },
-      {
-        title: "The Amazing Spider-Man #1 (1963)",
-        significance: "1st Issue of Ongoing Series; 1st Appearance of J. Jonah Jameson",
-        catalogUrl: "/comics?q=Amazing+Spider-Man+1",
-        era: "SILVER",
-        assetTier: "SOVEREIGN_BLUE_CHIP",
-      },
-    ],
-  },
-};
+// NOTE: A hand-authored CANONICAL_PREMIER_ENTITIES table (13 well-known
+// Marvel characters with curated summaries, tickers and landmark-debut
+// blurbs written directly into this file) used to live here as the only
+// way to resolve these slugs synchronously, since the local JSON sample
+// below has messy/unclean titles for these characters. It has been
+// removed per the zero-hardcoded-data standing rule -- getLoreEntityBySlug
+// now resolves purely from the local JSON sample (may be null for these
+// slugs), and getLoreEntityBySlugAsync additionally resolves them from the
+// real, live-queried public.ppcf_wiki_pages corpus (see loadWikiCorpusFromDb
+// below). Prefer the async path wherever the caller can await it.
 
 const SLUG_ALIASES: Record<string, string> = {
   batman: "bruce-wayne-earth-two",
@@ -947,44 +640,41 @@ export function getLoreEntityBySlug(slug: string): LoreEntitySummary | null {
   if (!slug) return null;
   const cleanSlug = slug.toLowerCase().trim();
 
-  // 1. Direct canonical premier entity match
-  if (CANONICAL_PREMIER_ENTITIES[cleanSlug]) {
-    return CANONICAL_PREMIER_ENTITIES[cleanSlug];
-  }
-
-  // 2. Direct slug map match
+  // 1. Direct slug map match (local JSON sample)
   if (cachedSlugMap && cachedSlugMap.has(cleanSlug)) {
     return cachedSlugMap.get(cleanSlug)!;
   }
 
-  // 3. Direct alias match
+  // 2. Direct alias match
   const alias = SLUG_ALIASES[cleanSlug];
-  if (alias) {
-    if (CANONICAL_PREMIER_ENTITIES[alias]) {
-      return CANONICAL_PREMIER_ENTITIES[alias];
-    }
-    if (cachedSlugMap && cachedSlugMap.has(alias)) {
-      return cachedSlugMap.get(alias)!;
-    }
+  if (alias && cachedSlugMap && cachedSlugMap.has(alias)) {
+    return cachedSlugMap.get(alias)!;
   }
 
-  // 4. Match by title from cachedTitleMap (e.g. "batman", "iron man")
+  // 3. Match by title from cachedTitleMap (e.g. "batman", "iron man")
   const titlePhrase = cleanSlug.replace(/-/g, " ");
   if (cachedTitleMap && cachedTitleMap.has(titlePhrase)) {
     return cachedTitleMap.get(titlePhrase)!;
   }
 
+  // No synchronous match in the local sample. Callers that can await
+  // should use getLoreEntityBySlugAsync instead, which additionally
+  // resolves against the real, live-queried public.ppcf_wiki_pages corpus.
   return null;
 }
 
 /**
- * Returns featured premier entities for the wiki overview.
+ * Fallback used only when the live public.ppcf_wiki_pages query in
+ * getFeaturedLoreEntities can't be reached (offline/test environments,
+ * or a real outage) -- pulls "top of file" entries from the local JSON
+ * sample instead of a hardcoded name list. This is the same
+ * degrade-to-local-sample behavior already used elsewhere in this file
+ * (see loadWikiCorpusFromDb's doc comment) when the DB is unavailable.
  */
-export function getFeaturedLoreEntities(): LoreEntitySummary[] {
+function getFeaturedLoreEntitiesFromLocalSample(): LoreEntitySummary[] {
   const index = loadLoreIndex();
   const featured: LoreEntitySummary[] = [];
 
-  // Top characters
   const marvelChars = index.universes?.marvel?.slice(0, 4) || [];
   for (const ch of marvelChars) {
     featured.push({ ...ch, type: "character" });
@@ -995,17 +685,67 @@ export function getFeaturedLoreEntities(): LoreEntitySummary[] {
     featured.push({ ...ch, type: "character" });
   }
 
-  // Top items
   for (const it of (index.items || []).slice(0, 4)) {
     featured.push({ ...it, type: "item" });
   }
 
-  // Top locations
   for (const loc of (index.locations || []).slice(0, 4)) {
     featured.push({ ...loc, type: "location" });
   }
 
   return featured;
+}
+
+/**
+ * Picks up to `totalCap` entities of the given type from the live
+ * multi-universe DB index, capping how many come from any single
+ * universe (`perUniverseCap`) so the result isn't dominated by whichever
+ * universe happens to sort first, and requiring a real signal of
+ * completeness -- a populated summary, creators and first_appearance --
+ * rather than thin/fallback rows.
+ */
+function pickQualityFeatured(
+  entities: LoreEntitySummary[],
+  type: LoreEntitySummary["type"],
+  perUniverseCap: number,
+  totalCap: number
+): LoreEntitySummary[] {
+  const picked: LoreEntitySummary[] = [];
+  const perUniverseCount = new Map<string, number>();
+  for (const entity of entities) {
+    if (picked.length >= totalCap) break;
+    if (entity.type !== type) continue;
+    if (!entity.summary || entity.summary.trim().length < 40) continue;
+    if (!entity.creators || !entity.first_appearance) continue;
+    const count = perUniverseCount.get(entity.universe) || 0;
+    if (count >= perUniverseCap) continue;
+    picked.push(entity);
+    perUniverseCount.set(entity.universe, count + 1);
+  }
+  return picked;
+}
+
+/**
+ * Returns featured entities for the wiki overview, queried live from the
+ * real, multi-universe public.ppcf_wiki_pages corpus (via the same
+ * WikiDbIndex loaded by loadWikiCorpusFromDb for text-entity matching)
+ * rather than any hardcoded/curated name list. Falls back to the local
+ * JSON sample only when the live corpus can't be reached at all --
+ * never to fabricated content.
+ */
+export async function getFeaturedLoreEntities(): Promise<LoreEntitySummary[]> {
+  const { slugMap } = await loadWikiCorpusFromDb();
+
+  if (slugMap.size > 0) {
+    const all = Array.from(slugMap.values());
+    const characters = pickQualityFeatured(all, "character", 2, 8);
+    const items = pickQualityFeatured(all, "item", 4, 4);
+    const locations = pickQualityFeatured(all, "location", 4, 4);
+    const featured = [...characters, ...items, ...locations];
+    if (featured.length > 0) return featured;
+  }
+
+  return getFeaturedLoreEntitiesFromLocalSample();
 }
 
 const LORE_STOP_WORDS = new Set([
@@ -1068,10 +808,11 @@ function* generateCandidatePhrases(text: string): Generator<CandidatePhrase> {
  * Rapidly extracts lore entities mentioned inside unstructured text
  * using n-gram exact tokenization against the local (capped) JSON index.
  * Synchronous by design -- used by page components and unit tests that
- * cannot await a database round trip. Marvel coverage here is limited to
+ * cannot await a database round trip. Coverage here is limited to
  * whatever made it into lib/wiki/multi_universe_character_index.json (a
- * fixed sample); for full Marvel coverage against the real ~132k-entity
- * ingested corpus, use findLoreEntitiesInTextAsync instead.
+ * fixed, per-universe-capped sample -- see that file's header comment);
+ * for full coverage against the real ~219k-entity ingested corpus across
+ * all 7 universes, use findLoreEntitiesInTextAsync instead.
  */
 export function findLoreEntitiesInText(text: string, limit = 6): LoreEntitySummary[] {
   if (!text || !text.trim()) return [];
@@ -1102,17 +843,30 @@ export function findLoreEntitiesInText(text: string, limit = 6): LoreEntitySumma
 }
 
 // ---------------------------------------------------------------------------
-// Supabase-backed Marvel wiki index (real, ingested public.ppcf_wiki_pages
-// rows -- see scripts/ingest_marvel_wiki.cjs). Loaded once per process via a
-// small number of paginated, indexed bulk queries (universe = 'MARVEL' hits
-// the ppcf_wiki_pages_universe_type_idx index from the
-// 20260928130000_ppcf_wiki_lore_and_artifacts.sql migration), then matched
-// entirely in memory -- the same architecture as the local JSON index, so a
-// news article's entity extraction never issues one query per candidate
-// n-gram or table-scans per word.
+// Supabase-backed multi-universe wiki index (real, ingested
+// public.ppcf_wiki_pages rows -- see scripts/ingest_marvel_wiki.cjs,
+// ingest_dc_wiki.cjs, ingest_starwars_wiki.cjs, and ingest_indie_wiki.cjs,
+// which together cover all 7 non-financial universes: MARVEL, DC,
+// STAR_WARS, and the Image/Dark Horse/Spawn/Transformers indie set).
+// Loaded once per process via a small number of paginated bulk queries
+// (excluding the unrelated FINANCIAL market-lexicon mirror universe, which
+// lives in the same table but is out of scope here -- see
+// lib/lexicon/cbr_market_lexicon.json), then matched entirely in memory --
+// the same architecture as the local JSON index, so a news article's
+// entity extraction never issues one query per candidate n-gram or
+// table-scans per word.
+//
+// The query below deliberately does NOT filter on specific universe
+// string values (e.g. .eq("universe", "MARVEL")). The indie universes'
+// stored strings have been inconsistent across ingestion passes (e.g.
+// "IMAGE" vs "IMAGECOMICS", "DARK_HORSE" vs "DARKHORSE") -- excluding the
+// one known non-lore universe (FINANCIAL) and taking everything else is
+// robust to that drift, where enumerating exact values is not. Whatever
+// the live "universe" column actually contains for each row is used
+// as-is on the returned LoreEntitySummary.
 // ---------------------------------------------------------------------------
 
-const MARVEL_DB_PAGE_TYPE_TO_LORE_TYPE: Record<string, LoreEntitySummary["type"]> = {
+const WIKI_DB_PAGE_TYPE_TO_LORE_TYPE: Record<string, LoreEntitySummary["type"]> = {
   CHARACTER: "character",
   CREATOR: "character",
   TEAM: "team",
@@ -1121,17 +875,19 @@ const MARVEL_DB_PAGE_TYPE_TO_LORE_TYPE: Record<string, LoreEntitySummary["type"]
   LOCATION: "location",
 };
 
-interface MarvelDbIndex {
+const WIKI_DB_EXCLUDED_UNIVERSE = "FINANCIAL";
+
+interface WikiDbIndex {
   titleMap: Map<string, LoreEntitySummary>;
   slugMap: Map<string, LoreEntitySummary>;
 }
 
-let marvelDbIndexPromise: Promise<MarvelDbIndex> | null = null;
+let wikiDbIndexPromise: Promise<WikiDbIndex> | null = null;
 
-async function loadMarvelWikiFromDb(): Promise<MarvelDbIndex> {
-  if (marvelDbIndexPromise) return marvelDbIndexPromise;
+async function loadWikiCorpusFromDb(): Promise<WikiDbIndex> {
+  if (wikiDbIndexPromise) return wikiDbIndexPromise;
 
-  marvelDbIndexPromise = (async () => {
+  wikiDbIndexPromise = (async () => {
     const titleMap = new Map<string, LoreEntitySummary>();
     const slugMap = new Map<string, LoreEntitySummary>();
 
@@ -1144,14 +900,15 @@ async function loadMarvelWikiFromDb(): Promise<MarvelDbIndex> {
       for (;;) {
         const { data, error } = await supabase
           .from("ppcf_wiki_pages")
-          .select("slug, display_title, page_type, summary, creators, first_appearance, reality")
-          .eq("universe", "MARVEL")
+          .select("slug, display_title, universe, page_type, summary, creators, first_appearance, reality")
+          .neq("universe", WIKI_DB_EXCLUDED_UNIVERSE)
           .range(from, from + pageSize - 1);
 
         if (error || !data || data.length === 0) break;
 
         for (const row of data) {
-          const type = MARVEL_DB_PAGE_TYPE_TO_LORE_TYPE[row.page_type as string] || "character";
+          const universe = (row.universe || "MARVEL").toUpperCase();
+          const type = WIKI_DB_PAGE_TYPE_TO_LORE_TYPE[row.page_type as string] || "character";
           const clean = (row.display_title || "").trim().toLowerCase();
           if (!clean) continue;
           if (LORE_OBSCURE_COLLISION_BLOCKLIST.has(clean)) continue;
@@ -1159,13 +916,13 @@ async function loadMarvelWikiFromDb(): Promise<MarvelDbIndex> {
           const entity: LoreEntitySummary = {
             slug: row.slug,
             title: row.display_title,
-            universe: "MARVEL",
+            universe,
             type,
             reality: row.reality || undefined,
             creators: row.creators || undefined,
             first_appearance: row.first_appearance || undefined,
             summary: row.summary || "",
-            ticker: deriveEntityTicker(row.display_title, "MARVEL"),
+            ticker: deriveEntityTicker(row.display_title, universe),
           };
 
           slugMap.set(row.slug, entity);
@@ -1185,24 +942,25 @@ async function loadMarvelWikiFromDb(): Promise<MarvelDbIndex> {
     return { titleMap, slugMap };
   })();
 
-  return marvelDbIndexPromise;
+  return wikiDbIndexPromise;
 }
 
 /**
  * Same as findLoreEntitiesInText, but supplements the local (capped) JSON
- * matches with lookups against the full, real Marvel corpus ingested into
- * public.ppcf_wiki_pages (~132k characters/teams/creators/items/locations/
- * vehicles, vs. the ~5,000-per-universe sample baked into the local JSON
- * index). Use this from any already-async caller -- e.g. the real news
- * ingestion pipeline in getDynamicEntitiesForText -- instead of the sync
- * version. DC, Star Wars, Image, Dark Horse, and indie publishers are not
- * yet ingested into the DB and keep coming from the local JSON index only.
+ * matches with lookups against the full, real corpus ingested into
+ * public.ppcf_wiki_pages across all 7 non-financial universes (Marvel, DC,
+ * Star Wars, Image, Dark Horse, Spawn, Transformers -- ~219k
+ * characters/teams/creators/items/locations/vehicles combined, vs. the
+ * ~5,000-per-universe sample baked into the local JSON index for Marvel/
+ * DC/Star Wars). Use this from any already-async caller -- e.g. the real
+ * news ingestion pipeline in getDynamicEntitiesForText -- instead of the
+ * sync version.
  */
 export async function findLoreEntitiesInTextAsync(text: string, limit = 6): Promise<LoreEntitySummary[]> {
   const matched = findLoreEntitiesInText(text, limit);
   if (!text || !text.trim() || matched.length >= limit) return matched;
 
-  const { titleMap } = await loadMarvelWikiFromDb();
+  const { titleMap } = await loadWikiCorpusFromDb();
   if (titleMap.size === 0) return matched;
 
   const seenSlugs = new Set(matched.map((m) => m.slug));
@@ -1221,14 +979,20 @@ export async function findLoreEntitiesInTextAsync(text: string, limit = 6): Prom
 }
 
 /**
- * Same as getLoreEntityBySlug, but falls back to the full ingested Marvel
- * corpus in public.ppcf_wiki_pages when the slug isn't in the local JSON
- * index or the hardcoded premier-entity table.
+ * Same as getLoreEntityBySlug, but falls back to the full ingested
+ * multi-universe corpus in public.ppcf_wiki_pages (all 7 non-financial
+ * universes) when the slug isn't in the local JSON index -- this is the
+ * real, live-queried replacement for what the removed hardcoded
+ * premier-entity table used to paper over for well-known characters.
  */
 export async function getLoreEntityBySlugAsync(slug: string): Promise<LoreEntitySummary | null> {
   const local = getLoreEntityBySlug(slug);
   if (local) return local;
   if (!slug) return null;
-  const { slugMap } = await loadMarvelWikiFromDb();
-  return slugMap.get(slug.toLowerCase().trim()) || null;
+  const cleanSlug = slug.toLowerCase().trim();
+  const { slugMap } = await loadWikiCorpusFromDb();
+  const direct = slugMap.get(cleanSlug);
+  if (direct) return direct;
+  const alias = SLUG_ALIASES[cleanSlug];
+  return (alias && slugMap.get(alias)) || null;
 }
