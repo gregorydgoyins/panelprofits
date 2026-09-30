@@ -1,7 +1,7 @@
 import { createAdminServerClient, createCleanReadOnlyServerClient } from "@/lib/supabase/admin";
 import { isMissingTableError } from "@/lib/supabase/errors";
 import { ComicRecord } from "@/lib/comics/types";
-import { resolveComicPricing } from "@/lib/pricing/baseline";
+import { resolveComicPricing, resolveBaselinePrice } from "@/lib/pricing/baseline";
 import { getComicCoverEvidenceByIds } from "@/lib/comics/covers";
 
 export interface MarketUniverseMetrics {
@@ -65,6 +65,7 @@ export interface CleanAssetSurfaceItem {
   assetClass: string | null;
   assetSubclass: string | null;
   constituentCount: number;
+  priceFormatted: string | null;
 }
 
 export interface CleanNewsIntelligenceItem {
@@ -199,72 +200,155 @@ export async function getIntelligenceRailComics(limit = 12): Promise<Intelligenc
  * Queries comics with genuine reference prices.
  */
 export async function getValuationRailComics(limit = 12): Promise<ValuationRailItem[]> {
+  const cleanDb = createCleanReadOnlyServerClient();
   try {
-    const cleanDb = createCleanReadOnlyServerClient();
+    // 1. CE70 equity universe, when that register has been populated.
     const { data, error } = await cleanDb
       .from("ce70_equity_universe")
       .select("id, series, issue_number, reference_fmv_usd, price_formatted, cover_url")
       .order("reference_fmv_usd", { ascending: false })
       .limit(limit);
 
-    if (error || !data) {
-      if (error && !isMissingTableError(error)) {
-        console.error("Error fetching CE70 equity universe rail:", error);
-      }
+    if (!error && data && data.length > 0) {
+      return data.map((item) => ({
+        id: item.id,
+        series: item.series,
+        issueNumber: item.issue_number,
+        publisher: null,
+        publicationYear: null,
+        coverUrl: item.cover_url || null,
+        coverStoragePath: null,
+        priceFormatted: item.price_formatted || `$${Number(item.reference_fmv_usd).toLocaleString()}`,
+        priceValue: Number(item.reference_fmv_usd),
+        sourceLabel: "CE70 CLEAN EQUITY PORT",
+      }));
+    }
+    if (error && !isMissingTableError(error)) {
+      console.error("Error fetching CE70 equity universe rail:", error);
+    }
+  } catch (err) {
+    console.error("Exception in CE70 equity rail query:", err);
+  }
+
+  // 2. Fallback: the real, already-populated Clean comics catalog.
+  // ce70_equity_universe has no backing migration (it is never created),
+  // so this fallback is what actually renders today. Ranked by the same
+  // baseline pricing resolver used across pricing surfaces, restricted to
+  // records with a verified cover so the rail never shows a blank slot.
+  try {
+    const { data: comicRows, error: comicError } = await cleanDb
+      .from("comics")
+      .select("id, series, issue_number, publisher, publication_year, cover_url, cover_storage_path, pp_grade_9_8_price, comicbase_price, baseline_grade_9_8_value, baseline_grade_9_8_sources, panel_profits_data")
+      .not("cover_url", "is", null)
+      .order("baseline_grade_9_8_value", { ascending: false, nullsFirst: false })
+      .limit(Math.min(Math.max(limit * 6, 24), 200));
+
+    if (comicError || !comicRows) {
+      if (comicError) console.error("Error fetching Clean comics valuation fallback:", comicError.message);
       return [];
     }
 
-    return data.map((item) => ({
-      id: item.id,
-      series: item.series,
-      issueNumber: item.issue_number,
-      publisher: null,
-      publicationYear: null,
-      coverUrl: item.cover_url || null,
-      coverStoragePath: null,
-      priceFormatted: item.price_formatted || `$${Number(item.reference_fmv_usd).toLocaleString()}`,
-      priceValue: Number(item.reference_fmv_usd),
-      sourceLabel: "CE70 CLEAN EQUITY PORT",
+    const priced = comicRows
+      .map((row) => ({ row, pricing: resolveBaselinePrice(row) }))
+      .filter((entry) => entry.pricing.price !== null)
+      .sort((a, b) => (b.pricing.price as number) - (a.pricing.price as number))
+      .slice(0, limit);
+
+    return priced.map(({ row, pricing }) => ({
+      id: row.id,
+      series: row.series || "Unknown series",
+      issueNumber: row.issue_number || "—",
+      publisher: row.publisher || null,
+      publicationYear: row.publication_year == null ? null : Number(row.publication_year),
+      coverUrl: row.cover_url || null,
+      coverStoragePath: row.cover_storage_path || null,
+      priceFormatted: pricing.formatted,
+      priceValue: pricing.price as number,
+      sourceLabel: "CLEAN COMICS CATALOG",
     }));
   } catch (err) {
-    console.error("Exception in CE70 equity rail query:", err);
+    console.error("Exception in Clean comics valuation fallback:", err);
     return [];
   }
 }
 
 export async function getCleanAssetSurfaces(limit = 24): Promise<CleanAssetSurfaceItem[]> {
+  const cleanDb = createCleanReadOnlyServerClient();
   try {
-    const cleanDb = createCleanReadOnlyServerClient();
+    // 1. CE70 index-definition seats, when that register has been populated.
     const { data, error } = await cleanDb
       .from("ce70_index_definitions")
       .select("seat_number, series, issue_number, era, publisher, constituent_count, asset_class, asset_subclass, cover_url")
       .order("seat_number", { ascending: true })
       .limit(limit);
 
-    if (error || !data) {
-      if (error && !isMissingTableError(error)) {
-        console.error("Error fetching CE70 asset surfaces:", error);
-      }
+    if (!error && data && data.length > 0) {
+      return data.map((item) => ({
+        id: `ce70-seat-${item.seat_number}`,
+        series: item.series,
+        issueNumber: String(item.seat_number),
+        publisher: item.publisher,
+        indexValue: null,
+        quantity: null,
+        source: "CLEAN ASSET PORT",
+        createdAt: null,
+        coverUrl: item.cover_url || null,
+        coverStoragePath: null,
+        assetClass: item.asset_class,
+        assetSubclass: item.asset_subclass || `${item.era.toUpperCase()} ERA`,
+        constituentCount: item.constituent_count || 1,
+        priceFormatted: null,
+      }));
+    }
+    if (error && !isMissingTableError(error)) {
+      console.error("Error fetching CE70 asset surfaces:", error);
+    }
+  } catch (err) {
+    console.error("Exception in CE70 asset surfaces query:", err);
+  }
+
+  // 2. Fallback: the real, already-populated Clean comics catalog.
+  // ce70_index_definitions has no backing migration (it is never created),
+  // so this fallback is what actually renders today. Each row is a single
+  // real comic asset (constituentCount 1), not a basket, priced through the
+  // same baseline resolver used elsewhere so the figure is never invented.
+  try {
+    const { data: comicRows, error: comicError } = await cleanDb
+      .from("comics")
+      .select("id, series, issue_number, publisher, publication_year, cover_url, cover_storage_path, pp_grade_9_8_price, comicbase_price, baseline_grade_9_8_value, baseline_grade_9_8_sources, panel_profits_data")
+      .not("cover_url", "is", null)
+      .order("baseline_grade_9_8_value", { ascending: false, nullsFirst: false })
+      .limit(Math.min(Math.max(limit * 4, 24), 150));
+
+    if (comicError || !comicRows) {
+      if (comicError) console.error("Error fetching Clean comics asset fallback:", comicError.message);
       return [];
     }
 
-    return data.map((item) => ({
-      id: `ce70-seat-${item.seat_number}`,
-      series: item.series,
-      issueNumber: String(item.seat_number),
-      publisher: item.publisher,
-      indexValue: null,
+    const priced = comicRows
+      .map((row) => ({ row, pricing: resolveBaselinePrice(row) }))
+      .filter((entry) => entry.pricing.price !== null)
+      .sort((a, b) => (b.pricing.price as number) - (a.pricing.price as number))
+      .slice(0, limit);
+
+    return priced.map(({ row, pricing }) => ({
+      id: row.id,
+      series: row.series || "Unknown series",
+      issueNumber: row.issue_number || "—",
+      publisher: row.publisher || null,
+      indexValue: pricing.price,
       quantity: null,
-      source: "CLEAN ASSET PORT",
+      source: "CLEAN COMICS CATALOG",
       createdAt: null,
-      coverUrl: item.cover_url || null,
-      coverStoragePath: null,
-      assetClass: item.asset_class,
-      assetSubclass: item.asset_subclass || `${item.era.toUpperCase()} ERA`,
-      constituentCount: item.constituent_count || 1,
+      coverUrl: row.cover_url || null,
+      coverStoragePath: row.cover_storage_path || null,
+      assetClass: row.publisher || null,
+      assetSubclass: row.publication_year == null ? null : String(row.publication_year),
+      constituentCount: 1,
+      priceFormatted: pricing.formatted,
     }));
   } catch (err) {
-    console.error("Exception in CE70 asset surfaces query:", err);
+    console.error("Exception in Clean comics asset fallback:", err);
     return [];
   }
 }
