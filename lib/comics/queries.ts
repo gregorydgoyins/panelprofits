@@ -137,6 +137,37 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
   };
 }
 
+export type ComicsPricingCoverage = {
+  totalCount: number | null;
+  pricedCount: number | null;
+};
+
+/**
+ * Real, dynamically-queried catalog-scale counts (no hardcoded figures): how many
+ * `comics` rows exist versus how many actually carry pricing (`comicbase_price` or
+ * `pp_grade_9_8_price` populated). Used so pages that surface a priced subset (e.g. the
+ * market ticker) can say honestly how much of the catalog that subset represents,
+ * instead of implying the whole catalog is priced.
+ */
+export async function getComicsPricingCoverage(): Promise<ComicsPricingCoverage> {
+  const supabase = createAdminServerClient();
+  const [total, priced] = await Promise.all([
+    supabase.from("comics").select("*", { count: "exact", head: true }),
+    supabase
+      .from("comics")
+      .select("*", { count: "exact", head: true })
+      .or("comicbase_price.not.is.null,pp_grade_9_8_price.not.is.null"),
+  ]);
+
+  if (total.error) console.error("Error counting comics catalog:", total.error);
+  if (priced.error) console.error("Error counting priced comics:", priced.error);
+
+  return {
+    totalCount: total.error ? null : total.count,
+    pricedCount: priced.error ? null : priced.count,
+  };
+}
+
 export async function getFeaturedComics(limit = 6): Promise<ComicRecord[]> {
   const supabase = createAdminServerClient();
   const { data, error } = await supabase

@@ -3,7 +3,7 @@ import { Activity, ArrowUpRight, BarChart3, Gauge, Radio, ShieldAlert, Layers, C
 import { getPanelTelemetry } from "@/lib/panel-profits/queries";
 import { getPpcfCoverage } from "@/lib/ppcf/queries";
 import { calculateMarketIndices } from "@/lib/market/indices";
-import { getFeaturedComics } from "@/lib/comics/queries";
+import { getFeaturedComics, getComicsPricingCoverage } from "@/lib/comics/queries";
 import { resolveBaselinePrice } from "@/lib/pricing/baseline";
 
 export const dynamic = "force-dynamic";
@@ -22,12 +22,17 @@ function deriveComicTicker(series: string): string {
 }
 
 export default async function MarketPage() {
-  const [{ state, recoveredIndices }, coverage, marketIndices, featuredComics] = await Promise.all([
+  const [{ state, recoveredIndices }, coverage, marketIndices, featuredComics, comicsPricingCoverage] = await Promise.all([
     getPanelTelemetry(),
     getPpcfCoverage(),
     calculateMarketIndices(),
     getFeaturedComics(7),
+    getComicsPricingCoverage(),
   ]);
+
+  const { totalCount: catalogTotal, pricedCount: catalogPriced } = comicsPricingCoverage;
+  const catalogPricedPct =
+    catalogTotal && catalogPriced != null && catalogTotal > 0 ? (catalogPriced / catalogTotal) * 100 : null;
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -73,6 +78,19 @@ export default async function MarketPage() {
             </span>
           )}
         </div>
+        <p className="mt-2 text-[10px] font-mono text-slate-500">
+          {catalogTotal != null && catalogPriced != null ? (
+            <>
+              Tickers are drawn only from the priced subset of the catalog:{" "}
+              {catalogPriced.toLocaleString()} of {catalogTotal.toLocaleString()} comics
+              {catalogPricedPct != null ? ` (${catalogPricedPct.toFixed(1)}%)` : ""} carry verified
+              pricing. The remaining catalog entries have no price observation yet and are not
+              represented here.
+            </>
+          ) : (
+            "Catalog pricing coverage is unavailable right now."
+          )}
+        </p>
       </section>
 
       {/* Core Indices Section (recovered index contracts, whichever are seeded) */}
