@@ -104,9 +104,10 @@ export function StoryPanel({ story }: { story: NewsStory }) {
         {/* Studio Neural Text-to-Speech Audio Briefing Player */}
         <AudioBriefingPlayer
           headline={story.headline}
-          summary={article.paragraphs.join(" ")}
+          summary={story.summary}
           source={story.source}
           storyId={story.id}
+          catalystReasoning={catalyst?.reasoning}
         />
 
         {/* Market Catalyst Engine Rail */}

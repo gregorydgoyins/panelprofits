@@ -3,18 +3,20 @@
 import * as React from "react";
 import { Play, Pause, RotateCcw, Volume2, FastForward, Sparkles, Video, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { createTwoSentenceAudioBrief } from "@/lib/news/audio-brief";
 
 interface AudioBriefingPlayerProps {
   headline: string;
   summary: string | null;
   source: string;
   storyId?: string;
+  catalystReasoning?: string | null;
 }
 
 // Blocklist of legacy robotic/novelty voices in browser SpeechSynthesis
 const ROBOTIC_VOICE_REGEX = /fred|albert|bad news|bells|boing|cellos|deranged|good news|hysterical|junior|kathy|organ|pipe organ|princess|ralph|trinoids|vicki|victoria|whisper|zarvox|espeak/i;
 
-export function AudioBriefingPlayer({ headline, summary, source, storyId }: AudioBriefingPlayerProps) {
+export function AudioBriefingPlayer({ headline, summary, source, storyId, catalystReasoning }: AudioBriefingPlayerProps) {
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [isLoadingAudio, setIsLoadingAudio] = React.useState(false);
   const [rate, setRate] = React.useState(1.0);
@@ -32,10 +34,15 @@ export function AudioBriefingPlayer({ headline, summary, source, storyId }: Audi
   const [browserVoices, setBrowserVoices] = React.useState<SpeechSynthesisVoice[]>([]);
   const [selectedBrowserVoiceURI, setSelectedBrowserVoiceURI] = React.useState<string>("");
 
-  const cleanScript = React.useMemo(() => {
-    const rawSummary = summary ? summary.replace(/\[\/?.*?\]/g, "").replace(/<[^>]+>/g, " ") : "";
-    return `Panel Profits Audio Intelligence Wire. Source report from ${source}. Headline: ${headline}. Summary: ${rawSummary}`;
-  }, [headline, summary, source]);
+  // Synthesize concise 2-sentence executive summary at natural speaking pace
+  const twoSentenceBrief = React.useMemo(() => {
+    return createTwoSentenceAudioBrief({
+      headline,
+      summary,
+      source,
+      catalystReasoning,
+    });
+  }, [headline, summary, source, catalystReasoning]);
 
   // Initialize browser voices as secondary fallback
   React.useEffect(() => {
@@ -101,7 +108,7 @@ export function AudioBriefingPlayer({ headline, summary, source, storyId }: Audi
       }
 
       const audio = audioRef.current;
-      const ttsUrl = `/api/news/tts?presenter=${selectedPresenter}&storyId=${encodeURIComponent(storyId || "")}&text=${encodeURIComponent(cleanScript)}`;
+      const ttsUrl = `/api/news/tts?presenter=${selectedPresenter}&storyId=${encodeURIComponent(storyId || "")}&text=${encodeURIComponent(twoSentenceBrief)}`;
 
       audio.src = ttsUrl;
       audio.playbackRate = rate;
@@ -145,7 +152,7 @@ export function AudioBriefingPlayer({ headline, summary, source, storyId }: Audi
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
     window.speechSynthesis.cancel();
 
-    const utterance = new SpeechSynthesisUtterance(cleanScript);
+    const utterance = new SpeechSynthesisUtterance(twoSentenceBrief);
     utteranceRef.current = utterance;
     utterance.rate = rate;
 
@@ -155,8 +162,8 @@ export function AudioBriefingPlayer({ headline, summary, source, storyId }: Audi
     }
 
     utterance.onboundary = (e) => {
-      if (e.charIndex && cleanScript.length > 0) {
-        setProgress(Math.min(100, Math.round((e.charIndex / cleanScript.length) * 100)));
+      if (e.charIndex && twoSentenceBrief.length > 0) {
+        setProgress(Math.min(100, Math.round((e.charIndex / twoSentenceBrief.length) * 100)));
       }
     };
 
@@ -333,6 +340,22 @@ export function AudioBriefingPlayer({ headline, summary, source, storyId }: Audi
             </Link>
           )}
         </div>
+      </div>
+
+      {/* 2-Sentence Spoken Executive Briefing Transcript */}
+      <div className="mt-3 rounded border border-cyan-500/20 bg-[#05080E] px-3.5 py-2">
+        <div className="flex items-center gap-1.5 mb-1">
+          <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
+          <span className="font-mono text-[9px] uppercase tracking-wider text-cyan-300 font-semibold">
+            2-Sentence Executive Briefing
+          </span>
+          <span className="text-[9px] font-mono text-slate-500 ml-auto">
+            ~12s Spoken Pace
+          </span>
+        </div>
+        <p className="text-xs text-slate-300 leading-relaxed font-sans">
+          "{twoSentenceBrief}"
+        </p>
       </div>
 
       {/* Spoken Progress Bar */}

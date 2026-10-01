@@ -24,10 +24,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Missing or invalid text parameter" }, { status: 400 });
   }
 
-  // Construct a concise, polished radio-broadcast intelligence briefing
-  // Keep under 800 characters to ensure sub-second ElevenLabs generation and conserve quota
-  const conciseBrief = cleanText.length > 700 ? cleanText.slice(0, 700) + "..." : cleanText;
-  const broadcastScript = `Panel Profits Audio Intelligence Wire. ${conciseBrief}`;
+  // Ensure the spoken script is a crisp two-sentence executive brief
+  const broadcastScript = cleanText.length > 500 ? cleanText.slice(0, 500).replace(/\.[^.]*$/, ".") : cleanText;
 
   const cacheKey = storyId ? `story:${storyId}:${voiceId}` : getCacheKey(broadcastScript, voiceId);
 
@@ -90,8 +88,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing or invalid text parameter" }, { status: 400 });
     }
 
-    const conciseBrief = cleanText.length > 700 ? cleanText.slice(0, 700) + "..." : cleanText;
-    const broadcastScript = `Panel Profits Audio Intelligence Wire. ${conciseBrief}`;
+    const broadcastScript = cleanText.length > 500 ? cleanText.slice(0, 500).replace(/\.[^.]*$/, ".") : cleanText;
     const cacheKey = storyId ? `story:${storyId}:${voiceId}` : getCacheKey(broadcastScript, voiceId);
 
     const cached = AUDIO_CACHE.get(cacheKey);
