@@ -50,7 +50,9 @@ const BLOCKED_TERMS = new Set([
 export function parseTextWithEntities(text: string, entities?: EntityWikiDef[]): React.ReactNode[] {
   if (!text) return [];
   // Strip any legacy raw HTML markup so we parse pure text cleanly
-  const cleanText = text.replace(/<[^>]+>/g, "");
+  const cleanText = text
+    .replace(/<[^>]+>/g, " ")
+    .replace(/[ \t]+/g, " ");
 
   // NOTE: market-concept / grading / lexicon entities (financial & grading glossary terms,
   // e.g. "Fair Market Value", "CGC", "Bid-Ask Spread") are intentionally included here.

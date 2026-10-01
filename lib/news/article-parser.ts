@@ -368,6 +368,12 @@ function deriveSuperheroMarketRamifications(
       evaluateCharacter("Dark Horse Premier Equities", "$DKHS", "San Diego Comic-Con Comics #2 (1st Hellboy)", 4500, "Sovereign Dark Horse indie keys driven by creator-owned prestige publishing and media options.");
     } else if (lower.includes("transformers") || lower.includes("hasbro") || lower.includes("skybound")) {
       evaluateCharacter("Energon Universe & Transformers Keys", "$TRANS", "The Transformers #1 (1984 Marvel)", 1250, "Skybound/Image publishing revival driving acute liquidity into 1980s first printing comic runs.");
+    } else if (lower.includes("star trek") || lower.includes("lower decks") || lower.includes("picard") || lower.includes("spock") || lower.includes("enterprise")) {
+      evaluateCharacter("Star Trek Sovereign Key Issue Index", "$TREK", "Star Trek #1 (1967 Gold Key)", 4800, "Historical Gold Key, DC, and IDW Star Trek key comic debuts.");
+      evaluateCharacter("Paramount / CBS Sci-Fi Media Index", "$PARA", "Star Trek: The Next Generation #1", 320, "Certified census copies reacting to Paramount media and streaming animation continuity extensions.");
+    } else if (lower.includes("star wars") || lower.includes("mandalorian") || lower.includes("grogu") || lower.includes("jedi") || lower.includes("vader")) {
+      evaluateCharacter("Star Wars Sovereign Key Issue Index", "$SW", "Star Wars #1 (1977 Marvel 35¢ Price Variant)", 78000, "Benchmark Bronze Age and Modern Star Wars key debuts.");
+      evaluateCharacter("The Mandalorian & Modern Star Wars Keys", "$MANDO", "Star Wars: The Mandalorian #1", 350, "Modern CGC 9.8 variant covers and first appearances reacting to active Disney+ and theatrical development.");
     } else {
       // Marvel Universe & General Sequential Art Bedrock
       evaluateCharacter("Marvel Sovereign Blue-Chip Index", "$MRVL", "Amazing Fantasy #15 / Fantastic Four #1", 285000, "Benchmark Silver Age Marvel key issue index tracking liquidity and census velocity.");
@@ -530,6 +536,32 @@ function deriveMarketButterflyRipples(
     seenTickers.add("$PNSH");
   }
 
+  // Star Trek / Sci-Fi
+  if (lower.includes("star trek") || lower.includes("lower decks") || lower.includes("picard") || lower.includes("enterprise")) {
+    ripples.push({
+      ticker: "$TREK",
+      assetName: "Star Trek Key Issue Basket",
+      landmarkKey: "Star Trek #1 (1967 Gold Key)",
+      direction: "uptick",
+      projectedDelta: "+14.2% Float Velocity",
+      catalystCausality: "Series continuation and new collection announcements channel speculative interest into certified Gold Key debuts and modern IDW comic runs.",
+    });
+    seenTickers.add("$TREK");
+  }
+
+  // Star Wars / Sci-Fi
+  if (lower.includes("star wars") || lower.includes("mandalorian") || lower.includes("grogu")) {
+    ripples.push({
+      ticker: "$SW",
+      assetName: "Star Wars Bronze & Modern Keys",
+      landmarkKey: "Star Wars #1 (1977 Marvel)",
+      direction: "surge",
+      projectedDelta: "+22.5% Liquidity Surge",
+      catalystCausality: "Streaming and cinematic franchise momentum directs fresh collector capital into canonical Bronze Age first printings and key first appearances.",
+    });
+    seenTickers.add("$SW");
+  }
+
   // 3. Dynamic generation for cast and lore dossiers
   for (const lore of loreDossiers) {
     if (seenTickers.has(lore.ticker)) continue;
@@ -625,7 +657,11 @@ function buildAnalyticalParagraphs(
     lorePara = `Canonical publishing lineage: ${entries.join(" ")} Understanding the publication era—from foundational Silver Age roots to modern creator-owned milestones—remains critical for modeling historical survivorship, print runs, and long-term collector demand.`;
   } else {
     const lower = fullText.toLowerCase();
-    if (lower.includes("dc") || lower.includes("batman") || lower.includes("superman") || lower.includes("gotham") || lower.includes("gunn")) {
+    if (lower.includes("star trek") || lower.includes("lower decks") || lower.includes("picard") || lower.includes("spock") || lower.includes("enterprise")) {
+      lorePara = `Canonical publishing lineage: Within Star Trek comic publishing canon, this narrative development connects directly to a multi-decade sequential art legacy spanning Gold Key (1967), Marvel, DC, and most prominently IDW Publishing ($IDW). Classic runs and modern serialized miniseries expand the television mythology beyond the screen, directing collector interest into certified early debut issues such as Star Trek #1 (1967 Gold Key) and pivotal crossover keys. Across certified census tiers, vintage sci-fi keys demonstrate sustained collector appeal, where high-grade condition scarcity commands a resilient premium over raw reading copies.`;
+    } else if (lower.includes("star wars") || lower.includes("mandalorian") || lower.includes("grogu") || lower.includes("jedi") || lower.includes("vader")) {
+      lorePara = `Canonical publishing lineage: Within Star Wars sequential art history, this narrative arc builds on the landmark publishing lineage initiated by Marvel Comics in 1977 with Star Wars #1, expanded through Dark Horse's prolific Expanded Universe continuity, and reaffirmed in modern canonical Marvel and IDW titles ($SW). High-grade certified copies of key character debuts and premiere variant covers remain benchmark assets across the speculative collector landscape, serving as primary targets for capital rotation during major streaming and theatrical milestones.`;
+    } else if (lower.includes("dc") || lower.includes("batman") || lower.includes("superman") || lower.includes("gotham") || lower.includes("gunn")) {
       lorePara = `Canonical publishing lineage: Within DC Comics continuity, this narrative trajectory connects directly to the historical bedrock established by Jerry Siegel, Joe Shuster, Bob Kane, and Bill Finger during the Golden Age genesis. Foundational keys such as Action Comics #1 (1938) and Detective Comics #27 (1939) anchor the sovereign benchmark of the entire superhero genre. Across subsequent Silver Age transformations and modern cinematic adaptations under DC Studios ($DC), creative shifts consistently stimulate secondary market demand for key character debuts and landmark crossover runs.`;
     } else if (lower.includes("image") || lower.includes("spawn") || lower.includes("kirkman") || lower.includes("mcfarlane") || lower.includes("invincible")) {
       lorePara = `Canonical publishing lineage: In the independent and creator-owned publishing sphere, this development highlights the enduring market power of sovereign creator equity. Breakthroughs pioneered by Image Comics and Dark Horse—such as Todd McFarlane's Spawn #1 (1992), Robert Kirkman's Invincible #1 (2003), and Mike Mignola's Hellboy in San Diego Comic-Con Comics #2 (1993)—established that high-grade creator-owned premier keys ($IMGC) retain resilient collector float and immune status from corporate editorial retcons.`;
@@ -695,7 +731,9 @@ export function parseAndSynthesizeArticle(story: {
   const cleanSummary = rawSummary
     .replace(/<\/p>\s*<p[^>]*>/gi, "\n\n")
     .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<[^>]+>/g, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n +/g, "\n")
     .trim();
 
   const authenticParagraphs = cleanSummary
