@@ -257,7 +257,7 @@ export const getValuationRailComics = createCachedQuery(
   { ttlSeconds: 600, staleWhileRevalidateSeconds: 3600, tags: ["dashboard", "valuation"] }
 );
 
-export async function getCleanAssetSurfaces(limit = 24): Promise<CleanAssetSurfaceItem[]> {
+async function fetchCleanAssetSurfacesRaw(limit = 24): Promise<CleanAssetSurfaceItem[]> {
   const cleanDb = createCleanReadOnlyServerClient();
   try {
     // 1. CE70 index-definition seats, when that register has been populated.
@@ -337,6 +337,12 @@ export async function getCleanAssetSurfaces(limit = 24): Promise<CleanAssetSurfa
     return [];
   }
 }
+
+export const getCleanAssetSurfaces = createCachedQuery(
+  fetchCleanAssetSurfacesRaw,
+  "clean-asset-surfaces",
+  { ttlSeconds: 600, staleWhileRevalidateSeconds: 3600, tags: ["dashboard", "assets"] }
+);
 
 export async function getCleanAssetSurface(surfaceKey: string) {
   try {
