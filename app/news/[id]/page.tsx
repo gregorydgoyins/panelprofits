@@ -41,8 +41,9 @@ export default async function NewsStoryPage({ params }: { params: Promise<{ id: 
     getRelatedDossiersForText(storyText),
   ]);
   const authenticVideo = !videoReel ? extractAuthenticVideo(story.summary, story.url) : null;
-  const hasEditorialImage = Boolean(story.imageUrl && !story.imageUrl.includes("google.com/s2/favicons"));
-  const hasPublisherMark = Boolean(story.imageUrl?.includes("google.com/s2/favicons"));
+  const isVideoStory = Boolean(videoReel || authenticVideo);
+  const hasEditorialImage = Boolean(!isVideoStory && story.imageUrl && !story.imageUrl.includes("google.com/s2/favicons"));
+  const hasPublisherMark = Boolean(!isVideoStory && story.imageUrl?.includes("google.com/s2/favicons"));
   const synthesizedArticle = parseAndSynthesizeArticle({
     headline: story.headline,
     summary: story.summary,
