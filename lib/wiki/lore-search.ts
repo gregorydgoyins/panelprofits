@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { getCanonicalBackground } from "./canonical-backgrounds";
 
 export interface LoreEntitySummary {
   slug: string;
@@ -769,9 +770,30 @@ export function getLoreEntityBySlug(slug: string): LoreEntitySummary | null {
     return cachedTitleMap.get(titlePhrase)!;
   }
 
-  // No synchronous match in the local sample. Callers that can await
-  // should use getLoreEntityBySlugAsync instead, which additionally
-  // resolves against the real, live-queried public.ppcf_wiki_pages corpus.
+  // 4. Fallback to verified canonical backgrounds (single source of truth for major character entries)
+  const canonical = getCanonicalBackground(cleanSlug) || (alias ? getCanonicalBackground(alias) : null);
+  if (canonical) {
+    return {
+      slug: canonical.slug,
+      title: canonical.term,
+      universe: canonical.universe,
+      type: "character",
+      creators: canonical.creators,
+      first_appearance: canonical.landmarkIssue,
+      summary: canonical.description,
+      ticker: canonical.ticker,
+      landmark_debuts: [
+        {
+          title: canonical.landmarkIssue,
+          significance: `${canonical.era} definitive first appearance and market benchmark`,
+          catalogUrl: `/comics?q=${encodeURIComponent(canonical.landmarkIssue)}`,
+          era: canonical.era,
+          assetTier: canonical.baseFmv > 50000 ? "TIER_1_BLUE_CHIP" : canonical.baseFmv > 5000 ? "TIER_2_GROWTH" : "TIER_3_SPECULATIVE",
+        },
+      ],
+    };
+  }
+
   return null;
 }
 

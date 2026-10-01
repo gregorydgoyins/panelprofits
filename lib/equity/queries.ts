@@ -81,24 +81,25 @@ export async function getEquityContracts(): Promise<EquityContract[]> {
 export async function getEquityDetail(indexCode: string): Promise<{ contract: EquityContract; observations: EquityObservation[]; constituents: EquityConstituent[] } | null> {
   try {
     if (!indexCode) return null;
+    const cleanCode = indexCode.trim().toUpperCase().replace(/^\$/, "");
     const db = createCleanReadOnlyServerClient();
     const { data: contract, error: contractError } = await db
       .from("recovered_index_contracts")
       .select("index_code,display_name,methodology_version,expected_constituent_count,price_basis,grade_basis,selection_rule,weighting_rule,rebalance_rule,calculation_frequency,historical_status,production_status,notes")
-      .eq("index_code", indexCode)
+      .eq("index_code", cleanCode)
       .maybeSingle();
     if (contractError || !contract) return null;
     const [{ data: observations, error: observationsError }, { data: constituents, error: constituentError }] = await Promise.all([
       db
         .from("recovered_index_observations")
         .select("observation_time,index_value,previous_value,absolute_change,percent_change,valid_constituent_count,expected_constituent_count,calculation_status,methodology_version")
-        .eq("index_code", indexCode)
+        .eq("index_code", cleanCode)
         .order("observation_time", { ascending: false })
         .limit(250),
       db
         .from("recovered_index_constituents")
         .select("seat_number,historical_identity,ppcf_id,match_status,historical_source,notes")
-        .eq("index_code", indexCode)
+        .eq("index_code", cleanCode)
         .order("seat_number"),
     ]);
     if (observationsError) {

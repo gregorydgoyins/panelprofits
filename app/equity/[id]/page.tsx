@@ -7,7 +7,8 @@ export const dynamic = "force-dynamic";
 
 export default async function EquityDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const detail = await getEquityDetail(id);
+  const cleanId = decodeURIComponent(id).trim().toUpperCase().replace(/^\$/, "");
+  const detail = await getEquityDetail(cleanId);
   if (!detail) notFound();
   const { contract, observations, constituents } = detail;
   return (

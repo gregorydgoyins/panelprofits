@@ -1,0 +1,525 @@
+/**
+ * Canonical Curated Encyclopedic Background Lore, Landmark Issues, Creators & FMV Benchmarks.
+ * Single source of truth across newsroom, parser, lore dossiers, and entity hover cards.
+ */
+
+export interface CanonicalBackground {
+  term: string;
+  slug: string;
+  ticker: string;
+  universe: "MARVEL" | "DC" | "DOCTOR_WHO" | "STAR_WARS" | "STAR_TREK" | "IMAGE" | "DARK_HORSE" | "INDIE";
+  landmarkIssue: string;
+  creators: string;
+  era: string;
+  description: string;
+  baseFmv: number;
+}
+
+export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = {
+  // --- DOCTOR HEROES & VILLAINS ---
+  "doctor who": {
+    term: "Doctor Who (The Doctor)",
+    slug: "the-doctor-earth-5556",
+    ticker: "$DWHO",
+    universe: "DOCTOR_WHO",
+    landmarkIssue: "TV Comic #674 (1964) / Doctor Who Magazine #1",
+    creators: "Sydney Newman, C. E. Webber, Donald Wilson, and John Lucarotti",
+    era: "Silver Age (1964)",
+    description: "The eccentric renegade Time Lord from Gallifrey traveling through the space-time continuum in the TARDIS, anchoring a 60-year global sci-fi television and publishing phenomenon.",
+    baseFmv: 18500,
+  },
+  "the doctor": {
+    term: "Doctor Who (The Doctor)",
+    slug: "the-doctor-earth-5556",
+    ticker: "$DWHO",
+    universe: "DOCTOR_WHO",
+    landmarkIssue: "TV Comic #674 (1964) / Doctor Who Magazine #1",
+    creators: "Sydney Newman, C. E. Webber, Donald Wilson, and John Lucarotti",
+    era: "Silver Age (1964)",
+    description: "The eccentric renegade Time Lord from Gallifrey traveling through the space-time continuum in the TARDIS, anchoring a 60-year global sci-fi television and publishing phenomenon.",
+    baseFmv: 18500,
+  },
+  "doctor strange": {
+    term: "Doctor Strange (Stephen Strange)",
+    slug: "doctor-strange",
+    ticker: "$STRG",
+    universe: "MARVEL",
+    landmarkIssue: "Strange Tales #110 (1963)",
+    creators: "Stan Lee and Steve Ditko",
+    era: "Silver Age (1963)",
+    description: "The Master of the Mystic Arts and Sorcerer Supreme of Earth-616, whose Silver Age debut in Strange Tales #110 anchors Marvel's supernatural and multiversal market tier.",
+    baseFmv: 88000,
+  },
+  "stephen strange": {
+    term: "Doctor Strange (Stephen Strange)",
+    slug: "doctor-strange",
+    ticker: "$STRG",
+    universe: "MARVEL",
+    landmarkIssue: "Strange Tales #110 (1963)",
+    creators: "Stan Lee and Steve Ditko",
+    era: "Silver Age (1963)",
+    description: "The Master of the Mystic Arts and Sorcerer Supreme of Earth-616, whose Silver Age debut in Strange Tales #110 anchors Marvel's supernatural and multiversal market tier.",
+    baseFmv: 88000,
+  },
+  "doctor doom": {
+    term: "Doctor Doom (Victor Von Doom)",
+    slug: "doctor-doom",
+    ticker: "$DOOM",
+    universe: "MARVEL",
+    landmarkIssue: "Fantastic Four #5 (1962)",
+    creators: "Stan Lee and Jack Kirby",
+    era: "Silver Age (1962)",
+    description: "The sovereign monarch of Latveria whose intellect and mystical prowess have solidified his first appearance as a blue-chip cornerstone of Silver Age Marvel collecting.",
+    baseFmv: 95000,
+  },
+  "victor von doom": {
+    term: "Doctor Doom (Victor Von Doom)",
+    slug: "doctor-doom",
+    ticker: "$DOOM",
+    universe: "MARVEL",
+    landmarkIssue: "Fantastic Four #5 (1962)",
+    creators: "Stan Lee and Jack Kirby",
+    era: "Silver Age (1962)",
+    description: "The sovereign monarch of Latveria whose intellect and mystical prowess have solidified his first appearance as a blue-chip cornerstone of Silver Age Marvel collecting.",
+    baseFmv: 95000,
+  },
+  "doctor octopus": {
+    term: "Doctor Octopus (Otto Octavius)",
+    slug: "doctor-octopus",
+    ticker: "$DOC",
+    universe: "MARVEL",
+    landmarkIssue: "The Amazing Spider-Man #3 (1963)",
+    creators: "Stan Lee and Steve Ditko",
+    era: "Silver Age (1963)",
+    description: "The brilliant nuclear physicist whose four telepathically controlled titanium-steel tentacles and founding leadership of the Sinister Six make ASM #3 a blue-chip cornerstone of Silver Age Marvel collecting.",
+    baseFmv: 45000,
+  },
+  "doc ock": {
+    term: "Doctor Octopus (Otto Octavius)",
+    slug: "doctor-octopus",
+    ticker: "$DOC",
+    universe: "MARVEL",
+    landmarkIssue: "The Amazing Spider-Man #3 (1963)",
+    creators: "Stan Lee and Steve Ditko",
+    era: "Silver Age (1963)",
+    description: "The brilliant nuclear physicist whose four telepathically controlled titanium-steel tentacles and founding leadership of the Sinister Six make ASM #3 a blue-chip cornerstone of Silver Age Marvel collecting.",
+    baseFmv: 45000,
+  },
+  "doctor fate": {
+    term: "Doctor Fate (Kent Nelson)",
+    slug: "doctor-fate",
+    ticker: "$FATE",
+    universe: "DC",
+    landmarkIssue: "More Fun Comics #55 (1940)",
+    creators: "Gardner Fox and Howard Sherman",
+    era: "Golden Age (1940)",
+    description: "The supreme sorcerer of the DC Universe and founding pillar of the Justice Society of America, wielding the mystical Helmet of Nabu, Amulet of Anubis, and Cloak of Destiny.",
+    baseFmv: 145000,
+  },
+  "doctor manhattan": {
+    term: "Doctor Manhattan (Jon Osterman)",
+    slug: "doctor-manhattan",
+    ticker: "$WTCH",
+    universe: "DC",
+    landmarkIssue: "Watchmen #1 (1986)",
+    creators: "Alan Moore and Dave Gibbons",
+    era: "Copper / Modern Age (1986)",
+    description: "The godlike quantum-physicist deity of Alan Moore and Dave Gibbons' Watchmen whose complete perception of non-linear time and atomic mastery transformed graphic narrative history.",
+    baseFmv: 950,
+  },
+
+  // --- FIRST FAMILY & MULTIVERSE ---
+  "fantastic four": {
+    term: "Fantastic Four (First Family)",
+    slug: "fantastic-four",
+    ticker: "$FF4",
+    universe: "MARVEL",
+    landmarkIssue: "Fantastic Four #1 (1961)",
+    creators: "Stan Lee and Jack Kirby",
+    era: "Silver Age (1961)",
+    description: "The birth certificate of modern Marvel Comics, introducing Mister Fantastic (Reed Richards), Invisible Woman (Sue Storm), Human Torch (Johnny Storm), and the Thing (Ben Grimm).",
+    baseFmv: 165000,
+  },
+  "mister fantastic": {
+    term: "Mister Fantastic (Reed Richards)",
+    slug: "mister-fantastic",
+    ticker: "$FF4",
+    universe: "MARVEL",
+    landmarkIssue: "Fantastic Four #1 (1961)",
+    creators: "Stan Lee and Jack Kirby",
+    era: "Silver Age (1961)",
+    description: "The elastic polymath leader of the Fantastic Four and architect of multiversal incursion defense whose intellect anchors the Council of Reeds and Marvel science continuity.",
+    baseFmv: 165000,
+  },
+  "reed richards": {
+    term: "Mister Fantastic (Reed Richards)",
+    slug: "mister-fantastic",
+    ticker: "$FF4",
+    universe: "MARVEL",
+    landmarkIssue: "Fantastic Four #1 (1961)",
+    creators: "Stan Lee and Jack Kirby",
+    era: "Silver Age (1961)",
+    description: "The elastic polymath leader of the Fantastic Four and architect of multiversal incursion defense whose intellect anchors the Council of Reeds and Marvel science continuity.",
+    baseFmv: 165000,
+  },
+  "invisible woman": {
+    term: "Invisible Woman (Sue Storm)",
+    slug: "invisible-woman",
+    ticker: "$FF4",
+    universe: "MARVEL",
+    landmarkIssue: "Fantastic Four #1 (1961)",
+    creators: "Stan Lee and Jack Kirby",
+    era: "Silver Age (1961)",
+    description: "The formidable co-founder of the Fantastic Four capable of psionic force field projection and light manipulation, serving as the emotional and tactical bedrock of the team.",
+    baseFmv: 165000,
+  },
+  "sue storm": {
+    term: "Invisible Woman (Sue Storm)",
+    slug: "invisible-woman",
+    ticker: "$FF4",
+    universe: "MARVEL",
+    landmarkIssue: "Fantastic Four #1 (1961)",
+    creators: "Stan Lee and Jack Kirby",
+    era: "Silver Age (1961)",
+    description: "The formidable co-founder of the Fantastic Four capable of psionic force field projection and light manipulation, serving as the emotional and tactical bedrock of the team.",
+    baseFmv: 165000,
+  },
+  "human torch": {
+    term: "Human Torch (Johnny Storm)",
+    slug: "human-torch",
+    ticker: "$FF4",
+    universe: "MARVEL",
+    landmarkIssue: "Fantastic Four #1 (1961)",
+    creators: "Stan Lee and Jack Kirby",
+    era: "Silver Age (1961)",
+    description: "The hot-headed cosmic-powered adventurer whose plasma generation and fiery flight made him a generational icon of Silver Age Marvel youth culture.",
+    baseFmv: 165000,
+  },
+  "the thing": {
+    term: "The Thing (Ben Grimm)",
+    slug: "the-thing",
+    ticker: "$FF4",
+    universe: "MARVEL",
+    landmarkIssue: "Fantastic Four #1 (1961)",
+    creators: "Stan Lee and Jack Kirby",
+    era: "Silver Age (1961)",
+    description: "The rocky, super-strong heart of the Fantastic Four whose tragic transformation and resilient spirit coined the immortal battle cry 'It's Clobberin' Time!'",
+    baseFmv: 165000,
+  },
+  "latverian witches": {
+    term: "Latverian Witches (Zefiro Sorcery Coven)",
+    slug: "latverian-witches",
+    ticker: "$DOOM:LATV",
+    universe: "MARVEL",
+    landmarkIssue: "Astonishing Tales #8 / Marvel Graphic Novel #49 (Triumph and Torment)",
+    creators: "Gerry Conway, Gene Colan, Roger Stern, and Mike Mignola",
+    era: "Bronze / Modern Age",
+    description: "The mystical Romani coven of Latveria led ancestrally by Cynthia Von Doom. Drawing on ancient Balkan elemental magic and necromancy, their demonic entanglement with Mephisto formed the tragic crucible that drove Victor Von Doom to master the mystic arts alongside advanced quantum cybernetics.",
+    baseFmv: 1200,
+  },
+  "cynthia von doom": {
+    term: "Cynthia Von Doom",
+    slug: "cynthia-von-doom",
+    ticker: "$DOOM:CYNTHIA",
+    universe: "MARVEL",
+    landmarkIssue: "Astonishing Tales #8 / Triumph and Torment",
+    creators: "Gerry Conway, Gene Colan, Roger Stern, and Mike Mignola",
+    era: "Bronze / Modern Age",
+    description: "The sorceress mother of Doctor Doom whose fateful pact with Mephisto to protect her clan condemned her soul to the Nether-Realms, establishing Doom's lifelong annual quest to liberate her spirit and forge his mastery over sorcery.",
+    baseFmv: 1200,
+  },
+
+  // --- SPIDER-MAN BEDROCK ---
+  "spider-man": {
+    term: "Spider-Man (Peter Parker)",
+    slug: "spider-man",
+    ticker: "$SPDR",
+    universe: "MARVEL",
+    landmarkIssue: "Amazing Fantasy #15 (1962)",
+    creators: "Stan Lee and Steve Ditko",
+    era: "Silver Age (1962)",
+    description: "The definitive genesis of Peter Parker, representing the pinnacle of Marvel's Silver Age revolution and the single most valuable modern-era superhero investment equity in existence.",
+    baseFmv: 285000,
+  },
+  "spider-man: brand new day": {
+    term: "Spider-Man: Brand New Day",
+    slug: "spider-man-brand-new-day",
+    ticker: "$SPDR:BND",
+    universe: "MARVEL",
+    landmarkIssue: "The Amazing Spider-Man #546 (2008)",
+    creators: "Dan Slott, Marc Guggenheim, Bob Gale, Zeb Wells, Steve McNiven, and John Romita Jr.",
+    era: "Modern Age (2008)",
+    description: "A pivotal fresh start for Peter Parker following the controversial 'One More Day' arc, introducing Mr. Negative (Martin Li), Jackpot, and Overdrive while revitalizing the Wall-Crawler's street-level rogues gallery across tri-monthly publishing schedules.",
+    baseFmv: 450,
+  },
+  "claire temple": {
+    term: "Claire Temple (Night Nurse)",
+    slug: "claire-temple",
+    ticker: "$NURSE",
+    universe: "MARVEL",
+    landmarkIssue: "Hero for Hire #2 (1972) / Night Nurse #1",
+    creators: "Archie Goodwin and George Tuska / Jean Thomas and Winslow Mortimer",
+    era: "Bronze Age (1972)",
+    description: "The street-level physician and underground medic of Harlem who treated Luke Cage, Daredevil, Iron Fist, and Spider-Man. Her character synthesizes the classic 1972 Night Nurse comic legacy with modern Marvel street-level continuity.",
+    baseFmv: 850,
+  },
+
+  // --- GOLDEN & SILVER AGE HOLY GRAILS ---
+  "batman": {
+    term: "Batman (Bruce Wayne)",
+    slug: "batman",
+    ticker: "$BAT",
+    universe: "DC",
+    landmarkIssue: "Detective Comics #27 (1939)",
+    creators: "Bob Kane and Bill Finger",
+    era: "Golden Age (1939)",
+    description: "The foundational genesis of the Dark Knight and Gotham City, commanding seven-figure clearing prices at sovereign international auction houses.",
+    baseFmv: 850000,
+  },
+  "superman": {
+    term: "Superman (Kal-El / Clark Kent)",
+    slug: "superman",
+    ticker: "$SUPR",
+    universe: "DC",
+    landmarkIssue: "Action Comics #1 (1938)",
+    creators: "Jerry Siegel and Joe Shuster",
+    era: "Golden Age (1938)",
+    description: "The foundational birth of the entire superhero genre and the most historically significant printed comic artifact in global cultural history.",
+    baseFmv: 1200000,
+  },
+  "wolverine": {
+    term: "Wolverine (Logan / Weapon X)",
+    slug: "wolverine",
+    ticker: "$WOLV",
+    universe: "MARVEL",
+    landmarkIssue: "The Incredible Hulk #181 (1974)",
+    creators: "Len Wein, John Romita Sr., and Herb Trimpe",
+    era: "Bronze Age (1974)",
+    description: "The premier Bronze Age investment holy grail, marking the full introduction of Weapon X / Logan into Marvel continuity.",
+    baseFmv: 42000,
+  },
+  "the punisher": {
+    term: "The Punisher (Frank Castle)",
+    slug: "punisher",
+    ticker: "$PNSH",
+    universe: "MARVEL",
+    landmarkIssue: "The Amazing Spider-Man #129 (1974)",
+    creators: "Gerry Conway, Ross Andru, and John Romita Sr.",
+    era: "Bronze Age (1974)",
+    description: "The ruthless vigilante Frank Castle's debut, serving as the undisputed bellwether key of Bronze Age Marvel investment and anti-hero storytelling.",
+    baseFmv: 14500,
+  },
+  "punisher": {
+    term: "The Punisher (Frank Castle)",
+    slug: "punisher",
+    ticker: "$PNSH",
+    universe: "MARVEL",
+    landmarkIssue: "The Amazing Spider-Man #129 (1974)",
+    creators: "Gerry Conway, Ross Andru, and John Romita Sr.",
+    era: "Bronze Age (1974)",
+    description: "The ruthless vigilante Frank Castle's debut, serving as the undisputed bellwether key of Bronze Age Marvel investment and anti-hero storytelling.",
+    baseFmv: 14500,
+  },
+
+  // --- SCI-FI PRESTIGE ASSETS ---
+  "star trek": {
+    term: "Star Trek (Enterprise Fleet Continuity)",
+    slug: "star-trek",
+    ticker: "$TREK",
+    universe: "STAR_TREK",
+    landmarkIssue: "Star Trek #1 (1967 Gold Key)",
+    creators: "Gene Roddenberry, Dick Wood, and Nevio Zaccara",
+    era: "Silver Age (1967)",
+    description: "The pioneering sci-fi franchise exploring strange new worlds, whose sequential art legacy spanning Gold Key, DC, Marvel, and IDW Publishing represents a historic certified collectible category.",
+    baseFmv: 4800,
+  },
+  "captain kirk": {
+    term: "Captain James T. Kirk",
+    slug: "james-t-kirk",
+    ticker: "$TREK",
+    universe: "STAR_TREK",
+    landmarkIssue: "Star Trek #1 (1967 Gold Key)",
+    creators: "Gene Roddenberry, Dick Wood, and Nevio Zaccara",
+    era: "Silver Age (1967)",
+    description: "The legendary Starfleet captain of the USS Enterprise whose voyages defined sci-fi exploration and inspired certified sequential art adaptations across four publishers.",
+    baseFmv: 4800,
+  },
+  "captain picard": {
+    term: "Captain Jean-Luc Picard",
+    slug: "jean-luc-picard",
+    ticker: "$TREK",
+    universe: "STAR_TREK",
+    landmarkIssue: "Star Trek: The Next Generation #1 (1988 DC Comics)",
+    creators: "Gene Roddenberry, Michael Carlin, and Pablo Marcos",
+    era: "Copper Age (1988)",
+    description: "The scholarly captain of the Enterprise-D, navigating diplomacy and Borg incursions across acclaimed comic series published by DC Comics and IDW.",
+    baseFmv: 320,
+  },
+  "the mandalorian": {
+    term: "The Mandalorian (Din Djarin & Grogu)",
+    slug: "the-mandalorian",
+    ticker: "$MANDO",
+    universe: "STAR_WARS",
+    landmarkIssue: "Star Wars: The Mandalorian #1 (2022 Marvel)",
+    creators: "Jon Favreau, Dave Filoni, and Rodney Barnes",
+    era: "Modern Age (2022)",
+    description: "The lone beskar-clad bounty hunter and Clan of Two protector of Grogu whose cinematic journey revitalized modern Star Wars lore and secondary market variant demand.",
+    baseFmv: 420,
+  },
+  "mandalorian": {
+    term: "The Mandalorian (Din Djarin & Grogu)",
+    slug: "the-mandalorian",
+    ticker: "$MANDO",
+    universe: "STAR_WARS",
+    landmarkIssue: "Star Wars: The Mandalorian #1 (2022 Marvel)",
+    creators: "Jon Favreau, Dave Filoni, and Rodney Barnes",
+    era: "Modern Age (2022)",
+    description: "The lone beskar-clad bounty hunter and Clan of Two protector of Grogu whose cinematic journey revitalized modern Star Wars lore and secondary market variant demand.",
+    baseFmv: 420,
+  },
+  "grogu": {
+    term: "Grogu (The Child)",
+    slug: "grogu",
+    ticker: "$MANDO",
+    universe: "STAR_WARS",
+    landmarkIssue: "Star Wars: The Mandalorian #1 (2022 Marvel)",
+    creators: "Jon Favreau, Dave Filoni, and Rodney Barnes",
+    era: "Modern Age (2022)",
+    description: "The Force-sensitive foundling and companion to Din Djarin, representing a global cultural phenomenon and driver of modern Star Wars key variant collecting.",
+    baseFmv: 420,
+  },
+
+  // --- MUTANTS & X-MEN ---
+  "the x-men": {
+    term: "The X-Men",
+    slug: "x-men",
+    ticker: "$XMEN",
+    universe: "MARVEL",
+    landmarkIssue: "The X-Men #1 / Giant-Size X-Men #1",
+    creators: "Stan Lee, Jack Kirby, Len Wein, and Dave Cockrum",
+    era: "Silver / Bronze Age",
+    description: "Marvel's mutant allegorical masterpiece, anchoring generations of reader engagement and high-grade investment capital across Silver and Bronze Age certified registries.",
+    baseFmv: 48000,
+  },
+  "x-men": {
+    term: "The X-Men",
+    slug: "x-men",
+    ticker: "$XMEN",
+    universe: "MARVEL",
+    landmarkIssue: "The X-Men #1 / Giant-Size X-Men #1",
+    creators: "Stan Lee, Jack Kirby, Len Wein, and Dave Cockrum",
+    era: "Silver / Bronze Age",
+    description: "Marvel's mutant allegorical masterpiece, anchoring generations of reader engagement and high-grade investment capital across Silver and Bronze Age certified registries.",
+    baseFmv: 48000,
+  },
+  "magneto": {
+    term: "Magneto (Erik Lehnsherr)",
+    slug: "magneto",
+    ticker: "$MGNT",
+    universe: "MARVEL",
+    landmarkIssue: "The X-Men #1 (1963)",
+    creators: "Stan Lee and Jack Kirby",
+    era: "Silver Age (1963)",
+    description: "The Master of Magnetism, complex mutant liberator and perpetual ideological foil to Professor Charles Xavier, whose first appearance anchors Silver Age villain investment.",
+    baseFmv: 48000,
+  },
+  "cyclops": {
+    term: "Cyclops (Scott Summers)",
+    slug: "cyclops",
+    ticker: "$CYCL",
+    universe: "MARVEL",
+    landmarkIssue: "The X-Men #1 (1963)",
+    creators: "Stan Lee and Jack Kirby",
+    era: "Silver Age (1963)",
+    description: "The foundational field commander of the X-Men whose optic blasts and tactical discipline define the leadership core of mutantkind.",
+    baseFmv: 48000,
+  },
+  "gambit": {
+    term: "Gambit (Remy LeBeau)",
+    slug: "gambit",
+    ticker: "$GMBT",
+    universe: "MARVEL",
+    landmarkIssue: "Uncanny X-Men #266 (1990)",
+    creators: "Chris Claremont and Jim Lee",
+    era: "Copper Age (1990)",
+    description: "The kinetic-charging Cajun thief whose debut in Uncanny X-Men #266 represents one of the most traded and liquid key issues of the 1990s comic era.",
+    baseFmv: 1100,
+  },
+  "professor x": {
+    term: "Professor X (Charles Xavier)",
+    slug: "professor-x",
+    ticker: "$PROFX",
+    universe: "MARVEL",
+    landmarkIssue: "The X-Men #1 (1963)",
+    creators: "Stan Lee and Jack Kirby",
+    era: "Silver Age (1963)",
+    description: "The visionary telepath founder of the X-Men whose dream of peaceful coexistence between humans and mutants anchors the entire ideological architecture of mutant lore.",
+    baseFmv: 48000,
+  },
+  "charles xavier": {
+    term: "Professor X (Charles Xavier)",
+    slug: "professor-x",
+    ticker: "$PROFX",
+    universe: "MARVEL",
+    landmarkIssue: "The X-Men #1 (1963)",
+    creators: "Stan Lee and Jack Kirby",
+    era: "Silver Age (1963)",
+    description: "The visionary telepath founder of the X-Men whose dream of peaceful coexistence between humans and mutants anchors the entire ideological architecture of mutant lore.",
+    baseFmv: 48000,
+  },
+
+  // --- CREATOR-OWNED & INDIE SOVEREIGNS ---
+  "spawn": {
+    term: "Spawn (Al Simmons)",
+    slug: "spawn",
+    ticker: "$SPWN",
+    universe: "IMAGE",
+    landmarkIssue: "Spawn #1 (1992)",
+    creators: "Todd McFarlane",
+    era: "Modern Age (1992)",
+    description: "The record-shattering flagship equity of Image Comics whose continuous 300+ issue independent run proved creator sovereignty can outlast corporate studio control.",
+    baseFmv: 180,
+  },
+  "hellboy": {
+    term: "Hellboy (Anung Un Rama)",
+    slug: "hellboy",
+    ticker: "$DKHS",
+    universe: "DARK_HORSE",
+    landmarkIssue: "San Diego Comic-Con Comics #2 (1993)",
+    creators: "Mike Mignola",
+    era: "Modern Age (1993)",
+    description: "The Right Hand of Doom paranormal investigator whose dark folklore world and creator-owned prestige established Dark Horse's premier key tier.",
+    baseFmv: 4500,
+  },
+};
+
+/**
+ * Universal lookup helper: resolves canonical background lore, FMV benchmark,
+ * landmark debut issue, and creators by matching term, alias, or slug.
+ */
+export function getCanonicalBackground(keyOrSlug: string): CanonicalBackground | null {
+  if (!keyOrSlug) return null;
+  const clean = keyOrSlug.toLowerCase().trim();
+
+  // 1. Direct key match
+  if (CANONICAL_COMIC_BACKGROUNDS[clean]) {
+    return CANONICAL_COMIC_BACKGROUNDS[clean];
+  }
+
+  // 2. Slug match
+  const slugClean = clean.replace(/[^a-z0-9]+/g, "-");
+  for (const bg of Object.values(CANONICAL_COMIC_BACKGROUNDS)) {
+    if (bg.slug === clean || bg.slug === slugClean) {
+      return bg;
+    }
+  }
+
+  // 3. Substring match
+  for (const [key, bg] of Object.entries(CANONICAL_COMIC_BACKGROUNDS)) {
+    if (clean.includes(key) || key.includes(clean)) {
+      return bg;
+    }
+  }
+
+  return null;
+}
