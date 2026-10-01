@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { createAdminServerClient } from "@/lib/supabase/admin";
 import { isMissingTableError } from "@/lib/supabase/errors";
+import { createCachedQuery } from "@/lib/cache/wrapper";
 
 export {
   type NewsCategory,
@@ -22,8 +23,6 @@ import {
   recordFetchSuccess,
   recordFetchFailure,
   getNetworkHealthSummary,
-  evaluateArticleQuality,
-  isRelevantComicStory,
   getAlternateFeedUrls,
 } from "./self-healing";
 
@@ -76,22 +75,37 @@ export const PRIMARY_SOURCES: NewsSource[] = [
   { name: "COMICTOM101", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UC6s16tJ0e5lQ5nQ4-6-666Q", category: "national" },
   { name: "GEM MINT COLLECTIBLES", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UC31fEeAOTnfRgvGFwYJsFUA", category: "national" },
   { name: "CARTOONIST KAYFABE", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCU61d9D1F-Y03e05-Pj2-uA", category: "national" },
-  { name: "VARIANT COMICS", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UC9c1MvP4U9m5JpS6a3N7Y7Q", category: "national" },
 ];
+
+import { ACTIVE_NEWS_CHANNELS } from "./channels-registry";
 
 export const EXTENDED_SOURCES: NewsSource[] = EXTENDED_NEWS_SOURCES;
 export const CURATED_SOURCES: NewsSource[] = CURATED_CHANNELS;
 
-// Deduplicated unified syndication network across 237+ feeds
+// Deduplicated unified syndication network prioritizing active verified channels
 const sourceRegistryMap = new Map<string, NewsSource>();
-for (const s of [...PRIMARY_SOURCES, ...CURATED_SOURCES, ...EXTENDED_SOURCES]) {
+for (const s of [...ACTIVE_NEWS_CHANNELS, ...PRIMARY_SOURCES, ...EXTENDED_SOURCES]) {
   if (!sourceRegistryMap.has(s.url)) {
     sourceRegistryMap.set(s.url, s);
   }
 }
 export const SOURCES: NewsSource[] = Array.from(sourceRegistryMap.values());
 
-export { isRelevantComicStory, STRICT_NEGATIVE_FILTER, CORE_COMIC_SIGNALS, evaluateArticleQuality } from "./self-healing";
+import {
+  isRelevantComicStory,
+  STRICT_NEGATIVE_FILTER,
+  CORE_COMIC_SIGNALS,
+  evaluateArticleQuality,
+  isFreshArticle,
+} from "./classifier";
+
+export {
+  isRelevantComicStory,
+  STRICT_NEGATIVE_FILTER,
+  CORE_COMIC_SIGNALS,
+  evaluateArticleQuality,
+  isFreshArticle,
+};
 
 function decodeEntities(value: string): string {
   return value
@@ -174,7 +188,9 @@ function parseFeedItems(xml: string): Array<{
       tagValue(block, "content");
     const summary = rawSummary ? decodeEntities(rawSummary).slice(0, 3000) : null;
     const author = tagValue(block, "dc:creator") || tagValue(block, "name") || tagValue(block, "author") || null;
-    const imageUrl = extractImage(block);
+    const imageUrl = ytVideoId
+      ? `https://img.youtube.com/vi/${ytVideoId}/hqdefault.jpg`
+      : extractImage(block);
     const pubDateStr = tagValue(block, "pubDate") || tagValue(block, "published") || tagValue(block, "updated");
     const publishedAt = pubDateStr && !Number.isNaN(Date.parse(pubDateStr)) ? new Date(pubDateStr).toISOString() : null;
 
@@ -248,21 +264,25 @@ export async function fetchFeedSource(source: NewsSource): Promise<Array<{
 
     return items
       .filter((item) => {
+        if (!isFreshArticle(item.publishedAt, 45)) return false;
         if (!isRelevantComicStory(source.name, item.title, item.summary, true)) return false;
         return evaluateArticleQuality(item.title, item.summary, true).admit;
       })
-      .map((item) => ({
-        story_key: generateStoryKey(source.url, item.url, item.title),
-        source: source.name,
-        source_url: source.url,
-        category: source.category,
-        headline: item.title,
-        author: item.author,
-        summary: item.summary,
-        url: item.url,
-        image_url: item.imageUrl || sourceFavicon(source.url),
-        published_at: item.publishedAt,
-      }));
+      .map((item) => {
+        const isVideo = item.url.includes("youtube.com") || item.url.includes("youtu.be");
+        return {
+          story_key: generateStoryKey(source.url, item.url, item.title),
+          source: source.name,
+          source_url: source.url,
+          category: isVideo ? "video" : source.category,
+          headline: item.title,
+          author: item.author,
+          summary: item.summary,
+          url: item.url,
+          image_url: item.imageUrl || sourceFavicon(source.url),
+          published_at: item.publishedAt,
+        };
+      });
   } catch (err) {
     recordFetchFailure(source.name, source.url, (err as Error).message);
     return [];
@@ -322,6 +342,7 @@ export async function refreshNewsStore(
     const combinedMap = new Map<string, typeof syndicatedRows[0]>();
     for (const row of [...syndicatedRows, ...wireRows]) {
       if (
+        isFreshArticle(row.published_at, 45) &&
         isRelevantComicStory(row.source, row.headline, row.summary) &&
         evaluateArticleQuality(row.headline, row.summary).admit
       ) {
@@ -370,11 +391,17 @@ export async function refreshNewsStore(
 }
 
 function mapStory(row: Record<string, unknown>): NewsStory {
+  const cat = String(row.category || "national").toLowerCase();
+  const validCategory: NewsCategory =
+    cat === "video" || cat === "market" || cat === "creators" || cat === "international"
+      ? (cat as NewsCategory)
+      : "national";
+
   return {
     id: String(row.id),
     source: String(row.source),
     sourceUrl: String(row.source_url),
-    category: row.category === "national" ? "national" : "international",
+    category: validCategory,
     headline: String(row.headline),
     author: row.author ? String(row.author) : null,
     summary: row.summary ? String(row.summary) : null,
@@ -477,7 +504,7 @@ export function deduplicateNewsStories(stories: NewsStory[]): NewsStory[] {
   return result;
 }
 
-export async function getNewsStories(limit = 24, includeArchive = false): Promise<NewsStory[]> {
+async function fetchNewsStoriesRaw(limit = 24, includeArchive = false): Promise<NewsStory[]> {
   const db = createAdminServerClient();
   const query = db
     .from("pp_news_stories")
@@ -505,7 +532,13 @@ export async function getNewsStories(limit = 24, includeArchive = false): Promis
   return deduplicateNewsStories(relevantStories).slice(0, limit);
 }
 
-export async function getNewsStory(id: string): Promise<NewsStory | null> {
+export const getNewsStories = createCachedQuery(
+  fetchNewsStoriesRaw,
+  "news-stories",
+  { ttlSeconds: 60, staleWhileRevalidateSeconds: 300, tags: ["news"] }
+);
+
+async function fetchNewsStoryRaw(id: string): Promise<NewsStory | null> {
   const db = createAdminServerClient();
   const { data, error } = await db
     .from("pp_news_stories")
@@ -525,3 +558,9 @@ export async function getNewsStory(id: string): Promise<NewsStory | null> {
 
   return story;
 }
+
+export const getNewsStory = createCachedQuery(
+  fetchNewsStoryRaw,
+  "news-story",
+  { ttlSeconds: 120, staleWhileRevalidateSeconds: 600, tags: ["news"] }
+);

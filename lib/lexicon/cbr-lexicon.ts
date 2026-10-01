@@ -42,17 +42,38 @@ function loadCbrDictionary(): Record<string, CbrLexiconEntry> {
 export function getCbrTermBySlug(slug: string): CbrLexiconEntry | null {
   if (!slug) return null;
   const dict = loadCbrDictionary();
-  const clean = slug.toLowerCase().trim();
+  let decoded = slug;
+  try {
+    decoded = decodeURIComponent(slug);
+  } catch {}
+  const clean = decoded.toLowerCase().trim().replace(/\/$/, "");
 
   // 1. Direct slug match
   if (dict[clean]) return dict[clean];
 
+  const normalized = clean.replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  if (dict[normalized]) return dict[normalized];
+
   // 2. Fallback search by normalized slug or title
   if (cachedTermList) {
-    const found = cachedTermList.find(
-      (t) => t.slug.toLowerCase() === clean || t.term.toLowerCase() === clean.replace(/-/g, " ")
-    );
+    const found = cachedTermList.find((t) => {
+      const tSlug = t.slug.toLowerCase();
+      const tTerm = t.term.toLowerCase();
+      const tNorm = tSlug.replace(/[^a-z0-9]+/g, "-");
+      return (
+        tSlug === clean ||
+        tNorm === normalized ||
+        tTerm === clean.replace(/[-_]/g, " ") ||
+        tTerm.replace(/[^a-z0-9]+/g, " ") === clean.replace(/[^a-z0-9]+/g, " ")
+      );
+    });
     if (found) return found;
+
+    // 3. Prefix matching for terms with parentheticals (e.g. "market-capitalization" -> "market-capitalization-asset-float-cap")
+    const prefixMatch = cachedTermList.find(
+      (t) => t.slug.toLowerCase().startsWith(`${normalized}-`) || normalized.startsWith(`${t.slug.toLowerCase()}-`)
+    );
+    if (prefixMatch) return prefixMatch;
   }
 
   return null;

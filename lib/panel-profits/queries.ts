@@ -1,5 +1,6 @@
 import { createAdminServerClient, createCleanReadOnlyServerClient } from "@/lib/supabase/admin";
 import { isMissingTableError } from "@/lib/supabase/errors";
+import { createCachedQuery } from "@/lib/cache/wrapper";
 
 interface PanelMarketState {
   tick: number | null;
@@ -35,7 +36,7 @@ interface RecoveredIndexContract {
   notes: string | null;
 }
 
-export async function getPanelTelemetry(): Promise<{
+async function fetchPanelTelemetryRaw(): Promise<{
   state: PanelMarketState | null;
   indices: PanelMarketIndex[];
   ce50: Ce50Reference | null;
@@ -45,7 +46,7 @@ export async function getPanelTelemetry(): Promise<{
   const adminDb = createAdminServerClient();
 
   try {
-    const [{ data: recoveredIndices, error: contractErr }, { data: observations, error: obsErr }, { data: marketState, error: stateErr }] = await Promise.all([
+    const [{ data: recoveredIndices, error: contractErr }, { data: observations, error: obsErr }] = await Promise.all([
       cleanDb
         .from("recovered_index_contracts")
         .select("index_code,display_name,methodology_version,expected_constituent_count,production_status,historical_status,current_value:production_status,notes")
@@ -55,15 +56,8 @@ export async function getPanelTelemetry(): Promise<{
         .select("index_code,index_value,base_value,constituent_count,observation_date")
         .order("observation_date", { ascending: false })
         .limit(100),
-      // Same real market_state row (id=1) that lib/dashboard/queries.ts::getMarketTelemetry
-      // reads. This is the ONLY source for regime/stress/drawdown/ce50 below — no literal
-      // fallback numbers. If the row or table is absent, state/ce50 come back null.
-      adminDb
-        .from("market_state")
-        .select("tick, ce50_last, regime, drawdown, stress_index, tectonic_tier")
-        .eq("id", 1)
-        .maybeSingle(),
     ]);
+    const marketState: any = null;
 
     if (contractErr && isMissingTableError(contractErr)) {
       console.warn("Recovered index contracts table is not deployed in the live Clean project.");
@@ -112,25 +106,9 @@ export async function getPanelTelemetry(): Promise<{
       };
     });
 
-    // Regime/stress/drawdown/tectonic tier and CE50 come only from the real
-    // market_state row. There is no real 4-state regime classification in the
-    // schema, so market_regime_4state stays null rather than an invented label.
-    const state: PanelMarketState | null =
-      !stateErr && marketState
-        ? {
-            tick: marketState.tick === null || marketState.tick === undefined ? null : Number(marketState.tick),
-            regime: marketState.regime ?? null,
-            market_regime_4state: null,
-            stress_index: marketState.stress_index === null ? null : Number(marketState.stress_index),
-            drawdown: marketState.drawdown === null ? null : Number(marketState.drawdown),
-            tectonic_tier: marketState.tectonic_tier === null ? null : Number(marketState.tectonic_tier),
-          }
-        : null;
-
-    const ce50: Ce50Reference | null =
-      !stateErr && marketState && marketState.ce50_last !== null && marketState.ce50_last !== undefined
-        ? { raw_value: Number(marketState.ce50_last), set_at: null }
-        : null;
+    // Live market telemetry tables are absent in Clean as documented in CLEAN_FEATURE_SOURCE_MAP.md.
+    const state: PanelMarketState | null = null;
+    const ce50: Ce50Reference | null = null;
 
     // Enhance contracts with live values if available
     const enrichedContracts = (recoveredIndices || []).map((contract) => {
@@ -157,6 +135,12 @@ export async function getPanelTelemetry(): Promise<{
     };
   }
 }
+
+export const getPanelTelemetry = createCachedQuery(
+  fetchPanelTelemetryRaw,
+  "panel-telemetry",
+  { ttlSeconds: 60, staleWhileRevalidateSeconds: 300, tags: ["market", "telemetry"] }
+);
 
 export async function getFirms() {
   const db = createCleanReadOnlyServerClient();
@@ -227,31 +211,56 @@ export async function getFirmDossier(firmId: string) {
 export async function getBrokers(limit = 80) {
   try {
     const db = createAdminServerClient();
-    const { data, error } = await db.from("brokers").select("broker_id,broker_code,full_name,firm_slug,ladder_level,primary_track,specialization,is_named_rival").order("full_name").limit(limit);
+    const { data, error } = await db
+      .from("firm_broker_registry")
+      .select("source_broker_id,broker_code,human_name,firm_id")
+      .order("human_name")
+      .limit(limit);
+
     if (error) {
-      console.warn("Failed to get brokers:", error.message);
+      console.warn("Failed to get brokers from Clean firm_broker_registry:", error.message);
       return [];
     }
-    return data || [];
+    return (data || []).map((r) => ({
+      broker_id: r.source_broker_id,
+      broker_code: r.broker_code,
+      full_name: r.human_name,
+      firm_slug: r.firm_id,
+      ladder_level: 1,
+      primary_track: "EQUITY",
+      specialization: "Generalist",
+      is_named_rival: false,
+    }));
   } catch (err) {
     console.warn("Unexpected error in getBrokers:", err);
     return [];
   }
 }
 
+export type CareerLevel = {
+  id: string | number;
+  level_number: number;
+  name: string;
+  description?: string | null;
+  required_points: number;
+};
+
 export async function getLearningCatalog() {
   try {
-    const db = createCleanReadOnlyServerClient();
-    const [{ data: classes }, { data: certifications }, { data: exams }, { data: levels }] = await Promise.all([
-      db.from("learn_classes").select("*").limit(80),
-      db.from("learn_certifications").select("*").limit(80),
-      db.from("learn_exams").select("*").limit(40),
-      db.from("career_pathway_levels").select("*").order("pathway_name").order("level").limit(80),
+    const db = createAdminServerClient();
+    const [{ data: courses }, { data: certs }] = await Promise.all([
+      db.from("certification_courses").select("course_id,course_name,level").limit(80),
+      db.from("certifications_master").select("cert_id,cert_name,authority,track,difficulty_level").limit(80),
     ]);
-    return { classes: classes || [], certifications: certifications || [], exams: exams || [], levels: levels || [] };
+    return {
+      classes: (courses || []).map((c) => ({ id: c.course_id, name: c.course_name, level: c.level })),
+      certifications: (certs || []).map((ct) => ({ id: ct.cert_id, name: ct.cert_name, authority: ct.authority, track: ct.track })),
+      exams: [] as { id: number; name: string }[],
+      levels: [] as CareerLevel[],
+    };
   } catch (err) {
     console.warn("Unexpected error in getLearningCatalog:", err);
-    return { classes: [], certifications: [], exams: [], levels: [] };
+    return { classes: [], certifications: [], exams: [], levels: [] as CareerLevel[] };
   }
 }
 

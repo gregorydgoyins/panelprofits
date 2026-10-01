@@ -1,5 +1,6 @@
 import { createCleanReadOnlyServerClient } from "@/lib/supabase/admin";
 import { isMissingTableError } from "@/lib/supabase/errors";
+import { createCachedQuery } from "@/lib/cache/wrapper";
 
 export interface MarketIndexRecord {
   indexCode: string;
@@ -39,7 +40,7 @@ export interface EquitiesRailItem {
  * contracts table has no rows, this returns an empty array — callers must
  * render an honest "no live data" state rather than substituting numbers.
  */
-export async function calculateMarketIndices(): Promise<MarketIndexRecord[]> {
+async function fetchMarketIndicesRaw(): Promise<MarketIndexRecord[]> {
   const db = createCleanReadOnlyServerClient();
 
   const { data: contracts, error } = await db
@@ -86,3 +87,9 @@ export async function calculateMarketIndices(): Promise<MarketIndexRecord[]> {
     };
   });
 }
+
+export const calculateMarketIndices = createCachedQuery(
+  fetchMarketIndicesRaw,
+  "market-indices-summary",
+  { ttlSeconds: 60, staleWhileRevalidateSeconds: 300, tags: ["market", "indices"] }
+);

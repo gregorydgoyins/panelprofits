@@ -1,4 +1,5 @@
 import { createAdminServerClient } from "@/lib/supabase/admin";
+import { createCachedQuery } from "@/lib/cache/wrapper";
 
 export interface PpcfComicRecord {
   ppcf_id: string;
@@ -62,7 +63,7 @@ export async function getPpcfComic(ppcfId: string): Promise<PpcfComicRecord | nu
   }
 }
 
-export async function getPpcfCoverage() {
+async function fetchPpcfCoverageRaw() {
   const db = createAdminServerClient();
   const [identity, priced, stories, credits, gcdLinks, ppLinks, comicbaseLinks] = await Promise.all([
     db.from("ppcf_canonical_comics").select("*", { count: "exact", head: true }),
@@ -88,6 +89,12 @@ export async function getPpcfCoverage() {
   };
 }
 
+export const getPpcfCoverage = createCachedQuery(
+  fetchPpcfCoverageRaw,
+  "ppcf-coverage-summary",
+  { ttlSeconds: 3600, staleWhileRevalidateSeconds: 86400, tags: ["ppcf", "coverage"] }
+);
+
 export type PpcfAnalyticsSnapshot = {
   identityCount: number;
   pricedIdentityCount: number;
@@ -96,7 +103,7 @@ export type PpcfAnalyticsSnapshot = {
   density: Array<{ label: string; identityCount: number }>;
 };
 
-export async function getPpcfAnalyticsSnapshot(): Promise<PpcfAnalyticsSnapshot> {
+async function fetchPpcfAnalyticsSnapshotRaw(): Promise<PpcfAnalyticsSnapshot> {
   const defaultSnapshot: PpcfAnalyticsSnapshot = {
     identityCount: 0,
     pricedIdentityCount: 0,
@@ -122,28 +129,28 @@ export async function getPpcfAnalyticsSnapshot(): Promise<PpcfAnalyticsSnapshot>
       return defaultSnapshot;
     }
 
-  const summaryRows = summaries.data || [];
-  const observationRows = observations.data || [];
-  const currencyMap = new Map<string, { observationCount: number; identities: Set<string> }>();
-  for (const row of observationRows) {
-    const currency = row.currency || "UNSPECIFIED";
-    const entry = currencyMap.get(currency) || { observationCount: 0, identities: new Set<string>() };
-    entry.observationCount += 1;
-    entry.identities.add(row.ppcf_id);
-    currencyMap.set(currency, entry);
-  }
+    const summaryRows = summaries.data || [];
+    const observationRows = observations.data || [];
+    const currencyMap = new Map<string, { observationCount: number; identities: Set<string> }>();
+    for (const row of observationRows) {
+      const currency = row.currency || "UNSPECIFIED";
+      const entry = currencyMap.get(currency) || { observationCount: 0, identities: new Set<string>() };
+      entry.observationCount += 1;
+      entry.identities.add(row.ppcf_id);
+      currencyMap.set(currency, entry);
+    }
 
-  const densityBuckets = [
-    { label: "1 observation", identityCount: 0 },
-    { label: "2-13 observations", identityCount: 0 },
-    { label: "14+ observations", identityCount: 0 },
-  ];
-  for (const row of summaryRows) {
-    const count = row.observation_count || 0;
-    if (count === 1) densityBuckets[0].identityCount += 1;
-    else if (count < 14) densityBuckets[1].identityCount += 1;
-    else densityBuckets[2].identityCount += 1;
-  }
+    const densityBuckets = [
+      { label: "1 observation", identityCount: 0 },
+      { label: "2-13 observations", identityCount: 0 },
+      { label: "14+ observations", identityCount: 0 },
+    ];
+    for (const row of summaryRows) {
+      const count = row.observation_count || 0;
+      if (count === 1) densityBuckets[0].identityCount += 1;
+      else if (count < 14) densityBuckets[1].identityCount += 1;
+      else densityBuckets[2].identityCount += 1;
+    }
 
     return {
       identityCount: identities.count || 0,
@@ -159,3 +166,9 @@ export async function getPpcfAnalyticsSnapshot(): Promise<PpcfAnalyticsSnapshot>
     return defaultSnapshot;
   }
 }
+
+export const getPpcfAnalyticsSnapshot = createCachedQuery(
+  fetchPpcfAnalyticsSnapshotRaw,
+  "ppcf-analytics-snapshot",
+  { ttlSeconds: 1800, staleWhileRevalidateSeconds: 86400, tags: ["ppcf", "analytics"] }
+);

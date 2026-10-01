@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { getSourceTicker } from "@/lib/news/sourceTickerMap";
 import { shortNewsSource, type NewsStory } from "@/lib/news/types";
 
@@ -30,6 +31,25 @@ function getSourceAccent(source: string): string {
   return "#06B6D4";
 }
 
+function extractStoryPrimaryTicker(headline: string): string | null {
+  const lower = headline.toLowerCase();
+  if (lower.includes("spider-man") || lower.includes("spiderman") || lower.includes("peter parker")) return "SPDR";
+  if (lower.includes("doctor doom") || lower.includes("dr. doom") || lower.includes("latveria")) return "DOOM";
+  if (lower.includes("batman") || lower.includes("dark knight") || lower.includes("bruce wayne")) return "BAT";
+  if (lower.includes("superman") || lower.includes("clark kent") || lower.includes("man of steel")) return "SUPR";
+  if (lower.includes("wolverine") || lower.includes("logan") || lower.includes("weapon x")) return "WOLV";
+  if (lower.includes("x-men") || lower.includes("mutant") || lower.includes("cyclops") || lower.includes("magneto")) return "XMEN";
+  if (lower.includes("fantastic four") || lower.includes("reed richards") || lower.includes("sue storm")) return "FF4";
+  if (lower.includes("thunderbolts") || lower.includes("yelena")) return "THUN";
+  if (lower.includes("punisher") || lower.includes("frank castle")) return "PNSH";
+  if (lower.includes("avengers") || lower.includes("secret wars") || lower.includes("doomsday")) return "AVNG";
+  if (lower.includes("disney") || lower.includes("mcu") || lower.includes("marvel studios")) return "DIS";
+  if (lower.includes("warner") || lower.includes("wbd") || lower.includes("dc studios") || lower.includes("dcu")) return "WBD";
+  if (lower.includes("sony")) return "SONY";
+  if (lower.includes("paramount") || lower.includes("tmnt")) return "PARA";
+  return null;
+}
+
 interface TopTickerProps {
   stories: NewsStory[];
   activeId: string;
@@ -39,16 +59,24 @@ interface TopTickerProps {
 export function TopTicker({ stories, activeId, onSelect }: TopTickerProps) {
   return (
     <section className="flex items-center gap-3 border-y border-slate-800/80 bg-[#07090F] px-3 py-2 overflow-hidden shadow-inner">
-      <div className="shrink-0 text-[10px] font-mono uppercase tracking-[0.2em] text-cyan-400 font-semibold px-2 py-0.5 border-r border-slate-800 flex items-center gap-2">
-        <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
-        WIRE TICKER
+      <div className="shrink-0 flex items-center gap-2 border-r border-slate-800 pr-3">
+        <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-cyan-400 font-semibold flex items-center gap-1.5">
+          <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
+          WIRE TICKER
+        </span>
+        <Link
+          href="/lexicon#ticker-legend"
+          className="text-[9px] font-mono uppercase tracking-wider text-cyan-400 hover:text-cyan-200 border border-cyan-500/40 bg-cyan-950/60 px-1.5 py-0.5 rounded transition-colors"
+        >
+          LEGEND
+        </Link>
       </div>
 
       <div className="flex items-center gap-2 overflow-x-auto py-0.5 no-scrollbar scroll-smooth">
         {stories.slice(0, 30).map((story) => {
           const isActive = story.id === activeId;
           const accent = getSourceAccent(story.source);
-          const corpTicker = getSourceTicker(story.source);
+          const corpTicker = getSourceTicker(story.source) || extractStoryPrimaryTicker(story.headline);
 
           return (
             <button

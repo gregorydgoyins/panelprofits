@@ -166,82 +166,13 @@ export function getAlternateFeedUrls(originalUrl: string): string[] {
   }
 }
 
-import adaptationCastData from "./adaptation-cast-registry.json";
+export {
+  isRelevantComicStory,
+  evaluateArticleQuality,
+  isFreshArticle,
+  STRICT_NEGATIVE_FILTER,
+  COMPREHENSIVE_COMIC_SIGNALS as CORE_COMIC_SIGNALS,
+  DEDICATED_COMIC_SOURCES_REGEX as DEDICATED_COMIC_SOURCES,
+} from "./classifier";
 
-const ADAPTATION_ACTOR_NAMES = (adaptationCastData as Array<{ name: string; aliases: string[] }>).flatMap(
-  (a) => [a.name, ...a.aliases]
-);
-const ADAPTATION_ACTOR_REGEX = new RegExp(
-  `\\b(${ADAPTATION_ACTOR_NAMES.map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})\\b`,
-  "i"
-);
-
-const DEDICATED_COMIC_SOURCES = /lords of the long box|near mint condition|comictom101|cartoonist kayfabe|variant comics|gem mint collectibles|bleeding cool|the beat|aipt|cbr|comicbook invest|comics journal|comicsxf|multiversity|first comics news|comic crusaders|major spoilers|comic book herald|gocollect|covrprice|comichron|previewsworld|2000 ad|dark horse|image comics|marvel comics|dc comics|idw|boom studios|dynamite|valiant|archie comics|fantagraphics|kodansha|viz media|heritage comic|comiclink|comicconnect|shortboxed|key collector|comic tropes|comicpop|comics explained|casually comics|automatic comics|swagglehaus/i;
-
-const COMPANY_TERMS = /disney|warner bros|warner discovery|wbd|sony pictures|universal|paramount|skydance|marvel entertainment/i;
-const FINANCIAL_TERMS = /earnings|revenue|profit|loss|shares|stock|investor|acquisition|merger|deal|buyout|results|box office/i;
-
-/**
- * Strict negative filter: unequivocally disqualifies sports wires, college athletics,
- * local civic/crime blotters, municipal politics, and irrelevant consumer lifestyle noise.
- */
-export const STRICT_NEGATIVE_FILTER = /\b(ac\/dc\b|mayor\s+bowser|zohran\s+mamdani|ribbon-cutting|washington,?\s*d\.?c\.?|(?:dc|d\.c\.)\s+(?:mayor|council|police|government|politics|statehood|attorney|public\s+schools)|florida\s+state|seminoles|fsu\b|gators\b|college\s+football|high\s+school\s+football|fantasy\s+football|nfl\b|nba\b|mlb\b|nhl\b|ncaa\b|quarterback|touchdown|touchdowns|linebacker|interception|puck|formula 1|\bf1\b|nascar|tennis|wimbledon|golf|\bpga\b|boxing|\bmma\b|\bufc\b|wrestling|pwi 500|wwe|aew|soccer|premier league|champions league|mls|inter miami|acc\b|sec\b|big ten|big 12|pac-12|martial arts film|martial arts films|martial arts movie|martial arts movies|kung fu hustle|action filmmaking|super bowl|earphones|smartwatch|airpods|vacuum cleaner|casino|crypto casino|slot machine|weight loss|celebrity gossip|love island|bachelor|real housewives|dc council|trayon white|city council|county commissioner|zoning board|police blotter|homicide|shooting incident|car crash|traffic accident|terror suspects|bribery trial|bribery mistrial|bribery case|politico caught|local election|mayoral election|gubernatorial|senate seat|congressional district|tax hike|affordable housing|mortgage rates|etfs?|funds\s+under\s+management|childcare\s+centers?|trump\b|biden\b|kamala\b|jimmy\s+kimmel|dwts\b|dancing\s+with\s+the\s+stars|presidential\s+(?:election|campaign)|white\s+house|gameplay|playstation\s*5|ps5|xbox|nintendo switch|platinum trophy|found footage|horror movie|blair witch)\b/i;
-
-export const CORE_COMIC_SIGNALS = /\b(comics?|comic\s+books?|graphic\s+novels?|manga|mangaka|omnibus|omnibuses|superhero(?:es)?|marvel(?:man)?|miracleman|dc comics|dc studios|dc universe|dcu|dceu|dc lore|marvel lore|batman|superman|spider-man|spiderman|x-men|avengers|spawn|dark horse|image comics|idw|boom studios|cgc|cbcs|slabbed|stan lee|jack kirby|will eisner|alan moore|neil gaiman|grant morrison|cbr|comicbook|gocollect|covrprice|comichron|auction|first appearance|key issue|green lantern|lanterns|hal jordan|sinestro|justice league|daredevil|punisher|fantastic four|iron man|captain america|thor|hulk|deadpool|wolverine|wonder woman|aquaman|flash|joker|harley quinn|clayface|sandman|hellboy|tmnt|ninja turtles|transformers|invincible|judge dredd|sequential art|webtoon|manhwa|collector(?:'s)?\s+market)\b/i;
-
-export function isRelevantComicStory(
-  source: string,
-  headline: string,
-  summary: string | null,
-  isDedicatedComicSource = false
-): boolean {
-  const text = `${headline} ${summary || ""}`;
-  // Hard negative check always runs first
-  if (STRICT_NEGATIVE_FILTER.test(text)) {
-    return false;
-  }
-  if (isDedicatedComicSource || DEDICATED_COMIC_SOURCES.test(source)) {
-    return true;
-  }
-  const isComicOrManga = CORE_COMIC_SIGNALS.test(text);
-  const isCompanyFinance = COMPANY_TERMS.test(text) && FINANCIAL_TERMS.test(text);
-  const isAdaptationActor = ADAPTATION_ACTOR_REGEX.test(text);
-  return isComicOrManga || isCompanyFinance || isAdaptationActor;
-}
-
-export function evaluateArticleQuality(
-  headline: string,
-  summary: string | null,
-  isDedicatedComicSource = false
-): {
-  admit: boolean;
-  reason: string;
-} {
-  const combined = `${headline} ${summary || ""}`.trim();
-
-  // Discard empty or micro-stubs
-  if (combined.length < 20) {
-    return { admit: false, reason: "Insufficient substance (less than 20 characters)" };
-  }
-
-  // Reject explicit junk / spam / sports / politics / non-comic wires
-  if (STRICT_NEGATIVE_FILTER.test(combined)) {
-    return { admit: false, reason: "Disallowed topic, sports wire, or non-comic noise matched" };
-  }
-
-  if (isDedicatedComicSource) {
-    return { admit: true, reason: "Verified dedicated sequential art source" };
-  }
-
-  // Verify substantive comic, graphic literature, or equity signal
-  const hasComicSignal = CORE_COMIC_SIGNALS.test(combined);
-  const hasAdaptationActor = ADAPTATION_ACTOR_REGEX.test(combined);
-  const hasFinanceSignal = COMPANY_TERMS.test(combined) && FINANCIAL_TERMS.test(combined);
-
-  if (!hasComicSignal && !hasAdaptationActor && !hasFinanceSignal) {
-    return { admit: false, reason: "Missing comic, sequential art, or market signal" };
-  }
-
-  return { admit: true, reason: "Verified substantive sequential art or equity content" };
-}
 

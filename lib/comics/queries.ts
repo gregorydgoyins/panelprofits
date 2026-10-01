@@ -1,6 +1,7 @@
 import { createAdminServerClient, createCleanReadOnlyServerClient } from "@/lib/supabase/admin";
 import { ComicRecord, ComicSearchParams, ComicQueryResult } from "@/lib/comics/types";
 import { getComicCoverEvidence } from "@/lib/comics/covers";
+import { createCachedQuery } from "@/lib/cache/wrapper";
 
 export const DEFAULT_PAGE_SIZE = 24;
 
@@ -83,32 +84,30 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
   if (data) return data as ComicRecord;
 
   const cleanDb = createCleanReadOnlyServerClient();
-  const { data: artifact, error: cleanError } = await cleanDb
-    .from("comic_instrument_market_artifacts")
-    .select("id,product_name,created_at,updated_at,verification_status,edition_form")
-    .eq("id", id.trim())
-    .eq("verification_status", "verified")
+  const { data: ppcf, error: cleanError } = await cleanDb
+    .from("ppcf_canonical_comics")
+    .select("ppcf_id,series_name,issue_number,publication_date,issue_title,variant_name,created_at,cover_url,cover_storage_path,cover_source")
+    .eq("ppcf_id", id.trim())
     .maybeSingle();
-  if (cleanError || !artifact) return null;
 
-  const match = String(artifact.product_name || "").match(/^(.*?)(?:\s+#?([^#]+))?\s+\((\d{4})\)$/);
-  const cover = await getComicCoverEvidence(id.trim());
-  const series = match?.[1] || artifact.product_name || "Verified comic equity";
-  const issueNumber = match?.[2]?.trim() || "";
-  const timestamp = artifact.updated_at || artifact.created_at || new Date().toISOString();
+  if (cleanError || !ppcf) return null;
+
+  const timestamp = ppcf.created_at || new Date().toISOString();
+  const series = ppcf.series_name || "Verified Comic";
+  const year = ppcf.publication_date ? parseInt(ppcf.publication_date.slice(0, 4), 10) || null : null;
 
   return {
-    id: artifact.id,
+    id: ppcf.ppcf_id,
     series,
-    title: series,
-    issue_number: issueNumber,
+    title: ppcf.issue_title || series,
+    issue_number: ppcf.issue_number || "",
     volume: null,
     printing: null,
-    direct_or_variant: artifact.edition_form || null,
+    direct_or_variant: ppcf.variant_name || null,
     cover_variant: null,
     publisher: null,
-    publication_date: null,
-    publication_year: match?.[3] ? Number(match[3]) : null,
+    publication_date: ppcf.publication_date || null,
+    publication_year: year,
     upc: null,
     alt_upc: null,
     pp_source_id: null,
@@ -123,17 +122,17 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
     comicbase_data: null,
     gcd_data: null,
     search_document: null,
-    created_at: artifact.created_at || timestamp,
+    created_at: timestamp,
     updated_at: timestamp,
-    cover_url: cover?.image_url || null,
-    cover_storage_path: cover?.storage_path || null,
-    cover_source: cover?.image_source || null,
-    cover_original_url: cover?.image_url || null,
-    cover_retrieval_url: cover?.image_url || null,
+    cover_url: ppcf.cover_url || null,
+    cover_storage_path: ppcf.cover_storage_path || null,
+    cover_source: ppcf.cover_source || null,
+    cover_original_url: ppcf.cover_url || null,
+    cover_retrieval_url: ppcf.cover_url || null,
     cover_width: null,
     cover_height: null,
-    cover_sha256: cover?.checksum || null,
-    cover_verified_at: cover ? timestamp : null,
+    cover_sha256: null,
+    cover_verified_at: ppcf.cover_url ? timestamp : null,
   };
 }
 
@@ -149,7 +148,7 @@ export type ComicsPricingCoverage = {
  * market ticker) can say honestly how much of the catalog that subset represents,
  * instead of implying the whole catalog is priced.
  */
-export async function getComicsPricingCoverage(): Promise<ComicsPricingCoverage> {
+async function fetchComicsPricingCoverageRaw(): Promise<ComicsPricingCoverage> {
   const supabase = createAdminServerClient();
   const [total, priced] = await Promise.all([
     supabase.from("comics").select("*", { count: "exact", head: true }),
@@ -168,7 +167,13 @@ export async function getComicsPricingCoverage(): Promise<ComicsPricingCoverage>
   };
 }
 
-export async function getFeaturedComics(limit = 6): Promise<ComicRecord[]> {
+export const getComicsPricingCoverage = createCachedQuery(
+  fetchComicsPricingCoverageRaw,
+  "comics-pricing-coverage",
+  { ttlSeconds: 3600, staleWhileRevalidateSeconds: 86400, tags: ["comics", "pricing"] }
+);
+
+async function fetchFeaturedComicsRaw(limit = 6): Promise<ComicRecord[]> {
   const supabase = createAdminServerClient();
   const { data, error } = await supabase
     .from("comics")
@@ -185,3 +190,9 @@ export async function getFeaturedComics(limit = 6): Promise<ComicRecord[]> {
 
   return (data as ComicRecord[]) || [];
 }
+
+export const getFeaturedComics = createCachedQuery(
+  fetchFeaturedComicsRaw,
+  "featured-comics-market",
+  { ttlSeconds: 600, staleWhileRevalidateSeconds: 3600, tags: ["comics", "featured"] }
+);

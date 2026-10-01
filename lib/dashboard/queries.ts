@@ -3,6 +3,7 @@ import { isMissingTableError } from "@/lib/supabase/errors";
 import { ComicRecord } from "@/lib/comics/types";
 import { resolveComicPricing, resolveBaselinePrice } from "@/lib/pricing/baseline";
 import { getComicCoverEvidenceByIds } from "@/lib/comics/covers";
+import { createCachedQuery } from "@/lib/cache/wrapper";
 
 export interface MarketUniverseMetrics {
   totalAuthoritativeComics: string;
@@ -93,38 +94,10 @@ export interface MarketTelemetry {
 }
 
 export async function getMarketTelemetry(): Promise<MarketTelemetry | null> {
-  try {
-    const supabase = createAdminServerClient();
-    const { data, error } = await supabase
-      .from("market_state")
-      .select("tick, ce50_last, regime, regime_vol, drawdown, stress_index, tectonic_tier, titan_overlay_active, cascade_active")
-      .eq("id", 1)
-      .maybeSingle();
-
-    if (error || !data) {
-      if (error && isMissingTableError(error)) {
-        console.warn("Market telemetry table is not deployed in the live Clean project.");
-        return null;
-      }
-      if (error) console.error("Error fetching market telemetry:", error);
-      return null;
-    }
-
-    return {
-      tick: Number(data.tick || 0),
-      ce50Last: data.ce50_last === null ? null : Number(data.ce50_last),
-      regime: data.regime || null,
-      regimeVolatility: data.regime_vol === null ? null : Number(data.regime_vol),
-      drawdown: data.drawdown === null ? null : Number(data.drawdown),
-      stressIndex: data.stress_index === null ? null : Number(data.stress_index),
-      tectonicTier: data.tectonic_tier === null ? null : Number(data.tectonic_tier),
-      overlayActive: Boolean(data.titan_overlay_active),
-      cascadeActive: Boolean(data.cascade_active),
-    };
-  } catch (error) {
-    console.error("Exception fetching market telemetry:", error);
-    return null;
-  }
+  // In Clean Supabase (vbcmjmakluyjnsmisoth), live telemetry tables are absent
+  // as documented in CLEAN_FEATURE_SOURCE_MAP.md. We return null directly
+  // without attempting to query the legacy market_state relation.
+  return null;
 }
 
 export async function getMarketIntelligence(limit = 24): Promise<MarketIntelligenceItem[]> {
@@ -162,7 +135,7 @@ export async function getMarketIntelligence(limit = 24): Promise<MarketIntellige
  * Bounded query for intelligence rail: returns 12 verified comic records.
  * Uses index on cover_verified_at without unbounded ordering.
  */
-export async function getIntelligenceRailComics(limit = 12): Promise<IntelligenceRailItem[]> {
+async function fetchIntelligenceRailComicsRaw(limit = 12): Promise<IntelligenceRailItem[]> {
   try {
     const cleanDb = createCleanReadOnlyServerClient();
     const { data, error } = await cleanDb
@@ -195,11 +168,17 @@ export async function getIntelligenceRailComics(limit = 12): Promise<Intelligenc
   }
 }
 
+export const getIntelligenceRailComics = createCachedQuery(
+  fetchIntelligenceRailComicsRaw,
+  "intelligence-rail-comics",
+  { ttlSeconds: 600, staleWhileRevalidateSeconds: 3600, tags: ["dashboard", "intelligence"] }
+);
+
 /**
  * Bounded query for valuation rail: returns 12 priced comic records.
  * Queries comics with genuine reference prices.
  */
-export async function getValuationRailComics(limit = 12): Promise<ValuationRailItem[]> {
+async function fetchValuationRailComicsRaw(limit = 12): Promise<ValuationRailItem[]> {
   const cleanDb = createCleanReadOnlyServerClient();
   try {
     // 1. CE70 equity universe, when that register has been populated.
@@ -271,6 +250,12 @@ export async function getValuationRailComics(limit = 12): Promise<ValuationRailI
     return [];
   }
 }
+
+export const getValuationRailComics = createCachedQuery(
+  fetchValuationRailComicsRaw,
+  "valuation-rail-comics",
+  { ttlSeconds: 600, staleWhileRevalidateSeconds: 3600, tags: ["dashboard", "valuation"] }
+);
 
 export async function getCleanAssetSurfaces(limit = 24): Promise<CleanAssetSurfaceItem[]> {
   const cleanDb = createCleanReadOnlyServerClient();
@@ -395,7 +380,7 @@ export async function getCleanNewsIntelligence(limit = 32): Promise<CleanNewsInt
  * Bounded deterministic query for the Featured Comic Universe grid.
  * Retrieves 18 verified records with valid covers and reference valuations.
  */
-export async function getFeaturedUniverseComics(limit = 18): Promise<ComicRecord[]> {
+async function fetchFeaturedUniverseComicsRaw(limit = 18): Promise<ComicRecord[]> {
   try {
     const supabase = createAdminServerClient();
     const { data, error } = await supabase
@@ -452,3 +437,9 @@ export async function getFeaturedUniverseComics(limit = 18): Promise<ComicRecord
     return [];
   }
 }
+
+export const getFeaturedUniverseComics = createCachedQuery(
+  fetchFeaturedUniverseComicsRaw,
+  "featured-universe-comics",
+  { ttlSeconds: 600, staleWhileRevalidateSeconds: 3600, tags: ["dashboard", "featured"] }
+);

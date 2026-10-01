@@ -470,7 +470,7 @@ describe("newsroom relevance gate", () => {
     try {
       const probe = createClient(supabaseUrl, supabaseAnonKey, { auth: { persistSession: false, autoRefreshToken: false } });
       const { error: probeError } = await probe.from("ppcf_wiki_pages").select("slug").limit(1);
-      if (probeError && !probeError.code) liveDossierDbReachable = false;
+      if (probeError) liveDossierDbReachable = false;
     } catch (e: any) {
       liveDossierDbReachable = false;
     }

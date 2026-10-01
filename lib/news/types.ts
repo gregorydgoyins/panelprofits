@@ -1,4 +1,4 @@
-export type NewsCategory = "national" | "international";
+export type NewsCategory = "national" | "international" | "video" | "market" | "creators";
 export const DEFAULT_NEWS_IMAGE = "/newsroom-default.svg";
 
 export interface NewsStory {

@@ -27,6 +27,20 @@ const BLOCKED_TERMS = new Set([
   "scratch",
   "risk",
   "australia",
+  "critic",
+  "critics",
+  "review",
+  "reviews",
+  "rating",
+  "ratings",
+  "score",
+  "scores",
+  "quote",
+  "quotes",
+  "fan",
+  "fans",
+  "viewer",
+  "viewers",
 ]);
 
 /**
@@ -112,7 +126,7 @@ export function parseTextWithEntities(text: string, entities?: EntityWikiDef[]):
           }`}
         >
           <span>{matchedTerm}</span>
-          {entity.ticker && (
+          {entity.ticker && !matchedTerm.startsWith("$") && matchedTerm !== entity.ticker && (
             <span
               className={`ml-1 text-[9px] font-mono opacity-90 uppercase tracking-tighter ${
                 isEquity ? "text-amber-300 font-bold" : "text-cyan-400"

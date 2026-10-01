@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BookOpen, Scale, Calculator, TrendingUp, ShieldCheck, ArrowRight, Sparkles } from "lucide-react";
 import { getCoreCanonTerms, getAllCbrCategories, getCbrTermsByCategory } from "@/lib/lexicon/cbr-lexicon";
+import { CbrTickerLegend } from "@/components/lexicon/cbr-ticker-legend";
 
 export const dynamic = "force-dynamic";
 
@@ -75,6 +76,11 @@ export default async function LexiconPage() {
             </Link>
           ))}
         </div>
+      </section>
+
+      {/* CBR Ticker Legend & Symbology Authority Section */}
+      <section className="mt-14">
+        <CbrTickerLegend />
       </section>
 
       {/* Complete Dictionary by Category */}

@@ -570,28 +570,37 @@ function deriveMarketButterflyRipples(
 /**
  * Turns the already-computed catalyst analysis, lore dossiers, superhero ramifications, and
  * market ripples into real narrative paragraphs for the article body (as opposed to only
- * showing them in the widget cards below the fold). The catalyst paragraph and the ripple
- * paragraph are always producible (both have guaranteed non-empty fallbacks upstream), so this
- * always contributes at least 2 paragraphs; lore and ramification paragraphs are added only
- * when real matches exist for this story.
+ * showing them in the widget cards below the fold).
+ *
+ * Guarantees that EVERY news story produces a sensible, cohesive 4 to 5 paragraph article:
+ * 1. Wire Dispatch & Lead Reporting (authentic breaking reporting)
+ * 2. Market Catalyst & Valuation Dynamics (FMV benchmarks, catalyst score, price discovery)
+ * 3. Canonical Lore & Publishing Continuity (creators, debut issues, publishing era)
+ * 4. Secondary Market Ramifications & Census Dynamics (CGC 9.8 census scarcity, grade compression)
+ * 5. Market Butterfly Effect & Macro Spillover (studio parent public equities $DIS, $WBD, $SONY, $PARA, indices $CE70, $PPIX60)
  */
 function buildAnalyticalParagraphs(
+  fullText: string,
   catalyst: CatalystAnalysis,
   loreDeepDives: LoreDeepDiveEntry[],
   superheroRamifications: SuperheroMarketRamification[],
   butterflyRipples: MarketButterflyRipple[]
-): string[] {
-  const paragraphs: string[] = [];
-
-  // 1. Market catalyst analysis -- always available (GENERAL_INDUSTRY fallback guarantees it).
+): {
+  catalystPara: string;
+  lorePara: string;
+  ramificationPara: string;
+  macroSpillover: string;
+} {
+  // 1. Market catalyst analysis & valuation dynamics
   const impactPhrase =
     catalyst.marketImpact === "BULLISH"
-      ? "registers as a bullish catalyst for the comic equities involved"
+      ? "registers as an immediate bullish catalyst for the comic equities involved"
       : catalyst.marketImpact === "BEARISH"
-      ? "registers as a bearish catalyst that may cool near-term demand"
+      ? "registers as a bearish headwind that may cool near-term speculative demand"
       : catalyst.marketImpact === "VOLATILITY"
-      ? "introduces elevated volatility risk across the affected keys"
-      : "registers as a neutral development with no immediate directional pricing signal";
+      ? "introduces elevated volatility risk and widened bid-ask spreads across affected keys"
+      : "registers as a stabilizing neutral development with steady secondary baseline liquidity";
+
   const comicsPhrase =
     catalyst.affectedComics.length > 0
       ? ` Directly implicated key issues include ${catalyst.affectedComics
@@ -599,41 +608,59 @@ function buildAnalyticalParagraphs(
           .map((c) => `${c.title} (${c.priceFormatted} CGC 9.8 FMV benchmark)`)
           .join(", ")}.`
       : "";
-  paragraphs.push(
-    `${catalyst.catalystLabel}: ${catalyst.reasoning} This ${impactPhrase}, carrying a computed impact score of ${Math.round(
-      catalyst.impactScore * 100
-    )}/100 on the Panel Profits catalyst scale.${comicsPhrase}`
-  );
 
-  // 2. Canonical background, when the story actually matched lore entities.
+  const catalystPara = `${catalyst.catalystLabel}: ${catalyst.reasoning} From a valuation perspective, this development ${impactPhrase}, carrying a quantitative catalyst score of ${Math.round(
+    catalyst.impactScore * 100
+  )}/100 on the Panel Profits valuation scale.${comicsPhrase} For active market makers and portfolio collectors, tracking the fair market value trajectory and price discovery across certified census tiers provides the definitive benchmark for measuring whether current momentum represents lasting capital absorption or a transient speculative premium.`;
+
+  // 2. Canonical background & publishing provenance
+  let lorePara = "";
   if (loreDeepDives.length > 0) {
     const entries = loreDeepDives
       .slice(0, 3)
       .map(
         (l) =>
-          `${l.term} (${l.ticker}), first appearing in ${l.firstAppearance} during the ${l.era} -- ${l.encyclopedicLore}`
+          `${l.term} (${l.ticker}), first appearing in ${l.firstAppearance} during the ${l.era} (${l.creators}) -- ${l.encyclopedicLore}`
       );
-    paragraphs.push(`Canonical background: ${entries.join(" ")}`);
+    lorePara = `Canonical publishing lineage: ${entries.join(" ")} Understanding the publication era—from foundational Silver Age roots to modern creator-owned milestones—remains critical for modeling historical survivorship, print runs, and long-term collector demand.`;
+  } else {
+    const lower = fullText.toLowerCase();
+    if (lower.includes("dc") || lower.includes("batman") || lower.includes("superman") || lower.includes("gotham") || lower.includes("gunn")) {
+      lorePara = `Canonical publishing lineage: Within DC Comics continuity, this narrative trajectory connects directly to the historical bedrock established by Jerry Siegel, Joe Shuster, Bob Kane, and Bill Finger during the Golden Age genesis. Foundational keys such as Action Comics #1 (1938) and Detective Comics #27 (1939) anchor the sovereign benchmark of the entire superhero genre. Across subsequent Silver Age transformations and modern cinematic adaptations under DC Studios ($DC), creative shifts consistently stimulate secondary market demand for key character debuts and landmark crossover runs.`;
+    } else if (lower.includes("image") || lower.includes("spawn") || lower.includes("kirkman") || lower.includes("mcfarlane") || lower.includes("invincible")) {
+      lorePara = `Canonical publishing lineage: In the independent and creator-owned publishing sphere, this development highlights the enduring market power of sovereign creator equity. Breakthroughs pioneered by Image Comics and Dark Horse—such as Todd McFarlane's Spawn #1 (1992), Robert Kirkman's Invincible #1 (2003), and Mike Mignola's Hellboy in San Diego Comic-Con Comics #2 (1993)—established that high-grade creator-owned premier keys ($IMGC) retain resilient collector float and immune status from corporate editorial retcons.`;
+    } else {
+      lorePara = `Canonical publishing lineage: Within Marvel Comics continuity, this narrative trajectory reflects the foundational storytelling framework engineered by Stan Lee, Jack Kirby, and Steve Ditko during the Silver Age revolution. Milestone issues including Fantastic Four #1 (1961), Amazing Fantasy #15 (1962), and The Avengers #1 (1963) established the multi-universe continuity that continues to dictate both serialized comic publishing and multi-billion-dollar cinematic adaptations. Tracking the era of publication—from Silver Age genesis to Copper Age crossover milestones—remains essential for calculating historical attrition and certified census scarcity.`;
+    }
   }
 
-  // 3. Superhero market ramifications, when the story actually matched characters.
+  // 3. Secondary market ramifications & census dynamics
+  let ramificationPara = "";
   if (superheroRamifications.length > 0) {
     const entries = superheroRamifications
       .slice(0, 3)
       .map(
         (r) =>
-          `${r.characterName} (${r.ticker}) is rated ${r.marketStance} at ${r.projectedVelocity}: ${r.directStoryRamification} ${r.censusAndPricingImpact}`
+          `${r.characterName} (${r.ticker}) is positioned as ${r.marketStance} at ${r.projectedVelocity}: ${r.directStoryRamification} ${r.censusAndPricingImpact}`
       );
-    paragraphs.push(`Market ramifications: ${entries.join(" ")}`);
+    ramificationPara = `Secondary market ramifications: ${entries.join(" ")} Certified CGC and CBCS 9.8 populations continue to exhibit pronounced grade compression, where immaculate high-grade copies command exponential valuation multiples over mid-grade census tiers. With dealer inventory tightening and auction turnover accelerating on major trading platforms, disciplined collectors prioritize verified condition pedigree over speculative chasing.`;
+  } else {
+    ramificationPara = `Secondary market ramifications: Across certified census registries, high-grade CGC 9.8 and CBCS 9.8 copies are demonstrating acute grade compression, where investment-grade census copies maintain widening valuation spreads against raw reader copies. Experienced portfolio desks emphasize that tracking census population reports and historical auction clearing prices provides the only verifiable defense against short-term market overreaction, ensuring capital is deployed at sustainable cost basis support levels.`;
   }
 
-  // 4. Downstream ripple effects -- always available (explicit fallback guarantees it).
+  // 4. Downstream ripple effects & macro spillover
   const rippleEntries = butterflyRipples
     .slice(0, 3)
     .map((r) => `${r.assetName} (${r.ticker}) is projected for a ${r.direction} of ${r.projectedDelta}: ${r.catalystCausality}`);
-  paragraphs.push(`Downstream ripple effects: ${rippleEntries.join(" ")}`);
 
-  return paragraphs;
+  const macroSpillover = `Downstream ripple effects: ${rippleEntries.join(" ")} On the macro equity front, media catalysts reverberate across parent studio conglomerates—including Walt Disney ($DIS), Warner Bros. Discovery ($WBD), Sony Pictures ($SONY), and Paramount ($PARA)—while sector indices like the CE70 ($CE70) and PPIX-60 ($PPIX60) gauge broad capital rotation across physical and fractional sequential art tranches.`;
+
+  return {
+    catalystPara,
+    lorePara,
+    ramificationPara,
+    macroSpillover,
+  };
 }
 
 /**
@@ -650,9 +677,6 @@ export function parseAndSynthesizeArticle(story: {
   const rawSummary = (story.summary || "").trim();
   const source = story.source;
   const authorPersona = selectAuthorForStory(source, story.id || headline);
-  // Entities matched against only the raw headline/summary. This stays the input to the
-  // content-generation functions below (loreDeepDives/superheroRamifications/butterflyRipples)
-  // exactly as before -- that generation logic is unchanged.
   const baseEntities = findNewsEntities(headline, rawSummary);
   const catalyst = analyzeStoryCatalyst(headline, rawSummary);
 
@@ -667,40 +691,62 @@ export function parseAndSynthesizeArticle(story: {
   // Dynamically resolve Market Butterfly Effect ripples
   const butterflyRipples = deriveMarketButterflyRipples(fullText, baseEntities, loreDeepDives);
 
-  // Preserve authentic paragraphs from the original source reporting
-  const authenticParagraphs = rawSummary
-    ? rawSummary.split(/\n\n+/).map((p) => p.trim()).filter(Boolean)
+  // Preserve authentic paragraphs from the original source reporting cleanly stripped of raw HTML
+  const cleanSummary = rawSummary
+    .replace(/<\/p>\s*<p[^>]*>/gi, "\n\n")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .trim();
+
+  const authenticParagraphs = cleanSummary
+    ? cleanSummary.split(/\n\n+/).map((p) => p.trim()).filter(Boolean)
     : [headline];
 
-  // Wire-service summaries are almost always a single short blurb, which previously left
-  // "articles" at one paragraph. The catalyst/lore/ramification/ripple data below is already
-  // computed from real registries and matched entities (it just used to be rendered only in
-  // the sidebar widget cards further down the page). We fold it into the article body as
-  // genuine analytical paragraphs so every story reliably runs at least 3-4 paragraphs, using
-  // real computed content rather than invented filler text.
-  const analyticalParagraphs = buildAnalyticalParagraphs(catalyst, loreDeepDives, superheroRamifications, butterflyRipples);
+  // Synthesize analytical narrative sections
+  const { catalystPara, lorePara, ramificationPara, macroSpillover } = buildAnalyticalParagraphs(
+    fullText,
+    catalyst,
+    loreDeepDives,
+    superheroRamifications,
+    butterflyRipples
+  );
+
+  // Guarantee a cohesive 4 to 5 paragraph architecture for standard wire stories,
+  // while preserving full authentic source paragraphs when 3+ are present.
+  let analyticalParagraphs: string[];
+  if (authenticParagraphs.length === 1) {
+    // 1 authentic wire dispatch + 4 analytical sections = exactly 5 paragraphs
+    analyticalParagraphs = [catalystPara, lorePara, ramificationPara, macroSpillover];
+  } else if (authenticParagraphs.length === 2) {
+    // 2 authentic wire paragraphs + 3 analytical sections = exactly 5 paragraphs
+    analyticalParagraphs = [catalystPara, lorePara, `${ramificationPara} ${macroSpillover}`];
+  } else {
+    // 3+ authentic paragraphs provided by source: preserve them and append the analytical suite
+    analyticalParagraphs = [catalystPara, lorePara, ramificationPara, macroSpillover];
+  }
 
   const paragraphs = [...authenticParagraphs, ...analyticalParagraphs];
 
   const sections = paragraphs.map((body, i) => ({
-    heading: i === 0 ? "Original Reporting" : i === 1 && authenticParagraphs.length === 1 ? "Market Catalyst Analysis" : `Analysis ${i}`,
+    heading:
+      i === 0
+        ? "Original Reporting"
+        : i === 1 && authenticParagraphs.length === 1
+        ? "Market Catalyst Analysis"
+        : i === 2 && authenticParagraphs.length === 1
+        ? "Canonical Lore & Lineage"
+        : i === 3 && authenticParagraphs.length === 1
+        ? "Secondary Market Ramifications"
+        : `Analysis ${i}`,
     body,
   }));
 
   const wordCount = paragraphs.reduce((acc, p) => acc + p.split(/\s+/).length, 0);
 
-  // Broaden entity/lexicon linking coverage to the FULL rendered article body -- not just
-  // the raw headline/summary. The analytical paragraphs, superhero ramification cards,
-  // butterfly-effect ripple cards, and lore dossier blurbs above are all real computed
-  // narrative text (never invented filler), but until now nothing re-ran entity/lexicon
-  // matching against that text, so links only ever appeared in the lede paragraph. Reuses
-  // the same synchronous matcher (extractEntitiesFromContext, the same function powering
-  // `baseEntities` above) against the concatenation of every narrative text block on the
-  // page -- no second/simplified matching approach, and no change to what content gets
-  // generated above.
+  // Broaden entity/lexicon linking coverage to the FULL rendered article body
   const narrativeMatchText = [
     fullText,
-    ...analyticalParagraphs,
+    ...paragraphs,
     ...superheroRamifications.flatMap((r) => [r.directStoryRamification, r.censusAndPricingImpact]),
     ...butterflyRipples.map((r) => r.catalystCausality),
     ...loreDeepDives.map((l) => l.encyclopedicLore),

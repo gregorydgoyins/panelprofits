@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { fetchAllWireStories } from "@/lib/news/wire-apis";
-import { createAdminServerClient } from "@/lib/supabase/admin";
+import { executeMasterNewsIngestion } from "@/lib/news/ingestion-engine";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60; // Allow background ingestion execution time
@@ -33,42 +32,13 @@ async function handleIngest(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const drafts = await fetchAllWireStories();
-    const supabase = createAdminServerClient();
-
-    let inserted = 0;
-    let errors = 0;
-
-    for (const draft of drafts) {
-      const { error } = await supabase.from("pp_news_stories").upsert(
-        {
-          story_key: draft.story_key,
-          source: draft.source,
-          source_url: draft.source_url,
-          category: draft.category,
-          headline: draft.headline,
-          summary: draft.summary,
-          url: draft.url,
-          image_url: draft.image_url,
-          published_at: draft.published_at || new Date().toISOString(),
-          ingested_at: new Date().toISOString(),
-          author: draft.author,
-        },
-        { onConflict: "story_key" }
-      );
-
-      if (error) {
-        errors++;
-      } else {
-        inserted++;
-      }
-    }
+    const result = await executeMasterNewsIngestion();
 
     return NextResponse.json({
       status: "success",
-      totalDrafts: drafts.length,
-      persisted: inserted,
-      errors,
+      totalIngested: result.totalIngested,
+      errors: result.totalErrors,
+      breakdown: result.breakdown,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {

@@ -16,6 +16,12 @@ export interface EntityWikiDef {
     landmarkIssue: string;
     comicTicker: string;
   };
+  lexiconDetails?: {
+    category: string;
+    definition: string;
+    translation?: string;
+    investopediaUrl?: string | null;
+  };
 }
 
 interface AdaptationRole {
@@ -253,15 +259,56 @@ export const KNOWN_NEWS_ENTITIES_MAP: EntityWikiDef[] = [
   { term: "Nadia Sterling", type: "creator", target: "intelligence", wikiPath: "/news/authors/nadia-sterling" },
 
   // --- PANEL PROFITS FUNDS, BASKETS & INDICES ---
-  { term: "CE70 Sovereign Comic Equity Index", ticker: "$CE70", type: "equity", target: "lexicon", wikiPath: "/indices?q=CE70" },
-  { term: "PPIX-60 Capitalization Benchmark", ticker: "$PPIX60", type: "equity", target: "lexicon", wikiPath: "/indices?q=PPIX60" },
-  { term: "Panel Profits Pulse Index 100", ticker: "$PPIX100", type: "equity", target: "lexicon", wikiPath: "/indices?q=PPIX100" },
-  { term: "PPIX Composite", ticker: "$PPIX", type: "equity", target: "lexicon", wikiPath: "/indices?q=PPIX_COMPOSITE" },
-  { term: "Sovereign Comic Basket", ticker: "$BASKET", type: "equity", target: "lexicon", wikiPath: "/indices?q=BASKET" },
-  { term: "Golden Age Basket", ticker: "$GOLD", type: "equity", target: "lexicon", wikiPath: "/indices?q=GOLD" },
-  { term: "Silver Age ETF", ticker: "$SLVR", type: "equity", target: "lexicon", wikiPath: "/indices?q=SLVR" },
-  { term: "Modern High-Grade Fund", ticker: "$MODF", type: "equity", target: "lexicon", wikiPath: "/indices?q=MODF" },
-  { term: "Bronze Age Liquidity Pool", ticker: "$BRNZ", type: "equity", target: "lexicon", wikiPath: "/indices?q=BRNZ" },
+  { term: "CE70 Sovereign Comic Equity Index", ticker: "$CE70", type: "equity", target: "lexicon", wikiPath: "/equity/CE70" },
+  { term: "CE70", ticker: "$CE70", type: "equity", target: "lexicon", wikiPath: "/equity/CE70" },
+  { term: "$CE70", ticker: "$CE70", type: "equity", target: "lexicon", wikiPath: "/equity/CE70" },
+  { term: "PPIX-60 Capitalization Benchmark", ticker: "$PPIX60", type: "equity", target: "lexicon", wikiPath: "/equity/PPIX60" },
+  { term: "PPIX-60", ticker: "$PPIX60", type: "equity", target: "lexicon", wikiPath: "/equity/PPIX60" },
+  { term: "$PPIX60", ticker: "$PPIX60", type: "equity", target: "lexicon", wikiPath: "/equity/PPIX60" },
+  { term: "Panel Profits Pulse Index 100", ticker: "$PPIX100", type: "equity", target: "lexicon", wikiPath: "/equity/PPIX100" },
+  { term: "PPIX-100", ticker: "$PPIX100", type: "equity", target: "lexicon", wikiPath: "/equity/PPIX100" },
+  { term: "$PPIX100", ticker: "$PPIX100", type: "equity", target: "lexicon", wikiPath: "/equity/PPIX100" },
+  { term: "PPIX Composite", ticker: "$PPIX", type: "equity", target: "lexicon", wikiPath: "/equities" },
+  { term: "$PPIX", ticker: "$PPIX", type: "equity", target: "lexicon", wikiPath: "/equities" },
+  { term: "Sovereign Comic Basket", ticker: "$BASKET", type: "equity", target: "lexicon", wikiPath: "/equities" },
+  { term: "$BASKET", ticker: "$BASKET", type: "equity", target: "lexicon", wikiPath: "/equities" },
+  { term: "Golden Age Basket", ticker: "$GOLD", type: "equity", target: "lexicon", wikiPath: "/equities" },
+  { term: "$GOLD", ticker: "$GOLD", type: "equity", target: "lexicon", wikiPath: "/equities" },
+  { term: "Silver Age ETF", ticker: "$SLVR", type: "equity", target: "lexicon", wikiPath: "/equities" },
+  { term: "$SLVR", ticker: "$SLVR", type: "equity", target: "lexicon", wikiPath: "/equities" },
+  { term: "Modern High-Grade Fund", ticker: "$MODF", type: "equity", target: "lexicon", wikiPath: "/equities" },
+  { term: "$MODF", ticker: "$MODF", type: "equity", target: "lexicon", wikiPath: "/equities" },
+  { term: "Bronze Age Liquidity Pool", ticker: "$BRNZ", type: "equity", target: "lexicon", wikiPath: "/equities" },
+  { term: "$BRNZ", ticker: "$BRNZ", type: "equity", target: "lexicon", wikiPath: "/equities" },
+
+  // --- CORPORATE & TICKER BEDROCK ---
+  { term: "$DIS", ticker: "$DIS", type: "equity", target: "intelligence", wikiPath: "/news?q=Disney" },
+  { term: "$WBD", ticker: "$WBD", type: "equity", target: "intelligence", wikiPath: "/news?q=Warner+Bros" },
+  { term: "$SONY", ticker: "$SONY", type: "equity", target: "intelligence", wikiPath: "/news?q=Sony" },
+  { term: "$PARA", ticker: "$PARA", type: "equity", target: "intelligence", wikiPath: "/news?q=Paramount" },
+  { term: "$CMCSA", ticker: "$CMCSA", type: "equity", target: "intelligence", wikiPath: "/news?q=Universal" },
+  { term: "$LGF", ticker: "$LGF", type: "equity", target: "intelligence", wikiPath: "/news?q=Lionsgate" },
+
+  // --- SOVEREIGN CHARACTER & KEY ISSUE TICKERS ---
+  { term: "$SPDR", ticker: "$SPDR", type: "character", target: "intelligence", wikiPath: "/wiki/entry/spider-man" },
+  { term: "$DOOM", ticker: "$DOOM", type: "character", target: "intelligence", wikiPath: "/wiki/entry/doctor-doom" },
+  { term: "$BAT", ticker: "$BAT", type: "character", target: "intelligence", wikiPath: "/wiki/entry/batman" },
+  { term: "$SUPR", ticker: "$SUPR", type: "character", target: "intelligence", wikiPath: "/wiki/entry/superman" },
+  { term: "$WOLV", ticker: "$WOLV", type: "character", target: "intelligence", wikiPath: "/wiki/entry/wolverine" },
+  { term: "$XMEN", ticker: "$XMEN", type: "character", target: "intelligence", wikiPath: "/wiki/entry/x-men" },
+  { term: "$FF4", ticker: "$FF4", type: "character", target: "intelligence", wikiPath: "/wiki/entry/fantastic-four" },
+  { term: "$THUN", ticker: "$THUN", type: "character", target: "intelligence", wikiPath: "/wiki/entry/thunderbolts" },
+  { term: "$PNSH", ticker: "$PNSH", type: "character", target: "intelligence", wikiPath: "/wiki/entry/punisher" },
+  { term: "$IRON", ticker: "$IRON", type: "character", target: "intelligence", wikiPath: "/wiki/entry/iron-man" },
+  { term: "$CAP", ticker: "$CAP", type: "character", target: "intelligence", wikiPath: "/wiki/entry/captain-america" },
+  { term: "$NURSE", ticker: "$NURSE", type: "character", target: "intelligence", wikiPath: "/wiki/entry/claire-temple" },
+  { term: "$DOOM:LATV", ticker: "$DOOM:LATV", type: "character", target: "intelligence", wikiPath: "/wiki/entry/latverian-witches" },
+  { term: "$DOOM:CYNTHIA", ticker: "$DOOM:CYNTHIA", type: "character", target: "intelligence", wikiPath: "/wiki/entry/cynthia-von-doom" },
+  { term: "$AF15", ticker: "$AF15", type: "equity", target: "intelligence", wikiPath: "/comics?q=Amazing+Fantasy+%2315" },
+  { term: "$HULK181", ticker: "$HULK181", type: "equity", target: "intelligence", wikiPath: "/comics?q=Incredible+Hulk+%23181" },
+  { term: "$FF1", ticker: "$FF1", type: "equity", target: "intelligence", wikiPath: "/comics?q=Fantastic+Four+%231" },
+  { term: "$TEC27", ticker: "$TEC27", type: "equity", target: "intelligence", wikiPath: "/comics?q=Detective+Comics+%2327" },
+  { term: "$ACT1", ticker: "$ACT1", type: "equity", target: "intelligence", wikiPath: "/comics?q=Action+Comics+%231" },
 
   // --- PUBLISHERS & STUDIOS (Grounded in ppcf_gcd_publishers & Hollywood Studios) ---
   { term: "Sony Pictures Entertainment", ticker: "$SONY", type: "publisher", target: "intelligence", wikiPath: "/intelligence?q=Sony+Pictures" },
@@ -551,6 +598,12 @@ function matchCbrLexiconEntities(text: string): EntityWikiDef[] {
       type: "market-concept" as const,
       target: "lexicon" as const,
       wikiPath: `/lexicon/${entry.slug}`,
+      lexiconDetails: {
+        category: entry.category,
+        definition: entry.investopedia_definition,
+        translation: entry.panel_profits_translation,
+        investopediaUrl: entry.investopedia_url || `https://www.investopedia.com/search?q=${encodeURIComponent(entry.term)}`,
+      },
     }));
   } catch {
     return [];

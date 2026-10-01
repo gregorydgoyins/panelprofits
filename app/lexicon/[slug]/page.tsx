@@ -23,7 +23,10 @@ export default async function LexiconTermPage({ params }: { params: Promise<{ sl
   const formula = cbrEntry.canonical_formula;
   const comicExample = cbrEntry.comic_example;
   const antiPatterns = cbrEntry.anti_patterns;
-  const investopediaUrl = cbrEntry.investopedia_url;
+  const rawInvestopediaUrl = cbrEntry.investopedia_url;
+  const investopediaUrl = rawInvestopediaUrl && rawInvestopediaUrl !== "https://www.investopedia.com"
+    ? rawInvestopediaUrl
+    : `https://www.investopedia.com/search?q=${encodeURIComponent(termTitle)}`;
 
   // Related terms from the same category
   const relatedTerms = searchCbrTerms(category, 6)
@@ -80,16 +83,14 @@ export default async function LexiconTermPage({ params }: { params: Promise<{ sl
             Underlying Investopedia Financial Principle:
           </span>
           <p className="leading-relaxed text-slate-300">{investopediaDef}</p>
-          {investopediaUrl && (
-            <a
-              href={investopediaUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-2 inline-flex items-center gap-1 text-[10px] font-mono text-cyan-400 hover:underline"
-            >
-              Verify on Investopedia <ExternalLink className="h-3 w-3" />
-            </a>
-          )}
+          <a
+            href={investopediaUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 inline-flex items-center gap-1 text-[10px] font-mono text-cyan-400 hover:underline"
+          >
+            Verify on Investopedia <ExternalLink className="h-3 w-3" />
+          </a>
         </div>
       </header>
 
