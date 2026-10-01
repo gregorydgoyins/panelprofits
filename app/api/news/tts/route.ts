@@ -15,8 +15,8 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const rawText = searchParams.get("text") || "";
   const storyId = searchParams.get("storyId") || "";
-  const presenterKey = searchParams.get("presenter") || "elena";
-  const presenter = PRESENTERS[presenterKey] || PRESENTERS.elena;
+  const presenterKey = searchParams.get("presenter") || "corinne";
+  const presenter = PRESENTERS[presenterKey] || PRESENTERS.corinne;
   const voiceId = searchParams.get("voiceId") || presenter.voiceId;
 
   const cleanText = sanitizeNewsText(rawText);
@@ -79,8 +79,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const rawText = body.text || "";
     const storyId = body.storyId || "";
-    const presenterKey = body.presenter || "elena";
-    const presenter = PRESENTERS[presenterKey] || PRESENTERS.elena;
+    const presenterKey = body.presenter || "corinne";
+    const presenter = PRESENTERS[presenterKey] || PRESENTERS.corinne;
     const voiceId = body.voiceId || presenter.voiceId;
 
     const cleanText = sanitizeNewsText(rawText);

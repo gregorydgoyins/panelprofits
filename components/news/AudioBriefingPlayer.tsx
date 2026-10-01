@@ -24,7 +24,7 @@ export function AudioBriefingPlayer({ headline, summary, source, storyId, cataly
   const [duration, setDuration] = React.useState(0);
   const [currentTime, setCurrentTime] = React.useState(0);
   const [audioSourceType, setAudioSourceType] = React.useState<"studio-neural" | "browser-natural">("studio-neural");
-  const [selectedPresenter, setSelectedPresenter] = React.useState<"elena" | "marcus" | "julian">("elena");
+  const [selectedPresenter, setSelectedPresenter] = React.useState<"corinne" | "marcus" | "elena">("corinne");
 
   // Audio element reference for Server-Side Neural TTS stream
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
@@ -300,15 +300,15 @@ export function AudioBriefingPlayer({ headline, summary, source, storyId, cataly
           <select
             value={selectedPresenter}
             onChange={(e) => {
-              setSelectedPresenter(e.target.value as "elena" | "marcus" | "julian");
+              setSelectedPresenter(e.target.value as "corinne" | "marcus" | "elena");
               if (isPlaying) stopPlayback();
             }}
             aria-label="Select Presenter"
             className="bg-[#0A0E17] border border-slate-800 text-[10px] font-mono text-slate-300 rounded px-2 py-1 outline-none focus:border-cyan-500 cursor-pointer"
           >
-            <option value="elena">Elena Rostova (Hollywood & Market)</option>
+            <option value="corinne">Corinne Howard (Chief Market Anchor)</option>
             <option value="marcus">Marcus Vance (Census & Equity)</option>
-            <option value="julian">Dr. Julian Mercer (Provenance)</option>
+            <option value="elena">Elena Rostova (Hollywood & Rights)</option>
           </select>
 
           {/* Rate Selector Pills */}

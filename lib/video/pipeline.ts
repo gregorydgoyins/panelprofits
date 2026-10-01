@@ -24,13 +24,13 @@ export interface PresenterProfile {
 }
 
 export const PRESENTERS: Record<string, PresenterProfile> = {
-  elena: {
-    id: "elena-rostova",
-    name: "Elena Rostova",
-    role: "Senior Market & Hollywood Correspondent",
-    voiceId: "21m00Tcm4TlvDq8ikWAM", // ElevenLabs Rachel / Elena
+  corinne: {
+    id: "corinne-howard",
+    name: "Corinne Howard",
+    role: "Chief Market Anchor & Bureau Chief",
+    voiceId: "zWoalRDt5TZrmW4ROIA7", // ElevenLabs Brooklyn (African American, mature, confident news anchor)
     heygenAvatarId: "default_female_anchor_1",
-    avatarImage: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=80",
+    avatarImage: "/media/anchor-face.jpg",
     badgeBg: "bg-cyan-950/60",
     badgeBorder: "border-cyan-500/40",
     badgeText: "text-cyan-300",
@@ -39,18 +39,29 @@ export const PRESENTERS: Record<string, PresenterProfile> = {
     id: "marcus-vance",
     name: "Marcus Vance",
     role: "Chief Equity & Census Strategist",
-    voiceId: "ErXwobaYiN019PkySvjV", // ElevenLabs Antoni / Marcus
+    voiceId: "cjVigY5qzO86Huf0OWal", // ElevenLabs Eric (Smooth, authoritative financial analyst)
     heygenAvatarId: "default_male_anchor_1",
     avatarImage: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=800&auto=format&fit=crop&q=80",
     badgeBg: "bg-blue-950/60",
     badgeBorder: "border-blue-500/40",
     badgeText: "text-blue-300",
   },
+  elena: {
+    id: "elena-rostova",
+    name: "Elena Rostova",
+    role: "Senior Hollywood & Media Correspondent",
+    voiceId: "BHf91PCMVcVwq6r1ku7L", // ElevenLabs Ava (Clear, professional news & explainer voice)
+    heygenAvatarId: "default_female_anchor_2",
+    avatarImage: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=80",
+    badgeBg: "bg-rose-950/60",
+    badgeBorder: "border-rose-500/40",
+    badgeText: "text-rose-300",
+  },
   julian: {
     id: "dr-julian-mercer",
     name: "Dr. Julian Mercer",
     role: "Director of Archival Provenance",
-    voiceId: "VR6AewLTigWG4xSOukaG", // ElevenLabs Arnold / Julian
+    voiceId: "JBFqnCBsd6RMkjVDRZzb", // ElevenLabs George (Warm, captivating, mature historian)
     heygenAvatarId: "default_male_anchor_2",
     avatarImage: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80",
     badgeBg: "bg-indigo-950/60",

@@ -24,11 +24,11 @@ async function main() {
   const res = await pg.query(insertSql, [
     storyId,
     "WizKids Reveals New 'Marvel HeroClix: Secret Wars Map and Terrain Kit'",
-    'Elena Rostova',
-    'Senior Market & Hollywood Correspondent',
-    '/media/reels/elena-market-briefing.mp4',
+    'Corinne Howard',
+    'Chief Market Anchor & Bureau Chief',
+    '/media/newsdesk-loop.mp4',
     '/media/anchor-face.jpg',
-    'Panel Profits market intelligence. This is Elena Rostova reporting on breaking comic equity trends and CGC 9.8 valuations.',
+    "WizKids has revealed the new 'Marvel HeroClix: Secret Wars Map and Terrain Kit'. The upcoming tabletop release includes two limited edition miniatures for collectors.",
   ]);
 
   console.log('Successfully inserted live video reel:', res.rows[0]);

@@ -23,6 +23,16 @@ import { LinkedBriefing } from "@/components/news/linked-briefing";
 
 export const dynamic = "force-dynamic";
 
+function cleanLoreTitle(title: string): string {
+  if (!title) return "";
+  let clean = title.trim();
+  clean = clean.replace(/^[|*]\s*(?:Titles|Aliases|Nicknames|Impersonations)\s*=\s*\*?\s*/i, "");
+  clean = clean.replace(/^\*\s*/, "");
+  clean = clean.replace(/^(.+?)(City of \1)$/i, "$1");
+  clean = clean.replace(/New York CityCity of New York/i, "New York City");
+  return clean.trim();
+}
+
 export default async function LoreEntityPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   let entity: LoreEntitySummary | null = getLoreEntityBySlug(slug);
@@ -56,6 +66,7 @@ export default async function LoreEntityPage({ params }: { params: Promise<{ slu
     notFound();
   }
 
+  const displayTitle = cleanLoreTitle(entity.title);
   const summaryEntities = entity.summary ? extractEntitiesFromContext(entity.summary) : [];
 
   const renderIcon = () => {
@@ -134,7 +145,7 @@ export default async function LoreEntityPage({ params }: { params: Promise<{ slu
         <div className="mt-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             <h1 className="text-3xl sm:text-5xl font-bold text-slate-100 tracking-tight">
-              {entity.title}
+              {displayTitle}
             </h1>
             {entity.alter_ego && (
               <p className="mt-1.5 text-base sm:text-lg text-cyan-300 font-medium">
@@ -145,17 +156,17 @@ export default async function LoreEntityPage({ params }: { params: Promise<{ slu
               {entity.type === "equity" ? (
                 <>Asset Class: <span className="text-amber-400 font-semibold">Cinematic & Comic Equity</span> · Reality: {entity.reality || "Canonical Universe"}</>
               ) : (
-                <>Multiverse Reality: {entity.reality || "Prime Reality / Earth-616"} · Alignment: <span className="text-emerald-400 font-semibold">{entity.alignment || "Good"}</span></>
+                <>Multiverse Reality: {entity.reality || (entity.universe === "MARVEL" ? "Earth-616" : entity.universe === "DC" ? "Prime Earth" : "Canonical Continuity")} · Alignment: <span className="text-emerald-400 font-semibold">{entity.alignment || "Good"}</span></>
               )}
             </p>
           </div>
 
           <div className="flex items-center gap-2">
             <Link
-              href={`/comics?q=${encodeURIComponent(entity.title)}`}
+              href={`/comics?q=${encodeURIComponent(displayTitle)}`}
               className="inline-flex items-center gap-1.5 border border-cyan-500/40 bg-cyan-950/40 px-3.5 py-2 text-xs font-mono uppercase tracking-wider text-cyan-300 hover:border-cyan-400 hover:bg-cyan-900/50 transition-all rounded"
             >
-              <Sparkles className="h-3.5 w-3.5 text-cyan-400" /> View {entity.title} Comic Catalog &rarr;
+              <Sparkles className="h-3.5 w-3.5 text-cyan-400" /> View {displayTitle} Comic Catalog &rarr;
             </Link>
           </div>
         </div>
@@ -179,7 +190,13 @@ export default async function LoreEntityPage({ params }: { params: Promise<{ slu
               1st Canonical Appearance
             </span>
             <p className="mt-1 text-base font-bold text-cyan-200">
-              {entity.first_appearance || "Detective Comics #27"}
+              {entity.first_appearance && entity.first_appearance.trim().length > 0
+                ? entity.first_appearance
+                : entity.universe === "MARVEL"
+                ? "Marvel Canonical Landmark Debut"
+                : entity.universe === "DC"
+                ? "Detective Comics #27"
+                : "Historical Benchmark Debut Issue"}
             </p>
             <p className="mt-1 text-xs text-slate-400">
               Historical milestone debut officially recorded in canonical publishing ledger.
@@ -191,7 +208,13 @@ export default async function LoreEntityPage({ params }: { params: Promise<{ slu
               Creator Lineage
             </span>
             <p className="mt-1 text-base font-bold text-slate-200">
-              {entity.creators || "Bob Kane; Bill Finger"}
+              {entity.creators && entity.creators.trim().length > 0
+                ? entity.creators
+                : entity.universe === "MARVEL"
+                ? "Marvel Canonical Creative Teams"
+                : entity.universe === "DC"
+                ? "DC Canonical Creative Architects"
+                : "Foundational Creative Architects"}
             </p>
             <p className="mt-1 text-xs text-slate-400">
               Foundational architects and iconic writers/pencillers.
@@ -203,7 +226,13 @@ export default async function LoreEntityPage({ params }: { params: Promise<{ slu
               Continuity Coordinates
             </span>
             <p className="mt-1 text-base font-mono font-bold text-indigo-300">
-              {entity.reality || "Prime Earth / New Earth"}
+              {entity.reality && entity.reality.trim().length > 0
+                ? entity.reality
+                : entity.universe === "MARVEL"
+                ? "Earth-616"
+                : entity.universe === "DC"
+                ? "Prime Earth / New Earth"
+                : "Canonical Multiverse"}
             </p>
             <p className="mt-1 text-xs text-slate-400">
               Universal continuity anchor across multiverse timelines.
