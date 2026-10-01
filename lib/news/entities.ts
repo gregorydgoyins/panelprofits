@@ -611,6 +611,9 @@ export const KNOWN_NEWS_ENTITIES_MAP: EntityWikiDef[] = [
 // TTL keeps this cheap per-request while letting it recover on its own.
 const ENTITY_CACHE_TTL_MS = 15 * 60 * 1000;
 const entityCache = new Map<string, { data: EntityWikiDef[]; loadedAt: number }>();
+let cachedIndexContracts: { index_code: string; display_name: string }[] | null = null;
+let cachedIndexContractsLoadedAt = 0;
+const INDEX_CONTRACTS_CACHE_TTL_MS = 60 * 60 * 1000;
 
 /**
  * Matches financial & market-concept terminology against the real 4,653-term CBR market
@@ -727,14 +730,20 @@ export async function getDynamicEntitiesForText(text: string): Promise<EntityWik
     matchedEntities.push(cbrMatch);
   }
 
-  // Dynamic Supabase Database Query for unrecognized terms
+  // Dynamic Supabase Database Query for unrecognized terms (cached in memory)
   try {
-    const db = createAdminServerClient();
-
-    // Query recovered index contracts dynamically
-    const { data: indexContracts } = await db
-      .from("recovered_index_contracts")
-      .select("index_code, display_name");
+    let indexContracts = cachedIndexContracts;
+    if (!indexContracts || Date.now() - cachedIndexContractsLoadedAt > INDEX_CONTRACTS_CACHE_TTL_MS) {
+      const db = createAdminServerClient();
+      const { data } = await db
+        .from("recovered_index_contracts")
+        .select("index_code, display_name");
+      if (data) {
+        cachedIndexContracts = data;
+        cachedIndexContractsLoadedAt = Date.now();
+        indexContracts = data;
+      }
+    }
 
     if (indexContracts) {
       for (const contract of indexContracts) {

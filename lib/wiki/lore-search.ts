@@ -868,15 +868,35 @@ function pickQualityFeatured(
  * never to fabricated content.
  */
 export async function getFeaturedLoreEntities(): Promise<LoreEntitySummary[]> {
-  const { slugMap } = await loadWikiCorpusFromDb();
+  try {
+    const { createAdminServerClient } = await import("@/lib/supabase/admin");
+    const supabase = createAdminServerClient();
+    const { data } = await supabase
+      .from("ppcf_wiki_pages")
+      .select("slug, display_title, universe, page_type, summary, creators, first_appearance, reality")
+      .neq("universe", WIKI_DB_EXCLUDED_UNIVERSE)
+      .in("page_type", ["CHARACTER", "ITEM", "LOCATION"])
+      .limit(20);
 
-  if (slugMap.size > 0) {
-    const all = Array.from(slugMap.values());
-    const characters = pickQualityFeatured(all, "character", 2, 8);
-    const items = pickQualityFeatured(all, "item", 4, 4);
-    const locations = pickQualityFeatured(all, "location", 4, 4);
-    const featured = [...characters, ...items, ...locations];
-    if (featured.length > 0) return featured;
+    if (data && data.length > 0) {
+      return data.map((row) => {
+        const universe = (row.universe || "MARVEL").toUpperCase();
+        const type = WIKI_DB_PAGE_TYPE_TO_LORE_TYPE[row.page_type as string] || "character";
+        return {
+          slug: row.slug,
+          title: row.display_title,
+          universe,
+          type,
+          reality: row.reality || undefined,
+          creators: row.creators || undefined,
+          first_appearance: row.first_appearance || undefined,
+          summary: row.summary || "",
+          ticker: deriveEntityTicker(row.display_title, universe),
+        };
+      });
+    }
+  } catch {
+    // DB unreachable, fallback to local sample
   }
 
   return getFeaturedLoreEntitiesFromLocalSample();
@@ -1011,56 +1031,67 @@ const WIKI_DB_PAGE_TYPE_TO_LORE_TYPE: Record<string, LoreEntitySummary["type"]> 
 
 const WIKI_DB_EXCLUDED_UNIVERSE = "FINANCIAL";
 
-interface WikiDbIndex {
-  titleMap: Map<string, LoreEntitySummary>;
-  slugMap: Map<string, LoreEntitySummary>;
-}
+const asyncSlugCache = new Map<string, { data: LoreEntitySummary | null; loadedAt: number }>();
+const textLoreCache = new Map<string, { data: LoreEntitySummary[]; loadedAt: number }>();
+const ASYNC_LORE_CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour in-memory memoization
 
-let wikiDbIndexPromise: Promise<WikiDbIndex> | null = null;
-let wikiDbIndexLoadedAt = 0;
+/**
+ * Same as findLoreEntitiesInText, but supplements the local (capped) JSON
+ * matches with fast targeted lookups against public.ppcf_wiki_pages.
+ * Instead of downloading the full 219k-row table, this extracts the candidate
+ * phrases from the text and executes a single targeted query against the
+ * database with in-memory memoization.
+ */
+export async function findLoreEntitiesInTextAsync(text: string, limit = 6): Promise<LoreEntitySummary[]> {
+  const matched = findLoreEntitiesInText(text, limit);
+  if (!text || !text.trim() || matched.length >= limit) return matched;
 
-// A warm serverless instance can stay alive for hours, and this index is
-// otherwise loaded exactly once per process and reused forever -- if the
-// underlying public.ppcf_wiki_pages rows are corrected (or corrupted) after
-// that first load, a long-lived instance would keep serving the stale
-// snapshot indefinitely with no way to recover short of a redeploy. A TTL
-// bounds that window. 15 minutes is chosen to stay well clear of the cost of
-// a full reload (~219k rows via paginated 1k-row queries) while still
-// self-healing within a reasonable time if the DB changes underneath it.
-const WIKI_DB_INDEX_TTL_MS = 15 * 60 * 1000;
+  const cacheKey = `${limit}:${text.slice(0, 160)}`;
+  const cached = textLoreCache.get(cacheKey);
+  if (cached && Date.now() - cached.loadedAt <= ASYNC_LORE_CACHE_TTL_MS) {
+    return cached.data;
+  }
 
-async function loadWikiCorpusFromDb(): Promise<WikiDbIndex> {
-  const isStale = wikiDbIndexPromise !== null && Date.now() - wikiDbIndexLoadedAt > WIKI_DB_INDEX_TTL_MS;
-  if (wikiDbIndexPromise && !isStale) return wikiDbIndexPromise;
+  const seenSlugs = new Set(matched.map((m) => m.slug));
+  const candidatePhrases: string[] = [];
 
-  wikiDbIndexLoadedAt = Date.now();
-  wikiDbIndexPromise = (async () => {
-    const titleMap = new Map<string, LoreEntitySummary>();
-    const slugMap = new Map<string, LoreEntitySummary>();
+  for (const { phrase, isSingleWord } of generateCandidatePhrases(text)) {
+    if (matched.length + candidatePhrases.length >= limit * 2) break;
+    if (isSingleWord && !TOP_TIER_HERO_WHITELIST.has(phrase)) continue;
+    candidatePhrases.push(phrase);
+  }
 
-    try {
-      const { createAdminServerClient } = await import("@/lib/supabase/admin");
-      const supabase = createAdminServerClient();
-      const pageSize = 1000;
-      let from = 0;
+  if (candidatePhrases.length === 0) {
+    textLoreCache.set(cacheKey, { data: matched, loadedAt: Date.now() });
+    return matched;
+  }
 
-      for (;;) {
-        const { data, error } = await supabase
-          .from("ppcf_wiki_pages")
-          .select("slug, display_title, universe, page_type, summary, creators, first_appearance, reality")
-          .neq("universe", WIKI_DB_EXCLUDED_UNIVERSE)
-          .range(from, from + pageSize - 1);
+  try {
+    const { createAdminServerClient } = await import("@/lib/supabase/admin");
+    const supabase = createAdminServerClient();
+    const titleCandidates = Array.from(new Set(
+      candidatePhrases.flatMap((p) => {
+        const words = p.split(" ");
+        const titleCase = words.map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+        return [p, titleCase];
+      })
+    ));
 
-        if (error || !data || data.length === 0) break;
+    const { data } = await supabase
+      .from("ppcf_wiki_pages")
+      .select("slug, display_title, universe, page_type, summary, creators, first_appearance, reality")
+      .neq("universe", WIKI_DB_EXCLUDED_UNIVERSE)
+      .in("display_title", titleCandidates)
+      .limit(limit - matched.length);
 
-        for (const row of data) {
+    if (data) {
+      for (const row of data) {
+        if (matched.length >= limit) break;
+        if (!seenSlugs.has(row.slug)) {
+          seenSlugs.add(row.slug);
           const universe = (row.universe || "MARVEL").toUpperCase();
           const type = WIKI_DB_PAGE_TYPE_TO_LORE_TYPE[row.page_type as string] || "character";
-          const clean = (row.display_title || "").trim().toLowerCase();
-          if (!clean) continue;
-          if (LORE_OBSCURE_COLLISION_BLOCKLIST.has(clean)) continue;
-
-          const entity: LoreEntitySummary = {
+          matched.push({
             slug: row.slug,
             title: row.display_title,
             universe,
@@ -1070,76 +1101,74 @@ async function loadWikiCorpusFromDb(): Promise<WikiDbIndex> {
             first_appearance: row.first_appearance || undefined,
             summary: row.summary || "",
             ticker: deriveEntityTicker(row.display_title, universe),
-          };
-
-          slugMap.set(row.slug, entity);
-          if (clean.length >= 3 && !titleMap.has(clean)) {
-            titleMap.set(clean, entity);
-          }
+          });
         }
-
-        if (data.length < pageSize) break;
-        from += pageSize;
       }
-    } catch {
-      // Network/DB unavailable -- return whatever (possibly empty) maps we
-      // built so far. Callers fall back to the local JSON-only matches.
     }
-
-    return { titleMap, slugMap };
-  })();
-
-  return wikiDbIndexPromise;
-}
-
-/**
- * Same as findLoreEntitiesInText, but supplements the local (capped) JSON
- * matches with lookups against the full, real corpus ingested into
- * public.ppcf_wiki_pages across all 7 non-financial universes (Marvel, DC,
- * Star Wars, Image, Dark Horse, Spawn, Transformers -- ~219k
- * characters/teams/creators/items/locations/vehicles combined, vs. the
- * ~5,000-per-universe sample baked into the local JSON index for Marvel/
- * DC/Star Wars). Use this from any already-async caller -- e.g. the real
- * news ingestion pipeline in getDynamicEntitiesForText -- instead of the
- * sync version.
- */
-export async function findLoreEntitiesInTextAsync(text: string, limit = 6): Promise<LoreEntitySummary[]> {
-  const matched = findLoreEntitiesInText(text, limit);
-  if (!text || !text.trim() || matched.length >= limit) return matched;
-
-  const { titleMap } = await loadWikiCorpusFromDb();
-  if (titleMap.size === 0) return matched;
-
-  const seenSlugs = new Set(matched.map((m) => m.slug));
-  for (const { phrase, isSingleWord } of generateCandidatePhrases(text)) {
-    if (matched.length >= limit) break;
-    if (isSingleWord && !TOP_TIER_HERO_WHITELIST.has(phrase)) continue;
-
-    const entity = titleMap.get(phrase);
-    if (entity && !seenSlugs.has(entity.slug)) {
-      seenSlugs.add(entity.slug);
-      matched.push(entity);
-    }
+  } catch {
+    // DB unreachable, return whatever local matches were found
   }
 
+  textLoreCache.set(cacheKey, { data: matched, loadedAt: Date.now() });
   return matched;
 }
 
 /**
  * Same as getLoreEntityBySlug, but falls back to the full ingested
  * multi-universe corpus in public.ppcf_wiki_pages (all 7 non-financial
- * universes) when the slug isn't in the local JSON index -- this is the
- * real, live-queried replacement for what the removed hardcoded
- * premier-entity table used to paper over for well-known characters.
+ * universes) when the slug isn't in the local JSON index. Executes a
+ * single targeted indexed query with in-memory memoization.
  */
 export async function getLoreEntityBySlugAsync(slug: string): Promise<LoreEntitySummary | null> {
   const local = getLoreEntityBySlug(slug);
   if (local) return local;
   if (!slug) return null;
   const cleanSlug = slug.toLowerCase().trim();
-  const { slugMap } = await loadWikiCorpusFromDb();
-  const direct = slugMap.get(cleanSlug);
-  if (direct) return direct;
   const alias = SLUG_ALIASES[cleanSlug];
-  return (alias && slugMap.get(alias)) || null;
+  if (alias && alias !== cleanSlug) {
+    const aliasedLocal = getLoreEntityBySlug(alias);
+    if (aliasedLocal) return aliasedLocal;
+  }
+
+  const cached = asyncSlugCache.get(cleanSlug);
+  if (cached && Date.now() - cached.loadedAt <= ASYNC_LORE_CACHE_TTL_MS) {
+    return cached.data;
+  }
+
+  try {
+    const { createAdminServerClient } = await import("@/lib/supabase/admin");
+    const supabase = createAdminServerClient();
+    const targetSlug = alias || cleanSlug;
+    const queryTerm = cleanSlug.replace(/-/g, " ");
+
+    const { data } = await supabase
+      .from("ppcf_wiki_pages")
+      .select("slug, display_title, universe, page_type, summary, creators, first_appearance, reality")
+      .or(`slug.eq.${targetSlug},slug.ilike.${targetSlug}-%,display_title.ilike.${queryTerm}`)
+      .limit(1)
+      .maybeSingle();
+
+    if (data) {
+      const universe = (data.universe || "MARVEL").toUpperCase();
+      const type = WIKI_DB_PAGE_TYPE_TO_LORE_TYPE[data.page_type as string] || "character";
+      const result: LoreEntitySummary = {
+        slug: data.slug,
+        title: data.display_title,
+        universe,
+        type,
+        reality: data.reality || undefined,
+        creators: data.creators || undefined,
+        first_appearance: data.first_appearance || undefined,
+        summary: data.summary || "",
+        ticker: deriveEntityTicker(data.display_title, universe),
+      };
+      asyncSlugCache.set(cleanSlug, { data: result, loadedAt: Date.now() });
+      return result;
+    }
+  } catch {
+    // DB unreachable
+  }
+
+  asyncSlugCache.set(cleanSlug, { data: null, loadedAt: Date.now() });
+  return null;
 }
