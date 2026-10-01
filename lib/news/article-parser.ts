@@ -1135,6 +1135,9 @@ function buildAnalyticalParagraphs(
   };
 }
 
+const SYNTHESIS_CACHE = new Map<string, SynthesizedArticle>();
+const MAX_SYNTHESIS_CACHE = 500;
+
 /**
  * Universal dynamic parser and synthesizer for ALL news stories across the platform.
  */
@@ -1145,6 +1148,10 @@ export function parseAndSynthesizeArticle(story: {
   author?: string | null;
   id?: string;
 }): SynthesizedArticle {
+  const cacheKey = story.id || `${story.headline}|${story.summary || ""}`;
+  const cached = SYNTHESIS_CACHE.get(cacheKey);
+  if (cached) return cached;
+
   const rawHeadline = story.headline.trim();
   const rawSummary = (story.summary || "").trim();
   const fullContext = `${rawHeadline} ${rawSummary}`;
@@ -1282,7 +1289,7 @@ export function parseAndSynthesizeArticle(story: {
 
   const entities = Array.from(entityMap.values());
 
-  return {
+  const result: SynthesizedArticle = {
     headline,
     paragraphs,
     sections,
@@ -1296,5 +1303,13 @@ export function parseAndSynthesizeArticle(story: {
     author: authorPersona,
     researchedProperNouns,
   };
+
+  if (SYNTHESIS_CACHE.size >= MAX_SYNTHESIS_CACHE) {
+    const oldest = SYNTHESIS_CACHE.keys().next().value;
+    if (oldest) SYNTHESIS_CACHE.delete(oldest);
+  }
+  SYNTHESIS_CACHE.set(cacheKey, result);
+
+  return result;
 }
 

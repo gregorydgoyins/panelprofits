@@ -68,11 +68,18 @@ const KEY_ISSUE_BENCHMARKS: Record<string, { fmv: number; significance: string; 
   "The Batman Adventures #12": { fmv: 2400, significance: "1st Comic Appearance Harley Quinn", ticker: "$HQUINN" },
 };
 
+const CATALYST_CACHE = new Map<string, CatalystAnalysis>();
+const MAX_CATALYST_CACHE = 500;
+
 /**
  * Analyzes news story headline and summary to determine market catalyst type,
  * projected volatility/sentiment impact, and linked comic equity keys.
  */
 export function analyzeStoryCatalyst(headline: string, summary: string | null): CatalystAnalysis {
+  const cacheKey = `${headline}|${summary || ""}`;
+  const cached = CATALYST_CACHE.get(cacheKey);
+  if (cached) return cached;
+
   const text = `${headline} ${summary || ""}`.toLowerCase();
 
   let catalystType: CatalystType = "GENERAL_INDUSTRY";
@@ -183,7 +190,7 @@ export function analyzeStoryCatalyst(headline: string, summary: string | null): 
     }
   }
 
-  return {
+  const result: CatalystAnalysis = {
     catalystType,
     catalystLabel,
     marketImpact,
@@ -191,4 +198,12 @@ export function analyzeStoryCatalyst(headline: string, summary: string | null): 
     reasoning,
     affectedComics,
   };
+
+  if (CATALYST_CACHE.size >= MAX_CATALYST_CACHE) {
+    const oldest = CATALYST_CACHE.keys().next().value;
+    if (oldest) CATALYST_CACHE.delete(oldest);
+  }
+  CATALYST_CACHE.set(cacheKey, result);
+
+  return result;
 }

@@ -23,6 +23,7 @@ import { type NewsStory, shortNewsSource } from "@/lib/news/types";
 import { TopTicker } from "@/components/news/TopTicker";
 import { StoryPanel } from "@/components/news/StoryPanel";
 import { analyzeStoryCatalyst } from "@/lib/news/catalyst";
+import { parseAndSynthesizeArticle } from "@/lib/news/article-parser";
 
 interface NewsroomProps {
   stories: NewsStory[];
@@ -398,6 +399,15 @@ export function Newsroom({ stories: initialStories }: NewsroomProps) {
                     <button
                       key={story.id}
                       onClick={() => setActiveStoryId(story.id)}
+                      onMouseEnter={() => {
+                        parseAndSynthesizeArticle({
+                          headline: story.headline,
+                          summary: story.summary,
+                          source: story.source,
+                          author: story.author,
+                          id: story.id,
+                        });
+                      }}
                       className={`w-full text-left p-2.5 rounded transition-all border font-mono ${
                         isSelected
                           ? "border-cyan-400/80 bg-cyan-950/25 shadow-[0_0_10px_rgba(6,182,212,0.1)]"
@@ -443,6 +453,15 @@ export function Newsroom({ stories: initialStories }: NewsroomProps) {
                   <button
                     key={story.id}
                     onClick={() => setActiveStoryId(story.id)}
+                    onMouseEnter={() => {
+                      parseAndSynthesizeArticle({
+                        headline: story.headline,
+                        summary: story.summary,
+                        source: story.source,
+                        author: story.author,
+                        id: story.id,
+                      });
+                    }}
                     className={`w-full text-left p-3 rounded transition-all border ${
                       isSelected
                         ? "border-cyan-400/80 bg-cyan-950/20 shadow-sm"

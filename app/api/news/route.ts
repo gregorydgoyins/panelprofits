@@ -12,7 +12,7 @@ export async function GET(request: Request) {
   return NextResponse.json(
     { stories, health, refreshedAt: new Date().toISOString() },
     {
-      headers: { "Cache-Control": "no-store, no-cache, must-revalidate" },
+      headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" },
     }
   );
 }

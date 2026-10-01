@@ -1,7 +1,7 @@
 import { ArrowLeft, Newspaper } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getNewsStory, shortNewsSource } from "@/lib/news/feed";
+import { getNewsStories, getNewsStory, shortNewsSource } from "@/lib/news/feed";
 import { getDynamicEntitiesForText } from "@/lib/news/entities";
 import { getRelatedDossiersForText } from "@/lib/news/related-dossiers";
 import { RelatedDossiersRail } from "@/components/news/RelatedDossiersRail";
@@ -15,8 +15,16 @@ import { AudioBriefingPlayer } from "@/components/news/AudioBriefingPlayer";
 import { AnalystDeskMemo } from "@/components/news/AnalystDeskMemo";
 import { parseAndSynthesizeArticle } from "@/lib/news/article-parser";
 
-export const dynamic = "force-dynamic";
-export const fetchCache = "force-no-store";
+export const revalidate = 300;
+
+export async function generateStaticParams() {
+  try {
+    const stories = await getNewsStories(24);
+    return stories.map((s) => ({ id: s.id }));
+  } catch {
+    return [];
+  }
+}
 
 export default async function NewsStoryPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

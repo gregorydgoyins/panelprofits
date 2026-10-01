@@ -46,6 +46,8 @@ const BLOCKED_TERMS = new Set([
   ...Array.from(AMBIGUOUS_HONORIFIC_PREFIXES),
 ]);
 
+const REGEX_CACHE = new WeakMap<EntityWikiDef[], { sorted: EntityWikiDef[]; pattern: RegExp } | null>();
+
 /**
  * Tokenizes article text and headlines, dynamically replacing recognized
  * characters, creators, actors, directors, and studio entities with live clickable badges.
@@ -61,35 +63,40 @@ export function parseTextWithEntities(text: string, entities?: EntityWikiDef[]):
   const entityContext = (entities || []).map((e) => e.term).join(" ");
   const cleanText = paraphraseInferredPlaceholders(rawClean, `${rawClean} ${entityContext}`);
 
-  // NOTE: market-concept / grading / lexicon entities (financial & grading glossary terms,
-  // e.g. "Fair Market Value", "CGC", "Bid-Ask Spread") are intentionally included here.
-  // They previously never rendered as links at all -- this is the root cause of the
-  // "Investopedia glossary links never show up" bug. Do not re-add a type exclusion here
-  // without wiring an equivalent real link target for that type.
-  const activeEntities = (entities || []).filter(
-    (e) => !BLOCKED_TERMS.has(e.term.toLowerCase())
-  );
-
+  const activeEntities = entities ? entities.filter((e) => !BLOCKED_TERMS.has(e.term.toLowerCase())) : [];
   if (activeEntities.length === 0) {
     return [cleanText];
   }
 
-  // Sort entities by term length descending so longer phrases match first (e.g. "Bruce Wayne" before "Bruce")
-  const sorted = [...activeEntities].sort((a, b) => b.term.length - a.term.length);
-  const escapedTerms = sorted.map((e) => {
-    const esc = e.term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const startsWithWord = /^\w/.test(e.term);
-    const endsWithWord = /\w$/.test(e.term);
-    const prefix = startsWithWord ? "\\b" : "(?<=^|\\s|[^\\w])";
-    const suffix = endsWithWord ? "\\b" : "(?=$|\\s|[^\\w])";
-    return `${prefix}${esc}${suffix}`;
-  });
-  
-  if (escapedTerms.length === 0) {
+  let cachedCompile = entities ? REGEX_CACHE.get(entities) : undefined;
+  if (cachedCompile === undefined) {
+    const sorted = [...activeEntities].sort((a, b) => b.term.length - a.term.length);
+    const escapedTerms = sorted.map((e) => {
+      const esc = e.term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const startsWithWord = /^\w/.test(e.term);
+      const endsWithWord = /\w$/.test(e.term);
+      const prefix = startsWithWord ? "\\b" : "(?<=^|\\s|[^\\w])";
+      const suffix = endsWithWord ? "\\b" : "(?=$|\\s|[^\\w])";
+      return `${prefix}${esc}${suffix}`;
+    });
+
+    if (escapedTerms.length === 0) {
+      cachedCompile = null;
+    } else {
+      cachedCompile = {
+        sorted,
+        pattern: new RegExp(`(${escapedTerms.join("|")})`, "gi"),
+      };
+    }
+    if (entities) REGEX_CACHE.set(entities, cachedCompile);
+  }
+
+  if (!cachedCompile) {
     return [cleanText];
   }
 
-  const pattern = new RegExp(`(${escapedTerms.join("|")})`, "gi");
+  const { sorted, pattern: basePattern } = cachedCompile;
+  const pattern = new RegExp(basePattern.source, "gi");
   const nodes: React.ReactNode[] = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;

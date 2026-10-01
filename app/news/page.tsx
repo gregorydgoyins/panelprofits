@@ -3,8 +3,7 @@ import Link from "next/link";
 import { Newsroom } from "@/components/news/newsroom";
 import { getNewsStories } from "@/lib/news/feed";
 
-export const dynamic = "force-dynamic";
-export const fetchCache = "force-no-store";
+export const revalidate = 60;
 
 export const metadata = {
   title: "Newsroom // Live Comic Wire | Panel Profits",

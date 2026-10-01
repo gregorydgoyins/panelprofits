@@ -85,24 +85,20 @@ export function EntityHoverCard({ entity, children, className }: EntityHoverCard
 
   const handleMouseEnter = () => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => setIsOpen(true), 180);
+    timeoutRef.current = setTimeout(() => setIsOpen(true), 40);
   };
 
   const handleMouseLeave = () => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => setIsOpen(false), 220);
+    timeoutRef.current = setTimeout(() => setIsOpen(false), 100);
   };
 
-  const canonical = React.useMemo(() => {
-    return (
-      getCanonicalBackground(entity.term) ||
+  const canonical = isOpen
+    ? getCanonicalBackground(entity.term) ||
       (entity.wikiPath ? getCanonicalBackground(entity.wikiPath.replace(/^\/wiki\/entry\//, "")) : null)
-    );
-  }, [entity.term, entity.wikiPath]);
+    : null;
 
-  const lexicon = React.useMemo(() => {
-    return getResolvedLexiconDetails(entity, canonical);
-  }, [entity, canonical]);
+  const lexicon = isOpen ? getResolvedLexiconDetails(entity, canonical) : null;
 
   const isActor = entity.type === "creator" && Boolean(entity.roleDetails);
   const isLexicon =
@@ -134,11 +130,11 @@ export function EntityHoverCard({ entity, children, className }: EntityHoverCard
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <Link href={entity.wikiPath} className={className} prefetch>
+      <Link href={entity.wikiPath} className={className} prefetch={false}>
         {children}
       </Link>
 
-      {isOpen && (
+      {isOpen && lexicon && (
         <div
           role="tooltip"
           className={`absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-84 sm:w-96 rounded-lg border bg-[#070A11] p-3.5 shadow-2xl text-left transition-all animate-in fade-in zoom-in-95 duration-150 ${

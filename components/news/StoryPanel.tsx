@@ -277,7 +277,7 @@ export function StoryPanel({ story }: { story: NewsStory }) {
             {allEntities.slice(0, 10).map((entity) => (
               <Link
                 key={entity.term}
-                prefetch
+                prefetch={false}
                 href={entity.wikiPath}
                 className="inline-flex items-center gap-1 border border-slate-800 bg-slate-900/60 px-2 py-0.5 text-[10px] text-slate-300 hover:border-cyan-400 hover:text-cyan-200 transition-colors rounded"
               >
