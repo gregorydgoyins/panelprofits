@@ -2,6 +2,7 @@ import { findNewsEntities, extractEntitiesFromContext, type EntityWikiDef } from
 import { analyzeStoryCatalyst, type CatalystAnalysis } from "./catalyst";
 import { selectAuthorForStory, type AuthorPersona } from "./authors";
 import { getLoreEntityBySlug, type LoreEntitySummary } from "@/lib/wiki/lore-search";
+import { paraphraseInferredPlaceholders } from "./fuzzy-engine";
 import adaptationCastData from "./adaptation-cast-registry.json";
 import adaptationAssetData from "./adaptation-asset-registry.json";
 
@@ -35,6 +36,7 @@ export interface LoreDeepDiveEntry {
 }
 
 export interface SynthesizedArticle {
+  headline: string;
   paragraphs: string[];
   sections: Array<{
     heading: string;
@@ -132,6 +134,69 @@ const CANONICAL_COMIC_BACKGROUNDS: Record<string, { term: string; ticker: string
     era: "Silver Age (1962)",
     description: "The sovereign monarch of Latveria whose intellect and mystical prowess have solidified his first appearance as a blue-chip cornerstone of Silver Age Marvel collecting.",
     baseFmv: 95000,
+  },
+  "doctor strange": {
+    term: "Doctor Strange (Stephen Strange)",
+    ticker: "$STRG",
+    landmarkIssue: "Strange Tales #110 (1963)",
+    creators: "Stan Lee and Steve Ditko",
+    era: "Silver Age (1963)",
+    description: "The Master of the Mystic Arts and Sorcerer Supreme of Earth-616, whose Silver Age debut in Strange Tales #110 anchors Marvel's supernatural and multiversal market tier.",
+    baseFmv: 88000,
+  },
+  "doctor who": {
+    term: "Doctor Who (The Doctor)",
+    ticker: "$DWHO",
+    landmarkIssue: "TV Comic #674 (1964) / Doctor Who Magazine #1",
+    creators: "Sydney Newman, C. E. Webber, Donald Wilson, and John Lucarotti",
+    era: "Silver Age (1964)",
+    description: "The eccentric renegade Time Lord from Gallifrey traveling through the space-time continuum in the TARDIS, anchoring a 60-year global sci-fi television and publishing phenomenon.",
+    baseFmv: 18500,
+  },
+  "doctor octopus": {
+    term: "Doctor Octopus (Otto Octavius)",
+    ticker: "$DOC",
+    landmarkIssue: "The Amazing Spider-Man #3 (1963)",
+    creators: "Stan Lee and Steve Ditko",
+    era: "Silver Age (1963)",
+    description: "The brilliant nuclear physicist whose four telepathically controlled titanium-steel tentacles and founding leadership of the Sinister Six make ASM #3 a blue-chip cornerstone of Silver Age Marvel collecting.",
+    baseFmv: 45000,
+  },
+  "doctor fate": {
+    term: "Doctor Fate (Kent Nelson)",
+    ticker: "$FATE",
+    landmarkIssue: "More Fun Comics #55 (1940)",
+    creators: "Gardner Fox and Howard Sherman",
+    era: "Golden Age (1940)",
+    description: "The supreme sorcerer of the DC Universe and founding pillar of the Justice Society of America, wielding the mystical Helmet of Nabu, Amulet of Anubis, and Cloak of Destiny.",
+    baseFmv: 145000,
+  },
+  "doctor manhattan": {
+    term: "Doctor Manhattan (Jon Osterman)",
+    ticker: "$WTCH",
+    landmarkIssue: "Watchmen #1 (1986)",
+    creators: "Alan Moore and Dave Gibbons",
+    era: "Copper / Modern Age (1986)",
+    description: "The godlike quantum-physicist deity of Alan Moore and Dave Gibbons' Watchmen whose complete perception of non-linear time and atomic mastery transformed graphic narrative history.",
+    baseFmv: 950,
+  },
+  "the mandalorian": {
+    term: "The Mandalorian (Din Djarin & Grogu)",
+    ticker: "$MANDO",
+    landmarkIssue: "Star Wars: The Mandalorian #1 (2022 Marvel)",
+    creators: "Jon Favreau, Dave Filoni, and Rodney Barnes",
+    era: "Modern Age (2022)",
+    description: "The lone beskar-clad bounty hunter and Clan of Two protector of Grogu whose cinematic journey revitalized modern Star Wars lore and secondary market variant demand.",
+    baseFmv: 420,
+  },
+  "star trek": {
+    term: "Star Trek (Enterprise Fleet Continuity)",
+    ticker: "$TREK",
+    landmarkIssue: "Star Trek #1 (1967 Gold Key)",
+    creators: "Gene Roddenberry, Dick Wood, and Nevio Zaccara",
+    era: "Silver Age (1967)",
+    description: "The pioneering sci-fi franchise exploring strange new worlds, whose sequential art legacy spanning Gold Key, DC, Marvel, and IDW Publishing represents a historic certified collectible category.",
+    baseFmv: 4800,
   },
   "fantastic four": {
     term: "Fantastic Four (First Family)",
@@ -304,6 +369,36 @@ function deriveSuperheroMarketRamifications(
       velocity = "+19.2% Blue-Chip Inflow";
       storyRamification = "Multiverse incursion warfare drawing classic Fox X-Men legends alongside modern Avengers creates unprecedented multi-franchise collector nostalgia.";
       censusImpact = "The X-Men #1 and Giant-Size X-Men #1 cement their standing as sovereign bedrock assets, experiencing zero supply dilution.";
+    } else if (cleanName.includes("doctor who") || cleanName.includes("the doctor")) {
+      stance = "ACCUMULATE (BULLISH)";
+      velocity = "+19.8% Global Inflow";
+      storyRamification = "Global television broadcasting and serialized media milestones direct collector capital into vintage British sequential debuts and Silver Age comic runs.";
+      censusImpact = "TV Comic #674 and Doctor Who Magazine #1 experience rapid inventory absorption across online auction venues; high-grade certified copies command strong baseline bids.";
+    } else if (cleanName.includes("doctor strange") || cleanName.includes("stephen strange")) {
+      stance = "ACCUMULATE (BULLISH)";
+      velocity = "+22.4% Multiverse Inflow";
+      storyRamification = "Mystical hierarchy storytelling and multiversal incursion focus re-anchor Strange Tales #110 as a blue-chip cornerstone of Silver Age Marvel collecting.";
+      censusImpact = "Certified CGC 9.6 and 9.8 census copies of Strange Tales #110 command strong institutional clearing prices with tightening secondary market float.";
+    } else if (cleanName.includes("doctor octopus") || cleanName.includes("doc ock") || cleanName.includes("otto octavius")) {
+      stance = "ACCUMULATE (BULLISH)";
+      velocity = "+16.5% Blue-Chip Inflow";
+      storyRamification = "Sinister Six leadership and premier Spider-Man villain status reinforce ASM #3 as one of the most reliable blue-chip assets in the Silver Age pantheon.";
+      censusImpact = "The Amazing Spider-Man #3 in certified high-grade slabs sees continuous auction turnover with resilient pricing support across all dealer tiers.";
+    } else if (cleanName.includes("doctor fate") || cleanName.includes("kent nelson")) {
+      stance = "ACCUMULATE (BULLISH)";
+      velocity = "+14.2% Golden Age Premium";
+      storyRamification = "DC mystic cornerstone status and Golden Age Justice Society of America prestige maintain More Fun Comics #55 as an elite sovereign grail target.";
+      censusImpact = "Extremely low census survival numbers across all grades create instantaneous collector competition whenever authenticated copies surface.";
+    } else if (cleanName.includes("doctor manhattan") || cleanName.includes("jon osterman")) {
+      stance = "ACCUMULATE (BULLISH)";
+      velocity = "+18.0% Modern Scarcity Inflow";
+      storyRamification = "Watchmen's untouchable prestige literature status insulates Doctor Manhattan keys from transient market volatility, ensuring steady collector accumulation.";
+      censusImpact = "Watchmen #1 in immaculate CGC 9.8 white-page condition maintains steady liquidity and narrow bid-ask spreads on major auction platforms.";
+    } else if (cleanName.includes("mister fantastic") || cleanName.includes("reed richards")) {
+      stance = "ACCUMULATE (BULLISH)";
+      velocity = "+21.5% First Family Inflow";
+      storyRamification = "Central tactical leadership in multiversal incursion warfare and MCU First Steps momentum accelerate buying interest in foundational Silver Age keys.";
+      censusImpact = "Fantastic Four #1 sustains multi-decade sovereign status, with early run issues (#2-#10) seeing renewed capital allocation from blue-chip portfolios.";
     } else {
       stance = lower.includes("villain") || lower.includes("cast") || lower.includes("return") || lower.includes("rerelease")
         ? "ACCUMULATE (BULLISH)"
@@ -562,6 +657,71 @@ function deriveMarketButterflyRipples(
     seenTickers.add("$SW");
   }
 
+  // Doctor Who / Sci-Fi
+  if (lower.includes("doctor who") || lower.includes("the doctor") || lower.includes("tardis") || lower.includes("dalek") || lower.includes("time lord") || lower.includes("whovian")) {
+    ripples.push({
+      ticker: "$DWHO",
+      assetName: "Doctor Who British Sequential Key Basket",
+      landmarkKey: "TV Comic #674 (1964) / Doctor Who Magazine #1",
+      direction: "surge",
+      projectedDelta: "+19.8% Global Inflow",
+      catalystCausality: "Streaming expansion and regeneration storylines direct global collector capital into certified vintage British comic debuts and key character appearances.",
+    });
+    seenTickers.add("$DWHO");
+  }
+
+  // Doctor Strange / Marvel Supernatural & Multiverse
+  if (lower.includes("doctor strange") || lower.includes("stephen strange") || lower.includes("sorcerer supreme") || lower.includes("sanctum")) {
+    ripples.push({
+      ticker: "$STRG",
+      assetName: "Doctor Strange & Mystic Marvel Keys",
+      landmarkKey: "Strange Tales #110 (1st Doctor Strange)",
+      direction: "surge",
+      projectedDelta: "+22.4% Blue-Chip Acceleration",
+      catalystCausality: "Multiversal narrative escalation elevates Silver Age mystic debuts, tightening dealer float on certified Strange Tales keys.",
+    });
+    seenTickers.add("$STRG");
+  }
+
+  // Doctor Fate / DC Golden Age Sorcery
+  if (lower.includes("doctor fate") || lower.includes("kent nelson") || lower.includes("helmet of nabu") || lower.includes("jsa")) {
+    ripples.push({
+      ticker: "$FATE",
+      assetName: "Doctor Fate Golden Age Benchmark Index",
+      landmarkKey: "More Fun Comics #55 (1st Doctor Fate)",
+      direction: "uptick",
+      projectedDelta: "+14.2% Grail Accumulation",
+      catalystCausality: "Prestige Golden Age DC debuts sustain unmatched scarcity, with collector capital concentrating into authenticated copies of More Fun Comics #55.",
+    });
+    seenTickers.add("$FATE");
+  }
+
+  // Doctor Octopus / Sinister Six Keys
+  if (lower.includes("doctor octopus") || lower.includes("doc ock") || lower.includes("otto octavius")) {
+    ripples.push({
+      ticker: "$DOC",
+      assetName: "Doctor Octopus & Sinister Six Keys",
+      landmarkKey: "The Amazing Spider-Man #3 (1st Doctor Octopus)",
+      direction: "uptick",
+      projectedDelta: "+16.5% Liquidity Surge",
+      catalystCausality: "High-grade Silver Age Spider-Man rogue keys experience accelerated auction clearance and narrowing spreads.",
+    });
+    seenTickers.add("$DOC");
+  }
+
+  // Mister Fantastic / First Family Bedrock
+  if (lower.includes("mister fantastic") || lower.includes("reed richards") || (lower.includes("fantastic four") && lower.includes("first steps"))) {
+    ripples.push({
+      ticker: "$FF4",
+      assetName: "Fantastic Four First Family Bedrock",
+      landmarkKey: "Fantastic Four #1 (1961 Marvel)",
+      direction: "surge",
+      projectedDelta: "+21.5% Blue-Chip Demand",
+      catalystCausality: "Cinematic leadership positioning strengthens institutional demand for certified Silver Age Fantastic Four foundation keys.",
+    });
+    seenTickers.add("$FF4");
+  }
+
   // 3. Dynamic generation for cast and lore dossiers
   for (const lore of loreDossiers) {
     if (seenTickers.has(lore.ticker)) continue;
@@ -709,14 +869,29 @@ export function parseAndSynthesizeArticle(story: {
   author?: string | null;
   id?: string;
 }): SynthesizedArticle {
-  const headline = story.headline.trim();
+  const rawHeadline = story.headline.trim();
   const rawSummary = (story.summary || "").trim();
+  const fullContext = `${rawHeadline} ${rawSummary}`;
+
+  // Preserve authentic paragraphs cleanly stripped of raw HTML markup
+  const rawCleanSummary = rawSummary
+    .replace(/<\/p>\s*<p[^>]*>/gi, "\n\n")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n +/g, "\n")
+    .trim();
+
+  // Apply intelligent fuzzy paraphrasing to resolve placeholders (e.g. "Doctor _________ ?")
+  const headline = paraphraseInferredPlaceholders(rawHeadline, fullContext);
+  const cleanSummary = paraphraseInferredPlaceholders(rawCleanSummary, fullContext);
+
   const source = story.source;
   const authorPersona = selectAuthorForStory(source, story.id || headline);
-  const baseEntities = findNewsEntities(headline, rawSummary);
-  const catalyst = analyzeStoryCatalyst(headline, rawSummary);
+  const baseEntities = findNewsEntities(headline, cleanSummary);
+  const catalyst = analyzeStoryCatalyst(headline, cleanSummary);
 
-  const fullText = `${headline} ${rawSummary}`;
+  const fullText = `${headline} ${cleanSummary}`;
 
   // Dynamically resolve Lore Deep Dives across the 210,000+ entity index
   const loreDeepDives = resolveDynamicLoreDeepDives(fullText, baseEntities);
@@ -726,15 +901,6 @@ export function parseAndSynthesizeArticle(story: {
 
   // Dynamically resolve Market Butterfly Effect ripples
   const butterflyRipples = deriveMarketButterflyRipples(fullText, baseEntities, loreDeepDives);
-
-  // Preserve authentic paragraphs from the original source reporting cleanly stripped of raw HTML
-  const cleanSummary = rawSummary
-    .replace(/<\/p>\s*<p[^>]*>/gi, "\n\n")
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/[ \t]+/g, " ")
-    .replace(/\n +/g, "\n")
-    .trim();
 
   const authenticParagraphs = cleanSummary
     ? cleanSummary.split(/\n\n+/).map((p) => p.trim()).filter(Boolean)
@@ -792,6 +958,7 @@ export function parseAndSynthesizeArticle(story: {
   const entities = extractEntitiesFromContext(narrativeMatchText);
 
   return {
+    headline,
     paragraphs,
     sections,
     readingTimeMinutes: Math.max(1, Math.ceil(wordCount / 200)),

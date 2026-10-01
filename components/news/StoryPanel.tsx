@@ -81,7 +81,7 @@ export function StoryPanel({ story }: { story: NewsStory }) {
 
         {/* Lead Headline with Live Entity Tokenization */}
         <h1 className="mt-4 text-2xl sm:text-3xl font-semibold text-slate-100 leading-tight tracking-tight">
-          <LinkedBriefing text={story.headline} entities={allEntities} />
+          <LinkedBriefing text={article.headline} entities={allEntities} />
         </h1>
 
         {/* Authentic Video Player or Editorial Artwork */}

@@ -1,6 +1,7 @@
 import { createAdminServerClient } from "@/lib/supabase/admin";
 import { findLoreEntitiesInText, findLoreEntitiesInTextAsync, GENERIC_REAL_WORLD_LOCATIONS, LORE_OBSCURE_COLLISION_BLOCKLIST } from "@/lib/wiki/lore-search";
 import { findCbrTermsInText } from "@/lib/lexicon/cbr-lexicon";
+import { resolveFuzzyEntitiesForStory } from "./fuzzy-engine";
 import adaptationCastData from "./adaptation-cast-registry.json";
 import adaptationAssetData from "./adaptation-asset-registry.json";
 
@@ -407,6 +408,33 @@ export const KNOWN_NEWS_ENTITIES_MAP: EntityWikiDef[] = [
   { term: "Victor Von Doom", ticker: "$DOOM", type: "character", target: "intelligence", wikiPath: "/wiki/entry/doctor-doom" },
   { term: "Dr. Doom", ticker: "$DOOM", type: "character", target: "intelligence", wikiPath: "/wiki/entry/doctor-doom" },
   { term: "Doom", ticker: "$DOOM", type: "character", target: "intelligence", wikiPath: "/wiki/entry/doctor-doom" },
+  { term: "Doctor Strange", ticker: "$STRG", type: "character", target: "intelligence", wikiPath: "/wiki/entry/doctor-strange" },
+  { term: "Stephen Strange", ticker: "$STRG", type: "character", target: "intelligence", wikiPath: "/wiki/entry/stephen-strange" },
+  { term: "Doctor Who", ticker: "$DWHO", type: "character", target: "intelligence", wikiPath: "/wiki/entry/the-doctor-earth-5556" },
+  { term: "The Doctor", ticker: "$DWHO", type: "character", target: "intelligence", wikiPath: "/wiki/entry/the-doctor-earth-5556" },
+  { term: "Doctor Fate", ticker: "$FATE", type: "character", target: "intelligence", wikiPath: "/wiki/entry/doctor-fate" },
+  { term: "Doctor Manhattan", ticker: "$WTCH", type: "character", target: "intelligence", wikiPath: "/wiki/entry/doctor-manhattan" },
+  { term: "Doctor Octopus", ticker: "$DOC", type: "character", target: "intelligence", wikiPath: "/wiki/entry/doctor-octopus" },
+  { term: "Doc Ock", ticker: "$DOC", type: "character", target: "intelligence", wikiPath: "/wiki/entry/doctor-octopus" },
+  { term: "Doctor Voodoo", ticker: "$VOODOO", type: "character", target: "intelligence", wikiPath: "/wiki/entry/brother-voodoo" },
+  { term: "Captain Marvel", ticker: "$CMARV", type: "character", target: "intelligence", wikiPath: "/wiki/entry/captain-marvel" },
+  { term: "Captain Britain", ticker: "$CBRIT", type: "character", target: "intelligence", wikiPath: "/wiki/entry/captain-britain" },
+  { term: "Captain Kirk", ticker: "$TREK", type: "character", target: "intelligence", wikiPath: "/wiki/entry/james-t-kirk" },
+  { term: "Captain Picard", ticker: "$TREK", type: "character", target: "intelligence", wikiPath: "/wiki/entry/jean-luc-picard" },
+  { term: "Star Trek", ticker: "$TREK", type: "equity", target: "intelligence", wikiPath: "/wiki/entry/star-trek" },
+  { term: "The Mandalorian", ticker: "$MANDO", type: "character", target: "intelligence", wikiPath: "/wiki/entry/the-mandalorian" },
+  { term: "Mandalorian", ticker: "$MANDO", type: "character", target: "intelligence", wikiPath: "/wiki/entry/the-mandalorian" },
+  { term: "Din Djarin", ticker: "$MANDO", type: "character", target: "intelligence", wikiPath: "/wiki/entry/the-mandalorian" },
+  { term: "Grogu", ticker: "$MANDO", type: "character", target: "intelligence", wikiPath: "/wiki/entry/grogu" },
+  { term: "Mister Fantastic", ticker: "$FF4", type: "character", target: "intelligence", wikiPath: "/wiki/entry/mister-fantastic" },
+  { term: "Reed Richards", ticker: "$FF4", type: "character", target: "intelligence", wikiPath: "/wiki/entry/mister-fantastic" },
+  { term: "Sue Storm", ticker: "$FF4", type: "character", target: "intelligence", wikiPath: "/wiki/entry/invisible-woman" },
+  { term: "Invisible Woman", ticker: "$FF4", type: "character", target: "intelligence", wikiPath: "/wiki/entry/invisible-woman" },
+  { term: "Human Torch", ticker: "$FF4", type: "character", target: "intelligence", wikiPath: "/wiki/entry/human-torch" },
+  { term: "Johnny Storm", ticker: "$FF4", type: "character", target: "intelligence", wikiPath: "/wiki/entry/human-torch" },
+  { term: "The Thing", ticker: "$FF4", type: "character", target: "intelligence", wikiPath: "/wiki/entry/the-thing" },
+  { term: "Ben Grimm", ticker: "$FF4", type: "character", target: "intelligence", wikiPath: "/wiki/entry/the-thing" },
+  { term: "Charles Xavier", ticker: "$PROFX", type: "character", target: "intelligence", wikiPath: "/wiki/entry/professor-x" },
   { term: "Latverian Witches", ticker: "$DOOM:LATV", type: "character", target: "intelligence", wikiPath: "/wiki/entry/latverian-witches" },
   { term: "Latverian Witch", ticker: "$DOOM:LATV", type: "character", target: "intelligence", wikiPath: "/wiki/entry/latverian-witches" },
   { term: "Cynthia von Doom", ticker: "$DOOM:CYNTHIA", type: "character", target: "intelligence", wikiPath: "/wiki/entry/cynthia-von-doom" },
@@ -756,8 +784,9 @@ export async function getDynamicEntitiesForText(text: string): Promise<EntityWik
   const filtered = matchedEntities.filter(
     (e) => !GENERIC_REAL_WORLD_LOCATIONS.has(e.term.toLowerCase())
   );
-  entityCache.set(textHash, { data: filtered, loadedAt: Date.now() });
-  return filtered;
+  const defuzzified = resolveFuzzyEntitiesForStory(text, filtered);
+  entityCache.set(textHash, { data: defuzzified, loadedAt: Date.now() });
+  return defuzzified;
 }
 
 /**
@@ -868,5 +897,6 @@ export function extractEntitiesFromContext(text: string): EntityWikiDef[] {
     }
   }
 
-  return baseMatches.filter((def) => !GENERIC_REAL_WORLD_LOCATIONS.has(def.term.toLowerCase()));
+  const filtered = baseMatches.filter((def) => !GENERIC_REAL_WORLD_LOCATIONS.has(def.term.toLowerCase()));
+  return resolveFuzzyEntitiesForStory(text, filtered);
 }

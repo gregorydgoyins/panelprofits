@@ -5,6 +5,8 @@ import Link from "next/link";
 import type { EntityWikiDef } from "@/lib/news/entities";
 import { EntityHoverCard } from "@/components/news/EntityHoverCard";
 
+import { AMBIGUOUS_HONORIFIC_PREFIXES, paraphraseInferredPlaceholders } from "@/lib/news/fuzzy-engine";
+
 const BLOCKED_TERMS = new Set([
   "florida",
   "orlando",
@@ -41,6 +43,7 @@ const BLOCKED_TERMS = new Set([
   "fans",
   "viewer",
   "viewers",
+  ...Array.from(AMBIGUOUS_HONORIFIC_PREFIXES),
 ]);
 
 /**
@@ -50,9 +53,13 @@ const BLOCKED_TERMS = new Set([
 export function parseTextWithEntities(text: string, entities?: EntityWikiDef[]): React.ReactNode[] {
   if (!text) return [];
   // Strip any legacy raw HTML markup so we parse pure text cleanly
-  const cleanText = text
+  const rawClean = text
     .replace(/<[^>]+>/g, " ")
     .replace(/[ \t]+/g, " ");
+
+  // Pre-paraphrase any ambiguous placeholder patterns (e.g. "Doctor _________ ?") using contextual inference
+  const entityContext = (entities || []).map((e) => e.term).join(" ");
+  const cleanText = paraphraseInferredPlaceholders(rawClean, `${rawClean} ${entityContext}`);
 
   // NOTE: market-concept / grading / lexicon entities (financial & grading glossary terms,
   // e.g. "Fair Market Value", "CGC", "Bid-Ask Spread") are intentionally included here.
