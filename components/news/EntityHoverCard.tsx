@@ -141,12 +141,20 @@ export function EntityHoverCard({ entity, children, className }: EntityHoverCard
       {isOpen && (
         <div
           role="tooltip"
-          className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-84 sm:w-96 rounded-lg border border-slate-700/90 bg-[#070A11] p-3.5 shadow-2xl shadow-cyan-950/40 text-left transition-all animate-in fade-in zoom-in-95 duration-150"
+          className={`absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-84 sm:w-96 rounded-lg border bg-[#070A11] p-3.5 shadow-2xl text-left transition-all animate-in fade-in zoom-in-95 duration-150 ${
+            isLexicon
+              ? "border-pink-500/60 shadow-pink-950/50"
+              : "border-slate-700/90 shadow-cyan-950/40"
+          }`}
         >
           {/* Header Bar */}
           <div className="flex items-center justify-between gap-2 border-b border-slate-800 pb-2">
-            <span className="text-[9px] font-mono uppercase tracking-wider text-cyan-400 font-semibold flex items-center gap-1">
-              <Sparkles className="h-3 w-3 text-cyan-400" />
+            <span
+              className={`text-[9px] font-mono uppercase tracking-wider font-semibold flex items-center gap-1 ${
+                isLexicon ? "text-pink-400" : "text-cyan-400"
+              }`}
+            >
+              <Sparkles className={`h-3 w-3 ${isLexicon ? "text-pink-400" : "text-cyan-400"}`} />
               {typeLabel}
             </span>
             <div className="flex items-center gap-1.5">
@@ -161,7 +169,13 @@ export function EntityHoverCard({ entity, children, className }: EntityHoverCard
                 </span>
               )}
               {lexicon.category && (
-                <span className="text-[9px] font-mono text-cyan-300 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-500/30 truncate max-w-[130px]">
+                <span
+                  className={`text-[9px] font-mono px-1.5 py-0.5 rounded border truncate max-w-[130px] ${
+                    isLexicon
+                      ? "text-pink-300 bg-pink-950/60 border-pink-500/40"
+                      : "text-cyan-300 bg-cyan-950/60 border-cyan-500/30"
+                  }`}
+                >
                   {lexicon.category}
                 </span>
               )}
@@ -216,17 +230,31 @@ export function EntityHoverCard({ entity, children, className }: EntityHoverCard
           )}
 
           {/* Lexicon Details: Investopedia definition + Panel Profits translation (GUARANTEED NEVER BLANK) */}
-          <div className="mt-2 space-y-1.5 rounded bg-slate-900/90 p-2.5 border border-slate-800 text-[11px] leading-relaxed">
+          <div
+            className={`mt-2 space-y-1.5 rounded p-2.5 border text-[11px] leading-relaxed ${
+              isLexicon
+                ? "bg-[#140813] border-pink-900/60"
+                : "bg-slate-900/90 border-slate-800"
+            }`}
+          >
             <div>
-              <span className="text-[9px] font-mono uppercase tracking-wider text-cyan-400 font-semibold block mb-0.5">
+              <span
+                className={`text-[9px] font-mono uppercase tracking-wider font-semibold block mb-0.5 ${
+                  isLexicon ? "text-pink-400" : "text-cyan-400"
+                }`}
+              >
                 Comic Market Meaning:
               </span>
               <p className="text-slate-200 line-clamp-3">
                 {lexicon.translation}
               </p>
             </div>
-            <div className="pt-1.5 border-t border-slate-800/80">
-              <span className="text-[9px] font-mono uppercase tracking-wider text-slate-400 block mb-0.5">
+            <div className={`pt-1.5 border-t ${isLexicon ? "border-pink-900/40" : "border-slate-800/80"}`}>
+              <span
+                className={`text-[9px] font-mono uppercase tracking-wider block mb-0.5 ${
+                  isLexicon ? "text-pink-300 font-medium" : "text-slate-400"
+                }`}
+              >
                 Investopedia Financial Principle:
               </span>
               <p className="text-slate-300 line-clamp-2">
@@ -239,7 +267,11 @@ export function EntityHoverCard({ entity, children, className }: EntityHoverCard
           <div className="mt-3 flex items-center justify-between border-t border-slate-800/80 pt-2 text-[10px] font-mono">
             <Link
               href={entity.wikiPath}
-              className="text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors"
+              className={`flex items-center gap-1 transition-colors ${
+                isLexicon
+                  ? "text-pink-400 hover:text-pink-300"
+                  : "text-cyan-400 hover:text-cyan-300"
+              }`}
             >
               {isLexicon ? "Inspect in Lexicon" : "Open Dossier"} <ArrowUpRight className="h-3 w-3" />
             </Link>
@@ -248,7 +280,7 @@ export function EntityHoverCard({ entity, children, className }: EntityHoverCard
               href={lexicon.investopediaUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-amber-300 hover:text-amber-200 flex items-center gap-1 transition-colors"
+              className="text-pink-400 hover:text-pink-200 flex items-center gap-1 transition-colors font-medium"
             >
               Investopedia <ExternalLink className="h-3 w-3" />
             </a>

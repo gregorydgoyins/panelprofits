@@ -20,6 +20,12 @@ const UNIVERSE_DISPLAY: Record<string, { label: string; accent: string }> = {
   DARKHORSE: { label: "Dark Horse", accent: "text-orange-300 border-orange-500/40 bg-orange-950/40" },
   SPAWN: { label: "Spawn", accent: "text-red-300 border-red-500/40 bg-red-950/40" },
   TRANSFORMERS: { label: "Transformers", accent: "text-cyan-300 border-cyan-500/40 bg-cyan-950/40" },
+  CYBERPUNK: { label: "Cyberpunk", accent: "text-fuchsia-300 border-fuchsia-500/40 bg-fuchsia-950/40" },
+  MANGA: { label: "Manga", accent: "text-emerald-300 border-emerald-500/40 bg-emerald-950/40" },
+  DOCTOR_WHO: { label: "Doctor Who", accent: "text-sky-300 border-sky-500/40 bg-sky-950/40" },
+  STAR_TREK: { label: "Star Trek", accent: "text-yellow-300 border-yellow-500/40 bg-yellow-950/40" },
+  INDIE: { label: "Indie", accent: "text-purple-300 border-purple-500/40 bg-purple-950/40" },
+  VERTIGO: { label: "DC Vertigo", accent: "text-teal-300 border-teal-500/40 bg-teal-950/40" },
 };
 
 function universeDisplay(universe: string) {
@@ -96,17 +102,17 @@ function LexiconTermPill({ term }: { term: RelatedLexiconTerm }) {
   return (
     <Link
       href={term.wikiPath}
-      className="group flex flex-col gap-1 rounded border border-violet-900/50 bg-[#0F0B17] px-3 py-2 transition-colors hover:border-violet-500/50 hover:bg-[#161022]"
+      className="group flex flex-col gap-1 rounded border border-pink-900/50 bg-[#140813] px-3 py-2 transition-colors hover:border-pink-500/60 hover:bg-[#1f0d1d]"
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="text-xs font-semibold text-violet-200 group-hover:text-violet-100 transition-colors">
+        <span className="text-xs font-semibold text-pink-200 group-hover:text-pink-100 transition-colors">
           {term.term}
         </span>
-        <ArrowUpRight className="h-3 w-3 shrink-0 text-violet-500 group-hover:text-violet-300 transition-colors" />
+        <ArrowUpRight className="h-3 w-3 shrink-0 text-pink-400 group-hover:text-pink-200 transition-colors" />
       </div>
-      <span className="text-[9px] font-mono uppercase tracking-wider text-violet-500">{term.category}</span>
+      <span className="text-[9px] font-mono uppercase tracking-wider text-pink-400">{term.category}</span>
       {term.definition && (
-        <p className="text-[11px] leading-relaxed text-slate-400 line-clamp-2">{term.definition}</p>
+        <p className="text-[11px] leading-relaxed text-slate-300 line-clamp-2">{term.definition}</p>
       )}
     </Link>
   );
@@ -171,9 +177,9 @@ export function RelatedDossiersRail({ data }: RelatedDossiersRailProps) {
 
       {lexiconTerms.length > 0 && (
         <div className="mt-4 border-t border-slate-800/60 pt-3">
-          <div className="mb-2.5 flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider text-slate-500">
-            <BookOpen className="h-3 w-3 text-violet-400" />
-            <span>Market Lexicon</span>
+          <div className="mb-2.5 flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider text-pink-400 font-semibold">
+            <BookOpen className="h-3 w-3 text-pink-400" />
+            <span>Market Lexicon · Investopedia Principles</span>
           </div>
           <div className="grid gap-2 sm:grid-cols-2">
             {lexiconTerms.map((term) => (

@@ -217,24 +217,24 @@ export function NewsBriefing({
                   </div>
                 </div>
 
-                <div className="mt-2.5 pt-2 border-t border-cyan-900/40 text-[11px] text-slate-300 leading-snug bg-cyan-950/40 p-2 rounded">
+                <div className="mt-2.5 pt-2 border-t border-pink-900/40 text-[11px] text-slate-300 leading-snug bg-pink-950/40 p-2.5 rounded border border-pink-500/30">
                   <div className="flex items-center justify-between gap-1 mb-1">
-                    <span className="text-cyan-400 font-mono text-[10px] uppercase font-bold">
+                    <span className="text-pink-400 font-mono text-[10px] uppercase font-bold">
                       Investopedia: {noun.investopediaPrinciple.term}
                     </span>
                     <a
                       href={noun.investopediaPrinciple.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[9px] font-mono text-cyan-300 underline hover:text-cyan-100"
+                      className="text-[9px] font-mono text-pink-300 underline hover:text-pink-100 font-medium"
                     >
                       Principle ↗
                     </a>
                   </div>
-                  <p className="text-slate-400 text-[10px] leading-tight mb-1">
+                  <p className="text-slate-300 text-[10px] leading-tight mb-1">
                     {noun.investopediaPrinciple.definition}
                   </p>
-                  <p className="text-cyan-200/90 text-[10px] leading-tight font-sans">
+                  <p className="text-pink-200/95 text-[10px] leading-tight font-sans">
                     <strong>Panel Profits Translation:</strong> {noun.investopediaPrinciple.translation}
                   </p>
                 </div>

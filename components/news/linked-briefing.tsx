@@ -130,7 +130,7 @@ export function parseTextWithEntities(text: string, entities?: EntityWikiDef[]):
               : isStudio
               ? "text-indigo-300 hover:text-indigo-100 bg-indigo-950/40 hover:bg-indigo-900/60 border border-indigo-500/40"
               : isGlossaryTerm
-              ? "text-violet-300 hover:text-violet-100 bg-violet-950/40 hover:bg-violet-900/60 border border-violet-500/40"
+              ? "text-pink-400 hover:text-pink-200 bg-pink-950/60 hover:bg-pink-900/70 border border-pink-500/50 shadow-sm shadow-pink-950/40"
               : "text-sky-300 hover:text-sky-100 bg-sky-950/30 hover:bg-sky-900/50 border border-sky-500/40"
           }`}
         >

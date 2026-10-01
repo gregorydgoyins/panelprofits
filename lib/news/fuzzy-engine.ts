@@ -499,11 +499,17 @@ export function inferIntendedProfile(contextText: string, prefixFilter?: string)
   for (const profile of candidateProfiles) {
     let score = 0;
 
+    // To prevent false positives from generic creator/publisher mentions (e.g. Stan Lee or Marvel),
+    // a profile requires at least ONE primary term, high-specificity context cue, or attached cast talent
+    // to be considered valid when an ambiguous honorific or placeholder is evaluated.
+    let hasCoreSignal = false;
+
     // 1. Direct Primary Term Mention (+25 points)
     for (const term of profile.signals.primaryTerms) {
       const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       if (new RegExp(`\\b${escaped}\\b`, "i").test(lower)) {
         score += 25;
+        hasCoreSignal = true;
       }
     }
 
@@ -512,6 +518,7 @@ export function inferIntendedProfile(contextText: string, prefixFilter?: string)
       const escaped = cue.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       if (new RegExp(`\\b${escaped}\\b`, "i").test(lower)) {
         score += 12;
+        hasCoreSignal = true;
       }
     }
 
@@ -520,6 +527,7 @@ export function inferIntendedProfile(contextText: string, prefixFilter?: string)
       const escaped = talent.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       if (new RegExp(`\\b${escaped}\\b`, "i").test(lower)) {
         score += 15;
+        hasCoreSignal = true;
       }
     }
 
@@ -537,6 +545,12 @@ export function inferIntendedProfile(contextText: string, prefixFilter?: string)
       if (new RegExp(`\\b${escaped}\\b`, "i").test(lower)) {
         score += 6;
       }
+    }
+
+    // If there is no core signal (no primary term, no context cue, no attached cast talent),
+    // generic creator/publisher mentions alone CANNOT infer a specific character.
+    if (!hasCoreSignal) {
+      continue;
     }
 
     if (score > highestScore) {
@@ -572,99 +586,107 @@ export function resolveFuzzyEntitiesForStory(
   const lower = storyText.toLowerCase();
 
   // 1. Resolve Doctor category (Doctor Who, Doctor Strange, Doctor Doom, Doctor Fate, Doctor Octopus, Doctor Manhattan)
-  const intendedDoctor = inferIntendedProfile(storyText, "doctor");
-  if (intendedDoctor) {
-    if (!existingTerms.has(intendedDoctor.canonicalTerm.toLowerCase())) {
-      existingTerms.add(intendedDoctor.canonicalTerm.toLowerCase());
-      resolvedList.push({
-        term: intendedDoctor.canonicalTerm,
-        ticker: intendedDoctor.ticker,
-        type: intendedDoctor.type,
-        target: "intelligence",
-        wikiPath: intendedDoctor.wikiPath,
-        roleDetails: {
-          character: intendedDoctor.canonicalTerm,
-          universe: intendedDoctor.universe,
-          landmarkIssue: intendedDoctor.landmarkIssue,
-          comicTicker: intendedDoctor.ticker,
-        },
-      });
-    }
+  if (/\b(doctor|dr\.?|tardis|dalek|daleks|time lord|gallifrey|sanctum|sorcerer supreme|latveria|latverian|doc ock|otto octavius|helmet of nabu)\b/i.test(lower)) {
+    const intendedDoctor = inferIntendedProfile(storyText, "doctor");
+    if (intendedDoctor) {
+      if (!existingTerms.has(intendedDoctor.canonicalTerm.toLowerCase())) {
+        existingTerms.add(intendedDoctor.canonicalTerm.toLowerCase());
+        resolvedList.push({
+          term: intendedDoctor.canonicalTerm,
+          ticker: intendedDoctor.ticker,
+          type: intendedDoctor.type,
+          target: "intelligence",
+          wikiPath: intendedDoctor.wikiPath,
+          roleDetails: {
+            character: intendedDoctor.canonicalTerm,
+            universe: intendedDoctor.universe,
+            landmarkIssue: intendedDoctor.landmarkIssue,
+            comicTicker: intendedDoctor.ticker,
+          },
+        });
+      }
 
-    // If Doctor Who, also resolve "The Doctor"
-    if (intendedDoctor.id === "doctor-who" && !existingTerms.has("the doctor")) {
-      existingTerms.add("the doctor");
-      resolvedList.push({
-        term: "The Doctor",
-        ticker: "$DWHO",
-        type: "character",
-        target: "intelligence",
-        wikiPath: intendedDoctor.wikiPath,
-        roleDetails: {
-          character: "The Doctor",
-          universe: "DOCTOR_WHO",
-          landmarkIssue: intendedDoctor.landmarkIssue,
-          comicTicker: "$DWHO",
-        },
-      });
+      // If Doctor Who, also resolve "The Doctor"
+      if (intendedDoctor.id === "doctor-who" && !existingTerms.has("the doctor")) {
+        existingTerms.add("the doctor");
+        resolvedList.push({
+          term: "The Doctor",
+          ticker: "$DWHO",
+          type: "character",
+          target: "intelligence",
+          wikiPath: intendedDoctor.wikiPath,
+          roleDetails: {
+            character: "The Doctor",
+            universe: "DOCTOR_WHO",
+            landmarkIssue: intendedDoctor.landmarkIssue,
+            comicTicker: "$DWHO",
+          },
+        });
+      }
     }
   }
 
   // 2. Check Captain references
-  const intendedCaptain = inferIntendedProfile(storyText, "captain");
-  if (intendedCaptain && !existingTerms.has(intendedCaptain.canonicalTerm.toLowerCase())) {
-    existingTerms.add(intendedCaptain.canonicalTerm.toLowerCase());
-    resolvedList.push({
-      term: intendedCaptain.canonicalTerm,
-      ticker: intendedCaptain.ticker,
-      type: intendedCaptain.type,
-      target: "intelligence",
-      wikiPath: intendedCaptain.wikiPath,
-      roleDetails: {
-        character: intendedCaptain.canonicalTerm,
-        universe: intendedCaptain.universe,
-        landmarkIssue: intendedCaptain.landmarkIssue,
-        comicTicker: intendedCaptain.ticker,
-      },
-    });
+  if (/\b(captain|capt\.?|starfleet|uss enterprise|star trek|vibranium shield|super soldier|shazam|billy batson)\b/i.test(lower)) {
+    const intendedCaptain = inferIntendedProfile(storyText, "captain");
+    if (intendedCaptain && !existingTerms.has(intendedCaptain.canonicalTerm.toLowerCase())) {
+      existingTerms.add(intendedCaptain.canonicalTerm.toLowerCase());
+      resolvedList.push({
+        term: intendedCaptain.canonicalTerm,
+        ticker: intendedCaptain.ticker,
+        type: intendedCaptain.type,
+        target: "intelligence",
+        wikiPath: intendedCaptain.wikiPath,
+        roleDetails: {
+          character: intendedCaptain.canonicalTerm,
+          universe: intendedCaptain.universe,
+          landmarkIssue: intendedCaptain.landmarkIssue,
+          comicTicker: intendedCaptain.ticker,
+        },
+      });
+    }
   }
 
   // 3. Check Professor references
-  const intendedProf = inferIntendedProfile(storyText, "professor");
-  if (intendedProf && !existingTerms.has(intendedProf.canonicalTerm.toLowerCase())) {
-    existingTerms.add(intendedProf.canonicalTerm.toLowerCase());
-    resolvedList.push({
-      term: intendedProf.canonicalTerm,
-      ticker: intendedProf.ticker,
-      type: intendedProf.type,
-      target: "intelligence",
-      wikiPath: intendedProf.wikiPath,
-      roleDetails: {
-        character: intendedProf.canonicalTerm,
-        universe: intendedProf.universe,
-        landmarkIssue: intendedProf.landmarkIssue,
-        comicTicker: intendedProf.ticker,
-      },
-    });
+  if (/\b(professor|prof\.?|cerebro|xavier institute|charles xavier)\b/i.test(lower)) {
+    const intendedProf = inferIntendedProfile(storyText, "professor");
+    if (intendedProf && !existingTerms.has(intendedProf.canonicalTerm.toLowerCase())) {
+      existingTerms.add(intendedProf.canonicalTerm.toLowerCase());
+      resolvedList.push({
+        term: intendedProf.canonicalTerm,
+        ticker: intendedProf.ticker,
+        type: intendedProf.type,
+        target: "intelligence",
+        wikiPath: intendedProf.wikiPath,
+        roleDetails: {
+          character: intendedProf.canonicalTerm,
+          universe: intendedProf.universe,
+          landmarkIssue: intendedProf.landmarkIssue,
+          comicTicker: intendedProf.ticker,
+        },
+      });
+    }
   }
 
   // 4. Check Mister / Mr references
-  const intendedMister = inferIntendedProfile(storyText, "mister");
-  if (intendedMister && !existingTerms.has(intendedMister.canonicalTerm.toLowerCase())) {
-    existingTerms.add(intendedMister.canonicalTerm.toLowerCase());
-    resolvedList.push({
-      term: intendedMister.canonicalTerm,
-      ticker: intendedMister.ticker,
-      type: intendedMister.type,
-      target: "intelligence",
-      wikiPath: intendedMister.wikiPath,
-      roleDetails: {
-        character: intendedMister.canonicalTerm,
-        universe: intendedMister.universe,
-        landmarkIssue: intendedMister.landmarkIssue,
-        comicTicker: intendedMister.ticker,
-      },
-    });
+  if (/\b(mister|mr\.?|baxter building|council of reeds|marauders)\b/i.test(lower)) {
+    const intendedMister = inferIntendedProfile(storyText, "mister");
+    if (intendedMister && !existingTerms.has(intendedMister.canonicalTerm.toLowerCase())) {
+      existingTerms.add(intendedMister.canonicalTerm.toLowerCase());
+      resolvedList.push({
+        term: intendedMister.canonicalTerm,
+        ticker: intendedMister.ticker,
+        type: intendedMister.type,
+        target: "intelligence",
+        wikiPath: intendedMister.wikiPath,
+        roleDetails: {
+          character: intendedMister.canonicalTerm,
+          universe: intendedMister.universe,
+          landmarkIssue: intendedMister.landmarkIssue,
+          comicTicker: intendedMister.ticker,
+        },
+      });
+    }
   }
 
   // 5. DEFERENCE FILTER:

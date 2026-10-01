@@ -170,6 +170,40 @@ function normalizeMatchPhrase(s: string): string {
  * ordinary financial/comics prose. See the block comment above for the concrete case
  * ("High-Grade") this exists to let through.
  */
+const COMMON_PHRASE_BLOCKLIST = new Set([
+  "the top",
+  "the bottom",
+  "the best",
+  "the only",
+  "top 10",
+  "how to",
+  "what is",
+  "why you",
+  "all of",
+  "part of",
+  "in the",
+  "on the",
+  "at the",
+  "out of",
+  "one of",
+  "some of",
+  "up to",
+  "down to",
+  "top",
+  "bottom",
+  "best",
+  "worst",
+  "only",
+  "about",
+  "who is",
+  "what are",
+  "when to",
+  "where to",
+  "which is",
+  "more than",
+  "less than",
+]);
+
 function isSafeSingleToken(normalized: string): boolean {
   return normalized.includes("-");
 }
@@ -182,7 +216,7 @@ function wordCountOf(normalized: string): number {
  *  both "high-grade" and "high grade" for a term stored as "High-Grade"), so hyphen-vs-
  *  space variance in how a compound term is written doesn't prevent a match. */
 function indexPhraseAndVariants(idx: Map<string, CbrLexiconEntry>, normalized: string, entry: CbrLexiconEntry): void {
-  if (!normalized) return;
+  if (!normalized || COMMON_PHRASE_BLOCKLIST.has(normalized)) return;
   const existing = idx.get(normalized);
   if (!existing || (!existing.is_core_canon && entry.is_core_canon)) {
     idx.set(normalized, entry);
@@ -190,7 +224,7 @@ function indexPhraseAndVariants(idx: Map<string, CbrLexiconEntry>, normalized: s
 
   if (normalized.includes("-")) {
     const spaced = normalized.replace(/-/g, " ").replace(/\s+/g, " ").trim();
-    if (spaced !== normalized) {
+    if (spaced !== normalized && !COMMON_PHRASE_BLOCKLIST.has(spaced)) {
       const existingSpaced = idx.get(spaced);
       if (!existingSpaced || (!existingSpaced.is_core_canon && entry.is_core_canon)) {
         idx.set(spaced, entry);
@@ -205,7 +239,10 @@ function buildCbrMatchIndex(): Map<string, CbrLexiconEntry> {
 
   const idx = new Map<string, CbrLexiconEntry>();
   for (const entry of cachedTermList || []) {
+    const termLower = entry.term.toLowerCase();
+    if (termLower.startsWith("the top (and only")) continue;
     const normalized = normalizeMatchPhrase(entry.term);
+    if (COMMON_PHRASE_BLOCKLIST.has(normalized)) continue;
     const wordCount = wordCountOf(normalized);
     const indexable =
       wordCount >= 2 ? wordCount <= MAX_MATCH_NGRAM : wordCount === 1 && isSafeSingleToken(normalized);
@@ -217,10 +254,12 @@ function buildCbrMatchIndex(): Map<string, CbrLexiconEntry> {
     const parenMatch = entry.term.match(/^([^(]+)\(/);
     if (parenMatch) {
       const base = normalizeMatchPhrase(parenMatch[1]);
-      const baseWordCount = wordCountOf(base);
-      const baseIndexable =
-        baseWordCount >= 2 ? baseWordCount <= MAX_MATCH_NGRAM : baseWordCount === 1 && isSafeSingleToken(base);
-      if (baseIndexable) indexPhraseAndVariants(idx, base, entry);
+      if (!COMMON_PHRASE_BLOCKLIST.has(base)) {
+        const baseWordCount = wordCountOf(base);
+        const baseIndexable =
+          baseWordCount >= 2 ? baseWordCount <= MAX_MATCH_NGRAM : baseWordCount === 1 && isSafeSingleToken(base);
+        if (baseIndexable) indexPhraseAndVariants(idx, base, entry);
+      }
     }
   }
 

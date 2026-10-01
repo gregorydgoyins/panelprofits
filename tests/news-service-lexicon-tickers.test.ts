@@ -125,4 +125,71 @@ describe("News Service 4-5 Paragraph Synthesis & Lexicon Routing", () => {
     expect(prefix).not.toBeNull();
     expect(prefix?.term).toContain("Market Capitalization");
   });
+
+  it("synthesizes a Cyberpunk book list with accurate genre lore, proper nouns, and zero Silver Age Marvel hallucinations", () => {
+    const story = {
+      headline: "5 Essential Cyberpunk Books To Read If You're New To The Genre",
+      summary: "From William Gibson's Neuromancer to Philip K. Dick's Do Androids Dream of Electric Sheep and Katsuhiro Otomo's Akira, cyberpunk defined modern dystopian sci-fi.",
+      source: "ScreenRant",
+    };
+
+    const article = parseAndSynthesizeArticle(story);
+
+    // 1. Paragraph count must be 4 or 5
+    expect(article.paragraphs.length).toBeGreaterThanOrEqual(4);
+    expect(article.paragraphs.length).toBeLessThanOrEqual(5);
+
+    const fullArticleText = article.paragraphs.join("\n\n");
+
+    // 2. Must recognize Cyberpunk, Gibson, Neuromancer, Akira, or Dick
+    expect(fullArticleText.toLowerCase()).toContain("cyberpunk");
+
+    // 3. Must NEVER hallucinate Silver Age Marvel (Stan Lee, Jack Kirby, FF #1, Avengers #1)
+    expect(fullArticleText).not.toContain("Stan Lee, Jack Kirby, and Steve Ditko");
+    expect(fullArticleText).not.toContain("Fantastic Four #1 (1961), Amazing Fantasy #15");
+
+    // 4. Must NOT inject false positive characters (Doctor Doom, Captain America, Professor X, Mister Fantastic)
+    const entityTerms = article.entities.map((e) => e.term.toLowerCase());
+    expect(entityTerms).not.toContain("doctor doom");
+    expect(entityTerms).not.toContain("captain america");
+    expect(entityTerms).not.toContain("professor x");
+    expect(entityTerms).not.toContain("mister fantastic");
+
+    // 5. Must NOT match "the top" as an entity
+    expect(entityTerms).not.toContain("the top");
+
+    // 6. Researched proper nouns must include William Gibson, Neuromancer, Akira, or Philip K. Dick
+    expect(article.researchedProperNouns.length).toBeGreaterThanOrEqual(1);
+    const properNounNames = article.researchedProperNouns.map((r) => r.properNoun.toLowerCase());
+    expect(
+      properNounNames.some(
+        (name) =>
+          name.includes("gibson") ||
+          name.includes("neuromancer") ||
+          name.includes("akira") ||
+          name.includes("cyberpunk") ||
+          name.includes("dick")
+      )
+    ).toBe(true);
+
+    // 7. Researched proper nouns must carry valid Investopedia principles
+    for (const rpn of article.researchedProperNouns) {
+      expect(rpn.investopediaPrinciple).toBeDefined();
+      expect(rpn.investopediaPrinciple.term).toBeTruthy();
+      expect(rpn.investopediaPrinciple.url).toMatch(/^https:\/\/www\.investopedia\.com/);
+      expect(rpn.investopediaPrinciple.definition).toBeTruthy();
+      expect(rpn.investopediaPrinciple.translation).toBeTruthy();
+    }
+
+    // 8. Superhero ramifications must be genre-appropriate ($CYBER or $MANGA or $INDIE), NOT Marvel Sovereign Blue-Chip Index
+    for (const ram of article.superheroRamifications) {
+      expect(ram.characterName).not.toContain("Marvel Sovereign Blue-Chip Index");
+    }
+
+    // 9. Butterfly ripples must NOT include "the top Canonical Key Basket"
+    for (const rip of article.butterflyRipples) {
+      expect(rip.assetName.toLowerCase()).not.toContain("the top");
+      expect(rip.ticker).not.toBe("$TOP");
+    }
+  });
 });

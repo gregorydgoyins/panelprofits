@@ -236,10 +236,23 @@ function deriveSuperheroMarketRamifications(
     } else if (lower.includes("star wars") || lower.includes("mandalorian") || lower.includes("grogu") || lower.includes("jedi") || lower.includes("vader")) {
       evaluateCharacter("Star Wars Sovereign Key Issue Index", "$SW", "Star Wars #1 (1977 Marvel 35¢ Price Variant)", 78000, "Benchmark Bronze Age and Modern Star Wars key debuts.");
       evaluateCharacter("The Mandalorian & Modern Star Wars Keys", "$MANDO", "Star Wars: The Mandalorian #1", 350, "Modern CGC 9.8 variant covers and first appearances reacting to active Disney+ and theatrical development.");
-    } else {
+    } else if (lower.includes("cyberpunk") || lower.includes("neuromancer") || lower.includes("gibson") || lower.includes("blade runner") || lower.includes("akira") || lower.includes("ghost in the shell") || lower.includes("dredd") || lower.includes("transmetropolitan") || lower.includes("philip k. dick") || lower.includes("sci-fi")) {
+      evaluateCharacter("Cyberpunk & Speculative Sci-Fi Keys", "$CYBER", "Akira #1 / Ghost in the Shell #1 / 2000 AD Prog #2", 450, "Pioneering cyberpunk and sci-fi graphic novel keys exhibiting resilient collector float and cultural prestige.");
+      evaluateCharacter("Independent Dystopian Graphic Novel Basket", "$INDIE", "Transmetropolitan #1 / Do Androids Dream #1", 280, "Prestige mature-readers sci-fi equities with high-grade condition scarcity.");
+    } else if (lower.includes("manga") || lower.includes("anime") || lower.includes("shonen") || lower.includes("dragon ball") || lower.includes("one piece") || lower.includes("berserk")) {
+      evaluateCharacter("Manga Sovereign Blue-Chip Index", "$MANGA", "Weekly Shonen Jump Vintage Keys / Akira #1", 4500, "Historical Japanese sequential art and premier English-translated first printings.");
+      evaluateCharacter("Modern Shonen & Seinen Catalyst Basket", "$SHONEN", "Dragon Ball / One Piece Early Volumes", 1850, "High-grade certified Japanese manga magazines and Tankōbon first printings.");
+    } else if (lower.includes("heroclix") || lower.includes("wizkids") || lower.includes("warhammer") || lower.includes("miniatures") || lower.includes("tabletop")) {
+      evaluateCharacter("Collectible Tabletop & Comic Cross-Equities", "$HERO", "HeroClix: Infinity Challenge / Warhammer 40k #1", 350, "Physical miniature games and licensed comic keys bridging tabletop gaming and sequential art collecting.");
+      evaluateCharacter("Gaming Media & Sequential Art Benchmark", "$TOY", "Magic: The Gathering #1 / Dungeons & Dragons Keys", 420, "Cross-medium collectible gaming properties demonstrating steady collector acquisition.");
+    } else if (lower.includes("marvel") || lower.includes("avengers") || lower.includes("spider") || lower.includes("x-men") || lower.includes("fantastic four") || lower.includes("hulk") || lower.includes("thor") || lower.includes("captain america")) {
       // Marvel Universe & General Sequential Art Bedrock
       evaluateCharacter("Marvel Sovereign Blue-Chip Index", "$MRVL", "Amazing Fantasy #15 / Fantastic Four #1", 285000, "Benchmark Silver Age Marvel key issue index tracking liquidity and census velocity.");
       evaluateCharacter("Modern Sequential Art Catalyst Basket", "$EQUITY", "Key Issue First Appearances", 3500, "High-grade CGC/CBCS 9.8 certified census copies exhibiting narrowing dealer bid-ask spreads.");
+    } else {
+      // General Sequential Art / Indie Sovereign Bedrock
+      evaluateCharacter("Independent Sovereign Asset Basket", "$INDIE", "Key Issue First Appearances", 3500, "High-grade CGC/CBCS 9.8 certified census copies exhibiting narrowing dealer bid-ask spreads.");
+      evaluateCharacter("Sequential Art Literary Milestone Index", "$EQUITY", "Historical Graphic Novel Debuts", 1450, "Benchmark sequential art equities exhibiting resilient collector accumulation.");
     }
   }
 
@@ -489,6 +502,45 @@ function deriveMarketButterflyRipples(
     seenTickers.add("$FF4");
   }
 
+  // Cyberpunk & Speculative Fiction Graphic Novels
+  if (lower.includes("cyberpunk") || lower.includes("neuromancer") || lower.includes("gibson") || lower.includes("blade runner") || lower.includes("akira") || lower.includes("ghost in the shell") || lower.includes("transmetropolitan")) {
+    ripples.push({
+      ticker: "$CYBER",
+      assetName: "Cyberpunk & Speculative Sci-Fi Graphic Novel Index",
+      landmarkKey: "Akira #1 (1988) / Neuromancer Graphic Novel (1989)",
+      direction: "surge",
+      projectedDelta: "+21.4% Liquidity Acceleration",
+      catalystCausality: "Curated cyberpunk reading lists and genre spotlights trigger fresh secondary market accumulation across vintage English-translated manga and sci-fi graphic novel keys.",
+    });
+    seenTickers.add("$CYBER");
+  }
+
+  // Manga & International Sequential Art
+  if (lower.includes("manga") || lower.includes("anime") || lower.includes("shonen") || lower.includes("dragon ball") || lower.includes("one piece")) {
+    ripples.push({
+      ticker: "$MANGA",
+      assetName: "Manga & International Sequential Art Index",
+      landmarkKey: "Weekly Shonen Jump Debut Issues / Akira #1",
+      direction: "surge",
+      projectedDelta: "+26.8% Global Inflow",
+      catalystCausality: "Expanding global streaming and reading audiences channel cross-border liquidity into certified high-grade vintage manga keys and premiere English publication issues.",
+    });
+    seenTickers.add("$MANGA");
+  }
+
+  // Tabletop & Gaming Crossovers
+  if (lower.includes("heroclix") || lower.includes("wizkids") || lower.includes("warhammer") || lower.includes("miniatures") || lower.includes("tabletop")) {
+    ripples.push({
+      ticker: "$HERO",
+      assetName: "Collectible Gaming & Sequential Art Crossover Index",
+      landmarkKey: "HeroClix: Infinity Challenge / Warhammer 40k #1",
+      direction: "uptick",
+      projectedDelta: "+15.6% Secondary Turn",
+      catalystCausality: "Tabletop expansion and competitive tournament circuits stimulate cross-medium interest in foundational superhero and sci-fi gaming keys.",
+    });
+    seenTickers.add("$HERO");
+  }
+
   // 3. Dynamic generation for cast and lore dossiers
   for (const lore of loreDossiers) {
     if (seenTickers.has(lore.ticker)) continue;
@@ -512,9 +564,16 @@ function deriveMarketButterflyRipples(
 
   // 4. Fallback default if ripples still empty
   if (ripples.length === 0) {
-    const primary = entities[0] || { term: "Benchmark Comic Equities", ticker: "$EQUITY" };
+    const validEntity = entities.find(
+      (e) =>
+        e.term &&
+        e.term.length > 2 &&
+        !["the top", "top", "the", "how to", "best"].includes(e.term.toLowerCase()) &&
+        (e.type === "character" || e.type === "equity" || e.type === "publisher")
+    );
+    const primary = validEntity || { term: "Independent Sequential Art Basket", ticker: "$INDIE" };
     ripples.push({
-      ticker: primary.ticker || "$EQUITY",
+      ticker: primary.ticker || "$INDIE",
       assetName: `${primary.term} Canonical Key Basket`,
       landmarkKey: "Primary Landmark Debut Issue",
       direction: "uptick",
@@ -729,6 +788,96 @@ const RENOWNED_CREATORS_MAP: Record<
     ticker: "$SUPR",
     thesis: "Corenswet's role as the foundation of James Gunn's DC Universe redirects institutional capital back into historic Golden Age bedrock grails.",
   },
+  "william gibson": {
+    displayName: "William Gibson",
+    role: "Novelist & Foundational Pioneer of Cyberpunk (Neuromancer)",
+    landmark: "Neuromancer Graphic Novel #1 (1989 Epic Comics)",
+    era: "Copper Age (1989)",
+    creators: "William Gibson, Tom de Haven, and Bruce Jensen",
+    fmv: 220,
+    ticker: "$CYBER",
+    thesis: "Gibson coined 'cyberspace' and engineered the neon-dystopian matrix aesthetic that established cyberpunk as an enduring speculative graphic novel category.",
+  },
+  "philip k. dick": {
+    displayName: "Philip K. Dick",
+    role: "Visionary Sci-Fi Author (Do Androids Dream of Electric Sheep?)",
+    landmark: "Do Androids Dream of Electric Sheep? #1 (2009 BOOM! Studios)",
+    era: "Modern Age (2009)",
+    creators: "Philip K. Dick and Tony Parker",
+    fmv: 180,
+    ticker: "$CYBER",
+    thesis: "Dick's speculative fiction inspired Blade Runner and definitive comic adaptations that trade as premier crossover sci-fi literature keys.",
+  },
+  "katsuhiro otomo": {
+    displayName: "Katsuhiro Otomo",
+    role: "Creator of Akira & Master of Cyberpunk Sequential Art",
+    landmark: "Akira #1 (1988 Marvel/Epic Comics)",
+    era: "Copper Age (1988)",
+    creators: "Katsuhiro Otomo",
+    fmv: 450,
+    ticker: "$MANGA",
+    thesis: "Otomo's post-apocalyptic masterpiece catalyzed the western manga explosion, with Marvel/Epic first printings trading as blue-chip crossover grails.",
+  },
+  "masamune shirow": {
+    displayName: "Masamune Shirow",
+    role: "Creator of Ghost in the Shell & Appleseed",
+    landmark: "Ghost in the Shell #1 (1995 Dark Horse)",
+    era: "Modern Age (1995)",
+    creators: "Masamune Shirow",
+    fmv: 380,
+    ticker: "$MANGA",
+    thesis: "Shirow's exploration of cybernetic augmentation and Section 9 tactical designs established the aesthetic blueprint for modern transhumanist fiction.",
+  },
+  "warren ellis": {
+    displayName: "Warren Ellis",
+    role: "Creator of Transmetropolitan, Planetary, and The Authority",
+    landmark: "Transmetropolitan #1 (1997) / Planetary #1 (1999)",
+    era: "Modern Age (1997)",
+    creators: "Warren Ellis and Darick Robertson",
+    fmv: 280,
+    ticker: "$INDIE",
+    thesis: "Ellis's transhumanist and cyberpunk worldbuilding across Vertigo and Wildstorm created sovereign creator-owned staples with dedicated collector followings.",
+  },
+  "john wagner": {
+    displayName: "John Wagner",
+    role: "Co-Creator of Judge Dredd & Core Architect of 2000 AD",
+    landmark: "2000 AD Prog #2 (1977)",
+    era: "Bronze Age (1977)",
+    creators: "John Wagner and Carlos Ezquerra",
+    fmv: 3200,
+    ticker: "$INDIE",
+    thesis: "Wagner's Judge Dredd established the British sci-fi sequential art benchmark with 45+ years of continuous publication and enduring international grail status.",
+  },
+  "neil gaiman": {
+    displayName: "Neil Gaiman",
+    role: "Creator of The Sandman & Mythological Literature Master",
+    landmark: "The Sandman #1 (1989 DC/Vertigo)",
+    era: "Copper Age (1989)",
+    creators: "Neil Gaiman, Sam Kieth, and Mike Dringenberg",
+    fmv: 450,
+    ticker: "$VERT",
+    thesis: "Gaiman's Sandman elevated comic books to institutional literary recognition, insulating high-grade Vertigo keys with long-term collector demand.",
+  },
+  "akira toriyama": {
+    displayName: "Akira Toriyama",
+    role: "Creator of Dragon Ball & Global Manga Titan",
+    landmark: "Weekly Shonen Jump 1984 #51 (1st Dragon Ball)",
+    era: "Copper Age (1984)",
+    creators: "Akira Toriyama",
+    fmv: 8500,
+    ticker: "$MANGA",
+    thesis: "Toriyama's martial arts epic represents the foundational pillar of global shonen publishing, driving record auction clearing prices for vintage Jump keys.",
+  },
+  "eiichiro oda": {
+    displayName: "Eiichiro Oda",
+    role: "Creator of One Piece",
+    landmark: "Weekly Shonen Jump 1997 #34 (1st One Piece)",
+    era: "Modern Age (1997)",
+    creators: "Eiichiro Oda",
+    fmv: 9200,
+    ticker: "$MANGA",
+    thesis: "Oda's One Piece is the best-selling comic book series in history, establishing early Jump debut issues as blue-chip global equities.",
+  },
 };
 
 /**
@@ -941,10 +1090,18 @@ function buildAnalyticalParagraphs(
       lorePara = `Canonical publishing lineage & proper noun research: Within Star Wars sequential art history, this narrative arc builds on the landmark publishing lineage initiated by Marvel Comics in 1977 with Star Wars #1, expanded through Dark Horse's prolific Expanded Universe continuity, and reaffirmed in modern canonical Marvel and IDW titles ($SW). High-grade certified copies of key character debuts and premiere variant covers remain benchmark assets across the speculative collector landscape, serving as primary targets for capital rotation during major streaming and theatrical milestones.`;
     } else if (lower.includes("dc") || lower.includes("batman") || lower.includes("superman") || lower.includes("gotham") || lower.includes("gunn")) {
       lorePara = `Canonical publishing lineage & proper noun research: Within DC Comics continuity, this narrative trajectory connects directly to the historical bedrock established by Jerry Siegel, Joe Shuster, Bob Kane, and Bill Finger during the Golden Age genesis. Foundational keys such as Action Comics #1 (1938) and Detective Comics #27 (1939) anchor the sovereign benchmark of the entire superhero genre. Across subsequent Silver Age transformations and modern cinematic adaptations under DC Studios ($DC), creative shifts consistently stimulate secondary market demand for key character debuts and landmark crossover runs.`;
-    } else if (lower.includes("image") || lower.includes("spawn") || lower.includes("kirkman") || lower.includes("mcfarlane") || lower.includes("invincible")) {
+    } else if (lower.includes("cyberpunk") || lower.includes("neuromancer") || lower.includes("gibson") || lower.includes("blade runner") || lower.includes("akira") || lower.includes("ghost in the shell") || lower.includes("dredd") || lower.includes("transmetropolitan") || lower.includes("philip k. dick") || lower.includes("sci-fi")) {
+      lorePara = `Canonical publishing lineage & proper noun research: Within speculative fiction and sequential art history, the cyberpunk movement represents a pivotal convergence of literary transhumanism and cutting-edge visual worldbuilding. Landmark literary touchstones like William Gibson's Neuromancer and Philip K. Dick's Do Androids Dream of Electric Sheep? catalyzed definitive comic adaptations alongside visionary manga masterpieces like Katsuhiro Otomo's Akira and Masamune Shirow's Ghost in the Shell ($CYBER). In western comics, John Wagner's Judge Dredd in 2000 AD Prog #2 (1977) and Warren Ellis's Transmetropolitan #1 (1997 Helix/Vertigo) proved that gritty neon dystopias command dedicated collector followings, where high-grade certified first printings sustain tight circulating float and steady multi-decade appreciation.`;
+    } else if (lower.includes("manga") || lower.includes("anime") || lower.includes("shonen") || lower.includes("dragon ball") || lower.includes("one piece") || lower.includes("berserk")) {
+      lorePara = `Canonical publishing lineage & proper noun research: In global sequential art, the explosive growth of Japanese manga and anime represents the single most expansive demographic shift in modern publishing. From foundational weekly anthology breakthroughs in Weekly Shonen Jump to masterworks by Akira Toriyama (Dragon Ball, 1984), Eiichiro Oda (One Piece, 1997), and Kentaro Miura (Berserk, 1989) ($MANGA), original Japanese magazine debuts and premier English-translated editions are increasingly treated as institutional collectible assets. As streaming adaptations and global fandom expand, certified high-grade early printings experience rapid secondary market price discovery.`;
+    } else if (lower.includes("heroclix") || lower.includes("wizkids") || lower.includes("warhammer") || lower.includes("miniatures") || lower.includes("tabletop")) {
+      lorePara = `Canonical publishing lineage & proper noun research: Across tabletop gaming and sequential art crossovers, physical collectible systems have long reinforced the economic footprint of comic book intellectual property. WizKids' pioneering launch of HeroClix in 2002 with Infinity Challenge ($HERO) merged tactical miniature combat with superhero lore, creating an enduring secondary market ecosystem for physical dials and tournament exclusives. Alongside licensed properties like Games Workshop's Warhammer 40,000, these crossovers demonstrate how multi-channel hobbyist engagement sustains baseline demand for both physical collectibles and their sequential art source material.`;
+    } else if (lower.includes("image") || lower.includes("spawn") || lower.includes("kirkman") || lower.includes("mcfarlane") || lower.includes("invincible") || lower.includes("dark horse") || lower.includes("hellboy")) {
       lorePara = `Canonical publishing lineage & proper noun research: In the independent and creator-owned publishing sphere, this development highlights the enduring market power of sovereign creator equity. Breakthroughs pioneered by Image Comics and Dark Horse—such as Todd McFarlane's Spawn #1 (1992), Robert Kirkman's Invincible #1 (2003), and Mike Mignola's Hellboy in San Diego Comic-Con Comics #2 (1993)—established that high-grade creator-owned premier keys ($IMGC) retain resilient collector float and immune status from corporate editorial retcons.`;
-    } else {
+    } else if (lower.includes("marvel") || lower.includes("avengers") || lower.includes("spider") || lower.includes("x-men") || lower.includes("fantastic four") || lower.includes("hulk") || lower.includes("thor") || lower.includes("captain america")) {
       lorePara = `Canonical publishing lineage & proper noun research: Within Marvel Comics continuity, this narrative trajectory reflects the foundational storytelling framework engineered by Stan Lee, Jack Kirby, and Steve Ditko during the Silver Age revolution. Milestone issues including Fantastic Four #1 (1961), Amazing Fantasy #15 (1962), and The Avengers #1 (1963) established the multi-universe continuity that continues to dictate both serialized comic publishing and multi-billion-dollar cinematic adaptations. Tracking the era of publication—from Silver Age genesis to Copper Age crossover milestones—remains essential for calculating historical attrition and certified census scarcity.`;
+    } else {
+      lorePara = `Canonical publishing lineage & proper noun research: Across foundational sequential art and speculative publishing, historical provenance remains the primary anchor of secondary market valuation. Tracking key publication eras—from Golden Age genesis and Silver Age archetype development to Modern creator-owned breakthroughs—allows market analysts to accurately model survivorship bias, CGC 9.8 registry density, and long-term collector accumulation. High-grade certified copies across historical milestones consistently outperform raw reading copies by commanding widening liquidity premiums during active media cycles.`;
     }
   }
 
