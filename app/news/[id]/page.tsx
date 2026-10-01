@@ -115,6 +115,7 @@ export default async function NewsStoryPage({ params }: { params: Promise<{ id: 
               headline={story.headline}
               summary={story.summary}
               source={story.source}
+              storyId={story.id}
             />
           </div>
 

@@ -4,6 +4,7 @@ import { selectAuthorForStory, type AuthorPersona } from "./authors";
 import { getLoreEntityBySlug, type LoreEntitySummary } from "@/lib/wiki/lore-search";
 import { CANONICAL_COMIC_BACKGROUNDS } from "@/lib/wiki/canonical-backgrounds";
 import { paraphraseInferredPlaceholders } from "./fuzzy-engine";
+import { sanitizeHeadline, sanitizeSummary, sanitizeNewsText } from "./sanitize";
 import adaptationCastData from "./adaptation-cast-registry.json";
 import adaptationAssetData from "./adaptation-asset-registry.json";
 
@@ -1152,22 +1153,13 @@ export function parseAndSynthesizeArticle(story: {
   const cached = SYNTHESIS_CACHE.get(cacheKey);
   if (cached) return cached;
 
-  const rawHeadline = story.headline.trim();
-  const rawSummary = (story.summary || "").trim();
+  const rawHeadline = sanitizeHeadline(story.headline);
+  const rawSummary = sanitizeSummary(story.summary) || "";
   const fullContext = `${rawHeadline} ${rawSummary}`;
-
-  // Preserve authentic paragraphs cleanly stripped of raw HTML markup
-  const rawCleanSummary = rawSummary
-    .replace(/<\/p>\s*<p[^>]*>/gi, "\n\n")
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/[ \t]+/g, " ")
-    .replace(/\n +/g, "\n")
-    .trim();
 
   // Apply intelligent fuzzy paraphrasing to resolve placeholders (e.g. "Doctor _________ ?")
   const headline = paraphraseInferredPlaceholders(rawHeadline, fullContext);
-  const cleanSummary = paraphraseInferredPlaceholders(rawCleanSummary, fullContext);
+  const cleanSummary = paraphraseInferredPlaceholders(rawSummary, fullContext);
 
   const source = story.source;
   const authorPersona = selectAuthorForStory(source, story.id || headline);

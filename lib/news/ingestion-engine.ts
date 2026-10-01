@@ -21,6 +21,7 @@ import { ACTIVE_NEWS_CHANNELS, ActiveFeedChannel } from "./channels-registry";
 import { fetchAllWireStories, WireStoryDraft } from "./wire-apis";
 import { isRelevantComicStory, evaluateArticleQuality, isFreshArticle } from "./classifier";
 import { sourceFavicon, NewsCategory } from "./types";
+import { sanitizeHeadline, sanitizeSummary, sanitizeNewsText } from "./sanitize";
 
 export interface IngestedStoryDraft {
   story_key: string;
@@ -41,20 +42,7 @@ function generateStoryKey(sourceUrl: string, itemUrl: string, title: string): st
 }
 
 function decodeEntities(str: string): string {
-  return str
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#039;/g, "'")
-    .replace(/&#8217;/g, "’")
-    .replace(/&#8216;/g, "‘")
-    .replace(/&#8220;/g, "“")
-    .replace(/&#8221;/g, "”")
-    .replace(/&#8211;/g, "–")
-    .replace(/&#8212;/g, "—")
-    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
-    .trim();
+  return sanitizeNewsText(str);
 }
 
 function tagValue(xml: string, tag: string): string | null {

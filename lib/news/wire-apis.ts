@@ -2,6 +2,7 @@ import crypto from "crypto";
 import type { NewsCategory, NewsStory } from "./types";
 import { sourceFavicon } from "./types";
 import { evaluateArticleQuality, isRelevantComicStory, recordFetchFailure, recordFetchSuccess } from "./self-healing";
+import { sanitizeHeadline, sanitizeSummary } from "./sanitize";
 
 export interface WireStoryDraft {
   story_key: string;
@@ -68,7 +69,7 @@ export async function fetchNewsDataWire(limit = 25): Promise<WireStoryDraft[]> {
       })
       .map((r) => {
         const itemUrl = r.link!;
-        const headline = r.title!.trim();
+        const headline = sanitizeHeadline(r.title);
         const author = Array.isArray(r.creator) && r.creator.length > 0 ? r.creator.join(", ") : null;
         const pubDateStr = r.pubDate;
         const published_at = pubDateStr && !Number.isNaN(Date.parse(pubDateStr)) ? new Date(pubDateStr).toISOString() : null;
@@ -80,7 +81,7 @@ export async function fetchNewsDataWire(limit = 25): Promise<WireStoryDraft[]> {
           category: "international",
           headline,
           author,
-          summary: r.description ? r.description.slice(0, 3000) : null,
+          summary: sanitizeSummary(r.description),
           url: itemUrl,
           image_url: r.image_url || sourceFavicon(itemUrl),
           published_at,
@@ -140,7 +141,7 @@ export async function fetchPerigonWire(limit = 30): Promise<WireStoryDraft[]> {
       })
       .map((a) => {
         const itemUrl = a.url!;
-        const headline = a.title!.trim();
+        const headline = sanitizeHeadline(a.title);
         const domain = a.source?.domain || "perigon.io";
         const pubDateStr = a.pubDate;
         const published_at = pubDateStr && !Number.isNaN(Date.parse(pubDateStr)) ? new Date(pubDateStr).toISOString() : null;
@@ -152,7 +153,7 @@ export async function fetchPerigonWire(limit = 30): Promise<WireStoryDraft[]> {
           category: "national",
           headline,
           author: a.authorsByline || null,
-          summary: a.description ? a.description.slice(0, 3000) : null,
+          summary: sanitizeSummary(a.description),
           url: itemUrl,
           image_url: a.imageUrl || sourceFavicon(itemUrl),
           published_at,
@@ -209,7 +210,7 @@ export async function fetchTheNewsApiWire(limit = 20): Promise<WireStoryDraft[]>
       })
       .map((i) => {
         const itemUrl = i.url!;
-        const headline = i.title!.trim();
+        const headline = sanitizeHeadline(i.title);
         const sourceLabel = i.source || "THENEWSAPI";
         const pubDateStr = i.published_at;
         const published_at = pubDateStr && !Number.isNaN(Date.parse(pubDateStr)) ? new Date(pubDateStr).toISOString() : null;
@@ -221,7 +222,7 @@ export async function fetchTheNewsApiWire(limit = 20): Promise<WireStoryDraft[]>
           category: "international",
           headline,
           author: null,
-          summary: i.description ? i.description.slice(0, 3000) : null,
+          summary: sanitizeSummary(i.description),
           url: itemUrl,
           image_url: i.image_url || sourceFavicon(itemUrl),
           published_at,
@@ -280,7 +281,7 @@ export async function fetchNewsApiOrgWire(limit = 30): Promise<WireStoryDraft[]>
       })
       .map((a) => {
         const itemUrl = a.url!;
-        const headline = a.title!.trim();
+        const headline = sanitizeHeadline(a.title);
         const sourceLabel = a.source?.name || "NEWSAPI";
         const pubDateStr = a.publishedAt;
         const published_at = pubDateStr && !Number.isNaN(Date.parse(pubDateStr)) ? new Date(pubDateStr).toISOString() : null;
@@ -292,7 +293,7 @@ export async function fetchNewsApiOrgWire(limit = 30): Promise<WireStoryDraft[]>
           category: "national",
           headline,
           author: a.author || null,
-          summary: a.description ? a.description.slice(0, 3000) : null,
+          summary: sanitizeSummary(a.description),
           url: itemUrl,
           image_url: a.urlToImage || sourceFavicon(itemUrl),
           published_at,
@@ -362,7 +363,7 @@ export async function fetchAskNewsWire(limit = 20): Promise<WireStoryDraft[]> {
       })
       .map((a) => {
         const itemUrl = a.article_url!;
-        const headline = (a.title || a.headline)!.trim();
+        const headline = sanitizeHeadline(a.title || a.headline);
         const sourceId = a.source_id || "ASKNEWS";
         const pubDateStr = a.pub_date;
         const published_at = pubDateStr && !Number.isNaN(Date.parse(pubDateStr)) ? new Date(pubDateStr).toISOString() : null;
@@ -374,7 +375,7 @@ export async function fetchAskNewsWire(limit = 20): Promise<WireStoryDraft[]> {
           category: "international",
           headline,
           author: null,
-          summary: a.summary ? a.summary.slice(0, 3000) : null,
+          summary: sanitizeSummary(a.summary),
           url: itemUrl,
           image_url: a.image_url || sourceFavicon(itemUrl),
           published_at,

@@ -101,11 +101,12 @@ export function StoryPanel({ story }: { story: NewsStory }) {
           )
         )}
 
-        {/* In-Browser Text-to-Speech Audio Briefing Player */}
+        {/* Studio Neural Text-to-Speech Audio Briefing Player */}
         <AudioBriefingPlayer
           headline={story.headline}
           summary={article.paragraphs.join(" ")}
           source={story.source}
+          storyId={story.id}
         />
 
         {/* Market Catalyst Engine Rail */}

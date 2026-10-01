@@ -3,6 +3,8 @@ import { createAdminServerClient } from "@/lib/supabase/admin";
 import { isMissingTableError } from "@/lib/supabase/errors";
 import { createCachedQuery } from "@/lib/cache/wrapper";
 
+import { sanitizeHeadline, sanitizeSummary, sanitizeNewsText } from "./sanitize";
+
 export {
   type NewsCategory,
   type NewsStory,
@@ -108,31 +110,7 @@ export {
 };
 
 function decodeEntities(value: string): string {
-  return value
-    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
-    .replace(/&amp;/g, "&")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;|&apos;/g, "'")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&nbsp;/gi, " ")
-    .replace(/&#(\d+);/g, (_, code: string) => {
-      try {
-        return String.fromCodePoint(Number(code));
-      } catch {
-        return "";
-      }
-    })
-    .replace(/&#x([0-9a-fA-F]+);/g, (_, code: string) => {
-      try {
-        return String.fromCodePoint(parseInt(code, 16));
-      } catch {
-        return "";
-      }
-    })
-    .replace(/<[^>]+>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  return sanitizeNewsText(value);
 }
 
 function tagValue(block: string, tag: string): string | null {
@@ -402,9 +380,9 @@ function mapStory(row: Record<string, unknown>): NewsStory {
     source: String(row.source),
     sourceUrl: String(row.source_url),
     category: validCategory,
-    headline: String(row.headline),
-    author: row.author ? String(row.author) : null,
-    summary: row.summary ? String(row.summary) : null,
+    headline: sanitizeHeadline(String(row.headline)),
+    author: row.author ? sanitizeNewsText(String(row.author)) : null,
+    summary: sanitizeSummary(row.summary ? String(row.summary) : null),
     url: String(row.url),
     imageUrl: row.image_url ? String(row.image_url) : null,
     publishedAt: row.published_at ? String(row.published_at) : null,

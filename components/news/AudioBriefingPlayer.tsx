@@ -1,41 +1,57 @@
 "use client";
 
 import * as React from "react";
-import { Play, Pause, RotateCcw, Volume2, VolumeX, FastForward, Activity } from "lucide-react";
+import { Play, Pause, RotateCcw, Volume2, FastForward, Sparkles, Video, Loader2 } from "lucide-react";
+import Link from "next/link";
 
 interface AudioBriefingPlayerProps {
   headline: string;
   summary: string | null;
   source: string;
+  storyId?: string;
 }
 
-export function AudioBriefingPlayer({ headline, summary, source }: AudioBriefingPlayerProps) {
-  const [isSupported, setIsSupported] = React.useState(false);
-  const [isPlaying, setIsPlaying] = React.useState(false);
-  const [isPaused, setIsPaused] = React.useState(false);
-  const [rate, setRate] = React.useState(1.0);
-  const [voices, setVoices] = React.useState<SpeechSynthesisVoice[]>([]);
-  const [selectedVoiceURI, setSelectedVoiceURI] = React.useState<string>("");
-  const [progress, setProgress] = React.useState(0);
+// Blocklist of legacy robotic/novelty voices in browser SpeechSynthesis
+const ROBOTIC_VOICE_REGEX = /fred|albert|bad news|bells|boing|cellos|deranged|good news|hysterical|junior|kathy|organ|pipe organ|princess|ralph|trinoids|vicki|victoria|whisper|zarvox|espeak/i;
 
+export function AudioBriefingPlayer({ headline, summary, source, storyId }: AudioBriefingPlayerProps) {
+  const [isPlaying, setIsPlaying] = React.useState(false);
+  const [isLoadingAudio, setIsLoadingAudio] = React.useState(false);
+  const [rate, setRate] = React.useState(1.0);
+  const [progress, setProgress] = React.useState(0);
+  const [duration, setDuration] = React.useState(0);
+  const [currentTime, setCurrentTime] = React.useState(0);
+  const [audioSourceType, setAudioSourceType] = React.useState<"studio-neural" | "browser-natural">("studio-neural");
+  const [selectedPresenter, setSelectedPresenter] = React.useState<"elena" | "marcus" | "julian">("elena");
+
+  // Audio element reference for Server-Side Neural TTS stream
+  const audioRef = React.useRef<HTMLAudioElement | null>(null);
+
+  // Client speech synthesis fallback references
   const utteranceRef = React.useRef<SpeechSynthesisUtterance | null>(null);
-  const fullText = React.useMemo(() => {
-    const cleanSummary = summary ? summary.replace(/\[\/?.*?\]/g, "") : "";
-    return `Panel Profits Audio Intelligence Wire. Source report from ${source}. Headline: ${headline}. Intelligence summary: ${cleanSummary}`;
+  const [browserVoices, setBrowserVoices] = React.useState<SpeechSynthesisVoice[]>([]);
+  const [selectedBrowserVoiceURI, setSelectedBrowserVoiceURI] = React.useState<string>("");
+
+  const cleanScript = React.useMemo(() => {
+    const rawSummary = summary ? summary.replace(/\[\/?.*?\]/g, "").replace(/<[^>]+>/g, " ") : "";
+    return `Panel Profits Audio Intelligence Wire. Source report from ${source}. Headline: ${headline}. Summary: ${rawSummary}`;
   }, [headline, summary, source]);
 
+  // Initialize browser voices as secondary fallback
   React.useEffect(() => {
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
-      setIsSupported(true);
-
       const updateVoices = () => {
         const available = window.speechSynthesis.getVoices();
-        const enVoices = available.filter((v) => v.lang.startsWith("en"));
-        const listToUse = enVoices.length > 0 ? enVoices : available;
-        setVoices(listToUse);
-        if (listToUse.length > 0 && !selectedVoiceURI) {
-          const defaultVoice = listToUse.find((v) => v.default) || listToUse[0];
-          setSelectedVoiceURI(defaultVoice.voiceURI);
+        // Filter out ancient robotic/novelty voices
+        const naturalVoices = available.filter((v) => !ROBOTIC_VOICE_REGEX.test(v.name));
+        const enVoices = naturalVoices.filter((v) => v.lang.startsWith("en"));
+        const listToUse = enVoices.length > 0 ? enVoices : naturalVoices.length > 0 ? naturalVoices : available;
+        setBrowserVoices(listToUse);
+
+        if (listToUse.length > 0 && !selectedBrowserVoiceURI) {
+          // Prioritize enhanced / natural / premium voices
+          const premium = listToUse.find((v) => /natural|enhanced|premium|siri|google/i.test(v.name));
+          setSelectedBrowserVoiceURI(premium ? premium.voiceURI : listToUse[0].voiceURI);
         }
       };
 
@@ -46,114 +62,180 @@ export function AudioBriefingPlayer({ headline, summary, source }: AudioBriefing
     }
 
     return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
       if (typeof window !== "undefined" && "speechSynthesis" in window) {
         window.speechSynthesis.cancel();
       }
     };
   }, []);
 
+  const formatTime = (secs: number) => {
+    if (isNaN(secs) || secs <= 0) return "0:00";
+    const m = Math.floor(secs / 60);
+    const s = Math.floor(secs % 60);
+    return `${m}:${s < 10 ? "0" : ""}${s}`;
+  };
+
   const stopPlayback = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
       window.speechSynthesis.cancel();
     }
     setIsPlaying(false);
-    setIsPaused(false);
+    setIsLoadingAudio(false);
     setProgress(0);
+    setCurrentTime(0);
   };
 
-  const handlePlay = () => {
-    if (!isSupported || typeof window === "undefined") return;
+  // Playback using Server-Side ElevenLabs Neural Broadcast Stream
+  const playStudioNeuralAudio = async () => {
+    setIsLoadingAudio(true);
+    try {
+      if (!audioRef.current) {
+        audioRef.current = new Audio();
+      }
 
-    if (isPaused) {
-      window.speechSynthesis.resume();
-      setIsPaused(false);
+      const audio = audioRef.current;
+      const ttsUrl = `/api/news/tts?presenter=${selectedPresenter}&storyId=${encodeURIComponent(storyId || "")}&text=${encodeURIComponent(cleanScript)}`;
+
+      audio.src = ttsUrl;
+      audio.playbackRate = rate;
+
+      audio.onloadedmetadata = () => {
+        setDuration(audio.duration);
+        setIsLoadingAudio(false);
+      };
+
+      audio.ontimeupdate = () => {
+        if (audio.duration > 0) {
+          setCurrentTime(audio.currentTime);
+          setProgress(Math.round((audio.currentTime / audio.duration) * 100));
+        }
+      };
+
+      audio.onended = () => {
+        setIsPlaying(false);
+        setProgress(100);
+        setTimeout(() => setProgress(0), 1200);
+      };
+
+      audio.onerror = () => {
+        console.warn("[AudioBriefing] Studio neural playback failed, falling back to natural browser voice");
+        setIsLoadingAudio(false);
+        playBrowserNaturalAudio();
+      };
+
+      await audio.play();
       setIsPlaying(true);
-      return;
+      setIsLoadingAudio(false);
+      setAudioSourceType("studio-neural");
+    } catch {
+      setIsLoadingAudio(false);
+      playBrowserNaturalAudio();
     }
+  };
 
+  // Secondary Fallback: Client Natural Voice Synthesis
+  const playBrowserNaturalAudio = () => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
     window.speechSynthesis.cancel();
 
-    const utterance = new SpeechSynthesisUtterance(fullText);
+    const utterance = new SpeechSynthesisUtterance(cleanScript);
     utteranceRef.current = utterance;
     utterance.rate = rate;
 
-    if (selectedVoiceURI) {
-      const match = voices.find((v) => v.voiceURI === selectedVoiceURI);
+    if (selectedBrowserVoiceURI) {
+      const match = browserVoices.find((v) => v.voiceURI === selectedBrowserVoiceURI);
       if (match) utterance.voice = match;
     }
 
     utterance.onboundary = (e) => {
-      if (e.charIndex && fullText.length > 0) {
-        const pct = Math.min(100, Math.round((e.charIndex / fullText.length) * 100));
-        setProgress(pct);
+      if (e.charIndex && cleanScript.length > 0) {
+        setProgress(Math.min(100, Math.round((e.charIndex / cleanScript.length) * 100)));
       }
     };
 
     utterance.onend = () => {
       setIsPlaying(false);
-      setIsPaused(false);
       setProgress(100);
-      setTimeout(() => setProgress(0), 1500);
+      setTimeout(() => setProgress(0), 1200);
     };
 
     utterance.onerror = () => {
       setIsPlaying(false);
-      setIsPaused(false);
     };
 
     window.speechSynthesis.speak(utterance);
     setIsPlaying(true);
-    setIsPaused(false);
+    setAudioSourceType("browser-natural");
   };
 
-  const handlePause = () => {
-    if (!isSupported || typeof window === "undefined") return;
-    window.speechSynthesis.pause();
-    setIsPaused(true);
-    setIsPlaying(false);
+  const handleTogglePlay = () => {
+    if (isPlaying) {
+      if (audioRef.current && !audioRef.current.paused) {
+        audioRef.current.pause();
+      }
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        window.speechSynthesis.pause();
+      }
+      setIsPlaying(false);
+      return;
+    }
+
+    if (audioRef.current && audioRef.current.paused && audioRef.current.currentTime > 0) {
+      audioRef.current.play();
+      setIsPlaying(true);
+      return;
+    }
+
+    playStudioNeuralAudio();
   };
 
   const handleSpeedChange = (newRate: number) => {
     setRate(newRate);
+    if (audioRef.current) {
+      audioRef.current.playbackRate = newRate;
+    }
     if (isPlaying && utteranceRef.current) {
       stopPlayback();
     }
   };
 
-  if (!isSupported) {
-    return null;
-  }
-
-  const rates = [0.85, 1.0, 1.25, 1.5, 2.0];
+  const rates = [0.85, 1.0, 1.25, 1.5];
 
   return (
     <div className="mt-4 rounded-lg border border-slate-800 bg-[#070A10] p-3.5 shadow-inner">
       <div className="flex flex-wrap items-center justify-between gap-3">
         {/* Playback Controls & Status */}
         <div className="flex items-center gap-3">
-          {isPlaying ? (
-            <button
-              onClick={handlePause}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-cyan-500/20 border border-cyan-400 text-cyan-300 hover:bg-cyan-500/30 transition-all shadow-[0_0_12px_rgba(6,182,212,0.3)]"
-              title="Pause Audio Briefing"
-              aria-label="Pause audio briefing"
-            >
+          <button
+            onClick={handleTogglePlay}
+            disabled={isLoadingAudio}
+            className={`flex h-9 w-9 items-center justify-center rounded-full transition-all ${
+              isPlaying
+                ? "bg-cyan-500/20 border border-cyan-400 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.4)]"
+                : "bg-cyan-600 text-slate-950 hover:bg-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.3)]"
+            } disabled:opacity-50`}
+            title={isPlaying ? "Pause Audio Briefing" : "Play Neural Audio Briefing"}
+            aria-label={isPlaying ? "Pause briefing" : "Play briefing"}
+          >
+            {isLoadingAudio ? (
+              <Loader2 className="h-4 w-4 animate-spin text-cyan-400" />
+            ) : isPlaying ? (
               <Pause className="h-4 w-4 fill-cyan-400" />
-            </button>
-          ) : (
-            <button
-              onClick={handlePlay}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-cyan-600 text-slate-950 hover:bg-cyan-400 transition-all shadow-[0_0_12px_rgba(6,182,212,0.4)]"
-              title="Listen to Audio Briefing"
-              aria-label="Listen to audio briefing"
-            >
+            ) : (
               <Play className="h-4 w-4 fill-slate-950 ml-0.5" />
-            </button>
-          )}
+            )}
+          </button>
 
           <button
             onClick={stopPlayback}
-            disabled={!isPlaying && !isPaused}
+            disabled={!isPlaying && progress === 0}
             className="flex h-7 w-7 items-center justify-center rounded border border-slate-800 bg-slate-900/60 text-slate-400 hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             title="Reset / Stop Audio"
             aria-label="Stop audio briefing"
@@ -165,24 +247,36 @@ export function AudioBriefingPlayer({ headline, summary, source }: AudioBriefing
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-mono uppercase tracking-[0.16em] text-cyan-400 font-semibold flex items-center gap-1.5">
                 <Volume2 className="h-3.5 w-3.5 text-cyan-400" />
-                AUDIO INTELLIGENCE DESK
+                INTELLIGENCE AUDIO DESK
               </span>
+
+              {/* Neural Studio Quality Badge */}
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8px] font-mono font-bold uppercase tracking-wider bg-emerald-950/80 text-emerald-300 border border-emerald-500/30">
+                <Sparkles className="h-2.5 w-2.5 text-emerald-400" />
+                {audioSourceType === "studio-neural" ? "STUDIO NEURAL AI" : "NATURAL AUDIO"}
+              </span>
+
               {isPlaying && (
                 <span className="flex items-center gap-1 text-[9px] font-mono text-cyan-300">
                   <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                  NARRATING
+                  BROADCASTING
                 </span>
               )}
             </div>
-            <p className="text-[10px] text-slate-400 font-mono">
-              Synthetic synthesized wire briefing · {progress}% spoken
+
+            <p className="text-[10px] text-slate-400 font-mono mt-0.5">
+              {isLoadingAudio
+                ? "Synthesizing ultra-realistic studio broadcast..."
+                : duration > 0
+                ? `${formatTime(currentTime)} / ${formatTime(duration)} · ${progress}% completed`
+                : "Authoritative neural briefing · Studio narration"}
             </p>
           </div>
         </div>
 
         {/* Audio Waveform Equalizer Display */}
         <div className="hidden sm:flex items-center gap-1 h-6 px-3 py-1 rounded bg-[#04060A] border border-slate-800/80">
-          {[40, 75, 100, 60, 90, 45, 80, 100, 70, 50, 85, 60].map((height, i) => (
+          {[35, 70, 95, 55, 85, 40, 75, 100, 65, 45, 80, 55].map((height, i) => (
             <span
               key={i}
               style={{ height: isPlaying ? `${height}%` : "20%" }}
@@ -193,8 +287,23 @@ export function AudioBriefingPlayer({ headline, summary, source }: AudioBriefing
           ))}
         </div>
 
-        {/* Speech Rate & Voice Selectors */}
+        {/* Presenter & Rate Selectors */}
         <div className="flex items-center gap-2">
+          {/* Presenter Persona Selector */}
+          <select
+            value={selectedPresenter}
+            onChange={(e) => {
+              setSelectedPresenter(e.target.value as "elena" | "marcus" | "julian");
+              if (isPlaying) stopPlayback();
+            }}
+            aria-label="Select Presenter"
+            className="bg-[#0A0E17] border border-slate-800 text-[10px] font-mono text-slate-300 rounded px-2 py-1 outline-none focus:border-cyan-500 cursor-pointer"
+          >
+            <option value="elena">Elena Rostova (Hollywood & Market)</option>
+            <option value="marcus">Marcus Vance (Census & Equity)</option>
+            <option value="julian">Dr. Julian Mercer (Provenance)</option>
+          </select>
+
           {/* Rate Selector Pills */}
           <div className="flex items-center gap-1 bg-[#0A0E17] border border-slate-800 rounded p-0.5">
             {rates.map((r) => (
@@ -212,20 +321,16 @@ export function AudioBriefingPlayer({ headline, summary, source }: AudioBriefing
             ))}
           </div>
 
-          {/* Voice Dropdown */}
-          {voices.length > 1 && (
-            <select
-              value={selectedVoiceURI}
-              onChange={(e) => setSelectedVoiceURI(e.target.value)}
-              aria-label="Synthesizer Voice"
-              className="bg-[#0A0E17] border border-slate-800 text-[10px] font-mono text-slate-300 rounded px-2 py-1 outline-none focus:border-cyan-500 max-w-[130px] truncate"
+          {/* HeyGen / D-ID Video Studio Link */}
+          {storyId && (
+            <Link
+              href={`/api/video/stream?storyId=${encodeURIComponent(storyId)}`}
+              target="_blank"
+              className="hidden lg:flex items-center gap-1 px-2 py-1 rounded border border-purple-800/60 bg-purple-950/30 text-purple-300 hover:border-purple-500 hover:text-purple-200 text-[9px] font-mono uppercase tracking-wider transition-colors"
+              title="Launch AI Avatar Video Reel Studio (HeyGen / D-ID)"
             >
-              {voices.slice(0, 8).map((v) => (
-                <option key={v.voiceURI} value={v.voiceURI}>
-                  {v.name.replace(/(Google|Microsoft|Apple|Natural)\s*/gi, "")}
-                </option>
-              ))}
-            </select>
+              <Video className="h-3 w-3 text-purple-400" /> Video Reel
+            </Link>
           )}
         </div>
       </div>
