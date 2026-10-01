@@ -13,6 +13,7 @@ import { analyzeStoryCatalyst } from "@/lib/news/catalyst";
 import { CatalystKeyRail } from "@/components/news/CatalystKeyRail";
 import { AudioBriefingPlayer } from "@/components/news/AudioBriefingPlayer";
 import { AnalystDeskMemo } from "@/components/news/AnalystDeskMemo";
+import { parseAndSynthesizeArticle } from "@/lib/news/article-parser";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -34,7 +35,14 @@ export default async function NewsStoryPage({ params }: { params: Promise<{ id: 
   const authenticVideo = !videoReel ? extractAuthenticVideo(story.summary, story.url) : null;
   const hasEditorialImage = Boolean(story.imageUrl && !story.imageUrl.includes("google.com/s2/favicons"));
   const hasPublisherMark = Boolean(story.imageUrl?.includes("google.com/s2/favicons"));
-  const catalyst = analyzeStoryCatalyst(story.headline, story.summary || "");
+  const synthesizedArticle = parseAndSynthesizeArticle({
+    headline: story.headline,
+    summary: story.summary,
+    source: story.source,
+    author: story.author,
+    id: story.id,
+  });
+  const catalyst = synthesizedArticle.catalyst;
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:py-12">
@@ -116,6 +124,7 @@ export default async function NewsStoryPage({ params }: { params: Promise<{ id: 
               author={story.author}
               publishedAt={story.publishedAt}
               entities={relatedEntities}
+              synthesizedArticle={synthesizedArticle}
             />
           </div>
 

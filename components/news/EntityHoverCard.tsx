@@ -12,6 +12,73 @@ interface EntityHoverCardProps {
   className?: string;
 }
 
+function getResolvedLexiconDetails(entity: EntityWikiDef, canonical: ReturnType<typeof getCanonicalBackground>) {
+  if (entity.lexiconDetails?.definition && entity.lexiconDetails?.translation) {
+    return {
+      category: entity.lexiconDetails.category || "CBR Financial Lexicon",
+      translation: entity.lexiconDetails.translation,
+      definition: entity.lexiconDetails.definition,
+      investopediaUrl:
+        entity.lexiconDetails.investopediaUrl ||
+        `https://www.investopedia.com/search?q=${encodeURIComponent(entity.term)}`,
+    };
+  }
+
+  // If entity is character / lore
+  if (entity.type === "character" || canonical) {
+    const characterName = canonical?.term || entity.term;
+    return {
+      category: "Alternative Asset Valuation",
+      translation: `Certified high-grade key issues of ${characterName} represent atomic collectible equities where physical census scarcity (CGC/CBCS 9.8 population) and media-catalyst velocity determine secondary market price discovery.`,
+      definition:
+        "Alternative Investment Asset: A tangible or financial asset outside standard public equities or bonds, valued based on verified historical provenance, physical preservation condition, and structural supply inelasticity.",
+      investopediaUrl: "https://www.investopedia.com/terms/a/alternative_investment.asp",
+    };
+  }
+
+  // If entity is creator / talent
+  if (entity.type === "creator") {
+    return {
+      category: "Creative Provenance & Key-Person Value",
+      translation: `Creative architects and attached cinematic talent serve as primary narrative catalysts, directly accelerating trade velocity and secondary market liquidity into their signature runs and landmark debuts.`,
+      definition:
+        "Key Person Value: The quantifiable economic value attributable to essential creative or leadership talent whose participation anchors market sentiment, auction demand, and brand equity.",
+      investopediaUrl: "https://www.investopedia.com/terms/k/keypersoninsurance.asp",
+    };
+  }
+
+  // If entity is publisher / studio
+  if (entity.type === "publisher") {
+    return {
+      category: "Enterprise Value & IP Royalties",
+      translation: `Parent entertainment conglomerates monetize sequential art intellectual property through multi-billion dollar box office cycles, premium streaming licensing, and global consumer merchandising.`,
+      definition:
+        "Conglomerate Valuation: An enterprise spanning diverse media and operating segments, where proprietary IP libraries generate high-margin recurring licensing cash flows.",
+      investopediaUrl: "https://www.investopedia.com/terms/c/conglomerate.asp",
+    };
+  }
+
+  // If entity is equity / index
+  if (entity.type === "equity") {
+    return {
+      category: "Index Methodology & Capitalization",
+      translation: `Standardized comic equities, constituent baskets, and indices track systemic valuation movements, liquidity spreads, and capital rotation across physical and fractional collectible tranches.`,
+      definition:
+        "Market Capitalization & Index Weighting: The aggregate market value of an asset class measured across outstanding constituent units, providing a standardized benchmark for tracking sector performance.",
+      investopediaUrl: "https://www.investopedia.com/terms/m/marketcapitalization.asp",
+    };
+  }
+
+  // Default fallback for any market/lexicon term
+  return {
+    category: "CBR Market Mechanics",
+    translation: `Quantitative comic market framework governing secondary auction bids, graded registry turnover, and certified slab valuation multiples.`,
+    definition:
+      "Fair Market Value (FMV): The price at which an asset trades between a willing buyer and a willing seller on an open, competitive market with reasonable knowledge of relevant facts.",
+    investopediaUrl: `https://www.investopedia.com/search?q=${encodeURIComponent(entity.term)}`,
+  };
+}
+
 export function EntityHoverCard({ entity, children, className }: EntityHoverCardProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
@@ -32,6 +99,10 @@ export function EntityHoverCard({ entity, children, className }: EntityHoverCard
       (entity.wikiPath ? getCanonicalBackground(entity.wikiPath.replace(/^\/wiki\/entry\//, "")) : null)
     );
   }, [entity.term, entity.wikiPath]);
+
+  const lexicon = React.useMemo(() => {
+    return getResolvedLexiconDetails(entity, canonical);
+  }, [entity, canonical]);
 
   const isActor = entity.type === "creator" && Boolean(entity.roleDetails);
   const isLexicon =
@@ -89,9 +160,9 @@ export function EntityHoverCard({ entity, children, className }: EntityHoverCard
                   {entity.ticker}
                 </span>
               )}
-              {entity.lexiconDetails?.category && (
+              {lexicon.category && (
                 <span className="text-[9px] font-mono text-cyan-300 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-500/30 truncate max-w-[130px]">
-                  {entity.lexiconDetails.category}
+                  {lexicon.category}
                 </span>
               )}
             </div>
@@ -144,31 +215,25 @@ export function EntityHoverCard({ entity, children, className }: EntityHoverCard
             </div>
           )}
 
-          {/* Lexicon Details: Investopedia definition + Panel Profits translation */}
-          {entity.lexiconDetails && (
-            <div className="mt-2 space-y-1.5 rounded bg-slate-900/90 p-2.5 border border-slate-800 text-[11px] leading-relaxed">
-              {entity.lexiconDetails.translation && (
-                <div>
-                  <span className="text-[9px] font-mono uppercase tracking-wider text-cyan-400 font-semibold block mb-0.5">
-                    Comic Market Meaning:
-                  </span>
-                  <p className="text-slate-200 line-clamp-3">
-                    {entity.lexiconDetails.translation}
-                  </p>
-                </div>
-              )}
-              {entity.lexiconDetails.definition && (
-                <div className="pt-1.5 border-t border-slate-800/80">
-                  <span className="text-[9px] font-mono uppercase tracking-wider text-slate-400 block mb-0.5">
-                    Investopedia Financial Principle:
-                  </span>
-                  <p className="text-slate-300 line-clamp-2">
-                    {entity.lexiconDetails.definition}
-                  </p>
-                </div>
-              )}
+          {/* Lexicon Details: Investopedia definition + Panel Profits translation (GUARANTEED NEVER BLANK) */}
+          <div className="mt-2 space-y-1.5 rounded bg-slate-900/90 p-2.5 border border-slate-800 text-[11px] leading-relaxed">
+            <div>
+              <span className="text-[9px] font-mono uppercase tracking-wider text-cyan-400 font-semibold block mb-0.5">
+                Comic Market Meaning:
+              </span>
+              <p className="text-slate-200 line-clamp-3">
+                {lexicon.translation}
+              </p>
             </div>
-          )}
+            <div className="pt-1.5 border-t border-slate-800/80">
+              <span className="text-[9px] font-mono uppercase tracking-wider text-slate-400 block mb-0.5">
+                Investopedia Financial Principle:
+              </span>
+              <p className="text-slate-300 line-clamp-2">
+                {lexicon.definition}
+              </p>
+            </div>
+          </div>
 
           {/* Actions & Deep Links */}
           <div className="mt-3 flex items-center justify-between border-t border-slate-800/80 pt-2 text-[10px] font-mono">
@@ -179,16 +244,14 @@ export function EntityHoverCard({ entity, children, className }: EntityHoverCard
               {isLexicon ? "Inspect in Lexicon" : "Open Dossier"} <ArrowUpRight className="h-3 w-3" />
             </Link>
 
-            {entity.lexiconDetails?.investopediaUrl && (
-              <a
-                href={entity.lexiconDetails.investopediaUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-amber-300 hover:text-amber-200 flex items-center gap-1 transition-colors"
-              >
-                Investopedia <ExternalLink className="h-3 w-3" />
-              </a>
-            )}
+            <a
+              href={lexicon.investopediaUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-amber-300 hover:text-amber-200 flex items-center gap-1 transition-colors"
+            >
+              Investopedia <ExternalLink className="h-3 w-3" />
+            </a>
 
             {landmarkIssue && (
               <Link

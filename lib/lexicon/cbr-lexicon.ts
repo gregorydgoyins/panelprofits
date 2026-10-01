@@ -14,29 +14,35 @@ export interface CbrLexiconEntry {
   investopedia_url?: string | null;
 }
 
+import { CORE_CANON_DICTIONARY } from "./core-canon-dictionary";
+
 let cachedTerms: Record<string, CbrLexiconEntry> | null = null;
 let cachedTermList: CbrLexiconEntry[] | null = null;
 
 function loadCbrDictionary(): Record<string, CbrLexiconEntry> {
-  if (cachedTerms) return cachedTerms;
-  if (typeof window !== "undefined") return {};
+  if (cachedTerms && Object.keys(cachedTerms).length > 0) return cachedTerms;
+  if (typeof window !== "undefined") {
+    cachedTerms = CORE_CANON_DICTIONARY;
+    cachedTermList = Object.values(CORE_CANON_DICTIONARY);
+    return cachedTerms;
+  }
 
   try {
     const jsonPath = path.join(process.cwd(), "lib/lexicon/cbr_market_lexicon.json");
     if (fs.existsSync(jsonPath)) {
       const raw = fs.readFileSync(jsonPath, "utf-8");
-      cachedTerms = JSON.parse(raw);
+      cachedTerms = { ...CORE_CANON_DICTIONARY, ...JSON.parse(raw) };
       cachedTermList = Object.values(cachedTerms!);
     } else {
-      cachedTerms = {};
-      cachedTermList = [];
+      cachedTerms = CORE_CANON_DICTIONARY;
+      cachedTermList = Object.values(CORE_CANON_DICTIONARY);
     }
   } catch {
-    cachedTerms = {};
-    cachedTermList = [];
+    cachedTerms = CORE_CANON_DICTIONARY;
+    cachedTermList = Object.values(CORE_CANON_DICTIONARY);
   }
 
-  return cachedTerms || {};
+  return cachedTerms || CORE_CANON_DICTIONARY;
 }
 
 export function getCbrTermBySlug(slug: string): CbrLexiconEntry | null {
@@ -177,11 +183,19 @@ function wordCountOf(normalized: string): number {
  *  space variance in how a compound term is written doesn't prevent a match. */
 function indexPhraseAndVariants(idx: Map<string, CbrLexiconEntry>, normalized: string, entry: CbrLexiconEntry): void {
   if (!normalized) return;
-  if (!idx.has(normalized)) idx.set(normalized, entry);
+  const existing = idx.get(normalized);
+  if (!existing || (!existing.is_core_canon && entry.is_core_canon)) {
+    idx.set(normalized, entry);
+  }
 
   if (normalized.includes("-")) {
     const spaced = normalized.replace(/-/g, " ").replace(/\s+/g, " ").trim();
-    if (spaced !== normalized && !idx.has(spaced)) idx.set(spaced, entry);
+    if (spaced !== normalized) {
+      const existingSpaced = idx.get(spaced);
+      if (!existingSpaced || (!existingSpaced.is_core_canon && entry.is_core_canon)) {
+        idx.set(spaced, entry);
+      }
+    }
   }
 }
 

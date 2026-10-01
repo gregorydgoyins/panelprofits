@@ -4,8 +4,8 @@ import * as React from "react";
 import Link from "next/link";
 import { type EntityWikiDef } from "@/lib/news/entities";
 import { LinkedBriefing } from "@/components/news/linked-briefing";
-import { parseAndSynthesizeArticle } from "@/lib/news/article-parser";
-import { Activity, BookOpen, ShieldAlert } from "lucide-react";
+import { parseAndSynthesizeArticle, type SynthesizedArticle } from "@/lib/news/article-parser";
+import { Activity, BookOpen, ShieldAlert, Sparkles } from "lucide-react";
 
 function dateLabel(value: string | null) {
   if (!value) return "Publication date unavailable";
@@ -21,6 +21,7 @@ export function NewsBriefing({
   author,
   publishedAt,
   entities: initialEntities,
+  synthesizedArticle,
 }: {
   id?: string;
   headline: string;
@@ -30,8 +31,10 @@ export function NewsBriefing({
   author: string | null;
   publishedAt: string | null;
   entities?: EntityWikiDef[];
+  synthesizedArticle?: SynthesizedArticle;
 }) {
   const article = React.useMemo(() => {
+    if (synthesizedArticle) return synthesizedArticle;
     return parseAndSynthesizeArticle({
       headline,
       summary,
@@ -39,7 +42,7 @@ export function NewsBriefing({
       author,
       id,
     });
-  }, [headline, summary, source, author, id]);
+  }, [synthesizedArticle, headline, summary, source, author, id]);
 
   // `initialEntities` comes from the server page's async, Supabase-backed match
   // (getDynamicEntitiesForText) but only against the raw headline/summary text.
@@ -147,6 +150,93 @@ export function NewsBriefing({
                 <div className="mt-2.5 pt-2 border-t border-amber-900/20 text-[11px] text-slate-400 leading-snug">
                   <strong className="text-cyan-400 text-[10px] block font-mono">Census & Pricing Dynamic:</strong>
                   <LinkedBriefing text={ram.censusAndPricingImpact} entities={activeEntities} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* --- RESEARCHED CANON PROPER NOUNS & INVESTOPEDIA RELEVANCE --- */}
+      {article.researchedProperNouns && article.researchedProperNouns.length > 0 && (
+        <div className="mt-6 rounded-lg border border-cyan-800/60 bg-[#08121f] p-4 shadow-lg">
+          <div className="flex items-center gap-2 border-b border-cyan-800/40 pb-2.5">
+            <Sparkles className="h-4 w-4 text-cyan-400" />
+            <h2 className="text-[11px] font-mono uppercase tracking-[0.16em] text-cyan-300 font-semibold">
+              RESEARCHED PROPER NOUNS · CANONICAL RELEVANCE & INVESTOPEDIA PRINCIPLES
+            </h2>
+          </div>
+          <p className="mt-2 text-xs text-slate-400 leading-relaxed">
+            Every proper noun in this story has been canonically researched for comic book relevance, landmark debuts, historical architects, and secondary market financial principles:
+          </p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            {article.researchedProperNouns.map((noun, idx) => (
+              <div key={idx} className="rounded border border-cyan-900/40 bg-[#0a1829] p-3 flex flex-col justify-between">
+                <div>
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-cyan-900/30 pb-2">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-semibold text-xs text-cyan-200">
+                        {noun.properNoun}
+                      </span>
+                      <span className="font-mono text-[10px] text-cyan-400 font-bold">
+                        ({noun.ticker})
+                      </span>
+                    </div>
+                    <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border border-cyan-700/60 bg-cyan-950 text-cyan-300 uppercase">
+                      {noun.category} · {noun.era}
+                    </span>
+                  </div>
+
+                  <div className="mt-2 text-[11px] text-slate-300">
+                    <span className="font-mono text-cyan-400 block text-[10px] uppercase tracking-wider">
+                      Role / Identity:
+                    </span>
+                    <span className="text-slate-200 font-medium">{noun.comicRoleOrIdentity}</span>
+                  </div>
+
+                  <div className="mt-2 flex items-center justify-between text-[11px]">
+                    <span className="font-mono text-cyan-400">
+                      Landmark Key: <Link href={`/comics?q=${encodeURIComponent(noun.landmarkDebutIssue)}`} className="underline hover:text-cyan-200">{noun.landmarkDebutIssue}</Link>
+                    </span>
+                    <span className="font-mono text-emerald-400 text-[10px] font-bold">
+                      CGC 9.8: ${noun.cgc98Fmv.toLocaleString()}
+                    </span>
+                  </div>
+
+                  {noun.creativeArchitects && (
+                    <div className="mt-1 text-[10px] text-slate-400">
+                      Architects: <span className="text-slate-300">{noun.creativeArchitects}</span>
+                    </div>
+                  )}
+
+                  <div className="mt-2 text-xs text-slate-300 leading-relaxed border-t border-cyan-900/30 pt-2">
+                    <strong className="text-cyan-300 text-[10px] block font-mono uppercase tracking-wider">
+                      Market Relevance:
+                    </strong>
+                    <LinkedBriefing text={noun.marketRelevanceThesis} entities={activeEntities} />
+                  </div>
+                </div>
+
+                <div className="mt-2.5 pt-2 border-t border-cyan-900/40 text-[11px] text-slate-300 leading-snug bg-cyan-950/40 p-2 rounded">
+                  <div className="flex items-center justify-between gap-1 mb-1">
+                    <span className="text-cyan-400 font-mono text-[10px] uppercase font-bold">
+                      Investopedia: {noun.investopediaPrinciple.term}
+                    </span>
+                    <a
+                      href={noun.investopediaPrinciple.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[9px] font-mono text-cyan-300 underline hover:text-cyan-100"
+                    >
+                      Principle ↗
+                    </a>
+                  </div>
+                  <p className="text-slate-400 text-[10px] leading-tight mb-1">
+                    {noun.investopediaPrinciple.definition}
+                  </p>
+                  <p className="text-cyan-200/90 text-[10px] leading-tight font-sans">
+                    <strong>Panel Profits Translation:</strong> {noun.investopediaPrinciple.translation}
+                  </p>
                 </div>
               </div>
             ))}

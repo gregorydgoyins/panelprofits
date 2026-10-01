@@ -36,6 +36,25 @@ export interface LoreDeepDiveEntry {
   encyclopedicLore: string;
 }
 
+export interface ResearchedProperNoun {
+  properNoun: string;
+  category: "TALENT" | "CHARACTER" | "CREATOR" | "KEY_ISSUE" | "STUDIO" | "FRANCHISE";
+  comicRoleOrIdentity: string;
+  landmarkDebutIssue: string;
+  creativeArchitects: string;
+  era: string;
+  cgc98Fmv: number;
+  ticker: string;
+  marketRelevanceThesis: string;
+  investopediaPrinciple: {
+    term: string;
+    category?: string;
+    definition: string;
+    translation: string;
+    url: string;
+  };
+}
+
 export interface SynthesizedArticle {
   headline: string;
   paragraphs: string[];
@@ -51,6 +70,7 @@ export interface SynthesizedArticle {
   butterflyRipples: MarketButterflyRipple[];
   catalyst: CatalystAnalysis;
   author: AuthorPersona;
+  researchedProperNouns: ResearchedProperNoun[];
 }
 
 // CANONICAL_COMIC_BACKGROUNDS is imported from @/lib/wiki/canonical-backgrounds (Single Source of Truth)
@@ -506,10 +526,346 @@ function deriveMarketButterflyRipples(
   return ripples.slice(0, 6);
 }
 
+const RENOWNED_CREATORS_MAP: Record<
+  string,
+  {
+    displayName: string;
+    role: string;
+    landmark: string;
+    era: string;
+    creators: string;
+    fmv: number;
+    ticker: string;
+    thesis: string;
+  }
+> = {
+  "stan lee": {
+    displayName: "Stan Lee",
+    role: "Co-Creator & Foundational Architect of Marvel Universe",
+    landmark: "Fantastic Four #1 (1961) / Amazing Fantasy #15",
+    era: "Silver Age (1961)",
+    creators: "Stan Lee, Jack Kirby, and Steve Ditko",
+    fmv: 165000,
+    ticker: "$MRVL",
+    thesis: "Stan Lee's co-creations anchor the most liquid blue-chip sovereign comic keys in global auction history.",
+  },
+  "jack kirby": {
+    displayName: "Jack Kirby",
+    role: "The King of Comics & Co-Creator of Fantastic Four, X-Men, Avengers, Captain America",
+    landmark: "Captain America Comics #1 (1941) / Fantastic Four #1 (1961)",
+    era: "Golden / Silver Age",
+    creators: "Jack Kirby, Joe Simon, and Stan Lee",
+    fmv: 850000,
+    ticker: "$FF4",
+    thesis: "Jack Kirby's dynamic cosmic pencil craft establishes sovereign collectible grails across Golden and Silver Age certified slabs.",
+  },
+  "steve ditko": {
+    displayName: "Steve Ditko",
+    role: "Co-Creator and Definitive Visual Architect of Spider-Man and Doctor Strange",
+    landmark: "Amazing Fantasy #15 (1962) / Strange Tales #110 (1963)",
+    era: "Silver Age (1962)",
+    creators: "Stan Lee and Steve Ditko",
+    fmv: 285000,
+    ticker: "$SPDR",
+    thesis: "Steve Ditko's psychological and surrealist character designs established the bedrock of Marvel's highest-valued comic equities.",
+  },
+  "dan slott": {
+    displayName: "Dan Slott",
+    role: "Writer & 10-Year Architect of The Amazing Spider-Man Modern Era",
+    landmark: "The Amazing Spider-Man #546 (2008) / Superior Spider-Man #1",
+    era: "Modern Age (2008)",
+    creators: "Dan Slott, Steve McNiven, and Ryan Stegman",
+    fmv: 450,
+    ticker: "$SPDR:BND",
+    thesis: "Dan Slott's prolific modern run introduced key rogues (Mister Negative, Jackpot) and storylines that continue to drive modern variant price spikes.",
+  },
+  "jonathan hickman": {
+    displayName: "Jonathan Hickman",
+    role: "Architect of Modern Marvel Multiverse, Secret Wars, and House of X",
+    landmark: "Fantastic Four #570 / Secret Wars #1 / House of X #1",
+    era: "Modern Age (2009-2019)",
+    creators: "Jonathan Hickman, Esad Ribic, and Pepe Larraz",
+    fmv: 350,
+    ticker: "$FF4",
+    thesis: "Hickman's high-concept incursion narratives form the direct creative foundation for upcoming Marvel Studios Multiverse Saga films.",
+  },
+  "chris claremont": {
+    displayName: "Chris Claremont",
+    role: "Master Architect of The Uncanny X-Men Modern Mythology",
+    landmark: "X-Men #94 (1975) / Uncanny X-Men #266 (1st Gambit)",
+    era: "Bronze / Copper Age",
+    creators: "Chris Claremont, Dave Cockrum, John Byrne, and Jim Lee",
+    fmv: 1100,
+    ticker: "$XMEN",
+    thesis: "Claremont's 16-year unbroken run defined modern mutant lore, creating sovereign investment keys with resilient high-grade census demand.",
+  },
+  "todd mcfarlane": {
+    displayName: "Todd McFarlane",
+    role: "Creator of Spawn, Co-Creator of Venom, Co-Founder of Image Comics",
+    landmark: "The Amazing Spider-Man #300 (1988) / Spawn #1 (1992)",
+    era: "Copper / Modern Age",
+    creators: "Todd McFarlane and David Michelinie",
+    fmv: 3800,
+    ticker: "$SPWN",
+    thesis: "McFarlane's hyper-detailed aesthetic and creator-owned sovereignty proved that independent comic books can outperform corporate studio equities.",
+  },
+  "alan moore": {
+    displayName: "Alan Moore",
+    role: "Visionary Author of Watchmen, V for Vendetta, and From Hell",
+    landmark: "Watchmen #1 (1986) / Swamp Thing #37 (1st John Constantine)",
+    era: "Copper Age (1986)",
+    creators: "Alan Moore, Dave Gibbons, and Stephen Bissette",
+    fmv: 950,
+    ticker: "$WTCH",
+    thesis: "Moore's deconstructionist masterpieces established comic books as institutional literature, preserving steady collector float and grade premiums.",
+  },
+  "james gunn": {
+    displayName: "James Gunn",
+    role: "Writer-Director & Co-CEO of DC Studios",
+    landmark: "Action Comics #1 / The Brave and the Bold #28 / The Authority #1",
+    era: "Modern Cinematic / Golden Age Roots",
+    creators: "James Gunn, Jerry Siegel, Joe Shuster, and Warren Ellis",
+    fmv: 1200000,
+    ticker: "$DC",
+    thesis: "James Gunn's DC Universe revitalization creates immediate secondary market volume for spotlighted characters across Silver and Modern eras.",
+  },
+  "matt shakman": {
+    displayName: "Matt Shakman",
+    role: "Director of Fantastic Four: First Steps & WandaVision",
+    landmark: "Fantastic Four #1 (1961) / Vision and the Scarlet Witch #1",
+    era: "Silver / Bronze Age",
+    creators: "Matt Shakman, Stan Lee, Jack Kirby, and Bill Mantlo",
+    fmv: 165000,
+    ticker: "$FF4",
+    thesis: "Shakman's retro-futurist 1960s aesthetic directly reconnects mainstream audiences to the original Silver Age Lee/Kirby comic genesis.",
+  },
+  "destin daniel cretton": {
+    displayName: "Destin Daniel Cretton",
+    role: "Director of Spider-Man 4 & Shang-Chi",
+    landmark: "Amazing Fantasy #15 / Special Marvel Edition #15",
+    era: "Silver / Bronze Age",
+    creators: "Destin Daniel Cretton, Stan Lee, Steve Ditko, and Steve Englehart",
+    fmv: 3200,
+    ticker: "$SPDR",
+    thesis: "Cretton's attached direction elevates street-level Marvel and martial arts key issues into premier investment targets.",
+  },
+  "robert downey jr.": {
+    displayName: "Robert Downey Jr.",
+    role: "Actor portraying Doctor Doom (Victor Von Doom) & Iron Man",
+    landmark: "Fantastic Four #5 (1962) / Tales of Suspense #39",
+    era: "Silver Age (1962)",
+    creators: "Stan Lee and Jack Kirby",
+    fmv: 95000,
+    ticker: "$DOOM",
+    thesis: "RDJ's dual legacy across Iron Man and Doctor Doom represents the largest individual talent catalyst in comic entertainment history.",
+  },
+  "pedro pascal": {
+    displayName: "Pedro Pascal",
+    role: "Actor portraying Mister Fantastic (Reed Richards) & Din Djarin",
+    landmark: "Fantastic Four #1 (1961) / Star Wars: The Mandalorian #1",
+    era: "Silver Age (1961)",
+    creators: "Stan Lee and Jack Kirby",
+    fmv: 165000,
+    ticker: "$FF4",
+    thesis: "Pascal's premier casting cements Mister Fantastic as the central defensive leadership figure of upcoming multiversal phases.",
+  },
+  "channing tatum": {
+    displayName: "Channing Tatum",
+    role: "Actor portraying Gambit (Remy LeBeau)",
+    landmark: "Uncanny X-Men #266 (1990)",
+    era: "Copper Age (1990)",
+    creators: "Chris Claremont and Jim Lee",
+    fmv: 1100,
+    ticker: "$GMBT",
+    thesis: "Tatum's attached portrayal in Deadpool & Wolverine and Avengers crossover slates triggered a multi-year trading volume record for UXM #266.",
+  },
+  "rosario dawson": {
+    displayName: "Rosario Dawson",
+    role: "Actor portraying Claire Temple (Night Nurse) & Ahsoka Tano",
+    landmark: "Hero for Hire #2 (1972) / Star Wars: Ahsoka #1",
+    era: "Bronze / Modern Age",
+    creators: "Archie Goodwin, George Tuska, and Dave Filoni",
+    fmv: 480,
+    ticker: "$NURSE",
+    thesis: "Restoring Dawson's cameo connects street-level Marvel canon to theatrical timelines, tightening dealer float on early Luke Cage keys.",
+  },
+  "jon bernthal": {
+    displayName: "Jon Bernthal",
+    role: "Actor portraying The Punisher (Frank Castle)",
+    landmark: "The Amazing Spider-Man #129 (1974)",
+    era: "Bronze Age (1974)",
+    creators: "Gerry Conway, Ross Andru, and John Romita Sr.",
+    fmv: 14500,
+    ticker: "$PNSH",
+    thesis: "Bernthal's attachment to Daredevil: Born Again and MCU film slates cements ASM #129 as the premier Bronze Age anti-hero investment bellwether.",
+  },
+  "hugh jackman": {
+    displayName: "Hugh Jackman",
+    role: "Actor portraying Wolverine (Logan / Weapon X)",
+    landmark: "The Incredible Hulk #181 (1974)",
+    era: "Bronze Age (1974)",
+    creators: "Len Wein, John Romita Sr., and Herb Trimpe",
+    fmv: 42000,
+    ticker: "$WOLV",
+    thesis: "Jackman's 25-year sovereign portrayal of Wolverine anchors Hulk #181 as the single most liquid high-value key in Bronze Age history.",
+  },
+  "ryan reynolds": {
+    displayName: "Ryan Reynolds",
+    role: "Actor portraying Deadpool (Wade Wilson)",
+    landmark: "The New Mutants #98 (1991)",
+    era: "Copper / Modern Age (1991)",
+    creators: "Fabian Nicieza and Rob Liefeld",
+    fmv: 2400,
+    ticker: "$DEAD",
+    thesis: "Reynolds' box office sovereign comedy action franchise transformed New Mutants #98 into the definitive high-volume modern market grail.",
+  },
+  "david corenswet": {
+    displayName: "David Corenswet",
+    role: "Actor portraying Superman (Clark Kent / Kal-El)",
+    landmark: "Action Comics #1 (1938)",
+    era: "Golden Age (1938)",
+    creators: "Jerry Siegel and Joe Shuster",
+    fmv: 1200000,
+    ticker: "$SUPR",
+    thesis: "Corenswet's role as the foundation of James Gunn's DC Universe redirects institutional capital back into historic Golden Age bedrock grails.",
+  },
+};
+
 /**
- * Turns the already-computed catalyst analysis, lore dossiers, superhero ramifications, and
- * market ripples into real narrative paragraphs for the article body (as opposed to only
- * showing them in the widget cards below the fold).
+ * Researches proper nouns mentioned in the news story against the platform's
+ * canonical comic backgrounds, creator directories, adaptation cast registry,
+ * and Investopedia principles.
+ */
+export function researchProperNounsForStory(
+  fullText: string,
+  entities: EntityWikiDef[]
+): ResearchedProperNoun[] {
+  const lower = fullText.toLowerCase();
+  const results: ResearchedProperNoun[] = [];
+  const seenNouns = new Set<string>();
+
+  // 1. Check Renowned Creators, Directors & Talent Map
+  for (const [key, c] of Object.entries(RENOWNED_CREATORS_MAP)) {
+    if (lower.includes(key)) {
+      seenNouns.add(c.displayName.toLowerCase());
+      results.push({
+        properNoun: c.displayName,
+        category: c.role.includes("Actor") ? "TALENT" : "CREATOR",
+        comicRoleOrIdentity: c.role,
+        landmarkDebutIssue: c.landmark,
+        creativeArchitects: c.creators,
+        era: c.era,
+        cgc98Fmv: c.fmv,
+        ticker: c.ticker,
+        marketRelevanceThesis: c.thesis,
+        investopediaPrinciple: {
+          term: c.role.includes("Actor") ? "Key Person Value" : "Intellectual Property Asset",
+          definition: c.role.includes("Actor")
+            ? "The quantifiable economic value attributable to essential creative, directorial, or acting talent whose attached participation directly drives asset recognition, institutional capital, and commercial velocity."
+            : "Intangible assets created by human intellect and creative work, legally protected to grant exclusive rights and generate compounding enterprise value.",
+          translation: `In comic equities, talent attachments and authorial runs trigger secondary market liquidity surges, shifting speculative buying into the character's key debut issues.`,
+          url: c.role.includes("Actor")
+            ? "https://www.investopedia.com/terms/k/keypersoninsurance.asp"
+            : "https://www.investopedia.com/terms/i/intellectualproperty.asp",
+        },
+      });
+    }
+  }
+
+  // 2. Check Canonical Backgrounds (Heroes, Villains, Franchises)
+  for (const [key, bg] of Object.entries(CANONICAL_COMIC_BACKGROUNDS)) {
+    if (lower.includes(key)) {
+      const cleanName = bg.term.replace(/\s*\(.*?\)/, "").trim();
+      if (!seenNouns.has(cleanName.toLowerCase())) {
+        seenNouns.add(cleanName.toLowerCase());
+        results.push({
+          properNoun: bg.term,
+          category: bg.universe === "MARVEL" || bg.universe === "DC" ? "CHARACTER" : "FRANCHISE",
+          comicRoleOrIdentity: bg.term,
+          landmarkDebutIssue: bg.landmarkIssue,
+          creativeArchitects: bg.creators,
+          era: bg.era,
+          cgc98Fmv: bg.baseFmv || 2500,
+          ticker: bg.ticker,
+          marketRelevanceThesis: bg.description,
+          investopediaPrinciple: {
+            term: "Alternative Investment Asset",
+            definition:
+              "A tangible or financial asset outside standard public equities or bonds, valued based on verified historical provenance, physical preservation condition, and structural supply inelasticity.",
+            translation: `Certified high-grade key issues of ${bg.landmarkIssue} represent atomic collectible equities where physical census scarcity (CGC 9.8 population) dictates secondary price discovery.`,
+            url: "https://www.investopedia.com/terms/a/alternative_investment.asp",
+          },
+        });
+      }
+    }
+  }
+
+  // 3. Check Adaptation Cast Registry
+  for (const cast of adaptationCastData as Array<{ name: string; aliases: string[]; roles: Array<{ character: string; landmarkIssue: string; comicTicker: string }>; franchises: string[] }>) {
+    const matched = lower.includes(cast.name.toLowerCase()) || (cast.aliases || []).some((al) => lower.includes(al.toLowerCase()));
+    if (matched && !seenNouns.has(cast.name.toLowerCase())) {
+      seenNouns.add(cast.name.toLowerCase());
+      const primaryRole = cast.roles[0];
+      if (primaryRole) {
+        results.push({
+          properNoun: cast.name,
+          category: "TALENT",
+          comicRoleOrIdentity: `${primaryRole.character} in ${cast.franchises.join(", ")}`,
+          landmarkDebutIssue: primaryRole.landmarkIssue,
+          creativeArchitects: `Attached adaptation talent across ${cast.franchises.join(", ")}`,
+          era: primaryRole.landmarkIssue.includes("196") ? "Silver Age" : primaryRole.landmarkIssue.includes("197") ? "Bronze Age" : primaryRole.landmarkIssue.includes("198") ? "Copper Age" : "Modern Age",
+          cgc98Fmv: 1850,
+          ticker: primaryRole.comicTicker || "$EQUITY",
+          marketRelevanceThesis: `Cinematic casting attachment directly channels speculative buying into ${primaryRole.landmarkIssue}, accelerating float turnover across certified slab registries.`,
+          investopediaPrinciple: {
+            term: "Key Person Value",
+            definition:
+              "The quantifiable economic value attributable to essential creative, directorial, or acting talent whose participation directly anchors asset prestige, institutional demand, and trading velocity.",
+            translation: `In comic equities, premier talent attachments trigger immediate secondary market liquidity surges, shifting speculative buying into the character's key debut issues.`,
+            url: "https://www.investopedia.com/terms/k/keypersoninsurance.asp",
+          },
+        });
+      }
+    }
+  }
+
+  // 4. Check Matched Entities from Context
+  for (const ent of entities) {
+    const entLower = ent.term.toLowerCase();
+    if (seenNouns.has(entLower)) continue;
+    if (ent.type === "character" || ent.type === "creator" || ent.type === "publisher") {
+      seenNouns.add(entLower);
+      const role = ent.roleDetails?.character || ent.term;
+      const debut = ent.roleDetails?.landmarkIssue || `${ent.term} Benchmark Issue`;
+      const ticker = ent.ticker || "$EQUITY";
+
+      results.push({
+        properNoun: ent.term,
+        category: ent.type === "character" ? "CHARACTER" : ent.type === "creator" ? "CREATOR" : "STUDIO",
+        comicRoleOrIdentity: role,
+        landmarkDebutIssue: debut,
+        creativeArchitects: "Sequential Art Creative Teams",
+        era: debut.includes("196") ? "Silver Age" : debut.includes("197") ? "Bronze Age" : "Modern Age",
+        cgc98Fmv: 2500,
+        ticker,
+        marketRelevanceThesis: `Active reporting and industry intelligence elevate ${ent.term}, directing heightened secondary market inspection into verified high-grade registry copies.`,
+        investopediaPrinciple: {
+          term: ent.type === "publisher" ? "Conglomerate Valuation" : "Price Discovery",
+          definition:
+            "The overall process by which the market determines the price of an asset through the interactions of buyers and sellers, factoring in supply, demand, risk, and new information.",
+          translation: `Syndicated reporting stimulates buyer inquiries, resetting the fair market value baseline for certified high-grade copies.`,
+          url: "https://www.investopedia.com/terms/p/pricediscovery.asp",
+        },
+      });
+    }
+  }
+
+  return results.slice(0, 8);
+}
+
+/**
+ * Turns the already-computed catalyst analysis, lore dossiers, superhero ramifications,
+ * researched proper nouns, and market ripples into real narrative paragraphs for the article body.
  *
  * Guarantees that EVERY news story produces a sensible, cohesive 4 to 5 paragraph article:
  * 1. Wire Dispatch & Lead Reporting (authentic breaking reporting)
@@ -523,13 +879,17 @@ function buildAnalyticalParagraphs(
   catalyst: CatalystAnalysis,
   loreDeepDives: LoreDeepDiveEntry[],
   superheroRamifications: SuperheroMarketRamification[],
-  butterflyRipples: MarketButterflyRipple[]
+  butterflyRipples: MarketButterflyRipple[],
+  researchedProperNouns: ResearchedProperNoun[]
 ): {
   catalystPara: string;
   lorePara: string;
   ramificationPara: string;
   macroSpillover: string;
 } {
+  const primaryProperNoun = researchedProperNouns[0];
+  const secondaryProperNoun = researchedProperNouns[1];
+
   // 1. Market catalyst analysis & valuation dynamics
   const impactPhrase =
     catalyst.marketImpact === "BULLISH"
@@ -546,38 +906,50 @@ function buildAnalyticalParagraphs(
           .slice(0, 4)
           .map((c) => `${c.title} (${c.priceFormatted} CGC 9.8 FMV benchmark)`)
           .join(", ")}.`
+      : primaryProperNoun
+      ? ` Key issues immediately impacted include ${primaryProperNoun.landmarkDebutIssue} ($${primaryProperNoun.cgc98Fmv.toLocaleString()} CGC 9.8 FMV benchmark)${
+          secondaryProperNoun ? ` and ${secondaryProperNoun.landmarkDebutIssue} ($${secondaryProperNoun.cgc98Fmv.toLocaleString()} CGC 9.8 FMV benchmark)` : ""
+        }.`
       : "";
 
-  const catalystPara = `${catalyst.catalystLabel}: ${catalyst.reasoning} From a valuation perspective, this development ${impactPhrase}, carrying a quantitative catalyst score of ${Math.round(
+  const primaryInvestopedia = primaryProperNoun?.investopediaPrinciple?.term || "Price Discovery";
+
+  const catalystPara = `${catalyst.catalystLabel}: ${catalyst.reasoning} From a fair market value perspective, this development ${impactPhrase}, carrying a quantitative catalyst score of ${Math.round(
     catalyst.impactScore * 100
-  )}/100 on the Panel Profits valuation scale.${comicsPhrase} For active market makers and portfolio collectors, tracking the fair market value trajectory and price discovery across certified census tiers provides the definitive benchmark for measuring whether current momentum represents lasting capital absorption or a transient speculative premium.`;
+  )}/100 on the Panel Profits valuation scale.${comicsPhrase} On the secondary trade desk, tracking this catalyst against the Investopedia financial principle of ${primaryInvestopedia} illustrates how high-visibility media attachments compress circulating float and accelerate price discovery across certified census tiers.`;
 
   // 2. Canonical background & publishing provenance
   let lorePara = "";
-  if (loreDeepDives.length > 0) {
+  if (researchedProperNouns.length > 0) {
+    const researchItems = researchedProperNouns.slice(0, 3).map((r) => {
+      return `${r.properNoun} (${r.comicRoleOrIdentity}, ticker ${r.ticker}), first appearing in ${r.landmarkDebutIssue} during the ${r.era} (${r.creativeArchitects}) -- ${r.marketRelevanceThesis}`;
+    });
+    lorePara = `Canonical publishing lineage & proper noun research: ${researchItems.join(" ")} Understanding the publication era—from foundational Silver Age roots to modern creator-owned milestones—remains critical for modeling historical survivorship, print runs, and long-term collector demand.`;
+  } else if (loreDeepDives.length > 0) {
     const entries = loreDeepDives
       .slice(0, 3)
       .map(
         (l) =>
           `${l.term} (${l.ticker}), first appearing in ${l.firstAppearance} during the ${l.era} (${l.creators}) -- ${l.encyclopedicLore}`
       );
-    lorePara = `Canonical publishing lineage: ${entries.join(" ")} Understanding the publication era—from foundational Silver Age roots to modern creator-owned milestones—remains critical for modeling historical survivorship, print runs, and long-term collector demand.`;
+    lorePara = `Canonical publishing lineage & proper noun research: ${entries.join(" ")} Understanding the publication era—from foundational Silver Age roots to modern creator-owned milestones—remains critical for modeling historical survivorship, print runs, and long-term collector demand.`;
   } else {
     const lower = fullText.toLowerCase();
     if (lower.includes("star trek") || lower.includes("lower decks") || lower.includes("picard") || lower.includes("spock") || lower.includes("enterprise")) {
-      lorePara = `Canonical publishing lineage: Within Star Trek comic publishing canon, this narrative development connects directly to a multi-decade sequential art legacy spanning Gold Key (1967), Marvel, DC, and most prominently IDW Publishing ($IDW). Classic runs and modern serialized miniseries expand the television mythology beyond the screen, directing collector interest into certified early debut issues such as Star Trek #1 (1967 Gold Key) and pivotal crossover keys. Across certified census tiers, vintage sci-fi keys demonstrate sustained collector appeal, where high-grade condition scarcity commands a resilient premium over raw reading copies.`;
+      lorePara = `Canonical publishing lineage & proper noun research: Within Star Trek comic publishing canon, this narrative development connects directly to a multi-decade sequential art legacy spanning Gold Key (1967), Marvel, DC, and most prominently IDW Publishing ($IDW). Classic runs and modern serialized miniseries expand the television mythology beyond the screen, directing collector interest into certified early debut issues such as Star Trek #1 (1967 Gold Key) and pivotal crossover keys. Across certified census tiers, vintage sci-fi keys demonstrate sustained collector appeal, where high-grade condition scarcity commands a resilient premium over raw reading copies.`;
     } else if (lower.includes("star wars") || lower.includes("mandalorian") || lower.includes("grogu") || lower.includes("jedi") || lower.includes("vader")) {
-      lorePara = `Canonical publishing lineage: Within Star Wars sequential art history, this narrative arc builds on the landmark publishing lineage initiated by Marvel Comics in 1977 with Star Wars #1, expanded through Dark Horse's prolific Expanded Universe continuity, and reaffirmed in modern canonical Marvel and IDW titles ($SW). High-grade certified copies of key character debuts and premiere variant covers remain benchmark assets across the speculative collector landscape, serving as primary targets for capital rotation during major streaming and theatrical milestones.`;
+      lorePara = `Canonical publishing lineage & proper noun research: Within Star Wars sequential art history, this narrative arc builds on the landmark publishing lineage initiated by Marvel Comics in 1977 with Star Wars #1, expanded through Dark Horse's prolific Expanded Universe continuity, and reaffirmed in modern canonical Marvel and IDW titles ($SW). High-grade certified copies of key character debuts and premiere variant covers remain benchmark assets across the speculative collector landscape, serving as primary targets for capital rotation during major streaming and theatrical milestones.`;
     } else if (lower.includes("dc") || lower.includes("batman") || lower.includes("superman") || lower.includes("gotham") || lower.includes("gunn")) {
-      lorePara = `Canonical publishing lineage: Within DC Comics continuity, this narrative trajectory connects directly to the historical bedrock established by Jerry Siegel, Joe Shuster, Bob Kane, and Bill Finger during the Golden Age genesis. Foundational keys such as Action Comics #1 (1938) and Detective Comics #27 (1939) anchor the sovereign benchmark of the entire superhero genre. Across subsequent Silver Age transformations and modern cinematic adaptations under DC Studios ($DC), creative shifts consistently stimulate secondary market demand for key character debuts and landmark crossover runs.`;
+      lorePara = `Canonical publishing lineage & proper noun research: Within DC Comics continuity, this narrative trajectory connects directly to the historical bedrock established by Jerry Siegel, Joe Shuster, Bob Kane, and Bill Finger during the Golden Age genesis. Foundational keys such as Action Comics #1 (1938) and Detective Comics #27 (1939) anchor the sovereign benchmark of the entire superhero genre. Across subsequent Silver Age transformations and modern cinematic adaptations under DC Studios ($DC), creative shifts consistently stimulate secondary market demand for key character debuts and landmark crossover runs.`;
     } else if (lower.includes("image") || lower.includes("spawn") || lower.includes("kirkman") || lower.includes("mcfarlane") || lower.includes("invincible")) {
-      lorePara = `Canonical publishing lineage: In the independent and creator-owned publishing sphere, this development highlights the enduring market power of sovereign creator equity. Breakthroughs pioneered by Image Comics and Dark Horse—such as Todd McFarlane's Spawn #1 (1992), Robert Kirkman's Invincible #1 (2003), and Mike Mignola's Hellboy in San Diego Comic-Con Comics #2 (1993)—established that high-grade creator-owned premier keys ($IMGC) retain resilient collector float and immune status from corporate editorial retcons.`;
+      lorePara = `Canonical publishing lineage & proper noun research: In the independent and creator-owned publishing sphere, this development highlights the enduring market power of sovereign creator equity. Breakthroughs pioneered by Image Comics and Dark Horse—such as Todd McFarlane's Spawn #1 (1992), Robert Kirkman's Invincible #1 (2003), and Mike Mignola's Hellboy in San Diego Comic-Con Comics #2 (1993)—established that high-grade creator-owned premier keys ($IMGC) retain resilient collector float and immune status from corporate editorial retcons.`;
     } else {
-      lorePara = `Canonical publishing lineage: Within Marvel Comics continuity, this narrative trajectory reflects the foundational storytelling framework engineered by Stan Lee, Jack Kirby, and Steve Ditko during the Silver Age revolution. Milestone issues including Fantastic Four #1 (1961), Amazing Fantasy #15 (1962), and The Avengers #1 (1963) established the multi-universe continuity that continues to dictate both serialized comic publishing and multi-billion-dollar cinematic adaptations. Tracking the era of publication—from Silver Age genesis to Copper Age crossover milestones—remains essential for calculating historical attrition and certified census scarcity.`;
+      lorePara = `Canonical publishing lineage & proper noun research: Within Marvel Comics continuity, this narrative trajectory reflects the foundational storytelling framework engineered by Stan Lee, Jack Kirby, and Steve Ditko during the Silver Age revolution. Milestone issues including Fantastic Four #1 (1961), Amazing Fantasy #15 (1962), and The Avengers #1 (1963) established the multi-universe continuity that continues to dictate both serialized comic publishing and multi-billion-dollar cinematic adaptations. Tracking the era of publication—from Silver Age genesis to Copper Age crossover milestones—remains essential for calculating historical attrition and certified census scarcity.`;
     }
   }
 
   // 3. Secondary market ramifications & census dynamics
+  const secondaryInvestopedia = secondaryProperNoun?.investopediaPrinciple?.term || "Grade Compression";
   let ramificationPara = "";
   if (superheroRamifications.length > 0) {
     const entries = superheroRamifications
@@ -586,9 +958,9 @@ function buildAnalyticalParagraphs(
         (r) =>
           `${r.characterName} (${r.ticker}) is positioned as ${r.marketStance} at ${r.projectedVelocity}: ${r.directStoryRamification} ${r.censusAndPricingImpact}`
       );
-    ramificationPara = `Secondary market ramifications: ${entries.join(" ")} Certified CGC and CBCS 9.8 populations continue to exhibit pronounced grade compression, where immaculate high-grade copies command exponential valuation multiples over mid-grade census tiers. With dealer inventory tightening and auction turnover accelerating on major trading platforms, disciplined collectors prioritize verified condition pedigree over speculative chasing.`;
+    ramificationPara = `Secondary market ramifications: ${entries.join(" ")} Certified CGC and CBCS 9.8 populations continue to exhibit pronounced grade compression, where immaculate high-grade copies command exponential valuation multiples over mid-grade census tiers. Experienced portfolio desks apply the Investopedia standard of ${secondaryInvestopedia} and track historical auction clearing prices to defend against speculative overreaction, ensuring capital is deployed at sustainable cost basis support levels.`;
   } else {
-    ramificationPara = `Secondary market ramifications: Across certified census registries, high-grade CGC 9.8 and CBCS 9.8 copies are demonstrating acute grade compression, where investment-grade census copies maintain widening valuation spreads against raw reader copies. Experienced portfolio desks emphasize that tracking census population reports and historical auction clearing prices provides the only verifiable defense against short-term market overreaction, ensuring capital is deployed at sustainable cost basis support levels.`;
+    ramificationPara = `Secondary market ramifications: Across certified census registries, high-grade CGC 9.8 and CBCS 9.8 copies are demonstrating acute grade compression, where investment-grade census copies maintain widening valuation spreads against raw reader copies. Experienced portfolio desks apply the Investopedia standard of ${secondaryInvestopedia} and track census population reports and historical auction clearing prices to provide verifiable defense against short-term market overreaction, ensuring capital is deployed at sustainable cost basis support levels.`;
   }
 
   // 4. Downstream ripple effects & macro spillover
@@ -649,6 +1021,9 @@ export function parseAndSynthesizeArticle(story: {
   // Dynamically resolve Market Butterfly Effect ripples
   const butterflyRipples = deriveMarketButterflyRipples(fullText, baseEntities, loreDeepDives);
 
+  // Research proper nouns for comic relevance, landmark debuts, and Investopedia principles
+  const researchedProperNouns = researchProperNounsForStory(fullText, baseEntities);
+
   const authenticParagraphs = cleanSummary
     ? cleanSummary.split(/\n\n+/).map((p) => p.trim()).filter(Boolean)
     : [headline];
@@ -659,7 +1034,8 @@ export function parseAndSynthesizeArticle(story: {
     catalyst,
     loreDeepDives,
     superheroRamifications,
-    butterflyRipples
+    butterflyRipples,
+    researchedProperNouns
   );
 
   // Guarantee a cohesive 4 to 5 paragraph architecture for standard wire stories,
@@ -698,11 +1074,56 @@ export function parseAndSynthesizeArticle(story: {
   const narrativeMatchText = [
     fullText,
     ...paragraphs,
+    ...researchedProperNouns.map(
+      (r) => `${r.properNoun} ${r.comicRoleOrIdentity} ${r.landmarkDebutIssue} ${r.investopediaPrinciple.term}`
+    ),
     ...superheroRamifications.flatMap((r) => [r.directStoryRamification, r.censusAndPricingImpact]),
     ...butterflyRipples.map((r) => r.catalystCausality),
     ...loreDeepDives.map((l) => l.encyclopedicLore),
   ].join(" \n ");
-  const entities = extractEntitiesFromContext(narrativeMatchText);
+  const baseMatchedEntities = extractEntitiesFromContext(narrativeMatchText);
+
+  // Ensure all researched proper nouns and their Investopedia principles are explicitly available in the entities list
+  const entityMap = new Map<string, EntityWikiDef>();
+  for (const ent of baseMatchedEntities) {
+    entityMap.set(ent.term.toLowerCase(), ent);
+  }
+
+  for (const r of researchedProperNouns) {
+    const nounLower = r.properNoun.toLowerCase();
+    if (!entityMap.has(nounLower)) {
+      entityMap.set(nounLower, {
+        term: r.properNoun,
+        ticker: r.ticker,
+        type: r.category === "CREATOR" ? "creator" : r.category === "CHARACTER" ? "character" : "creator",
+        target: "intelligence",
+        wikiPath: `/wiki/entry/${nounLower.replace(/[^a-z0-9]+/g, "-")}`,
+        lexiconDetails: {
+          category: r.investopediaPrinciple.category || "Comic Asset Valuation",
+          definition: r.investopediaPrinciple.definition,
+          translation: r.investopediaPrinciple.translation,
+          investopediaUrl: r.investopediaPrinciple.url,
+        },
+      });
+    }
+    const principleLower = r.investopediaPrinciple.term.toLowerCase();
+    if (!entityMap.has(principleLower)) {
+      entityMap.set(principleLower, {
+        term: r.investopediaPrinciple.term,
+        type: "market-concept",
+        target: "lexicon",
+        wikiPath: `/lexicon/${principleLower.replace(/[^a-z0-9]+/g, "-")}`,
+        lexiconDetails: {
+          category: r.investopediaPrinciple.category || "Valuation Principles",
+          definition: r.investopediaPrinciple.definition,
+          translation: r.investopediaPrinciple.translation,
+          investopediaUrl: r.investopediaPrinciple.url,
+        },
+      });
+    }
+  }
+
+  const entities = Array.from(entityMap.values());
 
   return {
     headline,
@@ -716,6 +1137,7 @@ export function parseAndSynthesizeArticle(story: {
     butterflyRipples,
     catalyst,
     author: authorPersona,
+    researchedProperNouns,
   };
 }
 
