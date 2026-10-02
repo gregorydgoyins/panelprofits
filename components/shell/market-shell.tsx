@@ -7,7 +7,9 @@ import { AssetsRail } from "./assets-rail";
 import { EquitiesRail } from "./equities-rail";
 import { DiaryRail } from "./diary-rail";
 import { Footer } from "./footer";
-import { getCleanAssetSurfaces, getMarketTelemetry, getValuationRailComics } from "@/lib/dashboard/queries";
+import { getMarketTelemetry } from "@/lib/dashboard/queries";
+import { getSovereignEquities, getCanonicalAssetSurfaces } from "@/lib/equity/canonical-equities";
+import { calculateMarketIndices } from "@/lib/market/indices";
 import { getNewsStories } from "@/lib/news/feed";
 import { getCurrentUser } from "@/lib/account/queries";
 import { getDiaryEntries } from "@/lib/panel-profits/queries";
@@ -27,11 +29,12 @@ export async function MarketShell({ children }: MarketShellProps) {
 
   // Fetch bounded rails concurrently
   const user = await getCurrentUser();
-  const [telemetry, newsStories, assetsItems, valuationItems, diaryEntries] = await Promise.all([
+  const [telemetry, newsStories, assetSurfaces, sovereignEquities, marketIndices, diaryEntries] = await Promise.all([
     getMarketTelemetry(),
     getNewsStories(32),
-    getCleanAssetSurfaces(24),
-    getValuationRailComics(12),
+    getCanonicalAssetSurfaces(48),
+    getSovereignEquities(48),
+    calculateMarketIndices(),
     user ? getDiaryEntries(user.id) : Promise.resolve([]),
   ]);
 
@@ -40,8 +43,8 @@ export async function MarketShell({ children }: MarketShellProps) {
       <Header />
       <RailVisibility setting="newsTicker"><NewsRail initialStories={newsStories} /></RailVisibility>
       <RailVisibility setting="marketTelemetry"><MarketTelemetryRail telemetry={telemetry} /></RailVisibility>
-      <RailVisibility setting="assets"><AssetsRail items={assetsItems} /></RailVisibility>
-      <RailVisibility setting="equities"><EquitiesRail items={valuationItems} /></RailVisibility>
+      <RailVisibility setting="assets"><AssetsRail items={assetSurfaces} /></RailVisibility>
+      <RailVisibility setting="equities"><EquitiesRail items={sovereignEquities} indices={marketIndices} /></RailVisibility>
       <RailVisibility setting="diary"><DiaryRail entries={diaryEntries} /></RailVisibility>
       <main className="flex-1">{children}</main>
       <Footer />

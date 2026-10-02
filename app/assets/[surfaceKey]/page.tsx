@@ -3,6 +3,8 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Boxes, ShieldCheck, Sparkles, TrendingUp, Layers, Award } from "lucide-react";
 import { getCleanEquityDetail } from "@/lib/panel-profits/assets";
+import { AssetClassesMatrix } from "@/components/equity/asset-classes-matrix";
+import { formatComicEquityTicker } from "@/lib/equity/canonical-equities";
 
 export const dynamic = "force-dynamic";
 
@@ -150,6 +152,14 @@ export default async function AssetSurfacePage({ params }: AssetSurfacePageProps
             </div>
 
             <div className="mt-8 flex flex-wrap gap-3">
+              {asset.reference_fmv_usd && (
+                <Link
+                  href={`/equity/${formatComicEquityTicker(asset.series, asset.issue_number || "1", "SOV")}`}
+                  className="inline-flex items-center gap-2 rounded bg-emerald-500/20 border border-emerald-500/40 px-4 py-2 text-xs font-mono font-bold text-emerald-300 hover:bg-emerald-500/30 transition-colors"
+                >
+                  Trade Sovereign Equity ({formatComicEquityTicker(asset.series, asset.issue_number || "1", "SOV")})
+                </Link>
+              )}
               <Link
                 href={`/comics/${asset.id}`}
                 className="inline-flex items-center gap-2 rounded bg-cyan-500/10 border border-cyan-500/40 px-4 py-2 text-xs font-medium text-cyan-300 hover:bg-cyan-500/20 transition-colors"
@@ -157,15 +167,26 @@ export default async function AssetSurfacePage({ params }: AssetSurfacePageProps
                 Inspect in Master Catalog
               </Link>
               <Link
-                href="/market"
+                href="/equities"
                 className="inline-flex items-center gap-2 rounded border border-slate-700 bg-slate-800/60 px-4 py-2 text-xs font-medium text-slate-300 hover:border-slate-500 transition-colors"
               >
-                View on Market Desk
+                Equities Trading Floor
               </Link>
             </div>
           </div>
         </div>
       </section>
+
+      {/* 16 Canonical Collectible Asset Classes Matrix */}
+      {asset.reference_fmv_usd ? (
+        <section className="mt-8">
+          <AssetClassesMatrix
+            series={asset.series}
+            issueNumber={asset.issue_number || "1"}
+            baseFmv={asset.reference_fmv_usd}
+          />
+        </section>
+      ) : null}
     </main>
   );
 }

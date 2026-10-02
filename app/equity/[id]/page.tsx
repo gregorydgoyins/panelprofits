@@ -1,31 +1,45 @@
-import Link from "next/link";
-import { ArrowLeft, BarChart3 } from "lucide-react";
 import { notFound } from "next/navigation";
 import { getEquityDetail } from "@/lib/equity/queries";
+import { getSovereignEquityDossier } from "@/lib/equity/canonical-equities";
+import { SovereignDossierView } from "@/components/equity/sovereign-dossier-view";
+import { IndexDossierView } from "@/components/equity/index-dossier-view";
 
 export const dynamic = "force-dynamic";
 
-export default async function EquityDetailPage({ params }: { params: Promise<{ id: string }> }) {
+interface EquityDetailPageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default async function EquityDetailPage({ params }: EquityDetailPageProps) {
   const { id } = await params;
+  if (!id) notFound();
+
   const cleanId = decodeURIComponent(id).trim().toUpperCase().replace(/^\$/, "");
-  const detail = await getEquityDetail(cleanId);
-  if (!detail) notFound();
-  const { contract, observations, constituents } = detail;
-  return (
-    <main className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
-      <Link href="/equities" className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-emerald-300 hover:text-emerald-200">
-        <ArrowLeft className="h-3.5 w-3.5" /> Equity desk
-      </Link>
-      <section className="mt-8 border border-emerald-900/50 bg-[#0b0f15] p-8">
-        <BarChart3 className="h-6 w-6 text-emerald-300" />
-        <p className="mt-6 text-[10px] uppercase tracking-[0.22em] text-emerald-300">{contract.index_code} / Clean reference</p>
-        <h1 className="mt-3 text-3xl text-slate-100">{contract.display_name}</h1>
-        <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-400">{contract.notes || "Methodology and observation state are shown from Clean."}</p>
-      </section>
-      <section className="mt-6 grid gap-4 sm:grid-cols-3"><div className="border border-slate-800 bg-[#0b0f15] p-4"><p className="text-[10px] uppercase tracking-[0.14em] text-slate-600">Expected constituents</p><p className="mt-2 text-xl text-slate-100">{contract.expected_constituent_count.toLocaleString()}</p></div><div className="border border-slate-800 bg-[#0b0f15] p-4"><p className="text-[10px] uppercase tracking-[0.14em] text-slate-600">Observations</p><p className="mt-2 text-xl text-slate-100">{contract.observation_count.toLocaleString()}</p></div><div className="border border-slate-800 bg-[#0b0f15] p-4"><p className="text-[10px] uppercase tracking-[0.14em] text-slate-600">Status</p><p className="mt-2 text-sm text-cyan-300">{contract.production_status}</p></div></section>
-      <section className="mt-6 border border-slate-800 bg-[#0b0f15] p-6"><h2 className="text-lg text-slate-100">Methodology record</h2><dl className="mt-5 grid gap-5 sm:grid-cols-2"><div><dt className="text-[10px] uppercase tracking-[0.14em] text-slate-600">Price basis</dt><dd className="mt-1 text-sm text-slate-300">{contract.price_basis}</dd></div><div><dt className="text-[10px] uppercase tracking-[0.14em] text-slate-600">Grade basis</dt><dd className="mt-1 text-sm text-slate-300">{contract.grade_basis || "Not specified"}</dd></div><div><dt className="text-[10px] uppercase tracking-[0.14em] text-slate-600">Selection rule</dt><dd className="mt-1 text-sm text-slate-300">{contract.selection_rule}</dd></div><div><dt className="text-[10px] uppercase tracking-[0.14em] text-slate-600">Weighting rule</dt><dd className="mt-1 text-sm text-slate-300">{contract.weighting_rule || "Not specified"}</dd></div><div><dt className="text-[10px] uppercase tracking-[0.14em] text-slate-600">Rebalance rule</dt><dd className="mt-1 text-sm text-slate-300">{contract.rebalance_rule || "Not specified"}</dd></div><div><dt className="text-[10px] uppercase tracking-[0.14em] text-slate-600">Calculation frequency</dt><dd className="mt-1 text-sm text-slate-300">{contract.calculation_frequency || "Not specified"}</dd></div></dl></section>
-      <section className="mt-6 border border-slate-800 bg-[#0b0f15] p-6"><h2 className="text-lg text-slate-100">Verified history</h2>{observations.length ? <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[760px] text-left text-xs"><thead className="text-[10px] uppercase tracking-[0.12em] text-slate-600"><tr><th className="px-3 py-2">Time</th><th className="px-3 py-2">Value</th><th className="px-3 py-2">Change</th><th className="px-3 py-2">Valid constituents</th><th className="px-3 py-2">Calculation</th></tr></thead><tbody className="divide-y divide-slate-800">{observations.map((observation) => <tr key={observation.observation_time}><td className="px-3 py-3 text-slate-400">{observation.observation_time}</td><td className="px-3 py-3 text-emerald-300">{observation.index_value ?? "Unavailable"}</td><td className="px-3 py-3 text-slate-300">{observation.percent_change == null ? "Unavailable" : `${observation.percent_change}%`}</td><td className="px-3 py-3 text-slate-300">{observation.valid_constituent_count} / {observation.expected_constituent_count}</td><td className="px-3 py-3 text-cyan-300">{observation.calculation_status}</td></tr>)}</tbody></table></div> : <p className="mt-4 text-sm leading-6 text-slate-500">No dated Clean observations are available. No price, candle, trend, or performance series is inferred.</p>}</section>
-      <section className="mt-6 border border-slate-800 bg-[#0b0f15] p-6"><h2 className="text-lg text-slate-100">CE70 seat register</h2><p className="mt-2 text-xs leading-5 text-slate-500">Named seats, PPCF links, unresolved edition matches, and vacant seats are shown separately.</p><div className="mt-4 overflow-x-auto"><table className="w-full min-w-[720px] text-left text-xs"><thead className="text-[10px] uppercase tracking-[0.12em] text-slate-600"><tr><th className="px-3 py-2">Seat</th><th className="px-3 py-2">Historical record</th><th className="px-3 py-2">PPCF link</th><th className="px-3 py-2">Status</th></tr></thead><tbody className="divide-y divide-slate-800">{constituents.map((constituent) => <tr key={constituent.historical_identity}><td className="px-3 py-3 text-slate-300">{constituent.seat_number ?? "—"}</td><td className="px-3 py-3 text-slate-400">{String(constituent.notes?.title_issue || constituent.historical_identity)}</td><td className="px-3 py-3 text-slate-300">{constituent.ppcf_id ? <Link href={`/wiki/${constituent.ppcf_id}`} className="text-emerald-300 hover:text-emerald-200">Open PPCF record</Link> : "Not linked"}</td><td className="px-3 py-3 text-cyan-300">{constituent.match_status}</td></tr>)}</tbody></table></div></section>
-    </main>
-  );
+
+  // 1. Check if identifier corresponds to an index contract (CE70, PPIX100, PPIX60, etc.)
+  const indexDetail = await getEquityDetail(cleanId);
+  if (indexDetail) {
+    return (
+      <main className="min-h-screen bg-[#06080F] text-slate-100 py-8">
+        <IndexDossierView
+          contract={indexDetail.contract}
+          observations={indexDetail.observations}
+          constituents={indexDetail.constituents}
+        />
+      </main>
+    );
+  }
+
+  // 2. Check if identifier is a Sovereign Comic Equity ticker or seat (e.g. ACT.252.SOV, CSS.022.SOV, ce70_seat_6_CE70-8.5, seat-6)
+  const sovereignDossier = await getSovereignEquityDossier(id);
+  if (sovereignDossier) {
+    return (
+      <main className="min-h-screen bg-[#06080F] text-slate-100 py-8">
+        <SovereignDossierView dossier={sovereignDossier} />
+      </main>
+    );
+  }
+
+  // 3. Fallback: Neither index contract nor sovereign equity exists
+  notFound();
 }

@@ -189,6 +189,61 @@ export async function getEquityRegistry(limit = 48): Promise<EquityRegistryRecor
 export async function getCleanEquityDetail(surfaceKey: string): Promise<DetailedAssetSurface | null> {
   try {
     const db = createCleanReadOnlyServerClient();
+    const cleanKey = surfaceKey.trim();
+
+    // 0. If key is a seat reference (e.g. seat-1, seat-01, 1), check ce70_index_definitions & ce70_equity_universe
+    const seatMatch = cleanKey.match(/^(?:seat-?)?(\d+)$/i);
+    const seatNum = seatMatch ? parseInt(seatMatch[1], 10) : null;
+
+    if (seatNum != null) {
+      // Check ce70_index_definitions first for rich constitutional metadata
+      const { data: indexDef } = await db
+        .from("ce70_index_definitions")
+        .select("*")
+        .eq("seat_number", seatNum)
+        .maybeSingle();
+
+      // Also check ce70_equity_universe for pricing
+      const { data: equitySeat } = await db
+        .from("ce70_equity_universe")
+        .select("*")
+        .eq("seat_number", seatNum)
+        .order("reference_fmv_usd", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (indexDef || equitySeat) {
+        const title = indexDef?.title_issue || equitySeat?.title || equitySeat?.series || "Constitutional Seat";
+        const series = indexDef?.series || equitySeat?.series || title;
+        const issueNum = indexDef?.issue_number || equitySeat?.issue_number || "1";
+        const refPrice = equitySeat?.reference_fmv_usd ? Number(equitySeat.reference_fmv_usd) : null;
+        const gScore = indexDef?.gregory_score ? Number(indexDef.gregory_score) : (equitySeat?.gregory_score ? Number(equitySeat.gregory_score) : 195.0);
+
+        return {
+          id: `seat-${seatNum}`,
+          surface_key: cleanKey,
+          series,
+          title,
+          issue_number: issueNum,
+          publisher: indexDef?.publisher || equitySeat?.publisher || "Independent / Classic",
+          publication_year: indexDef?.year || null,
+          origin_era: (indexDef?.era || equitySeat?.origin_era || "GOLDEN").toUpperCase(),
+          production_age: (indexDef?.era || equitySeat?.production_age || "GOLDEN").toUpperCase(),
+          lineage: `${series} Constitutional Lineage`,
+          reference_grade: equitySeat?.reference_grade ? String(equitySeat.reference_grade) : "9.8",
+          reference_fmv_usd: refPrice,
+          price_formatted: equitySeat?.price_formatted || (refPrice ? `$${refPrice.toLocaleString()}` : "Unpriced"),
+          gregory_score: gScore,
+          evidence_confidence: "CONSTITUTIONAL_CE70_VERIFIED",
+          seat_number: seatNum,
+          seat_type: "PRIMARY_DOMESTIC",
+          status: "CERTIFIED_ACTIVE",
+          cover_url: indexDef?.cover_url || equitySeat?.cover_url || null,
+          canonical_issue_id: equitySeat?.canonical_issue_id || `iss_seat_${seatNum}`,
+          source: "CE70 Constitutional Seat",
+        };
+      }
+    }
 
     // 1. Try finding by ID or canonical_issue_id in ce70_equity_universe
     const { data: equityRow } = await db
