@@ -5,7 +5,7 @@ import {
   type SurfaceKey,
 } from "@/lib/assets/surfaceConfig";
 import type { AssetItem, AssetResponse, SurfaceData } from "@/lib/assets/types";
-import ce70Dossiers from "@/lib/equity/ce70-dossiers-data.json";
+import { INITIAL_SURFACE_ASSETS } from "@/lib/assets/initial-assets";
 
 // Seed instruments for key surfaces
 const SEED_SURFACES: Record<string, Array<Partial<AssetItem>>> = {
@@ -109,24 +109,16 @@ export async function GET(request: Request) {
 
   for (const surfaceKey of SURFACE_ORDER) {
     const artPath = SURFACE_ART_MAP[surfaceKey] || null;
+    const initialItems = INITIAL_SURFACE_ASSETS.filter((it) => it.assetType === surfaceKey);
     const seeds = SEED_SURFACES[surfaceKey] || [];
 
-    // Fall back to CE70 constituents adapted for the surface if no specific seeds
-    const sourceItems: Array<Partial<AssetItem>> = seeds.length > 0 ? seeds : ce70Dossiers.slice(0, 3).map((dossier, i) => ({
-      symbol: `$${surfaceKey.slice(0, 4)}-${dossier.seatNumber}`,
-      displayName: `${dossier.title} (${surfaceKey})`,
-      universe: dossier.publisher,
-      pricing: {
-        price: Math.round(dossier.gregoryScore * 10),
-        delta: Number(((dossier.gregoryScore - 190.0) * 0.45).toFixed(2)),
-        fmv: Math.round(dossier.gregoryScore * 10),
-        production_age: dossier.era.toLowerCase().replace(/\s+age$/, ""),
-      },
-    }));
+    // Prioritize initial assets configured for the surface, falling back to seeds
+    const sourceItems: Array<Partial<AssetItem>> =
+      initialItems.length > 0 ? initialItems : seeds;
 
     const items: AssetItem[] = sourceItems.map((s, idx) => ({
-      entryId: `asset-${surfaceKey}-${idx}`,
-      assetId: s.symbol?.replace(/^\$/, "") || `${surfaceKey}-${idx}`,
+      entryId: s.entryId || `asset-${surfaceKey.toLowerCase()}-${idx}`,
+      assetId: s.assetId || s.symbol?.replace(/^\$/, "") || `${surfaceKey}-${idx}`,
       assetType: surfaceKey,
       displayRank: idx + 1,
       diversityBucket: s.diversityBucket || "standard",
@@ -136,9 +128,9 @@ export async function GET(request: Request) {
       universe: s.universe || "Global",
       pricing: s.pricing || { price: 100, delta: 0, fmv: 100 },
       valueUnit: "USD",
-      detailUrl: `/assets/${encodeURIComponent(s.symbol?.replace(/^\$/, "") || surfaceKey)}`,
-      coverImageUrl: artPath,
-      identityYear: (s.pricing as any)?.identityYear || 1965 + (idx * 5),
+      detailUrl: s.detailUrl || `/assets/${encodeURIComponent(s.symbol?.replace(/^\$/, "") || surfaceKey)}`,
+      coverImageUrl: s.coverImageUrl || artPath,
+      identityYear: (s.pricing as any)?.identityYear || (s as any).identityYear || 1965 + (idx * 5),
       coverVerified: true,
       quarantined: false,
     }));

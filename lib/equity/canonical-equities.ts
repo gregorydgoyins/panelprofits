@@ -3,6 +3,17 @@ import { isMissingTableError } from "@/lib/supabase/errors";
 import { createCachedQuery } from "@/lib/cache/wrapper";
 import { generateDynamicCoverSvg } from "@/lib/comics/cover-resolver";
 import verifiedCoversJson from "./verified-covers.json";
+import ce70ReferenceFmv from "./ce70-reference-fmv.json";
+
+const REFERENCE_FMV_MAP = ce70ReferenceFmv as Record<string, {
+  seatNumber: number;
+  series: string;
+  issueNumber: string;
+  referenceGrade?: string;
+  referenceFmvUsd?: number;
+  year?: number;
+  publisher?: string;
+}>;
 
 export interface SovereignEquityItem {
   id: string;
@@ -23,6 +34,8 @@ export interface SovereignEquityItem {
   status: string;
   coverUrl: string | null;
   canonicalIssueId: string | null;
+  year?: number;
+  publisher?: string;
 }
 
 export interface CanonicalAssetSurface {
@@ -274,7 +287,36 @@ async function fetchSovereignEquitiesRaw(limit = 70): Promise<SovereignEquityIte
       if (seenSeats.has(seatKey)) continue;
       seenSeats.add(seatKey);
 
-      const fmv = Number(row.reference_fmv_usd) || 0;
+      const seatRef = REFERENCE_FMV_MAP[String(row.seat_number)];
+      const fmv = seatRef?.referenceFmvUsd ?? (Number(row.reference_fmv_usd) || 0);
+      const grade = seatRef?.referenceGrade ?? (row.reference_grade || "9.0");
+
+      const cid = (row.canonical_issue_id || "").toLowerCase();
+      const lin = (row.lineage || "").toLowerCase();
+      const ser = (row.series || "").toLowerCase();
+      
+      const yearMatch = cid.match(/_(19\d\d|20\d\d)_/);
+      const authenticYear = yearMatch ? parseInt(yearMatch[1], 10) : (seatRef?.year || 1970);
+
+      let authenticPublisher = "Independent";
+      if (cid.includes("_pub_dc_") || lin.includes("dc comics") || lin.includes("fourth world") || ser.includes("batman") || ser.includes("superman") || ser.includes("new gods") || ser.includes("swamp thing") || ser.includes("watchmen")) {
+        authenticPublisher = "DC Comics";
+      } else if (cid.includes("_pub_marvel_") || lin.includes("marvel") || ser.includes("spider-man") || ser.includes("x-men") || ser.includes("hulk") || ser.includes("avengers") || ser.includes("daredevil") || ser.includes("fantastic four") || ser.includes("conan") || ser.includes("dracula")) {
+        authenticPublisher = "Marvel";
+      } else if (cid.includes("_pub_image_") || lin.includes("image")) {
+        authenticPublisher = "Image Comics";
+      } else if (cid.includes("_pub_ec_") || lin.includes("ec comics")) {
+        authenticPublisher = "EC Comics";
+      } else if (cid.includes("_pub_mirage_") || ser.includes("turtles") || ser.includes("tmnt")) {
+        authenticPublisher = "Mirage Studios";
+      } else if (cid.includes("_pub_fantagraphics_") || ser.includes("love and rockets")) {
+        authenticPublisher = "Fantagraphics";
+      } else if (cid.includes("_pub_boom_")) {
+        authenticPublisher = "BOOM! Studios";
+      } else if (seatRef?.publisher) {
+        authenticPublisher = seatRef.publisher;
+      }
+
       const keyName = `${row.series} #${row.issue_number}`;
       const seatKeyName = `seat-${row.seat_number}`;
       const ticker = formatComicEquityTicker(row.series, row.issue_number || "1", "SOV");
@@ -283,7 +325,7 @@ async function fetchSovereignEquitiesRaw(limit = 70): Promise<SovereignEquityIte
         VERIFIED_SEAT_COVERS[seatKeyName] ||
         VERIFIED_SEAT_COVERS[ticker] ||
         (row.cover_url && !row.cover_url.includes("526.jpg") ? row.cover_url : null) ||
-        generateDynamicCoverSvg(row.series, row.issue_number, "Marvel/DC", 1960);
+        generateDynamicCoverSvg(row.series, row.issue_number, authenticPublisher, authenticYear);
 
       // Deterministic realistic delta based on Gregory score and seat ranking
       const gScore = Number(row.gregory_score) || 190.0;
@@ -300,14 +342,16 @@ async function fetchSovereignEquitiesRaw(limit = 70): Promise<SovereignEquityIte
         originEra: String(row.origin_era || "MODERN").toUpperCase(),
         productionAge: String(row.production_age || "MODERN").toUpperCase(),
         lineage: row.lineage || `${row.series} Lineage`,
-        referenceGrade: row.reference_grade || "9.8",
+        referenceGrade: grade,
         referenceFmvUsd: fmv,
-        priceFormatted: row.price_formatted || `$${fmv.toLocaleString()}`,
+        priceFormatted: `$${fmv.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
         gregoryScore: gScore,
         deltaPercent: delta,
         status: row.status || "ACTIVE",
         coverUrl: resolvedCover,
         canonicalIssueId: row.canonical_issue_id || null,
+        year: authenticYear,
+        publisher: authenticPublisher,
       });
 
       if (items.length >= limit) break;

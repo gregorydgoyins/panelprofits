@@ -26,45 +26,12 @@ const SCROLL_SPEED = 40; // px/s (smooth deliberate asset market pace)
 const FETCH_MS = 5 * 60 * 1000;
 
 interface AssetsRailProps {
-  items: CanonicalAssetSurface[];
+  items?: CanonicalAssetSurface[];
 }
 
-export function AssetsRail({ items: initialSeats = [] }: AssetsRailProps) {
+export function AssetsRail({ items }: AssetsRailProps = {}) {
   const trackRef = React.useRef<HTMLDivElement>(null);
-  const [selectedFilter, setSelectedFilter] = React.useState<"ALL" | "CLASSES" | "SEATS">("ALL");
   const [selectedFamily, setSelectedFamily] = React.useState<string | null>(null);
-
-  // Convert initialSeats to AssetItem[] format for secondary SEATS toggle
-  const seatAssetItems = React.useMemo<AssetItem[]>(() => {
-    return initialSeats.map((seat) => {
-      const eraKey = seat.era.toLowerCase().replace(/\s+age$/, "");
-      return {
-        entryId: `seat-${seat.seatNumber}`,
-        assetId: `SEAT-${seat.seatNumber}`,
-        assetType: "INDEX",
-        symbol: `$SEAT-${seat.seatNumber}`,
-        displayName: seat.titleIssue,
-        universe: seat.publisher,
-        pricing: {
-          price: Math.round(seat.gregoryScore * 850),
-          fmv: Math.round(seat.gregoryScore * 850),
-          delta: 0.5,
-          production_age: eraKey,
-          era: seat.era,
-          asset_class: "INDEX SEAT",
-        },
-        detailUrl: `/assets/${encodeURIComponent(seat.id)}`,
-        coverImageUrl: seat.coverUrl || null,
-        parameters: {
-          gregoryScore: seat.gregoryScore,
-          seatNumber: seat.seatNumber,
-          issueNumber: seat.issueNumber,
-          series: seat.series,
-          year: seat.year,
-        },
-      };
-    });
-  }, [initialSeats]);
 
   const [assetItems, setAssetItems] = React.useState<AssetItem[]>(INITIAL_SURFACE_ASSETS);
   const [surfaceCounts, setSurfaceCounts] = React.useState<Partial<Record<SurfaceKey, number>>>({});
@@ -72,18 +39,11 @@ export function AssetsRail({ items: initialSeats = [] }: AssetsRailProps) {
 
   // Filter items by selected family if chosen
   const filteredItems = React.useMemo(() => {
-    let baseList: AssetItem[];
-    if (selectedFilter === "SEATS") {
-      baseList = seatAssetItems;
-    } else if (selectedFilter === "CLASSES") {
-      baseList = assetItems.length > 0 ? assetItems : INITIAL_SURFACE_ASSETS;
-    } else {
-      baseList = [...(assetItems.length > 0 ? assetItems : INITIAL_SURFACE_ASSETS), ...seatAssetItems];
-    }
+    const baseList = assetItems.length > 0 ? assetItems : INITIAL_SURFACE_ASSETS;
     if (!selectedFamily) return baseList;
     const members = FAMILY_MEMBERS[selectedFamily as keyof typeof FAMILY_MEMBERS] || [];
     return baseList.filter((it) => members.includes(it.assetType as SurfaceKey));
-  }, [assetItems, seatAssetItems, selectedFamily, selectedFilter]);
+  }, [assetItems, selectedFamily]);
 
   // Adjust duration dynamically on item count
   React.useLayoutEffect(() => {
@@ -115,7 +75,7 @@ export function AssetsRail({ items: initialSeats = [] }: AssetsRailProps) {
       }
 
       setSurfaceCounts(counts);
-      if (newItems.length > 0 && selectedFilter === "CLASSES") {
+      if (newItems.length > 0) {
         React.startTransition(() => {
           setAssetItems(newItems);
         });
@@ -124,7 +84,7 @@ export function AssetsRail({ items: initialSeats = [] }: AssetsRailProps) {
     } catch {
       setErrored(true);
     }
-  }, [selectedFilter]);
+  }, []);
 
   React.useEffect(() => {
     fetchSurfaces();
@@ -146,7 +106,7 @@ export function AssetsRail({ items: initialSeats = [] }: AssetsRailProps) {
       aria-label="16 Canonical Comic Asset Classes Surveillance Rail"
       className="border-b border-slate-800/80 bg-[#060910] text-xs text-slate-300 shadow-md select-none overflow-hidden"
     >
-      {/* ── Top Header & Mode Toggle Bar ── */}
+      {/* ── Top Header Bar ── */}
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-3 py-1.5 sm:px-4 border-b border-slate-800/60">
         {/* Left Anchor */}
         <div className="flex items-center gap-2 sm:gap-3">
@@ -162,34 +122,8 @@ export function AssetsRail({ items: initialSeats = [] }: AssetsRailProps) {
             </span>
           </Link>
 
-          {/* Toggle between 16 Asset Classes and 70 Sovereign Seats */}
-          <div className="flex items-center rounded border border-slate-800 bg-[#080D17] p-0.5 ml-1">
-            <button
-              onClick={() => {
-                setSelectedFilter("CLASSES");
-                fetchSurfaces();
-              }}
-              className={`rounded px-2 py-0.5 text-[8.5px] font-mono uppercase tracking-wider transition-colors ${
-                selectedFilter === "CLASSES"
-                  ? "bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40"
-                  : "text-slate-500 hover:text-slate-300"
-              }`}
-            >
-              16 Asset Classes (56 Surfaces)
-            </button>
-            <button
-              onClick={() => {
-                setSelectedFilter("SEATS");
-                setAssetItems(seatAssetItems);
-              }}
-              className={`rounded px-2 py-0.5 text-[8.5px] font-mono uppercase tracking-wider transition-colors ${
-                selectedFilter === "SEATS"
-                  ? "bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40"
-                  : "text-slate-500 hover:text-slate-300"
-              }`}
-            >
-              70 Constituent Seats
-            </button>
+          <div className="hidden sm:flex items-center gap-1.5 text-[9px] font-mono text-cyan-400/80 bg-cyan-950/40 border border-cyan-800/40 px-2 py-0.5 rounded">
+            <span>DERIVATIVES · FUNDS · INDICES · MUNI BONDS · ALTER EGOS</span>
           </div>
         </div>
 
@@ -197,9 +131,7 @@ export function AssetsRail({ items: initialSeats = [] }: AssetsRailProps) {
         <div className="hidden sm:flex items-center gap-2 text-[9px] font-mono text-slate-500">
           <span className="text-cyan-400/90 font-semibold flex items-center gap-1">
             <Layers className="h-3 w-3 text-cyan-400" />
-            {selectedFilter === "SEATS"
-              ? "CE70 CONSTITUENT SEATS"
-              : "Alter Egos (355 Firms) · Muni Bonds · Media IP · Derivatives · Volatility"}
+            Alter Egos (355 Firms) · Muni Bonds · Media IP · Derivatives · Volatility
           </span>
           <span className="text-slate-600 hidden md:inline">· Hover to Pause</span>
         </div>
@@ -241,59 +173,14 @@ export function AssetsRail({ items: initialSeats = [] }: AssetsRailProps) {
           >
             {(["a", "b"] as const).map((copy) => (
               <div key={copy} style={{ display: "flex", gap: "12px", paddingLeft: "16px", paddingRight: "12px", flexShrink: 0 }}>
-                {filteredItems.map((item, i) => {
-                  const seatNumber = (item.parameters as any)?.seatNumber;
-                  const gregoryScore = (item.parameters as any)?.gregoryScore;
-                  const isSeat = Boolean(seatNumber != null);
-                  const eraColors = getEraColors((item.pricing as any)?.era || (item.pricing as any)?.production_age);
-                  const rimColor = eraColors.border || "#06b6d4";
-
-                  return (
-                    <div
-                      key={`${copy}-${i}`}
-                      className="asset-seat-card"
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        ["--rim" as string]: rimColor,
-                      }}
-                    >
-                      {/* Rich Asset Card (215px x 375px) with Surface Art and Rimlight */}
-                      <AssetCard
-                        item={item}
-                        assetType={item.assetType}
-                        index={copy === "a" ? i : i + filteredItems.length}
-                      />
-
-                      {/* Explicit Seat & Gregory Score Badge metadata for constituent seats */}
-                      {isSeat && (
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            padding: "3px 8px",
-                            backgroundColor: "rgba(6,10,18,0.92)",
-                            border: `1px solid ${rimColor}55`,
-                            borderRadius: "0 0 4px 4px",
-                            marginTop: "-2px",
-                            fontSize: "8.5px",
-                            fontFamily: "monospace",
-                          }}
-                        >
-                          <span style={{ color: "#38bdf8", fontWeight: 700 }}>
-                            {`SEAT #${seatNumber}`}
-                          </span>
-                          {gregoryScore != null && (
-                            <span style={{ color: "#facc15" }}>
-                              {`GS ${Number(gregoryScore).toFixed(1)}`}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                {filteredItems.map((item, i) => (
+                  <AssetCard
+                    key={`${copy}-${i}`}
+                    item={item}
+                    assetType={item.assetType}
+                    index={copy === "a" ? i : i + filteredItems.length}
+                  />
+                ))}
               </div>
             ))}
           </div>

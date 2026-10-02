@@ -49,8 +49,8 @@ export function EquitiesRail({ items: initialItems = [], indices = [] }: Equitie
         identity: {
           assetId: item.ticker || `CE70.${String(item.seatNumber).padStart(3, "0")}.SOV`,
           productName: `${item.series} #${item.issueNumber}`,
-          year: 1960 + (idx % 40),
-          publisher: item.lineage.includes("DC") ? "DC Comics" : item.lineage.includes("Marvel") ? "Marvel" : "Independent",
+          year: item.year || 1970,
+          publisher: item.publisher || (item.lineage.includes("DC") ? "DC Comics" : item.lineage.includes("Marvel") ? "Marvel" : "Independent"),
           variant: null,
           productionAge: eraKey,
           scarcityTier: tier,

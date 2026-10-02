@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { getSovereignEquities } from "@/lib/equity/canonical-equities";
 import ce70Dossiers from "@/lib/equity/ce70-dossiers-data.json";
+import ce70ReferenceFmv from "@/lib/equity/ce70-reference-fmv.json";
 import verifiedCovers from "@/lib/equity/verified-covers.json";
 import { generateDynamicCoverSvg } from "@/lib/comics/cover-resolver";
 import type { EquityItem, EquityResponse } from "@/lib/equity/ticker-types";
 
 const VERIFIED_MAP = verifiedCovers as Record<string, string>;
+const REFERENCE_FMV_MAP = ce70ReferenceFmv as Record<string, { referenceFmvUsd: number; referenceGrade: string }>;
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -15,7 +17,7 @@ export async function GET(request: Request) {
 
   const equities = await getSovereignEquities(120);
 
-  // If database was empty, fall back to ce70Dossiers dataset
+  // If database was empty, fall back to ce70Dossiers dataset anchored to authentic reference FMV
   const baseItems = equities.length > 0 ? equities : ce70Dossiers.map((seat) => {
     const keyName = `${seat.title}`;
     const seatKeyName = `seat-${seat.seatNumber}`;
@@ -24,7 +26,9 @@ export async function GET(request: Request) {
       VERIFIED_MAP[keyName] ||
       generateDynamicCoverSvg(seat.title, String(seat.seatNumber), seat.publisher, seat.year);
 
-    const baseFmv = Math.round(seat.gregoryScore * 850);
+    const ref = REFERENCE_FMV_MAP[String(seat.seatNumber)];
+    const baseFmv = ref?.referenceFmvUsd ?? 150;
+    const grade = ref?.referenceGrade ?? "9.0";
     const delta = Number(((seat.gregoryScore - 190.0) * 0.45).toFixed(2));
 
     return {
@@ -38,14 +42,16 @@ export async function GET(request: Request) {
       originEra: String(seat.era || "").toUpperCase().replace(/\s+AGE$/, "") || "GOLDEN",
       productionAge: String(seat.era || "").toLowerCase().replace(/\s+age$/, "") || "golden",
       lineage: `${seat.publisher} Landmark Constituent`,
-      referenceGrade: "9.8",
+      referenceGrade: grade,
       referenceFmvUsd: baseFmv,
-      priceFormatted: `$${baseFmv.toLocaleString()}`,
+      priceFormatted: `$${baseFmv.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       gregoryScore: seat.gregoryScore,
       deltaPercent: delta,
       status: "ACTIVE",
       coverUrl: resolvedCover,
       canonicalIssueId: seat.canonicalId || null,
+      year: seat.year,
+      publisher: seat.publisher,
     };
   });
 
@@ -91,14 +97,14 @@ export async function GET(request: Request) {
       item.coverUrl ||
       VERIFIED_MAP[seatKeyName] ||
       VERIFIED_MAP[keyName] ||
-      generateDynamicCoverSvg(item.series, item.issueNumber, "Marvel/DC", 1965);
+      generateDynamicCoverSvg(item.series, item.issueNumber, item.publisher || "Marvel/DC", item.year || 1970);
 
     return {
       entryId: `eq-${item.id || idx}`,
       coverImageUrl: resolvedCover,
       pricing: {
         fmv_usd: item.referenceFmvUsd,
-        grade: item.referenceGrade || "9.8",
+        grade: item.referenceGrade || "9.0",
         delta_24: item.deltaPercent,
         delta_30: Number((item.deltaPercent * 1.2).toFixed(2)),
         delta_90: Number((item.deltaPercent * 2.1).toFixed(2)),
@@ -107,8 +113,8 @@ export async function GET(request: Request) {
       identity: {
         assetId: item.ticker,
         productName: `${item.series} #${item.issueNumber}`,
-        year: 1960 + (idx % 40),
-        publisher: item.lineage.includes("DC") ? "DC Comics" : item.lineage.includes("Marvel") ? "Marvel" : "Independent",
+        year: item.year || 1970,
+        publisher: item.publisher || (item.lineage.includes("DC") ? "DC Comics" : item.lineage.includes("Marvel") ? "Marvel" : "Independent"),
         variant: null,
         productionAge: eraKey,
         scarcityTier: tier,

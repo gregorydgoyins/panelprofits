@@ -197,44 +197,19 @@ describe("Canonical Equities Symbology & 16 Asset Families Canon", () => {
     expect(html).toContain("equities-marquee-track");
   });
 
-  it("renders AssetsRail with animated asset-seat-cards and 70 constituent seats", async () => {
+  it("renders AssetsRail with canonical non-equity asset surfaces across 16 families and 56 surfaces", async () => {
     const { AssetsRail } = await import("@/components/shell/assets-rail");
     const { renderToString } = await import("react-dom/server");
-
-    const sampleSeats = [
-      {
-        id: "seat-1",
-        seatNumber: 1,
-        indexCode: "CE70",
-        era: "PLATINUM",
-        titleIssue: "Detective Comics #2",
-        series: "Detective Comics",
-        issueNumber: "2",
-        year: 1937,
-        publisher: "DC Comics",
-        primaryCreators: "Vin Sullivan, Creig Flessel",
-        gregoryScore: 196.4,
-        assetClass: "EQUITY_INDEX_SEAT",
-        assetSubclass: "PLATINUM ERA CONSTITUENT",
-        wordCount: "475 words",
-        dossierPath: "./ce70_adjudication_dossiers/seat_01.md",
-        coverUrl: "/covers/seat_1_detective_comics_2.jpg",
-      },
-    ];
-
     const React = await import("react");
-    const html = renderToString(React.createElement(AssetsRail, { items: sampleSeats }));
+
+    const html = renderToString(React.createElement(AssetsRail));
 
     expect(html).toContain("ASSETS");
-    expect(html).toContain("16 FAMILIES");
-    expect(html).toContain("70 Constituent Seats");
-    expect(html).toContain("asset-seat-card");
-    expect(html).toContain("--rim");
-    expect(html).toContain("SEAT #1");
-    expect(html).toContain("Detective Comics #2");
-    expect(html).toContain("GS 196.4");
-    expect(html).toContain("/covers/seat_1_detective_comics_2.jpg");
+    expect(html).toContain("16 FAMILIES · 56 SURFACES");
+    expect(html).toContain("DERIVATIVES · FUNDS · INDICES · MUNI BONDS · ALTER EGOS");
     expect(html).toContain("assets-marquee-track");
+    expect(html).toContain("Mjolnir");
+    expect(html).toContain("Batmobile");
   });
 });
 
