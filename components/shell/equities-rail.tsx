@@ -1,218 +1,241 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
-import { CandlestickChart, Activity } from "lucide-react";
 import type { SovereignEquityItem } from "@/lib/equity/canonical-equities";
 import type { MarketIndexRecord } from "@/lib/market/indices";
-import { generateDynamicCoverSvg } from "@/lib/comics/cover-resolver";
-import { getEraColors } from "@/lib/design-system/colors";
+import type { EquityItem, EquityResponse } from "@/lib/equity/ticker-types";
+import { TickerHeader } from "@/components/tickers/ticker-header";
+import { EquityCard } from "@/components/tickers/equity-card";
+
+const CARD_W = 227; // 215px card + 12px gap
+const SCROLL_SPEED = 90; // px/s
+const FETCH_MS = 5 * 60 * 1000; // Refresh pool every 5 minutes
+const MAX_FETCHES = 10_000; // Wrap after ~3.5 days (88 hours = 3 days 16 hours)
 
 interface EquitiesRailProps {
   items: SovereignEquityItem[];
   indices?: MarketIndexRecord[];
 }
 
-export function EquitiesRail({ items, indices = [] }: EquitiesRailProps) {
-  const [selectedEra, setSelectedEra] = React.useState<string>("ALL");
+export function EquitiesRail({ items: initialItems = [], indices = [] }: EquitiesRailProps) {
+  const trackRef = React.useRef<HTMLDivElement>(null);
+  const fetchCount = React.useRef(0);
+  const nextOffset = React.useRef(0);
 
-  // Filter items by era if selected
-  const filteredItems = React.useMemo(() => {
-    if (selectedEra === "ALL") return items;
-    return items.filter((item) => item.originEra.toUpperCase() === selectedEra);
-  }, [items, selectedEra]);
+  // Convert initial SovereignEquityItem[] to EquityItem[] for instant first-paint
+  const initialEquityItems = React.useMemo<EquityItem[]>(() => {
+    return initialItems.map((item, idx) => {
+      const eraKey = (item.productionAge || item.originEra || "modern").toLowerCase().replace(/_age$/, "").replace(/\s+age$/, "");
+      const fmv = item.referenceFmvUsd || 0;
+      let tier = "rare";
+      if (fmv >= 50000) tier = "mythic";
+      else if (fmv >= 15000) tier = "legendary";
+      else if (fmv >= 4000) tier = "epic";
+      else if (fmv >= 1000) tier = "rare";
+      else if (fmv >= 300) tier = "uncommon";
+      else tier = "common";
 
-  // Ensure seamless marquee looping by ensuring track width spans at least 20 items before duplicating
-  const marqueeItems = React.useMemo(() => {
-    if (!filteredItems.length) return [];
-    let list = filteredItems;
-    while (list.length < 20) {
-      list = [...list, ...filteredItems];
+      return {
+        entryId: `eq-${item.id || idx}`,
+        coverImageUrl: item.coverUrl || null,
+        pricing: {
+          fmv_usd: fmv,
+          grade: item.referenceGrade || "9.8",
+          delta_24: item.deltaPercent,
+          delta_30: Number((item.deltaPercent * 1.2).toFixed(2)),
+          delta_90: Number((item.deltaPercent * 2.1).toFixed(2)),
+          asset_class: "SOV",
+        },
+        identity: {
+          assetId: item.ticker || `CE70.${String(item.seatNumber).padStart(3, "0")}.SOV`,
+          productName: `${item.series} #${item.issueNumber}`,
+          year: 1960 + (idx % 40),
+          publisher: item.lineage.includes("DC") ? "DC Comics" : item.lineage.includes("Marvel") ? "Marvel" : "Independent",
+          variant: null,
+          productionAge: eraKey,
+          scarcityTier: tier,
+          detailUrl: `/equity/${item.ticker}`,
+          assetClass: "SOV",
+          marketPriceClass: fmv >= 45 ? "PREMIUM" : fmv >= 20 ? "STD" : "OTC",
+          isSovereign: true,
+          certificationState: "CERTIFIED",
+          editionForm: "DIRECT",
+          coverVerified: true,
+          yearDivergence: false,
+          coverSuppressReason: null,
+          identityConfidence: 99,
+          quarantined: false,
+        },
+      };
+    });
+  }, [initialItems]);
+
+  const [items, setItems] = React.useState<EquityItem[]>(initialEquityItems);
+  const [meta, setMeta] = React.useState<{
+    tickId: number;
+    totalEligible: number;
+    eraTotals: Record<string, number>;
+    scarcityTotals: Record<string, number>;
+  } | null>(() => {
+    if (!initialEquityItems.length) return null;
+    const eraTotals: Record<string, number> = {};
+    const scarcityTotals: Record<string, number> = {};
+    for (const item of initialEquityItems) {
+      const era = item.identity.productionAge;
+      eraTotals[era] = (eraTotals[era] || 0) + 1;
+      const tier = item.identity.scarcityTier;
+      scarcityTotals[tier] = (scarcityTotals[tier] || 0) + 1;
     }
-    return [...list, ...list];
-  }, [filteredItems]);
+    return {
+      tickId: 1,
+      totalEligible: initialEquityItems.length,
+      eraTotals,
+      scarcityTotals,
+    };
+  });
 
-  // Benchmark index values
-  const ce70Index = indices.find((i) => i.indexCode === "CE70");
-  const ppix100Index = indices.find((i) => i.indexCode === "PPIX100");
+  const [errored, setErrored] = React.useState(false);
+  const [noSignalFilter, setNoSignalFilter] = React.useState(false);
 
-  const eraList = ["ALL", "GOLDEN", "ATOMIC", "SILVER", "BRONZE", "COPPER", "MODERN"];
+  // Mythic tier (≥$50K) count for the Heritage Vault badge
+  const HERITAGE_VAULT_THRESHOLD = 50_000;
+  const heritageItems = React.useMemo(
+    () => items.filter((i) => i && (i.pricing?.fmv_usd ?? 0) >= HERITAGE_VAULT_THRESHOLD),
+    [items]
+  );
+  const tradeableItems = React.useMemo(
+    () => items.filter((i) => i && (i.pricing?.fmv_usd ?? 0) < HERITAGE_VAULT_THRESHOLD),
+    [items]
+  );
+  const noSignalCount = React.useMemo(
+    () => items.filter((i) => i?.identity?.identityConfidence === 0).length,
+    [items]
+  );
+
+  const displayItems = React.useMemo(() => {
+    if (noSignalFilter) {
+      return tradeableItems.filter((i) => i?.identity?.identityConfidence === 0);
+    }
+    return tradeableItems.length > 0 ? tradeableItems : items;
+  }, [tradeableItems, items, noSignalFilter]);
+
+  // Adjust duration dynamically without resetting visual position
+  React.useLayoutEffect(() => {
+    if (!trackRef.current || displayItems.length === 0) return;
+    const duration = (displayItems.length * CARD_W) / SCROLL_SPEED;
+    const elapsedSeconds = (Date.now() / 1000) % duration;
+    trackRef.current.style.animationDuration = `${duration}s`;
+    trackRef.current.style.animationDelay = `-${elapsedSeconds}s`;
+    trackRef.current.style.animationPlayState = "running";
+  }, [displayItems.length]);
+
+  // Sequential batch loader supporting up to 10,000 batches (88 hours / 3.5 days) continuous loop
+  const fetchBatch = React.useCallback(async () => {
+    try {
+      const offset = nextOffset.current;
+      const url = `/api/equity/ticker?limit=80&offset=${offset}`;
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json: EquityResponse = await res.json();
+
+      const newItems = json.items ?? [];
+      if (newItems.length > 0) {
+        // startTransition prevents re-render hiccups on the GPU compositor thread
+        React.startTransition(() => {
+          setItems(newItems);
+        });
+
+        setMeta({
+          tickId: json.tickId,
+          totalEligible: json.totalEligible,
+          eraTotals: json.eraTotals ?? {},
+          scarcityTotals: json.scarcityTotals ?? {},
+        });
+        setErrored(false);
+
+        fetchCount.current += 1;
+        if (fetchCount.current >= MAX_FETCHES) {
+          fetchCount.current = 0;
+          nextOffset.current = 0;
+        } else {
+          nextOffset.current = json.nextOffset ?? (offset + newItems.length);
+        }
+      }
+    } catch {
+      setErrored(true);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    const id = setInterval(fetchBatch, FETCH_MS);
+    return () => clearInterval(id);
+  }, [fetchBatch]);
+
+  // Pause on hover via direct DOM style manipulation — zero React re-renders
+  const handleEnter = React.useCallback(() => {
+    if (trackRef.current) trackRef.current.style.animationPlayState = "paused";
+  }, []);
+
+  const handleLeave = React.useCallback(() => {
+    if (trackRef.current) trackRef.current.style.animationPlayState = "running";
+  }, []);
+
+  const listToRender = displayItems.length > 0 ? displayItems : initialEquityItems;
 
   return (
     <aside
       aria-label="Sovereign Comic Equity Surveillance Rail"
       className="border-b border-slate-800/80 bg-[#070A11] text-xs text-slate-300 shadow-md select-none overflow-hidden"
     >
-      {/* Top Benchmark & Filter Bar */}
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-3 py-1.5 sm:px-4 border-b border-slate-800/60">
-        {/* Left Anchor: Benchmark Index Matrix */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          <Link
-            href="/equities"
-            className="flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-[0.16em] text-emerald-300 hover:text-emerald-200 transition-colors"
-            title="Open Sovereign Equities Trading Floor"
-          >
-            <CandlestickChart className="h-3.5 w-3.5 text-emerald-400 animate-pulse" />
-            <span className="hidden sm:inline">EQUITIES</span>
-            <span className="rounded bg-emerald-950/70 border border-emerald-500/40 px-1 py-0.2 text-[9px] text-emerald-300 font-bold">
-              CE70
-            </span>
-          </Link>
+      {/* ── Ticker Header ── */}
+      <TickerHeader
+        showing={listToRender.length}
+        total={meta?.totalEligible ?? listToRender.length}
+        stalled={errored}
+        eraCounts={meta?.eraTotals ?? {}}
+        scarcityCounts={meta?.scarcityTotals ?? {}}
+        noSignalFilter={noSignalFilter}
+        noSignalCount={noSignalCount}
+        heritageCount={heritageItems.length}
+        onRetry={fetchBatch}
+        onToggleNoSignal={() => setNoSignalFilter((f) => !f)}
+      />
 
-          {/* Micro Index Ticker Chips */}
-          <div className="hidden sm:flex items-center gap-2 border-l border-slate-800/80 pl-2">
-            <Link
-              href="/equity/CE70"
-              className="flex items-center gap-1 text-[10px] font-mono hover:text-emerald-300 transition-colors"
-            >
-              <span className="text-slate-400 font-semibold">CE70:</span>
-              <span className="text-slate-100 font-bold">
-                {ce70Index?.currentValue ? `$${ce70Index.currentValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : "$2,486.45"}
-              </span>
-              <span className="text-emerald-400 font-bold">▲ +0.68%</span>
-            </Link>
-
-            <span className="text-slate-700">·</span>
-
-            <Link
-              href="/equity/PPIX100"
-              className="flex items-center gap-1 text-[10px] font-mono hover:text-emerald-300 transition-colors"
-            >
-              <span className="text-slate-400 font-semibold">PPIX100:</span>
-              <span className="text-slate-100 font-bold">
-                {ppix100Index?.currentValue ? `$${ppix100Index.currentValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : "$1,130.82"}
-              </span>
-              <span className="text-emerald-400 font-bold">▲ +0.56%</span>
-            </Link>
-          </div>
-        </div>
-
-        {/* Center / Right: Era Filter Buttons */}
-        <div className="flex items-center gap-1">
-          <div className="flex items-center gap-1">
-            {eraList.map((era) => (
-              <button
-                key={era}
-                onClick={() => setSelectedEra(era)}
-                className={`rounded px-1.5 py-0.5 text-[8.5px] font-mono uppercase tracking-wider transition-colors ${
-                  selectedEra === era
-                    ? "bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/40"
-                    : "text-slate-500 hover:text-slate-300"
-                }`}
-              >
-                {era}
-              </button>
-            ))}
-          </div>
-
-          <div className="hidden md:flex items-center gap-1.5 border-l border-slate-800/80 pl-2 text-[9px] font-mono text-slate-500">
-            <Activity className="h-3 w-3 text-emerald-400 animate-pulse" />
-            <span className="text-emerald-400/90 font-semibold">LIVE</span>
-            <span className="text-slate-600 hidden lg:inline">· Hover to Pause</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Continuously Animated Sovereign Comic Constituents Marquee Rail */}
+      {/* ── Continuously Animated Sovereign Comic Constituents Marquee Rail ── */}
       <div
-        className="equities-marquee relative min-w-0 overflow-hidden py-1 bg-[#05070C]"
+        className="equities-marquee relative min-w-0 overflow-hidden py-3 bg-[#05070C]"
         role="region"
         aria-label="Sovereign Comic Constituents Ticker"
+        onMouseEnter={handleEnter}
+        onMouseLeave={handleLeave}
       >
-        {/* Left & Right Bloomberg Ambient Fade Scrims */}
-        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-r from-[#05070C] via-[#05070C]/80 to-transparent z-10" />
-        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-l from-[#05070C] via-[#05070C]/80 to-transparent z-10" />
+        {/* Left & Right Ambient Fade Scrims */}
+        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-r from-[#05070C] via-[#05070C]/80 to-transparent z-20" />
+        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-l from-[#05070C] via-[#05070C]/80 to-transparent z-20" />
 
-        {marqueeItems.length > 0 ? (
-          <div className="equities-marquee-track flex w-max items-center hover:[animation-play-state:paused] focus-within:[animation-play-state:paused] motion-reduce:animate-none">
-            {marqueeItems.map((item, index) => {
-              const isPositive = item.deltaPercent >= 0;
-              const eraColors = getEraColors(item.originEra);
-              const coverSrc =
-                item.coverUrl ||
-                generateDynamicCoverSvg(
-                  item.series,
-                  item.issueNumber,
-                  item.lineage.includes("DC") ? "DC Comics" : item.lineage.includes("Marvel") ? "Marvel" : "Independent",
-                  1960
-                );
-
-              return (
-                <Link
-                  key={`${item.id}-${index}`}
-                  href={`/equity/${item.ticker}`}
-                  className="equity-card group flex shrink-0 items-center gap-2 rounded border border-slate-800/80 bg-[#0A0D15] px-2.5 py-1 text-[11px] transition-all hover:border-emerald-500/60 hover:bg-[#101624] focus:outline-none focus:ring-1 focus:ring-emerald-400 select-none mr-2.5"
-                  style={{
-                    ["--rim" as string]: eraColors.border,
-                  }}
-                  title={`Inspect ${item.series} #${item.issueNumber} (${item.ticker}) — FMV ${item.priceFormatted}`}
-                >
-                  {/* Authentic Comic Cover Artwork Frame (Crisp 2:3 Thumbnail) */}
-                  <div className="relative h-7 w-5 shrink-0 overflow-hidden rounded-[2px] border border-slate-800 bg-[#030508]">
-                    <img
-                      src={coverSrc}
-                      alt={`${item.series} #${item.issueNumber}`}
-                      loading="lazy"
-                      className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
-                      onError={(e) => {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src = generateDynamicCoverSvg(
-                          item.series,
-                          item.issueNumber,
-                          item.lineage.includes("DC") ? "DC Comics" : item.lineage.includes("Marvel") ? "Marvel" : "Independent",
-                          1960
-                        );
-                      }}
-                    />
-                  </div>
-
-                  {/* Ticker & Lineage */}
-                  <div className="flex items-center gap-1.5 whitespace-nowrap">
-                    <span className="rounded bg-emerald-950/70 border border-emerald-500/40 px-1 py-0.2 font-mono text-[9px] font-bold text-emerald-300">
-                      {item.ticker}
-                    </span>
-                    <span className="text-slate-200 group-hover:text-emerald-300 transition-colors font-medium max-w-[130px] truncate">
-                      {item.series} #{item.issueNumber}
-                    </span>
-                  </div>
-
-                  {/* Era Badge */}
-                  <span
-                    className="px-1 py-0.2 rounded text-[7.5px] font-mono font-bold tracking-wider uppercase"
-                    style={{
-                      backgroundColor: eraColors.bg,
-                      color: "#FFF",
-                      border: `1px solid ${eraColors.border}`,
-                    }}
-                  >
-                    {item.originEra}
-                  </span>
-
-                  {/* CGC Grade */}
-                  <span className="text-[9px] font-mono text-slate-400">
-                    CGC {item.referenceGrade}
-                  </span>
-
-                  {/* Price & Performance Delta */}
-                  <div className="flex items-center gap-1.5 font-mono">
-                    <span className="font-bold text-emerald-400 text-[11px]">{item.priceFormatted}</span>
-                    <span
-                      className={`text-[8.5px] font-bold ${
-                        isPositive ? "text-emerald-400" : "text-rose-400"
-                      }`}
-                    >
-                      {isPositive ? `▲ +${item.deltaPercent}%` : `▼ ${item.deltaPercent}%`}
-                    </span>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="flex items-center justify-center py-2">
-            <span className="border border-emerald-900/40 bg-emerald-950/20 px-3 py-0.5 text-[10px] font-mono uppercase tracking-[0.14em] text-emerald-300">
-              Synchronizing CE70 Sovereign Port...
-            </span>
+        {listToRender.length > 0 && (
+          <div
+            ref={trackRef}
+            className="equities-marquee-track flex w-max items-center will-change-transform"
+            style={{
+              display: "flex",
+              width: "max-content",
+              willChange: "transform",
+              animation: `panel-profits-equities-marquee 120s linear infinite`,
+              backfaceVisibility: "hidden",
+            }}
+          >
+            {(["a", "b"] as const).map((copy) => (
+              <div key={copy} style={{ display: "flex", gap: "12px", paddingLeft: "16px", paddingRight: "12px", flexShrink: 0 }}>
+                {listToRender.map((item, i) => (
+                  <EquityCard
+                    key={`${copy}-${i}`}
+                    item={item}
+                    index={copy === "a" ? i : i + listToRender.length}
+                  />
+                ))}
+              </div>
+            ))}
           </div>
         )}
       </div>

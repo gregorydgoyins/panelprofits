@@ -4,30 +4,131 @@ import * as React from "react";
 import Link from "next/link";
 import { Boxes, Sparkles, Layers } from "lucide-react";
 import type { CanonicalAssetSurface } from "@/lib/equity/canonical-equities";
-import { CANONICAL_16_ASSET_FAMILIES } from "@/lib/equity/canonical-equities";
-import { generateDynamicCoverSvg } from "@/lib/comics/cover-resolver";
+import {
+  FAMILY_ORDER,
+  FAMILY_MEMBERS,
+  FAMILY_HEADER,
+  SURFACE_ART_MAP,
+  SURFACE_COLORS,
+  SURFACE_ICONS,
+  SURFACE_LABELS,
+  type SurfaceKey,
+} from "@/lib/assets/surfaceConfig";
+import { AssetTickerHeader } from "@/components/tickers/asset-ticker-header";
+import { AssetCard } from "@/components/tickers/asset-card";
+import type { AssetItem, AssetResponse } from "@/lib/assets/types";
 import { getEraColors } from "@/lib/design-system/colors";
+
+const CARD_W = 227; // 215px card + 12px gap
+const SCROLL_SPEED = 40; // px/s (smooth deliberate asset market pace)
+const FETCH_MS = 5 * 60 * 1000;
 
 interface AssetsRailProps {
   items: CanonicalAssetSurface[];
 }
 
-export function AssetsRail({ items }: AssetsRailProps) {
+export function AssetsRail({ items: initialSeats = [] }: AssetsRailProps) {
+  const trackRef = React.useRef<HTMLDivElement>(null);
   const [selectedFilter, setSelectedFilter] = React.useState<"SEATS" | "CLASSES">("SEATS");
+  const [selectedFamily, setSelectedFamily] = React.useState<string | null>(null);
 
-  // Duplicate seat items to guarantee seamless continuous marquee loop
-  const marqueeSeats = React.useMemo(() => {
-    if (!items.length) return [];
-    let list = items;
-    while (list.length < 20) {
-      list = [...list, ...items];
+  // Convert initialSeats to AssetItem[] format for instant SSR rendering
+  const seatAssetItems = React.useMemo<AssetItem[]>(() => {
+    return initialSeats.map((seat) => {
+      const eraKey = seat.era.toLowerCase().replace(/\s+age$/, "");
+      return {
+        entryId: `seat-${seat.seatNumber}`,
+        assetId: `SEAT-${seat.seatNumber}`,
+        assetType: "INDEX",
+        symbol: `$SEAT-${seat.seatNumber}`,
+        displayName: seat.titleIssue,
+        universe: seat.publisher,
+        pricing: {
+          price: Math.round(seat.gregoryScore * 850),
+          fmv: Math.round(seat.gregoryScore * 850),
+          delta: 0.5,
+          production_age: eraKey,
+          era: seat.era,
+          asset_class: "INDEX SEAT",
+        },
+        detailUrl: `/assets/${encodeURIComponent(seat.id)}`,
+        coverImageUrl: seat.coverUrl || null,
+        parameters: {
+          gregoryScore: seat.gregoryScore,
+          seatNumber: seat.seatNumber,
+          issueNumber: seat.issueNumber,
+          series: seat.series,
+          year: seat.year,
+        },
+      };
+    });
+  }, [initialSeats]);
+
+  const [assetItems, setAssetItems] = React.useState<AssetItem[]>(seatAssetItems);
+  const [surfaceCounts, setSurfaceCounts] = React.useState<Partial<Record<SurfaceKey, number>>>({});
+  const [errored, setErrored] = React.useState(false);
+
+  // Filter items by selected family if chosen
+  const filteredItems = React.useMemo(() => {
+    if (!selectedFamily) return assetItems.length > 0 ? assetItems : seatAssetItems;
+    const members = FAMILY_MEMBERS[selectedFamily as keyof typeof FAMILY_MEMBERS] || [];
+    return assetItems.filter((it) => members.includes(it.assetType as SurfaceKey));
+  }, [assetItems, seatAssetItems, selectedFamily]);
+
+  // Adjust duration dynamically on item count
+  React.useLayoutEffect(() => {
+    if (!trackRef.current || filteredItems.length === 0) return;
+    const duration = (filteredItems.length * CARD_W) / SCROLL_SPEED;
+    const elapsedSeconds = (Date.now() / 1000) % duration;
+    trackRef.current.style.animationDuration = `${duration}s`;
+    trackRef.current.style.animationDelay = `-${elapsedSeconds}s`;
+    trackRef.current.style.animationPlayState = "running";
+  }, [filteredItems.length]);
+
+  // Background fetch to enrich surfaces from /api/asset/ticker
+  const fetchSurfaces = React.useCallback(async () => {
+    try {
+      const res = await fetch("/api/asset/ticker", { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json: AssetResponse = await res.json();
+
+      const counts: Partial<Record<SurfaceKey, number>> = {};
+      const newItems: AssetItem[] = [];
+
+      if (json.surfaces) {
+        for (const [key, data] of Object.entries(json.surfaces)) {
+          if (data?.items?.length) {
+            counts[key as SurfaceKey] = data.items.length;
+            newItems.push(...data.items);
+          }
+        }
+      }
+
+      setSurfaceCounts(counts);
+      if (newItems.length > 0 && selectedFilter === "CLASSES") {
+        React.startTransition(() => {
+          setAssetItems(newItems);
+        });
+      }
+      setErrored(false);
+    } catch {
+      setErrored(true);
     }
-    return [...list, ...list];
-  }, [items]);
+  }, [selectedFilter]);
 
-  // Duplicate asset classes for seamless loop
-  const marqueeClasses = React.useMemo(() => {
-    return [...CANONICAL_16_ASSET_FAMILIES, ...CANONICAL_16_ASSET_FAMILIES, ...CANONICAL_16_ASSET_FAMILIES];
+  React.useEffect(() => {
+    fetchSurfaces();
+    const id = setInterval(fetchSurfaces, FETCH_MS);
+    return () => clearInterval(id);
+  }, [fetchSurfaces]);
+
+  // Pause on hover via direct DOM style manipulation — zero React re-renders
+  const handleEnter = React.useCallback(() => {
+    if (trackRef.current) trackRef.current.style.animationPlayState = "paused";
+  }, []);
+
+  const handleLeave = React.useCallback(() => {
+    if (trackRef.current) trackRef.current.style.animationPlayState = "running";
   }, []);
 
   return (
@@ -35,7 +136,7 @@ export function AssetsRail({ items }: AssetsRailProps) {
       aria-label="16 Canonical Comic Asset Classes Surveillance Rail"
       className="border-b border-slate-800/80 bg-[#060910] text-xs text-slate-300 shadow-md select-none overflow-hidden"
     >
-      {/* Top Header & Mode Toggle Bar */}
+      {/* ── Top Header & Mode Toggle Bar ── */}
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-3 py-1.5 sm:px-4 border-b border-slate-800/60">
         {/* Left Anchor */}
         <div className="flex items-center gap-2 sm:gap-3">
@@ -54,7 +155,10 @@ export function AssetsRail({ items }: AssetsRailProps) {
           {/* Toggle between Seats and Asset Families */}
           <div className="flex items-center rounded border border-slate-800 bg-[#080D17] p-0.5 ml-1">
             <button
-              onClick={() => setSelectedFilter("SEATS")}
+              onClick={() => {
+                setSelectedFilter("SEATS");
+                setAssetItems(seatAssetItems);
+              }}
               className={`rounded px-2 py-0.5 text-[8.5px] font-mono uppercase tracking-wider transition-colors ${
                 selectedFilter === "SEATS"
                   ? "bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40"
@@ -64,7 +168,10 @@ export function AssetsRail({ items }: AssetsRailProps) {
               70 Constituent Seats
             </button>
             <button
-              onClick={() => setSelectedFilter("CLASSES")}
+              onClick={() => {
+                setSelectedFilter("CLASSES");
+                fetchSurfaces();
+              }}
               className={`rounded px-2 py-0.5 text-[8.5px] font-mono uppercase tracking-wider transition-colors ${
                 selectedFilter === "CLASSES"
                   ? "bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40"
@@ -86,153 +193,97 @@ export function AssetsRail({ items }: AssetsRailProps) {
         </div>
       </div>
 
-      {/* Continuously Animated Constituents / Asset Classes Marquee Rail */}
+      {/* ── Subheader with Family Filter Chips ── */}
+      <AssetTickerHeader
+        totalShowing={filteredItems.length}
+        surfaceCounts={surfaceCounts}
+        stalled={errored}
+        selectedFamily={selectedFamily}
+        onFamilySelect={setSelectedFamily}
+        onRetry={fetchSurfaces}
+      />
+
+      {/* ── Continuously Animated Constituents / Asset Classes Marquee Rail ── */}
       <div
-        className="assets-marquee relative min-w-0 overflow-hidden py-1 bg-[#04060C]"
+        className="assets-marquee relative min-w-0 overflow-hidden py-3 bg-[#04060C]"
         role="region"
         aria-label="Certified Asset Surfaces Ticker"
+        onMouseEnter={handleEnter}
+        onMouseLeave={handleLeave}
       >
-        {/* Left & Right Bloomberg Ambient Fade Scrims */}
-        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-r from-[#04060C] via-[#04060C]/80 to-transparent z-10" />
-        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-l from-[#04060C] via-[#04060C]/80 to-transparent z-10" />
+        {/* Left & Right Ambient Fade Scrims */}
+        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-r from-[#04060C] via-[#04060C]/80 to-transparent z-20" />
+        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-l from-[#04060C] via-[#04060C]/80 to-transparent z-20" />
 
-        {selectedFilter === "SEATS" ? (
-          marqueeSeats.length > 0 ? (
-            <div className="assets-marquee-track flex w-max items-center hover:[animation-play-state:paused] focus-within:[animation-play-state:paused] motion-reduce:animate-none">
-              {marqueeSeats.map((seat, index) => {
-                const eraColors = getEraColors(seat.era);
-                const coverSrc =
-                  seat.coverUrl ||
-                  generateDynamicCoverSvg(
-                    seat.series,
-                    seat.issueNumber,
-                    seat.publisher,
-                    seat.year
-                  );
+        {filteredItems.length > 0 && (
+          <div
+            ref={trackRef}
+            className="assets-marquee-track flex w-max items-center will-change-transform"
+            style={{
+              display: "flex",
+              width: "max-content",
+              willChange: "transform",
+              animation: `panel-profits-assets-marquee 140s linear infinite`,
+              backfaceVisibility: "hidden",
+            }}
+          >
+            {(["a", "b"] as const).map((copy) => (
+              <div key={copy} style={{ display: "flex", gap: "12px", paddingLeft: "16px", paddingRight: "12px", flexShrink: 0 }}>
+                {filteredItems.map((item, i) => {
+                  const seatNumber = (item.parameters as any)?.seatNumber;
+                  const gregoryScore = (item.parameters as any)?.gregoryScore;
+                  const isSeat = Boolean(seatNumber != null);
+                  const eraColors = getEraColors((item.pricing as any)?.era || (item.pricing as any)?.production_age);
+                  const rimColor = eraColors.border || "#06b6d4";
 
-                return (
-                  <Link
-                    key={`${seat.id}-${index}`}
-                    href={`/assets/${encodeURIComponent(seat.id)}`}
-                    className="asset-seat-card group flex shrink-0 items-center gap-2 rounded border border-slate-800/80 bg-[#090D17] px-2.5 py-1 text-[11px] transition-all hover:border-cyan-400/60 hover:bg-[#0F1626] focus:outline-none focus:ring-1 focus:ring-cyan-400 select-none mr-2.5"
-                    style={{
-                      ["--rim" as string]: eraColors.border || "#06b6d4",
-                    }}
-                    title={`Inspect Seat #${seat.seatNumber}: ${seat.titleIssue} (Gregory Score: ${seat.gregoryScore})`}
-                  >
-                    {/* Authentic Cover Thumbnail (Crisp 2:3 Thumbnail) */}
-                    <div className="relative h-7 w-5 shrink-0 overflow-hidden rounded-[2px] border border-slate-800 bg-[#030508]">
-                      <img
-                        src={coverSrc}
-                        alt={seat.titleIssue}
-                        loading="lazy"
-                        className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
-                        onError={(e) => {
-                          e.currentTarget.onerror = null;
-                          e.currentTarget.src = generateDynamicCoverSvg(
-                            seat.series,
-                            seat.issueNumber,
-                            seat.publisher,
-                            seat.year
-                          );
-                        }}
+                  return (
+                    <div
+                      key={`${copy}-${i}`}
+                      className="asset-seat-card"
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        ["--rim" as string]: rimColor,
+                      }}
+                    >
+                      {/* Rich Asset Card (215px x 375px) with Surface Art and Rimlight */}
+                      <AssetCard
+                        item={item}
+                        assetType={item.assetType}
+                        index={copy === "a" ? i : i + filteredItems.length}
                       />
+
+                      {/* Explicit Seat & Gregory Score Badge metadata for constituent seats */}
+                      {isSeat && (
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            padding: "3px 8px",
+                            backgroundColor: "rgba(6,10,18,0.92)",
+                            border: `1px solid ${rimColor}55`,
+                            borderRadius: "0 0 4px 4px",
+                            marginTop: "-2px",
+                            fontSize: "8.5px",
+                            fontFamily: "monospace",
+                          }}
+                        >
+                          <span style={{ color: "#38bdf8", fontWeight: 700 }}>
+                            {`SEAT #${seatNumber}`}
+                          </span>
+                          {gregoryScore != null && (
+                            <span style={{ color: "#facc15" }}>
+                              {`GS ${Number(gregoryScore).toFixed(1)}`}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
-
-                    {/* Seat Number & Title */}
-                    <div className="flex items-center gap-1.5 whitespace-nowrap">
-                      <span className="rounded bg-cyan-950/85 border border-cyan-500/40 px-1.5 py-0.2 font-mono text-[9px] font-bold text-cyan-300">
-                        {`SEAT #${seat.seatNumber}`}
-                      </span>
-                      <span className="text-slate-200 group-hover:text-cyan-300 transition-colors font-medium max-w-[140px] truncate">
-                        {seat.titleIssue}
-                      </span>
-                    </div>
-
-                    {/* Era & Gregory Score */}
-                    <div className="flex items-center gap-1 font-mono text-[9px]">
-                      <span
-                        className="px-1 py-0.2 rounded text-[7.5px] font-mono font-bold tracking-wider uppercase"
-                        style={{
-                          backgroundColor: eraColors.bg,
-                          color: "#FFF",
-                          border: `1px solid ${eraColors.border}`,
-                        }}
-                      >
-                        {seat.era}
-                      </span>
-                      <span className="rounded bg-slate-800/80 px-1 py-0.2 text-cyan-300 font-bold border border-slate-700 text-[8.5px]">
-                        {`GS ${seat.gregoryScore}`}
-                      </span>
-                    </div>
-
-                    {/* Publisher & Year */}
-                    <span className="text-slate-400 text-[9px] font-mono hidden md:inline">
-                      {seat.publisher} · {seat.year}
-                    </span>
-                  </Link>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="flex items-center justify-center py-2">
-              <span className="border border-cyan-900/40 bg-cyan-950/20 px-3 py-0.5 text-[10px] font-mono uppercase tracking-[0.14em] text-cyan-300">
-                Synchronizing Sovereign Asset Seats...
-              </span>
-            </div>
-          )
-        ) : (
-          /* 16 Canonical Collectible Asset Classes Track */
-          <div className="assets-marquee-track flex w-max items-center hover:[animation-play-state:paused] focus-within:[animation-play-state:paused] motion-reduce:animate-none">
-            {marqueeClasses.map((cls, index) => {
-              const borderColors: Record<string, string> = {
-                SOV: "#10b981",
-                SIG: "#f59e0b",
-                PED: "#a855f7",
-                NEW: "#3b82f6",
-                PRV: "#f43f5e",
-                RAT: "#06b6d4",
-                RAW: "#94a3b8",
-                VAR: "#d946ef",
-                DIR: "#0ea5e9",
-                QLF: "#22c55e",
-                RST: "#eab308",
-                CNS: "#14b8a6",
-                PRN: "#f97316",
-                INT: "#6366f1",
-                ERR: "#ef4444",
-                ASH: "#8b5cf6",
-              };
-              const accentColor = borderColors[cls.shortCode] || "#06b6d4";
-
-              return (
-                <div
-                  key={`${cls.id}-${index}`}
-                  className="asset-seat-card group flex shrink-0 items-center gap-2 rounded border border-slate-800/80 bg-[#090D17] px-2.5 py-1 text-[11px] transition-all hover:border-cyan-400/60 hover:bg-[#0F1626] select-none mr-2.5"
-                  style={{
-                    ["--rim" as string]: accentColor,
-                  }}
-                >
-                  <span
-                    className="rounded px-1.5 py-0.2 font-mono text-[9px] font-bold tracking-wider"
-                    style={{
-                      backgroundColor: `${accentColor}18`,
-                      color: accentColor,
-                      border: `1px solid ${accentColor}40`,
-                    }}
-                  >
-                    {cls.shortCode}
-                  </span>
-                  <span className="font-medium text-slate-200">{cls.name}</span>
-                  <span className="rounded bg-slate-900 border border-slate-800 px-1 py-0.2 text-[8px] font-mono text-slate-400">
-                    {cls.liquidityTier}
-                  </span>
-                  <span className="text-[9px] font-mono text-emerald-400 font-bold">
-                    {cls.pricingPremiumFactor}
-                  </span>
-                </div>
-              );
-            })}
+                  );
+                })}
+              </div>
+            ))}
           </div>
         )}
       </div>
