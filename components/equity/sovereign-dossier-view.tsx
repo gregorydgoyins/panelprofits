@@ -236,6 +236,8 @@ export function SovereignDossierView({ dossier }: SovereignDossierViewProps) {
       {/* Candlestick & Continuous Performance Chart */}
       <EquityCandlestickChart
         ticker={dossier.ticker}
+        series={dossier.series}
+        issueNumber={dossier.issueNumber}
         currentPrice={dossier.referenceFmvUsd}
         deltaPercent={dossier.deltaPercent}
         dataPoints={dossier.performanceHistory}
