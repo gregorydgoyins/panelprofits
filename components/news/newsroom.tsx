@@ -22,6 +22,9 @@ import {
 import { type NewsStory, shortNewsSource } from "@/lib/news/types";
 import { TopTicker } from "@/components/news/TopTicker";
 import { StoryPanel } from "@/components/news/StoryPanel";
+import { VaultRadar } from "@/components/news/VaultRadar";
+import { BreakingTickerRibbon } from "@/components/news/BreakingTickerRibbon";
+import { DailyIntelligenceHero } from "@/components/news/DailyIntelligenceHero";
 import { analyzeStoryCatalyst } from "@/lib/news/catalyst";
 import { parseAndSynthesizeArticle } from "@/lib/news/article-parser";
 
@@ -88,7 +91,19 @@ const ANGLE_MATCHERS: Record<AngleFilter, (s: NewsStory) => boolean> = {
       text.includes("iron man") ||
       text.includes("superman") ||
       text.includes("fantastic four") ||
-      text.includes("doom")
+      text.includes("doom") ||
+      text.includes("secret wars") ||
+      text.includes("venom") ||
+      text.includes("miles morales") ||
+      text.includes("deadpool") ||
+      text.includes("spawn") ||
+      text.includes("tmnt") ||
+      text.includes("ninja turtles") ||
+      text.includes("hulk") ||
+      text.includes("harley quinn") ||
+      text.includes("thor") ||
+      text.includes("thanos") ||
+      text.includes("galactus")
     );
   },
 };
@@ -247,7 +262,7 @@ export function Newsroom({ stories: initialStories }: NewsroomProps) {
 
   const angleOptions: Array<{ key: AngleFilter; label: string }> = [
     { key: "all", label: "All Channels" },
-    { key: "holdings", label: "My Holdings & Watchlist" },
+    { key: "holdings", label: "Vault Impact Radar" },
     { key: "market", label: "Secondary Market & Slabs" },
     { key: "scholarly", label: "Scholarly & Reviews" },
     { key: "creator", label: "Creator Substacks" },
@@ -256,10 +271,38 @@ export function Newsroom({ stories: initialStories }: NewsroomProps) {
     { key: "wire", label: "News Wire APIs" },
   ];
 
+  const vaultStoriesCount = React.useMemo(() => {
+    return stories.filter(ANGLE_MATCHERS.holdings).length;
+  }, [stories]);
+
+  const leadStory = React.useMemo(() => {
+    const withAffected = stories.find((s) => {
+      const cat = analyzeStoryCatalyst(s.headline, s.summary);
+      return cat.affectedComics.length > 0;
+    });
+    return withAffected || stories[0];
+  }, [stories]);
+
   return (
     <div className="space-y-6">
+      {/* Live Breaking Catalyst Ribbon */}
+      <BreakingTickerRibbon stories={stories} onSelectStory={setActiveStoryId} />
+
       {/* Live Ticker Wire at Top */}
       <TopTicker stories={filteredStories} activeId={activeStory.id} onSelect={setActiveStoryId} />
+
+      {/* Today on the Floor Showcase Broadcast Hero (Shown when on "all" channel without search query) */}
+      {activeAngle === "all" && !searchQuery.trim() && leadStory && (
+        <DailyIntelligenceHero story={leadStory} />
+      )}
+
+      {/* Vault Catalyst Radar */}
+      <VaultRadar
+        stories={stories}
+        isFilteringVault={activeAngle === "holdings"}
+        onToggleVaultFilter={() => setActiveAngle((prev) => (prev === "holdings" ? "all" : "holdings"))}
+        vaultStoriesCount={vaultStoriesCount}
+      />
 
       {/* Control Bar: Network Telemetry, View Mode Toggle & Search */}
       <div className="space-y-3 px-1">

@@ -105,4 +105,30 @@ describe("newsroom market catalyst engine", () => {
     expect(analysis.catalystType).toBe("FIRST_APPEARANCE_SPEC");
     expect(analysis.marketImpact).toBe("BULLISH");
   });
+
+  it("links Secret Wars and alien symbiote costume keywords to Secret Wars #8 ($SW8)", () => {
+    const analysis = analyzeStoryCatalyst(
+      "WizKids Reveals New 'Marvel HeroClix: Secret Wars Map and Terrain Kit'",
+      "The set includes two limited edition miniatures: Spider-Man in his alien symbiote costume and Beyonder."
+    );
+
+    expect(analysis.marketImpact).toBe("BULLISH");
+    expect(analysis.affectedComics.length).toBeGreaterThan(0);
+    const sw8 = analysis.affectedComics.find((c) => c.ticker === "$SW8");
+    expect(sw8).toBeDefined();
+    expect(sw8?.fmvCgc98).toBe(1850);
+    expect(sw8?.delta7d).toBeDefined();
+  });
+
+  it("links Doctor Doom announcements to Fantastic Four #5 ($FF5)", () => {
+    const analysis = analyzeStoryCatalyst(
+      "Marvel Studios Unveils Doctor Doom Role in Avengers: Doomsday",
+      "Victor von Doom returns as the primary antagonist of Phase 6."
+    );
+
+    expect(analysis.marketImpact).toBe("BULLISH");
+    const ff5 = analysis.affectedComics.find((c) => c.ticker === "$FF5");
+    expect(ff5).toBeDefined();
+    expect(ff5?.fmvCgc98).toBe(125000);
+  });
 });

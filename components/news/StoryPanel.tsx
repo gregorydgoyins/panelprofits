@@ -9,6 +9,7 @@ import { shortNewsSource, type NewsStory } from "@/lib/news/types";
 import { AuthenticVideoEmbed, extractAuthenticVideo } from "@/components/news/authentic-video-embed";
 import { analyzeStoryCatalyst } from "@/lib/news/catalyst";
 import { CatalystKeyRail } from "@/components/news/CatalystKeyRail";
+import { MarketReactionCard } from "@/components/news/MarketReactionCard";
 import { AudioBriefingPlayer } from "@/components/news/AudioBriefingPlayer";
 import { AnalystDeskMemo } from "@/components/news/AnalystDeskMemo";
 import { parseAndSynthesizeArticle } from "@/lib/news/article-parser";
@@ -109,6 +110,9 @@ export function StoryPanel({ story }: { story: NewsStory }) {
           storyId={story.id}
           catalystReasoning={catalyst?.reasoning}
         />
+
+        {/* Institutional Market Reaction & Sovereign Comic Valuation Matrix */}
+        <MarketReactionCard catalyst={catalyst} storyTitle={story.headline} />
 
         {/* Market Catalyst Engine Rail */}
         <CatalystKeyRail analysis={catalyst} />

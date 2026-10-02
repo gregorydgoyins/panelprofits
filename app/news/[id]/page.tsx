@@ -11,6 +11,7 @@ import { PresenterPlayer } from "@/components/news/PresenterPlayer";
 import { getStoryVideoReel } from "@/lib/video/pipeline";
 import { analyzeStoryCatalyst } from "@/lib/news/catalyst";
 import { CatalystKeyRail } from "@/components/news/CatalystKeyRail";
+import { MarketReactionCard } from "@/components/news/MarketReactionCard";
 import { AudioBriefingPlayer } from "@/components/news/AudioBriefingPlayer";
 import { AnalystDeskMemo } from "@/components/news/AnalystDeskMemo";
 import { parseAndSynthesizeArticle } from "@/lib/news/article-parser";
@@ -119,6 +120,10 @@ export default async function NewsStoryPage({ params }: { params: Promise<{ id: 
               storyId={story.id}
               catalystReasoning={catalyst?.reasoning}
             />
+          </div>
+
+          <div className="mt-6 max-w-3xl">
+            <MarketReactionCard catalyst={catalyst} storyTitle={story.headline} />
           </div>
 
           <div className="mt-6 max-w-3xl">
