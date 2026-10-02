@@ -3,9 +3,8 @@ import ce70ReferenceFmv from "@/lib/equity/ce70-reference-fmv.json";
 import ppix100Data from "@/lib/equity/ppix-100-constituents.json";
 import verifiedCovers from "@/lib/equity/verified-covers.json";
 import { INITIAL_SURFACE_ASSETS } from "@/lib/assets/initial-assets";
-import { generateDynamicCoverSvg } from "@/lib/comics/cover-resolver";
+import { getAuthoritativeCover } from "@/lib/comics/cover-authority";
 
-const VERIFIED_MAP = verifiedCovers as Record<string, string>;
 const REF_FMV_MAP = ce70ReferenceFmv as Record<string, any>;
 
 export type UniverseMode = "ce70" | "ppix100" | "cpi" | "assets";
@@ -78,16 +77,10 @@ export function getCE70Constituents(): FeaturedComicConstituent[] {
     const refData = REF_FMV_MAP[String(seatNum)] || REF_FMV_MAP[seat.title] || {};
     const baseFmv = refData.referenceFmvUsd ?? refData.grade98FmvUsd ?? 150;
     const grade = refData.referenceGrade ?? "9.0";
-    const seatKeyName = `seat-${seatNum}`;
-    const cover =
-      VERIFIED_MAP[seatKeyName] ||
-      VERIFIED_MAP[seat.title] ||
-      `/covers/seat_${seatNum}_${seat.title.toLowerCase().replace(/[^a-z0-9]+/g, "_")}.jpg` ||
-      generateDynamicCoverSvg(seat.title, String(seatNum), seat.publisher, seat.year);
-
     const match = seat.title.match(/^(.*?)(?:\s+#(\d+.*))?$/);
     const series = match && match[1] ? match[1].trim() : seat.title;
     const issueNumber = match && match[2] ? match[2].trim() : "1";
+    const cover = getAuthoritativeCover(series, issueNumber, seat.publisher, seat.year);
 
     return {
       id: `seat-${seatNum}`,
@@ -117,6 +110,7 @@ export function getPPIX100Constituents(): FeaturedComicConstituent[] {
     const seatMatch = book.key ? book.key.match(/^(\d+)$/) : null;
     const seatId = seatMatch ? `seat-${seatMatch[1]}` : `ppix-100-${idx + 1}`;
     const detailUrl = seatMatch ? `/comics/seat-${seatMatch[1]}` : `/comics/${seatId}`;
+    const cover = getAuthoritativeCover(book.series, book.issueNumber, book.publisher, book.year);
 
     return {
       id: seatId,
@@ -129,7 +123,7 @@ export function getPPIX100Constituents(): FeaturedComicConstituent[] {
       referenceGrade: book.referenceGrade || "9.0",
       fmv: book.fmv,
       formattedFmv: `$${Number(book.fmv).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
-      coverUrl: book.coverUrl,
+      coverUrl: cover,
       detailUrl,
       badge: `${String(book.era).toUpperCase()} ERA`,
     };
@@ -157,7 +151,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         issueNumber: "1",
         year: 1941,
         publisher: "Timely Comics",
-        coverUrl: "/covers/seat_7_captain_america_comics_10.jpg",
+        coverUrl: getAuthoritativeCover("Captain America Comics", "1", "Timely Comics", 1941),
         totalPoints: 855.0,
         impliedWeight: "25.0%",
         detailUrl: "/comics/seat-7",
@@ -169,7 +163,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         issueNumber: "1",
         year: 1939,
         publisher: "Timely Comics",
-        coverUrl: "/covers/seat_1_detective_comics_2.jpg",
+        coverUrl: getAuthoritativeCover("Marvel Comics", "1", "Timely Comics", 1939),
         totalPoints: 1026.0,
         impliedWeight: "30.0%",
         detailUrl: "/comics/seat-1",
@@ -181,7 +175,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         issueNumber: "8",
         year: 1941,
         publisher: "DC Comics",
-        coverUrl: "/covers/wonder_woman_98.jpg",
+        coverUrl: getAuthoritativeCover("All Star Comics", "8", "DC Comics", 1941),
         totalPoints: 780.0,
         impliedWeight: "23.0%",
         detailUrl: "/comics/seat-5",
@@ -193,7 +187,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         issueNumber: "1",
         year: 1940,
         publisher: "DC Comics",
-        coverUrl: "/covers/batman_251.jpg",
+        coverUrl: getAuthoritativeCover("Batman", "1", "DC Comics", 1940),
         totalPoints: 759.0,
         impliedWeight: "22.0%",
         detailUrl: "/comics/seat-31",
@@ -217,7 +211,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         issueNumber: "15",
         year: 1962,
         publisher: "Marvel Comics",
-        coverUrl: "/covers/amazing_spider_man_33.jpg",
+        coverUrl: getAuthoritativeCover("Amazing Fantasy", "15", "Marvel Comics", 1962),
         totalPoints: 560.0,
         impliedWeight: "31.7%",
         detailUrl: "/comics/seat-19",
@@ -229,7 +223,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         issueNumber: "4",
         year: 1956,
         publisher: "DC Comics",
-        coverUrl: "/covers/action_comics_252.jpg",
+        coverUrl: getAuthoritativeCover("Showcase", "4", "DC Comics", 1956),
         totalPoints: 420.0,
         impliedWeight: "23.8%",
         detailUrl: "/comics/seat-27",
@@ -241,7 +235,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         issueNumber: "1",
         year: 1963,
         publisher: "Marvel Comics",
-        coverUrl: "/covers/x_men_1.jpg",
+        coverUrl: getAuthoritativeCover("X-Men", "1", "Marvel Comics", 1963),
         totalPoints: 395.0,
         impliedWeight: "22.4%",
         detailUrl: "/comics/seat-28",
@@ -253,7 +247,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         issueNumber: "1",
         year: 1961,
         publisher: "Marvel Comics",
-        coverUrl: "/covers/fantastic_four_48.jpg",
+        coverUrl: getAuthoritativeCover("Fantastic Four", "1", "Marvel Comics", 1961),
         totalPoints: 391.0,
         impliedWeight: "22.1%",
         detailUrl: "/comics/seat-20",
@@ -277,7 +271,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         issueNumber: "181",
         year: 1974,
         publisher: "Marvel Comics",
-        coverUrl: "/covers/giant_size_x_men_1.jpg",
+        coverUrl: getAuthoritativeCover("Incredible Hulk", "181", "Marvel Comics", 1974),
         totalPoints: 640.0,
         impliedWeight: "44.9%",
         detailUrl: "/comics/seat-30",
@@ -289,7 +283,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         issueNumber: "1",
         year: 1975,
         publisher: "Marvel Comics",
-        coverUrl: "/covers/giant_size_x_men_1.jpg",
+        coverUrl: getAuthoritativeCover("Giant-Size X-Men", "1", "Marvel Comics", 1975),
         totalPoints: 410.0,
         impliedWeight: "28.8%",
         detailUrl: "/comics/seat-30",
@@ -301,7 +295,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         issueNumber: "92",
         year: 1971,
         publisher: "DC Comics",
-        coverUrl: "/covers/the_saga_of_swamp_thing_21.jpg",
+        coverUrl: getAuthoritativeCover("House of Secrets", "92", "DC Comics", 1971),
         totalPoints: 375.0,
         impliedWeight: "26.3%",
         detailUrl: "/comics/seat-35",
@@ -325,7 +319,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         issueNumber: "300",
         year: 1988,
         publisher: "Marvel Comics",
-        coverUrl: "/covers/amazing_spider_man_33.jpg",
+        coverUrl: getAuthoritativeCover("Amazing Spider-Man", "300", "Marvel Comics", 1988),
         totalPoints: 55.0,
         impliedWeight: "33.0%",
         detailUrl: "/comics/seat-19",
@@ -337,7 +331,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         issueNumber: "1",
         year: 1984,
         publisher: "Mirage Studios",
-        coverUrl: "/covers/teenage_mutant_ninja_turtles_1.jpg",
+        coverUrl: getAuthoritativeCover("Teenage Mutant Ninja Turtles", "1", "Mirage Studios", 1984),
         totalPoints: 55.0,
         impliedWeight: "33.0%",
         detailUrl: "/comics/seat-40",
@@ -349,7 +343,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         issueNumber: "1",
         year: 1986,
         publisher: "DC Comics",
-        coverUrl: "/covers/batman_the_dark_knight_returns_1.jpg",
+        coverUrl: getAuthoritativeCover("Batman: The Dark Knight Returns", "1", "DC Comics", 1986),
         totalPoints: 55.0,
         impliedWeight: "34.0%",
         detailUrl: "/comics/seat-36",
@@ -373,7 +367,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         issueNumber: "4",
         year: 2011,
         publisher: "Marvel Comics",
-        coverUrl: "/covers/house_of_x_1.jpg",
+        coverUrl: getAuthoritativeCover("Ultimate Fallout", "4", "Marvel Comics", 2011),
         totalPoints: 95.0,
         impliedWeight: "18.3%",
         detailUrl: "/comics/seat-59",
@@ -385,7 +379,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         issueNumber: "1",
         year: 1992,
         publisher: "Image Comics",
-        coverUrl: "/covers/the_walking_dead_1.jpg",
+        coverUrl: getAuthoritativeCover("Spawn", "1", "Image Comics", 1992),
         totalPoints: 45.0,
         impliedWeight: "8.6%",
         detailUrl: "/comics/seat-48",
@@ -397,7 +391,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         issueNumber: "1",
         year: 2003,
         publisher: "Image Comics",
-        coverUrl: "/covers/the_walking_dead_1.jpg",
+        coverUrl: getAuthoritativeCover("The Walking Dead", "1", "Image Comics", 2003),
         totalPoints: 120.0,
         impliedWeight: "23.1%",
         detailUrl: "/comics/seat-48",
@@ -421,7 +415,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         issueNumber: "1",
         year: 1938,
         publisher: "DC Comics",
-        coverUrl: "/covers/action_comics_252.jpg",
+        coverUrl: getAuthoritativeCover("Action Comics", "1", "DC Comics", 1938),
         totalPoints: 2500.0,
         impliedWeight: "51.8%",
         detailUrl: "/comics/seat-27",
@@ -433,7 +427,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         issueNumber: "27",
         year: 1939,
         publisher: "DC Comics",
-        coverUrl: "/covers/seat_1_detective_comics_2.jpg",
+        coverUrl: getAuthoritativeCover("Detective Comics", "27", "DC Comics", 1939),
         totalPoints: 1800.0,
         impliedWeight: "37.3%",
         detailUrl: "/comics/seat-1",
@@ -445,7 +439,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         issueNumber: "1",
         year: 1939,
         publisher: "DC Comics",
-        coverUrl: "/covers/all_star_superman_1.jpg",
+        coverUrl: getAuthoritativeCover("Superman", "1", "DC Comics", 1939),
         totalPoints: 520.0,
         impliedWeight: "10.8%",
         detailUrl: "/comics/seat-50",

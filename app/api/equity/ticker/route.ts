@@ -2,11 +2,9 @@ import { NextResponse } from "next/server";
 import { getSovereignEquities } from "@/lib/equity/canonical-equities";
 import ce70Dossiers from "@/lib/equity/ce70-dossiers-data.json";
 import ce70ReferenceFmv from "@/lib/equity/ce70-reference-fmv.json";
-import verifiedCovers from "@/lib/equity/verified-covers.json";
-import { generateDynamicCoverSvg } from "@/lib/comics/cover-resolver";
+import { getAuthoritativeCover } from "@/lib/comics/cover-authority";
 import type { EquityItem, EquityResponse } from "@/lib/equity/ticker-types";
 
-const VERIFIED_MAP = verifiedCovers as Record<string, string>;
 const REFERENCE_FMV_MAP = ce70ReferenceFmv as Record<string, { referenceFmvUsd: number; referenceGrade: string }>;
 
 export async function GET(request: Request) {
@@ -19,12 +17,9 @@ export async function GET(request: Request) {
 
   // If database was empty, fall back to ce70Dossiers dataset anchored to authentic reference FMV
   const baseItems = equities.length > 0 ? equities : ce70Dossiers.map((seat) => {
-    const keyName = `${seat.title}`;
-    const seatKeyName = `seat-${seat.seatNumber}`;
-    const resolvedCover =
-      VERIFIED_MAP[seatKeyName] ||
-      VERIFIED_MAP[keyName] ||
-      generateDynamicCoverSvg(seat.title, String(seat.seatNumber), seat.publisher, seat.year);
+    const seriesTitle = seat.title.replace(/\s+#\d+.*$/, "");
+    const issueNum = (seat.title.match(/#(\d+[\w-]*)/) || ["", "1"])[1];
+    const resolvedCover = getAuthoritativeCover(seriesTitle, issueNum, seat.publisher, seat.year);
 
     const ref = REFERENCE_FMV_MAP[String(seat.seatNumber)];
     const baseFmv = ref?.referenceFmvUsd ?? 150;
@@ -95,9 +90,7 @@ export async function GET(request: Request) {
     const seatKeyName = `seat-${item.seatNumber}`;
     const resolvedCover =
       item.coverUrl ||
-      VERIFIED_MAP[seatKeyName] ||
-      VERIFIED_MAP[keyName] ||
-      generateDynamicCoverSvg(item.series, item.issueNumber, item.publisher || "Marvel/DC", item.year || 1970);
+      getAuthoritativeCover(item.series, item.issueNumber, item.publisher || "Marvel/DC", item.year || 1970);
 
     return {
       entryId: `eq-${item.id || idx}`,

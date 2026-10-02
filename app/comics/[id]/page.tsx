@@ -16,6 +16,7 @@ import { getComicCensusDossier } from "@/lib/comics/census";
 import { CensusDossier } from "@/components/comics/census-dossier";
 import { resolveIssueDebuts } from "@/lib/wiki/debut-resolver";
 import { ConnoisseurDossier } from "@/components/comics/connoisseur-dossier";
+import { getAuthoritativeCover } from "@/lib/comics/cover-authority";
 import { Sparkles, BookOpen } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -120,7 +121,12 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
         <div className="lg:col-span-4 space-y-6">
           <div className="rounded-xl border border-cyan-500/40 bg-graphite-900/90 p-4 shadow-xl portfolio-rimlight-hover">
             <ComicCover
-              coverUrl={comic.cover_retrieval_url || comic.cover_url || coverEvidence?.image_url}
+              coverUrl={
+                getAuthoritativeCover(comic.series, comic.issue_number, comic.publisher, comic.publication_year) ||
+                comic.cover_retrieval_url ||
+                comic.cover_url ||
+                coverEvidence?.image_url
+              }
               storagePath={comic.cover_storage_path || coverEvidence?.storage_path}
               series={seriesLabel}
               issueNumber={comic.issue_number}

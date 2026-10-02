@@ -2,6 +2,7 @@ import { createCleanReadOnlyServerClient } from "@/lib/supabase/admin";
 import { isMissingTableError } from "@/lib/supabase/errors";
 import { createCachedQuery } from "@/lib/cache/wrapper";
 import { generateDynamicCoverSvg } from "@/lib/comics/cover-resolver";
+import { getAuthoritativeCover, isCoverAuthoritativelyVerified } from "@/lib/comics/cover-authority";
 import { lookupReferenceFmv } from "@/lib/pricing/reference-benchmarks";
 import verifiedCoversJson from "./verified-covers.json";
 import ce70ReferenceFmv from "./ce70-reference-fmv.json";
@@ -320,12 +321,12 @@ async function fetchSovereignEquitiesRaw(limit = 150): Promise<SovereignEquityIt
         const keyName = `${row.series} #${row.issue_number}`;
         const seatKeyName = `seat-${row.seat_number}`;
         const ticker = formatComicEquityTicker(row.series, row.issue_number || "1", "SOV");
-        const resolvedCover =
-          VERIFIED_SEAT_COVERS[keyName] ||
-          VERIFIED_SEAT_COVERS[seatKeyName] ||
-          VERIFIED_SEAT_COVERS[ticker] ||
-          (row.cover_url && !row.cover_url.includes("526.jpg") ? row.cover_url : null) ||
-          generateDynamicCoverSvg(row.series, row.issue_number, authenticPublisher, authenticYear);
+        const resolvedCover = getAuthoritativeCover(
+          row.series,
+          row.issue_number,
+          authenticPublisher,
+          authenticYear
+        );
 
         // Deterministic realistic delta based on Gregory score and seat ranking
         const gScore = Number(row.gregory_score) || 190.0;
@@ -429,12 +430,12 @@ async function fetchCanonicalAssetSurfacesRaw(limit = 70): Promise<CanonicalAsse
     return data.map((row) => {
       const keyName = `${row.series} #${row.issue_number}`;
       const seatKeyName = `seat-${row.seat_number}`;
-      const resolvedCover =
-        VERIFIED_SEAT_COVERS[seatKeyName] ||
-        VERIFIED_SEAT_COVERS[keyName] ||
-        VERIFIED_SEAT_COVERS[row.title_issue] ||
-        (row.cover_url && !row.cover_url.includes("526.jpg") ? row.cover_url : null) ||
-        generateDynamicCoverSvg(row.series, row.issue_number, row.publisher, row.year);
+      const resolvedCover = getAuthoritativeCover(
+        row.series,
+        row.issue_number,
+        row.publisher,
+        row.year
+      );
 
       return {
         id: `seat-${row.seat_number}`,
@@ -566,7 +567,7 @@ export async function getSovereignEquityDossier(identifier: string): Promise<Det
       gregoryScore: dossierData.gregoryScore,
       deltaPercent: Number(((dossierData.gregoryScore - 190.0) * 0.45).toFixed(2)),
       status: "ACTIVE",
-      coverUrl: VERIFIED_SEAT_COVERS[dossierData.title] || null,
+      coverUrl: getAuthoritativeCover(seriesTitle, issueNum, dossierData.publisher, dossierData.year),
       canonicalIssueId: dossierData.canonicalId || null,
     };
   }

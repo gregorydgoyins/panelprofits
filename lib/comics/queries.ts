@@ -69,6 +69,7 @@ export async function getComics(params: ComicSearchParams): Promise<ComicQueryRe
 import ce70Dossiers from "@/lib/equity/ce70-dossiers-data.json";
 import verifiedCoversJson from "@/lib/equity/verified-covers.json";
 import { lookupReferenceFmv } from "@/lib/pricing/reference-benchmarks";
+import { getAuthoritativeCover } from "@/lib/comics/cover-authority";
 
 function enrichWithConnoisseurDossier(comic: ComicRecord): ComicRecord {
   // Look for matching CE70 dossier
@@ -298,16 +299,10 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
   });
 
   if (matchedSeat) {
-    const verifiedMap = verifiedCoversJson as Record<string, string>;
-    const coverPath =
-      verifiedMap[`seat-${matchedSeat.seatNumber}`] ||
-      verifiedMap[`Seat #${matchedSeat.seatNumber}`] ||
-      verifiedMap[matchedSeat.title] ||
-      `/covers/seat_${matchedSeat.seatNumber}_${matchedSeat.title.toLowerCase().replace(/[^a-z0-9]+/g, "_")}.jpg`;
-
     const titleParts = matchedSeat.title.split(/#(\d+.*)/);
     const seriesName = titleParts[0]?.trim() || matchedSeat.title;
     const issueNum = titleParts[1]?.trim() || "1";
+    const coverPath = getAuthoritativeCover(seriesName, issueNum, matchedSeat.publisher, matchedSeat.year);
     const timestamp = new Date().toISOString();
 
     const bench = lookupReferenceFmv(matchedSeat.seatNumber, matchedSeat.title, matchedSeat.canonicalId);

@@ -141,7 +141,7 @@
     "era": "golden",
     "referenceGrade": "9.2",
     "fmv": 50968.5,
-    "coverUrl": "/covers/seat_16_crime_suspenstories_22.jpg"
+    "coverUrl": "/covers/crime_suspenstories_22.jpg"
   },
   {
     "key": "7",
@@ -357,7 +357,7 @@
     "era": "bronze",
     "referenceGrade": "9.2",
     "fmv": 2283.48,
-    "coverUrl": "/covers/seat_26_green_lantern_76.jpg"
+    "coverUrl": "/covers/green_lantern_76.jpg"
   },
   {
     "key": "17",
@@ -417,7 +417,7 @@
     "era": "silver",
     "referenceGrade": "9.2",
     "fmv": 1159.0,
-    "coverUrl": "/covers/seat_19_the_amazing_spider_man_33.jpg"
+    "coverUrl": "/covers/the_amazing_spider_man_33.jpg"
   },
   {
     "key": "The Saga of Swamp Thing #21",
@@ -429,7 +429,7 @@
     "era": "copper",
     "referenceGrade": "9.2",
     "fmv": 147.0,
-    "coverUrl": "/covers/seat_35_the_saga_of_swamp_thing_21.jpg"
+    "coverUrl": "/covers/the_saga_of_swamp_thing_21.jpg"
   },
   {
     "key": "20",
@@ -501,7 +501,7 @@
     "era": "bronze",
     "referenceGrade": "9.2",
     "fmv": 333.0,
-    "coverUrl": "/covers/seat_32_love_and_rockets_1.jpg"
+    "coverUrl": "/covers/love_and_rockets_1.jpg"
   },
   {
     "key": "25",
@@ -537,7 +537,7 @@
     "era": "copper",
     "referenceGrade": "9.2",
     "fmv": 16543.75,
-    "coverUrl": "/covers/seat_40_teenage_mutant_ninja_turtles_1.jpg"
+    "coverUrl": "/covers/teenage_mutant_ninja_turtles_1.jpg"
   },
   {
     "key": "28",
@@ -573,7 +573,7 @@
     "era": "bronze",
     "referenceGrade": "9.2",
     "fmv": 1650.0,
-    "coverUrl": "/covers/seat_30_the_amazing_spider_man_121.jpg"
+    "coverUrl": "/covers/the_amazing_spider_man_121.jpg"
   },
   {
     "key": "Infinity Gauntlet #1",
@@ -609,7 +609,7 @@
     "era": "modern",
     "referenceGrade": "9.8",
     "fmv": 2757.11,
-    "coverUrl": "/covers/seat_48_the_walking_dead_1.jpg"
+    "coverUrl": "/covers/the_walking_dead_1.jpg"
   },
   {
     "key": "33",
@@ -657,7 +657,7 @@
     "era": "modern",
     "referenceGrade": "9.2",
     "fmv": 65.38,
-    "coverUrl": "/covers/seat_46_preacher_1.jpg"
+    "coverUrl": "/covers/preacher_1.jpg"
   },
   {
     "key": "37",
@@ -693,7 +693,7 @@
     "era": "copper",
     "referenceGrade": "9.8",
     "fmv": 150.0,
-    "coverUrl": "/covers/seat_39_raw_8.jpg"
+    "coverUrl": "/covers/raw_8.jpg"
   },
   {
     "key": "All-Star Superman #1",
@@ -717,7 +717,7 @@
     "era": "modern",
     "referenceGrade": "9.2",
     "fmv": 109.25,
-    "coverUrl": "/covers/seat_55_saga_1.jpg"
+    "coverUrl": "/covers/saga_1.jpg"
   },
   {
     "key": "41",
@@ -777,7 +777,7 @@
     "era": "modern",
     "referenceGrade": "9.8",
     "fmv": 150.0,
-    "coverUrl": "/covers/seat_43_the_acme_novelty_library_13.jpg"
+    "coverUrl": "/covers/the_acme_novelty_library_13.jpg"
   },
   {
     "key": "Monstress #1",
@@ -789,7 +789,7 @@
     "era": "modern",
     "referenceGrade": "9.8",
     "fmv": 95.0,
-    "coverUrl": "/covers/seat_57_monstress_1.jpg"
+    "coverUrl": "/covers/monstress_1.jpg"
   },
   {
     "key": "44",
@@ -825,7 +825,7 @@
     "era": "modern",
     "referenceGrade": "9.8",
     "fmv": 150.0,
-    "coverUrl": "/covers/seat_45_black_hole_1.jpg"
+    "coverUrl": "/covers/black_hole_1.jpg"
   },
   {
     "key": "Batman (2011) #1",
@@ -921,7 +921,7 @@
     "era": "modern",
     "referenceGrade": "9.8",
     "fmv": 217.01,
-    "coverUrl": "/covers/seat_50_all_star_superman_1.jpg"
+    "coverUrl": "/covers/all_star_superman_1.jpg"
   },
   {
     "key": "The Nice House on the Lake #1",
@@ -945,7 +945,7 @@
     "era": "modern",
     "referenceGrade": "9.8",
     "fmv": 95.0,
-    "coverUrl": "/covers/seat_51_fun_home_a_family_tragicomic_nn.jpg"
+    "coverUrl": "/covers/fun_home_a_family_tragicomic_[nn].jpg"
   },
   {
     "key": "Nightwing (2021) #78",
@@ -969,7 +969,7 @@
     "era": "modern",
     "referenceGrade": "9.8",
     "fmv": 95.0,
-    "coverUrl": "/covers/seat_52_asterios_polyp_nn.jpg"
+    "coverUrl": "/covers/asterios_polyp_[nn].jpg"
   },
   {
     "key": "Ultimate Spider-Man (2024) #1",
@@ -993,7 +993,7 @@
     "era": "modern",
     "referenceGrade": "9.8",
     "fmv": 95.0,
-    "coverUrl": "/covers/seat_64_sabrina_nn.jpg"
+    "coverUrl": "/covers/sabrina_[nn].jpg"
   },
   {
     "key": "Tintin: Objectif Lune #1",
@@ -1005,7 +1005,7 @@
     "era": "atomic",
     "referenceGrade": "9.0",
     "fmv": 8500.0,
-    "coverUrl": "/covers/seat_64_sabrina_nn.jpg"
+    "coverUrl": "/covers/tintin_objectif_lune_1.jpg"
   },
   {
     "key": "65",
@@ -1017,7 +1017,7 @@
     "era": "modern",
     "referenceGrade": "9.8",
     "fmv": 95.0,
-    "coverUrl": "/covers/seat_65_it_s_lonely_at_the_centre_of_the_earth_nn.jpg"
+    "coverUrl": "/covers/it_s_lonely_at_the_centre_of_the_earth_[nn].jpg"
   },
   {
     "key": "Ast\u00e9rix le Gaulois #1",
@@ -1029,7 +1029,7 @@
     "era": "silver",
     "referenceGrade": "9.0",
     "fmv": 12000.0,
-    "coverUrl": "/covers/seat_65_it_s_lonely_at_the_centre_of_the_earth_nn.jpg"
+    "coverUrl": "/covers/ast_rix_le_gaulois_1.jpg"
   },
   {
     "key": "66",
@@ -1041,7 +1041,7 @@
     "era": "bronze",
     "referenceGrade": "6.0",
     "fmv": 950.0,
-    "coverUrl": "/covers/seat_66_1.jpg"
+    "coverUrl": "/covers/66_1.jpg"
   },
   {
     "key": "The Incal #1",
@@ -1053,7 +1053,7 @@
     "era": "bronze",
     "referenceGrade": "9.0",
     "fmv": 5200.0,
-    "coverUrl": "/covers/seat_66_1.jpg"
+    "coverUrl": "/covers/the_incal_1.jpg"
   },
   {
     "key": "67",
@@ -1065,7 +1065,7 @@
     "era": "bronze",
     "referenceGrade": "6.0",
     "fmv": 950.0,
-    "coverUrl": "/covers/seat_67_1.jpg"
+    "coverUrl": "/covers/67_1.jpg"
   },
   {
     "key": "Akira #1",
@@ -1077,7 +1077,7 @@
     "era": "copper",
     "referenceGrade": "9.0",
     "fmv": 2500.0,
-    "coverUrl": "/covers/seat_67_1.jpg"
+    "coverUrl": "/covers/akira_1.jpg"
   },
   {
     "key": "68",
@@ -1089,7 +1089,7 @@
     "era": "bronze",
     "referenceGrade": "6.0",
     "fmv": 950.0,
-    "coverUrl": "/covers/seat_68_1.jpg"
+    "coverUrl": "/covers/68_1.jpg"
   },
   {
     "key": "One Piece #1",
@@ -1113,7 +1113,7 @@
     "era": "bronze",
     "referenceGrade": "6.0",
     "fmv": 950.0,
-    "coverUrl": "/covers/seat_69_1.jpg"
+    "coverUrl": "/covers/69_1.jpg"
   },
   {
     "key": "Death Note #1",
@@ -1137,7 +1137,7 @@
     "era": "bronze",
     "referenceGrade": "6.0",
     "fmv": 950.0,
-    "coverUrl": "/covers/seat_70_1.jpg"
+    "coverUrl": "/covers/70_1.jpg"
   },
   {
     "key": "Chainsaw Man #1",
@@ -1161,7 +1161,7 @@
     "era": "modern",
     "referenceGrade": "9.8",
     "fmv": 95.0,
-    "coverUrl": "/covers/seat_53_building_stories_a.jpg"
+    "coverUrl": "/covers/building_stories_[a].jpg"
   },
   {
     "key": "Building Stories #1",
@@ -1173,7 +1173,7 @@
     "era": "independent",
     "referenceGrade": "9.0",
     "fmv": 65.0,
-    "coverUrl": "/covers/seat_53_building_stories_a.jpg"
+    "coverUrl": "/covers/building_stories_1.jpg"
   },
   {
     "key": "54",
