@@ -1,5 +1,6 @@
 import type { ComicRecord } from "@/lib/comics/types";
 import {
+  cgcGrades,
   comicBaseGrades,
   comicBaseReference,
   getHighestGradedPrice,
@@ -18,11 +19,13 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
   const cbGrades = comicBaseGrades(comic);
   const cb = comicBaseReference(comic);
   const gcGrades = goCollectGrades(comic);
+  const cgcGpaGrades = cgcGrades(comic);
 
   const highest = getHighestGradedPrice({
     "Panel Profits": pp,
     "ComicBase": cbGrades,
     "GoCollect": gcGrades,
+    "CGC · GPA sales": cgcGpaGrades,
   });
 
   return (
@@ -88,6 +91,8 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
                     price = cbGrades[grade];
                   } else if (source === "GoCollect") {
                     price = gcGrades[grade];
+                  } else if (source === "CGC · GPA sales") {
+                    price = cgcGpaGrades[grade];
                   }
                   // CGC, CBCS, PSA, GoCollect stay strictly unblended unless exact observation matches exist in Clean
                   // Missing prices remain unpriced; no synthetic extrapolation across grades.

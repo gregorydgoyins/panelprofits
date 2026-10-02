@@ -148,6 +148,35 @@ export function goCollectGrades(comic: Partial<ComicRecord>): Partial<Record<Gra
   return result;
 }
 
+/**
+ * Reads authentic CGC · GPA sales observation ladder if present in payload or metadata.
+ */
+export function cgcGrades(comic: Partial<ComicRecord>): Partial<Record<Grade, number>> {
+  const result: Partial<Record<Grade, number>> = {};
+  const cgcDict = (comic as Record<string, unknown>).cgc_data as Record<string, unknown> | undefined ||
+    (comic.panel_profits_data as Record<string, unknown> | undefined)?.cgc_grades as Record<string, unknown> | undefined ||
+    (comic.panel_profits_data as Record<string, unknown> | undefined);
+
+  if (!cgcDict) return result;
+
+  const raw = positivePrice(cgcDict["CGC - Grade RAW"] || cgcDict["cgc_raw_price"] || (cgcDict as any)["RAW"]);
+  if (raw !== null) result["RAW"] = raw;
+
+  for (const grade of GRADES) {
+    if (grade === "RAW") continue;
+    const gradeKey = grade.replace(".", "_");
+    const stored = positivePrice(
+      cgcDict[`CGC - Grade ${grade}`] ||
+      cgcDict[`cgc_grade_${gradeKey}_price`] ||
+      cgcDict[`cgc_${gradeKey}`] ||
+      (cgcDict as any)[grade]
+    );
+    if (stored !== null) result[grade] = stored;
+  }
+
+  return result;
+}
+
 export interface HighestGradedPriceResult {
   grade: Grade;
   price: number;

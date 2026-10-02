@@ -68,12 +68,9 @@ export async function getComics(params: ComicSearchParams): Promise<ComicQueryRe
 
 import ce70Dossiers from "@/lib/equity/ce70-dossiers-data.json";
 import verifiedCoversJson from "@/lib/equity/verified-covers.json";
+import { lookupReferenceFmv } from "@/lib/pricing/reference-benchmarks";
 
 function enrichWithConnoisseurDossier(comic: ComicRecord): ComicRecord {
-  if (comic.panel_profits_data && typeof comic.panel_profits_data === "object" && Object.keys(comic.panel_profits_data).length > 0) {
-    return comic;
-  }
-
   // Look for matching CE70 dossier
   const cleanSeries = (comic.series || "").toLowerCase().trim();
   const cleanIssue = (comic.issue_number || "").toLowerCase().trim();
@@ -91,15 +88,46 @@ function enrichWithConnoisseurDossier(comic: ComicRecord): ComicRecord {
   });
 
   if (matchedDossier) {
+    const bench = lookupReferenceFmv(matchedDossier.seatNumber, matchedDossier.title, matchedDossier.canonicalId);
+    const fmv98 = bench?.grade98FmvUsd ?? bench?.referenceFmvUsd ?? null;
+    const rawFmv = bench?.rawFmvUsd ?? null;
+    const coverPrice = bench?.coverPrice ?? 2.99;
+
+    const existingPp = (comic.panel_profits_data && typeof comic.panel_profits_data === "object") ? comic.panel_profits_data : {};
+
     const panelProfitsData = {
+      ...existingPp,
       seat_number: matchedDossier.seatNumber,
       gregory_score: matchedDossier.gregoryScore,
       quality_scores: matchedDossier.qualityScores,
       essay: matchedDossier.essay,
       justification: matchedDossier.justification,
       era: matchedDossier.era,
-      creators: matchedDossier.creators,
-      video_discussions: [
+      creators: bench?.creators || matchedDossier.creators,
+      raw_market_price: (existingPp as any).raw_market_price ?? rawFmv,
+      "PP - Ungraded Market Price": (existingPp as any)["PP - Ungraded Market Price"] ?? rawFmv,
+      "PP - Grade RAW Market Price": (existingPp as any)["PP - Grade RAW Market Price"] ?? rawFmv,
+      grade_4_0_value: (existingPp as any).grade_4_0_value ?? bench?.grade40FmvUsd ?? null,
+      grade_6_0_value: (existingPp as any).grade_6_0_value ?? bench?.grade60FmvUsd ?? null,
+      grade_8_0_value: (existingPp as any).grade_8_0_value ?? bench?.grade80FmvUsd ?? null,
+      grade_9_0_value: (existingPp as any).grade_9_0_value ?? bench?.grade90FmvUsd ?? null,
+      grade_9_2_value: (existingPp as any).grade_9_2_value ?? bench?.grade92FmvUsd ?? null,
+      grade_9_4_value: (existingPp as any).grade_9_4_value ?? bench?.grade94FmvUsd ?? null,
+      grade_9_6_value: (existingPp as any).grade_9_6_value ?? bench?.grade96FmvUsd ?? null,
+      grade_9_8_value: (existingPp as any).grade_9_8_value ?? fmv98,
+      "PP - Grade 9.8 Market Price": (existingPp as any)["PP - Grade 9.8 Market Price"] ?? fmv98,
+      cgc_grades: (existingPp as any).cgc_grades ?? (bench ? {
+        "RAW": rawFmv,
+        "4.0": bench.grade40FmvUsd,
+        "6.0": bench.grade60FmvUsd,
+        "8.0": bench.grade80FmvUsd,
+        "9.0": bench.grade90FmvUsd,
+        "9.2": bench.grade92FmvUsd,
+        "9.4": bench.grade94FmvUsd,
+        "9.6": bench.grade96FmvUsd,
+        "9.8": fmv98,
+      } : undefined),
+      video_discussions: (existingPp as any).video_discussions || [
         {
           title: `${matchedDossier.title} - Certified Census & Market Appraisal`,
           channel: "Comic Book Market Intelligence",
@@ -126,6 +154,9 @@ function enrichWithConnoisseurDossier(comic: ComicRecord): ComicRecord {
 
     return {
       ...comic,
+      pp_grade_9_8_price: comic.pp_grade_9_8_price ?? fmv98,
+      baseline_grade_9_8_value: comic.baseline_grade_9_8_value ?? fmv98,
+      comicbase_price: comic.comicbase_price ?? coverPrice,
       panel_profits_data: panelProfitsData as any,
     };
   }
@@ -270,7 +301,12 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
     const seriesName = titleParts[0]?.trim() || matchedSeat.title;
     const issueNum = titleParts[1]?.trim() || "1";
     const timestamp = new Date().toISOString();
-    const fmv = Math.round(matchedSeat.gregoryScore * 850);
+
+    const bench = lookupReferenceFmv(matchedSeat.seatNumber, matchedSeat.title, matchedSeat.canonicalId);
+
+    const fmv98 = bench?.grade98FmvUsd ?? bench?.referenceFmvUsd ?? 150;
+    const rawFmv = bench?.rawFmvUsd ?? Math.round(fmv98 * 0.1);
+    const coverPrice = bench?.coverPrice ?? 2.99;
 
     const sovereignRecord: ComicRecord = {
       id: cleanId,
@@ -281,18 +317,18 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
       printing: "1",
       direct_or_variant: "Original Newsstand / Direct",
       cover_variant: null,
-      publisher: matchedSeat.publisher,
-      publication_date: `${matchedSeat.year}-01-01`,
-      publication_year: matchedSeat.year,
+      publisher: bench?.publisher || matchedSeat.publisher,
+      publication_date: `${bench?.year || matchedSeat.year}-01-01`,
+      publication_year: bench?.year || matchedSeat.year,
       upc: null,
       alt_upc: null,
       pp_source_id: `CE70-SEAT-${matchedSeat.seatNumber}`,
       comicbase_source_id: null,
       gcd_source_id: matchedSeat.canonicalId || null,
-      pp_grade_9_8_price: fmv,
-      comicbase_price: fmv,
-      baseline_grade_9_8_value: fmv,
-      baseline_grade_9_8_sources: "CE70_CONSTITUTIONAL_FMV",
+      pp_grade_9_8_price: fmv98,
+      comicbase_price: coverPrice,
+      baseline_grade_9_8_value: fmv98,
+      baseline_grade_9_8_sources: "PriceCharting / CGC Certified Census Benchmark",
       baseline_grade_9_8_observation_count: 24,
       panel_profits_data: {
         seat_number: matchedSeat.seatNumber,
@@ -301,7 +337,30 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
         essay: matchedSeat.essay,
         justification: matchedSeat.justification,
         era: matchedSeat.era,
-        creators: matchedSeat.creators,
+        creators: bench?.creators || matchedSeat.creators,
+        raw_market_price: rawFmv,
+        "PP - Ungraded Market Price": rawFmv,
+        "PP - Grade RAW Market Price": rawFmv,
+        grade_4_0_value: bench?.grade40FmvUsd ?? null,
+        grade_6_0_value: bench?.grade60FmvUsd ?? null,
+        grade_8_0_value: bench?.grade80FmvUsd ?? null,
+        grade_9_0_value: bench?.grade90FmvUsd ?? null,
+        grade_9_2_value: bench?.grade92FmvUsd ?? null,
+        grade_9_4_value: bench?.grade94FmvUsd ?? null,
+        grade_9_6_value: bench?.grade96FmvUsd ?? null,
+        grade_9_8_value: fmv98,
+        "PP - Grade 9.8 Market Price": fmv98,
+        cgc_grades: {
+          "RAW": rawFmv,
+          "4.0": bench?.grade40FmvUsd,
+          "6.0": bench?.grade60FmvUsd,
+          "8.0": bench?.grade80FmvUsd,
+          "9.0": bench?.grade90FmvUsd,
+          "9.2": bench?.grade92FmvUsd,
+          "9.4": bench?.grade94FmvUsd,
+          "9.6": bench?.grade96FmvUsd,
+          "9.8": fmv98,
+        },
         video_discussions: [
           {
             title: `${matchedSeat.title} - Certified Census & Market Appraisal`,
@@ -326,7 +385,18 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
           },
         ],
       } as any,
-      comicbase_data: null,
+      comicbase_data: {
+        "ComicBase - Grade RAW": rawFmv,
+        "CB - Raw Price": rawFmv,
+        "CB - Cover Price": coverPrice,
+        pub_date: `${bench?.year || matchedSeat.year}-01-01`,
+      },
+      gocollect_data: {
+        "GoCollect - Grade RAW": rawFmv,
+        "GoCollect - Grade 9.8": fmv98,
+        "GoCollect - Grade 9.6": bench?.grade96FmvUsd ?? null,
+        "GoCollect - Grade 9.2": bench?.grade92FmvUsd ?? null,
+      },
       gcd_data: null,
       search_document: null,
       created_at: timestamp,

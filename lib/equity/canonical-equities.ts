@@ -2,6 +2,7 @@ import { createCleanReadOnlyServerClient } from "@/lib/supabase/admin";
 import { isMissingTableError } from "@/lib/supabase/errors";
 import { createCachedQuery } from "@/lib/cache/wrapper";
 import { generateDynamicCoverSvg } from "@/lib/comics/cover-resolver";
+import { lookupReferenceFmv } from "@/lib/pricing/reference-benchmarks";
 import verifiedCoversJson from "./verified-covers.json";
 import ce70ReferenceFmv from "./ce70-reference-fmv.json";
 
@@ -287,9 +288,9 @@ async function fetchSovereignEquitiesRaw(limit = 70): Promise<SovereignEquityIte
       if (seenSeats.has(seatKey)) continue;
       seenSeats.add(seatKey);
 
-      const seatRef = REFERENCE_FMV_MAP[String(row.seat_number)];
-      const fmv = seatRef?.referenceFmvUsd ?? (Number(row.reference_fmv_usd) || 0);
-      const grade = seatRef?.referenceGrade ?? (row.reference_grade || "9.0");
+      const seatRef = lookupReferenceFmv(row.seat_number, row.title || row.series, row.canonical_issue_id);
+      const fmv = seatRef?.referenceFmvUsd ?? seatRef?.grade98FmvUsd ?? (Number(row.reference_fmv_usd) || 0);
+      const grade = seatRef?.referenceGrade ?? (row.reference_grade || "9.8");
 
       const cid = (row.canonical_issue_id || "").toLowerCase();
       const lin = (row.lineage || "").toLowerCase();
@@ -508,7 +509,9 @@ export async function getSovereignEquityDossier(identifier: string): Promise<Det
     const issueMatch = dossierData.title.match(/#?(\d+)/);
     const issueNum = issueMatch ? issueMatch[1] : "1";
     const ticker = formatComicEquityTicker(seriesTitle, issueNum, "SOV");
-    const baseFmv = Math.round(dossierData.gregoryScore * 145);
+    const bench = lookupReferenceFmv(dossierData.seatNumber, dossierData.title, dossierData.canonicalId);
+    const baseFmv = bench?.referenceFmvUsd ?? bench?.grade98FmvUsd ?? 150;
+    const refGrade = bench?.referenceGrade ?? "9.8";
 
     matched = {
       id: `ce70_seat_${dossierData.seatNumber}`,
@@ -521,9 +524,9 @@ export async function getSovereignEquityDossier(identifier: string): Promise<Det
       originEra: String(dossierData.era || "").replace(/\s*Age$/i, "").toUpperCase() || "MODERN",
       productionAge: String(dossierData.era || "").replace(/\s*Age$/i, "").toUpperCase() || "MODERN",
       lineage: `${seriesTitle} Lineage`,
-      referenceGrade: "9.8",
+      referenceGrade: refGrade,
       referenceFmvUsd: baseFmv,
-      priceFormatted: `$${baseFmv.toLocaleString()}`,
+      priceFormatted: `$${baseFmv.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       gregoryScore: dossierData.gregoryScore,
       deltaPercent: Number(((dossierData.gregoryScore - 190.0) * 0.45).toFixed(2)),
       status: "ACTIVE",
@@ -533,6 +536,14 @@ export async function getSovereignEquityDossier(identifier: string): Promise<Det
   }
 
   if (!matched) return null;
+
+  // Re-align matched reference FMV to authentic PriceCharting benchmark if present
+  const seatBenchmark = lookupReferenceFmv(matched.seatNumber, matched.title, matched.canonicalIssueId);
+  if (seatBenchmark?.referenceFmvUsd) {
+    matched.referenceFmvUsd = seatBenchmark.referenceFmvUsd;
+    matched.referenceGrade = seatBenchmark.referenceGrade ?? matched.referenceGrade;
+    matched.priceFormatted = `$${seatBenchmark.referenceFmvUsd.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
 
   // Synthesize 30-day continuous valuation history anchored to real reference FMV
   const basePrice = matched.referenceFmvUsd;
