@@ -88,17 +88,17 @@ export function AssetsRail({ items }: AssetsRailProps) {
 
       {/* Continuously Animated Constituents / Asset Classes Marquee Rail */}
       <div
-        className="assets-marquee relative min-w-0 overflow-hidden py-3 bg-[#04060C]"
+        className="assets-marquee relative min-w-0 overflow-hidden py-1 bg-[#04060C]"
         role="region"
         aria-label="Certified Asset Surfaces Ticker"
       >
         {/* Left & Right Bloomberg Ambient Fade Scrims */}
-        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-12 sm:w-20 bg-gradient-to-r from-[#04060C] via-[#04060C]/80 to-transparent z-10" />
-        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-12 sm:w-20 bg-gradient-to-l from-[#04060C] via-[#04060C]/80 to-transparent z-10" />
+        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-r from-[#04060C] via-[#04060C]/80 to-transparent z-10" />
+        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-l from-[#04060C] via-[#04060C]/80 to-transparent z-10" />
 
         {selectedFilter === "SEATS" ? (
           marqueeSeats.length > 0 ? (
-            <div className="assets-marquee-track flex w-max items-stretch gap-3.5 px-4 hover:[animation-play-state:paused] focus-within:[animation-play-state:paused] motion-reduce:animate-none">
+            <div className="assets-marquee-track flex w-max items-center hover:[animation-play-state:paused] focus-within:[animation-play-state:paused] motion-reduce:animate-none">
               {marqueeSeats.map((seat, index) => {
                 const eraColors = getEraColors(seat.era);
                 const coverSrc =
@@ -114,19 +114,19 @@ export function AssetsRail({ items }: AssetsRailProps) {
                   <Link
                     key={`${seat.id}-${index}`}
                     href={`/assets/${encodeURIComponent(seat.id)}`}
-                    className="asset-seat-card group w-[184px] shrink-0 rounded-lg overflow-hidden border border-slate-800/80 bg-[#090D17] flex flex-col focus:outline-none focus:ring-1 focus:ring-cyan-400 select-none"
+                    className="asset-seat-card group flex shrink-0 items-center gap-2 rounded border border-slate-800/80 bg-[#090D17] px-2.5 py-1 text-[11px] transition-all hover:border-cyan-400/60 hover:bg-[#0F1626] focus:outline-none focus:ring-1 focus:ring-cyan-400 select-none mr-2.5"
                     style={{
                       ["--rim" as string]: eraColors.border || "#06b6d4",
                     }}
                     title={`Inspect Seat #${seat.seatNumber}: ${seat.titleIssue} (Gregory Score: ${seat.gregoryScore})`}
                   >
-                    {/* Authentic Comic Cover Artwork Frame (2:3 Aspect Ratio) */}
-                    <div className="relative w-full aspect-[2/3] max-h-[190px] overflow-hidden bg-[#030508] border-b border-slate-800/80">
+                    {/* Authentic Cover Thumbnail (Crisp 2:3 Thumbnail) */}
+                    <div className="relative h-7 w-5 shrink-0 overflow-hidden rounded-[2px] border border-slate-800 bg-[#030508]">
                       <img
                         src={coverSrc}
                         alt={seat.titleIssue}
                         loading="lazy"
-                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
                         onError={(e) => {
                           e.currentTarget.onerror = null;
                           e.currentTarget.src = generateDynamicCoverSvg(
@@ -137,68 +137,53 @@ export function AssetsRail({ items }: AssetsRailProps) {
                           );
                         }}
                       />
-
-                      {/* Top Seat & Era Overlays */}
-                      <div className="absolute top-1.5 inset-x-1.5 flex items-center justify-between gap-1 pointer-events-none">
-                        <span className="rounded bg-cyan-950/85 border border-cyan-500/40 px-1.5 py-0.5 font-mono text-[7.5px] font-bold text-cyan-300 backdrop-blur-md shadow-sm">
-                          {`SEAT #${seat.seatNumber}`}
-                        </span>
-                        <span
-                          className="px-1.5 py-0.5 rounded text-[7.5px] font-mono font-bold tracking-wider uppercase backdrop-blur-md shadow-sm"
-                          style={{
-                            backgroundColor: eraColors.bg,
-                            color: "#FFF",
-                            border: `1px solid ${eraColors.border}`,
-                          }}
-                        >
-                          {seat.era}
-                        </span>
-                      </div>
-
-                      {/* Bottom Scrim & Publisher / Year */}
-                      <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-[#090D17] via-[#090D17]/80 to-transparent flex items-end px-2 pb-1">
-                        <span className="text-[8.5px] font-mono text-slate-300 truncate drop-shadow">
-                          {seat.publisher} · {seat.year}
-                        </span>
-                      </div>
                     </div>
 
-                    {/* Asset Seat Metadata Strip */}
-                    <div className="p-2.5 flex-1 flex flex-col justify-between gap-1 bg-[#090D17]">
-                      {/* Title & Issue */}
-                      <div className="text-[11.5px] font-bold text-slate-100 truncate group-hover:text-cyan-300 transition-colors leading-snug">
+                    {/* Seat Number & Title */}
+                    <div className="flex items-center gap-1.5 whitespace-nowrap">
+                      <span className="rounded bg-cyan-950/85 border border-cyan-500/40 px-1.5 py-0.2 font-mono text-[9px] font-bold text-cyan-300">
+                        {`SEAT #${seat.seatNumber}`}
+                      </span>
+                      <span className="text-slate-200 group-hover:text-cyan-300 transition-colors font-medium max-w-[140px] truncate">
                         {seat.titleIssue}
-                      </div>
-
-                      {/* Creators */}
-                      <div className="text-[9px] text-slate-400 font-mono truncate" title={seat.primaryCreators}>
-                        {seat.primaryCreators}
-                      </div>
-
-                      {/* Gregory Score & Era Subclass */}
-                      <div className="flex items-center justify-between gap-1 pt-0.5 border-t border-slate-800/60 font-mono text-[9px]">
-                        <span className="rounded bg-cyan-950/70 border border-cyan-500/40 px-1.5 py-0.2 text-cyan-300 font-bold">
-                          {`GS ${seat.gregoryScore}`}
-                        </span>
-                        <span className="text-slate-400 text-[8.5px]">
-                          {`${seat.era} CONSTITUENT`}
-                        </span>
-                      </div>
+                      </span>
                     </div>
+
+                    {/* Era & Gregory Score */}
+                    <div className="flex items-center gap-1 font-mono text-[9px]">
+                      <span
+                        className="px-1 py-0.2 rounded text-[7.5px] font-mono font-bold tracking-wider uppercase"
+                        style={{
+                          backgroundColor: eraColors.bg,
+                          color: "#FFF",
+                          border: `1px solid ${eraColors.border}`,
+                        }}
+                      >
+                        {seat.era}
+                      </span>
+                      <span className="rounded bg-slate-800/80 px-1 py-0.2 text-cyan-300 font-bold border border-slate-700 text-[8.5px]">
+                        {`GS ${seat.gregoryScore}`}
+                      </span>
+                    </div>
+
+                    {/* Publisher & Year */}
+                    <span className="text-slate-400 text-[9px] font-mono hidden md:inline">
+                      {seat.publisher} · {seat.year}
+                    </span>
                   </Link>
                 );
               })}
             </div>
           ) : (
-            <div className="flex items-center justify-center py-8">
-              <span className="border border-cyan-900/40 bg-cyan-950/20 px-3 py-1 text-[11px] font-mono uppercase tracking-[0.14em] text-cyan-300">
-                Loading Sovereign Asset Seats...
+            <div className="flex items-center justify-center py-2">
+              <span className="border border-cyan-900/40 bg-cyan-950/20 px-3 py-0.5 text-[10px] font-mono uppercase tracking-[0.14em] text-cyan-300">
+                Synchronizing Sovereign Asset Seats...
               </span>
             </div>
           )
         ) : (
           /* 16 Canonical Collectible Asset Classes Track */
-          <div className="assets-marquee-track flex w-max items-stretch gap-3.5 px-4 hover:[animation-play-state:paused] focus-within:[animation-play-state:paused] motion-reduce:animate-none">
+          <div className="assets-marquee-track flex w-max items-center hover:[animation-play-state:paused] focus-within:[animation-play-state:paused] motion-reduce:animate-none">
             {marqueeClasses.map((cls, index) => {
               const borderColors: Record<string, string> = {
                 SOV: "#10b981",
@@ -223,47 +208,28 @@ export function AssetsRail({ items }: AssetsRailProps) {
               return (
                 <div
                   key={`${cls.id}-${index}`}
-                  className="asset-seat-card group w-[210px] shrink-0 rounded-lg overflow-hidden border border-slate-800/80 bg-[#090D17] flex flex-col p-3 transition-all duration-200 justify-between select-none"
+                  className="asset-seat-card group flex shrink-0 items-center gap-2 rounded border border-slate-800/80 bg-[#090D17] px-2.5 py-1 text-[11px] transition-all hover:border-cyan-400/60 hover:bg-[#0F1626] select-none mr-2.5"
                   style={{
                     ["--rim" as string]: accentColor,
                   }}
                 >
-                  <div>
-                    {/* Header: Short Code & Liquidity Tier */}
-                    <div className="flex items-center justify-between gap-1 mb-2">
-                      <span
-                        className="rounded px-1.5 py-0.5 font-mono text-[9px] font-bold tracking-wider"
-                        style={{
-                          backgroundColor: `${accentColor}18`,
-                          color: accentColor,
-                          border: `1px solid ${accentColor}40`,
-                        }}
-                      >
-                        {cls.shortCode}
-                      </span>
-                      <span className="rounded bg-slate-900 border border-slate-800 px-1.5 py-0.5 text-[8px] font-mono text-slate-400 font-semibold">
-                        {cls.liquidityTier}
-                      </span>
-                    </div>
-
-                    {/* Class Name */}
-                    <div className="text-[12px] font-bold text-slate-100 mb-1 group-hover:text-cyan-300 transition-colors">
-                      {cls.name}
-                    </div>
-
-                    {/* Description */}
-                    <p className="text-[9.5px] text-slate-400 line-clamp-2 leading-relaxed">
-                      {cls.description}
-                    </p>
-                  </div>
-
-                  {/* Pricing Factor & Role */}
-                  <div className="mt-3 pt-2 border-t border-slate-800/60 font-mono text-[8.5px] flex items-center justify-between gap-1">
-                    <span className="text-slate-400 truncate">{cls.marketRole}</span>
-                    <span className="font-bold text-slate-200 shrink-0" style={{ color: accentColor }}>
-                      {cls.pricingPremiumFactor}
-                    </span>
-                  </div>
+                  <span
+                    className="rounded px-1.5 py-0.2 font-mono text-[9px] font-bold tracking-wider"
+                    style={{
+                      backgroundColor: `${accentColor}18`,
+                      color: accentColor,
+                      border: `1px solid ${accentColor}40`,
+                    }}
+                  >
+                    {cls.shortCode}
+                  </span>
+                  <span className="font-medium text-slate-200">{cls.name}</span>
+                  <span className="rounded bg-slate-900 border border-slate-800 px-1 py-0.2 text-[8px] font-mono text-slate-400">
+                    {cls.liquidityTier}
+                  </span>
+                  <span className="text-[9px] font-mono text-emerald-400 font-bold">
+                    {cls.pricingPremiumFactor}
+                  </span>
                 </div>
               );
             })}

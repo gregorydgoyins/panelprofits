@@ -115,16 +115,16 @@ export function EquitiesRail({ items, indices = [] }: EquitiesRailProps) {
 
       {/* Continuously Animated Sovereign Comic Constituents Marquee Rail */}
       <div
-        className="equities-marquee relative min-w-0 overflow-hidden py-3 bg-[#05070C]"
+        className="equities-marquee relative min-w-0 overflow-hidden py-1 bg-[#05070C]"
         role="region"
         aria-label="Sovereign Comic Constituents Ticker"
       >
         {/* Left & Right Bloomberg Ambient Fade Scrims */}
-        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-12 sm:w-20 bg-gradient-to-r from-[#05070C] via-[#05070C]/80 to-transparent z-10" />
-        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-12 sm:w-20 bg-gradient-to-l from-[#05070C] via-[#05070C]/80 to-transparent z-10" />
+        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-r from-[#05070C] via-[#05070C]/80 to-transparent z-10" />
+        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-l from-[#05070C] via-[#05070C]/80 to-transparent z-10" />
 
         {marqueeItems.length > 0 ? (
-          <div className="equities-marquee-track flex w-max items-stretch gap-3.5 px-4 hover:[animation-play-state:paused] focus-within:[animation-play-state:paused] motion-reduce:animate-none">
+          <div className="equities-marquee-track flex w-max items-center hover:[animation-play-state:paused] focus-within:[animation-play-state:paused] motion-reduce:animate-none">
             {marqueeItems.map((item, index) => {
               const isPositive = item.deltaPercent >= 0;
               const eraColors = getEraColors(item.originEra);
@@ -141,19 +141,19 @@ export function EquitiesRail({ items, indices = [] }: EquitiesRailProps) {
                 <Link
                   key={`${item.id}-${index}`}
                   href={`/equity/${item.ticker}`}
-                  className="equity-card group w-[184px] shrink-0 rounded-lg overflow-hidden border border-slate-800/80 bg-[#0A0D15] flex flex-col focus:outline-none focus:ring-1 focus:ring-emerald-400 select-none"
+                  className="equity-card group flex shrink-0 items-center gap-2 rounded border border-slate-800/80 bg-[#0A0D15] px-2.5 py-1 text-[11px] transition-all hover:border-emerald-500/60 hover:bg-[#101624] focus:outline-none focus:ring-1 focus:ring-emerald-400 select-none mr-2.5"
                   style={{
                     ["--rim" as string]: eraColors.border,
                   }}
                   title={`Inspect ${item.series} #${item.issueNumber} (${item.ticker}) — FMV ${item.priceFormatted}`}
                 >
-                  {/* Authentic Comic Cover Artwork Frame (2:3 Aspect Ratio) */}
-                  <div className="relative w-full aspect-[2/3] max-h-[190px] overflow-hidden bg-[#030508] border-b border-slate-800/80">
+                  {/* Authentic Comic Cover Artwork Frame (Crisp 2:3 Thumbnail) */}
+                  <div className="relative h-7 w-5 shrink-0 overflow-hidden rounded-[2px] border border-slate-800 bg-[#030508]">
                     <img
                       src={coverSrc}
                       alt={`${item.series} #${item.issueNumber}`}
                       loading="lazy"
-                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
                       onError={(e) => {
                         e.currentTarget.onerror = null;
                         e.currentTarget.src = generateDynamicCoverSvg(
@@ -164,68 +164,53 @@ export function EquitiesRail({ items, indices = [] }: EquitiesRailProps) {
                         );
                       }}
                     />
-
-                    {/* Top Era & Grade Overlays */}
-                    <div className="absolute top-1.5 inset-x-1.5 flex items-center justify-between gap-1 pointer-events-none">
-                      <span
-                        className="px-1.5 py-0.5 rounded text-[7.5px] font-mono font-bold tracking-wider uppercase backdrop-blur-md shadow-sm"
-                        style={{
-                          backgroundColor: eraColors.bg,
-                          color: "#FFF",
-                          border: `1px solid ${eraColors.border}`,
-                        }}
-                      >
-                        {item.originEra}
-                      </span>
-                      <span className="px-1.5 py-0.5 rounded text-[7.5px] font-mono font-bold tracking-wider uppercase bg-black/80 text-emerald-300 border border-emerald-500/40 backdrop-blur-md shadow-sm">
-                        CGC {item.referenceGrade}
-                      </span>
-                    </div>
-
-                    {/* Bottom Scrim & Seat Index */}
-                    <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-[#0A0D15] via-[#0A0D15]/80 to-transparent flex items-end px-2 pb-1">
-                      <span className="text-[8.5px] font-mono font-bold text-slate-300 tracking-wide drop-shadow">
-                        {`SEAT #${item.seatNumber}`}
-                      </span>
-                    </div>
                   </div>
 
-                  {/* Comic Financial & Identity Dossier Strip */}
-                  <div className="p-2.5 flex-1 flex flex-col justify-between gap-1 bg-[#0A0D15]">
-                    {/* Ticker & Lineage */}
-                    <div className="flex items-center justify-between gap-1.5">
-                      <span className="rounded bg-emerald-950/70 border border-emerald-500/40 px-1.5 py-0.2 font-mono text-[9px] font-bold text-emerald-300">
-                        {item.ticker}
-                      </span>
-                      <span className="text-[8.5px] font-mono text-slate-400 truncate max-w-[80px]" title={item.lineage}>
-                        {item.lineage.replace(/\s+Lineage$/i, "")}
-                      </span>
-                    </div>
+                  {/* Ticker & Lineage */}
+                  <div className="flex items-center gap-1.5 whitespace-nowrap">
+                    <span className="rounded bg-emerald-950/70 border border-emerald-500/40 px-1 py-0.2 font-mono text-[9px] font-bold text-emerald-300">
+                      {item.ticker}
+                    </span>
+                    <span className="text-slate-200 group-hover:text-emerald-300 transition-colors font-medium max-w-[130px] truncate">
+                      {item.series} #{item.issueNumber}
+                    </span>
+                  </div>
 
-                    {/* Series & Issue */}
-                    <div className="text-[11.5px] font-bold text-slate-100 truncate group-hover:text-emerald-300 transition-colors leading-snug">
-                      {`${item.series} #${item.issueNumber}`}
-                    </div>
+                  {/* Era Badge */}
+                  <span
+                    className="px-1 py-0.2 rounded text-[7.5px] font-mono font-bold tracking-wider uppercase"
+                    style={{
+                      backgroundColor: eraColors.bg,
+                      color: "#FFF",
+                      border: `1px solid ${eraColors.border}`,
+                    }}
+                  >
+                    {item.originEra}
+                  </span>
 
-                    {/* Reference FMV & Performance Delta */}
-                    <div className="flex items-center justify-between gap-1 pt-0.5 border-t border-slate-800/60 font-mono">
-                      <span className="font-bold text-emerald-400 text-[12px]">{item.priceFormatted}</span>
-                      <span
-                        className={`text-[8.5px] font-bold flex items-center gap-0.5 ${
-                          isPositive ? "text-emerald-400" : "text-rose-400"
-                        }`}
-                      >
-                        {isPositive ? `▲ +${item.deltaPercent}%` : `▼ ${item.deltaPercent}%`}
-                      </span>
-                    </div>
+                  {/* CGC Grade */}
+                  <span className="text-[9px] font-mono text-slate-400">
+                    CGC {item.referenceGrade}
+                  </span>
+
+                  {/* Price & Performance Delta */}
+                  <div className="flex items-center gap-1.5 font-mono">
+                    <span className="font-bold text-emerald-400 text-[11px]">{item.priceFormatted}</span>
+                    <span
+                      className={`text-[8.5px] font-bold ${
+                        isPositive ? "text-emerald-400" : "text-rose-400"
+                      }`}
+                    >
+                      {isPositive ? `▲ +${item.deltaPercent}%` : `▼ ${item.deltaPercent}%`}
+                    </span>
                   </div>
                 </Link>
               );
             })}
           </div>
         ) : (
-          <div className="flex items-center justify-center py-8">
-            <span className="border border-emerald-900/40 bg-emerald-950/20 px-3 py-1 text-[11px] font-mono uppercase tracking-[0.14em] text-emerald-300">
+          <div className="flex items-center justify-center py-2">
+            <span className="border border-emerald-900/40 bg-emerald-950/20 px-3 py-0.5 text-[10px] font-mono uppercase tracking-[0.14em] text-emerald-300">
               Synchronizing CE70 Sovereign Port...
             </span>
           </div>

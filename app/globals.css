@@ -30,12 +30,15 @@
 }
 
 @keyframes panel-profits-equities-marquee {
-  from { transform: translateX(0); }
-  to { transform: translateX(calc(-50% - 0.25rem)); }
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
 }
 
 .equities-marquee-track {
   animation: panel-profits-equities-marquee 120s linear infinite;
+  display: flex;
+  width: max-content;
+  will-change: transform;
 }
 
 .equities-marquee {
@@ -57,12 +60,15 @@
 }
 
 @keyframes panel-profits-assets-marquee {
-  from { transform: translateX(0); }
-  to { transform: translateX(calc(-50% - 0.25rem)); }
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
 }
 
 .assets-marquee-track {
   animation: panel-profits-assets-marquee 140s linear infinite;
+  display: flex;
+  width: max-content;
+  will-change: transform;
 }
 
 .assets-marquee {
