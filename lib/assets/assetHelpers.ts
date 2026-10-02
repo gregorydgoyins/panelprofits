@@ -188,9 +188,10 @@ export function formatHumanTicker(symbol: any, displayName?: string, assetType?:
   return `$${tickerCode.toUpperCase()}`;
 }
 
-export function symbolToReadableName(symbol: string, assetType?: string): string {
-  if (!symbol) return assetType || 'Asset';
-  let s = symbol
+export function symbolToReadableName(symbol: any, assetType?: string): string {
+  const symStr = String(symbol ?? '').trim();
+  if (!symStr) return assetType || 'Asset';
+  let s = symStr
     .replace(/^PP-(?:CHAR|ALS|CRT|VIL|LOC|TEAM|GAD|FILM|REAL|IDX|PET|PWR|WKN|DCCHAR|DCTEAM|DEAD|BSTAT)-/i, '')
     .replace(/^(?:COMM|FX|VOL|IDX|OPT|NFT|BOND|ETF|FUND|HEDGE|REIT|STRUCT|TREAS|PRIV|SWAP|CRED|CRYP)-/i, '');
   s = s.replace(/-(?:earth|prime|ultimate|nu|universe)-\d+$/i, '');
@@ -272,8 +273,8 @@ export function getTypeLabel(item: AssetItem, assetType: string): string {
       return fmt2(count > 0 ? `${count.toLocaleString()} instr` : null, method);
     }
     case 'OPTIONS': {
-      const bucket      = (item.diversityBucket || '').toLowerCase();
-      const sym         = (item.symbol || '').toUpperCase();
+      const bucket      = String(item.diversityBucket || '').toLowerCase();
+      const sym         = String(item.symbol || '').toUpperCase();
       const isStraddle  = bucket === 'straddle'  || sym.includes('-STR-');
       const isButterfly = bucket === 'butterfly' || sym.includes('-BTF-');
       const isCall      = !isStraddle && !isButterfly && (bucket === 'call' || sym.includes('-C-'));
@@ -296,7 +297,7 @@ export function getTypeLabel(item: AssetItem, assetType: string): string {
       return fmt2('TRS', formatUSD(notional));
     }
     case 'BOND': {
-      const species  = (get<string>('species') || '').toUpperCase();
+      const species  = String(get<string>('species') || '').toUpperCase();
       const duration = get<number>('duration_months') || 0;
       const coupon   = get<number>('coupon_pct') || get<number>('coupon') || 0;
       const yrs      = duration > 0 ? `${Math.round(duration / 12)}Y` : '';

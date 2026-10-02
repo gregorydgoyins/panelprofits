@@ -107,7 +107,7 @@ export function MarketClocks() {
       const connectedFirm = localStorage.getItem("pp-connected-firm") || "arnveld";
       const homeOffice = FIRM_HOME_OFFICES[connectedFirm] || FIRM_HOME_OFFICES.arnveld;
       setHomeZone(homeOffice.zone);
-      setHomeLabel(homeOffice.label.toUpperCase());
+      setHomeLabel(String(homeOffice?.label || "NEW YORK").toUpperCase());
       setBarometersVisible(localStorage.getItem("pp-barometers-visible") === "true");
       setClockRailVisible(localStorage.getItem("pp-clock-rail-visible") !== "false");
       try {

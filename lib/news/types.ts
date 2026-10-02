@@ -59,8 +59,9 @@ export function shortNewsSource(source: string): string {
     "image comics": "IMAGE",
   };
   if (labels[normalized]) return labels[normalized];
-  if (source.length <= 14) return source.toUpperCase();
-  return source.split(/\s+/).map((word) => word[0]).join("").slice(0, 5).toUpperCase();
+  const srcStr = String(source || "NEWS");
+  if (srcStr.length <= 14) return srcStr.toUpperCase();
+  return srcStr.split(/\s+/).map((word) => word[0]).join("").slice(0, 5).toUpperCase();
 }
 
 export interface NewsSource {

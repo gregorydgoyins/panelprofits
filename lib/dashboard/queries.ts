@@ -280,7 +280,7 @@ async function fetchCleanAssetSurfacesRaw(limit = 24): Promise<CleanAssetSurface
         coverUrl: item.cover_url || null,
         coverStoragePath: null,
         assetClass: item.asset_class,
-        assetSubclass: item.asset_subclass || `${item.era.toUpperCase()} ERA`,
+        assetSubclass: item.asset_subclass || `${String(item.era || "GOLDEN").toUpperCase()} ERA`,
         constituentCount: item.constituent_count || 1,
         priceFormatted: null,
       }));

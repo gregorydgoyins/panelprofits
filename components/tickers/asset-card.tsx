@@ -97,9 +97,10 @@ export const AssetCard = React.memo(function AssetCard({
   const displayImage = item?.coverImageUrl || surfaceArt;
 
   const pricing = item?.pricing ?? {};
-  const eraKey = (pricing?.production_age ?? pricing?.era ?? null) as string | null;
-  const eraMeta = eraKey ? ERA_LOOKUP[eraKey.toLowerCase()] ?? null : null;
-  const eraLabel = eraMeta?.label?.replace(/ Age$/, "").toUpperCase() ?? eraKey?.toUpperCase() ?? null;
+  const eraKey = pricing?.production_age ?? pricing?.era ?? null;
+  const eraKeyStr = eraKey != null ? String(eraKey) : null;
+  const eraMeta = eraKeyStr ? ERA_LOOKUP[eraKeyStr.toLowerCase()] ?? null : null;
+  const eraLabel = eraMeta?.label?.replace(/ Age$/, "").toUpperCase() ?? (eraKeyStr ? eraKeyStr.toUpperCase() : null);
 
   const publisher = (item?.universe || pricing?.publisher || familyHeader.label || "GLOBAL") as string;
   const displayName = resolveCardDisplayName(item, surfaceKey);

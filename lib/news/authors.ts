@@ -278,7 +278,7 @@ export const AUTHOR_PERSONAS: AuthorPersona[] = [
 ];
 
 export function selectAuthorForStory(source: string, storyId: string): AuthorPersona {
-  const normSource = source.toUpperCase();
+  const normSource = String(source || "").toUpperCase();
   if (normSource.includes("CBR") || normSource.includes("BLEEDING COOL")) return AUTHOR_PERSONAS[0];
   if (normSource.includes("VARIETY") || normSource.includes("DEADLINE") || normSource.includes("THR")) return AUTHOR_PERSONAS[1];
   if (normSource.includes("SCREENRANT") || normSource.includes("GAMESRADAR")) return AUTHOR_PERSONAS[2];

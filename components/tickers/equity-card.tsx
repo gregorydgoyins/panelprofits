@@ -104,11 +104,11 @@ export const EquityCard = React.memo(function EquityCard({
   const delta = getDelta(pricing.delta_24 ?? pricing.delta_30 ?? pricing.delta_90);
   const { series: rawSeries, issueNum } = parseSeriesIssue(identity.productName || "");
 
-  const variantTag = identity.variant && identity.variant !== "standard" ? identity.variant : null;
+  const variantTag = typeof identity.variant === "string" && identity.variant !== "standard" ? identity.variant : null;
   const series = rawSeries.replace(/\s*\[[^\]]*\]\s*/g, " ").trim();
   const hasVariant = Boolean(variantTag);
 
-  const rawGrade = pricing.grade || "RAW";
+  const rawGrade = String(pricing.grade ?? "RAW");
   const isRawCopy = !rawGrade || rawGrade === "RAW" || rawGrade.toUpperCase() === "RAW";
   const isTrueVariant = Boolean(variantTag && !["direct", "base", "regular"].includes(variantTag.toLowerCase()));
 
