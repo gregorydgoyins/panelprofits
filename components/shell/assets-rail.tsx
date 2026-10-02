@@ -101,12 +101,14 @@ export function AssetsRail({ items }: AssetsRailProps) {
             <div className="assets-marquee-track flex w-max items-stretch gap-3.5 px-4 hover:[animation-play-state:paused] focus-within:[animation-play-state:paused] motion-reduce:animate-none">
               {marqueeSeats.map((seat, index) => {
                 const eraColors = getEraColors(seat.era);
-                const fallbackSvg = generateDynamicCoverSvg(
-                  seat.series,
-                  seat.issueNumber,
-                  seat.publisher,
-                  seat.year
-                );
+                const coverSrc =
+                  seat.coverUrl ||
+                  generateDynamicCoverSvg(
+                    seat.series,
+                    seat.issueNumber,
+                    seat.publisher,
+                    seat.year
+                  );
 
                 return (
                   <Link
@@ -121,13 +123,18 @@ export function AssetsRail({ items }: AssetsRailProps) {
                     {/* Authentic Comic Cover Artwork Frame (2:3 Aspect Ratio) */}
                     <div className="relative w-full aspect-[2/3] max-h-[190px] overflow-hidden bg-[#030508] border-b border-slate-800/80">
                       <img
-                        src={seat.coverUrl || fallbackSvg}
+                        src={coverSrc}
                         alt={seat.titleIssue}
                         loading="lazy"
                         className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                         onError={(e) => {
                           e.currentTarget.onerror = null;
-                          e.currentTarget.src = fallbackSvg;
+                          e.currentTarget.src = generateDynamicCoverSvg(
+                            seat.series,
+                            seat.issueNumber,
+                            seat.publisher,
+                            seat.year
+                          );
                         }}
                       />
 

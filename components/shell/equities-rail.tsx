@@ -128,12 +128,14 @@ export function EquitiesRail({ items, indices = [] }: EquitiesRailProps) {
             {marqueeItems.map((item, index) => {
               const isPositive = item.deltaPercent >= 0;
               const eraColors = getEraColors(item.originEra);
-              const fallbackSvg = generateDynamicCoverSvg(
-                item.series,
-                item.issueNumber,
-                item.lineage.includes("DC") ? "DC Comics" : item.lineage.includes("Marvel") ? "Marvel" : "Independent",
-                1960
-              );
+              const coverSrc =
+                item.coverUrl ||
+                generateDynamicCoverSvg(
+                  item.series,
+                  item.issueNumber,
+                  item.lineage.includes("DC") ? "DC Comics" : item.lineage.includes("Marvel") ? "Marvel" : "Independent",
+                  1960
+                );
 
               return (
                 <Link
@@ -148,13 +150,18 @@ export function EquitiesRail({ items, indices = [] }: EquitiesRailProps) {
                   {/* Authentic Comic Cover Artwork Frame (2:3 Aspect Ratio) */}
                   <div className="relative w-full aspect-[2/3] max-h-[190px] overflow-hidden bg-[#030508] border-b border-slate-800/80">
                     <img
-                      src={item.coverUrl || fallbackSvg}
+                      src={coverSrc}
                       alt={`${item.series} #${item.issueNumber}`}
                       loading="lazy"
                       className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                       onError={(e) => {
                         e.currentTarget.onerror = null;
-                        e.currentTarget.src = fallbackSvg;
+                        e.currentTarget.src = generateDynamicCoverSvg(
+                          item.series,
+                          item.issueNumber,
+                          item.lineage.includes("DC") ? "DC Comics" : item.lineage.includes("Marvel") ? "Marvel" : "Independent",
+                          1960
+                        );
                       }}
                     />
 
