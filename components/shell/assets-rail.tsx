@@ -19,6 +19,8 @@ import { AssetCard } from "@/components/tickers/asset-card";
 import type { AssetItem, AssetResponse } from "@/lib/assets/types";
 import { getEraColors } from "@/lib/design-system/colors";
 
+import { INITIAL_SURFACE_ASSETS } from "@/lib/assets/initial-assets";
+
 const CARD_W = 227; // 215px card + 12px gap
 const SCROLL_SPEED = 40; // px/s (smooth deliberate asset market pace)
 const FETCH_MS = 5 * 60 * 1000;
@@ -29,10 +31,10 @@ interface AssetsRailProps {
 
 export function AssetsRail({ items: initialSeats = [] }: AssetsRailProps) {
   const trackRef = React.useRef<HTMLDivElement>(null);
-  const [selectedFilter, setSelectedFilter] = React.useState<"SEATS" | "CLASSES">("SEATS");
+  const [selectedFilter, setSelectedFilter] = React.useState<"ALL" | "CLASSES" | "SEATS">("ALL");
   const [selectedFamily, setSelectedFamily] = React.useState<string | null>(null);
 
-  // Convert initialSeats to AssetItem[] format for instant SSR rendering
+  // Convert initialSeats to AssetItem[] format for secondary SEATS toggle
   const seatAssetItems = React.useMemo<AssetItem[]>(() => {
     return initialSeats.map((seat) => {
       const eraKey = seat.era.toLowerCase().replace(/\s+age$/, "");
@@ -64,16 +66,24 @@ export function AssetsRail({ items: initialSeats = [] }: AssetsRailProps) {
     });
   }, [initialSeats]);
 
-  const [assetItems, setAssetItems] = React.useState<AssetItem[]>(seatAssetItems);
+  const [assetItems, setAssetItems] = React.useState<AssetItem[]>(INITIAL_SURFACE_ASSETS);
   const [surfaceCounts, setSurfaceCounts] = React.useState<Partial<Record<SurfaceKey, number>>>({});
   const [errored, setErrored] = React.useState(false);
 
   // Filter items by selected family if chosen
   const filteredItems = React.useMemo(() => {
-    if (!selectedFamily) return assetItems.length > 0 ? assetItems : seatAssetItems;
+    let baseList: AssetItem[];
+    if (selectedFilter === "SEATS") {
+      baseList = seatAssetItems;
+    } else if (selectedFilter === "CLASSES") {
+      baseList = assetItems.length > 0 ? assetItems : INITIAL_SURFACE_ASSETS;
+    } else {
+      baseList = [...seatAssetItems, ...(assetItems.length > 0 ? assetItems : INITIAL_SURFACE_ASSETS)];
+    }
+    if (!selectedFamily) return baseList;
     const members = FAMILY_MEMBERS[selectedFamily as keyof typeof FAMILY_MEMBERS] || [];
-    return assetItems.filter((it) => members.includes(it.assetType as SurfaceKey));
-  }, [assetItems, seatAssetItems, selectedFamily]);
+    return baseList.filter((it) => members.includes(it.assetType as SurfaceKey));
+  }, [assetItems, seatAssetItems, selectedFamily, selectedFilter]);
 
   // Adjust duration dynamically on item count
   React.useLayoutEffect(() => {
@@ -146,14 +156,27 @@ export function AssetsRail({ items: initialSeats = [] }: AssetsRailProps) {
             title="Open 16 Canonical Collectible Asset Classes Registry"
           >
             <Boxes className="h-3.5 w-3.5 text-cyan-400" />
-            <span className="hidden sm:inline">ASSETS</span>
-            <span className="rounded bg-cyan-950/70 border border-cyan-500/40 px-1 py-0.2 text-[9px] text-cyan-300 font-bold">
-              16 FAMILIES
+            <span className="hidden sm:inline">NON-EQUITY ASSETS</span>
+            <span className="rounded bg-cyan-950/70 border border-cyan-500/40 px-1.5 py-0.2 text-[9px] text-cyan-300 font-bold">
+              16 FAMILIES · 56 SURFACES
             </span>
           </Link>
 
-          {/* Toggle between Seats and Asset Families */}
+          {/* Toggle between 16 Asset Classes and 70 Sovereign Seats */}
           <div className="flex items-center rounded border border-slate-800 bg-[#080D17] p-0.5 ml-1">
+            <button
+              onClick={() => {
+                setSelectedFilter("CLASSES");
+                fetchSurfaces();
+              }}
+              className={`rounded px-2 py-0.5 text-[8.5px] font-mono uppercase tracking-wider transition-colors ${
+                selectedFilter === "CLASSES"
+                  ? "bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40"
+                  : "text-slate-500 hover:text-slate-300"
+              }`}
+            >
+              16 Asset Classes (56 Surfaces)
+            </button>
             <button
               onClick={() => {
                 setSelectedFilter("SEATS");
@@ -167,19 +190,6 @@ export function AssetsRail({ items: initialSeats = [] }: AssetsRailProps) {
             >
               70 Constituent Seats
             </button>
-            <button
-              onClick={() => {
-                setSelectedFilter("CLASSES");
-                fetchSurfaces();
-              }}
-              className={`rounded px-2 py-0.5 text-[8.5px] font-mono uppercase tracking-wider transition-colors ${
-                selectedFilter === "CLASSES"
-                  ? "bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40"
-                  : "text-slate-500 hover:text-slate-300"
-              }`}
-            >
-              16 Asset Classes
-            </button>
           </div>
         </div>
 
@@ -187,7 +197,9 @@ export function AssetsRail({ items: initialSeats = [] }: AssetsRailProps) {
         <div className="hidden sm:flex items-center gap-2 text-[9px] font-mono text-slate-500">
           <span className="text-cyan-400/90 font-semibold flex items-center gap-1">
             <Layers className="h-3 w-3 text-cyan-400" />
-            {selectedFilter === "SEATS" ? "CE70 CONSTITUENT GALLERY" : "CANONICAL MATRIX"}
+            {selectedFilter === "SEATS"
+              ? "CE70 CONSTITUENT SEATS"
+              : "Alter Egos (355 Firms) · Muni Bonds · Media IP · Derivatives · Volatility"}
           </span>
           <span className="text-slate-600 hidden md:inline">· Hover to Pause</span>
         </div>

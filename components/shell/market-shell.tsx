@@ -43,8 +43,8 @@ export async function MarketShell({ children }: MarketShellProps) {
       <Header />
       <RailVisibility setting="newsTicker"><NewsRail initialStories={newsStories} /></RailVisibility>
       <RailVisibility setting="marketTelemetry"><MarketTelemetryRail telemetry={telemetry} /></RailVisibility>
-      <RailVisibility setting="assets"><AssetsRail items={assetSurfaces} /></RailVisibility>
       <RailVisibility setting="equities"><EquitiesRail items={sovereignEquities} indices={marketIndices} /></RailVisibility>
+      <RailVisibility setting="assets"><AssetsRail items={assetSurfaces} /></RailVisibility>
       <RailVisibility setting="diary"><DiaryRail entries={diaryEntries} /></RailVisibility>
       <main className="flex-1">{children}</main>
       <Footer />

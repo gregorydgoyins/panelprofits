@@ -2,6 +2,7 @@ import { getCurrentUser, getUserCollections, getUserAllCollectionItems, getWatch
 import { calculateHoldingsSummary } from "@/lib/account/calculations";
 import { getFeaturedUniverseComics } from "@/lib/dashboard/queries";
 import { MarketUniverse } from "@/components/dashboard/market-universe";
+import { MarketBarometerBar } from "@/components/dashboard/market-barometer-bar";
 import { FeaturedComicUniverse } from "@/components/dashboard/featured-comic-universe";
 import { PriceIntelligenceCoverage } from "@/components/dashboard/price-intelligence-coverage";
 import { CatalogEntrySurface } from "@/components/dashboard/catalog-entry-surface";
@@ -62,7 +63,10 @@ export default async function DashboardPage() {
       {/* 1. Market Universe Coverage */}
       <MarketUniverse metrics={marketMetrics} />
 
-      {/* 2. Featured Comic Universe */}
+      {/* 2. Core Market Barometers & Health Indices */}
+      <MarketBarometerBar />
+
+      {/* 3. Featured Comic Universe */}
       <FeaturedComicUniverse comics={featuredComics} />
 
       {/* 3. Catalog Entry Surface */}

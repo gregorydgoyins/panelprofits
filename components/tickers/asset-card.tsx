@@ -92,9 +92,10 @@ export const AssetCard = React.memo(function AssetCard({
   const surfaceIcon = SURFACE_ICONS[surfaceKey] ?? "◈";
   const typeBadge = SURFACE_LABELS[surfaceKey] || surfaceKey;
 
-  // Resolves primary surface artwork graphic or cover image
+  // Resolves primary authentic 3D surface artwork graphic or constituent cover
   const surfaceArt = SURFACE_ART_MAP[surfaceKey] ?? null;
-  const displayImage = item?.coverImageUrl || surfaceArt;
+  const isSeat = Boolean((item?.parameters as any)?.seatNumber != null);
+  const displayImage = isSeat ? (item?.coverImageUrl || surfaceArt) : (surfaceArt || item?.coverImageUrl);
 
   const pricing = item?.pricing ?? {};
   const eraKey = pricing?.production_age ?? pricing?.era ?? null;
