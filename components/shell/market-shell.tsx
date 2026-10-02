@@ -32,8 +32,8 @@ export async function MarketShell({ children }: MarketShellProps) {
   const [telemetry, newsStories, assetSurfaces, sovereignEquities, marketIndices, diaryEntries] = await Promise.all([
     getMarketTelemetry(),
     getNewsStories(32),
-    getCanonicalAssetSurfaces(48),
-    getSovereignEquities(48),
+    getCanonicalAssetSurfaces(70),
+    getSovereignEquities(70),
     calculateMarketIndices(),
     user ? getDiaryEntries(user.id) : Promise.resolve([]),
   ]);

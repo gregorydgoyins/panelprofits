@@ -119,4 +119,122 @@ describe("Canonical Equities Symbology & 16 Asset Families Canon", () => {
     const uniqueSeatCovers = new Set(seatCovers);
     expect(uniqueSeatCovers.size).toBeGreaterThan(5);
   });
+
+  it("provides canonical era colors and dynamic rimlight tokens across all eras", async () => {
+    const { getEraColors, withAlpha } = await import("@/lib/design-system/colors");
+    const eras = ["platinum", "golden", "atomic", "silver", "bronze", "copper", "modern", "independent", "postmodern"];
+
+    for (const era of eras) {
+      const colors = getEraColors(era);
+      expect(colors).toBeDefined();
+      expect(colors.border).toMatch(/^#[0-9A-Fa-f]{6}$/);
+      expect(colors.bg).toContain("rgba");
+      expect(colors.glow).toContain("rgba");
+    }
+
+    // withAlpha helper test
+    expect(withAlpha("#C9A227", 0.5)).toContain("rgba");
+  });
+
+  it("renders EquitiesRail with animated equity-cards, authentic covers, and era rimlights", async () => {
+    const { EquitiesRail } = await import("@/components/shell/equities-rail");
+    const { renderToString } = await import("react-dom/server");
+
+    const sampleEquities = [
+      {
+        id: "eq-1",
+        seatNumber: 1,
+        seatType: "PRIMARY_DOMESTIC",
+        ticker: "ACT.252.SOV",
+        series: "Action Comics",
+        issueNumber: "252",
+        title: "Action Comics #252",
+        originEra: "SILVER",
+        productionAge: "SILVER",
+        lineage: "Superman Lineage",
+        referenceGrade: "9.8",
+        referenceFmvUsd: 48500,
+        priceFormatted: "$48,500",
+        gregoryScore: 196.4,
+        deltaPercent: 0.68,
+        status: "ACTIVE",
+        coverUrl: "/covers/action_comics_252.jpg",
+        canonicalIssueId: null,
+      },
+      {
+        id: "eq-2",
+        seatNumber: 2,
+        seatType: "PRIMARY_DOMESTIC",
+        ticker: "BAT.251.SOV",
+        series: "Batman",
+        issueNumber: "251",
+        title: "Batman #251",
+        originEra: "BRONZE",
+        productionAge: "BRONZE",
+        lineage: "Batman Lineage",
+        referenceGrade: "9.8",
+        referenceFmvUsd: 8500,
+        priceFormatted: "$8,500",
+        gregoryScore: 194.2,
+        deltaPercent: 0.42,
+        status: "ACTIVE",
+        coverUrl: "/covers/batman_251.jpg",
+        canonicalIssueId: null,
+      },
+    ];
+
+    const React = await import("react");
+    const html = renderToString(React.createElement(EquitiesRail, { items: sampleEquities }));
+
+    expect(html).toContain("EQUITIES");
+    expect(html).toContain("CE70");
+    expect(html).toContain("equity-card");
+    expect(html).toContain("--rim");
+    expect(html).toContain("ACT.252.SOV");
+    expect(html).toContain("Action Comics");
+    expect(html).toContain("$48,500");
+    expect(html).toContain("/covers/action_comics_252.jpg");
+    expect(html).toContain("equities-marquee-track");
+  });
+
+  it("renders AssetsRail with animated asset-seat-cards and 70 constituent seats", async () => {
+    const { AssetsRail } = await import("@/components/shell/assets-rail");
+    const { renderToString } = await import("react-dom/server");
+
+    const sampleSeats = [
+      {
+        id: "seat-1",
+        seatNumber: 1,
+        indexCode: "CE70",
+        era: "PLATINUM",
+        titleIssue: "Detective Comics #2",
+        series: "Detective Comics",
+        issueNumber: "2",
+        year: 1937,
+        publisher: "DC Comics",
+        primaryCreators: "Vin Sullivan, Creig Flessel",
+        gregoryScore: 196.4,
+        assetClass: "EQUITY_INDEX_SEAT",
+        assetSubclass: "PLATINUM ERA CONSTITUENT",
+        wordCount: "475 words",
+        dossierPath: "./ce70_adjudication_dossiers/seat_01.md",
+        coverUrl: "/covers/seat_1_detective_comics_2.jpg",
+      },
+    ];
+
+    const React = await import("react");
+    const html = renderToString(React.createElement(AssetsRail, { items: sampleSeats }));
+
+    expect(html).toContain("ASSETS");
+    expect(html).toContain("16 FAMILIES");
+    expect(html).toContain("70 Constituent Seats");
+    expect(html).toContain("asset-seat-card");
+    expect(html).toContain("--rim");
+    expect(html).toContain("SEAT #1");
+    expect(html).toContain("Detective Comics #2");
+    expect(html).toContain("GS 196.4");
+    expect(html).toContain("/covers/seat_1_detective_comics_2.jpg");
+    expect(html).toContain("assets-marquee-track");
+  });
 });
+

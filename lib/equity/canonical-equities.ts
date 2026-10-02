@@ -249,7 +249,7 @@ const VERIFIED_SEAT_COVERS: Record<string, string> = verifiedCoversJson as Recor
 /**
  * Raw query for CE70 Sovereign Equities Universe with real market pricing and tickers.
  */
-async function fetchSovereignEquitiesRaw(limit = 48): Promise<SovereignEquityItem[]> {
+async function fetchSovereignEquitiesRaw(limit = 70): Promise<SovereignEquityItem[]> {
   const db = createCleanReadOnlyServerClient();
   try {
     const { data, error } = await db
@@ -329,7 +329,7 @@ export const getSovereignEquities = createCachedQuery(
 /**
  * Raw query for CE70 Certified Index Definition Constituents (Assets).
  */
-async function fetchCanonicalAssetSurfacesRaw(limit = 48): Promise<CanonicalAssetSurface[]> {
+async function fetchCanonicalAssetSurfacesRaw(limit = 70): Promise<CanonicalAssetSurface[]> {
   const db = createCleanReadOnlyServerClient();
   try {
     const { data, error } = await db

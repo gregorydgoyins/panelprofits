@@ -83,6 +83,50 @@
   z-index: 10;
 }
 
+/* Sovereign Comic Equity Ticker Card with Dynamic Era Rimlight */
+.equity-card {
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.8),
+    0 0 2px color-mix(in srgb, var(--rim, #10b981) 90%, transparent),
+    0 0 10px color-mix(in srgb, var(--rim, #10b981) 50%, transparent),
+    0 0 24px color-mix(in srgb, var(--rim, #10b981) 30%, transparent),
+    inset 0 0 14px color-mix(in srgb, var(--rim, #10b981) 15%, transparent);
+  transition: box-shadow 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.22s ease;
+  cursor: pointer;
+}
+.equity-card:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 24px 50px rgba(0, 0, 0, 0.95),
+    0 0 3px var(--rim, #10b981),
+    0 0 14px var(--rim, #10b981),
+    0 0 32px color-mix(in srgb, var(--rim, #10b981) 80%, transparent),
+    0 0 60px color-mix(in srgb, var(--rim, #10b981) 50%, transparent),
+    inset 0 0 24px color-mix(in srgb, var(--rim, #10b981) 25%, transparent);
+}
+
+/* Sovereign Asset Seat Card with Dynamic Rimlight */
+.asset-seat-card {
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.8),
+    0 0 2px color-mix(in srgb, var(--rim, #06b6d4) 90%, transparent),
+    0 0 10px color-mix(in srgb, var(--rim, #06b6d4) 50%, transparent),
+    0 0 24px color-mix(in srgb, var(--rim, #06b6d4) 30%, transparent),
+    inset 0 0 14px color-mix(in srgb, var(--rim, #06b6d4) 15%, transparent);
+  transition: box-shadow 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.22s ease;
+  cursor: pointer;
+}
+.asset-seat-card:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 24px 50px rgba(0, 0, 0, 0.95),
+    0 0 3px var(--rim, #06b6d4),
+    0 0 14px var(--rim, #06b6d4),
+    0 0 32px color-mix(in srgb, var(--rim, #06b6d4) 80%, transparent),
+    0 0 60px color-mix(in srgb, var(--rim, #06b6d4) 50%, transparent),
+    inset 0 0 24px color-mix(in srgb, var(--rim, #06b6d4) 25%, transparent);
+}
+
 @layer base {
   :root {
     --background: 240 10% 4%;
