@@ -2,19 +2,10 @@
 
 import * as React from "react";
 import Link from "next/link";
-import Image from "next/image";
-import {
-  TrendingUp,
-  TrendingDown,
-  Layers,
-  CandlestickChart,
-  ChevronRight,
-  Filter,
-  Activity,
-  ShieldCheck,
-} from "lucide-react";
+import { CandlestickChart } from "lucide-react";
 import type { SovereignEquityItem } from "@/lib/equity/canonical-equities";
 import type { MarketIndexRecord } from "@/lib/market/indices";
+import { generateDynamicCoverSvg } from "@/lib/comics/cover-resolver";
 
 interface EquitiesRailProps {
   items: SovereignEquityItem[];
@@ -23,8 +14,6 @@ interface EquitiesRailProps {
 
 export function EquitiesRail({ items, indices = [] }: EquitiesRailProps) {
   const [selectedEra, setSelectedEra] = React.useState<string>("ALL");
-  const [isPaused, setIsPaused] = React.useState(false);
-  const scrollContainerRef = React.useRef<HTMLDivElement | null>(null);
 
   // Filter items by era if selected
   const filteredItems = React.useMemo(() => {
@@ -32,19 +21,26 @@ export function EquitiesRail({ items, indices = [] }: EquitiesRailProps) {
     return items.filter((item) => item.originEra === selectedEra);
   }, [items, selectedEra]);
 
+  // Ensure seamless marquee looping by ensuring track width spans at least 24 items
+  const marqueeItems = React.useMemo(() => {
+    if (!filteredItems.length) return [];
+    let list = filteredItems;
+    while (list.length < 24) {
+      list = [...list, ...filteredItems];
+    }
+    return [...list, ...list];
+  }, [filteredItems]);
+
   // Default benchmarks if not provided
   const ce70Index = indices.find((i) => i.indexCode === "CE70");
   const ppix100Index = indices.find((i) => i.indexCode === "PPIX100");
-  const ppix60Index = indices.find((i) => i.indexCode === "PPIX60");
 
   const eraList = ["ALL", "GOLDEN", "ATOMIC", "SILVER", "BRONZE", "COPPER", "MODERN"];
 
   return (
     <aside
       aria-label="Sovereign Comic Equity Surveillance Rail"
-      className="border-b border-slate-800/80 bg-[#070A11] text-xs text-slate-300 shadow-md"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
+      className="border-b border-slate-800/80 bg-[#070A11] text-xs text-slate-300 shadow-md select-none"
     >
       <div className="mx-auto flex max-w-7xl items-center gap-3 px-3 py-1.5 sm:px-4">
         {/* Left Anchor: Benchmark Index Matrix */}
@@ -89,67 +85,70 @@ export function EquitiesRail({ items, indices = [] }: EquitiesRailProps) {
           </div>
         </div>
 
-        {/* Scrolling Sovereign Comic Constituents Rail */}
+        {/* Continuously Animated Sovereign Comic Constituents Rail */}
         <div
-          ref={scrollContainerRef}
-          tabIndex={0}
+          className="equities-marquee min-w-0 flex-1 overflow-hidden py-0.5"
           role="region"
           aria-label="Sovereign Comic Constituents Ticker"
-          className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto py-0.5 no-scrollbar scroll-smooth"
         >
-          {filteredItems.length > 0 ? (
-            filteredItems.map((item) => {
-              const isPositive = item.deltaPercent >= 0;
+          {marqueeItems.length > 0 ? (
+            <div className="equities-marquee-track flex w-max items-center gap-2.5 hover:[animation-play-state:paused] focus-within:[animation-play-state:paused] motion-reduce:animate-none">
+              {marqueeItems.map((item, index) => {
+                const isPositive = item.deltaPercent >= 0;
+                const fallbackSvg = generateDynamicCoverSvg(
+                  item.series,
+                  item.issueNumber,
+                  item.lineage.includes("DC") ? "DC Comics" : item.lineage.includes("Marvel") ? "Marvel" : "Independent",
+                  1960
+                );
 
-              return (
-                <Link
-                  key={item.id}
-                  href={`/equity/${item.ticker}`}
-                  className="group flex shrink-0 items-center gap-2 rounded border border-slate-800/80 bg-[#0B0F18] px-2 py-1 text-[10px] transition-all hover:border-emerald-400/60 hover:bg-[#101724]"
-                  title={`Inspect ${item.series} #${item.issueNumber} sovereign equity dossier`}
-                >
-                  {/* Cover Artwork Thumbnail */}
-                  {item.coverUrl ? (
-                    <div className="relative h-6 w-4 shrink-0 overflow-hidden rounded-[2px] border border-slate-800 bg-[#05070B]">
-                      <Image
-                        src={item.coverUrl}
+                return (
+                  <Link
+                    key={`${item.id}-${index}`}
+                    href={`/equity/${item.ticker}`}
+                    className="group flex shrink-0 items-center gap-2 rounded border border-slate-800/80 bg-[#0B0F18] px-2 py-1 text-[10px] transition-all hover:border-emerald-400/60 hover:bg-[#101724] focus:outline-none focus:ring-1 focus:ring-emerald-400"
+                    title={`Inspect ${item.series} #${item.issueNumber} (${item.ticker}) — FMV ${item.priceFormatted}`}
+                  >
+                    {/* Authentic Issue Cover Thumbnail with Guaranteed Fallback */}
+                    <div className="relative h-7 w-5 shrink-0 overflow-hidden rounded-[2px] border border-slate-700/60 bg-[#05070B] shadow-sm">
+                      <img
+                        src={item.coverUrl || fallbackSvg}
                         alt={`${item.series} #${item.issueNumber}`}
-                        fill
-                        sizes="16px"
-                        className="object-cover"
+                        loading="lazy"
+                        className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = fallbackSvg;
+                        }}
                       />
                     </div>
-                  ) : (
-                    <div className="flex h-6 w-4 shrink-0 items-center justify-center rounded-[2px] border border-slate-800 bg-slate-900 text-[8px] font-mono text-emerald-400">
-                      $
+
+                    {/* Ticker & Title */}
+                    <div className="flex items-center gap-1.5 whitespace-nowrap">
+                      <span className="rounded bg-emerald-950/60 border border-emerald-500/30 px-1 py-0.2 font-mono text-[9px] font-bold text-emerald-300">
+                        {item.ticker}
+                      </span>
+                      <span className="max-w-[120px] truncate font-medium text-slate-200 group-hover:text-emerald-200 transition-colors">
+                        {item.series}
+                      </span>
+                      <span className="text-slate-500 font-mono">#{item.issueNumber}</span>
                     </div>
-                  )}
 
-                  {/* Ticker & Title */}
-                  <div className="flex items-center gap-1.5 whitespace-nowrap">
-                    <span className="rounded bg-emerald-950/60 border border-emerald-500/30 px-1 py-0.2 font-mono text-[9px] font-bold text-emerald-300">
-                      {item.ticker}
-                    </span>
-                    <span className="max-w-[120px] truncate font-medium text-slate-200 group-hover:text-emerald-200 transition-colors">
-                      {item.series}
-                    </span>
-                    <span className="text-slate-500 font-mono">#{item.issueNumber}</span>
-                  </div>
-
-                  {/* Valuation & Delta */}
-                  <div className="flex items-center gap-1 font-mono">
-                    <span className="font-bold text-slate-100">{item.priceFormatted}</span>
-                    <span
-                      className={`text-[9px] font-semibold flex items-center ${
-                        isPositive ? "text-emerald-400" : "text-rose-400"
-                      }`}
-                    >
-                      {isPositive ? "▲" : "▼"} {isPositive ? `+${item.deltaPercent}%` : `${item.deltaPercent}%`}
-                    </span>
-                  </div>
-                </Link>
-              );
-            })
+                    {/* Valuation & Delta */}
+                    <div className="flex items-center gap-1 font-mono">
+                      <span className="font-bold text-slate-100">{item.priceFormatted}</span>
+                      <span
+                        className={`text-[9px] font-semibold flex items-center ${
+                          isPositive ? "text-emerald-400" : "text-rose-400"
+                        }`}
+                      >
+                        {isPositive ? "▲" : "▼"} {isPositive ? `+${item.deltaPercent}%` : `${item.deltaPercent}%`}
+                      </span>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
           ) : (
             <span className="border border-emerald-900/40 bg-emerald-950/20 px-2.5 py-0.5 text-[10px] font-mono uppercase tracking-[0.14em] text-emerald-300">
               Synchronizing CE70 Sovereign Port...

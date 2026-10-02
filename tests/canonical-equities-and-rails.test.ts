@@ -91,4 +91,32 @@ describe("Canonical Equities Symbology & 16 Asset Families Canon", () => {
       expect(seatDetail.source).toContain("CE70");
     }
   });
+
+  it("assigns authentic distinct cover artwork without brittle generic placeholders", async () => {
+    const equities = await getSovereignEquities(20);
+    const covers = equities.map((e) => e.coverUrl).filter(Boolean);
+    expect(covers.length).toBeGreaterThan(0);
+
+    // Ensure none are using the old brittle 526.jpg placeholder
+    for (const cover of covers) {
+      expect(cover).not.toContain("526.jpg");
+    }
+
+    // Ensure multiple distinct issues have distinct cover URLs
+    const uniqueCovers = new Set(covers);
+    expect(uniqueCovers.size).toBeGreaterThan(5);
+  });
+
+  it("assigns distinct authentic cover art to canonical asset seats", async () => {
+    const seats = await getCanonicalAssetSurfaces(15);
+    const seatCovers = seats.map((s) => s.coverUrl).filter(Boolean);
+    expect(seatCovers.length).toBeGreaterThan(0);
+
+    for (const cover of seatCovers) {
+      expect(cover).not.toContain("526.jpg");
+    }
+
+    const uniqueSeatCovers = new Set(seatCovers);
+    expect(uniqueSeatCovers.size).toBeGreaterThan(5);
+  });
 });

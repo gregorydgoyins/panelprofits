@@ -1,6 +1,8 @@
 import { createCleanReadOnlyServerClient } from "@/lib/supabase/admin";
 import { isMissingTableError } from "@/lib/supabase/errors";
 import { createCachedQuery } from "@/lib/cache/wrapper";
+import { generateDynamicCoverSvg } from "@/lib/comics/cover-resolver";
+import verifiedCoversJson from "./verified-covers.json";
 
 export interface SovereignEquityItem {
   id: string;
@@ -241,29 +243,8 @@ export function formatComicEquityTicker(series: string, issue: string, assetClas
   return `${root}.${formattedNum}.${assetClass.toUpperCase()}`;
 }
 
-// Deterministic cover lookups for the top CE70 sovereign seats
-const VERIFIED_SEAT_COVERS: Record<string, string> = {
-  "Action Comics #252": "https://files1.comics.org//img/gcd/covers_by_id/0/w400/526.jpg",
-  "Batman #251": "https://files1.comics.org//img/gcd/covers_by_id/0/w400/526.jpg",
-  "Wonder Woman #98": "https://files1.comics.org//img/gcd/covers_by_id/0/w400/526.jpg",
-  "Crime SuspenStories #22": "https://files1.comics.org//img/gcd/covers_by_id/0/w400/526.jpg",
-  "Avengers #4": "https://files1.comics.org//img/gcd/covers_by_id/0/w400/526.jpg",
-  "Fantastic Four #48": "https://files1.comics.org//img/gcd/covers_by_id/0/w400/526.jpg",
-  "Teenage Mutant Ninja Turtles #1": "https://files1.comics.org//img/gcd/covers_by_id/0/w400/526.jpg",
-  "Amazing Spider-Man #33": "https://files1.comics.org//img/gcd/covers_by_id/0/w400/526.jpg",
-  "Journey into Mystery #85": "https://files1.comics.org//img/gcd/covers_by_id/0/w400/526.jpg",
-  "Strange Tales #110": "https://files1.comics.org//img/gcd/covers_by_id/0/w400/526.jpg",
-  "X-Men #1": "https://files1.comics.org//img/gcd/covers_by_id/0/w400/526.jpg",
-  "Uncanny X-Men #137": "https://files1.comics.org//img/gcd/covers_by_id/0/w400/526.jpg",
-  "Daredevil #168": "https://files1.comics.org//img/gcd/covers_by_id/0/w400/526.jpg",
-  "Green Lantern #76": "https://files1.comics.org//img/gcd/covers_by_id/0/w400/526.jpg",
-  "Silver Surfer #1": "https://files1.comics.org//img/gcd/covers_by_id/0/w400/526.jpg",
-  "Giant-Size X-Men #1": "https://files1.comics.org//img/gcd/covers_by_id/0/w400/526.jpg",
-  "Detective Comics #2": "https://files1.comics.org//img/gcd/covers_by_id/0/w400/526.jpg",
-  "Four Color #9": "https://files1.comics.org//img/gcd/covers_by_id/0/w400/526.jpg",
-  "Crime Does Not Pay #22": "https://files1.comics.org//img/gcd/covers_by_id/0/w400/526.jpg",
-  "Captain America Comics #1": "https://files1.comics.org//img/gcd/covers_by_id/0/w400/526.jpg",
-};
+// Deterministic cover lookups mapped to authentic harvested assets
+const VERIFIED_SEAT_COVERS: Record<string, string> = verifiedCoversJson as Record<string, string>;
 
 /**
  * Raw query for CE70 Sovereign Equities Universe with real market pricing and tickers.
@@ -295,7 +276,14 @@ async function fetchSovereignEquitiesRaw(limit = 48): Promise<SovereignEquityIte
 
       const fmv = Number(row.reference_fmv_usd) || 0;
       const keyName = `${row.series} #${row.issue_number}`;
-      const resolvedCover = row.cover_url || VERIFIED_SEAT_COVERS[keyName] || null;
+      const seatKeyName = `seat-${row.seat_number}`;
+      const ticker = formatComicEquityTicker(row.series, row.issue_number || "1", "SOV");
+      const resolvedCover =
+        VERIFIED_SEAT_COVERS[keyName] ||
+        VERIFIED_SEAT_COVERS[seatKeyName] ||
+        VERIFIED_SEAT_COVERS[ticker] ||
+        (row.cover_url && !row.cover_url.includes("526.jpg") ? row.cover_url : null) ||
+        generateDynamicCoverSvg(row.series, row.issue_number, "Marvel/DC", 1960);
 
       // Deterministic realistic delta based on Gregory score and seat ranking
       const gScore = Number(row.gregory_score) || 190.0;
@@ -305,7 +293,7 @@ async function fetchSovereignEquitiesRaw(limit = 48): Promise<SovereignEquityIte
         id: row.id,
         seatNumber: row.seat_number || 1,
         seatType: row.seat_type || "PRIMARY_DOMESTIC",
-        ticker: formatComicEquityTicker(row.series, row.issue_number || "1", "SOV"),
+        ticker,
         series: row.series,
         issueNumber: row.issue_number || "1",
         title: row.title || row.series,
@@ -359,7 +347,13 @@ async function fetchCanonicalAssetSurfacesRaw(limit = 48): Promise<CanonicalAsse
 
     return data.map((row) => {
       const keyName = `${row.series} #${row.issue_number}`;
-      const resolvedCover = row.cover_url || VERIFIED_SEAT_COVERS[keyName] || null;
+      const seatKeyName = `seat-${row.seat_number}`;
+      const resolvedCover =
+        VERIFIED_SEAT_COVERS[seatKeyName] ||
+        VERIFIED_SEAT_COVERS[keyName] ||
+        VERIFIED_SEAT_COVERS[row.title_issue] ||
+        (row.cover_url && !row.cover_url.includes("526.jpg") ? row.cover_url : null) ||
+        generateDynamicCoverSvg(row.series, row.issue_number, row.publisher, row.year);
 
       return {
         id: `seat-${row.seat_number}`,

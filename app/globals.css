@@ -29,6 +29,60 @@
   width: 3rem;
 }
 
+@keyframes panel-profits-equities-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(calc(-50% - 0.25rem)); }
+}
+
+.equities-marquee-track {
+  animation: panel-profits-equities-marquee 120s linear infinite;
+}
+
+.equities-marquee {
+  position: relative;
+}
+
+.equities-marquee:focus-within .equities-marquee-track {
+  animation-play-state: paused;
+}
+
+.equities-marquee::after {
+  background: linear-gradient(90deg, transparent, #070A11 88%);
+  content: "";
+  inset: 0 0 0 auto;
+  pointer-events: none;
+  position: absolute;
+  width: 3rem;
+  z-index: 10;
+}
+
+@keyframes panel-profits-assets-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(calc(-50% - 0.25rem)); }
+}
+
+.assets-marquee-track {
+  animation: panel-profits-assets-marquee 140s linear infinite;
+}
+
+.assets-marquee {
+  position: relative;
+}
+
+.assets-marquee:focus-within .assets-marquee-track {
+  animation-play-state: paused;
+}
+
+.assets-marquee::after {
+  background: linear-gradient(90deg, transparent, #060910 88%);
+  content: "";
+  inset: 0 0 0 auto;
+  pointer-events: none;
+  position: absolute;
+  width: 3rem;
+  z-index: 10;
+}
+
 @layer base {
   :root {
     --background: 240 10% 4%;
