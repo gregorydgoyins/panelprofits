@@ -25,12 +25,12 @@ const BAROMETERS: BarometerIndex[] = [
     href: "/equity/CE70",
   },
   {
-    code: "PPIX 1000",
-    name: "PPIX 1000 Multi-Era Benchmark",
-    cadence: "Broad Market Breadth",
+    code: "PPIX 100",
+    name: "PPIX 100 Multi-Era Benchmark",
+    cadence: "100 Books Across Eras",
     value: 1130.82,
     changePercent: 0.56,
-    description: "Broader measure across different books and eras measuring overall equity health.",
+    description: "Broader benchmark tracking 100 books across different eras measuring overall equity market health.",
     href: "/equity/PPIX100",
   },
   {
@@ -67,7 +67,7 @@ export function MarketBarometerBar() {
               Market Barometers & Core Health Indices
             </h2>
             <p className="text-[11px] text-slate-400">
-              Four canonical market gauges — CE70 blue-chip movement, broad PPIX 1000, GoCollect CPI, and PPIX Composite
+              Four canonical market gauges — CE70 blue-chip movement, broad PPIX 100 (100 books), GoCollect CPI, and PPIX Composite
             </p>
           </div>
         </div>

@@ -78,7 +78,7 @@ export function AssetsRail({ items: initialSeats = [] }: AssetsRailProps) {
     } else if (selectedFilter === "CLASSES") {
       baseList = assetItems.length > 0 ? assetItems : INITIAL_SURFACE_ASSETS;
     } else {
-      baseList = [...seatAssetItems, ...(assetItems.length > 0 ? assetItems : INITIAL_SURFACE_ASSETS)];
+      baseList = [...(assetItems.length > 0 ? assetItems : INITIAL_SURFACE_ASSETS), ...seatAssetItems];
     }
     if (!selectedFamily) return baseList;
     const members = FAMILY_MEMBERS[selectedFamily as keyof typeof FAMILY_MEMBERS] || [];
