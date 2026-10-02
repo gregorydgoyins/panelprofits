@@ -54,7 +54,7 @@ export function EquitiesRail({ items: initialItems = [], indices = [] }: Equitie
           variant: null,
           productionAge: eraKey,
           scarcityTier: tier,
-          detailUrl: `/equity/${item.ticker}`,
+          detailUrl: `/comics/${encodeURIComponent(item.canonicalIssueId || item.id || item.ticker)}`,
           assetClass: "SOV",
           marketPriceClass: fmv >= 45 ? "PREMIUM" : fmv >= 20 ? "STD" : "OTC",
           isSovereign: true,
@@ -104,7 +104,7 @@ export function EquitiesRail({ items: initialItems = [], indices = [] }: Equitie
     [items]
   );
   const tradeableItems = React.useMemo(
-    () => items.filter((i) => i && (i.pricing?.fmv_usd ?? 0) < HERITAGE_VAULT_THRESHOLD),
+    () => items,
     [items]
   );
   const noSignalCount = React.useMemo(

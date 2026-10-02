@@ -1,7 +1,6 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getEquityDetail } from "@/lib/equity/queries";
-import { getSovereignEquityDossier } from "@/lib/equity/canonical-equities";
-import { SovereignDossierView } from "@/components/equity/sovereign-dossier-view";
+import { getComicById } from "@/lib/comics/queries";
 import { IndexDossierView } from "@/components/equity/index-dossier-view";
 
 export const dynamic = "force-dynamic";
@@ -30,14 +29,11 @@ export default async function EquityDetailPage({ params }: EquityDetailPageProps
     );
   }
 
-  // 2. Check if identifier is a Sovereign Comic Equity ticker or seat (e.g. ACT.252.SOV, CSS.022.SOV, ce70_seat_6_CE70-8.5, seat-6)
-  const sovereignDossier = await getSovereignEquityDossier(id);
-  if (sovereignDossier) {
-    return (
-      <main className="min-h-screen bg-[#06080F] text-slate-100 py-8">
-        <SovereignDossierView dossier={sovereignDossier} />
-      </main>
-    );
+  // 2. Check if identifier is a Sovereign Comic Equity ticker, seat, or slug
+  // Redirect directly to the user's authentic September comic detail page (/comics/[id])
+  const comic = await getComicById(id);
+  if (comic) {
+    redirect(`/comics/${encodeURIComponent(comic.id)}`);
   }
 
   // 3. Fallback: Neither index contract nor sovereign equity exists

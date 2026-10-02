@@ -7,6 +7,7 @@ import {
   getSovereignEquityDossier,
 } from "@/lib/equity/canonical-equities";
 import { getCleanEquityDetail } from "@/lib/panel-profits/assets";
+import { getComicById } from "@/lib/comics/queries";
 
 describe("Canonical Equities Symbology & 16 Asset Families Canon", () => {
   it("formats canonical comic equity tickers following BNF grammar [ROOT].[ISSUE].[CLASS]", () => {
@@ -79,6 +80,35 @@ describe("Canonical Equities Symbology & 16 Asset Families Canon", () => {
       expect(dossier.assetFamilyValuations.length).toBe(16);
       expect(dossier.qualityScores.length).toBeGreaterThan(0);
       expect(dossier.adjudicationEssay.length).toBeGreaterThan(50);
+    }
+  });
+
+  it("resolves X-Men #1 with authentic Jack Kirby cover, Stan Lee/Jack Kirby creators, and authentic PriceCharting FMV", async () => {
+    const xmen = await getSovereignEquityDossier("XMN.001.SOV");
+    expect(xmen).not.toBeNull();
+    if (xmen) {
+      expect(xmen.series).toBe("X-Men");
+      expect(xmen.issueNumber).toBe("1");
+      // Price must reflect authentic X-Men 1 (over $100k for 9.2, not $2,400 from Two-Fisted Tales)
+      expect(xmen.referenceFmvUsd).toBe(137704.13);
+      expect(xmen.referenceGrade).toBe("9.2");
+      expect(xmen.publisher).toContain("Marvel");
+      expect(xmen.publicationYear).toBe(1963);
+      expect(xmen.primaryCreators).toContain("Jack Kirby");
+      expect(xmen.primaryCreators).toContain("Stan Lee");
+      expect(xmen.coverUrl).toBe("/covers/x_men_1.jpg");
+    }
+  });
+
+  it("resolves MAD #1 with authentic PriceCharting FMV ($13,155) without colliding with Wonder Woman #1 ($45,000)", async () => {
+    const mad = await getSovereignEquityDossier("MAD.001.SOV");
+    expect(mad).not.toBeNull();
+    if (mad) {
+      expect(mad.series.toUpperCase()).toContain("MAD");
+      expect(mad.issueNumber).toBe("1");
+      // Must NOT be Wonder Woman's $45,000
+      expect(mad.referenceFmvUsd).toBe(13155.0);
+      expect(mad.referenceGrade).toBe("9.2");
     }
   });
 
@@ -210,6 +240,76 @@ describe("Canonical Equities Symbology & 16 Asset Families Canon", () => {
     expect(html).toContain("assets-marquee-track");
     expect(html).toContain("Mjolnir");
     expect(html).toContain("Batmobile");
+  });
+
+  it("resolves canonical September comic detail records via getComicById with authentic PriceCharting benchmarks", async () => {
+    // 1. Resolve X-Men #1 via ticker and slug
+    const xmenTicker = await getComicById("XMN.001.SOV");
+    expect(xmenTicker).not.toBeNull();
+    if (xmenTicker) {
+      expect(xmenTicker.series).toBe("X-Men");
+      expect(xmenTicker.issue_number).toBe("1");
+      expect(xmenTicker.publisher).toContain("Marvel");
+      expect(xmenTicker.publication_year).toBe(1963);
+      expect(xmenTicker.cover_url).toBe("/covers/x_men_1.jpg");
+      expect(xmenTicker.pp_grade_9_8_price).toBe(489682.98);
+      expect(xmenTicker.comicbase_price).toBe(137704.13);
+      const ppData = xmenTicker.panel_profits_data as any;
+      expect(ppData?.creators).toBe("Stan Lee, Jack Kirby");
+      expect(ppData?.grade_9_2_value).toBe(137704.13);
+    }
+
+    const xmenSlug = await getComicById("x_men_1");
+    expect(xmenSlug).not.toBeNull();
+    if (xmenSlug) {
+      expect(xmenSlug.series).toBe("X-Men");
+      expect(xmenSlug.cover_url).toBe("/covers/x_men_1.jpg");
+      expect(xmenSlug.pp_grade_9_8_price).toBe(489682.98);
+    }
+
+    // 2. Resolve MAD #1 via ticker
+    const madTicker = await getComicById("MAD.001.SOV");
+    expect(madTicker).not.toBeNull();
+    if (madTicker) {
+      expect(madTicker.series).toBe("MAD");
+      expect(madTicker.issue_number).toBe("1");
+      expect(madTicker.comicbase_price).toBe(13155);
+      expect(madTicker.pp_grade_9_8_price).toBe(30699.33);
+      const ppData = madTicker.panel_profits_data as any;
+      expect(ppData?.creators).toBe("Harvey Kurtzman");
+    }
+
+    // 3. Resolve Preacher #1 via ticker
+    const preacherTicker = await getComicById("PREA.001.SOV");
+    expect(preacherTicker).not.toBeNull();
+    if (preacherTicker) {
+      expect(preacherTicker.series).toBe("Preacher");
+      expect(preacherTicker.issue_number).toBe("1");
+      expect(preacherTicker.publisher).toContain("DC");
+      expect(preacherTicker.publication_year).toBe(1995);
+      expect(preacherTicker.comicbase_price).toBe(65.38);
+      expect(preacherTicker.pp_grade_9_8_price).toBe(197.5);
+      const ppData = preacherTicker.panel_profits_data as any;
+      expect(ppData?.creators).toBe("Garth Ennis, Steve Dillon");
+    }
+
+    // 4. Resolve Batman #251 via ticker
+    const batmanTicker = await getComicById("BAT.251.SOV");
+    expect(batmanTicker).not.toBeNull();
+    if (batmanTicker) {
+      expect(batmanTicker.series).toBe("Batman");
+      expect(batmanTicker.issue_number).toBe("251");
+      expect(batmanTicker.comicbase_price).toBe(1666.78);
+    }
+
+    // 5. Resolve Action Comics #252 via slug
+    const actSlug = await getComicById("action_comics_252");
+    expect(actSlug).not.toBeNull();
+    if (actSlug) {
+      expect(actSlug.series).toBe("Action Comics");
+      expect(actSlug.issue_number).toBe("252");
+      expect(actSlug.comicbase_price).toBe(47905);
+    }
   });
 });
 

@@ -111,7 +111,7 @@ export async function GET(request: Request) {
         variant: null,
         productionAge: eraKey,
         scarcityTier: tier,
-        detailUrl: `/equity/${item.ticker}`,
+        detailUrl: `/comics/${encodeURIComponent(item.canonicalIssueId || item.id || item.ticker)}`,
         assetClass: "SOV",
         marketPriceClass: item.referenceFmvUsd >= 45 ? "PREMIUM" : item.referenceFmvUsd >= 20 ? "STD" : "OTC",
         isSovereign: true,

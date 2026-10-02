@@ -387,6 +387,7 @@ export async function getCleanNewsIntelligence(limit = 32): Promise<CleanNewsInt
  * Retrieves 18 verified records with valid covers and reference valuations.
  */
 const LANDMARK_FEATURED_COMICS: Array<{
+  id: string;
   seatNumber: number;
   series: string;
   title: string;
@@ -396,24 +397,24 @@ const LANDMARK_FEATURED_COMICS: Array<{
   fmv: number;
   coverPath: string;
 }> = [
-  { seatNumber: 1, series: "Detective Comics", title: "Detective Comics #2", issueNumber: "2", publisher: "DC Comics", year: 1937, fmv: 35000, coverPath: "/covers/seat_1_detective_comics_2.jpg" },
-  { seatNumber: 16, series: "Crime SuspenStories", title: "Crime SuspenStories #22", issueNumber: "22", publisher: "EC Comics", year: 1954, fmv: 58000, coverPath: "/covers/crime_suspenstories_22.jpg" },
-  { seatNumber: 19, series: "Amazing Spider-Man", title: "Amazing Spider-Man #33", issueNumber: "33", publisher: "Marvel Comics", year: 1966, fmv: 18500, coverPath: "/covers/amazing_spider_man_33.jpg" },
-  { seatNumber: 20, series: "Fantastic Four", title: "Fantastic Four #48", issueNumber: "48", publisher: "Marvel Comics", year: 1966, fmv: 42000, coverPath: "/covers/fantastic_four_48.jpg" },
-  { seatNumber: 26, series: "Green Lantern", title: "Green Lantern #76", issueNumber: "76", publisher: "DC Comics", year: 1970, fmv: 12500, coverPath: "/covers/green_lantern_76.jpg" },
-  { seatNumber: 27, series: "Action Comics", title: "Action Comics #252", issueNumber: "252", publisher: "DC Comics", year: 1959, fmv: 48500, coverPath: "/covers/action_comics_252.jpg" },
-  { seatNumber: 28, series: "X-Men", title: "X-Men #1", issueNumber: "1", publisher: "Marvel Comics", year: 1963, fmv: 48577, coverPath: "/covers/x_men_1.jpg" },
-  { seatNumber: 29, series: "Avengers", title: "Avengers #4", issueNumber: "4", publisher: "Marvel Comics", year: 1964, fmv: 55000, coverPath: "/covers/avengers_4.jpg" },
-  { seatNumber: 30, series: "Giant-Size X-Men", title: "Giant-Size X-Men #1", issueNumber: "1", publisher: "Marvel Comics", year: 1975, fmv: 16500, coverPath: "/covers/giant_size_x_men_1.jpg" },
-  { seatNumber: 31, series: "Batman", title: "Batman #251", issueNumber: "251", publisher: "DC Comics", year: 1973, fmv: 8500, coverPath: "/covers/batman_251.jpg" },
-  { seatNumber: 35, series: "The Saga of Swamp Thing", title: "The Saga of Swamp Thing #21", issueNumber: "21", publisher: "DC Comics", year: 1984, fmv: 850, coverPath: "/covers/the_saga_of_swamp_thing_21.jpg" },
-  { seatNumber: 36, series: "Batman: The Dark Knight Returns", title: "Batman: The Dark Knight Returns #1", issueNumber: "1", publisher: "DC Comics", year: 1986, fmv: 1600, coverPath: "/covers/batman_the_dark_knight_returns_1.jpg" },
-  { seatNumber: 37, series: "Watchmen", title: "Watchmen #1", issueNumber: "1", publisher: "DC Comics", year: 1986, fmv: 850, coverPath: "/covers/watchmen_1.jpg" },
-  { seatNumber: 40, series: "Teenage Mutant Ninja Turtles", title: "Teenage Mutant Ninja Turtles #1", issueNumber: "1", publisher: "Mirage Studios", year: 1984, fmv: 9800, coverPath: "/covers/teenage_mutant_ninja_turtles_1.jpg" },
-  { seatNumber: 48, series: "The Walking Dead", title: "The Walking Dead #1", issueNumber: "1", publisher: "Image Comics", year: 2003, fmv: 2200, coverPath: "/covers/the_walking_dead_1.jpg" },
-  { seatNumber: 50, series: "All-Star Superman", title: "All-Star Superman #1", issueNumber: "1", publisher: "DC Comics", year: 2006, fmv: 150, coverPath: "/covers/all_star_superman_1.jpg" },
-  { seatNumber: 55, series: "Saga", title: "Saga #1", issueNumber: "1", publisher: "Image Comics", year: 2012, fmv: 250, coverPath: "/covers/saga_1.jpg" },
-  { seatNumber: 59, series: "House of X", title: "House of X #1", issueNumber: "1", publisher: "Marvel Comics", year: 2019, fmv: 85, coverPath: "/covers/house_of_x_1.jpg" },
+  { id: "issue_series_pub_dc_detective_comics_1937_v1_2", seatNumber: 1, series: "Detective Comics", title: "Detective Comics #2", issueNumber: "2", publisher: "DC Comics", year: 1937, fmv: 48000, coverPath: "/covers/seat_1_detective_comics_2.jpg" },
+  { id: "issue_series_pub_ec_crime_suspenstories_1954_v1_22", seatNumber: 16, series: "Crime SuspenStories", title: "Crime SuspenStories #22", issueNumber: "22", publisher: "EC Comics", year: 1954, fmv: 50968.50, coverPath: "/covers/crime_suspenstories_22.jpg" },
+  { id: "issue_series_pub_marvel_amazing_spider_man_1966_v1_33", seatNumber: 12, series: "Amazing Spider-Man", title: "Amazing Spider-Man #33", issueNumber: "33", publisher: "Marvel Comics", year: 1966, fmv: 1159, coverPath: "/covers/amazing_spider_man_33.jpg" },
+  { id: "issue_series_pub_marvel_fantastic_four_1966_v1_48", seatNumber: 11, series: "Fantastic Four", title: "Fantastic Four #48", issueNumber: "48", publisher: "Marvel Comics", year: 1966, fmv: 6123.50, coverPath: "/covers/fantastic_four_48.jpg" },
+  { id: "issue_series_pub_dc_green_lantern_1970_v1_76", seatNumber: 26, series: "Green Lantern", title: "Green Lantern #76", issueNumber: "76", publisher: "DC Comics", year: 1970, fmv: 2283.48, coverPath: "/covers/green_lantern_76.jpg" },
+  { id: "issue_series_pub_dc_action_comics_1959_v1_252", seatNumber: 1, series: "Action Comics", title: "Action Comics #252", issueNumber: "252", publisher: "DC Comics", year: 1959, fmv: 47905, coverPath: "/covers/action_comics_252.jpg" },
+  { id: "issue_series_pub_marvel_x_men_1963_v1_1", seatNumber: 13, series: "X-Men", title: "X-Men #1", issueNumber: "1", publisher: "Marvel Comics", year: 1963, fmv: 137704.13, coverPath: "/covers/x_men_1.jpg" },
+  { id: "issue_series_pub_marvel_avengers_1964_v1_4", seatNumber: 14, series: "Avengers", title: "Avengers #4", issueNumber: "4", publisher: "Marvel Comics", year: 1964, fmv: 10125, coverPath: "/covers/avengers_4.jpg" },
+  { id: "issue_series_pub_marvel_giant_size_x_men_1975_v1_1", seatNumber: 18, series: "Giant-Size X-Men", title: "Giant-Size X-Men #1", issueNumber: "1", publisher: "Marvel Comics", year: 1975, fmv: 4766.24, coverPath: "/covers/giant_size_x_men_1.jpg" },
+  { id: "issue_series_pub_dc_batman_1973_v1_251", seatNumber: 2, series: "Batman", title: "Batman #251", issueNumber: "251", publisher: "DC Comics", year: 1973, fmv: 1666.78, coverPath: "/covers/batman_251.jpg" },
+  { id: "issue_series_pub_dc_swamp_thing_1984_v1_21", seatNumber: 35, series: "The Saga of Swamp Thing", title: "The Saga of Swamp Thing #21", issueNumber: "21", publisher: "DC Comics", year: 1984, fmv: 147, coverPath: "/covers/the_saga_of_swamp_thing_21.jpg" },
+  { id: "issue_series_pub_dc_batman_dark_knight_1986_v1_1", seatNumber: 36, series: "Batman: The Dark Knight Returns", title: "Batman: The Dark Knight Returns #1", issueNumber: "1", publisher: "DC Comics", year: 1986, fmv: 199.99, coverPath: "/covers/batman_the_dark_knight_returns_1.jpg" },
+  { id: "issue_series_pub_dc_watchmen_1986_v1_1", seatNumber: 37, series: "Watchmen", title: "Watchmen #1", issueNumber: "1", publisher: "DC Comics", year: 1986, fmv: 80.32, coverPath: "/covers/watchmen_1.jpg" },
+  { id: "issue_series_pub_mirage_tmnt_1984_v1_1", seatNumber: 40, series: "Teenage Mutant Ninja Turtles", title: "Teenage Mutant Ninja Turtles #1", issueNumber: "1", publisher: "Mirage Studios", year: 1984, fmv: 16543.75, coverPath: "/covers/teenage_mutant_ninja_turtles_1.jpg" },
+  { id: "issue_series_pub_image_walking_dead_2003_v1_1", seatNumber: 48, series: "The Walking Dead", title: "The Walking Dead #1", issueNumber: "1", publisher: "Image Comics", year: 2003, fmv: 2757.11, coverPath: "/covers/the_walking_dead_1.jpg" },
+  { id: "issue_series_pub_dc_all_star_superman_2006_v1_1", seatNumber: 50, series: "All-Star Superman", title: "All-Star Superman #1", issueNumber: "1", publisher: "DC Comics", year: 2006, fmv: 45, coverPath: "/covers/all_star_superman_1.jpg" },
+  { id: "issue_series_pub_image_saga_2012_v1_1", seatNumber: 55, series: "Saga", title: "Saga #1", issueNumber: "1", publisher: "Image Comics", year: 2012, fmv: 109.25, coverPath: "/covers/saga_1.jpg" },
+  { id: "issue_series_pub_marvel_house_of_x_2019_v1_1", seatNumber: 59, series: "House of X", title: "House of X #1", issueNumber: "1", publisher: "Marvel Comics", year: 2019, fmv: 56, coverPath: "/covers/house_of_x_1.jpg" },
 ];
 
 /**
@@ -425,7 +426,7 @@ async function fetchFeaturedUniverseComicsRaw(limit = 18): Promise<ComicRecord[]
   const selected = LANDMARK_FEATURED_COMICS.slice(0, Math.min(Math.max(limit, 1), 18));
 
   return selected.map((comic) => ({
-    id: `seat-${comic.seatNumber}`,
+    id: comic.id,
     series: comic.series,
     title: comic.title,
     issue_number: comic.issueNumber,
