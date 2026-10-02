@@ -78,12 +78,19 @@ export default async function AssetSurfacePage({ params }: AssetSurfacePageProps
               )}
             </div>
 
-            <h1 className="mt-4 text-2xl sm:text-4xl font-bold tracking-tight text-slate-100">
-              {asset.series} {asset.issue_number ? `#${asset.issue_number}` : ""}
-            </h1>
+            <div className="flex items-center gap-3">
+              <h1 className="mt-4 text-2xl sm:text-4xl font-bold tracking-tight text-slate-100">
+                {asset.series} {asset.issue_number && !asset.issue_number.startsWith("$") ? `#${asset.issue_number}` : ""}
+              </h1>
+              {asset.issue_number?.startsWith("$") && (
+                <span className="mt-4 inline-block font-mono text-sm px-2.5 py-1 bg-cyan-950/70 border border-cyan-500/50 text-cyan-300 rounded font-bold">
+                  {asset.issue_number}
+                </span>
+              )}
+            </div>
 
             {asset.title && asset.title !== asset.series && (
-              <p className="mt-1 text-sm text-slate-400 font-medium">{asset.title}</p>
+              <p className="mt-2 text-sm text-slate-400 font-medium">{asset.title}</p>
             )}
 
             <p className="mt-2 text-xs text-slate-500 font-mono">
@@ -154,10 +161,10 @@ export default async function AssetSurfacePage({ params }: AssetSurfacePageProps
             <div className="mt-8 flex flex-wrap gap-3">
               {asset.reference_fmv_usd && (
                 <Link
-                  href={`/equity/${formatComicEquityTicker(asset.series, asset.issue_number || "1", "SOV")}`}
+                  href={asset.issue_number?.startsWith("$") ? `/assets/${asset.surface_key}` : `/equity/${formatComicEquityTicker(asset.series, asset.issue_number || "1", "SOV")}`}
                   className="inline-flex items-center gap-2 rounded bg-emerald-500/20 border border-emerald-500/40 px-4 py-2 text-xs font-mono font-bold text-emerald-300 hover:bg-emerald-500/30 transition-colors"
                 >
-                  Trade Sovereign Equity ({formatComicEquityTicker(asset.series, asset.issue_number || "1", "SOV")})
+                  {asset.issue_number?.startsWith("$") ? `Trade Asset ${asset.issue_number}` : `Trade Sovereign Equity (${formatComicEquityTicker(asset.series, asset.issue_number || "1", "SOV")})`}
                 </Link>
               )}
               <Link

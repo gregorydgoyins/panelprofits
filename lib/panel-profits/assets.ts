@@ -1,5 +1,6 @@
 import { createCleanReadOnlyServerClient } from "@/lib/supabase/admin";
 import { panelProfitsGrades, comicBaseGrades, getHighestGradedPrice } from "@/lib/pricing/source-ladder";
+import { INITIAL_SURFACE_ASSETS } from "@/lib/assets/initial-assets";
 
 export interface AssetRegistryRecord {
   id: string;
@@ -243,6 +244,45 @@ export async function getCleanEquityDetail(surfaceKey: string): Promise<Detailed
           source: "CE70 Constitutional Seat",
         };
       }
+    }
+
+    // 0.5. Check Multi-Asset and Derivative Instruments in INITIAL_SURFACE_ASSETS
+    const normalizedKey = cleanKey.replace(/^\$/, "").toUpperCase();
+    const matchedAsset = INITIAL_SURFACE_ASSETS.find(
+      (a) =>
+        (a.assetId && a.assetId.toUpperCase() === normalizedKey) ||
+        (a.entryId && a.entryId.toUpperCase() === normalizedKey) ||
+        (a.symbol && a.symbol.replace(/^\$/, "").toUpperCase() === normalizedKey) ||
+        (a.displayName && a.displayName.toUpperCase() === normalizedKey)
+    );
+
+    if (matchedAsset) {
+      const p = matchedAsset.pricing;
+      const fmv = p.fmv_usd ?? p.fmv ?? p.price ?? 0;
+      const effectiveKey = matchedAsset.assetId || matchedAsset.entryId;
+      return {
+        id: matchedAsset.entryId,
+        surface_key: effectiveKey,
+        series: matchedAsset.displayName,
+        title: matchedAsset.description || null,
+        issue_number: matchedAsset.symbol,
+        publisher: matchedAsset.universe || "Alternative Sovereign Instrument",
+        publication_year: p.maturity ? parseInt(String(p.maturity), 10) : 2026,
+        origin_era: p.era ? String(p.era).toUpperCase() : "DERIVATIVE_MULTI_ASSET",
+        production_age: p.production_age ? String(p.production_age).toUpperCase() : "MULTI_ASSET",
+        lineage: `${matchedAsset.assetType} Instrument · ${matchedAsset.universe || "Sovereign Alternative Asset"}`,
+        reference_grade: matchedAsset.assetType,
+        reference_fmv_usd: fmv,
+        price_formatted: `$${fmv.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        gregory_score: 195.0,
+        evidence_confidence: "SOVEREIGN_ASSET_COVENANT_VERIFIED",
+        seat_number: null,
+        seat_type: matchedAsset.assetType,
+        status: "ACTIVE_INSTRUMENT",
+        cover_url: matchedAsset.coverImageUrl || `/surface-art/${matchedAsset.assetType.toLowerCase()}.png`,
+        canonical_issue_id: `asset_${effectiveKey.toLowerCase()}`,
+        source: `Multi-Asset Class (${matchedAsset.assetType})`,
+      };
     }
 
     // 1. Try finding by ID or canonical_issue_id in ce70_equity_universe

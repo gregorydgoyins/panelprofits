@@ -5,6 +5,7 @@ import { generateDynamicCoverSvg } from "@/lib/comics/cover-resolver";
 import { lookupReferenceFmv } from "@/lib/pricing/reference-benchmarks";
 import verifiedCoversJson from "./verified-covers.json";
 import ce70ReferenceFmv from "./ce70-reference-fmv.json";
+import ppix100Data from "./ppix-100-constituents.json";
 
 const REFERENCE_FMV_MAP = ce70ReferenceFmv as Record<string, {
   seatNumber: number;
@@ -263,7 +264,7 @@ const VERIFIED_SEAT_COVERS: Record<string, string> = verifiedCoversJson as Recor
 /**
  * Raw query for CE70 Sovereign Equities Universe with real market pricing and tickers.
  */
-async function fetchSovereignEquitiesRaw(limit = 70): Promise<SovereignEquityItem[]> {
+async function fetchSovereignEquitiesRaw(limit = 150): Promise<SovereignEquityItem[]> {
   const db = createCleanReadOnlyServerClient();
   try {
     const { data, error } = await db
@@ -272,90 +273,125 @@ async function fetchSovereignEquitiesRaw(limit = 70): Promise<SovereignEquityIte
       .order("reference_fmv_usd", { ascending: false })
       .limit(limit * 2);
 
-    if (error || !data || data.length === 0) {
-      if (error && !isMissingTableError(error)) {
-        console.warn("Notice querying ce70_equity_universe:", error.message);
-      }
-      return [];
+    if (error && !isMissingTableError(error)) {
+      console.warn("Notice querying ce70_equity_universe:", error.message);
     }
 
     // Deduplicate by series + issue_number to select the highest-specimen variant per seat
     const seenSeats = new Set<string>();
     const items: SovereignEquityItem[] = [];
 
-    for (const row of data) {
-      const seatKey = `${row.seat_number}-${row.series}-${row.issue_number}`;
-      if (seenSeats.has(seatKey)) continue;
-      seenSeats.add(seatKey);
+    if (data && data.length > 0) {
+      for (const row of data) {
+        const seatKey = `${row.seat_number}-${row.series}-${row.issue_number}`;
+        if (seenSeats.has(seatKey)) continue;
+        seenSeats.add(seatKey);
 
-      const seatRef = lookupReferenceFmv(row.seat_number, row.title || row.series, row.canonical_issue_id);
-      const fmv = seatRef?.referenceFmvUsd ?? seatRef?.grade98FmvUsd ?? (Number(row.reference_fmv_usd) || 0);
-      const grade = seatRef?.referenceGrade ?? (row.reference_grade || "9.8");
+        const seatRef = lookupReferenceFmv(row.seat_number, row.title || row.series, row.canonical_issue_id);
+        const fmv = seatRef?.referenceFmvUsd ?? seatRef?.grade98FmvUsd ?? (Number(row.reference_fmv_usd) || 0);
+        const grade = seatRef?.referenceGrade ?? (row.reference_grade || "9.8");
 
-      const cid = (row.canonical_issue_id || "").toLowerCase();
-      const lin = (row.lineage || "").toLowerCase();
-      const ser = (row.series || "").toLowerCase();
-      
-      const yearMatch = cid.match(/_(19\d\d|20\d\d)_/);
-      const authenticYear = yearMatch ? parseInt(yearMatch[1], 10) : (seatRef?.year || 1970);
+        const cid = (row.canonical_issue_id || "").toLowerCase();
+        const lin = (row.lineage || "").toLowerCase();
+        const ser = (row.series || "").toLowerCase();
+        
+        const yearMatch = cid.match(/_(19\d\d|20\d\d)_/);
+        const authenticYear = yearMatch ? parseInt(yearMatch[1], 10) : (seatRef?.year || 1970);
 
-      let authenticPublisher = "Independent";
-      if (cid.includes("_pub_dc_") || lin.includes("dc comics") || lin.includes("fourth world") || ser.includes("batman") || ser.includes("superman") || ser.includes("new gods") || ser.includes("swamp thing") || ser.includes("watchmen")) {
-        authenticPublisher = "DC Comics";
-      } else if (cid.includes("_pub_marvel_") || lin.includes("marvel") || ser.includes("spider-man") || ser.includes("x-men") || ser.includes("hulk") || ser.includes("avengers") || ser.includes("daredevil") || ser.includes("fantastic four") || ser.includes("conan") || ser.includes("dracula")) {
-        authenticPublisher = "Marvel";
-      } else if (cid.includes("_pub_image_") || lin.includes("image")) {
-        authenticPublisher = "Image Comics";
-      } else if (cid.includes("_pub_ec_") || lin.includes("ec comics")) {
-        authenticPublisher = "EC Comics";
-      } else if (cid.includes("_pub_mirage_") || ser.includes("turtles") || ser.includes("tmnt")) {
-        authenticPublisher = "Mirage Studios";
-      } else if (cid.includes("_pub_fantagraphics_") || ser.includes("love and rockets")) {
-        authenticPublisher = "Fantagraphics";
-      } else if (cid.includes("_pub_boom_")) {
-        authenticPublisher = "BOOM! Studios";
-      } else if (seatRef?.publisher) {
-        authenticPublisher = seatRef.publisher;
+        let authenticPublisher = "Independent";
+        if (cid.includes("_pub_dc_") || lin.includes("dc comics") || lin.includes("fourth world") || ser.includes("batman") || ser.includes("superman") || ser.includes("new gods") || ser.includes("swamp thing") || ser.includes("watchmen")) {
+          authenticPublisher = "DC Comics";
+        } else if (cid.includes("_pub_marvel_") || lin.includes("marvel") || ser.includes("spider-man") || ser.includes("x-men") || ser.includes("hulk") || ser.includes("avengers") || ser.includes("daredevil") || ser.includes("fantastic four") || ser.includes("conan") || ser.includes("dracula")) {
+          authenticPublisher = "Marvel";
+        } else if (cid.includes("_pub_image_") || lin.includes("image")) {
+          authenticPublisher = "Image Comics";
+        } else if (cid.includes("_pub_ec_") || lin.includes("ec comics")) {
+          authenticPublisher = "EC Comics";
+        } else if (cid.includes("_pub_mirage_") || ser.includes("turtles") || ser.includes("tmnt")) {
+          authenticPublisher = "Mirage Studios";
+        } else if (cid.includes("_pub_fantagraphics_") || ser.includes("love and rockets")) {
+          authenticPublisher = "Fantagraphics";
+        } else if (cid.includes("_pub_boom_")) {
+          authenticPublisher = "BOOM! Studios";
+        } else if (seatRef?.publisher) {
+          authenticPublisher = seatRef.publisher;
+        }
+
+        const keyName = `${row.series} #${row.issue_number}`;
+        const seatKeyName = `seat-${row.seat_number}`;
+        const ticker = formatComicEquityTicker(row.series, row.issue_number || "1", "SOV");
+        const resolvedCover =
+          VERIFIED_SEAT_COVERS[keyName] ||
+          VERIFIED_SEAT_COVERS[seatKeyName] ||
+          VERIFIED_SEAT_COVERS[ticker] ||
+          (row.cover_url && !row.cover_url.includes("526.jpg") ? row.cover_url : null) ||
+          generateDynamicCoverSvg(row.series, row.issue_number, authenticPublisher, authenticYear);
+
+        // Deterministic realistic delta based on Gregory score and seat ranking
+        const gScore = Number(row.gregory_score) || 190.0;
+        const delta = Number(((gScore - 190.0) * 0.45).toFixed(2));
+
+        items.push({
+          id: row.id,
+          seatNumber: row.seat_number || 1,
+          seatType: row.seat_type || "PRIMARY_DOMESTIC",
+          ticker,
+          series: row.series,
+          issueNumber: row.issue_number || "1",
+          title: row.title || row.series,
+          originEra: String(row.origin_era || "MODERN").toUpperCase(),
+          productionAge: String(row.production_age || "MODERN").toUpperCase(),
+          lineage: row.lineage || `${row.series} Lineage`,
+          referenceGrade: grade,
+          referenceFmvUsd: fmv,
+          priceFormatted: `$${fmv.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          gregoryScore: gScore,
+          deltaPercent: delta,
+          status: row.status || "ACTIVE",
+          coverUrl: resolvedCover,
+          canonicalIssueId: row.canonical_issue_id || null,
+          year: authenticYear,
+          publisher: authenticPublisher,
+        });
+
+        if (items.length >= limit) break;
       }
+    }
 
-      const keyName = `${row.series} #${row.issue_number}`;
-      const seatKeyName = `seat-${row.seat_number}`;
-      const ticker = formatComicEquityTicker(row.series, row.issue_number || "1", "SOV");
-      const resolvedCover =
-        VERIFIED_SEAT_COVERS[keyName] ||
-        VERIFIED_SEAT_COVERS[seatKeyName] ||
-        VERIFIED_SEAT_COVERS[ticker] ||
-        (row.cover_url && !row.cover_url.includes("526.jpg") ? row.cover_url : null) ||
-        generateDynamicCoverSvg(row.series, row.issue_number, authenticPublisher, authenticYear);
+    // Supplement from multi-era benchmark corpus to provide full continuous breadth
+    if (items.length < limit) {
+      for (const pBook of (ppix100Data as any[])) {
+        const keyName = `${pBook.series} #${pBook.issueNumber}`;
+        if (seenSeats.has(keyName)) continue;
+        seenSeats.add(keyName);
 
-      // Deterministic realistic delta based on Gregory score and seat ranking
-      const gScore = Number(row.gregory_score) || 190.0;
-      const delta = Number(((gScore - 190.0) * 0.45).toFixed(2));
+        const fmv = Number(pBook.fmv) || 150;
+        const ticker = formatComicEquityTicker(pBook.series, pBook.issueNumber || "1", "SOV");
+        items.push({
+          id: `ppix-${items.length + 1}`,
+          seatNumber: items.length + 1,
+          seatType: "MULTI_ERA_PULSE",
+          ticker,
+          series: pBook.series,
+          issueNumber: String(pBook.issueNumber || "1"),
+          title: pBook.title,
+          originEra: String(pBook.era || "MODERN").toUpperCase(),
+          productionAge: String(pBook.era || "MODERN").toUpperCase(),
+          lineage: `${pBook.publisher} Benchmark Constituent`,
+          referenceGrade: pBook.referenceGrade || "9.0",
+          referenceFmvUsd: fmv,
+          priceFormatted: `$${fmv.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          gregoryScore: 195.0,
+          deltaPercent: 0.55,
+          status: "ACTIVE",
+          coverUrl: pBook.coverUrl || generateDynamicCoverSvg(pBook.series, pBook.issueNumber, pBook.publisher, pBook.year),
+          canonicalIssueId: null,
+          year: pBook.year,
+          publisher: pBook.publisher,
+        });
 
-      items.push({
-        id: row.id,
-        seatNumber: row.seat_number || 1,
-        seatType: row.seat_type || "PRIMARY_DOMESTIC",
-        ticker,
-        series: row.series,
-        issueNumber: row.issue_number || "1",
-        title: row.title || row.series,
-        originEra: String(row.origin_era || "MODERN").toUpperCase(),
-        productionAge: String(row.production_age || "MODERN").toUpperCase(),
-        lineage: row.lineage || `${row.series} Lineage`,
-        referenceGrade: grade,
-        referenceFmvUsd: fmv,
-        priceFormatted: `$${fmv.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-        gregoryScore: gScore,
-        deltaPercent: delta,
-        status: row.status || "ACTIVE",
-        coverUrl: resolvedCover,
-        canonicalIssueId: row.canonical_issue_id || null,
-        year: authenticYear,
-        publisher: authenticPublisher,
-      });
-
-      if (items.length >= limit) break;
+        if (items.length >= limit) break;
+      }
     }
 
     return items;

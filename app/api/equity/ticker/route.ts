@@ -15,7 +15,7 @@ export async function GET(request: Request) {
   const offsetParam = parseInt(searchParams.get("offset") || "0", 10);
   const randomStart = searchParams.get("randomStart") === "1" || searchParams.get("reload") === "1";
 
-  const equities = await getSovereignEquities(120);
+  const equities = await getSovereignEquities(180);
 
   // If database was empty, fall back to ce70Dossiers dataset anchored to authentic reference FMV
   const baseItems = equities.length > 0 ? equities : ce70Dossiers.map((seat) => {

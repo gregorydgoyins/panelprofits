@@ -20,6 +20,8 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
   const cb = comicBaseReference(comic);
   const gcGrades = goCollectGrades(comic);
   const cgcGpaGrades = cgcGrades(comic);
+  const rawCoverPrice = (comic.comicbase_data as any)?.["CB - Cover Price"] ?? (comic as any).cover_price;
+  const coverPrice = rawCoverPrice != null ? Number(String(rawCoverPrice).replace(/[^0-9.]/g, "")) : null;
 
   const highest = getHighestGradedPrice({
     "Panel Profits": pp,
@@ -112,7 +114,7 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
         </table>
       </div>
 
-      <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
+      <div className="mt-4 grid gap-3 text-sm grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-lg border border-slate-800 bg-[#0C1626] p-3.5">
           <div className="text-[10px] font-mono font-medium uppercase tracking-wider text-cyan-300">
             Highest Graded Market Price
@@ -138,7 +140,19 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
           </div>
           <div className="mt-1.5 text-lg font-semibold text-slate-100">{cb === null ? "—" : formatCurrency(cb)}</div>
           <p className="mt-1 text-xs leading-relaxed text-slate-400">
-            ComicBase catalog reference price. Evaluated independently from certified CGC/CBCS/PSA transaction records.
+            ComicBase catalog guide reference valuation. Evaluated independently from newsstand cover prices and certified slabs.
+          </p>
+        </div>
+
+        <div className="rounded-lg border border-slate-800 bg-[#0C1626] p-3.5">
+          <div className="text-[10px] font-mono font-medium uppercase tracking-wider text-cyan-300">
+            Original Cover Price
+          </div>
+          <div className="mt-1.5 text-lg font-semibold text-amber-300">
+            {coverPrice != null && coverPrice > 0 ? formatCurrency(coverPrice) : "—"}
+          </div>
+          <p className="mt-1 text-xs leading-relaxed text-slate-400">
+            Historical cover price stamped on physical newsstand or direct copies at initial publication.
           </p>
         </div>
 

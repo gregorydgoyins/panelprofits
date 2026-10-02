@@ -152,12 +152,20 @@ function enrichWithConnoisseurDossier(comic: ComicRecord): ComicRecord {
       ],
     };
 
+    const cbGuidePrice = bench?.grade92FmvUsd ?? bench?.rawFmvUsd ?? 12.00;
+
     return {
       ...comic,
       pp_grade_9_8_price: comic.pp_grade_9_8_price ?? fmv98,
       baseline_grade_9_8_value: comic.baseline_grade_9_8_value ?? fmv98,
-      comicbase_price: comic.comicbase_price ?? coverPrice,
+      comicbase_price: comic.comicbase_price ?? cbGuidePrice,
       panel_profits_data: panelProfitsData as any,
+      comicbase_data: {
+        ...(comic.comicbase_data || {}),
+        "ComicBase - Grade RAW": (comic.comicbase_data as any)?.["ComicBase - Grade RAW"] ?? rawFmv,
+        "CB - Price": (comic.comicbase_data as any)?.["CB - Price"] ?? cbGuidePrice,
+        "CB - Cover Price": (comic.comicbase_data as any)?.["CB - Cover Price"] ?? coverPrice,
+      },
     };
   }
 
@@ -307,6 +315,7 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
     const fmv98 = bench?.grade98FmvUsd ?? bench?.referenceFmvUsd ?? 150;
     const rawFmv = bench?.rawFmvUsd ?? Math.round(fmv98 * 0.1);
     const coverPrice = bench?.coverPrice ?? 2.99;
+    const cbGuidePrice = bench?.grade92FmvUsd ?? bench?.rawFmvUsd ?? 12.00;
 
     const sovereignRecord: ComicRecord = {
       id: cleanId,
@@ -326,7 +335,7 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
       comicbase_source_id: null,
       gcd_source_id: matchedSeat.canonicalId || null,
       pp_grade_9_8_price: fmv98,
-      comicbase_price: coverPrice,
+      comicbase_price: cbGuidePrice,
       baseline_grade_9_8_value: fmv98,
       baseline_grade_9_8_sources: "PriceCharting / CGC Certified Census Benchmark",
       baseline_grade_9_8_observation_count: 24,
@@ -388,6 +397,7 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
       comicbase_data: {
         "ComicBase - Grade RAW": rawFmv,
         "CB - Raw Price": rawFmv,
+        "CB - Price": cbGuidePrice,
         "CB - Cover Price": coverPrice,
         pub_date: `${bench?.year || matchedSeat.year}-01-01`,
       },

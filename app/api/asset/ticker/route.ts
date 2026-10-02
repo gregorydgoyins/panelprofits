@@ -126,7 +126,12 @@ export async function GET(request: Request) {
       displayName: s.displayName || `${surfaceKey} Asset`,
       description: s.description || `Canonical ${surfaceKey} surface instrument for portfolio exposure.`,
       universe: s.universe || "Global",
-      pricing: s.pricing || { price: 100, delta: 0, fmv: 100 },
+      pricing: {
+        ...(s.pricing || { price: 100, delta: 0, fmv: 100 }),
+        fmv_usd: (s.pricing as any)?.fmv_usd ?? (s.pricing as any)?.fmv ?? (s.pricing as any)?.price ?? 100,
+        fmv: (s.pricing as any)?.fmv ?? (s.pricing as any)?.fmv_usd ?? (s.pricing as any)?.price ?? 100,
+        price: (s.pricing as any)?.price ?? (s.pricing as any)?.fmv_usd ?? (s.pricing as any)?.fmv ?? 100,
+      },
       valueUnit: "USD",
       detailUrl: s.detailUrl || `/assets/${encodeURIComponent(s.symbol?.replace(/^\$/, "") || surfaceKey)}`,
       coverImageUrl: s.coverImageUrl || artPath,

@@ -33,7 +33,7 @@ export async function MarketShell({ children }: MarketShellProps) {
     getMarketTelemetry(),
     getNewsStories(32),
     getCanonicalAssetSurfaces(70),
-    getSovereignEquities(70),
+    getSovereignEquities(150),
     calculateMarketIndices(),
     user ? getDiaryEntries(user.id) : Promise.resolve([]),
   ]);
