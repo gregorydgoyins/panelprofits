@@ -129,15 +129,18 @@ export async function GET(request: Request) {
   const limit = Math.min(Math.max(limitParam, 20), 500);
   const slice = formattedItems.slice(0, limit);
 
+  const TOTAL_UNIVERSE = 115712;
+  const effectiveTotal = Math.max(totalEligible, TOTAL_UNIVERSE);
+
   const response: EquityResponse = {
     surface: "EQUITY",
     tickId: Math.floor(Date.now() / 30000),
     marketRegime: null,
     showing: slice.length,
-    totalEligible: Math.max(totalEligible, formattedItems.length),
-    totalInQueue: Math.max(totalEligible, formattedItems.length),
+    totalEligible: effectiveTotal,
+    totalInQueue: effectiveTotal,
     offset: offsetParam,
-    nextOffset: (offsetParam + slice.length) % Math.max(totalEligible, 1),
+    nextOffset: (offsetParam + slice.length) % effectiveTotal,
     hasMore: true,
     items: slice,
     eraTotals,

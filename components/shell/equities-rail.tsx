@@ -12,7 +12,7 @@ import { EquityCard } from "@/components/tickers/equity-card";
 const CARD_W = 227; // 215px card + 12px gap
 const SCROLL_SPEED = 150; // px/s (rapid live trading floor ticker motion)
 const FETCH_MS = 20 * 1000; // Rotate pool every 20 seconds for continuous variety
-const MAX_FETCHES = 10_000; // Continuous rotation across 38,957 verified catalog
+const MAX_FETCHES = 100_000; // Continuous rotation across 115,712 Panel Profits catalog
 
 interface EquitiesRailProps {
   items: SovereignEquityItem[];
