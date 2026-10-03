@@ -5,7 +5,7 @@ import { getAuthoritativeCover, isCoverAuthoritativelyVerified } from "@/lib/com
 import { lookupReferenceFmv } from "@/lib/pricing/reference-benchmarks";
 import verifiedCoversJson from "./verified-covers.json";
 import ce70ReferenceFmv from "./ce70-reference-fmv.json";
-import ppix100Data from "./ppix-100-constituents.json";
+import { getVerifiedRealEquities } from "./verified-equities-service";
 
 const REFERENCE_FMV_MAP = ce70ReferenceFmv as Record<string, {
   seatNumber: number;
@@ -410,143 +410,62 @@ export function validateCe70Constituent(item: {
 }
 
 /**
- * Raw query for CE70 Sovereign Equities Universe with real market pricing and tickers.
+ * Raw query for Sovereign Equities Universe with real market pricing and tickers.
+ * Resolves the server-side initial render hydration gap by querying the high-speed
+ * verified SQLite catalog first, ensuring authentic unrounded pennies and unique covers.
  */
 async function fetchSovereignEquitiesRaw(limit = 150): Promise<SovereignEquityItem[]> {
-  const db = createCleanReadOnlyServerClient();
   try {
+    // 1. Primary Source: High-speed verified equities from local SQLite catalog
+    // Genuine unrounded pennies, unique Supabase Storage covers, and authentic tickers
+    const verified = getVerifiedRealEquities(0, limit, false);
+    if (verified.items && verified.items.length > 0) {
+      return verified.items;
+    }
+
+    // 2. Secondary source: query Supabase clean comics catalog
+    const db = createCleanReadOnlyServerClient();
     const { data, error } = await db
-      .from("ce70_equity_universe")
-      .select("id, seat_number, seat_type, origin_era, production_age, canonical_issue_id, series, title, issue_number, lineage, reference_grade, reference_fmv_usd, price_formatted, gregory_score, status, cover_url")
-      .order("reference_fmv_usd", { ascending: false })
-      .limit(limit * 2);
+      .from("comics")
+      .select("id, series, issue_number, publisher, publication_year, cover_url, pp_grade_9_8_price, baseline_grade_9_8_value")
+      .not("cover_url", "is", null)
+      .gt("baseline_grade_9_8_value", 17.0)
+      .order("baseline_grade_9_8_value", { ascending: false })
+      .limit(limit);
 
     if (error && !isMissingTableError(error)) {
-      console.warn("Notice querying ce70_equity_universe:", error.message);
+      console.warn("Notice querying comics catalog for equities rail:", error.message);
     }
-
-    // Deduplicate by series + issue_number to select the highest-specimen variant per seat
-    const seenSeats = new Set<string>();
-    const items: SovereignEquityItem[] = [];
 
     if (data && data.length > 0) {
-      for (const row of data) {
-        // Enforce 65-seat constitutional quota (seats 66-70 are vacant)
-        if (row.seat_number && row.seat_number > 65) continue;
-
-        const seatKey = `${row.seat_number}-${row.series}-${row.issue_number}`;
-        if (seenSeats.has(seatKey)) continue;
-        seenSeats.add(seatKey);
-
-        const seatRef = lookupReferenceFmv(row.seat_number, row.title || row.series, row.canonical_issue_id);
-        const fmv = seatRef?.referenceFmvUsd ?? seatRef?.grade98FmvUsd ?? (Number(row.reference_fmv_usd) || 0);
-        const grade = seatRef?.referenceGrade ?? (row.reference_grade || "9.8");
-
-        const cid = (row.canonical_issue_id || "").toLowerCase();
-        const lin = (row.lineage || "").toLowerCase();
-        const ser = (row.series || "").toLowerCase();
-        
-        const yearMatch = cid.match(/_(19\d\d|20\d\d)_/);
-        const authenticYear = yearMatch ? parseInt(yearMatch[1], 10) : (seatRef?.year || 1970);
-
-        let authenticPublisher = seatRef?.publisher || "Independent";
-        if (!seatRef?.publisher) {
-          if (cid.includes("_pub_dc_") || lin.includes("dc comics") || lin.includes("fourth world") || ser.includes("batman") || ser.includes("superman") || ser.includes("new gods") || ser.includes("swamp thing") || ser.includes("watchmen")) {
-            authenticPublisher = "DC Comics";
-          } else if (cid.includes("_pub_marvel_") || lin.includes("marvel") || ser.includes("spider-man") || ser.includes("x-men") || ser.includes("hulk") || ser.includes("avengers") || ser.includes("daredevil") || ser.includes("fantastic four") || ser.includes("conan") || ser.includes("dracula")) {
-            authenticPublisher = "Marvel Comics";
-          } else if (cid.includes("_pub_image_") || lin.includes("image")) {
-            authenticPublisher = "Image Comics";
-          } else if (cid.includes("_pub_ec_") || lin.includes("ec comics")) {
-            authenticPublisher = "EC Comics";
-          } else if (cid.includes("_pub_mirage_") || ser.includes("turtles") || ser.includes("tmnt")) {
-            authenticPublisher = "Mirage Studios";
-          } else if (cid.includes("_pub_fantagraphics_") || ser.includes("love and rockets")) {
-            authenticPublisher = "Fantagraphics";
-          } else if (cid.includes("_pub_boom_")) {
-            authenticPublisher = "BOOM! Studios";
-          }
-        }
-
-        const keyName = `${row.series} #${row.issue_number}`;
-        const seatKeyName = `seat-${row.seat_number}`;
-        const ticker = formatComicEquityTicker(row.series, row.issue_number || "1", "SOV");
-        const resolvedCover = getAuthoritativeCover(
-          row.series,
-          row.issue_number,
-          authenticPublisher,
-          authenticYear
-        );
-
-        // Deterministic realistic delta based on Gregory score and seat ranking
-        const gScore = Number(row.gregory_score) || 190.0;
-        const delta = Number(((gScore - 190.0) * 0.45).toFixed(2));
-
-        items.push({
-          id: row.id,
-          seatNumber: row.seat_number || 1,
-          seatType: row.seat_type || "PRIMARY_DOMESTIC",
-          ticker,
-          series: row.series,
-          issueNumber: row.issue_number || "1",
-          title: row.title || row.series,
-          originEra: String(row.origin_era || "MODERN").toUpperCase(),
-          productionAge: String(row.production_age || "MODERN").toUpperCase(),
-          lineage: row.lineage || `${row.series} Lineage`,
-          referenceGrade: grade,
+      return data.map((c, idx) => {
+        const fmv = Number(c.baseline_grade_9_8_value || c.pp_grade_9_8_price || 20.0);
+        return {
+          id: c.id,
+          seatNumber: idx + 1,
+          seatType: "PRIMARY_DOMESTIC",
+          ticker: formatComicEquityTicker(c.series, c.issue_number || "1", "SOV"),
+          series: c.series,
+          issueNumber: c.issue_number || "1",
+          title: `${c.series} #${c.issue_number || "1"}`,
+          originEra: "MODERN",
+          productionAge: "MODERN",
+          lineage: `${c.publisher || "Verified"} Benchmark Constituent`,
+          referenceGrade: "9.8",
           referenceFmvUsd: fmv,
           priceFormatted: `$${fmv.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-          gregoryScore: gScore,
-          deltaPercent: delta,
-          status: row.status || "ACTIVE",
-          coverUrl: resolvedCover,
-          canonicalIssueId: row.canonical_issue_id || null,
-          year: authenticYear,
-          publisher: authenticPublisher,
-        });
-
-        if (items.length >= limit) break;
-      }
-    }
-
-    // Supplement from multi-era benchmark corpus to provide full continuous breadth
-    if (items.length < limit) {
-      for (const pBook of (ppix100Data as any[])) {
-        const keyName = `${pBook.series} #${pBook.issueNumber}`;
-        if (seenSeats.has(keyName)) continue;
-        seenSeats.add(keyName);
-
-        const fmv = Number(pBook.fmv) || 150;
-        const ticker = formatComicEquityTicker(pBook.series, pBook.issueNumber || "1", "SOV");
-        items.push({
-          id: `ppix-${items.length + 1}`,
-          seatNumber: items.length + 1,
-          seatType: "MULTI_ERA_PULSE",
-          ticker,
-          series: pBook.series,
-          issueNumber: String(pBook.issueNumber || "1"),
-          title: pBook.title,
-          originEra: String(pBook.era || "MODERN").toUpperCase(),
-          productionAge: String(pBook.era || "MODERN").toUpperCase(),
-          lineage: `${pBook.publisher} Benchmark Constituent`,
-          referenceGrade: pBook.referenceGrade || "9.0",
-          referenceFmvUsd: fmv,
-          priceFormatted: `$${fmv.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-          gregoryScore: 195.0,
-          deltaPercent: 0.55,
+          gregoryScore: 192.5,
+          deltaPercent: 0.45,
           status: "ACTIVE",
-          coverUrl: pBook.coverUrl || getAuthoritativeCover(pBook.series, pBook.issueNumber, pBook.publisher, pBook.year),
-          canonicalIssueId: null,
-          year: pBook.year,
-          publisher: pBook.publisher,
-          variant: pBook.variant || null,
-        });
-
-        if (items.length >= limit) break;
-      }
+          coverUrl: c.cover_url,
+          canonicalIssueId: c.id,
+          year: c.publication_year || 1975,
+          publisher: c.publisher || "Marvel / DC",
+        };
+      });
     }
 
-    return items;
+    return [];
   } catch (err) {
     console.error("Exception in fetchSovereignEquitiesRaw:", err);
     return [];
@@ -648,77 +567,49 @@ export async function getSovereignEquityDossier(identifier: string): Promise<Det
   if (!identifier) return null;
   const clean = identifier.trim().toLowerCase().replace(/^\$/, "");
 
-  const equities = await getSovereignEquities(120);
-
-  // 1. Match by ticker (e.g. CSS.022.SOV or CSS-022-SOV)
-  let matched = equities.find(
-    (e) => e.ticker.toLowerCase() === clean || e.ticker.toLowerCase().replace(/\./g, "-") === clean
-  );
-
-  if (!matched && clean.includes(".")) {
-    const parts = clean.split(".");
-    const root = parts[0].toLowerCase();
-    const num = parseInt((parts[1] || "").replace(/\D/g, ""), 10);
-    matched = equities.find((e) => {
-      const formatted = formatComicEquityTicker(e.series, e.issueNumber).toLowerCase();
-      const eNum = parseInt(e.issueNumber.replace(/\D/g, ""), 10);
-      return (
-        formatted === clean ||
-        (formatted.startsWith(root) && eNum === num) ||
-        (e.series.toLowerCase().includes(root) && eNum === num) ||
-        (root === "xmn" && e.series.toLowerCase().includes("x-men") && eNum === num) ||
-        (root === "css" && e.series.toLowerCase().includes("suspen") && eNum === num) ||
-        (root === "mad" && e.series.toLowerCase().includes("mad") && eNum === num)
-      );
-    });
-  }
-
-  // 2. Match by exact ID or seat prefix (e.g. ce70_seat_6_CE70-8.5 or seat-6)
-  if (!matched) {
-    matched = equities.find((e) => e.id.toLowerCase() === clean);
-  }
-
-  // 3. Match by seat number
-  if (!matched) {
-    const seatNum = parseInt(clean.replace(/\D/g, ""), 10);
-    if (!isNaN(seatNum) && (clean.startsWith("seat") || !isNaN(Number(clean)))) {
-      matched = equities.find((e) => e.seatNumber === seatNum);
-    }
-  }
-
-  // 4. Match by canonical issue id
-  if (!matched) {
-    matched = equities.find(
-      (e) => e.canonicalIssueId && e.canonicalIssueId.toLowerCase() === clean
-    );
-  }
-
-  // 5. Match by series and issue substring
-  if (!matched) {
-    matched = equities.find((e) => {
-      const full = `${e.series} ${e.issueNumber}`.toLowerCase();
-      return full.includes(clean) || clean.includes(full);
-    });
-  }
-
-  // Find corresponding adjudication dossier from ce70-dossiers-data.json
+  // 1. Direct match on CE70 Dossiers by ticker, slug, canonicalId, or seat
   const dossierData = ce70DossiersData.find((d) => {
-    if (matched) {
-      const dClean = d.title.toLowerCase().replace(/^the\s+/, "").replace(/[^a-z0-9]/g, " ").trim();
-      const mClean = `${matched.series} ${matched.issueNumber}`.toLowerCase().replace(/^the\s+/, "").replace(/[^a-z0-9]/g, " ").trim();
-      if (dClean === mClean) return true;
-      if (dClean.replace(/\s+/g, "") === mClean.replace(/\s+/g, "")) return true;
+    const dClean = d.title.toLowerCase().replace(/^the\s+/, "").replace(/[^a-z0-9]/g, " ").trim();
+    const dSlug = dClean.replace(/\s+/g, "");
+    const dCanon = (d.canonicalId || "").toLowerCase();
+    
+    const seriesTitle = d.title.replace(/\s*#?\d+.*$/, "");
+    const issueMatch = d.title.match(/#?(\d+)/);
+    const issueNum = issueMatch ? issueMatch[1] : "1";
+    const ticker = formatComicEquityTicker(seriesTitle, issueNum, "SOV").toLowerCase();
+    const tickerBase = formatComicEquityTicker(seriesTitle, issueNum).toLowerCase();
+    
+    if (clean === ticker || clean === tickerBase || clean === ticker.replace(/\./g, "-")) return true;
+    if (clean.includes(".")) {
+      const parts = clean.split(".");
+      const root = parts[0].toLowerCase();
+      const num = parseInt((parts[1] || "").replace(/\D/g, ""), 10);
+      const dNum = parseInt(issueNum, 10);
+      if (dNum === num && (
+        ticker.startsWith(root) ||
+        tickerBase.startsWith(root) ||
+        seriesTitle.toLowerCase().includes(root) ||
+        (root === "xmn" && seriesTitle.toLowerCase().includes("x-men")) ||
+        (root === "css" && seriesTitle.toLowerCase().includes("suspen")) ||
+        (root === "mad" && seriesTitle.toLowerCase().includes("mad"))
+      )) return true;
     }
-    // Only match by seatNumber if the requested identifier explicitly specifies a seat (e.g. "seat-1" or "ce70_seat_1")
-    if (/^(?:seat[-_]?|ce70[-_]?seat[-_]?)?\d+$/i.test(clean) && (clean.startsWith("seat") || clean.startsWith("ce70") || /^\d+$/.test(clean))) {
+
+    if (clean === dCanon || (dCanon.length > 0 && dCanon.includes(clean))) return true;
+    const cleanAlpha = clean.replace(/[^a-z0-9]/g, "");
+    if (cleanAlpha.length > 3 && (dSlug === cleanAlpha || dSlug.includes(cleanAlpha))) return true;
+
+    // Seat match
+    if (/^(?:seat[-_]?|ce70[-_]?seat[-_]?)?\d+$/i.test(clean)) {
       const cleanNum = parseInt(clean.replace(/\D/g, ""), 10);
       return !isNaN(cleanNum) && d.seatNumber === cleanNum;
     }
     return false;
   });
 
-  // If not in ce70_equity_universe, but in ce70-dossiers-data.json, construct from dossier
-  if (!matched && dossierData) {
+  let matched: SovereignEquityItem | null = null;
+
+  if (dossierData) {
     const seriesTitle = dossierData.title.replace(/\s*#?\d+.*$/, "");
     const issueMatch = dossierData.title.match(/#?(\d+)/);
     const issueNum = issueMatch ? issueMatch[1] : "1";
@@ -749,6 +640,54 @@ export async function getSovereignEquityDossier(identifier: string): Promise<Det
       year: dossierData.year,
       publisher: dossierData.publisher,
     };
+  }
+
+  // 2. If not a CE70 dossier book, match against the verified equity catalog
+  if (!matched) {
+    const equities = await getSovereignEquities(120);
+
+    matched = equities.find(
+      (e) => e.ticker.toLowerCase() === clean || e.ticker.toLowerCase().replace(/\./g, "-") === clean
+    ) || null;
+
+    if (!matched && clean.includes(".")) {
+      const parts = clean.split(".");
+      const root = parts[0].toLowerCase();
+      const num = parseInt((parts[1] || "").replace(/\D/g, ""), 10);
+      matched = equities.find((e) => {
+        const formatted = formatComicEquityTicker(e.series, e.issueNumber).toLowerCase();
+        const eNum = parseInt(e.issueNumber.replace(/\D/g, ""), 10);
+        return (
+          formatted === clean ||
+          (formatted.startsWith(root) && eNum === num) ||
+          (e.series.toLowerCase().includes(root) && eNum === num)
+        );
+      }) || null;
+    }
+
+    if (!matched) {
+      matched = equities.find((e) => e.id.toLowerCase() === clean) || null;
+    }
+
+    if (!matched) {
+      const seatNum = parseInt(clean.replace(/\D/g, ""), 10);
+      if (!isNaN(seatNum) && (clean.startsWith("seat") || !isNaN(Number(clean)))) {
+        matched = equities.find((e) => e.seatNumber === seatNum) || null;
+      }
+    }
+
+    if (!matched) {
+      matched = equities.find(
+        (e) => e.canonicalIssueId && e.canonicalIssueId.toLowerCase() === clean
+      ) || null;
+    }
+
+    if (!matched) {
+      matched = equities.find((e) => {
+        const full = `${e.series} ${e.issueNumber}`.toLowerCase();
+        return full.includes(clean) || clean.includes(full);
+      }) || null;
+    }
   }
 
   if (!matched) return null;

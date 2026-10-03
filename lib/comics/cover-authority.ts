@@ -44,7 +44,6 @@ const VERIFIED_COVER_REGISTRY: Record<string, string> = {
   "wonder woman:1": "/covers/seat_5_wonder_woman_1.jpg",
   "wonder woman:98": "/covers/wonder_woman_98.jpg",
   "four color:9": "/covers/seat_2_four_color_9.jpg",
-  "four color:223": "/covers/seat_14_four_color_223.jpg",
   "four color:386": "/covers/seat_11_four_color_386.jpg",
   "captain marvel adventures:18": "/covers/captain_marvel_adventures_18.jpg",
   "crime does not pay:22": "/covers/seat_3_crime_does_not_pay_22.jpg",
