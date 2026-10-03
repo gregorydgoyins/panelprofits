@@ -41,7 +41,7 @@ export function FeaturedComicUniverse({ comics }: FeaturedComicUniverseProps) {
 
   // Memoized data sources
   const ce70Items = React.useMemo(() => getCE70Constituents(), []);
-  const ppix100Items = React.useMemo(() => getPPIX100Constituents(), []);
+  const ppix100Items = React.useMemo(() => getPPIX100Constituents(comics), [comics]);
   const cpiCategories = React.useMemo(() => GOCOLLECT_CPI_CATEGORIES, []);
   const compositeAssets = React.useMemo(() => getPPIXCompositeAssets(), []);
 

@@ -4,7 +4,6 @@ import ppix100Data from "@/lib/equity/ppix-100-constituents.json";
 import verifiedCovers from "@/lib/equity/verified-covers.json";
 import { INITIAL_SURFACE_ASSETS } from "@/lib/assets/initial-assets";
 import { getAuthoritativeCover } from "@/lib/comics/cover-authority";
-import { getVerifiedRealEquities } from "@/lib/equity/verified-equities-service";
 
 const REF_FMV_MAP = ce70ReferenceFmv as Record<string, any>;
 
@@ -106,30 +105,25 @@ export function getCE70Constituents(): FeaturedComicConstituent[] {
 // ─────────────────────────────────────────────────────────────
 // 2. PPIX 100 Multi-Era Benchmark (100 Landmark Books)
 // ─────────────────────────────────────────────────────────────
-export function getPPIX100Constituents(): FeaturedComicConstituent[] {
-  try {
-    const verified = getVerifiedRealEquities(0, 100, false);
-    if (verified.items && verified.items.length > 0) {
-      return verified.items.map((eq, idx) => ({
-        id: eq.canonicalIssueId || eq.id,
-        series: eq.series,
-        issueNumber: eq.issueNumber,
-        title: eq.title,
-        publisher: eq.publisher || "Marvel / DC",
-        year: eq.year || 1975,
-        era: String(eq.originEra || "MODERN").toUpperCase(),
-        referenceGrade: eq.referenceGrade || "9.8",
-        fmv: eq.referenceFmvUsd,
-        formattedFmv: eq.priceFormatted,
-        coverUrl: eq.coverUrl,
-        seatNumber: idx + 1,
-        detailUrl: `/comics/${encodeURIComponent(eq.canonicalIssueId || eq.id || eq.ticker)}`,
-        badge: `${String(eq.originEra || "SOVEREIGN").toUpperCase()} ERA`,
-        gregoryScore: eq.gregoryScore,
-      }));
-    }
-  } catch (err) {
-    console.warn("Notice reading verified equities for PPIX100 constituents:", err);
+export function getPPIX100Constituents(providedItems?: any[]): FeaturedComicConstituent[] {
+  if (providedItems && providedItems.length > 0) {
+    return providedItems.map((eq, idx) => ({
+      id: eq.canonicalIssueId || eq.id,
+      series: eq.series,
+      issueNumber: eq.issueNumber,
+      title: eq.title,
+      publisher: eq.publisher || "Marvel / DC",
+      year: eq.year || 1975,
+      era: String(eq.originEra || eq.era || "MODERN").toUpperCase(),
+      referenceGrade: eq.referenceGrade || "9.8",
+      fmv: eq.referenceFmvUsd ?? eq.fmv ?? 0,
+      formattedFmv: eq.priceFormatted || (eq.fmv ? `$${Number(eq.fmv).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "$0.00"),
+      coverUrl: eq.coverUrl,
+      seatNumber: idx + 1,
+      detailUrl: eq.detailUrl || `/comics/${encodeURIComponent(eq.canonicalIssueId || eq.id || eq.ticker || "")}`,
+      badge: `${String(eq.originEra || eq.era || "SOVEREIGN").toUpperCase()} ERA`,
+      gregoryScore: eq.gregoryScore,
+    }));
   }
 
   return (ppix100Data as any[]).map((book, idx) => {

@@ -5,7 +5,7 @@ import { Boxes, ShieldCheck, Sparkles, Layers, ArrowUpRight, Filter } from "luci
 import {
   CANONICAL_16_ASSET_FAMILIES,
   type CollectibleAssetFamily,
-} from "@/lib/equity/canonical-equities";
+} from "@/lib/equity/asset-families";
 
 interface AssetClassesMatrixProps {
   series: string;
