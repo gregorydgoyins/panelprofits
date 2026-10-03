@@ -24,7 +24,7 @@ export default async function EquitiesPage() {
           Comic Equities Trading Floor
         </h1>
         <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-400">
-          Continuous price discovery, sovereign equity surveillance, and benchmark contract management across the 70 constitutional comic seats.
+          Continuous price discovery, sovereign equity surveillance, and verified transaction clearing across all publishing eras. Incorporating real-time auction hammers, institutional float liquidity, and the curated CE70 benchmark index.
         </p>
       </header>
 

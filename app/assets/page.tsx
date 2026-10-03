@@ -19,10 +19,10 @@ export default async function AssetsPage() {
           <Boxes className="h-3.5 w-3.5" /> Asset Registry / 16 Canonical Collectible Families
         </p>
         <h1 className="mt-3 text-3xl sm:text-5xl font-black text-slate-100 tracking-tight">
-          Comic Asset Classes & Constitutional Seats
+          Comic Asset Classes & Benchmark Index Universe
         </h1>
         <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-400">
-          Complete structural taxonomy governing the 16 Canonical Collectible Asset Classes alongside the 70 certified constitutional seats of the CE70 index.
+          Complete structural taxonomy governing the 16 Canonical Collectible Asset Classes across the sovereign comic equities landscape, alongside the curated 70 constituent seats of the CE70 benchmark index.
         </p>
       </header>
 
@@ -95,15 +95,15 @@ export default async function AssetsPage() {
             <div className="flex items-center gap-2">
               <ShieldCheck className="h-4 w-4 text-emerald-400" />
               <h2 className="text-base font-bold text-slate-100 tracking-wide">
-                CE70 Certified Constitutional Asset Surfaces ({seats.length} Seats)
+                CE70 Index Constituent Asset Surfaces ({seats.length} Constituents)
               </h2>
             </div>
             <p className="mt-1 text-xs text-slate-400">
-              Certified constitutional seats and underlying creative provenance.
+              Curated model portfolio constituents tracking baseline historical weightings and creative provenance.
             </p>
           </div>
           <span className="text-xs font-mono text-slate-500">
-            Audit Authority: Panel Profits Canon
+            Benchmark Portfolio: CE70 Model Index
           </span>
         </div>
 

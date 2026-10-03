@@ -508,7 +508,7 @@ export function FeaturedComicUniverse({ comics }: FeaturedComicUniverseProps) {
       {/* ── Footer Expand / View All Controls ── */}
       <div className="mt-6 pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="text-xs text-slate-400">
-          {mode === "ce70" && `Showing ${Math.min(currentCE70.length, displayLimit)} of 70 Constitutional Seats`}
+          {mode === "ce70" && `Showing ${Math.min(currentCE70.length, displayLimit)} of 70 CE70 Index Constituents`}
           {mode === "ppix100" && `Showing ${Math.min(currentPPIX.length, displayLimit)} of 100 Multi-Era Benchmark Issues`}
           {mode === "cpi" && `Showing ${currentCPICategory.constituents.length} Constituents for ${currentCPICategory.name}`}
           {mode === "assets" && `Showing ${Math.min(currentAssets.length, displayLimit)} of ${compositeAssets.length} Alternative Derivatives`}
