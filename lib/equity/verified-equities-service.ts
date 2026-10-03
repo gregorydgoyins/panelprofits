@@ -227,3 +227,38 @@ export function getVerifiedEquityByIdOrTicker(idOrTicker: string): VerifiedEquit
   }
 }
 
+export function searchVerifiedEquities(queryText = "", limit = 48): VerifiedEquityRecord[] {
+  const db = getDb();
+  if (!db) return [];
+
+  try {
+    const clean = queryText.trim();
+    if (!clean) {
+      return db
+        .prepare("SELECT * FROM verified_equities ORDER BY fmv_usd DESC LIMIT ?")
+        .all(limit) as unknown as VerifiedEquityRecord[];
+    }
+
+    // Ticker match
+    const upper = clean.toUpperCase();
+    const tickerMatch = db
+      .prepare("SELECT * FROM verified_equities WHERE ticker = ? COLLATE NOCASE LIMIT ?")
+      .all(upper, limit) as unknown as VerifiedEquityRecord[];
+    if (tickerMatch.length > 0) return tickerMatch;
+
+    // Pattern search on series, title, and ticker
+    const searchPattern = `%${clean.replace(/[%_]/g, "")}%`;
+    return db
+      .prepare(`
+        SELECT * FROM verified_equities 
+        WHERE series LIKE ? OR title LIKE ? OR ticker LIKE ?
+        ORDER BY fmv_usd DESC 
+        LIMIT ?
+      `)
+      .all(searchPattern, searchPattern, searchPattern, limit) as unknown as VerifiedEquityRecord[];
+  } catch (err) {
+    console.warn("Error searching verified equities:", err);
+    return [];
+  }
+}
+

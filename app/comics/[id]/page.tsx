@@ -14,9 +14,12 @@ import { displayIssue, displaySeries } from "@/lib/comics/display";
 import { getComicCoverEvidence } from "@/lib/comics/covers";
 import { getComicCensusDossier } from "@/lib/comics/census";
 import { CensusDossier } from "@/components/comics/census-dossier";
+import { ConnoisseurDossier } from "@/components/comics/connoisseur-dossier";
+import { EquityCandlestickChart } from "@/components/equity/equity-candlestick-chart";
 import { resolveIssueDebuts } from "@/lib/wiki/debut-resolver";
 import { getAuthoritativeCover } from "@/lib/comics/cover-authority";
-import { Sparkles, BookOpen } from "lucide-react";
+import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
+import { Sparkles, BookOpen, Activity, ArrowUpRight } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -83,6 +86,9 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
   const seriesLabel = displaySeries(comic.series, comic.issue_number);
   const issueLabel = displayIssue(comic.issue_number);
   const debut = resolveIssueDebuts(comic.series, comic.issue_number);
+  const tickerSymbol =
+    (comic.panel_profits_data as any)?.ticker ||
+    formatComicEquityTicker(comic.series, comic.issue_number);
 
   // Non-pricing metadata hierarchy: GCD 1st -> ComicBase 2nd -> Legacy Master 3rd
   // Strictly separated from secondary market transaction / observation dates
@@ -162,6 +168,9 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
                 <Badge variant="default" className="text-xs">
                   {comic.publisher || "INDEPENDENT PUBLISHER"}
                 </Badge>
+                <span className="font-mono text-xs px-2 py-0.5 rounded bg-cyan-950/70 border border-cyan-500/50 text-cyan-300 font-medium">
+                  {tickerSymbol}
+                </span>
                 {comic.publication_year && (
                   <Badge variant="secondary" className="text-xs">
                     {comic.publication_year}
@@ -306,6 +315,45 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
                 <p className="text-chalk truncate">{comic.upc || "—"}</p>
               </div>
             </div>
+
+            {/* Quick Series Exploration Link */}
+            <div className="flex items-center justify-between text-xs text-graphite-400 pt-3 border-t border-graphite-800">
+              <span className="text-graphite-400">Series Collection:</span>
+              <Link
+                href={`/comics?q=${encodeURIComponent(comic.series)}`}
+                className="text-cyan-400 hover:text-cyan-300 font-medium flex items-center gap-1 group"
+              >
+                <span>Browse all {seriesLabel} issues in Catalog</span>
+                <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              </Link>
+            </div>
+          </div>
+
+          {/* Interactive TradingView Candlestick & Volume Chart */}
+          <div className="rounded-xl border border-slate-700 bg-[#111319] p-4 sm:p-6 shadow-lg space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-700 pb-3">
+              <div className="flex items-center gap-2">
+                <Activity className="h-4 w-4 text-cyan-400" />
+                <h3 className="text-base font-semibold text-slate-100">
+                  TradingView Price Action & Liquidity Chart
+                </h3>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/60 border border-cyan-500/40 text-cyan-300">
+                  {tickerSymbol}
+                </span>
+              </div>
+              <div className="flex items-center gap-3 text-xs text-slate-400 font-mono">
+                <span>9.8 FMV: <strong className="text-emerald-400">${Number(comic.baseline_grade_9_8_value || comic.pp_grade_9_8_price || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></span>
+              </div>
+            </div>
+
+            <EquityCandlestickChart
+              ticker={tickerSymbol}
+              series={comic.series}
+              issueNumber={comic.issue_number}
+              currentPrice={Number(comic.baseline_grade_9_8_value || comic.pp_grade_9_8_price || 100)}
+              deltaPercent={0.45}
+              height={360}
+            />
           </div>
 
           {/* Pricing Dossier */}
@@ -313,6 +361,13 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
 
           {/* Census and Graded Market Evidence */}
           <CensusDossier dossier={censusDossier} />
+
+          {/* Connoisseur Dossier (20 Dimensions of Gregory Room Adjudication) */}
+          <ConnoisseurDossier
+            data={(comic as any).connoisseur_dossier || (comic.panel_profits_data as any)}
+            series={comic.series}
+            issueNumber={comic.issue_number}
+          />
 
           {/* Provenance & Source Inspection */}
           <ProvenanceCard comic={comic} />

@@ -15,11 +15,15 @@ export function Footer() {
             <span className="text-[11px] text-slate-400">COMIC MARKET INTELLIGENCE PLATFORM</span>
           </div>
 
-          <div className="flex items-center gap-4 text-[11px] text-slate-400">
+          <div className="flex flex-wrap items-center justify-center sm:justify-end gap-x-4 gap-y-2 text-[11px] text-slate-400">
             <Link href="/" className="hover:text-slate-200 transition-colors">DASHBOARD</Link>
-            <Link href="/news" className="hover:text-slate-200 transition-colors">INTELLIGENCE</Link>
+            <Link href="/market" className="hover:text-slate-200 transition-colors">MARKETS</Link>
+            <Link href="/equities" className="hover:text-slate-200 transition-colors">EQUITIES</Link>
             <Link href="/comics" className="hover:text-slate-200 transition-colors">CATALOG</Link>
-            <Link href="/collection" className="hover:text-slate-200 transition-colors">COLLECTION</Link>
+            <Link href="/wiki" className="hover:text-slate-200 transition-colors">ENCYCLOPEDIA</Link>
+            <Link href="/lexicon" className="hover:text-slate-200 transition-colors">LEXICON</Link>
+            <Link href="/news" className="hover:text-slate-200 transition-colors">INTELLIGENCE</Link>
+            <Link href="/collection" className="hover:text-slate-200 transition-colors">PORTFOLIO</Link>
             <Link href="/watchlist" className="hover:text-slate-200 transition-colors">WATCHLIST</Link>
           </div>
         </div>
