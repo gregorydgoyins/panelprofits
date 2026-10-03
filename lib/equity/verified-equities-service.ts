@@ -46,6 +46,15 @@ function getDb(): any {
       if (fs.existsSync(p)) {
         try {
           cachedDb = new DatabaseSync(p);
+          try {
+            cachedDb.exec("PRAGMA journal_mode = WAL;");
+            cachedDb.exec("PRAGMA synchronous = NORMAL;");
+            cachedDb.exec("PRAGMA cache_size = -131072;"); // 128 MB RAM page cache
+            cachedDb.exec("PRAGMA mmap_size = 268435456;"); // 256 MB zero-copy memory mapping
+            cachedDb.exec("PRAGMA temp_store = MEMORY;");
+          } catch (pragmaErr) {
+            console.warn("Notice tuning sqlite pragmas:", pragmaErr);
+          }
           return cachedDb;
         } catch (err) {
           console.warn(`Failed to open sqlite db at ${p}:`, err);
@@ -63,7 +72,12 @@ function getDb(): any {
  * Retrieves authentic, verified comics with real market-cleared prices (with pennies)
  * and verified photographic cover images. Zero synthetic .00 fallbacks.
  */
-export function getVerifiedRealEquities(offset = 0, limit = 80, random = false): {
+export function getVerifiedRealEquities(
+  offset = 0,
+  limit = 80,
+  random = false,
+  era?: string
+): {
   items: SovereignEquityItem[];
   totalEligible: number;
 } {
@@ -73,13 +87,27 @@ export function getVerifiedRealEquities(offset = 0, limit = 80, random = false):
   }
 
   try {
+    const cleanEra = era && era !== "all" ? era.toLowerCase().trim() : null;
+
     // Total count of verified comics meeting the $17.01 floor and strict cover gate
-    const countRow = db
-      .prepare(
-        "SELECT COUNT(*) AS c FROM verified_equities WHERE fmv_usd >= 17.01 AND cover_url IS NOT NULL AND cover_url != ''"
-      )
-      .get() as { c: number } | undefined;
-    const totalEligible = countRow?.c || 0;
+    let totalEligible = 0;
+    if (cleanEra) {
+      const countRow = db
+        .prepare(
+          `SELECT COUNT(*) AS c FROM verified_equities 
+           WHERE fmv_usd >= 17.01 AND cover_url IS NOT NULL AND cover_url != '' 
+           AND (LOWER(production_age) = ? OR LOWER(origin_era) = ?)`
+        )
+        .get(cleanEra, cleanEra) as { c: number } | undefined;
+      totalEligible = countRow?.c || 0;
+    } else {
+      const countRow = db
+        .prepare(
+          "SELECT COUNT(*) AS c FROM verified_equities WHERE fmv_usd >= 17.01 AND cover_url IS NOT NULL AND cover_url != ''"
+        )
+        .get() as { c: number } | undefined;
+      totalEligible = countRow?.c || 0;
+    }
 
     if (totalEligible === 0) {
       return { items: [], totalEligible: 0 };
@@ -88,27 +116,53 @@ export function getVerifiedRealEquities(offset = 0, limit = 80, random = false):
     let rows: VerifiedEquityRecord[] = [];
     if (random) {
       // Randomized traversal across the full price spectrum ($17.01 to Max)
-      rows = db
-        .prepare(
-          `SELECT id, series, issue_number, title, publication_year, publisher, fmv_usd, price_formatted, cover_url, ticker, origin_era, production_age, reference_grade, gregory_score, delta_percent, status, variant 
-           FROM verified_equities 
-           WHERE fmv_usd >= 17.01 AND cover_url IS NOT NULL AND cover_url != '' 
-           ORDER BY RANDOM() 
-           LIMIT ?`
-        )
-        .all(limit) as unknown as VerifiedEquityRecord[];
+      if (cleanEra) {
+        rows = db
+          .prepare(
+            `SELECT id, series, issue_number, title, publication_year, publisher, fmv_usd, price_formatted, cover_url, ticker, origin_era, production_age, reference_grade, gregory_score, delta_percent, status, variant 
+             FROM verified_equities 
+             WHERE fmv_usd >= 17.01 AND cover_url IS NOT NULL AND cover_url != '' 
+             AND (LOWER(production_age) = ? OR LOWER(origin_era) = ?)
+             ORDER BY RANDOM() 
+             LIMIT ?`
+          )
+          .all(cleanEra, cleanEra, limit) as unknown as VerifiedEquityRecord[];
+      } else {
+        rows = db
+          .prepare(
+            `SELECT id, series, issue_number, title, publication_year, publisher, fmv_usd, price_formatted, cover_url, ticker, origin_era, production_age, reference_grade, gregory_score, delta_percent, status, variant 
+             FROM verified_equities 
+             WHERE fmv_usd >= 17.01 AND cover_url IS NOT NULL AND cover_url != '' 
+             ORDER BY RANDOM() 
+             LIMIT ?`
+          )
+          .all(limit) as unknown as VerifiedEquityRecord[];
+      }
     } else {
-      // Cursor offset once-through traversal
+      // Cursor offset once-through traversal ordered by FMV descending with stable secondary key
       const safeOffset = offset % totalEligible;
-      rows = db
-        .prepare(
-          `SELECT id, series, issue_number, title, publication_year, publisher, fmv_usd, price_formatted, cover_url, ticker, origin_era, production_age, reference_grade, gregory_score, delta_percent, status, variant 
-           FROM verified_equities 
-           WHERE fmv_usd >= 17.01 AND cover_url IS NOT NULL AND cover_url != '' 
-           ORDER BY id ASC 
-           LIMIT ? OFFSET ?`
-        )
-        .all(limit, safeOffset) as unknown as VerifiedEquityRecord[];
+      if (cleanEra) {
+        rows = db
+          .prepare(
+            `SELECT id, series, issue_number, title, publication_year, publisher, fmv_usd, price_formatted, cover_url, ticker, origin_era, production_age, reference_grade, gregory_score, delta_percent, status, variant 
+             FROM verified_equities 
+             WHERE fmv_usd >= 17.01 AND cover_url IS NOT NULL AND cover_url != '' 
+             AND (LOWER(production_age) = ? OR LOWER(origin_era) = ?)
+             ORDER BY fmv_usd DESC, id ASC 
+             LIMIT ? OFFSET ?`
+          )
+          .all(cleanEra, cleanEra, limit, safeOffset) as unknown as VerifiedEquityRecord[];
+      } else {
+        rows = db
+          .prepare(
+            `SELECT id, series, issue_number, title, publication_year, publisher, fmv_usd, price_formatted, cover_url, ticker, origin_era, production_age, reference_grade, gregory_score, delta_percent, status, variant 
+             FROM verified_equities 
+             WHERE fmv_usd >= 17.01 AND cover_url IS NOT NULL AND cover_url != '' 
+             ORDER BY fmv_usd DESC, id ASC 
+             LIMIT ? OFFSET ?`
+          )
+          .all(limit, safeOffset) as unknown as VerifiedEquityRecord[];
+      }
     }
 
     const items: SovereignEquityItem[] = rows.map((r, idx) => ({
@@ -227,13 +281,25 @@ export function getVerifiedEquityByIdOrTicker(idOrTicker: string): VerifiedEquit
   }
 }
 
-export function searchVerifiedEquities(queryText = "", limit = 48): VerifiedEquityRecord[] {
+export function searchVerifiedEquities(queryText = "", limit = 48, era?: string): VerifiedEquityRecord[] {
   const db = getDb();
   if (!db) return [];
 
   try {
     const clean = queryText.trim();
+    const cleanEra = era && era !== "all" ? era.toLowerCase().trim() : null;
+
     if (!clean) {
+      if (cleanEra) {
+        return db
+          .prepare(
+            `SELECT * FROM verified_equities 
+             WHERE LOWER(production_age) = ? OR LOWER(origin_era) = ? 
+             ORDER BY fmv_usd DESC 
+             LIMIT ?`
+          )
+          .all(cleanEra, cleanEra, limit) as unknown as VerifiedEquityRecord[];
+      }
       return db
         .prepare("SELECT * FROM verified_equities ORDER BY fmv_usd DESC LIMIT ?")
         .all(limit) as unknown as VerifiedEquityRecord[];
@@ -241,13 +307,37 @@ export function searchVerifiedEquities(queryText = "", limit = 48): VerifiedEqui
 
     // Ticker match
     const upper = clean.toUpperCase();
-    const tickerMatch = db
-      .prepare("SELECT * FROM verified_equities WHERE ticker = ? COLLATE NOCASE LIMIT ?")
-      .all(upper, limit) as unknown as VerifiedEquityRecord[];
-    if (tickerMatch.length > 0) return tickerMatch;
+    if (!cleanEra) {
+      const tickerMatch = db
+        .prepare("SELECT * FROM verified_equities WHERE ticker = ? COLLATE NOCASE LIMIT ?")
+        .all(upper, limit) as unknown as VerifiedEquityRecord[];
+      if (tickerMatch.length > 0) return tickerMatch;
+    } else {
+      const tickerMatch = db
+        .prepare(
+          `SELECT * FROM verified_equities 
+           WHERE ticker = ? COLLATE NOCASE 
+           AND (LOWER(production_age) = ? OR LOWER(origin_era) = ?) 
+           LIMIT ?`
+        )
+        .all(upper, cleanEra, cleanEra, limit) as unknown as VerifiedEquityRecord[];
+      if (tickerMatch.length > 0) return tickerMatch;
+    }
 
     // Pattern search on series, title, and ticker
     const searchPattern = `%${clean.replace(/[%_]/g, "")}%`;
+    if (cleanEra) {
+      return db
+        .prepare(`
+          SELECT * FROM verified_equities 
+          WHERE (series LIKE ? OR title LIKE ? OR ticker LIKE ?)
+          AND (LOWER(production_age) = ? OR LOWER(origin_era) = ?)
+          ORDER BY fmv_usd DESC 
+          LIMIT ?
+        `)
+        .all(searchPattern, searchPattern, searchPattern, cleanEra, cleanEra, limit) as unknown as VerifiedEquityRecord[];
+    }
+
     return db
       .prepare(`
         SELECT * FROM verified_equities 

@@ -14,6 +14,9 @@ interface TickerHeaderProps {
   noSignalFilter?: boolean;
   noSignalCount?: number;
   heritageCount?: number;
+  selectedEra?: string | null;
+  onSelectEra?: (era: string | null) => void;
+  onNextBatch?: () => void;
   onRetry?: () => void;
   onToggleNoSignal?: () => void;
 }
@@ -27,6 +30,9 @@ export function TickerHeader({
   noSignalFilter = false,
   noSignalCount = 0,
   heritageCount = 0,
+  selectedEra = null,
+  onSelectEra,
+  onNextBatch,
   onRetry,
   onToggleNoSignal,
 }: TickerHeaderProps) {
@@ -156,26 +162,61 @@ export function TickerHeader({
         </>
       )}
 
+      {/* Rotate / Next Batch Button */}
+      {onNextBatch && (
+        <button
+          type="button"
+          onClick={onNextBatch}
+          title="Rotate equities to the next 80 continuous issues across the 38,957 verified catalog"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "4px",
+            padding: "2px 8px",
+            borderRadius: "3px",
+            cursor: "pointer",
+            flexShrink: 0,
+            backgroundColor: "rgba(56,189,248,0.14)",
+            border: "1px solid rgba(56,189,248,0.45)",
+            color: "#38bdf8",
+            fontSize: "9px",
+            fontFamily: "monospace",
+            fontWeight: 700,
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+            transition: "all 150ms ease",
+          }}
+        >
+          <span>↻ Rotate</span>
+        </button>
+      )}
+
       <div style={{ width: "1px", height: "12px", backgroundColor: "rgba(255,255,255,0.1)", flexShrink: 0, margin: "0 2px" }} />
 
       {/* Era chips */}
       {ERA_LEGEND.map(({ key, label, color }) => {
         const n = eraCounts[key] ?? 0;
-        const active = n > 0;
+        const isSelected = selectedEra === key;
+        const active = n > 0 || isSelected;
         return (
-          <div
+          <button
             key={key}
+            type="button"
+            onClick={onSelectEra ? () => onSelectEra(isSelected ? null : key) : undefined}
+            title={`Filter ticker to ${label} (${n} issues)`}
             style={{
               display: "inline-flex",
               alignItems: "center",
               gap: "3px",
               padding: "2px 6px",
               borderRadius: "3px",
-              cursor: "default",
+              cursor: onSelectEra ? "pointer" : "default",
               flexShrink: 0,
-              backgroundColor: active ? `${color}15` : "transparent",
-              border: `1px solid ${active ? color + "35" : "rgba(255,255,255,0.07)"}`,
-              opacity: active ? 1 : 0.32,
+              backgroundColor: isSelected ? `${color}35` : active ? `${color}15` : "transparent",
+              border: `1px solid ${isSelected ? color : active ? color + "35" : "rgba(255,255,255,0.07)"}`,
+              boxShadow: isSelected ? `0 0 8px ${color}60` : "none",
+              opacity: isSelected ? 1 : active ? 1 : 0.32,
+              transition: "all 150ms ease",
             }}
           >
             <div
@@ -183,7 +224,7 @@ export function TickerHeader({
                 width: "5px",
                 height: "5px",
                 borderRadius: "50%",
-                backgroundColor: active ? color : "#4b5563",
+                backgroundColor: isSelected ? "#fff" : active ? color : "#4b5563",
                 boxShadow: active ? `0 0 4px ${color}80` : "none",
                 flexShrink: 0,
               }}
@@ -192,10 +233,10 @@ export function TickerHeader({
               style={{
                 fontSize: "9px",
                 fontFamily: "var(--font-sans, system-ui)",
-                fontWeight: 500,
+                fontWeight: isSelected ? 700 : 500,
                 textTransform: "uppercase",
                 letterSpacing: "0.07em",
-                color: active ? color : "#6b7280",
+                color: isSelected ? "#ffffff" : active ? color : "#6b7280",
                 whiteSpace: "nowrap",
               }}
             >
@@ -205,13 +246,13 @@ export function TickerHeader({
               style={{
                 fontSize: "9px",
                 fontFamily: "monospace",
-                color: active ? `${color}bb` : "#374151",
+                color: isSelected ? "#ffffff" : active ? `${color}bb` : "#374151",
                 fontVariantNumeric: "tabular-nums",
               }}
             >
               {n}
             </span>
-          </div>
+          </button>
         );
       })}
 

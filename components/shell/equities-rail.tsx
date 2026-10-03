@@ -11,7 +11,7 @@ import { EquityCard } from "@/components/tickers/equity-card";
 
 const CARD_W = 227; // 215px card + 12px gap
 const SCROLL_SPEED = 90; // px/s
-const FETCH_MS = 5 * 60 * 1000; // Refresh pool every 5 minutes
+const FETCH_MS = 45 * 1000; // Rotate pool every 45 seconds
 const MAX_FETCHES = 10_000; // Wrap after ~3.5 days (88 hours = 3 days 16 hours)
 
 interface EquitiesRailProps {
@@ -23,6 +23,24 @@ export function EquitiesRail({ items: initialItems = [], indices = [] }: Equitie
   const trackRef = React.useRef<HTMLDivElement>(null);
   const fetchCount = React.useRef(0);
   const nextOffset = React.useRef(0);
+  const [selectedEra, setSelectedEra] = React.useState<string | null>(null);
+
+  // Initialize nextOffset from sessionStorage if user previously rotated
+  React.useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem("pp_rail_offset");
+      if (stored) {
+        const parsed = parseInt(stored, 10);
+        if (!isNaN(parsed) && parsed > 0) {
+          nextOffset.current = parsed;
+        }
+      } else if (initialItems.length > 0) {
+        nextOffset.current = initialItems.length;
+      }
+    } catch {
+      // sessionStorage not accessible
+    }
+  }, [initialItems.length]);
 
   // Convert initial SovereignEquityItem[] to EquityItem[] for instant first-paint
   const initialEquityItems = React.useMemo<EquityItem[]>(() => {
@@ -145,11 +163,13 @@ export function EquitiesRail({ items: initialItems = [], indices = [] }: Equitie
     trackRef.current.style.animationPlayState = "running";
   }, [displayItems.length]);
 
-  // Sequential batch loader supporting up to 10,000 batches (88 hours / 3.5 days) continuous loop
-  const fetchBatch = React.useCallback(async () => {
+  // Sequential batch loader supporting up to 10,000 batches (continuous rotation across 38,957 verified catalog)
+  const fetchBatch = React.useCallback(async (overrideOffset?: number, overrideEra?: string | null) => {
     try {
-      const offset = nextOffset.current;
-      const url = `/api/equity/ticker?limit=80&offset=${offset}`;
+      const targetEra = overrideEra !== undefined ? overrideEra : selectedEra;
+      const offset = overrideOffset !== undefined ? overrideOffset : nextOffset.current;
+      const eraQuery = targetEra ? `&era=${encodeURIComponent(targetEra)}` : "";
+      const url = `/api/equity/ticker?limit=80&offset=${offset}${eraQuery}`;
       const res = await fetch(url, { cache: "no-store" });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json: EquityResponse = await res.json();
@@ -170,17 +190,28 @@ export function EquitiesRail({ items: initialItems = [], indices = [] }: Equitie
         setErrored(false);
 
         fetchCount.current += 1;
-        if (fetchCount.current >= MAX_FETCHES) {
-          fetchCount.current = 0;
-          nextOffset.current = 0;
-        } else {
-          nextOffset.current = json.nextOffset ?? (offset + newItems.length);
+        const next = json.nextOffset ?? ((offset + newItems.length) % (json.totalEligible || 1));
+        nextOffset.current = next;
+        try {
+          sessionStorage.setItem("pp_rail_offset", String(next));
+        } catch {
+          // Ignore storage quota or disabled storage
         }
       }
     } catch {
       setErrored(true);
     }
-  }, []);
+  }, [selectedEra]);
+
+  const handleSelectEra = React.useCallback((era: string | null) => {
+    setSelectedEra(era);
+    nextOffset.current = 0;
+    fetchBatch(0, era);
+  }, [fetchBatch]);
+
+  const handleNextBatch = React.useCallback(() => {
+    fetchBatch();
+  }, [fetchBatch]);
 
   React.useEffect(() => {
     const id = setInterval(fetchBatch, FETCH_MS);
@@ -213,7 +244,10 @@ export function EquitiesRail({ items: initialItems = [], indices = [] }: Equitie
         noSignalFilter={noSignalFilter}
         noSignalCount={noSignalCount}
         heritageCount={heritageItems.length}
-        onRetry={fetchBatch}
+        selectedEra={selectedEra}
+        onSelectEra={handleSelectEra}
+        onNextBatch={handleNextBatch}
+        onRetry={() => fetchBatch()}
         onToggleNoSignal={() => setNoSignalFilter((f) => !f)}
       />
 

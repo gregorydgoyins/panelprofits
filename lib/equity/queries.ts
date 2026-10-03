@@ -1,5 +1,6 @@
 import { createCleanReadOnlyServerClient } from "@/lib/supabase/admin";
 import { isMissingTableError } from "@/lib/supabase/errors";
+import { createCachedQuery } from "@/lib/cache/wrapper";
 
 export interface EquityContract {
   index_code: string;
@@ -56,27 +57,35 @@ async function getObservationCount(db: ReturnType<typeof createCleanReadOnlyServ
   }
 }
 
-export async function getEquityContracts(): Promise<EquityContract[]> {
-  try {
-    const db = createCleanReadOnlyServerClient();
-    const { data, error } = await db
-      .from("recovered_index_contracts")
-      .select("index_code,display_name,methodology_version,expected_constituent_count,price_basis,grade_basis,selection_rule,weighting_rule,rebalance_rule,calculation_frequency,historical_status,production_status,notes")
-      .order("index_code");
-    if (error) {
-      if (isMissingTableError(error)) return [];
-      console.warn("Failed to fetch equity contracts:", error.message);
+export const getEquityContracts = createCachedQuery(
+  async (): Promise<EquityContract[]> => {
+    try {
+      const db = createCleanReadOnlyServerClient();
+      const { data, error } = await db
+        .from("recovered_index_contracts")
+        .select("index_code,display_name,methodology_version,expected_constituent_count,price_basis,grade_basis,selection_rule,weighting_rule,rebalance_rule,calculation_frequency,historical_status,production_status,notes")
+        .order("index_code");
+      if (error) {
+        if (isMissingTableError(error)) return [];
+        console.warn("Failed to fetch equity contracts:", error.message);
+        return [];
+      }
+      return Promise.all((data || []).map(async (contract) => ({
+        ...contract,
+        observation_count: await getObservationCount(db, contract.index_code),
+      })));
+    } catch (err) {
+      console.warn("Unexpected error in getEquityContracts:", err);
       return [];
     }
-    return Promise.all((data || []).map(async (contract) => ({
-      ...contract,
-      observation_count: await getObservationCount(db, contract.index_code),
-    })));
-  } catch (err) {
-    console.warn("Unexpected error in getEquityContracts:", err);
-    return [];
+  },
+  "equity_contracts",
+  {
+    ttlSeconds: 300,
+    staleWhileRevalidateSeconds: 1800,
+    tags: ["equity_contracts"],
   }
-}
+);
 
 export async function getEquityDetail(indexCode: string): Promise<{ contract: EquityContract; observations: EquityObservation[]; constituents: EquityConstituent[] } | null> {
   try {

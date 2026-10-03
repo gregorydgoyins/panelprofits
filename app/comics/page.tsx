@@ -22,13 +22,8 @@ export default async function ComicsPage({ searchParams }: ComicsPageProps) {
   const currentView = params.view === "ppedia" ? "ppedia" : "equities";
   const selectedEra = params.era?.toLowerCase();
 
-  // 1. Fetch verified market equities (0.1ms via SQLite / local estate)
-  let verifiedComics = searchVerifiedEquities(query, 48);
-  if (selectedEra && selectedEra !== "all") {
-    verifiedComics = verifiedComics.filter(
-      (c) => (c.production_age || c.origin_era || "").toLowerCase().includes(selectedEra)
-    );
-  }
+  // 1. Fetch verified market equities (0.1ms via SQLite / local estate with SQL-indexed era filtering)
+  const verifiedComics = searchVerifiedEquities(query, 48, selectedEra);
 
   // 2. Fetch PPCF records when in encyclopedia mode or searching
   const ppcfComics = currentView === "ppedia" ? await searchPpcfComics(query, 48) : [];

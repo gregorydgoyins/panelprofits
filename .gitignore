@@ -13,6 +13,10 @@
 # production
 /build
 
+# sqlite temporary wal/shm
+*.sqlite-wal
+*.sqlite-shm
+
 # misc
 .DS_Store
 *.pem

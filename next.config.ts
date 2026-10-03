@@ -2,7 +2,20 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  compress: true,
+  experimental: {
+    optimizePackageImports: [
+      "lucide-react",
+      "@radix-ui/react-select",
+      "@radix-ui/react-separator",
+      "@radix-ui/react-slot",
+    ],
+  },
   images: {
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 2592000, // 30 days
+    deviceSizes: [320, 420, 640, 750, 828, 1080, 1200],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     remotePatterns: [
       {
         protocol: "https",
@@ -35,6 +48,37 @@ const nextConfig: NextConfig = {
         pathname: "/images.pricecharting.com/**",
       },
     ],
+  },
+  async headers() {
+    return [
+      {
+        source: "/covers/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
+        source: "/surface-art/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
+        source: "/fonts/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+    ];
   },
   webpack: (config, { isServer }) => {
     if (!isServer) {

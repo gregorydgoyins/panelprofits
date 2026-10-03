@@ -12,9 +12,10 @@ export async function GET(request: Request) {
   const limitParam = parseInt(searchParams.get("limit") || "80", 10);
   const offsetParam = parseInt(searchParams.get("offset") || "0", 10);
   const randomStart = searchParams.get("randomStart") === "1" || searchParams.get("reload") === "1";
+  const eraParam = searchParams.get("era") || undefined;
 
   // 1. Primary Source: Real verified equities with unrounded market cents and verified covers
-  const verifiedResult = getVerifiedRealEquities(offsetParam, limitParam, randomStart);
+  const verifiedResult = getVerifiedRealEquities(offsetParam, limitParam, randomStart, eraParam);
   let baseItems = verifiedResult.items;
   let totalEligible = verifiedResult.totalEligible;
 
@@ -79,8 +80,9 @@ export async function GET(request: Request) {
     }
 
     const itemGrade = String(item.referenceGrade || "9.8").trim();
-    const bench = lookupReferenceFmv(item.seatNumber, item.title, item.canonicalIssueId);
-    const isTrulySovereign = isSpecimenSovereign(itemGrade, bench);
+    // Sovereign Copy Canon: Direct universal 9.8 copy (or highest recorded sale where no 9.8 exists)
+    // Non-9.8 holdings, variants, or signature copies cannot be labeled sovereign
+    const isTrulySovereign = itemGrade === "9.8" && !item.variant;
     const marketClass = item.referenceFmvUsd >= 45 ? "PREMIUM" : item.referenceFmvUsd >= 20 ? "STD" : "OTC";
     const effectiveAssetClass = isTrulySovereign ? "SOV" : marketClass;
 
