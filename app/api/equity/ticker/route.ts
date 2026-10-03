@@ -43,7 +43,7 @@ export async function GET(request: Request) {
   const validBaseItems = baseItems.filter((item) => {
     const cover =
       item.coverUrl ||
-      getAuthoritativeCoverStrict(item.series, item.issueNumber, item.publisher || "Marvel / DC", item.year || 1975);
+      getAuthoritativeCoverStrict(item.series, item.issueNumber, item.publisher || "Independent", item.year || 1975);
 
     if (!cover) return false;
     if (cover.includes("svg") || cover.startsWith("data:image/svg")) return false;
@@ -88,7 +88,7 @@ export async function GET(request: Request) {
 
     const resolvedCover =
       item.coverUrl ||
-      getAuthoritativeCoverStrict(item.series, item.issueNumber, item.publisher || "Marvel / DC", item.year || 1975);
+      getAuthoritativeCoverStrict(item.series, item.issueNumber, item.publisher || "Independent", item.year || 1975);
 
     return {
       entryId: `eq-${item.id || idx}`,
@@ -107,7 +107,7 @@ export async function GET(request: Request) {
           ? `${item.series} #${item.issueNumber} [${item.variant}]`
           : `${item.series} #${item.issueNumber}`,
         year: item.year || 1975,
-        publisher: item.publisher || "Marvel / DC",
+        publisher: item.publisher || "Independent",
         variant: item.variant || null,
         productionAge: eraKey,
         scarcityTier: tier,

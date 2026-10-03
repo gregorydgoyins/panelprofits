@@ -187,10 +187,13 @@ async function fetchSovereignEquitiesRaw(limit = 150): Promise<SovereignEquityIt
     const db = createCleanReadOnlyServerClient();
     const { data, error } = await db
       .from("comics")
-      .select("id, series, issue_number, publisher, publication_year, cover_url, pp_grade_9_8_price, baseline_grade_9_8_value")
+      .select("id, series, issue_number, publisher, publication_year, cover_url, pp_grade_9_8_price, baseline_grade_9_8_value, pp_source_id")
+      .neq("pp_source_id", "")
+      .neq("cover_url", "")
       .not("cover_url", "is", null)
-      .gt("baseline_grade_9_8_value", 17.0)
-      .order("baseline_grade_9_8_value", { ascending: false })
+      .not("cover_url", "like", "%files1.comics.org%")
+      .not("cover_url", "like", "%526.jpg%")
+      .order("pp_source_id", { ascending: true })
       .limit(limit);
 
     if (error && !isMissingTableError(error)) {
@@ -199,7 +202,7 @@ async function fetchSovereignEquitiesRaw(limit = 150): Promise<SovereignEquityIt
 
     if (data && data.length > 0) {
       return data.map((c, idx) => {
-        const fmv = Number(c.baseline_grade_9_8_value || c.pp_grade_9_8_price || 20.0);
+        const fmv = Number(c.pp_grade_9_8_price || c.baseline_grade_9_8_value || 24.50);
         return {
           id: c.id,
           seatNumber: idx + 1,
@@ -220,7 +223,7 @@ async function fetchSovereignEquitiesRaw(limit = 150): Promise<SovereignEquityIt
           coverUrl: c.cover_url,
           canonicalIssueId: c.id,
           year: c.publication_year || 1975,
-          publisher: c.publisher || "Marvel / DC",
+          publisher: c.publisher || "Independent",
         };
       });
     }

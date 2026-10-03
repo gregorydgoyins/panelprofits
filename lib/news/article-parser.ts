@@ -316,7 +316,7 @@ function resolveDynamicLoreDeepDives(text: string, entities: EntityWikiDef[]): L
     if (loreRecord) {
       seenTerms.add(termLower);
       const firstApp = loreRecord.first_appearance || (loreRecord.landmark_debuts?.[0]?.title) || `${entity.term} Debut Issue`;
-      const creators = loreRecord.creators || "Canonical Marvel / DC Creative Teams";
+      const creators = loreRecord.creators || "Canonical Creative Teams";
       const era = firstApp.includes("196") ? "Silver Age" : firstApp.includes("197") ? "Bronze Age" : firstApp.includes("198") ? "Copper Age" : firstApp.includes("193") || firstApp.includes("194") ? "Golden Age" : "Modern Age";
       const loreDesc = loreRecord.summary || `Canonical ${loreRecord.universe} character and publishing equity.`;
 

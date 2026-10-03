@@ -86,7 +86,7 @@ interface LandmarkSovereign {
 const LANDMARK_SOVEREIGNS: LandmarkSovereign[] = landmarkSovereignsJson as LandmarkSovereign[];
 
 const OBSCURE_OUTLIERS_FILTER = "AND series NOT IN ('Phantom Lady', 'Mister Mystery', 'Boy Comics', 'Kid Komics', 'Speed Comics', 'Venus', 'All-Select Comics', 'Clue Comics', 'Cowgirl Romances', 'Diary Secrets', 'Fight Comics', 'Headline Comics', 'Jumbo Comics', 'Punch Comics', 'Zip Comics', 'Romantic Hearts', 'Shocking Mystery Cases', 'Torchy', 'Weird Science-Fantasy', 'Classic Comics', 'The United States Marines', 'Four Color', 'Vault of Horror', 'Haunt of Fear', 'Planet Comics', 'Strange Worlds', 'Tales from the Crypt', 'Blue Bolt Weird Tales of Terror', 'Worlds of Fear', 'Beware! Terror Tales', 'This Magazine Is Haunted', 'This Magazine is Haunted', 'Saddle Justice', 'Torrid Affairs', 'Crime Does Not Pay', 'Frontline Combat', 'Two-Fisted Tales')";
-const PREMIER_PUBLISHERS = "'Marvel', 'DC', 'Marvel / DC', 'DC Comics', 'Marvel Comics', 'Image', 'Dark Horse', 'Quality Comics', 'Fawcett', 'Valiant', 'Eclipse', 'Mirage Studios', 'IDW Publishing'";
+const PREMIER_PUBLISHERS = "'Marvel', 'DC', 'DC Comics', 'Marvel Comics', 'Image', 'Dark Horse', 'Quality Comics', 'Fawcett', 'Valiant', 'Eclipse', 'Mirage Studios', 'IDW Publishing', 'Independent'";
 
 const ERA_SQL_CONDITIONS: Record<string, string> = {
   golden: `(publication_year <= 1955 OR LOWER(production_age) IN ('golden', 'atomic', 'platinum')) ${OBSCURE_OUTLIERS_FILTER} AND publisher IN (${PREMIER_PUBLISHERS})`,

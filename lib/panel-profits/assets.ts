@@ -177,7 +177,7 @@ export async function getEquityRegistry(limit = 48): Promise<EquityRegistryRecor
           id: r.id,
           series: r.series || "Unknown Series",
           issue_number: r.issue_number || null,
-          publisher: "Marvel / DC",
+          publisher: r.publisher || "Independent",
           publication_year: null,
         },
       };

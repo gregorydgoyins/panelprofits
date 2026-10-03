@@ -439,7 +439,7 @@ async function fetchFeaturedUniverseComicsRaw(limit = 18): Promise<ComicRecord[]
         printing: "1",
         direct_or_variant: eq.variant || "Direct Edition / Sovereign Anchor",
         cover_variant: null,
-        publisher: eq.publisher || "Marvel / DC",
+        publisher: eq.publisher || "Independent",
         publication_date: `${eq.year || 1975}-01-01`,
         publication_year: eq.year || 1975,
         upc: null,
