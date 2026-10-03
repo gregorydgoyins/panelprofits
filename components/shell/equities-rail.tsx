@@ -198,22 +198,13 @@ export function EquitiesRail({ items: initialItems = [], indices = [] }: Equitie
 
   React.useEffect(() => {
     try {
-      const stored = sessionStorage.getItem("pp_rail_offset");
-      if (stored) {
-        const parsed = parseInt(stored, 10);
-        if (!isNaN(parsed) && parsed > 0) {
-          nextOffset.current = parsed;
-          fetchBatch(parsed);
-          return;
-        }
-      }
-      const seed = (Math.floor(Date.now() / 60000) * 20) % 38000;
-      nextOffset.current = seed;
-      fetchBatch(seed);
-    } catch {
-      // sessionStorage not accessible
+      sessionStorage.removeItem("pp_rail_offset");
+    } catch {}
+    nextOffset.current = initialEquityItems.length > 0 ? initialEquityItems.length : 0;
+    if (initialEquityItems.length === 0) {
+      fetchBatch(0);
     }
-  }, [fetchBatch]);
+  }, [fetchBatch, initialEquityItems.length]);
 
   React.useEffect(() => {
     const id = setInterval(fetchBatch, FETCH_MS);
