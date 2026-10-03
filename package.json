@@ -12,7 +12,9 @@
     "start": "next start",
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "worker:sync-equities": "node --experimental-strip-types --env-file=.env.local scripts/workers/sync_verified_equities_to_supabase.ts",
+    "worker:sync-equities:daemon": "node --experimental-strip-types --env-file=.env.local scripts/workers/sync_verified_equities_to_supabase.ts --daemon --interval 300"
   },
   "dependencies": {
     "@radix-ui/react-select": "^2.1.6",
