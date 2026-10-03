@@ -5,28 +5,16 @@ import { getPpcfCoverage } from "@/lib/ppcf/queries";
 import { calculateMarketIndices } from "@/lib/market/indices";
 import { getFeaturedComics, getComicsPricingCoverage } from "@/lib/comics/queries";
 import { resolveBaselinePrice } from "@/lib/pricing/baseline";
+import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
 
 export const dynamic = "force-dynamic";
-
-/**
- * Derives a deterministic ticker mnemonic from a real comic series name.
- * This is a display label computed from real catalog data, never a
- * stand-in for price/change data — no market figures are invented here.
- */
-function deriveComicTicker(series: string): string {
-  const clean = (series || "").replace(/[^a-zA-Z0-9\s]/g, "").trim();
-  const words = clean.split(/\s+/).filter(Boolean);
-  if (words.length === 0) return "$—";
-  if (words.length === 1) return `$${words[0].slice(0, 6).toUpperCase()}`;
-  return `$${words.map((w) => w[0]).join("").toUpperCase().slice(0, 6)}`;
-}
 
 export default async function MarketPage() {
   const [{ state, recoveredIndices }, coverage, marketIndices, featuredComics, comicsPricingCoverage] = await Promise.all([
     getPanelTelemetry(),
     getPpcfCoverage(),
     calculateMarketIndices(),
-    getFeaturedComics(7),
+    getFeaturedComics(14),
     getComicsPricingCoverage(),
   ]);
 
@@ -57,18 +45,25 @@ export default async function MarketPage() {
             Live Equities Rail
           </span>
           {featuredComics.length > 0 ? (
-            <div className="flex items-center gap-4 shrink-0 font-mono">
+            <div className="flex items-center gap-3 shrink-0 font-mono">
               {featuredComics.map((comic) => {
                 const pricing = resolveBaselinePrice(comic);
+                const ticker = formatComicEquityTicker(comic.series, comic.issue_number || "1");
                 return (
-                  <div
+                  <Link
                     key={comic.id}
-                    title={`${comic.series} #${comic.issue_number || "—"}`}
-                    className="flex items-center gap-2 bg-slate-900/60 px-3 py-1 border border-slate-800 rounded"
+                    href={`/comics/${encodeURIComponent(comic.id)}`}
+                    title={`${comic.series} #${comic.issue_number || "1"} — Click to inspect trading dossier`}
+                    className="group flex items-center gap-2 bg-slate-900/80 hover:bg-slate-800/90 px-3 py-1.5 border border-slate-800 hover:border-cyan-500/60 rounded transition-all cursor-pointer shadow-sm"
                   >
-                    <span className="text-cyan-300 font-semibold">{deriveComicTicker(comic.series)}</span>
-                    <span className="text-slate-300">{pricing.formatted}</span>
-                  </div>
+                    <span className="text-cyan-300 font-bold tracking-wider group-hover:text-cyan-200 transition-colors">
+                      {ticker}
+                    </span>
+                    <span className="text-slate-200 font-medium">{pricing.formatted}</span>
+                    <span className="text-[9px] uppercase tracking-wider text-slate-500 group-hover:text-slate-400">
+                      #{comic.issue_number || "1"}
+                    </span>
+                  </Link>
                 );
               })}
             </div>
