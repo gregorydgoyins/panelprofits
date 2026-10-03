@@ -52,15 +52,18 @@ export function panelProfitsGrades(comic: Partial<ComicRecord>): Partial<Record<
   const result: Partial<Record<Grade, number>> = {};
   if (!comic.panel_profits_data) return result;
 
-  // Extract RAW (ungraded) market price
+  // Extract RAW (ungraded / loose) market price
   const rawCandidateKeys = [
     "PP - Ungraded Market Price",
     "PP - Raw Market Price",
     "raw_market_price",
     "ungraded_market_price",
+    "ungraded_value",
     "raw_price",
     "raw",
     "ungraded",
+    "loose",
+    "loose_price",
   ];
   for (const key of rawCandidateKeys) {
     const stored = positivePrice(comic.panel_profits_data[key]);
@@ -76,8 +79,10 @@ export function panelProfitsGrades(comic: Partial<ComicRecord>): Partial<Record<
     const candidateKeys = [
       `PP - Grade ${grade} Market Price`,
       `grade_${gradeKey}_value`,
+      `grade_${gradeKey}`,
       `pp_grade_${gradeKey}_price`,
       `${grade}_nm`,
+      grade,
     ];
 
     for (const key of candidateKeys) {
@@ -150,6 +155,7 @@ export function goCollectGrades(comic: Partial<ComicRecord>): Partial<Record<Gra
 
 /**
  * Reads authentic CGC · GPA sales observation ladder if present in payload or metadata.
+ * CGC is exclusively a certified grading company — it NEVER issues a RAW or ungraded price.
  */
 export function cgcGrades(comic: Partial<ComicRecord>): Partial<Record<Grade, number>> {
   const result: Partial<Record<Grade, number>> = {};
@@ -159,9 +165,7 @@ export function cgcGrades(comic: Partial<ComicRecord>): Partial<Record<Grade, nu
 
   if (!cgcDict) return result;
 
-  const raw = positivePrice(cgcDict["CGC - Grade RAW"] || cgcDict["cgc_raw_price"] || (cgcDict as any)["RAW"]);
-  if (raw !== null) result["RAW"] = raw;
-
+  // CGC never has an ungraded/RAW price — only certified numerical grades
   for (const grade of GRADES) {
     if (grade === "RAW") continue;
     const gradeKey = grade.replace(".", "_");
@@ -174,6 +178,80 @@ export function cgcGrades(comic: Partial<ComicRecord>): Partial<Record<Grade, nu
     if (stored !== null) result[grade] = stored;
   }
 
+  return result;
+}
+
+/**
+ * Reads PriceCharting secondary market auction/sales observation ladder.
+ * Operates as an independent pricing authority. Never blends with ComicBase or Panel Profits.
+ * RAW indicates uncertified market transactions; rarely if ever exceeds 9.8 certified pricing.
+ */
+export function priceChartingGrades(comic: Partial<ComicRecord>): Partial<Record<Grade, number>> {
+  const result: Partial<Record<Grade, number>> = {};
+
+  const pcData = (comic as Record<string, unknown>).pricecharting_data as Record<string, unknown> | undefined ||
+    (comic.panel_profits_data as Record<string, unknown> | undefined)?.pricecharting as Record<string, unknown> | undefined;
+
+  if (pcData) {
+    const rawVal = positivePrice(pcData["raw"] || pcData["RAW"] || pcData["raw_price"]);
+    if (rawVal !== null) result["RAW"] = rawVal;
+
+    for (const grade of GRADES) {
+      if (grade === "RAW") continue;
+      const gradeKey = grade.replace(".", "_");
+      const stored = positivePrice(
+        pcData[`grade_${gradeKey}`] ||
+        pcData[`PriceCharting - Grade ${grade}`] ||
+        pcData[grade]
+      );
+      if (stored !== null) result[grade] = stored;
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Reads authentic CBCS certified observation ladder if present in payload or metadata.
+ */
+export function cbcsGrades(comic: Partial<ComicRecord>): Partial<Record<Grade, number>> {
+  const result: Partial<Record<Grade, number>> = {};
+  const data = (comic as Record<string, unknown>).cbcs_data as Record<string, unknown> | undefined ||
+    (comic.panel_profits_data as Record<string, unknown> | undefined)?.cbcs_grades as Record<string, unknown> | undefined;
+  if (!data) return result;
+
+  for (const grade of GRADES) {
+    if (grade === "RAW") continue;
+    const gradeKey = grade.replace(".", "_");
+    const stored = positivePrice(
+      data[`CBCS - Grade ${grade}`] ||
+      data[`cbcs_grade_${gradeKey}_price`] ||
+      data[grade]
+    );
+    if (stored !== null) result[grade] = stored;
+  }
+  return result;
+}
+
+/**
+ * Reads authentic PSA certified observation ladder if present in payload or metadata.
+ */
+export function psaGrades(comic: Partial<ComicRecord>): Partial<Record<Grade, number>> {
+  const result: Partial<Record<Grade, number>> = {};
+  const data = (comic as Record<string, unknown>).psa_data as Record<string, unknown> | undefined ||
+    (comic.panel_profits_data as Record<string, unknown> | undefined)?.psa_grades as Record<string, unknown> | undefined;
+  if (!data) return result;
+
+  for (const grade of GRADES) {
+    if (grade === "RAW") continue;
+    const gradeKey = grade.replace(".", "_");
+    const stored = positivePrice(
+      data[`PSA - Grade ${grade}`] ||
+      data[`psa_grade_${gradeKey}_price`] ||
+      data[grade]
+    );
+    if (stored !== null) result[grade] = stored;
+  }
   return result;
 }
 
@@ -223,20 +301,86 @@ export function getHighestGradedPrice(
 
 /**
  * Reads order-book execution spreads (_buy and _sell) for key anchor grades.
+ * Corresponds to the bid/ask execution spreads in the 115k dataset and translation layer.
  */
 export function panelProfitsSpreads(comic: Partial<ComicRecord>, grade: Grade): ExecutionSpreads {
-  if (!comic.panel_profits_data) return { buy: null, sell: null };
+  const ppData = comic.panel_profits_data as Record<string, unknown> | undefined;
+  if (!ppData) return { buy: null, sell: null };
+
   const gradeKey = grade.replace(".", "_");
 
-  const buy = positivePrice(
-    comic.panel_profits_data[`${grade}_buy`] ||
-    comic.panel_profits_data[`grade_${gradeKey}_buy`]
-  );
+  const rawBuyKeys = [
+    "ungraded_buy",
+    "PP - Ungraded Buy Price",
+    "raw_buy",
+    "loose_buy",
+    "PP - Raw Buy Price",
+  ];
+  const rawSellKeys = [
+    "ungraded_sell",
+    "PP - Ungraded Sell Price",
+    "raw_sell",
+    "loose_sell",
+    "PP - Raw Sell Price",
+  ];
 
-  const sell = positivePrice(
-    comic.panel_profits_data[`${grade}_sell`] ||
-    comic.panel_profits_data[`grade_${gradeKey}_sell`]
-  );
+  let buy: number | null = null;
+  let sell: number | null = null;
+
+  if (grade === "RAW") {
+    for (const key of rawBuyKeys) {
+      const v = positivePrice(ppData[key]);
+      if (v !== null) {
+        buy = v;
+        break;
+      }
+    }
+    for (const key of rawSellKeys) {
+      const v = positivePrice(ppData[key]);
+      if (v !== null) {
+        sell = v;
+        break;
+      }
+    }
+  } else {
+    const buyKeys = [
+      `grade_${gradeKey}_buy`,
+      `PP - Grade ${grade} Buy Price`,
+      `${grade}_buy`,
+      `grade_${gradeKey.replace("_", "")}_buy`,
+    ];
+    const sellKeys = [
+      `grade_${gradeKey}_sell`,
+      `PP - Grade ${grade} Sell Price`,
+      `${grade}_sell`,
+      `grade_${gradeKey.replace("_", "")}_sell`,
+    ];
+
+    for (const key of buyKeys) {
+      const v = positivePrice(ppData[key]);
+      if (v !== null) {
+        buy = v;
+        break;
+      }
+    }
+    for (const key of sellKeys) {
+      const v = positivePrice(ppData[key]);
+      if (v !== null) {
+        sell = v;
+        break;
+      }
+    }
+  }
+
+  // Fallback to translation layer deterministic spread (0.66 buy / 1.10 sell) if explicit spreads are unrecorded
+  const gradesMap = panelProfitsGrades(comic);
+  const marketPrice = gradesMap[grade];
+  if (marketPrice && buy === null) {
+    buy = Number((marketPrice * 0.66).toFixed(2));
+  }
+  if (marketPrice && sell === null) {
+    sell = Number((marketPrice * 1.10).toFixed(2));
+  }
 
   return { buy, sell };
 }

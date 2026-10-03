@@ -63,21 +63,72 @@ export function AssetsRail({ items }: AssetsRailProps = {}) {
       const json: AssetResponse = await res.json();
 
       const counts: Partial<Record<SurfaceKey, number>> = {};
-      const newItems: AssetItem[] = [];
+      const surfacePools: AssetItem[][] = [];
 
       if (json.surfaces) {
         for (const [key, data] of Object.entries(json.surfaces)) {
           if (data?.items?.length) {
             counts[key as SurfaceKey] = data.items.length;
-            newItems.push(...data.items);
+            surfacePools.push([...data.items]);
           }
         }
       }
 
+      // Interleave items with strict anti-collision so no similar assets or identical art sit back-to-back
+      const allCandidates: AssetItem[] = [];
+      for (const pool of surfacePools) {
+        for (const it of pool) {
+          if ((it.pricing?.fmv ?? it.pricing?.price ?? 0) >= 20.00) {
+            allCandidates.push(it);
+          }
+        }
+      }
+
+      const interleavedItems: AssetItem[] = [];
+      const poolCopy = [...allCandidates];
+
+      while (poolCopy.length > 0) {
+        let nextIdx = -1;
+        const lastItem = interleavedItems[interleavedItems.length - 1];
+
+        for (let i = 0; i < poolCopy.length; i++) {
+          const cand = poolCopy[i];
+          if (
+            !lastItem ||
+            (cand.coverImageUrl !== lastItem.coverImageUrl &&
+              cand.assetType !== lastItem.assetType &&
+              cand.displayName !== lastItem.displayName)
+          ) {
+            nextIdx = i;
+            break;
+          }
+        }
+
+        if (nextIdx === -1) {
+          for (let i = 0; i < poolCopy.length; i++) {
+            if (!lastItem || poolCopy[i].coverImageUrl !== lastItem.coverImageUrl) {
+              nextIdx = i;
+              break;
+            }
+          }
+        }
+
+        if (nextIdx === -1) nextIdx = 0;
+        interleavedItems.push(poolCopy.splice(nextIdx, 1)[0]);
+      }
+
+      if (
+        interleavedItems.length > 2 &&
+        interleavedItems[interleavedItems.length - 1].coverImageUrl === interleavedItems[0].coverImageUrl
+      ) {
+        const last = interleavedItems.pop()!;
+        interleavedItems.splice(Math.floor(interleavedItems.length / 2), 0, last);
+      }
+
       setSurfaceCounts(counts);
-      if (newItems.length > 0) {
+      if (interleavedItems.length > 0) {
         React.startTransition(() => {
-          setAssetItems(newItems);
+          setAssetItems(interleavedItems);
         });
       }
       setErrored(false);

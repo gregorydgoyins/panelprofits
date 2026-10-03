@@ -1,7 +1,7 @@
 import { SURFACE_ORDER, SURFACE_ART_MAP, type SurfaceKey } from "./surfaceConfig";
 import type { AssetItem } from "./types";
 
-export const INITIAL_SURFACE_ASSETS: AssetItem[] = [
+const RAW_INITIAL_SURFACE_ASSETS: AssetItem[] = [
   // ── 1. Artifacts, Weapons & Gadgets ──
   {
     entryId: "asset-gadget-mjol",
@@ -1002,6 +1002,52 @@ export const INITIAL_SURFACE_ASSETS: AssetItem[] = [
     detailUrl: "/assets/WAK-DNR",
     coverImageUrl: "/surface-art/currency.png",
     coverVerified: true,
-    quarantined: false,
   },
 ];
+
+function interleaveInitialAssets(assets: AssetItem[]): AssetItem[] {
+  const result: AssetItem[] = [];
+  // Filter for assets meeting the $20.00 floor
+  const remaining = assets.filter((a) => (a.pricing?.fmv ?? a.pricing?.price ?? 0) >= 20.00);
+
+  while (remaining.length > 0) {
+    let nextIdx = -1;
+    const lastItem = result[result.length - 1];
+
+    // Find next item with DIFFERENT coverImageUrl, DIFFERENT assetType, and DIFFERENT universe/title
+    for (let i = 0; i < remaining.length; i++) {
+      const cand = remaining[i];
+      if (
+        !lastItem ||
+        (cand.coverImageUrl !== lastItem.coverImageUrl &&
+          cand.assetType !== lastItem.assetType &&
+          cand.displayName !== lastItem.displayName)
+      ) {
+        nextIdx = i;
+        break;
+      }
+    }
+
+    if (nextIdx === -1) {
+      for (let i = 0; i < remaining.length; i++) {
+        if (!lastItem || remaining[i].coverImageUrl !== lastItem.coverImageUrl) {
+          nextIdx = i;
+          break;
+        }
+      }
+    }
+
+    if (nextIdx === -1) nextIdx = 0;
+    result.push(remaining.splice(nextIdx, 1)[0]);
+  }
+
+  // Ensure track wrap-around boundary doesn't match first item
+  if (result.length > 2 && result[result.length - 1].coverImageUrl === result[0].coverImageUrl) {
+    const last = result.pop()!;
+    result.splice(Math.floor(result.length / 2), 0, last);
+  }
+
+  return result;
+}
+
+export const INITIAL_SURFACE_ASSETS: AssetItem[] = interleaveInitialAssets(RAW_INITIAL_SURFACE_ASSETS);

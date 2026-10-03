@@ -15,7 +15,6 @@ import { getComicCoverEvidence } from "@/lib/comics/covers";
 import { getComicCensusDossier } from "@/lib/comics/census";
 import { CensusDossier } from "@/components/comics/census-dossier";
 import { resolveIssueDebuts } from "@/lib/wiki/debut-resolver";
-import { ConnoisseurDossier } from "@/components/comics/connoisseur-dossier";
 import { getAuthoritativeCover } from "@/lib/comics/cover-authority";
 import { Sparkles, BookOpen } from "lucide-react";
 
@@ -314,13 +313,6 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
 
           {/* Census and Graded Market Evidence */}
           <CensusDossier dossier={censusDossier} />
-
-          {/* Gregory Room 20-Dimension Connoisseurship & Curated Collector Discussions */}
-          <ConnoisseurDossier
-            data={comic.panel_profits_data as any}
-            series={comic.series}
-            issueNumber={comic.issue_number}
-          />
 
           {/* Provenance & Source Inspection */}
           <ProvenanceCard comic={comic} />

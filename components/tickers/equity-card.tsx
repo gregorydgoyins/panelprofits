@@ -118,7 +118,9 @@ export const EquityCard = React.memo(function EquityCard({
 
   const displayAssetClass: string | null = isRawCopy
     ? "RAW"
-    : isSovereign && rawGrade === "9.8" && !isTrueVariant
+    : isTrueVariant
+    ? "VAR"
+    : isSovereign && rawGrade === "9.8"
     ? "SOV"
     : marketPriceClass;
 
@@ -500,6 +502,7 @@ export const EquityCard = React.memo(function EquityCard({
             )}
             {displayAssetClass && ASSET_CLASS_CONFIG[displayAssetClass] && (
               <span
+                title={`${ASSET_CLASS_CONFIG[displayAssetClass].fullName} | Venue: ${ASSET_CLASS_CONFIG[displayAssetClass].venue} | Margin Haircut: ${ASSET_CLASS_CONFIG[displayAssetClass].marginHaircut} | ${ASSET_CLASS_CONFIG[displayAssetClass].description}`}
                 style={{
                   fontSize: "8px",
                   fontFamily: "var(--font-sans, system-ui)",
@@ -511,6 +514,7 @@ export const EquityCard = React.memo(function EquityCard({
                   lineHeight: "14px",
                   flexShrink: 0,
                   letterSpacing: "0.2px",
+                  cursor: "help",
                 }}
               >
                 {ASSET_CLASS_CONFIG[displayAssetClass].label}

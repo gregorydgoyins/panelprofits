@@ -1,5 +1,3 @@
-import { generateDynamicCoverSvg } from "./cover-resolver";
-
 /**
  * Normalizes series and issue strings for deterministic, collision-free lookup.
  */
@@ -70,9 +68,13 @@ const VERIFIED_COVER_REGISTRY: Record<string, string> = {
   "fantastic four:51": "/covers/seat_20_fantastic_four_51.jpg",
   "amazing fantasy:15": "/covers/amazing_fantasy_15.jpg",
   "amazing spider man:1": "/covers/amazing_spider_man_1.jpg",
+  "the amazing spider man:1": "/covers/amazing_spider_man_1.jpg",
   "amazing spider man:33": "/covers/amazing_spider_man_33.jpg",
+  "the amazing spider man:33": "/covers/amazing_spider_man_33.jpg",
   "amazing spider man:121": "/covers/seat_30_the_amazing_spider_man_121.jpg",
+  "the amazing spider man:121": "/covers/seat_30_the_amazing_spider_man_121.jpg",
   "amazing spider man:300": "/covers/amazing_spider_man_300.jpg",
+  "the amazing spider man:300": "/covers/amazing_spider_man_300.jpg",
   "journey into mystery:85": "/covers/journey_into_mystery_85.jpg",
   "strange tales:110": "/covers/strange_tales_110.jpg",
   "strange tales:138": "/covers/seat_23_strange_tales_138.jpg",
@@ -81,6 +83,7 @@ const VERIFIED_COVER_REGISTRY: Record<string, string> = {
   "daredevil:168": "/covers/daredevil_168.jpg",
   "daredevil:181": "/covers/seat_29_daredevil_181.jpg",
   "x men:1": "/covers/x_men_1.jpg",
+  "the x men:1": "/covers/x_men_1.jpg",
   "silver surfer:1": "/covers/silver_surfer_1.jpg",
   "green lantern:76": "/covers/green_lantern_76.jpg",
   "nick fury agent of shield:1": "/covers/seat_21_nick_fury_agent_of_shield_1.jpg",
@@ -169,7 +172,7 @@ export function getAuthoritativeCover(
   issueNumber?: string | number | null,
   publisher?: string | null,
   year?: number | null
-): string {
+): string | null {
   const rawSeries = (series || "Canonical Comic").trim();
   const rawIssue = (issueNumber !== undefined && issueNumber !== null && String(issueNumber).trim() !== "")
     ? String(issueNumber).trim()
@@ -200,8 +203,50 @@ export function getAuthoritativeCover(
     return VERIFIED_COVER_REGISTRY[strippedKey];
   }
 
-  // 3. Fallback: Authenticated trade-dressed dynamic SVG for THIS exact series & issue
-  return generateDynamicCoverSvg(cleanSeries, cleanIssue, publisher || "Independent", year || 1975);
+  // 3. No verified image found -> Return null (NO SVG placeholders allowed)
+  return null;
+}
+
+/**
+ * Strict version of getAuthoritativeCover that returns null if no real verified image exists.
+ * Prevents SVG fallback placeholders from ever polluting surveillance rails.
+ */
+export function getAuthoritativeCoverStrict(
+  series?: string | null,
+  issueNumber?: string | number | null,
+  publisher?: string | null,
+  year?: number | null
+): string | null {
+  const rawSeries = (series || "").trim();
+  if (!rawSeries) return null;
+
+  const rawIssue = (issueNumber !== undefined && issueNumber !== null && String(issueNumber).trim() !== "")
+    ? String(issueNumber).trim()
+    : "1";
+
+  let cleanSeries = rawSeries;
+  let cleanIssue = rawIssue;
+
+  const match = rawSeries.match(/^(.*?)(?:\s+#(\d+[\w-]*))$/);
+  if (match) {
+    cleanSeries = match[1].trim();
+    if (rawIssue === "1" || !rawIssue) {
+      cleanIssue = match[2].trim();
+    }
+  }
+
+  const key = normalizeKey(cleanSeries, cleanIssue);
+  if (VERIFIED_COVER_REGISTRY[key]) {
+    return VERIFIED_COVER_REGISTRY[key];
+  }
+
+  const strippedSeries = cleanSeries.replace(/[:\-']/g, "").replace(/\s+/g, " ");
+  const strippedKey = normalizeKey(strippedSeries, cleanIssue);
+  if (VERIFIED_COVER_REGISTRY[strippedKey]) {
+    return VERIFIED_COVER_REGISTRY[strippedKey];
+  }
+
+  return null;
 }
 
 /**

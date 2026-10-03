@@ -42,16 +42,16 @@ describe("Pricing Fallback Engine", () => {
     expect(result.observationCount).toBe(42);
   });
 
-  it("falls back to comicbase_price when both promoted and json baseline values are missing", () => {
+  it("keeps comicbase_price isolated and leaves baselinePrice98 null when 9.8 pricing is missing", () => {
     const comic: Partial<ComicRecord> = {
       baseline_grade_9_8_value: null,
       panel_profits_data: null,
       comicbase_price: 24.95,
     };
     const result = resolveComicPricing(comic);
-    expect(result.baselinePrice98).toBe(24.95);
+    expect(result.baselinePrice98).toBeNull();
     expect(result.comicbasePrice).toBe(24.95);
-    expect(result.baselineSource).toBe("ComicBase Reference Valuation");
+    expect(result.baselineSource).toBeNull();
   });
 
   it("recovers historical PP pricing when empty promoted columns are zero", () => {
@@ -66,16 +66,18 @@ describe("Pricing Fallback Engine", () => {
     });
     expect(result.panelProfitsPrice98).toBe(350.5);
     expect(result.baselinePrice98).toBe(300);
+    expect(result.comicbasePrice).toBe(24.95);
   });
 
-  it("uses the ComicBase reference if historical baseline text is not a price", () => {
+  it("keeps 9.8 baseline unpriced if historical baseline text is not a price, isolating ComicBase", () => {
     const result = resolveComicPricing({
       baseline_grade_9_8_value: null,
       panel_profits_data: { "Panel Profits Baseline Grade 9.8 Value": "unavailable" },
       comicbase_price: 24.95,
     });
-    expect(result.baselinePrice98).toBe(24.95);
-    expect(result.baselineSource).toBe("ComicBase Reference Valuation");
+    expect(result.baselinePrice98).toBeNull();
+    expect(result.comicbasePrice).toBe(24.95);
+    expect(result.baselineSource).toBeNull();
   });
 
   it("gracefully handles complete absence of pricing data", () => {

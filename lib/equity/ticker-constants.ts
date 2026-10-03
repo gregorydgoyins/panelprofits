@@ -40,14 +40,80 @@ export const ERA_LEGEND = [
   { key: 'postmodern',  label: 'Post-Mod', color: ERA_COLORS.postmodern.border },
 ];
 
-export const ASSET_CLASS_CONFIG: Record<string, { color: string; label: string }> = {
-  SOV:          { color: '#f59e0b', label: 'SOV' },
-  PREMIUM:      { color: '#c084fc', label: 'PREMIUM' },
-  STD:          { color: '#38bdf8', label: 'STD' },
-  OTC:          { color: '#fb923c', label: 'OTC' },
-  UNICORN_CALL: { color: '#f472b6', label: 'UC'  },
-  RAW:          { color: '#94a3b8', label: 'RAW' },
-  VARIANT:      { color: '#a78bfa', label: 'VAR' },
+export interface AssetClassConfig {
+  color: string;
+  label: string;
+  fullName: string;
+  venue: string;
+  marginHaircut: string;
+  description: string;
+}
+
+export const ASSET_CLASS_CONFIG: Record<string, AssetClassConfig> = {
+  SOV: {
+    color: '#f59e0b',
+    label: 'SOV',
+    fullName: 'Sovereign Graded Equity',
+    venue: 'Continuous Central Bourse / Sovereign Vault Collateral',
+    marginHaircut: '25%',
+    description: 'Universal graded, direct copy of a comic at its highest verified sold grade (typically a 9.8, or the highest known verified grade on record for that issue). Eligible as institutional vault collateral.',
+  },
+  PREMIUM: {
+    color: '#c084fc',
+    label: 'PREMIUM',
+    fullName: 'Premium Market Equity',
+    venue: 'Tier-1 Continuous Central Bourse',
+    marginHaircut: '35%',
+    description: 'High-liquidity blue-chip key issues (FMV >= $45). Continuous dealer bid-ask depth and high trade velocity.',
+  },
+  STD: {
+    color: '#38bdf8',
+    label: 'STD',
+    fullName: 'Standard Market Equity',
+    venue: 'Standard Exchange Floor',
+    marginHaircut: '50%',
+    description: 'Continuous circulation issues ($20 <= FMV < $45). Regular secondary market trading pool with standard exchange collateral haircut.',
+  },
+  OTC: {
+    color: '#fb923c',
+    label: 'OTC',
+    fullName: 'Over-The-Counter Equity',
+    venue: 'Bilateral Dealer Desks / Off-Exchange',
+    marginHaircut: '75%',
+    description: 'Lower-liquidity, unlisted, or sub-$20 issues traded through bilateral broker desks rather than continuous exchange matching.',
+  },
+  VAR: {
+    color: '#a78bfa',
+    label: 'VAR',
+    fullName: 'Variant & Incentive Issue',
+    venue: 'Specialized Collector Exchange',
+    marginHaircut: '50%–60%',
+    description: 'Retailer ratio incentives, convention exclusives, and regional price test variants with distinct census floats.',
+  },
+  VARIANT: {
+    color: '#a78bfa',
+    label: 'VAR',
+    fullName: 'Variant & Incentive Issue',
+    venue: 'Specialized Collector Exchange',
+    marginHaircut: '50%–60%',
+    description: 'Retailer ratio incentives, convention exclusives, and regional price test variants with distinct census floats.',
+  },
+  RAW: {
+    color: '#94a3b8',
+    label: 'RAW',
+    fullName: 'Uncertified Physical Specimen',
+    venue: 'Physical Secondary Cash Market',
+    marginHaircut: '80%',
+    description: 'Unslabbed physical collector copy inspected under Overstreet standards. Base collector pool and grading arbitrage pipeline; never certified by CGC/CBCS/PSA.',
+  },
+  UNICORN_CALL: {
+    color: '#f472b6',
+    label: 'UC',
+    fullName: 'Unicorn Call Derivative',
+    venue: 'Options Clearing Desk',
+    marginHaircut: '100%',
+    description: 'High-leverage upside call contract against milestone census transactions.',
+  },
 };
 
 export const REGIME_IMG_FILTER: Record<string, string> = {

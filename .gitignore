@@ -38,3 +38,5 @@ supabase/.temp
 .env*
 .gpa_secret_local
 scripts/gcd_covers_cache.json
+audit_*.json
+

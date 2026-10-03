@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
+import { getVerifiedRealEquities } from "@/lib/equity/verified-equities-service";
 import { getSovereignEquities } from "@/lib/equity/canonical-equities";
-import ce70Dossiers from "@/lib/equity/ce70-dossiers-data.json";
-import ce70ReferenceFmv from "@/lib/equity/ce70-reference-fmv.json";
-import { getAuthoritativeCover } from "@/lib/comics/cover-authority";
+import { lookupReferenceFmv, isSpecimenSovereign } from "@/lib/pricing/reference-benchmarks";
+import { getAuthoritativeCoverStrict } from "@/lib/comics/cover-authority";
 import type { EquityItem, EquityResponse } from "@/lib/equity/ticker-types";
 
-const REFERENCE_FMV_MAP = ce70ReferenceFmv as Record<string, { referenceFmvUsd: number; referenceGrade: string }>;
+export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -13,44 +13,19 @@ export async function GET(request: Request) {
   const offsetParam = parseInt(searchParams.get("offset") || "0", 10);
   const randomStart = searchParams.get("randomStart") === "1" || searchParams.get("reload") === "1";
 
-  const equities = await getSovereignEquities(180);
+  // 1. Primary Source: Real verified equities with unrounded market cents and verified covers
+  const verifiedResult = getVerifiedRealEquities(offsetParam, limitParam, randomStart);
+  let baseItems = verifiedResult.items;
+  let totalEligible = verifiedResult.totalEligible;
 
-  // If database was empty, fall back to ce70Dossiers dataset anchored to authentic reference FMV
-  const baseItems = equities.length > 0 ? equities : ce70Dossiers.map((seat) => {
-    const seriesTitle = seat.title.replace(/\s+#\d+.*$/, "");
-    const issueNum = (seat.title.match(/#(\d+[\w-]*)/) || ["", "1"])[1];
-    const resolvedCover = getAuthoritativeCover(seriesTitle, issueNum, seat.publisher, seat.year);
+  // 2. Fallback to audited canonical database if verified service is initializing
+  if (baseItems.length === 0) {
+    const equities = await getSovereignEquities(limitParam * 2);
+    baseItems = equities;
+    totalEligible = equities.length;
+  }
 
-    const ref = REFERENCE_FMV_MAP[String(seat.seatNumber)];
-    const baseFmv = ref?.referenceFmvUsd ?? 150;
-    const grade = ref?.referenceGrade ?? "9.0";
-    const delta = Number(((seat.gregoryScore - 190.0) * 0.45).toFixed(2));
-
-    return {
-      id: `ce70-${seat.seatNumber}`,
-      seatNumber: seat.seatNumber,
-      seatType: "PRIMARY_DOMESTIC",
-      ticker: `CE70.${String(seat.seatNumber).padStart(3, "0")}.SOV`,
-      series: seat.title.replace(/\s+#\d+.*$/, ""),
-      issueNumber: (seat.title.match(/#(\d+[\w-]*)/) || ["", "1"])[1],
-      title: seat.title,
-      originEra: String(seat.era || "").toUpperCase().replace(/\s+AGE$/, "") || "GOLDEN",
-      productionAge: String(seat.era || "").toLowerCase().replace(/\s+age$/, "") || "golden",
-      lineage: `${seat.publisher} Landmark Constituent`,
-      referenceGrade: grade,
-      referenceFmvUsd: baseFmv,
-      priceFormatted: `$${baseFmv.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      gregoryScore: seat.gregoryScore,
-      deltaPercent: delta,
-      status: "ACTIVE",
-      coverUrl: resolvedCover,
-      canonicalIssueId: seat.canonicalId || null,
-      year: seat.year,
-      publisher: seat.publisher,
-    };
-  });
-
-  // Calculate Era and Scarcity totals across the entire universe
+  // Calculate Era and Scarcity totals across the universe
   const eraTotals: Record<string, number> = {};
   const scarcityTotals: Record<string, number> = {
     mythic: 0,
@@ -61,8 +36,25 @@ export async function GET(request: Request) {
     common: 0,
   };
 
-  const formattedItems: EquityItem[] = baseItems.map((item, idx) => {
-    const eraKey = (item.productionAge || item.originEra || "modern").toLowerCase().replace(/_age$/, "").replace(/\s+age$/, "");
+  // 3. Strict Pre-Queue Verification Gate:
+  // - Cover MUST be an authentic image URL (strictly no SVG, no placeholder data URIs)
+  // - Price MUST be >= $17.01
+  const validBaseItems = baseItems.filter((item) => {
+    const cover =
+      item.coverUrl ||
+      getAuthoritativeCoverStrict(item.series, item.issueNumber, item.publisher || "Marvel / DC", item.year || 1975);
+
+    if (!cover) return false;
+    if (cover.includes("svg") || cover.startsWith("data:image/svg")) return false;
+    if ((item.referenceFmvUsd || 0) < 17.01) return false;
+    return true;
+  });
+
+  const formattedItems: EquityItem[] = validBaseItems.map((item, idx) => {
+    const eraKey = (item.productionAge || item.originEra || "modern")
+      .toLowerCase()
+      .replace(/_age$/, "")
+      .replace(/\s+age$/, "");
     eraTotals[eraKey] = (eraTotals[eraKey] || 0) + 1;
 
     let tier = "rare";
@@ -86,37 +78,43 @@ export async function GET(request: Request) {
       scarcityTotals.common++;
     }
 
-    const keyName = `${item.series} #${item.issueNumber}`;
-    const seatKeyName = `seat-${item.seatNumber}`;
+    const itemGrade = String(item.referenceGrade || "9.8").trim();
+    const bench = lookupReferenceFmv(item.seatNumber, item.title, item.canonicalIssueId);
+    const isTrulySovereign = isSpecimenSovereign(itemGrade, bench);
+    const marketClass = item.referenceFmvUsd >= 45 ? "PREMIUM" : item.referenceFmvUsd >= 20 ? "STD" : "OTC";
+    const effectiveAssetClass = isTrulySovereign ? "SOV" : marketClass;
+
     const resolvedCover =
       item.coverUrl ||
-      getAuthoritativeCover(item.series, item.issueNumber, item.publisher || "Marvel/DC", item.year || 1970);
+      getAuthoritativeCoverStrict(item.series, item.issueNumber, item.publisher || "Marvel / DC", item.year || 1975);
 
     return {
       entryId: `eq-${item.id || idx}`,
       coverImageUrl: resolvedCover,
       pricing: {
         fmv_usd: item.referenceFmvUsd,
-        grade: item.referenceGrade || "9.0",
+        grade: itemGrade,
         delta_24: item.deltaPercent,
         delta_30: Number((item.deltaPercent * 1.2).toFixed(2)),
         delta_90: Number((item.deltaPercent * 2.1).toFixed(2)),
-        asset_class: "SOV",
+        asset_class: effectiveAssetClass,
       },
       identity: {
         assetId: item.ticker,
-        productName: `${item.series} #${item.issueNumber}`,
-        year: item.year || 1970,
-        publisher: item.publisher || (item.lineage.includes("DC") ? "DC Comics" : item.lineage.includes("Marvel") ? "Marvel" : "Independent"),
-        variant: null,
+        productName: item.variant
+          ? `${item.series} #${item.issueNumber} [${item.variant}]`
+          : `${item.series} #${item.issueNumber}`,
+        year: item.year || 1975,
+        publisher: item.publisher || "Marvel / DC",
+        variant: item.variant || null,
         productionAge: eraKey,
         scarcityTier: tier,
         detailUrl: `/comics/${encodeURIComponent(item.canonicalIssueId || item.id || item.ticker)}`,
-        assetClass: "SOV",
-        marketPriceClass: item.referenceFmvUsd >= 45 ? "PREMIUM" : item.referenceFmvUsd >= 20 ? "STD" : "OTC",
-        isSovereign: true,
+        assetClass: effectiveAssetClass,
+        marketPriceClass: marketClass,
+        isSovereign: isTrulySovereign,
         certificationState: "CERTIFIED",
-        editionForm: "DIRECT",
+        editionForm: item.variant ? "VARIANT" : "DIRECT",
         coverVerified: true,
         yearDivergence: false,
         coverSuppressReason: null,
@@ -126,31 +124,16 @@ export async function GET(request: Request) {
     };
   });
 
-  const totalEligible = formattedItems.length;
-  let pool = [...formattedItems];
-
-  if (randomStart && pool.length > 0) {
-    const shift = Math.floor(Math.random() * pool.length);
-    pool = [...pool.slice(shift), ...pool.slice(0, shift)];
-  } else if (offsetParam > 0 && pool.length > 0) {
-    const effectiveOffset = offsetParam % pool.length;
-    pool = [...pool.slice(effectiveOffset), ...pool.slice(0, effectiveOffset)];
-  }
-
-  // Ensure enough items to fill the batch
   const limit = Math.min(Math.max(limitParam, 20), 500);
-  while (pool.length < limit && formattedItems.length > 0) {
-    pool = [...pool, ...formattedItems];
-  }
-  const slice = pool.slice(0, limit);
+  const slice = formattedItems.slice(0, limit);
 
   const response: EquityResponse = {
     surface: "EQUITY",
     tickId: Math.floor(Date.now() / 30000),
     marketRegime: null,
     showing: slice.length,
-    totalEligible,
-    totalInQueue: totalEligible,
+    totalEligible: Math.max(totalEligible, formattedItems.length),
+    totalInQueue: Math.max(totalEligible, formattedItems.length),
     offset: offsetParam,
     nextOffset: (offsetParam + slice.length) % Math.max(totalEligible, 1),
     hasMore: true,

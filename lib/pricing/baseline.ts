@@ -34,7 +34,10 @@ export function resolveComicPricing(comic: Partial<ComicRecord>): ResolvedPricin
   // 2. ComicBase Price
   const comicbasePrice: number | null = parseNumeric(comic.comicbase_price);
 
-  // 3. Baseline 9.8 Value
+  // 3. Baseline 9.8 Value - Strictly isolated to verified 9.8 records.
+  // AGENTS.md Law: Missing prices remain unpriced; do not infer a value.
+  // Non-9.8 holdings must not receive a 9.8 valuation. ComicBase is an entirely
+  // separate value in pricing and is NOT related to PP legacy or 9.8 baseline pricing.
   let baselinePrice98: number | null = parseNumeric(comic.baseline_grade_9_8_value);
   let baselineSource: string | null = null;
 
@@ -45,21 +48,14 @@ export function resolveComicPricing(comic: Partial<ComicRecord>): ResolvedPricin
     if (baselinePrice98 !== null) {
       baselineSource = ppData["Panel Profits Baseline Grade 9.8 Sources"] || "Panel Profits Baseline Dataset";
     }
-  }
-  if (baselinePrice98 === null && comicbasePrice !== null) {
-    baselinePrice98 = comicbasePrice;
-    baselineSource = "ComicBase Reference Valuation";
+  } else if (panelProfitsPrice98 !== null) {
+    baselinePrice98 = panelProfitsPrice98;
+    baselineSource = panelProfitsPriceSource || "Panel Profits Promoted Grade 9.8";
   }
 
-  // Baseline source fallback cleanup
+  // Baseline source cleanup (only if verified 9.8 price exists)
   if (!baselineSource && baselinePrice98 !== null) {
-    if (panelProfitsPrice98 !== null && baselinePrice98 === panelProfitsPrice98) {
-      baselineSource = "Panel Profits Market Valuation";
-    } else if (comicbasePrice !== null && baselinePrice98 === comicbasePrice) {
-      baselineSource = "ComicBase Reference Valuation";
-    } else {
-      baselineSource = "Blended Market Baseline";
-    }
+    baselineSource = "Panel Profits Market Valuation";
   }
 
   // Observation count

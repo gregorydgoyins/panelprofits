@@ -5,6 +5,7 @@ import {
   getHighestGradedPrice,
   GRADES,
   panelProfitsGrades,
+  priceChartingGrades,
 } from "@/lib/pricing/source-ladder";
 
 describe("distinct grade evidence", () => {
@@ -76,6 +77,23 @@ describe("distinct grade evidence", () => {
   it("does not project the ComicBase reference onto a certified grade", () => {
     const comic = { comicbase_price: 1300000, panel_profits_data: null };
     expect(comicBaseReference(comic)).toBe(1300000);
+    expect(panelProfitsGrades(comic)).toEqual({});
+  });
+
+  it("extracts PriceCharting grades independently without polluting Panel Profits or ComicBase", () => {
+    const comic = {
+      pricecharting_data: {
+        raw: 45.0,
+        grade_8_0: 120.0,
+        grade_9_8: 850.0,
+      },
+      comicbase_price: 25.0,
+      pp_grade_9_8_price: null,
+    };
+    const pc = priceChartingGrades(comic);
+    expect(pc["RAW"]).toBe(45.0);
+    expect(pc["8.0"]).toBe(120.0);
+    expect(pc["9.8"]).toBe(850.0);
     expect(panelProfitsGrades(comic)).toEqual({});
   });
 });

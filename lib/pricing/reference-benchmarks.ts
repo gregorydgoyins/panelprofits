@@ -123,3 +123,40 @@ export function lookupReferenceFmv(
 
   return null;
 }
+
+/**
+ * Resolves the absolute highest verified sold grade on record for a comic book.
+ * Cascade order: 9.8 -> 9.6 -> 9.4 -> 9.2 -> 9.0 -> 8.0 -> 6.0 -> 4.0 -> 0.5.
+ * If a 9.8 sale exists, "9.8" is the ONLY Sovereign grade for this issue.
+ * If 9.8 is absent, 9.6 with a sale becomes Sovereign; if 9.6 is absent, 9.4 becomes Sovereign, etc.
+ */
+export function getTopRecordedGrade(b: Partial<ComicBenchmarkPricing> | Record<string, any> | null): string {
+  if (!b) return "9.8";
+
+  const num = (v?: number | null) => (v != null && v > 0 ? v : 0);
+
+  if (num(b.grade98FmvUsd) > 0 || num((b as any).grade98_fmv) > 0 || num((b as any)["Grade 9.8 Market Price"]) > 0) return "9.8";
+  if (num(b.grade96FmvUsd) > 0 || num((b as any).grade96_fmv) > 0 || num((b as any)["Grade 9.6 Market Price"]) > 0) return "9.6";
+  if (num(b.grade94FmvUsd) > 0 || num((b as any).grade94_fmv) > 0 || num((b as any)["Grade 9.4 Market Price"]) > 0) return "9.4";
+  if (num(b.grade92FmvUsd) > 0 || num((b as any).grade92_fmv) > 0 || num((b as any)["Grade 9.2 Market Price"]) > 0) return "9.2";
+  if (num(b.grade90FmvUsd) > 0 || num((b as any).grade90_fmv) > 0 || num((b as any)["Grade 9.0 Market Price"]) > 0) return "9.0";
+  if (num(b.grade80FmvUsd) > 0 || num((b as any).grade80_fmv) > 0 || num((b as any)["Grade 8.0 Market Price"]) > 0) return "8.0";
+  if (num(b.grade60FmvUsd) > 0 || num((b as any).grade60_fmv) > 0 || num((b as any)["Grade 6.0 Market Price"]) > 0) return "6.0";
+  if (num(b.grade40FmvUsd) > 0 || num((b as any).grade40_fmv) > 0 || num((b as any)["Grade 4.0 Market Price"]) > 0) return "4.0";
+  
+  return "9.8";
+}
+
+/**
+ * Evaluates whether a specific specimen grade is Sovereign (SOV).
+ * Returns true ONLY IF specimenGrade matches the top recorded grade for this book.
+ */
+export function isSpecimenSovereign(
+  specimenGrade: string | number | null,
+  benchmark: Partial<ComicBenchmarkPricing> | Record<string, any> | null
+): boolean {
+  if (!specimenGrade) return false;
+  const cleanGrade = String(specimenGrade).trim();
+  const topGrade = getTopRecordedGrade(benchmark);
+  return cleanGrade === topGrade;
+}

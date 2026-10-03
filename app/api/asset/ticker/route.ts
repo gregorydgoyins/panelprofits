@@ -140,7 +140,13 @@ export async function GET(request: Request) {
       quarantined: false,
     }));
 
-    let surfaceItems = [...items];
+    let surfaceItems = items.filter((item) => {
+      if (!item.coverImageUrl) return false;
+      const fmv = item.pricing?.fmv_usd ?? item.pricing?.fmv ?? item.pricing?.price ?? 0;
+      if (fmv < 20.00) return false;
+      return true;
+    });
+
     if (randomStart && surfaceItems.length > 1) {
       const shift = Math.floor(Math.random() * surfaceItems.length);
       surfaceItems = [...surfaceItems.slice(shift), ...surfaceItems.slice(0, shift)];

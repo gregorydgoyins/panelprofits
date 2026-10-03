@@ -20,7 +20,7 @@ export interface FeaturedComicConstituent {
   referenceGrade: string;
   fmv: number;
   formattedFmv: string;
-  coverUrl: string;
+  coverUrl: string | null;
   seatNumber?: number;
   detailUrl: string;
   badge?: string;
@@ -34,7 +34,7 @@ export interface CPICategoryConstituent {
   issueNumber: string;
   year: number;
   publisher: string;
-  coverUrl: string;
+  coverUrl: string | null;
   totalPoints: number;
   impliedWeight: string;
   detailUrl: string;

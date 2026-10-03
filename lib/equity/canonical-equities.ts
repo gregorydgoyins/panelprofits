@@ -1,7 +1,6 @@
 import { createCleanReadOnlyServerClient } from "@/lib/supabase/admin";
 import { isMissingTableError } from "@/lib/supabase/errors";
 import { createCachedQuery } from "@/lib/cache/wrapper";
-import { generateDynamicCoverSvg } from "@/lib/comics/cover-resolver";
 import { getAuthoritativeCover, isCoverAuthoritativelyVerified } from "@/lib/comics/cover-authority";
 import { lookupReferenceFmv } from "@/lib/pricing/reference-benchmarks";
 import verifiedCoversJson from "./verified-covers.json";
@@ -39,6 +38,7 @@ export interface SovereignEquityItem {
   canonicalIssueId: string | null;
   year?: number;
   publisher?: string;
+  variant?: string | null;
 }
 
 export interface CanonicalAssetSurface {
@@ -217,18 +217,61 @@ export const CANONICAL_16_ASSET_FAMILIES: CollectibleAssetFamily[] = [
   },
 ];
 
-// Helper to construct canonical [SERIES].[ISSUE].[CLASS] ticker symbols
-export function formatComicEquityTicker(series: string, issue: string, assetClass = "SOV"): string {
-  const cleanSeries = series.trim().toLowerCase();
-  let root = "CMX";
+// Constructs clean 4 to 5 character equity ticker symbols (NASDAQ / NYSE style)
+// e.g., ASM01, AS300, ACT01, AC252, DET27, HK181, FF048, XMN94, BAT01, BA251, GSX01, TMNT1
+export function formatComicEquityTicker(series: string, issue: string | number, _assetClass?: string): string {
+  const cleanSeries = String(series || "").trim().toLowerCase();
+  const rawIssue = String(issue ?? "1").trim();
+  const cleanNum = rawIssue.replace(/\D/g, "");
 
+  // Curated canonical mapping for landmark high-profile issues
+  if (cleanSeries.includes("action comics") && cleanNum === "1") return "ACT01";
+  if (cleanSeries.includes("action comics") && cleanNum === "252") return "AC252";
+  if (cleanSeries.includes("detective comics") && cleanNum === "27") return "DET27";
+  if (cleanSeries.includes("amazing spider-man") && cleanNum === "1") return "ASM01";
+  if (cleanSeries.includes("amazing spider-man") && cleanNum === "300") return "AS300";
+  if (cleanSeries.includes("amazing spider-man") && cleanNum === "129") return "AS129";
+  if (cleanSeries.includes("incredible hulk") && cleanNum === "181") return "HK181";
+  if (cleanSeries.includes("incredible hulk") && cleanNum === "1") return "HLK01";
+  if (cleanSeries.includes("fantastic four") && cleanNum === "48") return "FF048";
+  if (cleanSeries.includes("fantastic four") && cleanNum === "1") return "FF001";
+  if (cleanSeries.includes("fantastic four") && cleanNum === "52") return "FF052";
+  if (cleanSeries.includes("x-men") && cleanNum === "1") return "XMN01";
+  if (cleanSeries.includes("x-men") && cleanNum === "94") return "XMN94";
+  if (cleanSeries.includes("giant-size x-men") && cleanNum === "1") return "GSX01";
+  if (cleanSeries.includes("batman") && cleanNum === "1") return "BAT01";
+  if (cleanSeries.includes("batman") && cleanNum === "251") return "BA251";
+  if (cleanSeries.includes("tales of suspense") && cleanNum === "39") return "TOS39";
+  if (cleanSeries.includes("tales of suspense") && cleanNum === "40") return "TOS40";
+  if (cleanSeries.includes("journey into mystery") && cleanNum === "83") return "JIM83";
+  if (cleanSeries.includes("journey into mystery") && cleanNum === "85") return "JIM85";
+  if (cleanSeries.includes("showcase") && cleanNum === "4") return "SHC04";
+  if (cleanSeries.includes("avengers") && cleanNum === "1") return "AVG01";
+  if (cleanSeries.includes("avengers") && cleanNum === "4") return "AVG04";
+  if ((cleanSeries.includes("ninja turtles") || cleanSeries.includes("tmnt")) && cleanNum === "1") return "TMNT1";
+  if (cleanSeries.includes("secret wars") && cleanNum === "8") return "SW008";
+  if (cleanSeries.includes("crime suspen") && cleanNum === "22") return "CSS22";
+  if (cleanSeries.includes("strange tales") && cleanNum === "110") return "ST110";
+  if (cleanSeries.includes("daredevil") && cleanNum === "1") return "DD001";
+  if (cleanSeries.includes("daredevil") && cleanNum === "168") return "DD168";
+  if (cleanSeries.includes("tomb of dracula") && cleanNum === "10") return "TOD10";
+  if (cleanSeries.includes("watchmen") && cleanNum === "1") return "WCH01";
+  if (cleanSeries.includes("dark knight returns") && cleanNum === "1") return "DKR01";
+  if (cleanSeries.includes("new mutants") && cleanNum === "98") return "NM098";
+  if (cleanSeries.includes("ultimate fallout") && cleanNum === "4") return "UF004";
+  if (cleanSeries.includes("spawn") && cleanNum === "1") return "SPW01";
+  if (cleanSeries.includes("mad") && cleanNum === "1") return "MAD01";
+  if (cleanSeries.includes("aquaman") && cleanNum === "1") return "AQM01";
+
+  // Deterministic series root extraction
+  let root = "CMX";
   if (cleanSeries.includes("action comics")) root = "ACT";
   else if (cleanSeries.includes("detective comics")) root = "DET";
   else if (cleanSeries.includes("amazing spider-man")) root = "ASM";
-  else if (cleanSeries.includes("spider-man")) root = "SPDR";
+  else if (cleanSeries.includes("spider-man")) root = "SPD";
   else if (cleanSeries.includes("batman")) root = "BAT";
   else if (cleanSeries.includes("superman")) root = "SUP";
-  else if (cleanSeries.includes("incredible hulk") || cleanSeries.includes("hulk")) root = "HULK";
+  else if (cleanSeries.includes("incredible hulk") || cleanSeries.includes("hulk")) root = "HLK";
   else if (cleanSeries.includes("x-men")) root = "XMN";
   else if (cleanSeries.includes("fantastic four")) root = "FF";
   else if (cleanSeries.includes("avengers")) root = "AVG";
@@ -238,29 +281,133 @@ export function formatComicEquityTicker(series: string, issue: string, assetClas
   else if (cleanSeries.includes("daredevil")) root = "DD";
   else if (cleanSeries.includes("iron man")) root = "IRM";
   else if (cleanSeries.includes("captain america")) root = "CAP";
-  else if (cleanSeries.includes("thor")) root = "THOR";
+  else if (cleanSeries.includes("thor")) root = "TH";
   else if (cleanSeries.includes("wonder woman")) root = "WW";
-  else if (cleanSeries.includes("crime suspensorystories") || cleanSeries.includes("crime suspenstories")) root = "CSS";
-  else if (cleanSeries.includes("mad")) root = "MAD";
-  else if (cleanSeries.includes("swamp thing")) root = "SWMP";
-  else if (cleanSeries.includes("silver surfer")) root = "SLV";
+  else if (cleanSeries.includes("silver surfer")) root = "SS";
   else if (cleanSeries.includes("green lantern")) root = "GL";
-  else if (cleanSeries.includes("ninja turtles") || cleanSeries.includes("tmnt")) root = "TMNT";
-  else if (cleanSeries.includes("spawn")) root = "SPWN";
-  else if (cleanSeries.includes("secret wars")) root = "SW";
+  else if (cleanSeries.includes("aquaman")) root = "AQM";
+  else if (cleanSeries.includes("spawn")) root = "SPW";
   else {
-    const words = cleanSeries.split(/\s+/).filter(Boolean);
-    if (words.length === 1) root = words[0].slice(0, 4).toUpperCase();
-    else root = words.map((w) => w[0]).join("").slice(0, 4).toUpperCase();
+    const words = cleanSeries.replace(/[^a-zA-Z0-9\s]/g, "").split(/\s+/).filter(Boolean);
+    if (words.length === 1) root = words[0].slice(0, 3).toUpperCase();
+    else if (words.length === 2) root = (words[0].slice(0, 2) + words[1].slice(0, 1)).toUpperCase();
+    else root = words.map((w) => w[0]).join("").slice(0, 3).toUpperCase();
   }
 
-  const cleanNum = String(issue).replace(/\D/g, "");
-  const formattedNum = cleanNum ? cleanNum.padStart(3, "0") : "001";
-  return `${root}.${formattedNum}.${assetClass.toUpperCase()}`;
+  // Combine with issue digits to guarantee strictly 4-5 characters
+  if (!cleanNum) {
+    return root.padEnd(4, "X").slice(0, 5);
+  }
+
+  if (cleanNum.length === 1) {
+    const prefix = root.length >= 3 ? root.slice(0, 3) : root.padEnd(3, "0");
+    return `${prefix}0${cleanNum}`.slice(0, 5);
+  } else if (cleanNum.length === 2) {
+    const prefix = root.length >= 3 ? root.slice(0, 3) : root.padEnd(3, "0");
+    return `${prefix}${cleanNum}`.slice(0, 5);
+  } else if (cleanNum.length === 3) {
+    const prefix = root.length >= 2 ? root.slice(0, 2) : root.padEnd(2, "X");
+    return `${prefix}${cleanNum}`.slice(0, 5);
+  } else {
+    const prefix = root.slice(0, 1) || "C";
+    return `${prefix}${cleanNum.slice(-4)}`;
+  }
 }
 
 // Deterministic cover lookups mapped to authentic harvested assets
 const VERIFIED_SEAT_COVERS: Record<string, string> = verifiedCoversJson as Record<string, string>;
+
+export interface Ce70ConstitutionalRuleViolation {
+  seatNumber: number;
+  rule: "SEAT_COUNT" | "GRADE_FLOOR" | "GRADE_CEILING" | "PRICE_CEILING" | "LABEL_TYPE" | "VARIANT_PROHIBITION";
+  message: string;
+}
+
+/**
+ * Validates any candidate or active constituent against the CE70 Constitution:
+ * 1. Exactly 65 allocated books (seats 1..65 populated; seats 66..70 remain vacant per CE70_MASTER_INDEX.md).
+ * 2. Minimum grade of 8.5 (grade >= 8.5; can be a 9.8 and Sovereign (SOV) if its direct copy is valued at < $65,000).
+ * 3. Strictly excludes 9.9 Mint and 10.0 Gem Mint by definition.
+ * 4. Valuation ceiling strictly below $65,000 (< $65k).
+ * 5. Direct single issue only (variants of any type are strictly prohibited).
+ * 6. Universal Blue Label only (qualified green, modified/restored purple, and signature yellow labels are strictly prohibited).
+ */
+export function validateCe70Constituent(item: {
+  seatNumber: number;
+  referenceGrade?: string | number | null;
+  referenceFmvUsd?: number | null;
+  series?: string | null;
+  issueNumber?: string | null;
+  isVariant?: boolean | null;
+  labelType?: string | null;
+}): Ce70ConstitutionalRuleViolation[] {
+  const violations: Ce70ConstitutionalRuleViolation[] = [];
+
+  // Rule 1: Exactly 65 allocated seats (1..65)
+  if (item.seatNumber < 1 || item.seatNumber > 65) {
+    violations.push({
+      seatNumber: item.seatNumber,
+      rule: "SEAT_COUNT",
+      message: `CE70 Constitution restricts populated seats to 1..65 (Seat #${item.seatNumber} exceeds 65-seat constitutional quota; seats 66-70 remain vacant pending adjudication).`,
+    });
+  }
+
+  // Rule 2 & 3: Grade restrictions (8.5 <= grade <= 9.8; no 9.9, 10.0, or Signature)
+  const gradeStr = String(item.referenceGrade || "").trim();
+  const gradeNum = parseFloat(gradeStr);
+  if (!isNaN(gradeNum)) {
+    if (gradeNum < 8.5) {
+      violations.push({
+        seatNumber: item.seatNumber,
+        rule: "GRADE_FLOOR",
+        message: `CE70 Constitution requires minimum grade of 8.5 (received grade ${gradeStr}).`,
+      });
+    }
+    if (gradeNum >= 9.9) {
+      violations.push({
+        seatNumber: item.seatNumber,
+        rule: "GRADE_CEILING",
+        message: `CE70 Constitution strictly excludes 9.9 Mint and 10.0 Gem Mint (received grade ${gradeStr}).`,
+      });
+    }
+  }
+
+  if (gradeStr.toUpperCase().includes("SIG") || item.labelType === "SIGNATURE_SERIES") {
+    violations.push({
+      seatNumber: item.seatNumber,
+      rule: "LABEL_TYPE",
+      message: `CE70 Constitution mandates Universal Blue Label certification; Signature Series yellow labels are prohibited.`,
+    });
+  }
+
+  if (item.labelType && (item.labelType === "QUALIFIED_LABEL" || item.labelType === "RESTORED_LABEL")) {
+    violations.push({
+      seatNumber: item.seatNumber,
+      rule: "LABEL_TYPE",
+      message: `CE70 Constitution requires Universal Blue Label; qualified (green) or restored (purple) labels are prohibited.`,
+    });
+  }
+
+  // Rule 4: Valuation ceiling < $65,000
+  if (item.referenceFmvUsd != null && item.referenceFmvUsd >= 65000) {
+    violations.push({
+      seatNumber: item.seatNumber,
+      rule: "PRICE_CEILING",
+      message: `CE70 Constitution mandates reference valuation ceiling strictly below $65,000 (received $${item.referenceFmvUsd.toLocaleString()}).`,
+    });
+  }
+
+  // Rule 5: Direct single issue only, no variants
+  if (item.isVariant) {
+    violations.push({
+      seatNumber: item.seatNumber,
+      rule: "VARIANT_PROHIBITION",
+      message: `CE70 Constitution requires direct single issue only; variants of any type are prohibited.`,
+    });
+  }
+
+  return violations;
+}
 
 /**
  * Raw query for CE70 Sovereign Equities Universe with real market pricing and tickers.
@@ -284,6 +431,9 @@ async function fetchSovereignEquitiesRaw(limit = 150): Promise<SovereignEquityIt
 
     if (data && data.length > 0) {
       for (const row of data) {
+        // Enforce 65-seat constitutional quota (seats 66-70 are vacant)
+        if (row.seat_number && row.seat_number > 65) continue;
+
         const seatKey = `${row.seat_number}-${row.series}-${row.issue_number}`;
         if (seenSeats.has(seatKey)) continue;
         seenSeats.add(seatKey);
@@ -299,23 +449,23 @@ async function fetchSovereignEquitiesRaw(limit = 150): Promise<SovereignEquityIt
         const yearMatch = cid.match(/_(19\d\d|20\d\d)_/);
         const authenticYear = yearMatch ? parseInt(yearMatch[1], 10) : (seatRef?.year || 1970);
 
-        let authenticPublisher = "Independent";
-        if (cid.includes("_pub_dc_") || lin.includes("dc comics") || lin.includes("fourth world") || ser.includes("batman") || ser.includes("superman") || ser.includes("new gods") || ser.includes("swamp thing") || ser.includes("watchmen")) {
-          authenticPublisher = "DC Comics";
-        } else if (cid.includes("_pub_marvel_") || lin.includes("marvel") || ser.includes("spider-man") || ser.includes("x-men") || ser.includes("hulk") || ser.includes("avengers") || ser.includes("daredevil") || ser.includes("fantastic four") || ser.includes("conan") || ser.includes("dracula")) {
-          authenticPublisher = "Marvel";
-        } else if (cid.includes("_pub_image_") || lin.includes("image")) {
-          authenticPublisher = "Image Comics";
-        } else if (cid.includes("_pub_ec_") || lin.includes("ec comics")) {
-          authenticPublisher = "EC Comics";
-        } else if (cid.includes("_pub_mirage_") || ser.includes("turtles") || ser.includes("tmnt")) {
-          authenticPublisher = "Mirage Studios";
-        } else if (cid.includes("_pub_fantagraphics_") || ser.includes("love and rockets")) {
-          authenticPublisher = "Fantagraphics";
-        } else if (cid.includes("_pub_boom_")) {
-          authenticPublisher = "BOOM! Studios";
-        } else if (seatRef?.publisher) {
-          authenticPublisher = seatRef.publisher;
+        let authenticPublisher = seatRef?.publisher || "Independent";
+        if (!seatRef?.publisher) {
+          if (cid.includes("_pub_dc_") || lin.includes("dc comics") || lin.includes("fourth world") || ser.includes("batman") || ser.includes("superman") || ser.includes("new gods") || ser.includes("swamp thing") || ser.includes("watchmen")) {
+            authenticPublisher = "DC Comics";
+          } else if (cid.includes("_pub_marvel_") || lin.includes("marvel") || ser.includes("spider-man") || ser.includes("x-men") || ser.includes("hulk") || ser.includes("avengers") || ser.includes("daredevil") || ser.includes("fantastic four") || ser.includes("conan") || ser.includes("dracula")) {
+            authenticPublisher = "Marvel Comics";
+          } else if (cid.includes("_pub_image_") || lin.includes("image")) {
+            authenticPublisher = "Image Comics";
+          } else if (cid.includes("_pub_ec_") || lin.includes("ec comics")) {
+            authenticPublisher = "EC Comics";
+          } else if (cid.includes("_pub_mirage_") || ser.includes("turtles") || ser.includes("tmnt")) {
+            authenticPublisher = "Mirage Studios";
+          } else if (cid.includes("_pub_fantagraphics_") || ser.includes("love and rockets")) {
+            authenticPublisher = "Fantagraphics";
+          } else if (cid.includes("_pub_boom_")) {
+            authenticPublisher = "BOOM! Studios";
+          }
         }
 
         const keyName = `${row.series} #${row.issue_number}`;
@@ -385,10 +535,11 @@ async function fetchSovereignEquitiesRaw(limit = 150): Promise<SovereignEquityIt
           gregoryScore: 195.0,
           deltaPercent: 0.55,
           status: "ACTIVE",
-          coverUrl: pBook.coverUrl || generateDynamicCoverSvg(pBook.series, pBook.issueNumber, pBook.publisher, pBook.year),
+          coverUrl: pBook.coverUrl || getAuthoritativeCover(pBook.series, pBook.issueNumber, pBook.publisher, pBook.year),
           canonicalIssueId: null,
           year: pBook.year,
           publisher: pBook.publisher,
+          variant: pBook.variant || null,
         });
 
         if (items.length >= limit) break;
@@ -503,6 +654,24 @@ export async function getSovereignEquityDossier(identifier: string): Promise<Det
   let matched = equities.find(
     (e) => e.ticker.toLowerCase() === clean || e.ticker.toLowerCase().replace(/\./g, "-") === clean
   );
+
+  if (!matched && clean.includes(".")) {
+    const parts = clean.split(".");
+    const root = parts[0].toLowerCase();
+    const num = parseInt((parts[1] || "").replace(/\D/g, ""), 10);
+    matched = equities.find((e) => {
+      const formatted = formatComicEquityTicker(e.series, e.issueNumber).toLowerCase();
+      const eNum = parseInt(e.issueNumber.replace(/\D/g, ""), 10);
+      return (
+        formatted === clean ||
+        (formatted.startsWith(root) && eNum === num) ||
+        (e.series.toLowerCase().includes(root) && eNum === num) ||
+        (root === "xmn" && e.series.toLowerCase().includes("x-men") && eNum === num) ||
+        (root === "css" && e.series.toLowerCase().includes("suspen") && eNum === num) ||
+        (root === "mad" && e.series.toLowerCase().includes("mad") && eNum === num)
+      );
+    });
+  }
 
   // 2. Match by exact ID or seat prefix (e.g. ce70_seat_6_CE70-8.5 or seat-6)
   if (!matched) {
@@ -661,7 +830,7 @@ export async function getSovereignEquityDossier(identifier: string): Promise<Det
     scarcityTier: basePrice > 25000 ? "SOVEREIGN_GRAIL" : "INVESTMENT_GRADE_ELITE",
     censusUniversalCount: Math.max(1, Math.round(180000 / (basePrice + 100))),
     censusTotalGraded: Math.max(5, Math.round(650000 / (basePrice + 100))),
-    qualityScores: dossierData?.qualityScores || [
+    qualityScores: [
       { dimension: "Authorial Presence", score: 9.8, rationale: "Unmistakable creative handwriting and singular auteur vision." },
       { dimension: "Artistic Merit", score: 9.9, rationale: "Exceptional draftsmanship, iconic composition, and dynamic panel layout." },
       { dimension: "Cultural Gravity", score: 10.0, rationale: "Enduring multi-generational franchise resonance and transmedia archetype foundation." },

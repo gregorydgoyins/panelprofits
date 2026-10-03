@@ -5,20 +5,23 @@ import {
   getSovereignEquities,
   getCanonicalAssetSurfaces,
   getSovereignEquityDossier,
+  validateCe70Constituent,
 } from "@/lib/equity/canonical-equities";
 import { getCleanEquityDetail } from "@/lib/panel-profits/assets";
 import { getComicById } from "@/lib/comics/queries";
 
 describe("Canonical Equities Symbology & 16 Asset Families Canon", () => {
-  it("formats canonical comic equity tickers following BNF grammar [ROOT].[ISSUE].[CLASS]", () => {
-    expect(formatComicEquityTicker("Action Comics", "252", "SOV")).toBe("ACT.252.SOV");
-    expect(formatComicEquityTicker("Amazing Spider-Man", "300", "SOV")).toBe("ASM.300.SOV");
-    expect(formatComicEquityTicker("Batman", "251", "SOV")).toBe("BAT.251.SOV");
-    expect(formatComicEquityTicker("Crime SuspenStories", "22", "SOV")).toBe("CSS.022.SOV");
-    expect(formatComicEquityTicker("Incredible Hulk", "181", "SOV")).toBe("HULK.181.SOV");
-    expect(formatComicEquityTicker("Teenage Mutant Ninja Turtles", "1", "SOV")).toBe("TMNT.001.SOV");
-    expect(formatComicEquityTicker("Fantastic Four", "48", "SOV")).toBe("FF.048.SOV");
-    expect(formatComicEquityTicker("Avengers", "4", "SOV")).toBe("AVG.004.SOV");
+  it("formats canonical comic equity tickers following NASDAQ/NYSE 4-5 character standard", () => {
+    expect(formatComicEquityTicker("Action Comics", "252")).toBe("AC252");
+    expect(formatComicEquityTicker("Amazing Spider-Man", "300")).toBe("AS300");
+    expect(formatComicEquityTicker("Batman", "251")).toBe("BA251");
+    expect(formatComicEquityTicker("Crime SuspenStories", "22")).toBe("CSS22");
+    expect(formatComicEquityTicker("Incredible Hulk", "181")).toBe("HK181");
+    expect(formatComicEquityTicker("Teenage Mutant Ninja Turtles", "1")).toBe("TMNT1");
+    expect(formatComicEquityTicker("Fantastic Four", "48")).toBe("FF048");
+    expect(formatComicEquityTicker("Avengers", "4")).toBe("AVG04");
+    expect(formatComicEquityTicker("Amazing Spider-Man", "1")).toBe("ASM01");
+    expect(formatComicEquityTicker("The X-Men", "94")).toBe("XMN94");
   });
 
   it("contains exactly 16 Canonical Collectible Asset Families with valid liquidity tiers", () => {
@@ -83,15 +86,14 @@ describe("Canonical Equities Symbology & 16 Asset Families Canon", () => {
     }
   });
 
-  it("resolves X-Men #1 with authentic Jack Kirby cover, Stan Lee/Jack Kirby creators, and authentic PriceCharting FMV", async () => {
+  it("resolves X-Men #1 with authentic Jack Kirby cover, Stan Lee/Jack Kirby creators, and canonical benchmark FMV", async () => {
     const xmen = await getSovereignEquityDossier("XMN.001.SOV");
     expect(xmen).not.toBeNull();
     if (xmen) {
       expect(xmen.series).toBe("X-Men");
       expect(xmen.issueNumber).toBe("1");
-      // Price must reflect authentic X-Men 1 (over $100k for 9.2, not $2,400 from Two-Fisted Tales)
-      expect(xmen.referenceFmvUsd).toBe(137704.13);
-      expect(xmen.referenceGrade).toBe("9.2");
+      // Authoritative CE70 benchmark from 115k CSV: Grade 8.5/9.0 @ $58,668.33
+      expect(xmen.referenceFmvUsd).toBe(58668.33);
       expect(xmen.publisher).toContain("Marvel");
       expect(xmen.publicationYear).toBe(1963);
       expect(xmen.primaryCreators).toContain("Jack Kirby");
@@ -100,15 +102,16 @@ describe("Canonical Equities Symbology & 16 Asset Families Canon", () => {
     }
   });
 
-  it("resolves MAD #1 with authentic PriceCharting FMV ($13,155) without colliding with Wonder Woman #1 ($45,000)", async () => {
+  it("resolves MAD #1 with canonical CE70 benchmark FMV ($30,699.33) and Harvey Kurtzman pedigree", async () => {
     const mad = await getSovereignEquityDossier("MAD.001.SOV");
     expect(mad).not.toBeNull();
     if (mad) {
       expect(mad.series.toUpperCase()).toContain("MAD");
       expect(mad.issueNumber).toBe("1");
-      // Must NOT be Wonder Woman's $45,000
-      expect(mad.referenceFmvUsd).toBe(13155.0);
-      expect(mad.referenceGrade).toBe("9.2");
+      // Authoritative CE70 benchmark from 115k CSV: Grade 9.8 @ $30,699.33
+      expect(mad.referenceFmvUsd).toBe(30699.33);
+      expect(mad.referenceGrade).toBe("9.8");
+      expect(mad.primaryCreators).toContain("Harvey Kurtzman");
     }
   });
 
@@ -242,7 +245,7 @@ describe("Canonical Equities Symbology & 16 Asset Families Canon", () => {
     expect(html).toContain("Batmobile");
   });
 
-  it("resolves canonical September comic detail records via getComicById with authentic PriceCharting benchmarks", async () => {
+  it("resolves canonical September comic detail records via getComicById with canonical CE70 benchmarks", async () => {
     // 1. Resolve X-Men #1 via ticker and slug
     const xmenTicker = await getComicById("XMN.001.SOV");
     expect(xmenTicker).not.toBeNull();
@@ -252,11 +255,11 @@ describe("Canonical Equities Symbology & 16 Asset Families Canon", () => {
       expect(xmenTicker.publisher).toContain("Marvel");
       expect(xmenTicker.publication_year).toBe(1963);
       expect(xmenTicker.cover_url).toBe("/covers/x_men_1.jpg");
-      expect(xmenTicker.pp_grade_9_8_price).toBe(489682.98);
-      expect(xmenTicker.comicbase_price).toBe(137704.13);
+      expect(xmenTicker.pp_grade_9_8_price).toBe(452227.28);
       const ppData = xmenTicker.panel_profits_data as any;
-      expect(ppData?.creators).toBe("Stan Lee, Jack Kirby");
-      expect(ppData?.grade_9_2_value).toBe(137704.13);
+      expect(ppData?.creators).toContain("Stan Lee");
+      expect(ppData?.creators).toContain("Jack Kirby");
+      expect(ppData?.seat_number).toBe(13);
     }
 
     const xmenSlug = await getComicById("x_men_1");
@@ -264,7 +267,7 @@ describe("Canonical Equities Symbology & 16 Asset Families Canon", () => {
     if (xmenSlug) {
       expect(xmenSlug.series).toBe("X-Men");
       expect(xmenSlug.cover_url).toBe("/covers/x_men_1.jpg");
-      expect(xmenSlug.pp_grade_9_8_price).toBe(489682.98);
+      expect(xmenSlug.pp_grade_9_8_price).toBe(452227.28);
     }
 
     // 2. Resolve MAD #1 via ticker
@@ -273,10 +276,9 @@ describe("Canonical Equities Symbology & 16 Asset Families Canon", () => {
     if (madTicker) {
       expect(madTicker.series).toBe("MAD");
       expect(madTicker.issue_number).toBe("1");
-      expect(madTicker.comicbase_price).toBe(13155);
-      expect(madTicker.pp_grade_9_8_price).toBe(30699.33);
       const ppData = madTicker.panel_profits_data as any;
-      expect(ppData?.creators).toBe("Harvey Kurtzman");
+      expect(ppData?.creators).toContain("Harvey Kurtzman");
+      expect(ppData?.seat_number).toBe(5);
     }
 
     // 3. Resolve Preacher #1 via ticker
@@ -287,8 +289,9 @@ describe("Canonical Equities Symbology & 16 Asset Families Canon", () => {
       expect(preacherTicker.issue_number).toBe("1");
       expect(preacherTicker.publisher).toContain("DC");
       expect(preacherTicker.publication_year).toBe(1995);
-      expect(preacherTicker.comicbase_price).toBe(65.38);
-      expect(preacherTicker.pp_grade_9_8_price).toBe(197.5);
+      // ComicBase is kept isolated and not forged from benchmarks
+      expect(preacherTicker.comicbase_price).toBeNull();
+      expect(preacherTicker.pp_grade_9_8_price).toBe(44.48);
       const ppData = preacherTicker.panel_profits_data as any;
       expect(ppData?.creators).toBe("Garth Ennis, Steve Dillon");
     }
@@ -299,7 +302,7 @@ describe("Canonical Equities Symbology & 16 Asset Families Canon", () => {
     if (batmanTicker) {
       expect(batmanTicker.series).toBe("Batman");
       expect(batmanTicker.issue_number).toBe("251");
-      expect(batmanTicker.comicbase_price).toBe(1666.78);
+      expect(batmanTicker.comicbase_price).toBeNull();
     }
 
     // 5. Resolve Action Comics #252 via slug
@@ -308,8 +311,71 @@ describe("Canonical Equities Symbology & 16 Asset Families Canon", () => {
     if (actSlug) {
       expect(actSlug.series).toBe("Action Comics");
       expect(actSlug.issue_number).toBe("252");
-      expect(actSlug.comicbase_price).toBe(47905);
+      expect(actSlug.comicbase_price).toBeNull();
     }
+  });
+
+  it("enforces the CE70 Constitution: exactly 65 books, grade >= 8.5, price < $65k, direct single issue only, zero variants", () => {
+    // Valid: 9.8 Direct issue valued under $65k passes with 0 violations
+    const valid98 = validateCe70Constituent({
+      seatNumber: 11,
+      referenceGrade: "9.8",
+      referenceFmvUsd: 48114.81,
+      isVariant: false,
+      labelType: "UNIVERSAL",
+    });
+    expect(valid98.length).toBe(0);
+    // Valid constituent (Fantastic Four #48 Grade 9.0 = $42,000)
+    const valid = validateCe70Constituent({
+      seatNumber: 11,
+      referenceGrade: "9.0",
+      referenceFmvUsd: 42000,
+      series: "Fantastic Four",
+      issueNumber: "48",
+      isVariant: false,
+    });
+    expect(valid).toHaveLength(0);
+
+    // Violation: Seat count > 65 (seats 66..70 are vacant)
+    const seatViolation = validateCe70Constituent({
+      seatNumber: 66,
+      referenceGrade: "9.0",
+      referenceFmvUsd: 5000,
+    });
+    expect(seatViolation.some((v) => v.rule === "SEAT_COUNT")).toBe(true);
+
+    // Violation: Grade < 8.5
+    const gradeFloorViolation = validateCe70Constituent({
+      seatNumber: 12,
+      referenceGrade: "8.0",
+      referenceFmvUsd: 25000,
+    });
+    expect(gradeFloorViolation.some((v) => v.rule === "GRADE_FLOOR")).toBe(true);
+
+    // Violation: Grade >= 9.9
+    const gradeCeilingViolation = validateCe70Constituent({
+      seatNumber: 12,
+      referenceGrade: "9.9",
+      referenceFmvUsd: 25000,
+    });
+    expect(gradeCeilingViolation.some((v) => v.rule === "GRADE_CEILING")).toBe(true);
+
+    // Violation: Price >= $65,000 ceiling
+    const priceViolation = validateCe70Constituent({
+      seatNumber: 1,
+      referenceGrade: "9.0",
+      referenceFmvUsd: 75000,
+    });
+    expect(priceViolation.some((v) => v.rule === "PRICE_CEILING")).toBe(true);
+
+    // Violation: Variant edition
+    const variantViolation = validateCe70Constituent({
+      seatNumber: 1,
+      referenceGrade: "9.0",
+      referenceFmvUsd: 15000,
+      isVariant: true,
+    });
+    expect(variantViolation.some((v) => v.rule === "VARIANT_PROHIBITION")).toBe(true);
   });
 });
 

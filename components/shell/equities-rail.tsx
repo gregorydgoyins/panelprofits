@@ -4,6 +4,7 @@ import * as React from "react";
 import type { SovereignEquityItem } from "@/lib/equity/canonical-equities";
 import type { MarketIndexRecord } from "@/lib/market/indices";
 import type { EquityItem, EquityResponse } from "@/lib/equity/ticker-types";
+import { lookupReferenceFmv, isSpecimenSovereign } from "@/lib/pricing/reference-benchmarks";
 import { TickerHeader } from "@/components/tickers/ticker-header";
 import { EquityCard } from "@/components/tickers/equity-card";
 
@@ -35,16 +36,22 @@ export function EquitiesRail({ items: initialItems = [], indices = [] }: Equitie
       else if (fmv >= 300) tier = "uncommon";
       else tier = "common";
 
+      const itemGrade = String(item.referenceGrade || "9.0").trim();
+      const bench = lookupReferenceFmv(item.seatNumber, item.title, item.canonicalIssueId);
+      const isTrulySovereign = isSpecimenSovereign(itemGrade, bench);
+      const marketPriceClass = fmv >= 45 ? "PREMIUM" : fmv >= 20 ? "STD" : "OTC";
+      const effectiveAssetClass = isTrulySovereign ? "SOV" : marketPriceClass;
+
       return {
         entryId: `eq-${item.id || idx}`,
         coverImageUrl: item.coverUrl || null,
         pricing: {
           fmv_usd: fmv,
-          grade: item.referenceGrade || "9.8",
+          grade: itemGrade,
           delta_24: item.deltaPercent,
           delta_30: Number((item.deltaPercent * 1.2).toFixed(2)),
           delta_90: Number((item.deltaPercent * 2.1).toFixed(2)),
-          asset_class: "SOV",
+          asset_class: effectiveAssetClass,
         },
         identity: {
           assetId: item.ticker || `CE70.${String(item.seatNumber).padStart(3, "0")}.SOV`,
@@ -55,9 +62,9 @@ export function EquitiesRail({ items: initialItems = [], indices = [] }: Equitie
           productionAge: eraKey,
           scarcityTier: tier,
           detailUrl: `/comics/${encodeURIComponent(item.canonicalIssueId || item.id || item.ticker)}`,
-          assetClass: "SOV",
-          marketPriceClass: fmv >= 45 ? "PREMIUM" : fmv >= 20 ? "STD" : "OTC",
-          isSovereign: true,
+          assetClass: effectiveAssetClass,
+          marketPriceClass,
+          isSovereign: isTrulySovereign,
           certificationState: "CERTIFIED",
           editionForm: "DIRECT",
           coverVerified: true,

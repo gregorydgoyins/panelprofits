@@ -73,22 +73,30 @@ export function ComicCard({ comic }: ComicCardProps) {
       <div className="mt-2 flex items-center justify-between border-t border-slate-800/80 bg-[#0A0A0C] px-3 py-2 text-xs">
         <div className="flex flex-col">
           <span className="text-[9px] uppercase tracking-wider text-slate-400">
-            {pricing.baselineSource ? "9.8 BASELINE" : "MARKET VALUE"}
+            {pricing.baselinePrice98 !== null
+              ? "9.8 BASELINE"
+              : pricing.comicbasePrice !== null
+              ? "CB GUIDE REF"
+              : "VALUATION"}
           </span>
-          <span className="text-slate-100">
+          <span className={pricing.baselinePrice98 !== null ? "text-slate-100 font-medium" : pricing.comicbasePrice !== null ? "text-cyan-300 font-medium" : "text-slate-500"}>
             {pricing.baselinePrice98 !== null
               ? formatCurrency(pricing.baselinePrice98)
               : pricing.comicbasePrice !== null
               ? formatCurrency(pricing.comicbasePrice)
-              : "—"}
+              : "Unpriced"}
           </span>
         </div>
 
-        {pricing.panelProfitsPrice98 !== null && (
+        {pricing.panelProfitsPrice98 !== null ? (
           <Badge variant="default" className="text-[9px]">
             PP 9.8
           </Badge>
-        )}
+        ) : pricing.comicbasePrice !== null ? (
+          <Badge variant="outline" className="text-[9px] text-cyan-400 border-cyan-800/50">
+            CB Guide
+          </Badge>
+        ) : null}
       </div>
     </Link>
   );

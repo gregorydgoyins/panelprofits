@@ -318,12 +318,12 @@ export function FeaturedComicUniverse({ comics }: FeaturedComicUniverseProps) {
             >
               <div className="relative aspect-[2/3] w-full overflow-hidden rounded border border-slate-800 bg-[#07080C] mb-2">
                 <Image
-                  src={comic.coverUrl}
+                  src={comic.coverUrl || "/covers/action_comics_1.jpg"}
                   alt={comic.title}
                   fill
                   sizes="(max-width: 768px) 50vw, 16vw"
                   className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  unoptimized={comic.coverUrl.endsWith(".svg")}
+                  unoptimized={Boolean(comic.coverUrl && comic.coverUrl.endsWith(".svg"))}
                 />
                 <span className="absolute top-1 left-1 bg-cyan-950/90 border border-cyan-500/40 text-[9px] font-mono font-bold text-cyan-300 px-1 rounded">
                   {comic.badge}
@@ -364,12 +364,12 @@ export function FeaturedComicUniverse({ comics }: FeaturedComicUniverseProps) {
             >
               <div className="relative aspect-[2/3] w-full overflow-hidden rounded border border-slate-800 bg-[#07080C] mb-2">
                 <Image
-                  src={comic.coverUrl}
+                  src={comic.coverUrl || "/covers/action_comics_1.jpg"}
                   alt={comic.title}
                   fill
                   sizes="(max-width: 768px) 50vw, 16vw"
                   className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  unoptimized={comic.coverUrl.endsWith(".svg")}
+                  unoptimized={Boolean(comic.coverUrl && comic.coverUrl.endsWith(".svg"))}
                 />
                 <span className="absolute top-1 left-1 bg-emerald-950/90 border border-emerald-500/40 text-[9px] font-mono font-bold text-emerald-300 px-1 rounded">
                   {comic.badge}
@@ -427,12 +427,12 @@ export function FeaturedComicUniverse({ comics }: FeaturedComicUniverseProps) {
               >
                 <div className="relative aspect-[2/3] w-full overflow-hidden rounded border border-slate-800 bg-[#07080C] mb-2.5">
                   <Image
-                    src={book.coverUrl}
+                    src={book.coverUrl || "/covers/action_comics_1.jpg"}
                     alt={book.comicName}
                     fill
                     sizes="(max-width: 768px) 50vw, 25vw"
                     className="object-cover group-hover:scale-105 transition-transform duration-300"
-                    unoptimized={book.coverUrl.endsWith(".svg")}
+                    unoptimized={Boolean(book.coverUrl && book.coverUrl.endsWith(".svg"))}
                   />
                   <span className="absolute top-1.5 left-1.5 bg-amber-950/90 border border-amber-500/40 text-[9px] font-mono font-bold text-amber-300 px-1.5 py-0.5 rounded">
                     Weight {book.impliedWeight}
