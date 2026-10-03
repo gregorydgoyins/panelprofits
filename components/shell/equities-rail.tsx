@@ -10,9 +10,9 @@ import { TickerHeader } from "@/components/tickers/ticker-header";
 import { EquityCard } from "@/components/tickers/equity-card";
 
 const CARD_W = 227; // 215px card + 12px gap
-const SCROLL_SPEED = 90; // px/s
-const FETCH_MS = 45 * 1000; // Rotate pool every 45 seconds
-const MAX_FETCHES = 10_000; // Wrap after ~3.5 days (88 hours = 3 days 16 hours)
+const SCROLL_SPEED = 150; // px/s (rapid live trading floor ticker motion)
+const FETCH_MS = 20 * 1000; // Rotate pool every 20 seconds for continuous variety
+const MAX_FETCHES = 10_000; // Continuous rotation across 38,957 verified catalog
 
 interface EquitiesRailProps {
   items: SovereignEquityItem[];
@@ -24,23 +24,6 @@ export function EquitiesRail({ items: initialItems = [], indices = [] }: Equitie
   const fetchCount = React.useRef(0);
   const nextOffset = React.useRef(0);
   const [selectedEra, setSelectedEra] = React.useState<string | null>(null);
-
-  // Initialize nextOffset from sessionStorage if user previously rotated
-  React.useEffect(() => {
-    try {
-      const stored = sessionStorage.getItem("pp_rail_offset");
-      if (stored) {
-        const parsed = parseInt(stored, 10);
-        if (!isNaN(parsed) && parsed > 0) {
-          nextOffset.current = parsed;
-        }
-      } else if (initialItems.length > 0) {
-        nextOffset.current = initialItems.length;
-      }
-    } catch {
-      // sessionStorage not accessible
-    }
-  }, [initialItems.length]);
 
   // Convert initial SovereignEquityItem[] to EquityItem[] for instant first-paint
   const initialEquityItems = React.useMemo<EquityItem[]>(() => {
@@ -211,6 +194,25 @@ export function EquitiesRail({ items: initialItems = [], indices = [] }: Equitie
 
   const handleNextBatch = React.useCallback(() => {
     fetchBatch();
+  }, [fetchBatch]);
+
+  React.useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem("pp_rail_offset");
+      if (stored) {
+        const parsed = parseInt(stored, 10);
+        if (!isNaN(parsed) && parsed > 0) {
+          nextOffset.current = parsed;
+          fetchBatch(parsed);
+          return;
+        }
+      }
+      const seed = (Math.floor(Date.now() / 60000) * 20) % 38000;
+      nextOffset.current = seed;
+      fetchBatch(seed);
+    } catch {
+      // sessionStorage not accessible
+    }
   }, [fetchBatch]);
 
   React.useEffect(() => {

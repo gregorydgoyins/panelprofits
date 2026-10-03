@@ -22,7 +22,7 @@ import { getEraColors } from "@/lib/design-system/colors";
 import { INITIAL_SURFACE_ASSETS } from "@/lib/assets/initial-assets";
 
 const CARD_W = 227; // 215px card + 12px gap
-const SCROLL_SPEED = 40; // px/s (smooth deliberate asset market pace)
+const SCROLL_SPEED = 95; // px/s (swift, responsive asset market pace)
 const FETCH_MS = 5 * 60 * 1000;
 
 interface AssetsRailProps {

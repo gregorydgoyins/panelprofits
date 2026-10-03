@@ -177,7 +177,9 @@ async function fetchSovereignEquitiesRaw(limit = 150): Promise<SovereignEquityIt
   try {
     // 1. Primary Source: High-speed verified equities from local SQLite catalog
     // Genuine unrounded pennies, unique Supabase Storage covers, and authentic tickers
-    const verified = getVerifiedRealEquities(0, limit, false);
+    // Rotate offset smoothly with minute bucket so SSR displays fresh catalog entries across sessions
+    const sessionOffset = (Math.floor(Date.now() / 60000) * 20) % 38000;
+    const verified = getVerifiedRealEquities(sessionOffset, limit, false);
     if (verified.items && verified.items.length > 0) {
       return verified.items;
     }

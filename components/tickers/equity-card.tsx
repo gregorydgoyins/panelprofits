@@ -7,6 +7,7 @@ import { getEraColors, getScarcityColors, getPublisherColor, withAlpha, type Sca
 import { SCARCITY_NEON, ASSET_CLASS_CONFIG } from "@/lib/equity/ticker-constants";
 import { resolveProductionAge, formatEraLabel, getDelta, parseSeriesIssue } from "@/lib/equity/ticker-utils";
 import { AnimatedPrice } from "@/components/shared/animated-price";
+import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
 import type { EquityItem } from "@/lib/equity/ticker-types";
 
 const EQUITY_CARD_STYLE_ID = "equity-card-shadow-kf";
@@ -117,6 +118,17 @@ export const EquityCard = React.memo(function EquityCard({
     .replace(/\.(SOV|ANC|STD|OTC|PREMIUM)$/i, "")
     .replace(/^CE70\.\d+\.?/i, "")
     .trim();
+
+  const isInternalOrHash = !cleanTicker || /^(eq-|ppix-|seat-)/i.test(cleanTicker) || /^[0-9a-f]{16,}$/i.test(cleanTicker);
+  const fallbackTicker = formatComicEquityTicker(series, issueNum);
+  const effectiveTicker = (
+    !isInternalOrHash
+      ? cleanTicker
+      : fallbackTicker
+  )
+    .replace(/^\$/, "")
+    .replace(/\.(SOV|ANC|STD|OTC|PREMIUM)$/i, "")
+    .toUpperCase();
 
   // Strict Sovereign check:
   // A Sovereign copy of a comic is a direct 9.8 copy of the comic (or proven highest sale where no 9.8 exists).
@@ -413,105 +425,116 @@ export const EquityCard = React.memo(function EquityCard({
             </span>
           </div>
 
-          {/* Pills: scarcity · grade · asset class */}
-          <div style={{ display: "flex", alignItems: "center", gap: "3px" }}>
-            {(() => {
-              const neon = SCARCITY_NEON[scarcityTier] ?? "#94a3b8";
-              return (
+          {/* Bottom Card Strip: Dedicated Bold Exchange Ticker Badge + Certification / Scarcity Badges */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "4px",
+              marginTop: "2px",
+              paddingTop: "2px",
+            }}
+          >
+            {/* Bold Guaranteed Exchange Ticker */}
+            <span
+              style={{
+                fontFamily: "monospace",
+                fontSize: "10px",
+                fontWeight: 700,
+                letterSpacing: "0.08em",
+                color: "#38bdf8",
+                backgroundColor: "rgba(56,189,248,0.14)",
+                border: "1px solid rgba(56,189,248,0.45)",
+                borderRadius: "3px",
+                padding: "1px 6px",
+                lineHeight: "15px",
+                flexShrink: 0,
+                textTransform: "uppercase",
+              }}
+            >
+              ${effectiveTicker}
+            </span>
+
+            {/* Right Badges: Scarcity · Grade · Sovereign */}
+            <div style={{ display: "flex", alignItems: "center", gap: "3px", flexShrink: 0 }}>
+              {(() => {
+                const neon = SCARCITY_NEON[scarcityTier] ?? "#94a3b8";
+                return (
+                  <span
+                    style={{
+                      fontSize: "8px",
+                      fontFamily: "var(--font-sans, system-ui)",
+                      fontWeight: 600,
+                      color: neon,
+                      backgroundColor: withAlpha(neon, 0.12),
+                      border: `1px solid ${withAlpha(neon, 0.45)}`,
+                      borderRadius: "2px",
+                      padding: "1px 4px",
+                      lineHeight: "13px",
+                      letterSpacing: "0.2px",
+                    }}
+                  >
+                    {scarcityColors.label}
+                  </span>
+                );
+              })()}
+              {!isRawCopy && (
                 <span
                   style={{
                     fontSize: "8px",
                     fontFamily: "var(--font-sans, system-ui)",
-                    fontWeight: 500,
-                    color: neon,
-                    backgroundColor: withAlpha(neon, 0.133),
-                    border: `1px solid ${withAlpha(neon, 0.533)}`,
+                    fontWeight: 600,
+                    color: "rgba(255,255,255,0.9)",
+                    border: "1px solid rgba(255,255,255,0.30)",
+                    backgroundColor: "rgba(255,255,255,0.06)",
                     borderRadius: "2px",
                     padding: "1px 4px",
-                    lineHeight: "14px",
-                    flexShrink: 0,
+                    lineHeight: "13px",
                     letterSpacing: "0.2px",
                   }}
                 >
-                  {scarcityColors.label}
+                  {pricing.grade}
                 </span>
-              );
-            })()}
-            {cleanTicker && (
-              <span
-                style={{
-                  fontSize: "8px",
-                  fontFamily: "monospace",
-                  fontWeight: 600,
-                  color: "#38bdf8",
-                  backgroundColor: "rgba(56,189,248,0.12)",
-                  border: "1px solid rgba(56,189,248,0.3)",
-                  borderRadius: "2px",
-                  padding: "1px 4px",
-                  lineHeight: "14px",
-                  flexShrink: 0,
-                }}
-              >
-                {cleanTicker}
-              </span>
-            )}
-            {!isRawCopy && (
-              <span
-                style={{
-                  fontSize: "8px",
-                  fontFamily: "var(--font-sans, system-ui)",
-                  fontWeight: 500,
-                  color: "rgba(255,255,255,0.85)",
-                  border: "1px solid rgba(255,255,255,0.30)",
-                  borderRadius: "2px",
-                  padding: "1px 4px",
-                  lineHeight: "14px",
-                  flexShrink: 0,
-                  letterSpacing: "0.2px",
-                }}
-              >
-                {pricing.grade}
-              </span>
-            )}
-            {isProvenSovereign ? (
-              <span
-                title="Verified Sovereign Copy: Direct 9.8 certified universal copy (or verified top recorded sale on record). Eligible as institutional vault collateral."
-                style={{
-                  fontSize: "8px",
-                  fontFamily: "var(--font-sans, system-ui)",
-                  fontWeight: 600,
-                  color: "#f59e0b",
-                  backgroundColor: "rgba(245,158,11,0.15)",
-                  border: "1px solid rgba(245,158,11,0.5)",
-                  borderRadius: "2px",
-                  padding: "1px 4px",
-                  lineHeight: "14px",
-                  flexShrink: 0,
-                  letterSpacing: "0.3px",
-                }}
-              >
-                SOVEREIGN
-              </span>
-            ) : isTrueVariant ? (
-              <span
-                title="Certified Variant / Incentive Edition"
-                style={{
-                  fontSize: "8px",
-                  fontFamily: "var(--font-sans, system-ui)",
-                  fontWeight: 500,
-                  color: "#a78bfa",
-                  backgroundColor: "rgba(167,139,250,0.12)",
-                  border: "1px solid rgba(167,139,250,0.4)",
-                  borderRadius: "2px",
-                  padding: "1px 4px",
-                  lineHeight: "14px",
-                  flexShrink: 0,
-                  letterSpacing: "0.2px",
-                }}
-              >
-                VARIANT
-              </span>
-            ) : null}
+              )}
+              {isProvenSovereign ? (
+                <span
+                  title="Verified Sovereign Copy: Direct 9.8 certified universal copy"
+                  style={{
+                    fontSize: "8px",
+                    fontFamily: "var(--font-sans, system-ui)",
+                    fontWeight: 700,
+                    color: "#f59e0b",
+                    backgroundColor: "rgba(245,158,11,0.18)",
+                    border: "1px solid rgba(245,158,11,0.6)",
+                    borderRadius: "2px",
+                    padding: "1px 4px",
+                    lineHeight: "13px",
+                    letterSpacing: "0.3px",
+                  }}
+                >
+                  SOV
+                </span>
+              ) : isTrueVariant ? (
+                <span
+                  title="Certified Variant Edition"
+                  style={{
+                    fontSize: "8px",
+                    fontFamily: "var(--font-sans, system-ui)",
+                    fontWeight: 600,
+                    color: "#a78bfa",
+                    backgroundColor: "rgba(167,139,250,0.14)",
+                    border: "1px solid rgba(167,139,250,0.45)",
+                    borderRadius: "2px",
+                    padding: "1px 4px",
+                    lineHeight: "13px",
+                    letterSpacing: "0.2px",
+                  }}
+                >
+                  VAR
+                </span>
+              ) : null}
+            </div>
           </div>
         </div>
       </div>
