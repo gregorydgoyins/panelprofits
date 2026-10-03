@@ -22,6 +22,14 @@ describe("Canonical Equities Symbology & 16 Asset Families Canon", () => {
     expect(formatComicEquityTicker("Avengers", "4")).toBe("AVG04");
     expect(formatComicEquityTicker("Amazing Spider-Man", "1")).toBe("ASM01");
     expect(formatComicEquityTicker("The X-Men", "94")).toBe("XMN94");
+
+    // Disambiguated spin-off and variant series
+    expect(formatComicEquityTicker("Astonishing X-Men", "1")).toBe("AXM01");
+    expect(formatComicEquityTicker("Ultimate X-Men", "1")).toBe("UXM01");
+    expect(formatComicEquityTicker("Weapon X-Men", "1")).toBe("WXM01");
+    expect(formatComicEquityTicker("Batman Adventures", "1")).toBe("BMA01");
+    expect(formatComicEquityTicker("Batman Beyond", "1")).toBe("BMB01");
+    expect(formatComicEquityTicker("Batman and Robin", "1")).toBe("BAR01");
   });
 
   it("contains exactly 16 Canonical Collectible Asset Families with valid liquidity tiers", () => {
