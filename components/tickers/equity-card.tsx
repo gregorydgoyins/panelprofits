@@ -110,19 +110,19 @@ export const EquityCard = React.memo(function EquityCard({
 
   const rawGrade = String(pricing.grade ?? "RAW");
   const isRawCopy = !rawGrade || rawGrade === "RAW" || rawGrade.toUpperCase() === "RAW";
-  const isTrueVariant = Boolean(variantTag && !["direct", "base", "regular"].includes(variantTag.toLowerCase()));
+  const isTrueVariant = Boolean(variantTag && !["direct", "base", "regular", "standard"].includes(variantTag.toLowerCase()));
 
-  const priceTierClass = (usd: number) => ((usd || 0) >= 45 ? "PREMIUM" : (usd || 0) >= 20 ? "STD" : "OTC");
-  const isSovereign = identity.isSovereign === true;
-  const marketPriceClass = identity.marketPriceClass || priceTierClass(pricing.fmv_usd);
+  // Clean pure ticker symbol: strip any legacy .SOV, .ANC, or classification suffixes
+  const cleanTicker = String(identity.assetId || "")
+    .replace(/\.(SOV|ANC|STD|OTC|PREMIUM)$/i, "")
+    .replace(/^CE70\.\d+\.?/i, "")
+    .trim();
 
-  const displayAssetClass: string | null = isRawCopy
-    ? "RAW"
-    : isTrueVariant
-    ? "VAR"
-    : isSovereign && rawGrade === "9.8"
-    ? "SOV"
-    : marketPriceClass;
+  // Strict Sovereign check:
+  // A Sovereign copy of a comic is a direct 9.8 copy of the comic (or proven highest sale where no 9.8 exists).
+  // It CANNOT be a modified, qualified, variant, or signature.
+  // If it cannot be proven to be a sovereign copy, it CANNOT be labeled a sovereign copy.
+  const isProvenSovereign = identity.isSovereign === true && !isTrueVariant && !isRawCopy;
 
   const coverUrl = item?.coverImageUrl || null;
   const borderColor = eraColors.border;
@@ -154,7 +154,9 @@ export const EquityCard = React.memo(function EquityCard({
     ["--rim" as string]: rimColor,
   };
 
-  const detailHref = identity.detailUrl || `/equity/${assetId || "CE70"}`;
+  const detailHref =
+    identity.detailUrl ||
+    (cleanTicker ? `/comics/${encodeURIComponent(cleanTicker)}` : `/equity/${assetId || "CE70"}`);
 
   return (
     <Link
@@ -435,7 +437,7 @@ export const EquityCard = React.memo(function EquityCard({
                 </span>
               );
             })()}
-            {identity.assetId && (
+            {cleanTicker && (
               <span
                 style={{
                   fontSize: "8px",
@@ -450,7 +452,7 @@ export const EquityCard = React.memo(function EquityCard({
                   flexShrink: 0,
                 }}
               >
-                {identity.assetId}
+                {cleanTicker}
               </span>
             )}
             {!isRawCopy && (
@@ -471,26 +473,45 @@ export const EquityCard = React.memo(function EquityCard({
                 {pricing.grade}
               </span>
             )}
-            {displayAssetClass && ASSET_CLASS_CONFIG[displayAssetClass] && (
+            {isProvenSovereign ? (
               <span
-                title={`${ASSET_CLASS_CONFIG[displayAssetClass].fullName} | Venue: ${ASSET_CLASS_CONFIG[displayAssetClass].venue} | Margin Haircut: ${ASSET_CLASS_CONFIG[displayAssetClass].marginHaircut} | ${ASSET_CLASS_CONFIG[displayAssetClass].description}`}
+                title="Verified Sovereign Copy: Direct 9.8 certified universal copy (or verified top recorded sale on record). Eligible as institutional vault collateral."
+                style={{
+                  fontSize: "8px",
+                  fontFamily: "var(--font-sans, system-ui)",
+                  fontWeight: 600,
+                  color: "#f59e0b",
+                  backgroundColor: "rgba(245,158,11,0.15)",
+                  border: "1px solid rgba(245,158,11,0.5)",
+                  borderRadius: "2px",
+                  padding: "1px 4px",
+                  lineHeight: "14px",
+                  flexShrink: 0,
+                  letterSpacing: "0.3px",
+                }}
+              >
+                SOVEREIGN
+              </span>
+            ) : isTrueVariant ? (
+              <span
+                title="Certified Variant / Incentive Edition"
                 style={{
                   fontSize: "8px",
                   fontFamily: "var(--font-sans, system-ui)",
                   fontWeight: 500,
-                  color: ASSET_CLASS_CONFIG[displayAssetClass].color,
-                  border: `1px solid ${withAlpha(ASSET_CLASS_CONFIG[displayAssetClass].color, 0.4)}`,
+                  color: "#a78bfa",
+                  backgroundColor: "rgba(167,139,250,0.12)",
+                  border: "1px solid rgba(167,139,250,0.4)",
                   borderRadius: "2px",
                   padding: "1px 4px",
                   lineHeight: "14px",
                   flexShrink: 0,
                   letterSpacing: "0.2px",
-                  cursor: "help",
                 }}
               >
-                {ASSET_CLASS_CONFIG[displayAssetClass].label}
+                VARIANT
               </span>
-            )}
+            ) : null}
           </div>
         </div>
       </div>

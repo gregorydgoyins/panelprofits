@@ -143,7 +143,7 @@ export function getVerifiedRealEquities(offset = 0, limit = 80, random = false):
 }
 
 /**
- * Resolves a comic equity by ID, source_product_id (pp-XXXX), or ticker.
+ * Resolves a comic equity by ID, source_product_id (pp-XXXX), ticker, ticker alias, or series-issue slug.
  * Executes in <1ms against local SQLite.
  */
 export function getVerifiedEquityByIdOrTicker(idOrTicker: string): VerifiedEquityRecord | null {
@@ -153,7 +153,7 @@ export function getVerifiedEquityByIdOrTicker(idOrTicker: string): VerifiedEquit
   try {
     const clean = idOrTicker.trim();
     
-    // 1. Direct match on ID
+    // 1. Direct match on ID (64-char sha256 or UUID)
     let row = db
       .prepare("SELECT * FROM verified_equities WHERE id = ? LIMIT 1")
       .get(clean) as unknown as VerifiedEquityRecord | undefined;
@@ -168,11 +168,57 @@ export function getVerifiedEquityByIdOrTicker(idOrTicker: string): VerifiedEquit
       if (row) return row;
     }
 
-    // 3. Match on ticker (case-insensitive)
+    // 3. Match on ticker (exact case-insensitive)
     row = db
       .prepare("SELECT * FROM verified_equities WHERE ticker = ? COLLATE NOCASE LIMIT 1")
       .get(clean.toUpperCase()) as unknown as VerifiedEquityRecord | undefined;
     if (row) return row;
+
+    // 4. Match ticker aliases (e.g. ASM300 -> AS300, ASM129 -> AS129, BAT251 -> BA251, HULK181 -> HK181)
+    const upper = clean.toUpperCase();
+    const aliasMap: Record<string, string> = {
+      ASM300: "AS300",
+      ASM129: "AS129",
+      ACT1: "ACT01",
+      ASM1: "ASM01",
+      XMN1: "XMN01",
+      BAT1: "BAT01",
+      BAT251: "BA251",
+      HULK181: "HK181",
+      HULK1: "HLK01",
+      FF1: "FF001",
+      FF48: "FF048",
+      FF52: "FF052",
+      TMNT01: "TMNT1",
+    };
+    if (aliasMap[upper]) {
+      row = db
+        .prepare("SELECT * FROM verified_equities WHERE ticker = ? COLLATE NOCASE LIMIT 1")
+        .get(aliasMap[upper]) as unknown as VerifiedEquityRecord | undefined;
+      if (row) return row;
+    }
+
+    // 5. Match series-issue slug (e.g. amazing-spider-man-300, action-comics-1, batman-251, x-men-1)
+    const slugMatch = clean.toLowerCase().match(/^(.*?)[-_](\d+[\w-]*)$/);
+    if (slugMatch) {
+      const rawSeries = slugMatch[1].replace(/[-_]+/g, " ");
+      const issueNum = slugMatch[2];
+      const normSearch = rawSeries.replace(/[^a-z0-9]/g, "");
+
+      const candidates = db
+        .prepare("SELECT * FROM verified_equities WHERE issue_number = ? ORDER BY fmv_usd DESC")
+        .all(issueNum) as unknown as VerifiedEquityRecord[];
+      for (const c of candidates) {
+        const normCand = (c.series || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+        if (
+          normCand === normSearch ||
+          normCand.replace(/^the/, "") === normSearch ||
+          normSearch.replace(/^the/, "") === normCand
+        ) {
+          return c;
+        }
+      }
+    }
 
     return null;
   } catch (err) {

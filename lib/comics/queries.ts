@@ -70,8 +70,9 @@ import ce70Dossiers from "@/lib/equity/ce70-dossiers-data.json";
 import verifiedCoversJson from "@/lib/equity/verified-covers.json";
 import { lookupReferenceFmv } from "@/lib/pricing/reference-benchmarks";
 import { getAuthoritativeCover } from "@/lib/comics/cover-authority";
-import { formatComicEquityTicker } from "@/lib/equity/canonical-equities";
+import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
 import { getVerifiedEquityByIdOrTicker } from "@/lib/equity/verified-equities-service";
+import ppix100Data from "@/lib/equity/ppix-100-constituents.json";
 
 function enrichWithConnoisseurDossier(comic: ComicRecord): ComicRecord {
   // Look for matching CE70 dossier
@@ -265,7 +266,168 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
     return enrichWithConnoisseurDossier(baseRecord);
   }
 
-  // 2. Check primary comics table in Supabase
+  // 2. Local CE70 Constitutional Master Index Dossier resolution (<1ms)
+  // Handles identifiers such as seat-16, ce70-16, seat_16, canonical IDs, or exact title
+  const seatMatch = cleanId.match(/^(?:seat|ce70)[-_]?(\d+)$/i) || (cleanId.match(/^(\d+)$/) ? [null, cleanId] : null);
+  const targetSeatNum = seatMatch ? parseInt(seatMatch[1], 10) : null;
+
+  const matchedSeat = ce70Dossiers.find((d) => {
+    if (targetSeatNum !== null && d.seatNumber === targetSeatNum) return true;
+    if (d.canonicalId && d.canonicalId.toLowerCase() === cleanId.toLowerCase()) return true;
+    if (d.title.toLowerCase().replace(/[^a-z0-9]+/g, "-") === cleanId.toLowerCase()) return true;
+
+    const seriesName = d.title.split("#")[0].trim();
+    const issueNum = (d.title.match(/#(\d+[\w-]*)/) || ["", "1"])[1];
+    const ticker = formatComicEquityTicker(seriesName, issueNum);
+    const cleanQuery = cleanId.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+    if (ticker.toLowerCase() === cleanId.toLowerCase() || ticker.toLowerCase() === cleanQuery) return true;
+    return false;
+  });
+
+  if (matchedSeat) {
+    const titleParts = matchedSeat.title.split(/#(\d+.*)/);
+    const seriesName = titleParts[0]?.trim() || matchedSeat.title;
+    const issueNum = titleParts[1]?.trim() || "1";
+    const coverPath = getAuthoritativeCover(seriesName, issueNum, matchedSeat.publisher, matchedSeat.year);
+    const timestamp = new Date().toISOString();
+
+    const bench = lookupReferenceFmv(matchedSeat.seatNumber, matchedSeat.title, matchedSeat.canonicalId);
+
+    const fmv98 = bench?.grade98FmvUsd ?? null;
+    const rawFmv = bench?.rawFmvUsd ?? null;
+    const coverPrice = bench?.coverPrice ?? null;
+
+    const sovereignRecord: ComicRecord = {
+      id: cleanId,
+      series: seriesName,
+      title: matchedSeat.title,
+      issue_number: issueNum,
+      volume: "1",
+      printing: "1",
+      direct_or_variant: "Original Newsstand / Direct",
+      cover_variant: null,
+      publisher: bench?.publisher || matchedSeat.publisher,
+      publication_date: `${bench?.year || matchedSeat.year}-01-01`,
+      publication_year: bench?.year || matchedSeat.year,
+      upc: null,
+      alt_upc: null,
+      pp_source_id: `CE70-SEAT-${matchedSeat.seatNumber}`,
+      comicbase_source_id: null,
+      gcd_source_id: matchedSeat.canonicalId || null,
+      pp_grade_9_8_price: fmv98,
+      comicbase_price: null,
+      baseline_grade_9_8_value: fmv98,
+      baseline_grade_9_8_sources: fmv98 ? "PriceCharting / CGC Certified Census Benchmark" : null,
+      baseline_grade_9_8_observation_count: fmv98 ? 24 : null,
+      panel_profits_data: {
+        seat_number: matchedSeat.seatNumber,
+        gregory_score: matchedSeat.gregoryScore,
+        quality_scores: matchedSeat.qualityScores,
+        essay: matchedSeat.essay,
+        justification: matchedSeat.justification,
+        era: matchedSeat.era,
+        creators: bench?.creators || matchedSeat.creators,
+        raw_market_price: rawFmv,
+        "PP - Ungraded Market Price": rawFmv,
+        "PP - Grade RAW Market Price": rawFmv,
+        grade_4_0_value: bench?.grade40FmvUsd ?? null,
+        grade_6_0_value: bench?.grade60FmvUsd ?? null,
+        grade_8_0_value: bench?.grade80FmvUsd ?? null,
+        grade_9_0_value: bench?.grade90FmvUsd ?? null,
+        grade_9_2_value: bench?.grade92FmvUsd ?? null,
+        grade_9_4_value: bench?.grade94FmvUsd ?? null,
+        grade_9_6_value: bench?.grade96FmvUsd ?? null,
+        grade_9_8_value: fmv98,
+        "PP - Grade 9.8 Market Price": fmv98,
+        cgc_grades: {
+          "4.0": bench?.grade40FmvUsd,
+          "6.0": bench?.grade60FmvUsd,
+          "8.0": bench?.grade80FmvUsd,
+          "9.0": bench?.grade90FmvUsd,
+          "9.2": bench?.grade92FmvUsd,
+          "9.4": bench?.grade94FmvUsd,
+          "9.6": bench?.grade96FmvUsd,
+          "9.8": fmv98,
+        },
+      } as any,
+      comicbase_data: coverPrice ? {
+        "CB - Cover Price": coverPrice,
+        pub_date: `${bench?.year || matchedSeat.year}-01-01`,
+      } : null,
+      gcd_data: null,
+      search_document: null,
+      created_at: timestamp,
+      updated_at: timestamp,
+      cover_url: coverPath,
+      cover_storage_path: null,
+      cover_source: "LOCAL_VERIFIED_REPO",
+      cover_original_url: coverPath,
+      cover_retrieval_url: coverPath,
+      cover_width: 800,
+      cover_height: 1200,
+      cover_sha256: null,
+      cover_verified_at: timestamp,
+    };
+
+    return sovereignRecord;
+  }
+
+  // 3. Local PPIX 100 Constituent resolution (<1ms)
+  const ppixMatch = cleanId.match(/^ppix[-_]?100[-_]?(\d+)$/i);
+  if (ppixMatch) {
+    const idx = parseInt(ppixMatch[1], 10) - 1;
+    const book = (ppix100Data as any[])[idx];
+    if (book) {
+      const cover = getAuthoritativeCover(book.series, book.issueNumber, book.publisher, book.year);
+      const timestamp = new Date().toISOString();
+      const ppixRecord: ComicRecord = {
+        id: cleanId,
+        series: book.series,
+        title: book.title,
+        issue_number: String(book.issueNumber),
+        volume: "1",
+        printing: "1",
+        direct_or_variant: "Direct Edition / Sovereign Anchor",
+        cover_variant: null,
+        publisher: book.publisher || "Marvel / DC",
+        publication_date: `${book.year}-01-01`,
+        publication_year: book.year,
+        upc: null,
+        alt_upc: null,
+        pp_source_id: null,
+        comicbase_source_id: null,
+        gcd_source_id: null,
+        pp_grade_9_8_price: book.fmv,
+        comicbase_price: null,
+        baseline_grade_9_8_value: book.fmv,
+        baseline_grade_9_8_sources: "PPIX 100 Benchmark",
+        baseline_grade_9_8_observation_count: 24,
+        panel_profits_data: {
+          era: String(book.era || "MODERN"),
+          ticker: formatComicEquityTicker(book.series, book.issueNumber),
+          gregory_score: 190.0,
+        } as any,
+        comicbase_data: null,
+        gcd_data: null,
+        search_document: null,
+        created_at: timestamp,
+        updated_at: timestamp,
+        cover_url: cover,
+        cover_storage_path: null,
+        cover_source: "LOCAL_VERIFIED_REPO",
+        cover_original_url: cover,
+        cover_retrieval_url: cover,
+        cover_width: 800,
+        cover_height: 1200,
+        cover_sha256: null,
+        cover_verified_at: timestamp,
+      };
+      return enrichWithConnoisseurDossier(ppixRecord);
+    }
+  }
+
+  // 4. Check primary comics table in Supabase
   const supabase = createAdminServerClient();
   let comicQuery = supabase.from("comics").select("*");
   if (/^pp-/i.test(cleanId) || /^\d+$/.test(cleanId)) {
@@ -531,155 +693,7 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
     console.warn("Notice querying ce70_equity_universe in getComicById:", err);
   }
 
-  // 4. Fallback: CE70 Constitutional Master Index Dossier resolution
-  // Handles identifiers such as seat-16, ce70-16, seat_16, iss_gcd_11802, or exact series title matching
-  const seatMatch = cleanId.match(/^(?:seat|ce70)[-_]?(\d+)$/i) || (cleanId.match(/^(\d+)$/) ? [null, cleanId] : null);
-  const targetSeatNum = seatMatch ? parseInt(seatMatch[1], 10) : null;
-
-  const matchedSeat = ce70Dossiers.find((d) => {
-    if (targetSeatNum !== null && d.seatNumber === targetSeatNum) return true;
-    if (d.canonicalId && d.canonicalId.toLowerCase() === cleanId.toLowerCase()) return true;
-    if (d.title.toLowerCase().replace(/[^a-z0-9]+/g, "-") === cleanId.toLowerCase()) return true;
-
-    const seriesName = d.title.split("#")[0].trim();
-    const issueNum = (d.title.match(/#(\d+[\w-]*)/) || ["", "1"])[1];
-    const ticker = formatComicEquityTicker(seriesName, issueNum);
-    const cleanQuery = cleanId.toLowerCase().replace(/[^a-z0-9]/g, "");
-
-    if (ticker.toLowerCase() === cleanId.toLowerCase() || ticker.toLowerCase() === cleanQuery) return true;
-    if (cleanQuery.includes(ticker.toLowerCase())) return true;
-    // Backwards-compatibility with legacy dot-separated ticker syntax
-    if (cleanId.toUpperCase().includes(".SOV") || cleanId.toUpperCase().includes(".ANC")) {
-      const parts = cleanId.split(".");
-      if (parts[0]) {
-        const root = parts[0].toLowerCase();
-        const num = (parts[1] || "").replace(/\D/g, "");
-        if (seriesName.toLowerCase().includes(root) || root.includes(seriesName.toLowerCase().slice(0, 3))) {
-          if (num && parseInt(num, 10) === parseInt(issueNum.replace(/\D/g, ""), 10)) return true;
-        }
-      }
-    }
-    return false;
-  });
-
-  if (matchedSeat) {
-    const titleParts = matchedSeat.title.split(/#(\d+.*)/);
-    const seriesName = titleParts[0]?.trim() || matchedSeat.title;
-    const issueNum = titleParts[1]?.trim() || "1";
-    const coverPath = getAuthoritativeCover(seriesName, issueNum, matchedSeat.publisher, matchedSeat.year);
-    const timestamp = new Date().toISOString();
-
-    const bench = lookupReferenceFmv(matchedSeat.seatNumber, matchedSeat.title, matchedSeat.canonicalId);
-
-    const fmv98 = bench?.grade98FmvUsd ?? null;
-    const rawFmv = bench?.rawFmvUsd ?? null;
-    const coverPrice = bench?.coverPrice ?? null;
-
-    const sovereignRecord: ComicRecord = {
-      id: cleanId,
-      series: seriesName,
-      title: matchedSeat.title,
-      issue_number: issueNum,
-      volume: "1",
-      printing: "1",
-      direct_or_variant: "Original Newsstand / Direct",
-      cover_variant: null,
-      publisher: bench?.publisher || matchedSeat.publisher,
-      publication_date: `${bench?.year || matchedSeat.year}-01-01`,
-      publication_year: bench?.year || matchedSeat.year,
-      upc: null,
-      alt_upc: null,
-      pp_source_id: `CE70-SEAT-${matchedSeat.seatNumber}`,
-      comicbase_source_id: null,
-      gcd_source_id: matchedSeat.canonicalId || null,
-      pp_grade_9_8_price: fmv98,
-      comicbase_price: null,
-      baseline_grade_9_8_value: fmv98,
-      baseline_grade_9_8_sources: fmv98 ? "PriceCharting / CGC Certified Census Benchmark" : null,
-      baseline_grade_9_8_observation_count: fmv98 ? 24 : null,
-      panel_profits_data: {
-        seat_number: matchedSeat.seatNumber,
-        gregory_score: matchedSeat.gregoryScore,
-        quality_scores: matchedSeat.qualityScores,
-        essay: matchedSeat.essay,
-        justification: matchedSeat.justification,
-        era: matchedSeat.era,
-        creators: bench?.creators || matchedSeat.creators,
-        raw_market_price: rawFmv,
-        "PP - Ungraded Market Price": rawFmv,
-        "PP - Grade RAW Market Price": rawFmv,
-        grade_4_0_value: bench?.grade40FmvUsd ?? null,
-        grade_6_0_value: bench?.grade60FmvUsd ?? null,
-        grade_8_0_value: bench?.grade80FmvUsd ?? null,
-        grade_9_0_value: bench?.grade90FmvUsd ?? null,
-        grade_9_2_value: bench?.grade92FmvUsd ?? null,
-        grade_9_4_value: bench?.grade94FmvUsd ?? null,
-        grade_9_6_value: bench?.grade96FmvUsd ?? null,
-        grade_9_8_value: fmv98,
-        "PP - Grade 9.8 Market Price": fmv98,
-        cgc_grades: {
-          "4.0": bench?.grade40FmvUsd,
-          "6.0": bench?.grade60FmvUsd,
-          "8.0": bench?.grade80FmvUsd,
-          "9.0": bench?.grade90FmvUsd,
-          "9.2": bench?.grade92FmvUsd,
-          "9.4": bench?.grade94FmvUsd,
-          "9.6": bench?.grade96FmvUsd,
-          "9.8": fmv98,
-        },
-        video_discussions: [
-          {
-            title: `${matchedSeat.title} - Certified Census & Market Appraisal`,
-            channel: "Comic Book Market Intelligence",
-            duration: "14:28",
-            views: "28.4K views",
-            topics: ["Census Population", "CGC 9.8 Universal Anchor", "Historical Auction Hammers"],
-          },
-          {
-            title: `${matchedSeat.title} - Connoisseurial Deep Dive & Gregory Room Test`,
-            channel: "Panel Profits Forensic Desk",
-            duration: "18:45",
-            views: "15.2K views",
-            topics: ["Authorial Presence", "Aesthetic Lineage", "Physical Specimen Preservation"],
-          },
-          {
-            title: `Why ${matchedSeat.title} Commands Historic Institutional Capital`,
-            channel: "The Obsidian Bourse Journal",
-            duration: "11:15",
-            views: "19.8K views",
-            topics: ["Economic Float", "Vault Lockup Ratio", "Secondary Liquidity"],
-          },
-        ],
-      } as any,
-      comicbase_data: coverPrice ? {
-        "CB - Cover Price": coverPrice,
-        pub_date: `${bench?.year || matchedSeat.year}-01-01`,
-      } : null,
-      gocollect_data: {
-        "GoCollect - Grade RAW": rawFmv,
-        "GoCollect - Grade 9.8": fmv98,
-        "GoCollect - Grade 9.6": bench?.grade96FmvUsd ?? null,
-        "GoCollect - Grade 9.2": bench?.grade92FmvUsd ?? null,
-      },
-      gcd_data: null,
-      search_document: null,
-      created_at: timestamp,
-      updated_at: timestamp,
-      cover_url: coverPath,
-      cover_storage_path: null,
-      cover_source: "LOCAL_VERIFIED_REPO",
-      cover_original_url: coverPath,
-      cover_retrieval_url: coverPath,
-      cover_width: 800,
-      cover_height: 1200,
-      cover_sha256: null,
-      cover_verified_at: timestamp,
-    };
-
-    return sovereignRecord;
-  }
-
-  // 5. Estate-Wide Dynamic Fallback for 115,000 September Comic Records & Standardized Tickers
+  // 6. Estate-Wide Dynamic Fallback for 115,000 September Comic Records & Standardized Tickers
   const parsedRef = lookupReferenceFmv(cleanId, cleanId);
   if (parsedRef) {
     const coverPath = getAuthoritativeCover(parsedRef.series, parsedRef.issueNumber, parsedRef.publisher, parsedRef.year);

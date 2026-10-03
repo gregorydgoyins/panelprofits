@@ -4,6 +4,7 @@ import ppix100Data from "@/lib/equity/ppix-100-constituents.json";
 import verifiedCovers from "@/lib/equity/verified-covers.json";
 import { INITIAL_SURFACE_ASSETS } from "@/lib/assets/initial-assets";
 import { getAuthoritativeCover } from "@/lib/comics/cover-authority";
+import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
 
 const REF_FMV_MAP = ce70ReferenceFmv as Record<string, any>;
 
@@ -127,13 +128,16 @@ export function getPPIX100Constituents(providedItems?: any[]): FeaturedComicCons
   }
 
   return (ppix100Data as any[]).map((book, idx) => {
-    const seatMatch = book.key ? book.key.match(/^(\d+)$/) : null;
-    const seatId = seatMatch ? `seat-${seatMatch[1]}` : `ppix-100-${idx + 1}`;
-    const detailUrl = seatMatch ? `/comics/seat-${seatMatch[1]}` : `/comics/${seatId}`;
+    const ticker = formatComicEquityTicker(book.series, book.issueNumber);
+    const slug = `${book.series}-${book.issueNumber}`
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+    const detailUrl = `/comics/${ticker || slug}`;
     const cover = getAuthoritativeCover(book.series, book.issueNumber, book.publisher, book.year);
 
     return {
-      id: seatId,
+      id: ticker || slug || `ppix-100-${idx + 1}`,
       series: book.series,
       issueNumber: String(book.issueNumber),
       title: book.title,
@@ -174,7 +178,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         coverUrl: getAuthoritativeCover("Captain America Comics", "1", "Timely Comics", 1941),
         totalPoints: 855.0,
         impliedWeight: "25.0%",
-        detailUrl: "/comics/seat-7",
+        detailUrl: "/comics/captain-america-comics-1",
       },
       {
         id: "cpi-gold-marv1",
@@ -186,7 +190,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         coverUrl: getAuthoritativeCover("Marvel Comics", "1", "Timely Comics", 1939),
         totalPoints: 1026.0,
         impliedWeight: "30.0%",
-        detailUrl: "/comics/seat-1",
+        detailUrl: "/comics/marvel-comics-1",
       },
       {
         id: "cpi-gold-allstar8",
@@ -198,7 +202,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         coverUrl: getAuthoritativeCover("All Star Comics", "8", "DC Comics", 1941),
         totalPoints: 780.0,
         impliedWeight: "23.0%",
-        detailUrl: "/comics/seat-5",
+        detailUrl: "/comics/all-star-comics-8",
       },
       {
         id: "cpi-gold-bat1",
@@ -210,7 +214,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         coverUrl: getAuthoritativeCover("Batman", "1", "DC Comics", 1940),
         totalPoints: 759.0,
         impliedWeight: "22.0%",
-        detailUrl: "/comics/seat-31",
+        detailUrl: "/comics/BAT01",
       },
     ],
   },
@@ -234,7 +238,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         coverUrl: getAuthoritativeCover("Amazing Fantasy", "15", "Marvel Comics", 1962),
         totalPoints: 560.0,
         impliedWeight: "31.7%",
-        detailUrl: "/comics/seat-19",
+        detailUrl: "/comics/amazing-fantasy-15",
       },
       {
         id: "cpi-silv-shw4",
@@ -246,7 +250,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         coverUrl: getAuthoritativeCover("Showcase", "4", "DC Comics", 1956),
         totalPoints: 420.0,
         impliedWeight: "23.8%",
-        detailUrl: "/comics/seat-27",
+        detailUrl: "/comics/SHC04",
       },
       {
         id: "cpi-silv-xm1",
@@ -258,7 +262,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         coverUrl: getAuthoritativeCover("X-Men", "1", "Marvel Comics", 1963),
         totalPoints: 395.0,
         impliedWeight: "22.4%",
-        detailUrl: "/comics/seat-28",
+        detailUrl: "/comics/XMN01",
       },
       {
         id: "cpi-silv-ff1",
@@ -270,7 +274,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         coverUrl: getAuthoritativeCover("Fantastic Four", "1", "Marvel Comics", 1961),
         totalPoints: 391.0,
         impliedWeight: "22.1%",
-        detailUrl: "/comics/seat-20",
+        detailUrl: "/comics/FF001",
       },
     ],
   },
@@ -294,7 +298,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         coverUrl: getAuthoritativeCover("Incredible Hulk", "181", "Marvel Comics", 1974),
         totalPoints: 640.0,
         impliedWeight: "44.9%",
-        detailUrl: "/comics/seat-30",
+        detailUrl: "/comics/HK181",
       },
       {
         id: "cpi-brnz-gsxm1",
@@ -306,7 +310,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         coverUrl: getAuthoritativeCover("Giant-Size X-Men", "1", "Marvel Comics", 1975),
         totalPoints: 410.0,
         impliedWeight: "28.8%",
-        detailUrl: "/comics/seat-30",
+        detailUrl: "/comics/GSX01",
       },
       {
         id: "cpi-brnz-hos92",
@@ -318,7 +322,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         coverUrl: getAuthoritativeCover("House of Secrets", "92", "DC Comics", 1971),
         totalPoints: 375.0,
         impliedWeight: "26.3%",
-        detailUrl: "/comics/seat-35",
+        detailUrl: "/comics/house-of-secrets-92",
       },
     ],
   },
@@ -342,7 +346,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         coverUrl: getAuthoritativeCover("Amazing Spider-Man", "300", "Marvel Comics", 1988),
         totalPoints: 55.0,
         impliedWeight: "33.0%",
-        detailUrl: "/comics/seat-19",
+        detailUrl: "/comics/AS300",
       },
       {
         id: "cpi-cop-tmnt1",
@@ -354,7 +358,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         coverUrl: getAuthoritativeCover("Teenage Mutant Ninja Turtles", "1", "Mirage Studios", 1984),
         totalPoints: 55.0,
         impliedWeight: "33.0%",
-        detailUrl: "/comics/seat-40",
+        detailUrl: "/comics/TMNT1",
       },
       {
         id: "cpi-cop-dkr1",
@@ -366,7 +370,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         coverUrl: getAuthoritativeCover("Batman: The Dark Knight Returns", "1", "DC Comics", 1986),
         totalPoints: 55.0,
         impliedWeight: "34.0%",
-        detailUrl: "/comics/seat-36",
+        detailUrl: "/comics/DKR01",
       },
     ],
   },
@@ -390,7 +394,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         coverUrl: getAuthoritativeCover("Ultimate Fallout", "4", "Marvel Comics", 2011),
         totalPoints: 95.0,
         impliedWeight: "18.3%",
-        detailUrl: "/comics/seat-59",
+        detailUrl: "/comics/UF004",
       },
       {
         id: "cpi-mod-spawn1",
@@ -402,7 +406,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         coverUrl: getAuthoritativeCover("Spawn", "1", "Image Comics", 1992),
         totalPoints: 45.0,
         impliedWeight: "8.6%",
-        detailUrl: "/comics/seat-48",
+        detailUrl: "/comics/SPW01",
       },
       {
         id: "cpi-mod-twd1",
@@ -414,7 +418,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         coverUrl: getAuthoritativeCover("The Walking Dead", "1", "Image Comics", 2003),
         totalPoints: 120.0,
         impliedWeight: "23.1%",
-        detailUrl: "/comics/seat-48",
+        detailUrl: "/comics/the-walking-dead-1",
       },
     ],
   },
@@ -438,7 +442,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         coverUrl: getAuthoritativeCover("Action Comics", "1", "DC Comics", 1938),
         totalPoints: 2500.0,
         impliedWeight: "51.8%",
-        detailUrl: "/comics/seat-27",
+        detailUrl: "/comics/ACT01",
       },
       {
         id: "cpi-spend-tec27",
@@ -450,7 +454,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         coverUrl: getAuthoritativeCover("Detective Comics", "27", "DC Comics", 1939),
         totalPoints: 1800.0,
         impliedWeight: "37.3%",
-        detailUrl: "/comics/seat-1",
+        detailUrl: "/comics/DET27",
       },
       {
         id: "cpi-spend-sup1",
@@ -462,7 +466,7 @@ export const GOCOLLECT_CPI_CATEGORIES: CPICategory[] = [
         coverUrl: getAuthoritativeCover("Superman", "1", "DC Comics", 1939),
         totalPoints: 520.0,
         impliedWeight: "10.8%",
-        detailUrl: "/comics/seat-50",
+        detailUrl: "/comics/superman-1",
       },
     ],
   },

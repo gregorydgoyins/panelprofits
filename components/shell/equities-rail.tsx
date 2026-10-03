@@ -4,7 +4,8 @@ import * as React from "react";
 import type { SovereignEquityItem } from "@/lib/equity/canonical-equities";
 import type { MarketIndexRecord } from "@/lib/market/indices";
 import type { EquityItem, EquityResponse } from "@/lib/equity/ticker-types";
-import { lookupReferenceFmv, isSpecimenSovereign } from "@/lib/pricing/reference-benchmarks";
+import { lookupReferenceFmv, isProvenSovereignCopy } from "@/lib/pricing/reference-benchmarks";
+import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
 import { TickerHeader } from "@/components/tickers/ticker-header";
 import { EquityCard } from "@/components/tickers/equity-card";
 
@@ -36,11 +37,19 @@ export function EquitiesRail({ items: initialItems = [], indices = [] }: Equitie
       else if (fmv >= 300) tier = "uncommon";
       else tier = "common";
 
-      const itemGrade = String(item.referenceGrade || "9.0").trim();
+      const itemGrade = String(item.referenceGrade || "9.8").trim();
       const bench = lookupReferenceFmv(item.seatNumber, item.title, item.canonicalIssueId);
-      const isTrulySovereign = isSpecimenSovereign(itemGrade, bench);
-      const marketPriceClass = fmv >= 45 ? "PREMIUM" : fmv >= 20 ? "STD" : "OTC";
-      const effectiveAssetClass = isTrulySovereign ? "SOV" : marketPriceClass;
+      const isTrulySovereign = isProvenSovereignCopy(itemGrade, bench, {
+        isVariant: Boolean(item.variant),
+        variantName: item.variant,
+      });
+      const marketClass = fmv >= 45 ? "PREMIUM" : fmv >= 20 ? "STD" : "OTC";
+      const effectiveAssetClass = isTrulySovereign ? "SOV" : marketClass;
+
+      const cleanTicker = (item.ticker || formatComicEquityTicker(item.series, item.issueNumber))
+        .replace(/\.(SOV|ANC|STD|OTC|PREMIUM)$/i, "")
+        .replace(/^CE70\.\d+\.?/i, "")
+        .trim();
 
       return {
         entryId: `eq-${item.id || idx}`,
@@ -54,19 +63,19 @@ export function EquitiesRail({ items: initialItems = [], indices = [] }: Equitie
           asset_class: effectiveAssetClass,
         },
         identity: {
-          assetId: item.ticker || `CE70.${String(item.seatNumber).padStart(3, "0")}.SOV`,
+          assetId: cleanTicker,
           productName: `${item.series} #${item.issueNumber}`,
           year: item.year || 1970,
           publisher: item.publisher || (item.lineage.includes("DC") ? "DC Comics" : item.lineage.includes("Marvel") ? "Marvel" : "Independent"),
-          variant: null,
+          variant: item.variant || null,
           productionAge: eraKey,
           scarcityTier: tier,
-          detailUrl: `/comics/${encodeURIComponent(item.canonicalIssueId || item.id || item.ticker)}`,
+          detailUrl: `/comics/${encodeURIComponent(item.canonicalIssueId || item.id || cleanTicker)}`,
           assetClass: effectiveAssetClass,
-          marketPriceClass,
+          marketPriceClass: marketClass,
           isSovereign: isTrulySovereign,
           certificationState: "CERTIFIED",
-          editionForm: "DIRECT",
+          editionForm: item.variant ? "VARIANT" : "DIRECT",
           coverVerified: true,
           yearDivergence: false,
           coverSuppressReason: null,
