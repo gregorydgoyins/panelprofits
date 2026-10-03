@@ -129,6 +129,10 @@ export const EquityCard = React.memo(function EquityCard({
   const rimColor = borderColor;
   const rim = (a: number) => withAlpha(rimColor, a);
 
+  if (!coverUrl || imgError) {
+    return null;
+  }
+
   const cardStyle: React.CSSProperties = {
     width: "215px",
     minWidth: "215px",
@@ -173,48 +177,15 @@ export const EquityCard = React.memo(function EquityCard({
           backgroundColor: "#060a12",
         }}
       >
-        {/* Placeholder background fallback */}
-        {(!coverUrl || imgError || !imgLoaded) && (
+        {/* Neutral loading skeleton (only before image load, zero placeholder graphics) */}
+        {!imgLoaded && (
           <div
             style={{
               position: "absolute",
               inset: 0,
-              background: `linear-gradient(160deg, ${withAlpha(borderColor, 0.15)} 0%, #0a0f1e 45%, ${withAlpha(borderColor, 0.08)} 100%)`,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "6px",
+              backgroundColor: "#0a0f1e",
             }}
-          >
-            <span
-              style={{
-                fontSize: "60px",
-                lineHeight: 1,
-                color: withAlpha(borderColor, 0.25),
-                fontFamily: "var(--font-sans, system-ui)",
-                fontWeight: 600,
-                letterSpacing: "-2px",
-              }}
-            >
-              {issueNum || "?"}
-            </span>
-            <span
-              style={{
-                fontSize: "9px",
-                color: withAlpha(borderColor, 0.38),
-                fontFamily: "var(--font-sans, system-ui)",
-                fontWeight: 500,
-                textTransform: "uppercase",
-                letterSpacing: "1.5px",
-                textAlign: "center",
-                maxWidth: "150px",
-                lineHeight: 1.3,
-              }}
-            >
-              {series.slice(0, 24)}
-            </span>
-          </div>
+          />
         )}
 
         {/* Pin button — visible on hover or when pinned */}
