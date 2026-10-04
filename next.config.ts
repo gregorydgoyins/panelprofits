@@ -11,6 +11,10 @@ const nextConfig: NextConfig = {
       "@radix-ui/react-slot",
     ],
   },
+  outputFileTracingIncludes: {
+    "/comics/[id]": ["./data/pp115k.sqlite"],
+    "/api/**/*": ["./data/pp115k.sqlite"],
+  },
   images: {
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 2592000, // 30 days
