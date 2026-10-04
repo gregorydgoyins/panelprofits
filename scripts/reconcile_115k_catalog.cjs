@@ -58,9 +58,21 @@ function parseCsvLine(line) {
 
 function parseDollar(val) {
   if (!val) return null;
+  const s = String(val).trim();
+  const usdMatch = s.match(/(?:\$|USD\s*)?(\d+(?:\.\d{1,2})?)\s*(?:USD|\$)?/i);
+  if (usdMatch) {
+    const num = parseFloat(usdMatch[1]);
+    if (!isNaN(num) && num > 0) return Math.round(num * 100) / 100;
+  }
+  const firstPart = s.split(/[;/]/)[0];
+  const m = firstPart.match(/(\d+(?:\.\d{1,2})?)/);
+  if (m) {
+    const num = parseFloat(m[1]);
+    if (!isNaN(num) && num > 0) return Math.round(num * 100) / 100;
+  }
   const clean = String(val).replace(/[^0-9.]/g, '');
   const num = parseFloat(clean);
-  return isNaN(num) || num <= 0 ? null : num;
+  return isNaN(num) || num <= 0 ? null : Math.round(num * 100) / 100;
 }
 
 // 1. Load PriceCharting CSVs into memory map
