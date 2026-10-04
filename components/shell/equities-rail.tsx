@@ -11,7 +11,6 @@ import { EquityCard } from "@/components/tickers/equity-card";
 
 const CARD_W = 227; // 215px card + 12px gap
 const SCROLL_SPEED = 150; // px/s (rapid live trading floor ticker motion)
-const FETCH_MS = 20 * 1000; // Rotate pool every 20 seconds for continuous variety
 const MAX_FETCHES = 100_000; // Continuous rotation across 115,712 Panel Profits catalog
 
 interface EquitiesRailProps {
@@ -42,7 +41,7 @@ export function EquitiesRail({ items: initialItems = [], indices = [], initialOf
 
       const itemGrade = String(item.referenceGrade || "9.8").trim();
       const bench = lookupReferenceFmv(item.seatNumber, item.title, item.canonicalIssueId);
-      const isTrulySovereign = isProvenSovereignCopy(itemGrade, bench, {
+      const isTrulySovereign = !item.variant && isProvenSovereignCopy(itemGrade, bench, {
         isVariant: Boolean(item.variant),
         variantName: item.variant,
       });
@@ -58,6 +57,15 @@ export function EquitiesRail({ items: initialItems = [], indices = [], initialOf
         ? item.ticker.replace(/^\$/, "").replace(/\.(SOV|ANC|STD|OTC|PREMIUM)$/i, "").trim()
         : formatComicEquityTicker(item.series, item.issueNumber);
 
+      const vLower = (item.variant || "").toLowerCase();
+      const editionForm = vLower.includes("newsstand")
+        ? "NEWSSTAND"
+        : vLower.includes("print")
+        ? "REPRINT"
+        : item.variant
+        ? "VARIANT"
+        : "DIRECT";
+
       return {
         entryId: `eq-${item.id || idx}`,
         coverImageUrl: item.coverUrl || null,
@@ -71,7 +79,9 @@ export function EquitiesRail({ items: initialItems = [], indices = [], initialOf
         },
         identity: {
           assetId: cleanTicker,
-          productName: `${item.series} #${item.issueNumber}`,
+          productName: item.variant
+            ? `${item.series} #${item.issueNumber} [${item.variant}]`
+            : `${item.series} #${item.issueNumber}`,
           year: item.year || 1990,
           publisher: item.publisher || (item.lineage.includes("DC") ? "DC Comics" : item.lineage.includes("Marvel") ? "Marvel" : "Independent"),
           variant: item.variant || null,
@@ -82,7 +92,7 @@ export function EquitiesRail({ items: initialItems = [], indices = [], initialOf
           marketPriceClass: marketClass,
           isSovereign: isTrulySovereign,
           certificationState: "CERTIFIED",
-          editionForm: item.variant ? "VARIANT" : "DIRECT",
+          editionForm,
           coverVerified: true,
           yearDivergence: false,
           coverSuppressReason: null,
@@ -228,11 +238,6 @@ export function EquitiesRail({ items: initialItems = [], indices = [], initialOf
     }
   }, [fetchBatch, initialEquityItems.length, seedOffset]);
 
-  React.useEffect(() => {
-    const id = setInterval(fetchBatch, FETCH_MS);
-    return () => clearInterval(id);
-  }, [fetchBatch]);
-
   // Pause on hover via direct DOM style manipulation — zero React re-renders
   const handleEnter = React.useCallback(() => {
     if (trackRef.current) trackRef.current.style.animationPlayState = "paused";
@@ -294,7 +299,7 @@ export function EquitiesRail({ items: initialItems = [], indices = [], initialOf
               <div key={copy} style={{ display: "flex", gap: "12px", paddingLeft: "16px", paddingRight: "12px", flexShrink: 0 }}>
                 {listToRender.map((item, i) => (
                   <EquityCard
-                    key={`${copy}-${i}`}
+                    key={`${copy}-${item.entryId || item.identity?.assetId || i}`}
                     item={item}
                     index={copy === "a" ? i : i + listToRender.length}
                   />

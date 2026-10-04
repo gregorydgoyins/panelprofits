@@ -60,12 +60,12 @@ export async function GET(request: Request) {
 
     // Strict Sovereign Constitutional Gating:
     // ONLY authenticated CE70 benchmark constituent seats or certified landmark grails are Sovereign.
-    // General catalog equities are market securities (PREMIUM, STD, or OTC) and MUST NOT be labeled SOV.
-    const isTrulySovereign = Boolean(
+    // Variants, newsstands, reprints, and general catalog equities are strictly non-sovereign.
+    const isTrulySovereign = !item.variant && Boolean(
       (item as any).isSovereign === true ||
       String(item.id).startsWith("landmark-") ||
-      (item.seatType === "PRIMARY_DOMESTIC" && (item as any).seatNumber && (item as any).seatNumber <= 70 && !String(item.id).startsWith("block-") && !String(item.id).startsWith("pg-block-")) ||
-      String(item.lineage || "").toLowerCase().includes("sovereign landmark")
+      String(item.lineage || "").toLowerCase().includes("sovereign landmark") ||
+      (String(item.id).startsWith("seat-") && (item as any).seatNumber <= 65)
     );
 
     const marketClass = item.referenceFmvUsd >= 45 ? "PREMIUM" : item.referenceFmvUsd >= 20 ? "STD" : "OTC";

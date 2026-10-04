@@ -120,6 +120,61 @@ function upgradeCoverUrl(url: string | null | undefined): string | null {
   return trimmed;
 }
 
+function mapDbRow(r: any, idx: number, offset: number, blockIndex: number): SovereignEquityItem {
+  const rawYear = r.publication_year ? Number(r.publication_year) : null;
+  const eraKey = resolveEra(rawYear, r.origin_era || r.production_age);
+  const fmv = Number(r.fmv_usd || 24.50);
+  const cover = upgradeCoverUrl(r.cover_url);
+  const ticker = formatComicEquityTicker(r.series, r.issue_number);
+
+  return {
+    id: r.id || `block-${blockIndex}-${idx}`,
+    seatNumber: offset + idx + 1,
+    seatType: "PRIMARY_DOMESTIC",
+    ticker,
+    series: r.series,
+    issueNumber: r.issue_number || "1",
+    title: r.variant ? `${r.series} #${r.issue_number || "1"} [${r.variant}]` : (r.title || `${r.series} #${r.issue_number || "1"}`),
+    originEra: eraKey.toUpperCase(),
+    productionAge: eraKey,
+    lineage: `${r.publisher || "Verified"} Benchmark Constituent`,
+    referenceGrade: r.reference_grade || "9.8",
+    referenceFmvUsd: fmv,
+    priceFormatted: `$${fmv.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+    gregoryScore: 192.5,
+    deltaPercent: Number(r.delta_percent || 0.45),
+    status: "ACTIVE",
+    coverUrl: cover,
+    canonicalIssueId: r.id,
+    year: rawYear || (eraKey === "golden" ? 1945 : eraKey === "silver" ? 1964 : eraKey === "bronze" ? 1978 : eraKey === "copper" ? 1988 : 2005),
+    publisher: resolveAuthoritativePublisher(r.series, r.publisher),
+    variant: r.variant || null,
+  };
+}
+
+function interleaveItems(
+  baseItems: SovereignEquityItem[],
+  variantItems: SovereignEquityItem[],
+  targetTotal = QUEUE_BLOCK_SIZE
+): SovereignEquityItem[] {
+  const result: SovereignEquityItem[] = [];
+  let b = 0;
+  let v = 0;
+  // Interleave 1 variant every 4th slot (~25% variants / newsstands / reprints)
+  while (result.length < targetTotal && (b < baseItems.length || v < variantItems.length)) {
+    if (result.length % 4 === 3 && v < variantItems.length) {
+      result.push(variantItems[v++]);
+    } else if (b < baseItems.length) {
+      result.push(baseItems[b++]);
+    } else if (v < variantItems.length) {
+      result.push(variantItems[v++]);
+    } else {
+      break;
+    }
+  }
+  return result;
+}
+
 /**
  * Loads a full 5,000-comic queue block from storage (SQLite or PostgreSQL)
  */
@@ -138,124 +193,94 @@ async function loadQueueBlock(blockIndex: number, era?: string): Promise<Soverei
   const sqlite = getSqliteDb();
   if (sqlite) {
     try {
-      let query = `
+      let baseSql = `
         SELECT id, series, issue_number, title, publication_year, publisher, 
                fmv_usd, price_formatted, cover_url, ticker, origin_era, production_age, 
                reference_grade, gregory_score, delta_percent, status, variant 
         FROM verified_equities 
-        WHERE fmv_usd >= 17.01 AND cover_url IS NOT NULL AND cover_url != ''
+        WHERE fmv_usd >= 17.01 AND cover_url IS NOT NULL AND cover_url != '' AND (variant IS NULL OR variant = '')
       `;
-      const params: any[] = [];
+      let varSql = `
+        SELECT id, series, issue_number, title, publication_year, publisher, 
+               fmv_usd, price_formatted, cover_url, ticker, origin_era, production_age, 
+               reference_grade, gregory_score, delta_percent, status, variant 
+        FROM verified_equities 
+        WHERE fmv_usd >= 17.01 AND cover_url IS NOT NULL AND cover_url != '' AND variant IS NOT NULL AND variant != ''
+      `;
+      const baseParams: any[] = [];
+      const varParams: any[] = [];
       if (era && era !== "all") {
-        query += ` AND (LOWER(production_age) = ? OR LOWER(origin_era) = ?)`;
-        params.push(era.toLowerCase(), era.toLowerCase());
+        baseSql += ` AND (LOWER(production_age) = ? OR LOWER(origin_era) = ?)`;
+        baseParams.push(era.toLowerCase(), era.toLowerCase());
+        varSql += ` AND (LOWER(production_age) = ? OR LOWER(origin_era) = ?)`;
+        varParams.push(era.toLowerCase(), era.toLowerCase());
       }
-      query += ` ORDER BY fmv_usd DESC, id ASC LIMIT ? OFFSET ?`;
-      params.push(limit, offset % 38957);
+      baseSql += ` ORDER BY fmv_usd DESC, id ASC LIMIT ? OFFSET ?`;
+      baseParams.push(Math.floor(limit * 0.8), (offset % 38957));
 
-      const rows = sqlite.prepare(query).all(...params) as any[];
-      if (rows && rows.length > 0) {
-        items = rows.map((r, idx) => {
-          const rawYear = r.publication_year ? Number(r.publication_year) : null;
-          const eraKey = resolveEra(rawYear, r.origin_era || r.production_age);
-          const fmv = Number(r.fmv_usd || 24.50);
-          const cover = upgradeCoverUrl(r.cover_url);
-          const ticker = formatComicEquityTicker(r.series, r.issue_number);
+      varSql += ` ORDER BY fmv_usd DESC, id ASC LIMIT ? OFFSET ?`;
+      varParams.push(Math.ceil(limit * 0.25), Math.floor((offset * 0.2) % 3445));
 
-          return {
-            id: r.id || `block-${blockIndex}-${idx}`,
-            seatNumber: offset + idx + 1,
-            seatType: "PRIMARY_DOMESTIC",
-            ticker,
-            series: r.series,
-            issueNumber: r.issue_number || "1",
-            title: r.title || `${r.series} #${r.issue_number || "1"}`,
-            originEra: eraKey.toUpperCase(),
-            productionAge: eraKey,
-            lineage: `${r.publisher || "Verified"} Benchmark Constituent`,
-            referenceGrade: r.reference_grade || "9.8",
-            referenceFmvUsd: fmv,
-            priceFormatted: `$${fmv.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-            gregoryScore: 192.5,
-            deltaPercent: Number(r.delta_percent || 0.45),
-            status: "ACTIVE",
-            coverUrl: cover,
-            canonicalIssueId: r.id,
-            year: rawYear || (eraKey === "golden" ? 1945 : eraKey === "silver" ? 1964 : eraKey === "bronze" ? 1978 : eraKey === "copper" ? 1988 : 2005),
-            publisher: resolveAuthoritativePublisher(r.series, r.publisher),
-            variant: r.variant || null,
-          };
-        });
-      }
+      const baseRows = sqlite.prepare(baseSql).all(...baseParams) as any[];
+      const varRows = sqlite.prepare(varSql).all(...varParams) as any[];
+
+      const mappedBase = (baseRows || []).map((r, idx) => mapDbRow(r, idx, offset, blockIndex));
+      const mappedVar = (varRows || []).map((r, idx) => mapDbRow(r, idx, offset, blockIndex));
+
+      items = interleaveItems(mappedBase, mappedVar, limit);
     } catch (sqliteErr) {
       console.warn("Notice loading queue block from sqlite:", sqliteErr);
     }
   }
 
-  // Source 2: Remote PostgreSQL (Supabase) via verified_equities and comics
+  // Source 2: Remote PostgreSQL (Supabase) via verified_equities
   if (items.length === 0) {
     try {
       const db = createCleanReadOnlyServerClient();
-      let query = db
+      let baseQuery = db
         .from("verified_equities")
         .select("id, series, issue_number, title, publication_year, publisher, fmv_usd, price_formatted, cover_url, ticker, origin_era, production_age, reference_grade, delta_percent, variant")
         .gte("fmv_usd", 17.01)
+        .or("variant.is.null,variant.eq.")
+        .not("cover_url", "is", null)
+        .neq("cover_url", "")
+        .not("cover_url", "like", "%files1.comics.org%")
+        .not("cover_url", "like", "%526.jpg%");
+
+      let varQuery = db
+        .from("verified_equities")
+        .select("id, series, issue_number, title, publication_year, publisher, fmv_usd, price_formatted, cover_url, ticker, origin_era, production_age, reference_grade, delta_percent, variant")
+        .gte("fmv_usd", 17.01)
+        .not("variant", "is", null)
+        .neq("variant", "")
         .not("cover_url", "is", null)
         .neq("cover_url", "")
         .not("cover_url", "like", "%files1.comics.org%")
         .not("cover_url", "like", "%526.jpg%");
 
       if (era && era !== "all") {
-        query = query.or(`production_age.ilike.${era},origin_era.ilike.${era}`);
+        baseQuery = baseQuery.or(`production_age.ilike.${era},origin_era.ilike.${era}`);
+        varQuery = varQuery.or(`production_age.ilike.${era},origin_era.ilike.${era}`);
       }
 
-      // Safe circular offset across verified pool
-      const safePgOffset = offset % 38957;
-      query = query
-        .order("fmv_usd", { ascending: false })
-        .order("id", { ascending: true })
-        .range(safePgOffset, safePgOffset + limit - 1);
+      const safeBaseOffset = offset % 38957;
+      const safeVarOffset = Math.floor((offset * 0.2) % 3445);
 
-      const { data, error } = await query;
-      if (data && data.length > 0) {
-        items = data.map((r, idx) => {
-          const rawYear = r.publication_year ? Number(r.publication_year) : null;
-          const eraKey = resolveEra(rawYear, r.origin_era || r.production_age);
-          const fmv = Number(r.fmv_usd || 24.50);
-          const cover = upgradeCoverUrl(r.cover_url);
-          const ticker = formatComicEquityTicker(r.series, r.issue_number);
+      const [baseRes, varRes] = await Promise.all([
+        baseQuery.order("fmv_usd", { ascending: false }).order("id", { ascending: true }).range(safeBaseOffset, safeBaseOffset + Math.floor(limit * 0.8) - 1),
+        varQuery.order("fmv_usd", { ascending: false }).order("id", { ascending: true }).range(safeVarOffset, safeVarOffset + Math.ceil(limit * 0.25) - 1),
+      ]);
 
-          return {
-            id: r.id || `pg-block-${blockIndex}-${idx}`,
-            seatNumber: offset + idx + 1,
-            seatType: "PRIMARY_DOMESTIC",
-            ticker,
-            series: r.series,
-            issueNumber: r.issue_number || "1",
-            title: r.title || `${r.series} #${r.issue_number || "1"}`,
-            originEra: eraKey.toUpperCase(),
-            productionAge: eraKey,
-            lineage: `${r.publisher || "Verified"} Benchmark Constituent`,
-            referenceGrade: r.reference_grade || "9.8",
-            referenceFmvUsd: fmv,
-            priceFormatted: `$${fmv.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-            gregoryScore: 192.5,
-            deltaPercent: Number(r.delta_percent || 0.45),
-            status: "ACTIVE",
-            coverUrl: cover,
-            canonicalIssueId: r.id,
-            year: rawYear || (eraKey === "golden" ? 1945 : eraKey === "silver" ? 1964 : eraKey === "bronze" ? 1978 : eraKey === "copper" ? 1988 : 2005),
-            publisher: resolveAuthoritativePublisher(r.series, r.publisher),
-            variant: r.variant || null,
-          };
-        });
-      }
+      const mappedBase = (baseRes.data || []).map((r, idx) => mapDbRow(r, idx, offset, blockIndex));
+      const mappedVar = (varRes.data || []).map((r, idx) => mapDbRow(r, idx, offset, blockIndex));
+
+      items = interleaveItems(mappedBase, mappedVar, limit);
     } catch (pgErr) {
       console.warn("Notice loading queue block from postgres:", pgErr);
     }
   }
 
-  // Prepend canonical landmark sovereigns to Block 0 so the apex keys headline the first queue
+  // Prepend & interleave canonical landmark sovereigns in Block 0 with apex variants/newsstands
   if (blockIndex === 0 && (!era || era === "all")) {
     const landmarkItems: SovereignEquityItem[] = LANDMARK_SOVEREIGNS.map((lm, idx) => ({
       id: `landmark-${lm.ticker.toLowerCase()}-${idx}`,
@@ -281,10 +306,31 @@ async function loadQueueBlock(blockIndex: number, era?: string): Promise<Soverei
       variant: null,
     }));
 
-    // Deduplicate against landmarks
     const seen = new Set(landmarkItems.map(l => `${l.series} #${l.issueNumber}`.toLowerCase()));
-    const filteredItems = items.filter(i => !seen.has(`${i.series} #${i.issueNumber}`.toLowerCase()));
-    items = [...landmarkItems, ...filteredItems];
+    const remainingItems = items.filter(i => !seen.has(`${i.series} #${i.issueNumber}`.toLowerCase()));
+
+    const topVariants = remainingItems.filter(i => Boolean(i.variant));
+    const regularItems = remainingItems.filter(i => !i.variant);
+
+    // Interleave landmarks with top variants every 4th slot so Block 0 starts with rich variety
+    const interleavedLandmarks: SovereignEquityItem[] = [];
+    let lIdx = 0;
+    let vIdx = 0;
+    while (lIdx < landmarkItems.length || (vIdx < topVariants.length && vIdx < 20)) {
+      if (interleavedLandmarks.length % 4 === 3 && vIdx < topVariants.length) {
+        interleavedLandmarks.push(topVariants[vIdx++]);
+      } else if (lIdx < landmarkItems.length) {
+        interleavedLandmarks.push(landmarkItems[lIdx++]);
+      } else if (vIdx < topVariants.length) {
+        interleavedLandmarks.push(topVariants[vIdx++]);
+      } else {
+        break;
+      }
+    }
+
+    const remainingVariants = topVariants.slice(vIdx);
+    const tailItems = interleaveItems(regularItems, remainingVariants, QUEUE_BLOCK_SIZE - interleavedLandmarks.length);
+    items = [...interleavedLandmarks, ...tailItems];
   }
 
   // Save to block cache

@@ -146,6 +146,11 @@ export const EquityCard = React.memo(function EquityCard({
   const isProvenSovereign = identity.isSovereign === true && !isTrueVariant && !isNewsstand && !isReprint;
 
   const coverUrl = item?.coverImageUrl || null;
+  React.useEffect(() => {
+    setImgLoaded(false);
+    setImgError(false);
+  }, [coverUrl]);
+
   const borderColor = eraColors.border;
   const rimColor = borderColor;
   const rim = (a: number) => withAlpha(rimColor, a);
@@ -454,15 +459,21 @@ export const EquityCard = React.memo(function EquityCard({
               }}
             />
             <span
+              title="30-day recorded secondary market sales delta (CGC/auction historical price guide movement)"
               style={{
                 fontSize: "10px",
                 color: delta.color,
                 fontFamily: "var(--font-sans, system-ui)",
                 fontWeight: 500,
                 flexShrink: 0,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "2px",
               }}
             >
-              {delta.arrow} {delta.text}
+              <span style={{ fontSize: "8px", opacity: 0.65, fontWeight: 600, letterSpacing: "0.04em" }}>30D</span>
+              <span>{delta.arrow}</span>
+              <span>{delta.text}</span>
             </span>
           </div>
 
