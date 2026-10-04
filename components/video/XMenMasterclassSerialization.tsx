@@ -10,6 +10,7 @@ export interface MasterclassChapter {
   id: string;
   chapterNumber: number;
   title: string;
+  videoId: string;
   timecodeStart: string;
   timecodeEnd: string;
   startSeconds: number;
@@ -34,6 +35,7 @@ export const CBG19_XMEN_CHAPTERS: MasterclassChapter[] = [
     id: "cbg19-ch1",
     chapterNumber: 1,
     title: "The Silver Age Genesis (1963): Stan Lee, Jack Kirby & The Civil Rights Metaphor",
+    videoId: "BvWDjHWgNgc",
     timecodeStart: "00:00",
     timecodeEnd: "38:15",
     startSeconds: 0,
@@ -57,6 +59,7 @@ export const CBG19_XMEN_CHAPTERS: MasterclassChapter[] = [
     id: "cbg19-ch2",
     chapterNumber: 2,
     title: "Magneto & The Brotherhood: Radical Survivalism vs. Assimilation",
+    videoId: "BvWDjHWgNgc",
     timecodeStart: "38:16",
     timecodeEnd: "1:15:30",
     startSeconds: 2296,
@@ -80,6 +83,7 @@ export const CBG19_XMEN_CHAPTERS: MasterclassChapter[] = [
     id: "cbg19-ch3",
     chapterNumber: 3,
     title: "The 1975 Resuscitation: Giant-Size X-Men #1 & The Claremont Renaissance",
+    videoId: "BvWDjHWgNgc",
     timecodeStart: "1:15:31",
     timecodeEnd: "1:58:45",
     startSeconds: 4531,
@@ -103,9 +107,10 @@ export const CBG19_XMEN_CHAPTERS: MasterclassChapter[] = [
     id: "cbg19-ch4",
     chapterNumber: 4,
     title: "Cosmic Tragedy & Editorial Warfare: The Phoenix & Dark Phoenix Saga",
+    videoId: "NjGUE8XaUn4",
     timecodeStart: "1:58:46",
     timecodeEnd: "2:48:10",
-    startSeconds: 7126,
+    startSeconds: 0,
     durationMinutes: 49,
     headline: "John Byrne, Chris Claremont, and Jim Shooter: The Climax That Shook Marvel Editorial",
     forensicSummary:
@@ -126,9 +131,10 @@ export const CBG19_XMEN_CHAPTERS: MasterclassChapter[] = [
     id: "cbg19-ch5",
     chapterNumber: 5,
     title: "Dystopian Climax: Days of Future Past & The Legacy of Mutantkind",
+    videoId: "NjGUE8XaUn4",
     timecodeStart: "2:48:11",
     timecodeEnd: "3:34:00",
-    startSeconds: 10091,
+    startSeconds: 3000,
     durationMinutes: 46,
     headline: "Sentinels, Concentration Camps, and the Template for Modern Sci-Fi Dystopia",
     forensicSummary:
@@ -190,7 +196,7 @@ export function XMenMasterclassSerialization() {
           {/* Authentic Video Player Embed with Timecode Offset */}
           <div className="relative aspect-video w-full rounded-xl overflow-hidden border border-indigo-500/30 bg-black shadow-lg">
             <iframe
-              src={`https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?start=${activeChapter.startSeconds}&autoplay=0`}
+              src={`https://www.youtube-nocookie.com/embed/${activeChapter.videoId}?start=${activeChapter.startSeconds}&autoplay=0`}
               title={activeChapter.title}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
@@ -206,7 +212,7 @@ export function XMenMasterclassSerialization() {
               <span className="text-slate-500">({activeChapter.durationMinutes} min chapter)</span>
             </div>
             <a
-              href={`https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=${activeChapter.startSeconds}`}
+              href={`https://www.youtube.com/watch?v=${activeChapter.videoId}&t=${activeChapter.startSeconds}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-[11px] text-cyan-400 hover:text-cyan-300 transition-colors"

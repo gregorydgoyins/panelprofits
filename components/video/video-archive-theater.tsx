@@ -37,8 +37,8 @@ const CURATED_VIDEO_ARCHIVE: VideoArchiveItem[] = [
     description: "A comprehensive forensic deep dive into secondary market clearing mechanisms, analyzing why certified 9.8 universal copies serve as sovereign collateral across institutional auctions.",
     video: {
       provider: "youtube",
-      embedUrl: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
-      videoId: "dQw4w9WgXcQ",
+      embedUrl: "https://www.youtube-nocookie.com/embed/GnNWNv4n-qU",
+      videoId: "GnNWNv4n-qU",
     },
     relatedComic: {
       id: "ASM01",
@@ -59,8 +59,8 @@ const CURATED_VIDEO_ARCHIVE: VideoArchiveItem[] = [
     description: "Detailed historical examination of Action Comics #1, tracing the known pedigree copies, restoration discoveries, and the macroeconomic trajectory of Jerry Siegel & Joe Shuster's masterwork.",
     video: {
       provider: "youtube",
-      embedUrl: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
-      videoId: "dQw4w9WgXcQ",
+      embedUrl: "https://www.youtube-nocookie.com/embed/BvWDjHWgNgc",
+      videoId: "BvWDjHWgNgc",
     },
     relatedComic: {
       id: "ACT01",
@@ -81,8 +81,8 @@ const CURATED_VIDEO_ARCHIVE: VideoArchiveItem[] = [
     description: "Exploring the critical adjudication rubric applied to determine museum-grade aesthetic merit, authorial handwriting, and cultural gravity beyond mere speculative bubbles.",
     video: {
       provider: "youtube",
-      embedUrl: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
-      videoId: "dQw4w9WgXcQ",
+      embedUrl: "https://www.youtube-nocookie.com/embed/NjGUE8XaUn4",
+      videoId: "NjGUE8XaUn4",
     },
   },
   {
@@ -97,8 +97,8 @@ const CURATED_VIDEO_ARCHIVE: VideoArchiveItem[] = [
     description: "Panel-by-panel sequential analysis of Jack Kirby and Stan Lee's groundbreaking Galactus and Silver Surfer saga, studying how page layouts evoke cosmic dread and scale.",
     video: {
       provider: "youtube",
-      embedUrl: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
-      videoId: "dQw4w9WgXcQ",
+      embedUrl: "https://www.youtube-nocookie.com/embed/GnNWNv4n-qU",
+      videoId: "GnNWNv4n-qU",
     },
     relatedComic: {
       id: "FF048",
@@ -119,8 +119,8 @@ const CURATED_VIDEO_ARCHIVE: VideoArchiveItem[] = [
     description: "Comparing secondary market float, graded census totals, and annualized ROI between Len Wein's Giant-Size X-Men #1 and the first full appearance of Wolverine in Hulk #181.",
     video: {
       provider: "youtube",
-      embedUrl: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
-      videoId: "dQw4w9WgXcQ",
+      embedUrl: "https://www.youtube-nocookie.com/embed/BvWDjHWgNgc",
+      videoId: "BvWDjHWgNgc",
     },
     relatedComic: {
       id: "HK181",
@@ -141,8 +141,8 @@ const CURATED_VIDEO_ARCHIVE: VideoArchiveItem[] = [
     description: "Forensic breakdown of Johnny Craig's infamous Crime SuspenStories #22 severed head cover and the subsequent implementation of the Comics Code Authority that reshaped the industry.",
     video: {
       provider: "youtube",
-      embedUrl: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
-      videoId: "dQw4w9WgXcQ",
+      embedUrl: "https://www.youtube-nocookie.com/embed/TdBAHexVYzc",
+      videoId: "TdBAHexVYzc",
     },
     relatedComic: {
       id: "CSS22",
@@ -163,8 +163,8 @@ const CURATED_VIDEO_ARCHIVE: VideoArchiveItem[] = [
     description: "Scott Niswander deconstructs the biochemical reality of Dr. Abraham Erskine's Super Soldier Serum, demonstrating how modern CRISPR-Cas9 genome editing, myostatin suppression, and telomerase therapy map to Steve Rogers' transformation in Captain America Comics #1.",
     video: {
       provider: "youtube",
-      embedUrl: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
-      videoId: "dQw4w9WgXcQ",
+      embedUrl: "https://www.youtube-nocookie.com/embed/TdBAHexVYzc",
+      videoId: "TdBAHexVYzc",
     },
     relatedComic: {
       id: "CAP01",
@@ -185,8 +185,8 @@ const CURATED_VIDEO_ARCHIVE: VideoArchiveItem[] = [
     description: "Danika XXIX delivers the legendary 3.5-hour cinematic masterwork charting the complete history of Marvel's mutantkind: Stan Lee and Jack Kirby's Silver Age, the Civil Rights mutant metaphor, Chris Claremont and Dave Cockrum's 1975 renaissance, the Dark Phoenix tragedy, and Days of Future Past dystopian science fiction.",
     video: {
       provider: "youtube",
-      embedUrl: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
-      videoId: "dQw4w9WgXcQ",
+      embedUrl: "https://www.youtube-nocookie.com/embed/BvWDjHWgNgc",
+      videoId: "BvWDjHWgNgc",
     },
     relatedComic: {
       id: "GSX01",
