@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getContinuousQueueSlice, TOTAL_CATALOG_UNIVERSE } from "@/lib/equity/continuous-queue-engine";
 import { getAuthoritativeCoverStrict } from "@/lib/comics/cover-authority";
+import { resolveAuthoritativePublisher } from "@/lib/comics/publisher-authority";
 import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
 import type { EquityItem, EquityResponse } from "@/lib/equity/ticker-types";
 
@@ -26,7 +27,8 @@ export async function GET(request: Request) {
 
   // Pre-Queue verification gate: cover must be valid image URL & FMV >= $17.01
   const validBaseItems = baseItems.filter((item) => {
-    const cover = item.coverUrl || getAuthoritativeCoverStrict(item.series, item.issueNumber, item.publisher || "Independent", item.year || 1990);
+    const authoritativePublisher = resolveAuthoritativePublisher(item.series, item.publisher);
+    const cover = item.coverUrl || getAuthoritativeCoverStrict(item.series, item.issueNumber, authoritativePublisher, item.year || 1990);
     if (!cover) return false;
     if (cover.includes("svg") || cover.startsWith("data:image/svg")) return false;
     if ((item.referenceFmvUsd || 0) < 17.01) return false;
@@ -55,12 +57,32 @@ export async function GET(request: Request) {
     }
 
     const itemGrade = String(item.referenceGrade || "9.8").trim();
-    const isTrulySovereign = itemGrade === "9.8" && !item.variant;
+
+    // Strict Sovereign Constitutional Gating:
+    // ONLY authenticated CE70 benchmark constituent seats or certified landmark grails are Sovereign.
+    // General catalog equities are market securities (PREMIUM, STD, or OTC) and MUST NOT be labeled SOV.
+    const isTrulySovereign = Boolean(
+      (item as any).isSovereign === true ||
+      String(item.id).startsWith("landmark-") ||
+      (item.seatType === "PRIMARY_DOMESTIC" && (item as any).seatNumber && (item as any).seatNumber <= 70 && !String(item.id).startsWith("block-") && !String(item.id).startsWith("pg-block-")) ||
+      String(item.lineage || "").toLowerCase().includes("sovereign landmark")
+    );
+
     const marketClass = item.referenceFmvUsd >= 45 ? "PREMIUM" : item.referenceFmvUsd >= 20 ? "STD" : "OTC";
     const effectiveAssetClass = isTrulySovereign ? "SOV" : marketClass;
 
-    const resolvedCover = item.coverUrl || getAuthoritativeCoverStrict(item.series, item.issueNumber, item.publisher || "Independent", item.year || 1990);
+    const authoritativePublisher = resolveAuthoritativePublisher(item.series, item.publisher);
+    const resolvedCover = item.coverUrl || getAuthoritativeCoverStrict(item.series, item.issueNumber, authoritativePublisher, item.year || 1990);
     const canonicalTicker = formatComicEquityTicker(item.series, item.issueNumber);
+
+    const vLower = (item.variant || "").toLowerCase();
+    const editionForm = vLower.includes("newsstand")
+      ? "NEWSSTAND"
+      : vLower.includes("print")
+      ? "REPRINT"
+      : item.variant
+      ? "VARIANT"
+      : "DIRECT";
 
     return {
       entryId: `eq-${item.id || idx}`,
@@ -79,7 +101,7 @@ export async function GET(request: Request) {
           ? `${item.series} #${item.issueNumber} [${item.variant}]`
           : `${item.series} #${item.issueNumber}`,
         year: item.year || 1990,
-        publisher: item.publisher || "Independent",
+        publisher: authoritativePublisher,
         variant: item.variant || null,
         productionAge: eraKey,
         scarcityTier: tier,
@@ -88,7 +110,7 @@ export async function GET(request: Request) {
         marketPriceClass: marketClass,
         isSovereign: isTrulySovereign,
         certificationState: "CERTIFIED",
-        editionForm: item.variant ? "VARIANT" : "DIRECT",
+        editionForm,
         coverVerified: true,
         yearDivergence: false,
         coverSuppressReason: null,

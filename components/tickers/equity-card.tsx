@@ -8,6 +8,7 @@ import { SCARCITY_NEON, ASSET_CLASS_CONFIG } from "@/lib/equity/ticker-constants
 import { resolveProductionAge, formatEraLabel, getDelta, parseSeriesIssue } from "@/lib/equity/ticker-utils";
 import { AnimatedPrice } from "@/components/shared/animated-price";
 import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
+import { resolveAuthoritativePublisher } from "@/lib/comics/publisher-authority";
 import type { EquityItem } from "@/lib/equity/ticker-types";
 
 const EQUITY_CARD_STYLE_ID = "equity-card-shadow-kf";
@@ -136,11 +137,13 @@ export const EquityCard = React.memo(function EquityCard({
     .replace(/\.(SOV|ANC|STD|OTC|PREMIUM)$/i, "")
     .toUpperCase();
 
-  // Strict Sovereign check:
-  // A Sovereign copy of a comic is a direct 9.8 copy of the comic (or proven highest sale where no 9.8 exists).
-  // It CANNOT be a modified, qualified, variant, or signature.
-  // If it cannot be proven to be a sovereign copy, it CANNOT be labeled a sovereign copy.
-  const isProvenSovereign = identity.isSovereign === true && !isTrueVariant && !isRawCopy;
+  // Newsstand, Reprint, Variant and Sovereign distinctions:
+  const isNewsstand = identity.editionForm === "NEWSSTAND" || Boolean(variantTag && variantTag.toLowerCase().includes("newsstand"));
+  const isReprint = identity.editionForm === "REPRINT" || Boolean(variantTag && (variantTag.toLowerCase().includes("print") || variantTag.toLowerCase().includes("printing")));
+  const isOtherVariant = isTrueVariant && !isNewsstand && !isReprint;
+
+  // Strict Sovereign check: ONLY authenticated CE70 benchmark seats.
+  const isProvenSovereign = identity.isSovereign === true && !isTrueVariant && !isNewsstand && !isReprint;
 
   const coverUrl = item?.coverImageUrl || null;
   const borderColor = eraColors.border;
@@ -295,10 +298,10 @@ export const EquityCard = React.memo(function EquityCard({
         {/* Publisher / era header */}
         {(() => {
           const rawPub = identity.publisher || "";
-          const publisher = /^unknown$/i.test(rawPub) ? "" : rawPub.replace(/\s+Comics$/i, "");
-          const pubColor = getPublisherColor(rawPub);
+          const publisher = resolveAuthoritativePublisher(series, rawPub);
+          const pubColor = getPublisherColor(publisher);
           const pubColorIsHex = pubColor.startsWith("#");
-          const pubBg = pubColorIsHex ? withAlpha(pubColor, 0.8) : pubColor;
+          const pubBg = pubColorIsHex ? withAlpha(pubColor, 0.85) : pubColor;
           return (
             <div
               style={{
@@ -517,27 +520,29 @@ export const EquityCard = React.memo(function EquityCard({
                   </span>
                 );
               })()}
-              {!isRawCopy && (
-                <span
-                  style={{
-                    fontSize: "8px",
-                    fontFamily: "var(--font-sans, system-ui)",
-                    fontWeight: 600,
-                    color: "rgba(255,255,255,0.9)",
-                    border: "1px solid rgba(255,255,255,0.30)",
-                    backgroundColor: "rgba(255,255,255,0.06)",
-                    borderRadius: "2px",
-                    padding: "1px 4px",
-                    lineHeight: "13px",
-                    letterSpacing: "0.2px",
-                  }}
-                >
-                  {pricing.grade}
-                </span>
-              )}
+              {/* Condition / Grade Badge */}
+              <span
+                title={isRawCopy ? "Ungraded / Loose physical copy" : `CGC/CBCS certified grade ${pricing.grade}`}
+                style={{
+                  fontSize: "8px",
+                  fontFamily: "var(--font-sans, system-ui)",
+                  fontWeight: 600,
+                  color: isRawCopy ? "#f59e0b" : "rgba(255,255,255,0.9)",
+                  border: isRawCopy ? "1px solid rgba(245,158,11,0.5)" : "1px solid rgba(255,255,255,0.30)",
+                  backgroundColor: isRawCopy ? "rgba(245,158,11,0.12)" : "rgba(255,255,255,0.06)",
+                  borderRadius: "2px",
+                  padding: "1px 4px",
+                  lineHeight: "13px",
+                  letterSpacing: "0.2px",
+                }}
+              >
+                {isRawCopy ? "RAW" : pricing.grade}
+              </span>
+
+              {/* Scarcity / Edition / Sovereign Badge */}
               {isProvenSovereign ? (
                 <span
-                  title="Verified Sovereign Copy: Direct 9.8 certified universal copy"
+                  title="Verified Sovereign Copy: Authenticated CE70 benchmark constituent"
                   style={{
                     fontSize: "8px",
                     fontFamily: "var(--font-sans, system-ui)",
@@ -553,7 +558,43 @@ export const EquityCard = React.memo(function EquityCard({
                 >
                   SOV
                 </span>
-              ) : isTrueVariant ? (
+              ) : isNewsstand ? (
+                <span
+                  title="Certified Newsstand Edition"
+                  style={{
+                    fontSize: "8px",
+                    fontFamily: "var(--font-sans, system-ui)",
+                    fontWeight: 700,
+                    color: "#34d399",
+                    backgroundColor: "rgba(52,211,153,0.18)",
+                    border: "1px solid rgba(52,211,153,0.6)",
+                    borderRadius: "2px",
+                    padding: "1px 4px",
+                    lineHeight: "13px",
+                    letterSpacing: "0.2px",
+                  }}
+                >
+                  NEWS
+                </span>
+              ) : isReprint ? (
+                <span
+                  title="Certified Subsequent Printing"
+                  style={{
+                    fontSize: "8px",
+                    fontFamily: "var(--font-sans, system-ui)",
+                    fontWeight: 700,
+                    color: "#38bdf8",
+                    backgroundColor: "rgba(56,189,248,0.18)",
+                    border: "1px solid rgba(56,189,248,0.6)",
+                    borderRadius: "2px",
+                    padding: "1px 4px",
+                    lineHeight: "13px",
+                    letterSpacing: "0.2px",
+                  }}
+                >
+                  {variantTag && variantTag.toLowerCase().includes("3rd") ? "3RD" : "2ND"}
+                </span>
+              ) : isOtherVariant ? (
                 <span
                   title="Certified Variant Edition"
                   style={{

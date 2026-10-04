@@ -16,6 +16,8 @@
 # sqlite temporary wal/shm
 *.sqlite-wal
 *.sqlite-shm
+data/*.csv
+*.bak
 
 # misc
 .DS_Store

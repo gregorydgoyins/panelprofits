@@ -18,6 +18,7 @@ import { ConnoisseurDossier } from "@/components/comics/connoisseur-dossier";
 import { EquityCandlestickChart } from "@/components/equity/equity-candlestick-chart";
 import { resolveIssueDebuts } from "@/lib/wiki/debut-resolver";
 import { getAuthoritativeCover } from "@/lib/comics/cover-authority";
+import { resolveAuthoritativePublisher } from "@/lib/comics/publisher-authority";
 import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
 import { Sparkles, BookOpen, Activity, ArrowUpRight } from "lucide-react";
 import { GcdBibliographicDossier } from "@/components/comics/gcd-bibliographic-dossier";
@@ -107,11 +108,13 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
   const gcdData = (comic.gcd_data as Record<string, any>) || {};
   const gcdBadges = (gcdData.key_badges as string[]) || [];
 
+  const authoritativePublisher = resolveAuthoritativePublisher(comic.series, comic.publisher);
+
   const investopediaMetrics = computeComicValuationMetrics({
     baseline_grade_9_8_value: comic.baseline_grade_9_8_value,
     pp_grade_9_8_price: comic.pp_grade_9_8_price,
     publication_year: comic.publication_year,
-    publisher: comic.publisher,
+    publisher: authoritativePublisher,
     series: comic.series,
     issue_number: comic.issue_number,
     census_total: censusDossier?.snapshot?.total_graded || 0,
@@ -149,7 +152,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
           <div className="rounded-xl border border-cyan-500/40 bg-graphite-900/90 p-4 shadow-xl portfolio-rimlight-hover">
             <ComicCover
               coverUrl={
-                getAuthoritativeCover(comic.series, comic.issue_number, comic.publisher, comic.publication_year) ||
+                getAuthoritativeCover(comic.series, comic.issue_number, authoritativePublisher, comic.publication_year) ||
                 comic.cover_retrieval_url ||
                 comic.cover_url ||
                 coverEvidence?.image_url
@@ -157,7 +160,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
               storagePath={comic.cover_storage_path || coverEvidence?.storage_path}
               series={seriesLabel}
               issueNumber={comic.issue_number}
-              publisher={comic.publisher}
+              publisher={authoritativePublisher}
               size="full"
               priority={true}
             />
@@ -188,7 +191,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
             <div className="space-y-2">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="default" className="text-xs">
-                  {comic.publisher || "INDEPENDENT PUBLISHER"}
+                  {authoritativePublisher}
                 </Badge>
                 <span className="font-mono text-xs px-2 py-0.5 rounded bg-cyan-950/70 border border-cyan-500/50 text-cyan-300 font-medium">
                   {tickerSymbol}
@@ -362,7 +365,23 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
             </div>
           </div>
 
-          {/* Interactive TradingView Candlestick & Volume Chart */}
+          {/* 1. Canonical Multi-Grade Pricing Dossier */}
+          <PricingDossier comic={comic} />
+
+          {/* 2. CGC Census and Graded Population Evidence */}
+          <CensusDossier dossier={censusDossier} />
+
+          {/* 3. Provenance & Cryptographic Lineage Card */}
+          <ProvenanceCard comic={comic} />
+
+          {/* 4. Investopedia Financial Valuation Lens & Cost Basis Calculator */}
+          <InvestopediaValuationLens
+            metrics={investopediaMetrics}
+            series={comic.series}
+            issueNumber={comic.issue_number}
+          />
+
+          {/* 5. Interactive TradingView Candlestick & Volume Chart */}
           <div className="rounded-xl border border-slate-700 bg-[#111319] p-4 sm:p-6 shadow-lg space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-700 pb-3">
               <div className="flex items-center gap-2">
@@ -389,28 +408,15 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
             />
           </div>
 
-          {/* Pricing Dossier */}
-          <PricingDossier comic={comic} />
-
-          {/* Investopedia Financial Valuation Lens & Cost Basis Calculator */}
-          <InvestopediaValuationLens
-            metrics={investopediaMetrics}
-            series={comic.series}
-            issueNumber={comic.issue_number}
-          />
-
-          {/* GCD Archival Bibliographic Dossier: Creators, Physical Specs & Story Arc */}
+          {/* 6. GCD Archival Bibliographic Dossier: Creators, Physical Specs & Story Arc */}
           <GcdBibliographicDossier
             gcdData={comic.gcd_data as any}
-            publisher={comic.publisher}
+            publisher={authoritativePublisher}
             series={comic.series}
             issueNumber={comic.issue_number}
           />
 
-          {/* Census and Graded Market Evidence */}
-          <CensusDossier dossier={censusDossier} />
-
-          {/* Connoisseur Dossier: Strictly calibrated for authenticated CE70 index constituent seats */}
+          {/* 7. Connoisseur Dossier: Strictly calibrated for authenticated CE70 index constituent seats */}
           {isCe70Seat && (
             <ConnoisseurDossier
               data={(comic as any).connoisseur_dossier || (comic.panel_profits_data as any)}
@@ -418,9 +424,6 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
               issueNumber={comic.issue_number}
             />
           )}
-
-          {/* Provenance & Source Inspection */}
-          <ProvenanceCard comic={comic} />
         </div>
       </div>
     </div>

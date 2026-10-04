@@ -70,26 +70,26 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
         <div>
           <div className="flex items-center gap-2">
             <h2 id="pricing-heading" className="text-lg font-semibold text-slate-100">
-              Sovereign Market Order Book & Execution Spreads
+              Price Evidence & Market Order Book by Grade Tier
             </h2>
             <span className="inline-flex items-center gap-1 rounded bg-emerald-950/60 border border-emerald-500/40 px-2 py-0.5 text-[10px] font-mono text-emerald-300">
               <ShieldCheck className="h-3 w-3 text-emerald-400" />
-              TRANSLATION LAYER ACTIVE
+              VERIFIED EVIDENCE ENGINE
             </span>
           </div>
           <p className="mt-1 text-xs text-slate-400">
-            Base market valuations decoded through the Panel Profits Translation Layer into empirical sovereign prices and bid/ask spreads. Ungraded and loose pricing represent raw physical unslabbed copies. Certified grading authorities (CGC, CBCS, PSA) never issue uncertified or RAW prices.
+            Recorded price evidence by source and grade tier. Ungraded / RAW pricing represents loose physical copies; certified grading authorities (CGC, CBCS, PSA) record authenticated slabbed grades only. Unpriced grades remain unpriced.
           </p>
         </div>
         <span className="text-xs text-slate-400 font-mono">
-          {GRADES.length} grade tiers · 6 sovereign exchange rungs
+          {GRADES.length} grade tiers · Multi-source market ladder
         </span>
       </div>
 
-      {/* 6-Grade Sovereign Order Book Shelf (Exact PriceCharting / Translation Layer Layout) */}
+      {/* 6-Grade Market Order Book Shelf */}
       <div>
         <div className="text-[11px] font-mono uppercase tracking-wider text-cyan-400 mb-2.5 flex items-center justify-between">
-          <span>Continuous Sovereign Execution Ladder (115,000 Universe)</span>
+          <span>Continuous Market Execution Ladder</span>
           <span className="text-[10px] text-slate-500 lowercase">bid/ask depth</span>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
@@ -189,7 +189,7 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
                       <div className="flex items-center gap-1.5">
                         <span>{source}</span>
                         {source === "Panel Profits" && (
-                          <span className="text-[10px] text-emerald-400/90 font-mono">(Sovereign)</span>
+                          <span className="text-[10px] text-emerald-400/90 font-mono">(Exchange FMV)</span>
                         )}
                         {source === "PriceCharting" && (
                           <span className="text-[10px] text-amber-400/80 font-mono">(Auction Sales)</span>

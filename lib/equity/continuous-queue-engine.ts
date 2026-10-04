@@ -12,6 +12,7 @@ import { createRequire } from "node:module";
 import { createCleanReadOnlyServerClient } from "@/lib/supabase/admin";
 import { formatComicEquityTicker } from "./ticker-formatting";
 import { resolveProductionAge } from "./ticker-utils";
+import { resolveAuthoritativePublisher } from "@/lib/comics/publisher-authority";
 import type { SovereignEquityItem } from "./canonical-equities";
 import landmarkSovereignsJson from "./landmark-sovereigns.json";
 
@@ -181,7 +182,7 @@ async function loadQueueBlock(blockIndex: number, era?: string): Promise<Soverei
             coverUrl: cover,
             canonicalIssueId: r.id,
             year: rawYear || (eraKey === "golden" ? 1945 : eraKey === "silver" ? 1964 : eraKey === "bronze" ? 1978 : eraKey === "copper" ? 1988 : 2005),
-            publisher: r.publisher || "Independent",
+            publisher: resolveAuthoritativePublisher(r.series, r.publisher),
             variant: r.variant || null,
           };
         });
@@ -244,7 +245,7 @@ async function loadQueueBlock(blockIndex: number, era?: string): Promise<Soverei
             coverUrl: cover,
             canonicalIssueId: r.id,
             year: rawYear || (eraKey === "golden" ? 1945 : eraKey === "silver" ? 1964 : eraKey === "bronze" ? 1978 : eraKey === "copper" ? 1988 : 2005),
-            publisher: r.publisher || "Independent",
+            publisher: resolveAuthoritativePublisher(r.series, r.publisher),
             variant: r.variant || null,
           };
         });
