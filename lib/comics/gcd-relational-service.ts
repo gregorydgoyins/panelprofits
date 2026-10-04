@@ -13,6 +13,7 @@ export interface GcdVariantItem {
   publicationDate: string;
   coverUrl?: string;
   catalogId?: string;
+  coverArtist?: string;
 }
 
 export interface GcdForeignEditionItem {
@@ -23,6 +24,9 @@ export interface GcdForeignEditionItem {
   language: string;
   publicationDate: string;
   issueNumber: string;
+  publisherName?: string;
+  notes?: string;
+  isDomesticSpecial?: boolean;
 }
 
 export interface GcdCreatorCredit {
@@ -172,6 +176,7 @@ export async function getGcdRelationalData(
         language: f.language,
         publicationDate: f.publication_date,
         issueNumber: String(f.number),
+        isDomesticSpecial: f.country === "United States",
       }));
 
       const result: GcdRelationalData = {
@@ -208,17 +213,46 @@ export async function getGcdRelationalData(
     }
 
     if (!issue && seriesName && issueNumber) {
-      const cleanSeries = seriesName.trim();
-      const cleanIssue = issueNumber.trim().replace(/^#/, "");
+      const cleanIssue = String(issueNumber).trim().replace(/^#/, "");
+      
+      // Extract target year if embedded in seriesName like "Absolute Batman (2024)"
+      const mYear = seriesName.match(/\((\d{4})\)/);
+      const targetYear = mYear ? parseInt(mYear[1], 10) : null;
+      
+      const cleanSeries = seriesName
+        .replace(/\s*\(\d{4}\)/g, "")
+        .replace(/\s*\([^)]*\)/g, "")
+        .trim();
+      const cleanSeriesNoThe = cleanSeries.toLowerCase().startsWith("the ")
+        ? cleanSeries.slice(4).trim()
+        : cleanSeries;
+      const cleanSeriesWithThe = `The ${cleanSeriesNoThe}`;
+
       issue = db
         .prepare(
           `SELECT i.id, i.series_id, i.number, i.publication_date, i.variant_of_id, i.variant_name, i.price, i.barcode, s.name as series_name
            FROM gcd_issue i
            JOIN gcd_series s ON i.series_id = s.id
-           WHERE s.name = ? AND i.number = ?
+           JOIN stddata_country c ON s.country_id = c.id
+           WHERE (s.name = ? COLLATE NOCASE OR s.name = ? COLLATE NOCASE OR s.name LIKE ? COLLATE NOCASE)
+             AND i.number = ?
+           ORDER BY
+             CASE WHEN s.country_id = 225 THEN 0 ELSE 1 END,
+             CASE WHEN ? IS NOT NULL AND s.year_began = ? THEN 0 ELSE 1 END,
+             CASE WHEN s.name = ? COLLATE NOCASE OR s.name = ? COLLATE NOCASE THEN 0 ELSE 1 END,
+             i.id ASC
            LIMIT 1`
         )
-        .get(cleanSeries, cleanIssue);
+        .get(
+          cleanSeriesNoThe,
+          cleanSeriesWithThe,
+          `${cleanSeriesNoThe}%`,
+          cleanIssue,
+          targetYear,
+          targetYear,
+          cleanSeriesNoThe,
+          cleanSeriesWithThe
+        );
     }
 
     if (!issue) {
@@ -242,6 +276,36 @@ export async function getGcdRelationalData(
       )
       .all(baseId, baseId) as any[];
 
+    // Fetch cover artists for these variants from sequence 0 credits
+    const variantArtistsMap = new Map<number, string>();
+    if (variantsRaw.length > 0) {
+      try {
+        const varIds = variantsRaw.map((v) => v.id);
+        const placeholders = varIds.map(() => "?").join(",");
+        const artistsRaw = db
+          .prepare(
+            `SELECT s.issue_id, c.gcd_official_name, ct.name as role
+             FROM gcd_story s
+             JOIN gcd_story_credit sc ON sc.story_id = s.id
+             JOIN gcd_creator c ON sc.creator_id = c.id
+             JOIN gcd_credit_type ct ON sc.credit_type_id = ct.id
+             WHERE s.issue_id IN (${placeholders}) AND s.sequence_number = 0`
+          )
+          .all(...varIds) as any[];
+
+        for (const a of artistsRaw) {
+          const existing = variantArtistsMap.get(a.issue_id);
+          if (!existing) {
+            variantArtistsMap.set(a.issue_id, a.gcd_official_name);
+          } else if (!existing.includes(a.gcd_official_name)) {
+            variantArtistsMap.set(a.issue_id, `${existing}, ${a.gcd_official_name}`);
+          }
+        }
+      } catch (creditErr) {
+        console.warn("Cover artist extraction for variants skipped:", creditErr);
+      }
+    }
+
     const variants: GcdVariantItem[] = variantsRaw.map((v) => ({
       id: v.id,
       issueNumber: String(v.number),
@@ -249,21 +313,39 @@ export async function getGcdRelationalData(
       price: v.price || "",
       barcode: v.barcode || "",
       publicationDate: v.publication_date || "",
+      coverArtist: variantArtistsMap.get(v.id),
     }));
 
-    // 2. Get all international / foreign editions linked via gcd_reprint
+    // 2. Get all international & foreign editions linked via gcd_reprint (both direct issue origin & story-level origin)
     const foreignRaw = db
       .prepare(
-        `SELECT r.id as reprint_id, r.target_issue_id, i.number, s.name as series_name, c.name as country, l.name as language, i.publication_date
+        `SELECT r.id as reprint_id, ti.id as target_issue_id, ti.number, s.name as series_name,
+                p.name as publisher_name, c.name as country, l.name as language,
+                ti.publication_date, r.notes
          FROM gcd_reprint r
-         JOIN gcd_issue i ON r.target_issue_id = i.id
-         JOIN gcd_series s ON i.series_id = s.id
+         JOIN gcd_issue ti ON r.target_issue_id = ti.id
+         JOIN gcd_series s ON ti.series_id = s.id
+         LEFT JOIN gcd_publisher p ON s.publisher_id = p.id
          JOIN stddata_country c ON s.country_id = c.id
          JOIN stddata_language l ON s.language_id = l.id
          WHERE r.origin_issue_id = ?
-         ORDER BY c.name ASC, i.publication_date ASC`
+
+         UNION
+
+         SELECT r.id as reprint_id, ti.id as target_issue_id, ti.number, s.name as series_name,
+                p.name as publisher_name, c.name as country, l.name as language,
+                ti.publication_date, r.notes
+         FROM gcd_reprint r
+         JOIN gcd_story ts ON r.target_id = ts.id
+         JOIN gcd_issue ti ON ts.issue_id = ti.id
+         JOIN gcd_series s ON ti.series_id = s.id
+         LEFT JOIN gcd_publisher p ON s.publisher_id = p.id
+         JOIN stddata_country c ON s.country_id = c.id
+         JOIN stddata_language l ON s.language_id = l.id
+         WHERE r.origin_id IN (SELECT id FROM gcd_story WHERE issue_id = ?)
+         ORDER BY country ASC, publication_date ASC`
       )
-      .all(baseId) as any[];
+      .all(baseId, baseId) as any[];
 
     // Deduplicate foreign editions by target_issue_id
     const seenForeign = new Set<number>();
@@ -271,14 +353,18 @@ export async function getGcdRelationalData(
     for (const f of foreignRaw) {
       if (!seenForeign.has(f.target_issue_id)) {
         seenForeign.add(f.target_issue_id);
+        const isDomestic = f.country === "United States";
         foreignEditions.push({
           reprintId: f.reprint_id,
           targetIssueId: f.target_issue_id,
           seriesName: f.series_name,
           country: f.country,
           language: f.language,
-          publicationDate: f.publication_date,
+          publicationDate: f.publication_date || "",
           issueNumber: String(f.number),
+          publisherName: f.publisher_name || undefined,
+          notes: f.notes ? String(f.notes).trim() : undefined,
+          isDomesticSpecial: isDomestic,
         });
       }
     }

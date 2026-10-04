@@ -116,7 +116,9 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
         }),
     getGcdRelationalData(
       comic.gcd_source_id || (comic.gcd_data as any)?.["GCD - gcd_issue.id"],
-      comic.series,
+      comic.series && comic.publication_year && !comic.series.includes("(")
+        ? `${comic.series} (${comic.publication_year})`
+        : comic.series,
       comic.issue_number
     ).catch((err) => {
       console.warn("GCD relational read unavailable:", err);

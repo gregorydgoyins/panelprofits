@@ -75,19 +75,43 @@ export function AtomicVariantsAndInternationalMatrix({
 
   // Country flags/emojis helper
   const getCountryFlag = (country: string) => {
-    const c = country.toLowerCase();
-    if (c.includes("germany")) return "🇩🇪";
+    if (!country) return "🌐";
+    const c = country.toLowerCase().trim();
+    if (c.includes("germany") || c.includes("deutschland")) return "🇩🇪";
     if (c.includes("brazil") || c.includes("brasil")) return "🇧🇷";
-    if (c.includes("france")) return "🇫🇷";
-    if (c.includes("italy")) return "🇮🇹";
-    if (c.includes("spain")) return "🇪🇸";
-    if (c.includes("japan")) return "🇯🇵";
-    if (c.includes("mexico")) return "🇲🇽";
-    if (c.includes("united states") || c.includes("usa")) return "🇺🇸";
-    if (c.includes("united kingdom") || c.includes("uk")) return "🇬🇧";
+    if (c.includes("france") || c.includes("french")) return "🇫🇷";
+    if (c.includes("italy") || c.includes("italia")) return "🇮🇹";
+    if (c.includes("spain") || c.includes("españa")) return "🇪🇸";
+    if (c.includes("mexico") || c.includes("méxico")) return "🇲🇽";
+    if (c.includes("netherlands") || c.includes("holland") || c.includes("dutch")) return "🇳🇱";
+    if (c.includes("united kingdom") || c.includes("uk") || c.includes("great britain") || c.includes("england")) return "🇬🇧";
+    if (c.includes("united states") || c.includes("usa") || c.includes("us")) return "🇺🇸";
     if (c.includes("canada")) return "🇨🇦";
+    if (c.includes("japan")) return "🇯🇵";
+    if (c.includes("norway")) return "🇳🇴";
+    if (c.includes("sweden")) return "🇸🇪";
+    if (c.includes("denmark")) return "🇩🇰";
+    if (c.includes("finland")) return "🇫🇮";
+    if (c.includes("australia")) return "🇦🇺";
+    if (c.includes("argentina")) return "🇦🇷";
+    if (c.includes("chile")) return "🇨🇱";
+    if (c.includes("colombia")) return "🇨🇴";
+    if (c.includes("poland")) return "🇵🇱";
+    if (c.includes("turkey") || c.includes("türkiye")) return "🇹🇷";
+    if (c.includes("greece")) return "🇬🇷";
+    if (c.includes("portugal")) return "🇵🇹";
+    if (c.includes("belgium")) return "🇧🇪";
+    if (c.includes("austria")) return "🇦🇹";
+    if (c.includes("switzerland")) return "🇨🇭";
     return "🌐";
   };
+
+  const internationalEditions = (foreignEditions || []).filter(
+    (f) => !f.isDomesticSpecial && f.country !== "United States"
+  );
+  const domesticSpecialEditions = (foreignEditions || []).filter(
+    (f) => f.isDomesticSpecial || f.country === "United States"
+  );
 
   return (
     <div className="space-y-6">
@@ -143,6 +167,14 @@ export function AtomicVariantsAndInternationalMatrix({
                         </span>
                       )}
                     </div>
+
+                    {/* Cover Artist Roster if resolved */}
+                    {v.coverArtist && (
+                      <div className="text-[10px] font-mono text-cyan-300/90 flex items-center gap-1 line-clamp-1">
+                        <PenTool className="h-2.5 w-2.5 shrink-0 text-cyan-400" />
+                        <span className="truncate">Cover: {v.coverArtist}</span>
+                      </div>
+                    )}
 
                     {/* Formulaic Pricing Parity Guidance */}
                     <div className="flex items-center justify-between text-[10px] font-mono pt-0.5">
@@ -204,7 +236,7 @@ export function AtomicVariantsAndInternationalMatrix({
       )}
 
       {/* ── 2. International & Foreign Editions Matrix ── */}
-      {hasForeign && (
+      {internationalEditions.length > 0 && (
         <section aria-labelledby="foreign-heading" className="rounded-xl border border-indigo-500/30 bg-[#111319] p-4 sm:p-6 shadow-lg space-y-4">
           <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-slate-700/80 pb-3">
             <div className="flex items-center gap-2">
@@ -215,18 +247,18 @@ export function AtomicVariantsAndInternationalMatrix({
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="border-indigo-500/40 text-[10px] text-indigo-300 font-mono">
-                {foreignEditions.length} INTERNATIONAL REPRINTS
+                {internationalEditions.length} INTERNATIONAL EDITIONS
               </Badge>
               <span className="text-xs text-slate-400 font-mono">Global Arbitrage Pool</span>
             </div>
           </div>
 
           <p className="text-xs text-slate-400">
-            Foreign editions (licensed through Panini, Urban Comics, etc.) represent physical tradeable instruments in international secondary markets. Arbitrage opportunities and geographic scarcity make these collectible assets.
+            Foreign editions (licensed through Panini, Urban Comics, Editorial Novaro, Novedades, Otto Simon, etc.) represent physical tradeable instruments in international secondary markets. Geographic scarcity and currency differentials drive global cross-border arbitrage.
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {foreignEditions.map((f) => (
+            {internationalEditions.map((f) => (
               <div
                 key={f.reprintId}
                 className="rounded-lg border border-slate-800 bg-[#0E131F] p-3 flex flex-col justify-between hover:border-indigo-500/50 transition-colors"
@@ -242,16 +274,28 @@ export function AtomicVariantsAndInternationalMatrix({
                     </Badge>
                   </div>
 
-                  <p className="text-xs text-indigo-300 font-medium pt-0.5">
+                  <p className="text-xs text-indigo-300 font-medium pt-0.5 line-clamp-1">
                     {f.seriesName} #{f.issueNumber}
                   </p>
 
-                  <div className="text-[10px] text-slate-400 font-mono pt-1">
+                  {f.publisherName && (
+                    <div className="text-[10px] font-mono text-slate-300">
+                      <span className="text-slate-500">Publisher:</span> {f.publisherName}
+                    </div>
+                  )}
+
+                  <div className="text-[10px] text-slate-400 font-mono">
                     <span>Pub Date: {f.publicationDate || "Archived Edition"}</span>
                   </div>
 
+                  {f.notes && (
+                    <p className="text-[9.5px] font-mono text-indigo-200/80 bg-indigo-950/40 rounded px-2 py-1 border border-indigo-800/30 line-clamp-2">
+                      {f.notes}
+                    </p>
+                  )}
+
                   <div className="text-[9.5px] font-mono text-emerald-400/90 pt-0.5">
-                    Licensed Translation Peg · Global Arbitrage
+                    Licensed Sovereign Peg · Physical Instrument
                   </div>
                 </div>
 
@@ -271,6 +315,86 @@ export function AtomicVariantsAndInternationalMatrix({
                     className="text-slate-400 hover:text-slate-200"
                   >
                     Search Edition
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── 2b. Domestic Prestige, Alternate Reprints & Special Editions ── */}
+      {domesticSpecialEditions.length > 0 && (
+        <section aria-labelledby="domestic-special-heading" className="rounded-xl border border-slate-700/60 bg-[#111319] p-4 sm:p-6 shadow-lg space-y-4">
+          <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-slate-700/80 pb-3">
+            <div className="flex items-center gap-2">
+              <BookOpen className="h-4 w-4 text-amber-400" />
+              <h3 id="domestic-special-heading" className="text-base font-semibold text-slate-100">
+                Domestic Prestige & Alternate Editions (Reprints & Collections)
+              </h3>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="border-amber-500/40 text-[10px] text-amber-300 font-mono">
+                {domesticSpecialEditions.length} DOMESTIC REPRINTS
+              </Badge>
+              <span className="text-xs text-slate-400 font-mono">Archival Registry</span>
+            </div>
+          </div>
+
+          <p className="text-xs text-slate-400">
+            Special black & white noir printings, facsimile editions, and anthology collections licensed or published domestically.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {domesticSpecialEditions.map((f) => (
+              <div
+                key={f.reprintId}
+                className="rounded-lg border border-slate-800 bg-[#0E131F] p-3 flex flex-col justify-between hover:border-amber-500/50 transition-colors"
+              >
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-semibold text-slate-100 flex items-center gap-1.5">
+                      <span>🇺🇸</span>
+                      <span>{f.seriesName}</span>
+                    </span>
+                    <Badge variant="secondary" className="text-[9px] font-mono px-1.5 py-0.5">
+                      #{f.issueNumber}
+                    </Badge>
+                  </div>
+
+                  {f.publisherName && (
+                    <div className="text-[10px] font-mono text-slate-300">
+                      <span className="text-slate-500">Publisher:</span> {f.publisherName}
+                    </div>
+                  )}
+
+                  <div className="text-[10px] text-slate-400 font-mono">
+                    <span>Pub Date: {f.publicationDate || "Archived Edition"}</span>
+                  </div>
+
+                  {f.notes && (
+                    <p className="text-[9.5px] font-mono text-amber-200/80 bg-amber-950/40 rounded px-2 py-1 border border-amber-800/30 line-clamp-2">
+                      {f.notes}
+                    </p>
+                  )}
+                </div>
+
+                <div className="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-mono text-slate-500">
+                  <a
+                    href={`https://www.comics.org/issue/${f.targetIssueId}/`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-amber-400 hover:text-amber-300 inline-flex items-center gap-1 font-medium"
+                    title="View reprint on Grand Comics Database"
+                  >
+                    <span>GCD #{f.targetIssueId}</span>
+                    <ExternalLink className="h-2.5 w-2.5" />
+                  </a>
+                  <Link
+                    href={`/comics?q=${encodeURIComponent(f.seriesName)}`}
+                    className="text-slate-400 hover:text-slate-200"
+                  >
+                    Search Series
                   </Link>
                 </div>
               </div>

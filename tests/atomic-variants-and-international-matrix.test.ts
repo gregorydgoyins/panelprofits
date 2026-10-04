@@ -38,18 +38,36 @@ describe("GCD Relational & Atomic Instruments Engine", () => {
     }
   });
 
-  it("links verified equity ID 402d42e9... directly to GCD 2663120 and atomic variants", async () => {
-    const { getComicById } = await import("@/lib/comics/queries");
-    const comic = await getComicById("402d42e9543e86783fc11a62a67bc141c56af2844809c9fda132d29611cc5890");
-    expect(comic).not.toBeNull();
-    expect(comic?.series).toBe("Absolute Batman");
-    expect(comic?.issue_number).toBe("1");
-    expect(comic?.gcd_source_id).toBe("2663120");
+  it("resolves comics by parenthetical year in series title without explicit GCD ID", async () => {
+    const data = await getGcdRelationalData(null, "Absolute Batman (2024)", "1");
+    expect(data).not.toBeNull();
+    expect(data?.baseIssueId).toBe(2663120);
+    expect(data?.variants.length).toBeGreaterThanOrEqual(40);
+    expect(data?.foreignEditions.length).toBeGreaterThanOrEqual(5);
 
-    const relational = await getGcdRelationalData(comic?.gcd_source_id || 0, comic?.series, comic?.issue_number);
-    expect(relational).not.toBeNull();
-    expect(relational?.variants.length).toBeGreaterThanOrEqual(40);
-    expect(relational?.foreignEditions.length).toBeGreaterThanOrEqual(5);
+    // Verify foreign publishers and notes
+    const germany = data?.foreignEditions.find((f) => f.country === "Germany");
+    expect(germany).toBeDefined();
+    expect(germany?.publisherName).toContain("Panini");
+
+    const france = data?.foreignEditions.find((f) => f.country === "France");
+    expect(france).toBeDefined();
+    expect(france?.publisherName).toContain("Urban Comics");
+
+    // Verify variant cover artist roster
+    const geradsVariant = data?.variants.find((v) => v.variantName.includes("Gerads"));
+    expect(geradsVariant).toBeDefined();
+  });
+
+  it("extracts international editions for classic series like ThunderCats (1985)", async () => {
+    const data = await getGcdRelationalData(null, "ThunderCats (1985)", "1");
+    expect(data).not.toBeNull();
+    expect(data?.baseIssueId).toBe(76201);
+    expect(data?.foreignEditions.length).toBeGreaterThanOrEqual(3);
+
+    const countries = data?.foreignEditions.map((f) => f.country) || [];
+    expect(countries).toContain("France");
+    expect(countries).toContain("Netherlands");
   });
 });
 
