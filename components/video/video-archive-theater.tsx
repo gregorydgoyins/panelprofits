@@ -195,6 +195,160 @@ const CURATED_VIDEO_ARCHIVE: VideoArchiveItem[] = [
       issue: "1",
     },
   },
+  {
+    id: "vid-danikaxix-akira",
+    title: "AKIRA: The Documentary — Katsuhiro Otomo's Cyberpunk Graphic Revolution",
+    channel: "Danika XIX (ComicBookGirl19)",
+    category: "connoisseur",
+    duration: "2:45",
+    views: "380K",
+    date: "2026-06-20",
+    topics: ["Akira #1", "Katsuhiro Otomo", "Cyberpunk Canon", "Epic Comics", "Steve Oliff"],
+    description: "Danika XIX's feature documentary investigation exploring Katsuhiro Otomo's 1988 opus AKIRA, its localization by Marvel's Epic Comics with pioneering computer coloring by Steve Oliff, and its monumental cultural shockwave across global cinema and sequential art.",
+    video: {
+      provider: "youtube",
+      embedUrl: "https://www.youtube-nocookie.com/embed/S1QZnN5e-CM",
+      videoId: "S1QZnN5e-CM",
+    },
+    relatedComic: {
+      id: "AKIRA01",
+      ticker: "AKIRA01",
+      series: "Akira",
+      issue: "1",
+    },
+  },
+  {
+    id: "vid-nerdsync-ditko-spidey",
+    title: "Why Spider-Man Used to Suck: How Steve Ditko's Objectivism Shaped Peter Parker",
+    channel: "NerdSync",
+    category: "craft",
+    duration: "16:12",
+    views: "410K",
+    date: "2026-05-18",
+    topics: ["Steve Ditko", "Ayn Rand Objectivism", "Amazing Spider-Man #1", "Stan Lee Collaboration"],
+    description: "Scott Niswander deconstructs how Steve Ditko's philosophical embrace of Objectivism and moral absolutism directly shaped Peter Parker's isolation, bitter cynicism, and unyielding individual responsibility during the foundational Silver Age run.",
+    video: {
+      provider: "youtube",
+      embedUrl: "https://www.youtube-nocookie.com/embed/Tu9SA3wMNv8",
+      videoId: "Tu9SA3wMNv8",
+    },
+    relatedComic: {
+      id: "ASM01",
+      ticker: "ASM01",
+      series: "Amazing Spider-Man",
+      issue: "1",
+    },
+  },
+  {
+    id: "vid-nerdsync-superman-nuke",
+    title: "Superman's Uncomfortable History with Nuclear Weapons: Cold War Censorship & The Manhattan Project",
+    channel: "NerdSync",
+    category: "connoisseur",
+    duration: "15:40",
+    views: "295K",
+    date: "2026-04-12",
+    topics: ["Action Comics #1", "Manhattan Project", "US War Department Censorship", "Cold War Paranoia"],
+    description: "An extraordinary historical deep dive into how the US War Department actively censored DC Comics during World War II when a Superman storyline accidentally anticipated secret atomic bomb tests, and how the Man of Steel became entangled with nuclear geopolitics.",
+    video: {
+      provider: "youtube",
+      embedUrl: "https://www.youtube-nocookie.com/embed/qBMHaM_3JhA",
+      videoId: "qBMHaM_3JhA",
+    },
+    relatedComic: {
+      id: "ACT01",
+      ticker: "ACT01",
+      series: "Action Comics",
+      issue: "1",
+    },
+  },
+  {
+    id: "vid-nerdsync-tights",
+    title: "Why Do Superheroes Wear Tights? Circus Strongmen, Anatomy, and Golden Age Aesthetics",
+    channel: "NerdSync",
+    category: "craft",
+    duration: "11:55",
+    views: "530K",
+    date: "2026-03-02",
+    topics: ["Superhero Visual Design", "Circus Strongmen", "Action Comics #1", "Four-Color Printing"],
+    description: "Scott Niswander traces the evolutionary morphology of superhero costume design from early 20th-century Vaudeville circus strongmen and athletic leotards to Jack Kirby and Joe Shuster's four-color newsprint requirements.",
+    video: {
+      provider: "youtube",
+      embedUrl: "https://www.youtube-nocookie.com/embed/Pgwsmt2utX4",
+      videoId: "Pgwsmt2utX4",
+    },
+    relatedComic: {
+      id: "ACT01",
+      ticker: "ACT01",
+      series: "Action Comics",
+      issue: "1",
+    },
+  },
+  {
+    id: "vid-nerdsync-mj-peter",
+    title: "The Beautiful Origin of Mary Jane and Peter Parker's Relationship",
+    channel: "NerdSync",
+    category: "connoisseur",
+    duration: "13:30",
+    views: "340K",
+    date: "2026-02-14",
+    topics: ["Amazing Spider-Man #42", "John Romita Sr", "Face it Tiger", "Romance Realism"],
+    description: "Analyzing the 18-issue running gag teasing Mary Jane Watson's face, culminating in John Romita Sr.'s legendary panel in Amazing Spider-Man #42, and how Mary Jane transformed Marvel's interpersonal realism forever.",
+    video: {
+      provider: "youtube",
+      embedUrl: "https://www.youtube-nocookie.com/embed/4xtzfzDkWzs",
+      videoId: "4xtzfzDkWzs",
+    },
+    relatedComic: {
+      id: "ASM042",
+      ticker: "ASM042",
+      series: "Amazing Spider-Man",
+      issue: "42",
+    },
+  },
+  {
+    id: "vid-nerdsync-batman-knight",
+    title: "Could Batman Be a Literal Dark Knight? Chivalric Codes, Feudal Martial Law & Bruce Wayne",
+    channel: "NerdSync",
+    category: "connoisseur",
+    duration: "14:15",
+    views: "260K",
+    date: "2026-01-28",
+    topics: ["Detective Comics #27", "Medieval Chivalry", "Sovereign Justice", "Dark Knight Returns"],
+    description: "Scott Niswander examines the historic qualifications of medieval European knighthood, code of arms, and extrajudicial enforcement, asking if Bruce Wayne's moral code and combat discipline would officially qualify him as a sovereign knight errant.",
+    video: {
+      provider: "youtube",
+      embedUrl: "https://www.youtube-nocookie.com/embed/smcnGd3pCIc",
+      videoId: "smcnGd3pCIc",
+    },
+    relatedComic: {
+      id: "TEC027",
+      ticker: "TEC027",
+      series: "Detective Comics",
+      issue: "27",
+    },
+  },
+  {
+    id: "vid-nerdsync-clone-saga",
+    title: "Why the Spider-Man Clone Saga Sucks: 90s Speculative Mania & Editorial Chaos",
+    channel: "NerdSync",
+    category: "market",
+    duration: "18:20",
+    views: "480K",
+    date: "2025-11-15",
+    topics: ["Clone Saga", "90s Speculative Bubble", "Amazing Spider-Man", "Editorial Mandates"],
+    description: "Scott Niswander breaks down how Marvel's 1990s speculative boom, variant gimmicks, and uncontrolled editorial extension warped Terry Kavanagh's original three-month Clone Saga story into a multi-year disaster that nearly bankrupted Marvel Comics.",
+    video: {
+      provider: "youtube",
+      embedUrl: "https://www.youtube-nocookie.com/embed/YUJRJNRqfh4",
+      videoId: "YUJRJNRqfh4",
+    },
+    relatedComic: {
+      id: "ASM01",
+      ticker: "ASM01",
+      series: "Amazing Spider-Man",
+      issue: "1",
+    },
+  },
 ];
 
 export function VideoArchiveTheater() {
@@ -204,7 +358,9 @@ export function VideoArchiveTheater() {
 
   const filteredVideos = React.useMemo(() => {
     return CURATED_VIDEO_ARCHIVE.filter((vid) => {
-      if (categoryFilter !== "all" && vid.category !== categoryFilter) return false;
+      if (categoryFilter === "cbg19" && !vid.channel.toLowerCase().includes("danika") && !vid.channel.toLowerCase().includes("comicbookgirl")) return false;
+      if (categoryFilter === "nerdsync" && !vid.channel.toLowerCase().includes("nerdsync")) return false;
+      if (categoryFilter !== "all" && categoryFilter !== "cbg19" && categoryFilter !== "nerdsync" && vid.category !== categoryFilter) return false;
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         return (
@@ -303,6 +459,8 @@ export function VideoArchiveTheater() {
           <div className="flex flex-wrap gap-2 text-xs">
             {[
               { id: "all", label: "All Broadcasts" },
+              { id: "cbg19", label: "Danika XIX / CBG19" },
+              { id: "nerdsync", label: "NerdSync Science" },
               { id: "market", label: "Market Valuations" },
               { id: "connoisseur", label: "Connoisseur Panels" },
               { id: "census", label: "Census Reports" },
