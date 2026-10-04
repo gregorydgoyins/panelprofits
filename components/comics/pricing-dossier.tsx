@@ -24,15 +24,14 @@ import { TrendingUp, ArrowDownRight, ArrowUpRight, ShieldCheck } from "lucide-re
 
 const SOURCES = [
   "Panel Profits",
-  "PriceCharting",
-  "eBay Sold Transactions",
-  "ComicBase",
-  "CGC · GPA sales",
-  "CBCS",
-  "PSA",
   "GoCollect - CGC",
   "GoCollect - CBCS",
   "GoCollect - PSA",
+  "CGC · GPA sales",
+  "CBCS",
+  "PSA",
+  "eBay Sold Transactions",
+  "ComicBase",
 ] as const;
 
 const PRIMARY_EXCHANGE_GRADES: Array<{
@@ -66,15 +65,14 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
 
   const highest = getHighestGradedPrice({
     "Panel Profits": pp,
-    "PriceCharting": pcGrades,
-    "eBay Sold Transactions": ebayLadder,
-    "ComicBase": cbGrades,
-    "CGC · GPA sales": cgcGpaGrades,
-    "CBCS": cbcsLadder,
-    "PSA": psaLadder,
     "GoCollect - CGC": gcCgcGrades,
     "GoCollect - CBCS": gcCbcsGrades,
     "GoCollect - PSA": gcPsaGrades,
+    "CGC · GPA sales": cgcGpaGrades,
+    "CBCS": cbcsLadder,
+    "PSA": psaLadder,
+    "eBay Sold Transactions": ebayLadder,
+    "ComicBase": cbGrades,
   });
 
   return (
@@ -108,7 +106,7 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
           {PRIMARY_EXCHANGE_GRADES.map(({ grade, label, sublabel }) => {
-            const price = pcGrades[grade] ?? pp[grade] ?? null;
+            const price = pp[grade] ?? pcGrades[grade] ?? null;
             const spreads = panelProfitsSpreads(comic, grade);
             const delta = panelProfitsDelta(comic, grade);
             const volume = panelProfitsVolume(comic, grade);
@@ -221,9 +219,6 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
                         {source === "Panel Profits" && (
                           <span className="text-[10px] text-emerald-400/90 font-mono">(Exchange FMV)</span>
                         )}
-                        {source === "PriceCharting" && (
-                          <span className="text-[10px] text-amber-400/80 font-mono">(Auction Sales)</span>
-                        )}
                         {source === "eBay Sold Transactions" && (
                           <span className="text-[10px] text-yellow-400/80 font-mono">(Realized Sales)</span>
                         )}
@@ -264,8 +259,6 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
 
                       if (source === "Panel Profits") {
                         price = pp[grade];
-                      } else if (source === "PriceCharting") {
-                        price = pcGrades[grade];
                       } else if (source === "eBay Sold Transactions") {
                         price = ebayLadder[grade];
                       } else if (source === "ComicBase") {

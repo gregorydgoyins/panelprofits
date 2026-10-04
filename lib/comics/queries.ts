@@ -170,7 +170,7 @@ function enrichWithBenchmarkData(comic: ComicRecord): ComicRecord {
   const deltas = benchmarkEntry.deltas;
   const volume = benchmarkEntry.volume;
 
-  const resolvedPrice98 = comic.pp_grade_9_8_price || comic.baseline_grade_9_8_value || pricecharting?.grade_9_8;
+  const resolvedPrice98 = pricecharting?.grade_9_8 || comic.pp_grade_9_8_price || comic.baseline_grade_9_8_value;
 
   const updatedPanelProfitsData = {
     ...(comic.panel_profits_data || {}),
@@ -191,6 +191,7 @@ function enrichWithBenchmarkData(comic: ComicRecord): ComicRecord {
       "PP - Grade 9.4 Market Price": pricecharting.grade_9_4,
       "PP - Grade 9.6 Market Price": pricecharting.grade_9_6,
       "PP - Grade 9.8 Market Price": pricecharting.grade_9_8,
+      "PP - Grade 9.9 Market Price": pricecharting.grade_9_9,
       "PP - Grade 10.0 Market Price": pricecharting.grade_10_0,
     } : {}),
   };
@@ -298,6 +299,7 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
           "PP - Grade 9.4 Market Price": benchmarkEntry.pricecharting.grade_9_4,
           "PP - Grade 9.6 Market Price": benchmarkEntry.pricecharting.grade_9_6,
           "PP - Grade 9.8 Market Price": benchmarkEntry.pricecharting.grade_9_8,
+          "PP - Grade 9.9 Market Price": benchmarkEntry.pricecharting.grade_9_9,
           "PP - Grade 10.0 Market Price": benchmarkEntry.pricecharting.grade_10_0,
         } : {}),
       } as any,

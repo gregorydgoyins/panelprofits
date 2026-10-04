@@ -54,6 +54,7 @@ export function panelProfitsGrades(comic: Partial<ComicRecord>): Partial<Record<
 
   // Extract RAW (ungraded / loose) market price
   const rawCandidateKeys = [
+    "PP - Grade RAW Market Price",
     "PP - Ungraded Market Price",
     "PP - Raw Market Price",
     "raw_market_price",
@@ -64,9 +65,16 @@ export function panelProfitsGrades(comic: Partial<ComicRecord>): Partial<Record<
     "ungraded",
     "loose",
     "loose_price",
+    "used_price",
   ];
   for (const key of rawCandidateKeys) {
-    const stored = positivePrice(comic.panel_profits_data[key]);
+    let stored = positivePrice(comic.panel_profits_data[key]);
+    if (stored === null && comic.panel_profits_data?.pricecharting) {
+      stored = positivePrice(comic.panel_profits_data.pricecharting[key] || comic.panel_profits_data.pricecharting.raw);
+    }
+    if (stored === null && (comic as any).pricecharting_data) {
+      stored = positivePrice((comic as any).pricecharting_data[key] || (comic as any).pricecharting_data.raw);
+    }
     if (stored !== null) {
       result["RAW"] = stored;
       break;
@@ -86,7 +94,21 @@ export function panelProfitsGrades(comic: Partial<ComicRecord>): Partial<Record<
     ];
 
     for (const key of candidateKeys) {
-      const stored = positivePrice(comic.panel_profits_data[key]);
+      let stored = positivePrice(comic.panel_profits_data[key]);
+      if (stored === null && comic.panel_profits_data?.pricecharting) {
+        stored = positivePrice(
+          comic.panel_profits_data.pricecharting[key] ||
+          comic.panel_profits_data.pricecharting[`grade_${gradeKey}`] ||
+          comic.panel_profits_data.pricecharting[grade]
+        );
+      }
+      if (stored === null && (comic as any).pricecharting_data) {
+        stored = positivePrice(
+          (comic as any).pricecharting_data[key] ||
+          (comic as any).pricecharting_data[`grade_${gradeKey}`] ||
+          (comic as any).pricecharting_data[grade]
+        );
+      }
       if (stored !== null) {
         result[grade] = stored;
         break;
