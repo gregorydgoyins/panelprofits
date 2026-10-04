@@ -26,6 +26,8 @@ import { AtomicVariantsAndInternationalMatrix } from "@/components/comics/atomic
 import { getGcdRelationalData } from "@/lib/comics/gcd-relational-service";
 import { InvestopediaValuationLens } from "@/components/finance/investopedia-valuation-lens";
 import { computeComicValuationMetrics } from "@/lib/finance/investopedia-service";
+import { AssetClassesMatrix } from "@/components/equity/asset-classes-matrix";
+import { GregoryRulerCard } from "@/components/equity/gregory-ruler-card";
 
 export const dynamic = "force-dynamic";
 
@@ -418,7 +420,14 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
             />
           </div>
 
-          {/* 6. Atomic Tradeable Instrument Matrix: Published Variants, International Editions & Creators */}
+          {/* 6. 16 Canonical Collectible Asset Classes Matrix & Parity Multipliers */}
+          <AssetClassesMatrix
+            series={comic.series}
+            issueNumber={comic.issue_number}
+            baseFmv={Number(comic.baseline_grade_9_8_value || comic.pp_grade_9_8_price || 100)}
+          />
+
+          {/* 7. Atomic Tradeable Instrument Matrix: Published Variants, International Editions & Creators */}
           <AtomicVariantsAndInternationalMatrix
             relationalData={gcdRelational}
             currentComicId={comic.id}
@@ -426,7 +435,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
             issueNumber={comic.issue_number}
           />
 
-          {/* 7. GCD Archival Bibliographic Dossier: Physical Specs & Archival Notes */}
+          {/* 8. GCD Archival Bibliographic Dossier: Physical Specs & Archival Notes */}
           <GcdBibliographicDossier
             gcdData={comic.gcd_data as any}
             publisher={authoritativePublisher}
@@ -434,7 +443,15 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
             issueNumber={comic.issue_number}
           />
 
-          {/* 7. Connoisseur Dossier: Strictly calibrated for authenticated CE70 index constituent seats */}
+          {/* 9. Gregory Connoisseurship Quality Ruler (CE70 & Sovereign Constituent Seats) */}
+          {isCe70Seat && (
+            <GregoryRulerCard
+              gregoryScore={Number((comic as any).gregory_score || (comic.panel_profits_data as any)?.gregory_score || 194.5)}
+              seatNumber={Number((comic as any).seat_number || (comic.panel_profits_data as any)?.seat_number || 1)}
+            />
+          )}
+
+          {/* 10. Connoisseur Dossier: Strictly calibrated for authenticated CE70 index constituent seats */}
           {isCe70Seat && (
             <ConnoisseurDossier
               data={(comic as any).connoisseur_dossier || (comic.panel_profits_data as any)}

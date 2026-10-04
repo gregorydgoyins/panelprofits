@@ -81,15 +81,17 @@ export function resolveMarketPricing(
       .trim()
       .toLowerCase();
 
-    // Scan for best matching key
+    // Scan for exact matching series name and issue number
     for (const [k, v] of Object.entries(BENCHMARKS_DATA)) {
-      const kLower = k.toLowerCase();
-      if (kLower.includes(cleanSeries) || cleanSeries.includes(v.series.toLowerCase())) {
-        if (v.issueNumber === String(issueNum) || kLower.endsWith(`#${issueNum}`)) {
-          matchedEntry = v;
-          searchKey = k;
-          break;
-        }
+      const vSeriesClean = v.series.toLowerCase().trim();
+      const kLower = k.toLowerCase().trim();
+      if (
+        (vSeriesClean === cleanSeries || kLower === `${cleanSeries} #${issueNum}`) &&
+        String(v.issueNumber) === String(issueNum)
+      ) {
+        matchedEntry = v;
+        searchKey = k;
+        break;
       }
     }
   }
