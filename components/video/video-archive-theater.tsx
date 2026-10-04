@@ -349,6 +349,50 @@ const CURATED_VIDEO_ARCHIVE: VideoArchiveItem[] = [
       issue: "1",
     },
   },
+  {
+    id: "vid-longbox-cgc-keys",
+    title: "Lords of the Long Box: High-Grade CGC Mail Call & Hidden Bronze Age Keys",
+    channel: "Lords of the Long Box (T-VO)",
+    category: "census",
+    duration: "24:18",
+    views: "45K",
+    date: "2024-05-12",
+    topics: ["CGC Mail Call", "Bronze Age Keys", "Long Box Digging", "Speculation"],
+    description: "Tim Vo ('T-VO') unboxes high-grade CGC blue labels from recent estate long-box hunts, breaking down yield rates, census scarcity, and back-issue undervalued keys before mainstream market discovery.",
+    video: {
+      provider: "youtube",
+      embedUrl: "https://www.youtube-nocookie.com/embed/6HvKD6APOpA",
+      videoId: "6HvKD6APOpA",
+    },
+    relatedComic: {
+      id: "HK181",
+      ticker: "HK181",
+      series: "Incredible Hulk",
+      issue: "181",
+    },
+  },
+  {
+    id: "vid-longbox-mcu-spec",
+    title: "Lords of the Long Box: Cinematic Catalyst Speculation & Character Debut Keys",
+    channel: "Lords of the Long Box (T-VO)",
+    category: "market",
+    duration: "29:40",
+    views: "68K",
+    date: "2024-04-02",
+    topics: ["Cinematic Adaptation", "First Appearance Keys", "Market Velocity", "Long Box Spec"],
+    description: "T-VO's legendary insider speculation breakdown: analyzing how Hollywood production whispers and option agreements ripple through secondary market float months ahead of official trailer drops.",
+    video: {
+      provider: "youtube",
+      embedUrl: "https://www.youtube-nocookie.com/embed/cM3f_w1xG_o",
+      videoId: "cM3f_w1xG_o",
+    },
+    relatedComic: {
+      id: "ASM01",
+      ticker: "ASM01",
+      series: "Amazing Spider-Man",
+      issue: "1",
+    },
+  },
 ];
 
 export function VideoArchiveTheater() {
@@ -360,7 +404,8 @@ export function VideoArchiveTheater() {
     return CURATED_VIDEO_ARCHIVE.filter((vid) => {
       if (categoryFilter === "cbg19" && !vid.channel.toLowerCase().includes("danika") && !vid.channel.toLowerCase().includes("comicbookgirl")) return false;
       if (categoryFilter === "nerdsync" && !vid.channel.toLowerCase().includes("nerdsync")) return false;
-      if (categoryFilter !== "all" && categoryFilter !== "cbg19" && categoryFilter !== "nerdsync" && vid.category !== categoryFilter) return false;
+      if (categoryFilter === "longbox" && !vid.channel.toLowerCase().includes("long box")) return false;
+      if (categoryFilter !== "all" && categoryFilter !== "cbg19" && categoryFilter !== "nerdsync" && categoryFilter !== "longbox" && vid.category !== categoryFilter) return false;
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         return (
@@ -459,6 +504,7 @@ export function VideoArchiveTheater() {
           <div className="flex flex-wrap gap-2 text-xs">
             {[
               { id: "all", label: "All Broadcasts" },
+              { id: "longbox", label: "Lords of the Long Box" },
               { id: "cbg19", label: "Danika XIX / CBG19" },
               { id: "nerdsync", label: "NerdSync Science" },
               { id: "market", label: "Market Valuations" },

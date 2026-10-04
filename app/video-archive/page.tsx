@@ -3,6 +3,7 @@ import { Tv, ArrowLeft, Radio, Archive } from "lucide-react";
 import { VideoArchiveTheater } from "@/components/video/video-archive-theater";
 import { XMenMasterclassSerialization } from "@/components/video/XMenMasterclassSerialization";
 import { ComicBaseArchiveTheater } from "@/components/video/comicbase-archive-theater";
+import { NerdSyncCuratedShowcase } from "@/components/video/nerdsync-curated-showcase";
 
 export const dynamic = "force-dynamic";
 
@@ -55,6 +56,9 @@ export default function VideoArchivePage() {
 
       {/* ComicBookGirl19 3.5-Hour Serialized X-Men Masterclass (Chopped into Precision Chapters) */}
       <XMenMasterclassSerialization />
+
+      {/* Scott Niswander's NerdSync: Forensic Science, Sequential Grammar & Speculation Laboratory */}
+      <NerdSyncCuratedShowcase />
 
       {/* Full Video Archive Theater */}
       <VideoArchiveTheater />
