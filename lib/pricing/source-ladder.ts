@@ -422,7 +422,11 @@ export function panelProfitsSpreads(comic: Partial<ComicRecord>, grade: Grade): 
 
   // 1. Direct structured spreads object
   if (ppData.spreads && typeof ppData.spreads === "object") {
-    const s = ppData.spreads[grade];
+    const gradeKey = grade.replace(".", "_");
+    const s =
+      ppData.spreads[grade] ??
+      ppData.spreads[grade.toLowerCase()] ??
+      (grade === "RAW" ? ppData.spreads.raw : ppData.spreads[`grade_${gradeKey}`]);
     if (s && typeof s === "object") {
       const b = positivePrice(s.buy);
       const sl = positivePrice(s.sell);
@@ -526,7 +530,11 @@ export function panelProfitsVolume(
 ): string | null {
   const ppData = comic.panel_profits_data as Record<string, any> | undefined;
   if (!ppData?.volume) return null;
-  const val = ppData.volume[grade];
+  const gradeKey = grade.replace(".", "_");
+  const val =
+    ppData.volume[grade] ??
+    ppData.volume[grade.toLowerCase()] ??
+    (grade === "RAW" ? ppData.volume.raw : ppData.volume[`grade_${gradeKey}`]);
   return typeof val === "string" ? val : null;
 }
 

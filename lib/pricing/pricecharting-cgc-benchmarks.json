@@ -22729,19 +22729,19 @@
     "comicOrgId": "2663120",
     "isKeyIssue": true,
     "pricecharting": {
-      "raw": 318.0,
-      "grade_2_0": 221.0,
-      "grade_3_0": 276.0,
+      "raw": 318,
+      "grade_2_0": 221,
+      "grade_3_0": 276,
       "grade_4_0": 344.75,
       "grade_6_0": 366.75,
-      "grade_8_0": 440.0,
-      "grade_9_0": 260.0,
-      "grade_9_2": 572.0,
+      "grade_8_0": 440,
+      "grade_9_0": 260,
+      "grade_9_2": 572,
       "grade_9_4": 262.5,
       "grade_9_6": 357.37,
       "grade_9_8": 563.93,
-      "grade_9_9": 620.0,
-      "grade_10_0": 733.0
+      "grade_9_9": 620,
+      "grade_10_0": 733
     },
     "deltas": {
       "RAW": 20.24,
@@ -22761,20 +22761,20 @@
     },
     "spreads": {
       "RAW": {
-        "buy": 175.0,
-        "sell": 350.0
+        "buy": 175,
+        "sell": 350
       },
       "4.0": {
         "buy": 189.5,
-        "sell": 379.0
+        "sell": 379
       },
       "6.0": {
         "buy": 201.5,
-        "sell": 403.0
+        "sell": 403
       },
       "8.0": {
         "buy": 290.4,
-        "sell": 484.0
+        "sell": 484
       },
       "9.2": {
         "buy": 377.52,
@@ -22794,9 +22794,137 @@
       },
       {
         "grade": "10.0",
-        "amount": 733.0,
+        "amount": 733,
         "observedAt": "2024-10-09T00:00:00.000000",
         "authority": "CGC"
+      }
+    ]
+  },
+  "Deadpool Max #10": {
+    "series": "Deadpool Max",
+    "issueNumber": "10",
+    "publicationDate": "2011-09-01",
+    "publisher": "Marvel",
+    "upc": "75960607147001011",
+    "pricechartingId": "3366977",
+    "comicOrgId": "863652",
+    "coverPrice": 3.99,
+    "isKeyIssue": false,
+    "pricecharting": {
+      "raw": 2.99,
+      "grade_2_0": null,
+      "grade_3_0": null,
+      "grade_4_0": null,
+      "grade_5_0": null,
+      "grade_6_0": null,
+      "grade_7_0": null,
+      "grade_8_0": null,
+      "grade_9_0": null,
+      "grade_9_2": null,
+      "grade_9_4": null,
+      "grade_9_6": null,
+      "grade_9_8": 50,
+      "grade_9_9": null,
+      "grade_10_0": null
+    },
+    "deltas": {
+      "RAW": 0,
+      "4.0": null,
+      "6.0": null,
+      "8.0": null,
+      "9.2": null,
+      "9.8": 0
+    },
+    "volume": {
+      "RAW": "2 sales per year",
+      "raw": "2 sales per year",
+      "4.0": "rare",
+      "grade_4_0": "rare",
+      "6.0": "rare",
+      "grade_6_0": "rare",
+      "8.0": "rare",
+      "grade_8_0": "rare",
+      "9.2": "rare",
+      "grade_9_2": "rare",
+      "9.8": "1 sale per year",
+      "grade_9_8": "1 sale per year"
+    },
+    "spreads": {
+      "RAW": {
+        "buy": null,
+        "sell": 3.29
+      },
+      "raw": {
+        "buy": null,
+        "sell": 3.29
+      },
+      "4.0": {
+        "buy": null,
+        "sell": null
+      },
+      "grade_4_0": {
+        "buy": null,
+        "sell": null
+      },
+      "6.0": {
+        "buy": null,
+        "sell": null
+      },
+      "grade_6_0": {
+        "buy": null,
+        "sell": null
+      },
+      "8.0": {
+        "buy": null,
+        "sell": null
+      },
+      "grade_8_0": {
+        "buy": null,
+        "sell": null
+      },
+      "9.2": {
+        "buy": null,
+        "sell": null
+      },
+      "grade_9_2": {
+        "buy": null,
+        "sell": null
+      },
+      "9.8": {
+        "buy": 22,
+        "sell": 54.99
+      },
+      "grade_9_8": {
+        "buy": 22,
+        "sell": 54.99
+      }
+    },
+    "salesListings": {
+      "ungradedCount": 10,
+      "grade98Count": 1
+    },
+    "cgc": [
+      {
+        "grade": "9.8",
+        "amount": 50,
+        "observedAt": "2026-09-18T12:00:00.000000",
+        "authority": "CGC"
+      }
+    ],
+    "allObservations": [
+      {
+        "type": "PRICECHARTING_GUIDE_OBSERVATION",
+        "grade": "RAW",
+        "authority": "RAW",
+        "amount": 2.99,
+        "date": "2026-09-18T12:00:00.000000"
+      },
+      {
+        "type": "PRICECHARTING_GUIDE_OBSERVATION",
+        "grade": "9.8",
+        "authority": "CGC",
+        "amount": 50,
+        "date": "2026-09-18T12:00:00.000000"
       }
     ]
   }

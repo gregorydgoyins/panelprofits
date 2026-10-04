@@ -70,7 +70,7 @@ export async function getComics(params: ComicSearchParams): Promise<ComicQueryRe
 import ce70Dossiers from "@/lib/equity/ce70-dossiers-data.json";
 import verifiedCoversJson from "@/lib/equity/verified-covers.json";
 import { lookupReferenceFmv } from "@/lib/pricing/reference-benchmarks";
-import { getAuthoritativeCover } from "@/lib/comics/cover-authority";
+import { getAuthoritativeCover, getAuthoritativeCoverStrict } from "@/lib/comics/cover-authority";
 import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
 import { getCatalogComicBySourceProductId, getVerifiedEquityByIdOrTicker, getVerifiedRealEquities } from "@/lib/equity/verified-equities-service";
 import ppix100Data from "@/lib/equity/ppix-100-constituents.json";
@@ -178,6 +178,7 @@ function enrichWithBenchmarkData(comic: ComicRecord): ComicRecord {
     spreads: spreads || comic.panel_profits_data?.spreads,
     deltas: deltas || comic.panel_profits_data?.deltas,
     volume: volume || comic.panel_profits_data?.volume,
+    coverPrice: benchmarkEntry.coverPrice ?? comic.panel_profits_data?.coverPrice,
     is_key_issue: benchmarkEntry.isKeyIssue ?? comic.panel_profits_data?.is_key_issue,
     ...(pricecharting ? {
       "PP - Grade RAW Market Price": pricecharting.raw,
@@ -196,8 +197,16 @@ function enrichWithBenchmarkData(comic: ComicRecord): ComicRecord {
     } : {}),
   };
 
+  const authCover = getAuthoritativeCoverStrict(comic.series, comic.issue_number, comic.publisher, comic.publication_year);
+
   return {
     ...comic,
+    ...(authCover ? {
+      cover_url: authCover,
+      cover_original_url: authCover,
+      cover_retrieval_url: authCover,
+      cover_source: "VERIFIED_REGISTRY",
+    } : {}),
     publisher: comic.publisher && !comic.publisher.includes("Independent /") ? comic.publisher : (benchmarkEntry.publisher || comic.publisher),
     upc: benchmarkEntry.upc || comic.upc,
     publication_date: benchmarkEntry.publicationDate || comic.publication_date,
@@ -282,6 +291,7 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
         era: localVerified.origin_era,
         "PP - Grade 9.8 Market Price": resolvedPrice98,
         grade_9_8_value: resolvedPrice98,
+        coverPrice: benchmarkEntry?.coverPrice || null,
         pricecharting: benchmarkEntry?.pricecharting || null,
         spreads: benchmarkEntry?.spreads || null,
         deltas: benchmarkEntry?.deltas || null,

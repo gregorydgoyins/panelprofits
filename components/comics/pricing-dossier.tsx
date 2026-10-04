@@ -60,7 +60,12 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
   const cgcGpaGrades = cgcGrades(comic);
   const cbcsLadder = cbcsGrades(comic);
   const psaLadder = psaGrades(comic);
-  const rawCoverPrice = (comic.comicbase_data as any)?.["CB - Cover Price"] ?? (comic as any).cover_price;
+  const rawCoverPrice =
+    (comic.panel_profits_data as any)?.coverPrice ??
+    (comic.panel_profits_data as any)?.cover_price ??
+    (comic.comicbase_data as any)?.["CB - Cover Price"] ??
+    (comic.gcd_data as any)?.["GCD - gcd_issue.price"] ??
+    (comic as any).cover_price;
   const coverPrice = rawCoverPrice != null ? Number(String(rawCoverPrice).replace(/[^0-9.]/g, "")) : null;
 
   const highest = getHighestGradedPrice({

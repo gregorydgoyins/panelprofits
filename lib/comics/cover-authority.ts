@@ -136,6 +136,7 @@ const VERIFIED_COVER_REGISTRY: Record<string, string> = {
   "batman:1_2011": "/covers/batman_2011_1.jpg",
   "mister miracle:1": "/covers/mister_miracle_2017_1.jpg",
   "mister miracle 2017:1": "/covers/mister_miracle_2017_1.jpg",
+  "deadpool max:10": "/covers/deadpool_max_10.jpg",
   "house of x:1": "/covers/house_of_x_1.jpg",
   "house of x:2": "/covers/seat_59_house_of_x_2.jpg",
   "immortal hulk:1": "/covers/immortal_hulk_1.jpg",

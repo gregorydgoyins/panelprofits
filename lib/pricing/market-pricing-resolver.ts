@@ -50,13 +50,13 @@ export interface MarketPricingResolution {
   rawPrice: number | null;
 }
 
-const BENCHMARKS_DATA = benchmarksJson as Record<
+const BENCHMARKS_DATA = benchmarksJson as unknown as Record<
   string,
   {
     series: string;
     issueNumber: string;
     publicationDate?: string;
-    pricecharting?: Record<string, number>;
+    pricecharting?: Record<string, number | null>;
     cgc?: CgcSaleObservation[];
     allObservations?: Array<{ type: string; grade: string; authority?: string; amount: number; date: string }>;
   }

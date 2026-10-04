@@ -207,17 +207,21 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
           ],
   };
 
+  const rawPrice = rawLattice["RAW"] ?? (comic.panel_profits_data as any)?.pricecharting?.raw ?? null;
+  const grade10Price = rawLattice["10.0"] ?? (comic.panel_profits_data as any)?.pricecharting?.grade_10_0 ?? null;
+  const grade80Price = rawLattice["8.0"] ?? (comic.panel_profits_data as any)?.pricecharting?.grade_8_0 ?? null;
+
   const keyPrices = {
     fmv98Usd: consensusFmv,
-    fmv10Usd: Number(rawLattice["10.0"] || (consensusFmv * 1.3).toFixed(2)),
-    fmvRawUsd: Number(rawLattice["RAW"] || 318),
+    fmv10Usd: grade10Price != null ? Number(grade10Price) : Number((consensusFmv * 1.3).toFixed(2)),
+    fmvRawUsd: rawPrice != null ? Number(rawPrice) : 0,
     sovPriceUsd: consensusFmv,
     sovGrade: "9.8",
     anchor9_8: consensusFmv,
     display_fmv_usd: consensusFmv,
     premiumPct: 0.45,
-    gradeCount: 14,
-    delta24h: 29.98,
+    gradeCount: Object.keys(rawLattice).length || 1,
+    delta24h: 0.00,
     observedAt: new Date().toISOString(),
   };
 
@@ -225,14 +229,14 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     { grade: "9.8", priceUsd: consensusFmv, observedAt: "2026-10-01T12:00:00Z" },
     { grade: "9.8", priceUsd: Number((consensusFmv * 0.95).toFixed(2)), observedAt: "2026-09-15T12:00:00Z" },
     { grade: "9.8", priceUsd: Number((consensusFmv * 0.90).toFixed(2)), observedAt: "2026-08-01T12:00:00Z" },
-    { grade: "RAW", priceUsd: Number(rawLattice["RAW"] || 318), observedAt: "2026-10-01T12:00:00Z" },
-    { grade: "8.0", priceUsd: Number(rawLattice["8.0"] || 440), observedAt: "2026-10-01T12:00:00Z" },
+    ...(rawPrice != null ? [{ grade: "RAW", priceUsd: Number(rawPrice), observedAt: "2026-10-01T12:00:00Z" }] : []),
+    ...(grade80Price != null ? [{ grade: "8.0", priceUsd: Number(grade80Price), observedAt: "2026-10-01T12:00:00Z" }] : []),
   ];
 
   const recentSales = [
     { grade: "9.8", priceUsd: consensusFmv, observedAt: "2026-10-02T18:30:00Z", authority: "CGC" },
     { grade: "9.8", priceUsd: Number((consensusFmv * 0.98).toFixed(2)), observedAt: "2026-09-28T14:15:00Z", authority: "CGC" },
-    { grade: "RAW", priceUsd: Number(rawLattice["RAW"] || 318), observedAt: "2026-10-03T11:00:00Z", authority: "RAW" },
+    ...(rawPrice != null ? [{ grade: "RAW", priceUsd: Number(rawPrice), observedAt: "2026-10-03T11:00:00Z", authority: "RAW" }] : []),
   ];
 
   const formattedSales = recentSales.map((s) => ({
