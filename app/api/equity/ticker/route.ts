@@ -122,6 +122,10 @@ export async function GET(request: Request) {
         coverSuppressReason: null,
         identityConfidence: 99,
         quarantined: false,
+        writer: (item as any).writer || (item as any).creators || null,
+        penciler: (item as any).penciler || null,
+        keyBadge: (item as any).keyBadge || null,
+        genre: (item as any).genre || null,
       },
     };
   });

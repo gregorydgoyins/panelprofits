@@ -38,6 +38,10 @@ export interface EquityItem {
     coverSuppressReason: string | null;
     identityConfidence: number | null;
     quarantined?: boolean;
+    writer?: string | null;
+    penciler?: string | null;
+    keyBadge?: string | null;
+    genre?: string | null;
   };
 }
 

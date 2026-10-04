@@ -20,6 +20,7 @@ import { resolveIssueDebuts } from "@/lib/wiki/debut-resolver";
 import { getAuthoritativeCover } from "@/lib/comics/cover-authority";
 import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
 import { Sparkles, BookOpen, Activity, ArrowUpRight } from "lucide-react";
+import { GcdBibliographicDossier } from "@/components/comics/gcd-bibliographic-dossier";
 
 export const dynamic = "force-dynamic";
 
@@ -100,6 +101,9 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     comic.publication_date ||
     (comic.comicbase_data as Record<string, unknown> | undefined)?.["CB - Value Year 1"] as string ||
     null;
+
+  const gcdData = (comic.gcd_data as Record<string, any>) || {};
+  const gcdBadges = (gcdData.key_badges as string[]) || [];
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-8">
@@ -201,7 +205,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
             </div>
 
             {/* Landmark Key Issue Debuts & Lore Equity */}
-            {debut && (debut.characters.length > 0 || (debut.items && debut.items.length > 0) || (debut.locations && debut.locations.length > 0) || (debut.teams && debut.teams.length > 0)) && (
+            {((debut && (debut.characters.length > 0 || (debut.items && debut.items.length > 0) || (debut.locations && debut.locations.length > 0) || (debut.teams && debut.teams.length > 0))) || gcdBadges.length > 0) && (
               <div className="rounded-lg border border-cyan-500/30 bg-graphite-950/80 p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -211,12 +215,23 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
                     </span>
                   </div>
                   <Badge variant="outline" className="border-cyan-500/40 text-[10px] text-cyan-400 uppercase">
-                    {debut.universe} Universe Canon
+                    {debut?.universe || "Canon"} Lore
                   </Badge>
                 </div>
 
                 <div className="flex flex-wrap gap-2 pt-1">
-                  {debut.characters.map((ch) => (
+                  {/* GCD Key Collector Debuts */}
+                  {gcdBadges.map((badge: string) => (
+                    <span
+                      key={badge}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-amber-950/40 border border-amber-500/40 text-amber-300 text-xs font-medium"
+                    >
+                      <span className="text-amber-400">★</span>
+                      <span>{badge}</span>
+                    </span>
+                  ))}
+
+                  {debut?.characters.map((ch) => (
                     <Link
                       key={ch}
                       href={`/wiki?q=${encodeURIComponent(ch)}`}
@@ -227,7 +242,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
                     </Link>
                   ))}
 
-                  {debut.items?.map((it) => (
+                  {debut?.items?.map((it) => (
                     <Link
                       key={it}
                       href={`/wiki?q=${encodeURIComponent(it)}`}
@@ -238,7 +253,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
                     </Link>
                   ))}
 
-                  {debut.locations?.map((loc) => (
+                  {debut?.locations?.map((loc) => (
                     <Link
                       key={loc}
                       href={`/wiki?q=${encodeURIComponent(loc)}`}
@@ -249,7 +264,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
                     </Link>
                   ))}
 
-                  {debut.teams?.map((tm) => (
+                  {debut?.teams?.map((tm) => (
                     <Link
                       key={tm}
                       href={`/wiki?q=${encodeURIComponent(tm)}`}
@@ -263,7 +278,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
 
                 <div className="flex items-center justify-between pt-2 border-t border-graphite-800 text-[11px] text-graphite-400">
                   <span className="truncate">
-                    {debut.creators && debut.creators.length > 0 && (
+                    {debut?.creators && debut.creators.length > 0 && (
                       <>Creator Lineage: {debut.creators.join(", ")}</>
                     )}
                   </span>
@@ -358,6 +373,14 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
 
           {/* Pricing Dossier */}
           <PricingDossier comic={comic} />
+
+          {/* GCD Archival Bibliographic Dossier: Creators, Physical Specs & Story Arc */}
+          <GcdBibliographicDossier
+            gcdData={comic.gcd_data as any}
+            publisher={comic.publisher}
+            series={comic.series}
+            issueNumber={comic.issue_number}
+          />
 
           {/* Census and Graded Market Evidence */}
           <CensusDossier dossier={censusDossier} />

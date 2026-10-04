@@ -377,9 +377,9 @@ export const EquityCard = React.memo(function EquityCard({
             )}
           </div>
 
-          {/* Variant description */}
-          <div style={{ minHeight: hasVariant ? "16px" : "0px" }}>
-            {hasVariant && (
+          {/* Variant description or Key Debut badge */}
+          <div style={{ minHeight: (hasVariant || identity.keyBadge || identity.writer) ? "16px" : "0px" }}>
+            {hasVariant ? (
               <span
                 style={{
                   fontSize: "11.5px",
@@ -396,7 +396,39 @@ export const EquityCard = React.memo(function EquityCard({
               >
                 {variantTag}
               </span>
-            )}
+            ) : identity.keyBadge ? (
+              <span
+                style={{
+                  fontSize: "10.5px",
+                  fontWeight: 600,
+                  color: "#f59e0b",
+                  fontFamily: "var(--font-sans, system-ui)",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  display: "block",
+                  lineHeight: "16px",
+                }}
+              >
+                ★ {identity.keyBadge}
+              </span>
+            ) : identity.writer ? (
+              <span
+                style={{
+                  fontSize: "10px",
+                  fontWeight: 400,
+                  color: "rgba(255,255,255,0.70)",
+                  fontFamily: "var(--font-sans, system-ui)",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  display: "block",
+                  lineHeight: "16px",
+                }}
+              >
+                {identity.writer}{identity.penciler && identity.penciler !== identity.writer ? ` • ${identity.penciler}` : ""}
+              </span>
+            ) : null}
           </div>
 
           {/* FMV price + delta */}
