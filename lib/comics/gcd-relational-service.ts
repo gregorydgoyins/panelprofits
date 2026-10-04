@@ -1,4 +1,5 @@
 import fs from "fs";
+import path from "path";
 
 export interface GcdVariantItem {
   id: number;
@@ -57,6 +58,7 @@ export interface GcdRelationalData {
 const GCD_DB_PATH = "/Users/macuser/Downloads/gcd-full-As1Act/2026-09-15.db";
 
 let dbInstance: any = null;
+let isBundledDb = false;
 let dbAvailable: boolean | null = null;
 const memoryCache = new Map<string, GcdRelationalData | null>();
 
@@ -64,16 +66,35 @@ function getGcdDatabase(): any | null {
   if (dbAvailable === false) return null;
   if (dbInstance) return dbInstance;
 
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { DatabaseSync } = require("node:sqlite");
+
   try {
-    if (!fs.existsSync(GCD_DB_PATH)) {
-      dbAvailable = false;
-      return null;
+    // 1. Check if 6.3GB local GCD database exists
+    if (fs.existsSync(GCD_DB_PATH)) {
+      dbInstance = new DatabaseSync(GCD_DB_PATH, { readOnly: true });
+      isBundledDb = false;
+      dbAvailable = true;
+      return dbInstance;
     }
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { DatabaseSync } = require("node:sqlite");
-    dbInstance = new DatabaseSync(GCD_DB_PATH, { readOnly: true });
-    dbAvailable = true;
-    return dbInstance;
+
+    // 2. Fall back to bundled data/pp115k.sqlite (used in Vercel serverless production)
+    const bundledPaths = [
+      path.join(process.cwd(), "data", "pp115k.sqlite"),
+      path.join(process.cwd(), "panel-profits", "data", "pp115k.sqlite"),
+    ];
+
+    for (const p of bundledPaths) {
+      if (fs.existsSync(p)) {
+        dbInstance = new DatabaseSync(p, { readOnly: true });
+        isBundledDb = true;
+        dbAvailable = true;
+        return dbInstance;
+      }
+    }
+
+    dbAvailable = false;
+    return null;
   } catch (err) {
     console.warn("GCD SQLite connection unavailable:", err);
     dbAvailable = false;
@@ -100,6 +121,78 @@ export async function getGcdRelationalData(
 
   try {
     let issue: any = null;
+    let baseId = 0;
+
+    if (isBundledDb) {
+      // Bundled database mode (Vercel production)
+      let numId = typeof gcdIssueId === "string" ? parseInt(gcdIssueId, 10) : (gcdIssueId || 0);
+
+      if (!numId && seriesName && issueNumber) {
+        const cleanSeries = seriesName.trim();
+        const cleanIssue = issueNumber.trim().replace(/^#/, "");
+        const comicRow = db
+          .prepare("SELECT gcd_id FROM comics WHERE series LIKE ? AND issue_number = ? AND gcd_id IS NOT NULL LIMIT 1")
+          .get(`%${cleanSeries}%`, cleanIssue) as any;
+        if (comicRow && comicRow.gcd_id) numId = parseInt(comicRow.gcd_id, 10);
+      }
+
+      if (!numId) {
+        memoryCache.set(cacheKey, null);
+        return null;
+      }
+
+      // Find base issue if this is a variant
+      const varLookup = db.prepare("SELECT base_issue_id FROM gcd_variants WHERE variant_issue_id = ?").get(numId) as any;
+      baseId = varLookup?.base_issue_id || numId;
+
+      const variantsRaw = db
+        .prepare("SELECT variant_issue_id as id, number, publication_date, variant_name, price, barcode FROM gcd_variants WHERE base_issue_id = ? ORDER BY variant_issue_id ASC")
+        .all(baseId) as any[];
+
+      const foreignRaw = db
+        .prepare("SELECT reprint_id, target_issue_id, number, series_name, country, language, publication_date FROM gcd_foreign_editions WHERE origin_issue_id = ? ORDER BY country ASC")
+        .all(baseId) as any[];
+
+      const variants: GcdVariantItem[] = variantsRaw.map((v) => ({
+        id: v.id,
+        issueNumber: String(v.number),
+        variantName: v.variant_name || (v.id === baseId ? "Primary Direct / Regular Cover" : `Variant #${v.id}`),
+        price: v.price || "",
+        barcode: v.barcode || "",
+        publicationDate: v.publication_date || "",
+      }));
+
+      const foreignEditions: GcdForeignEditionItem[] = foreignRaw.map((f) => ({
+        reprintId: f.reprint_id,
+        targetIssueId: f.target_issue_id,
+        seriesName: f.series_name,
+        country: f.country,
+        language: f.language,
+        publicationDate: f.publication_date,
+        issueNumber: String(f.number),
+      }));
+
+      const result: GcdRelationalData = {
+        baseIssueId: baseId,
+        seriesName: seriesName || "",
+        issueNumber: issueNumber || "",
+        publicationDate: "",
+        variants,
+        foreignEditions,
+        stories: [],
+        issueCredits: [],
+        allWriters: [],
+        allPencilers: [],
+        allInkers: [],
+        allColorists: [],
+        allLetterers: [],
+        allEditors: [],
+        allCoverArtists: [],
+      };
+
+      memoryCache.set(cacheKey, result);
+      return result;
+    }
 
     if (gcdIssueId) {
       const numId = typeof gcdIssueId === "string" ? parseInt(gcdIssueId, 10) : gcdIssueId;
@@ -131,7 +224,7 @@ export async function getGcdRelationalData(
       return null;
     }
 
-    const baseId = issue.variant_of_id || issue.id;
+    baseId = issue.variant_of_id || issue.id;
 
     // Get series details
     const seriesRow = db.prepare("SELECT name FROM gcd_series WHERE id = ?").get(issue.series_id) as any;
