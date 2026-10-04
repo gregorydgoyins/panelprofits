@@ -2,6 +2,7 @@ import { createAdminServerClient, createCleanReadOnlyServerClient } from "@/lib/
 import { ComicRecord, ComicSearchParams, ComicQueryResult } from "@/lib/comics/types";
 import { getComicCoverEvidence } from "@/lib/comics/covers";
 import { createCachedQuery } from "@/lib/cache/wrapper";
+import benchmarksData from "@/lib/pricing/pricecharting-cgc-benchmarks.json";
 
 export const DEFAULT_PAGE_SIZE = 24;
 
@@ -159,6 +160,56 @@ function enrichWithConnoisseurDossier(comic: ComicRecord): ComicRecord {
   };
 }
 
+function enrichWithBenchmarkData(comic: ComicRecord): ComicRecord {
+  const benchmarkKey = `${comic.series} #${comic.issue_number}`;
+  const benchmarkEntry = (benchmarksData as Record<string, any>)[benchmarkKey];
+  if (!benchmarkEntry) return comic;
+
+  const pricecharting = benchmarkEntry.pricecharting;
+  const spreads = benchmarkEntry.spreads;
+  const deltas = benchmarkEntry.deltas;
+  const volume = benchmarkEntry.volume;
+
+  const resolvedPrice98 = comic.pp_grade_9_8_price || comic.baseline_grade_9_8_value || pricecharting?.grade_9_8;
+
+  const updatedPanelProfitsData = {
+    ...(comic.panel_profits_data || {}),
+    pricecharting: pricecharting || comic.panel_profits_data?.pricecharting,
+    spreads: spreads || comic.panel_profits_data?.spreads,
+    deltas: deltas || comic.panel_profits_data?.deltas,
+    volume: volume || comic.panel_profits_data?.volume,
+    is_key_issue: benchmarkEntry.isKeyIssue ?? comic.panel_profits_data?.is_key_issue,
+    ...(pricecharting ? {
+      "PP - Grade RAW Market Price": pricecharting.raw,
+      "PP - Grade 2.0 Market Price": pricecharting.grade_2_0,
+      "PP - Grade 3.0 Market Price": pricecharting.grade_3_0,
+      "PP - Grade 4.0 Market Price": pricecharting.grade_4_0,
+      "PP - Grade 6.0 Market Price": pricecharting.grade_6_0,
+      "PP - Grade 8.0 Market Price": pricecharting.grade_8_0,
+      "PP - Grade 9.0 Market Price": pricecharting.grade_9_0,
+      "PP - Grade 9.2 Market Price": pricecharting.grade_9_2,
+      "PP - Grade 9.4 Market Price": pricecharting.grade_9_4,
+      "PP - Grade 9.6 Market Price": pricecharting.grade_9_6,
+      "PP - Grade 9.8 Market Price": pricecharting.grade_9_8,
+      "PP - Grade 10.0 Market Price": pricecharting.grade_10_0,
+    } : {}),
+  };
+
+  return {
+    ...comic,
+    publisher: comic.publisher && !comic.publisher.includes("Independent /") ? comic.publisher : (benchmarkEntry.publisher || comic.publisher),
+    upc: benchmarkEntry.upc || comic.upc,
+    publication_date: benchmarkEntry.publicationDate || comic.publication_date,
+    pp_source_id: comic.pp_source_id || benchmarkEntry.pricechartingId || null,
+    gcd_source_id: comic.gcd_source_id || benchmarkEntry.comicOrgId || null,
+    pp_grade_9_8_price: resolvedPrice98,
+    baseline_grade_9_8_value: resolvedPrice98,
+    pricecharting_data: pricecharting || comic.pricecharting_data,
+    panel_profits_data: updatedPanelProfitsData,
+    cgc_data: benchmarkEntry.cgc ? ({ cgc_grades: benchmarkEntry.cgc } as any) : comic.cgc_data,
+  };
+}
+
 export async function getComicById(id: string): Promise<ComicRecord | null> {
   if (!id || typeof id !== "string") return null;
   const cleanId = id.trim();
@@ -176,7 +227,7 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
     }
     const { data, error } = await comicQuery.maybeSingle();
     if (!error && data) {
-      return enrichWithConnoisseurDossier(data as ComicRecord);
+      return enrichWithConnoisseurDossier(enrichWithBenchmarkData(data as ComicRecord));
     }
   }
 
@@ -195,6 +246,13 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
       ? catalogRow.publisher 
       : (localVerified.publisher || "Independent");
 
+    const benchmarkKey = `${localVerified.series} #${localVerified.issue_number}`;
+    const benchmarkEntry = (benchmarksData as Record<string, any>)[benchmarkKey];
+    
+    const resolvedPrice98 = localVerified.fmv_usd || benchmarkEntry?.pricecharting?.grade_9_8;
+    const resolvedPubDate = benchmarkEntry?.publicationDate || (localVerified.publication_year ? `${localVerified.publication_year}-01-01` : null);
+    const resolvedUpc = benchmarkEntry?.upc || (localVerified as any).upc || null;
+
     const baseRecord: ComicRecord = {
       id: localVerified.id,
       series: localVerified.series,
@@ -204,25 +262,46 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
       printing: "1",
       direct_or_variant: localVerified.variant || catalogRow?.variant || null,
       cover_variant: null,
-      publisher,
-      publication_date: localVerified.publication_year ? `${localVerified.publication_year}-01-01` : null,
-      publication_year: localVerified.publication_year || null,
-      upc: null,
+      publisher: benchmarkEntry?.publisher || publisher,
+      publication_date: resolvedPubDate,
+      publication_year: localVerified.publication_year || (benchmarkEntry?.publicationDate ? parseInt(benchmarkEntry.publicationDate.slice(0, 4), 10) : null),
+      upc: resolvedUpc,
       alt_upc: null,
-      pp_source_id: (localVerified as any).source_product_id || null,
+      pp_source_id: (localVerified as any).source_product_id || benchmarkEntry?.pricechartingId || null,
       comicbase_source_id: comicbaseSourceId,
-      gcd_source_id: gcdSourceId,
-      pp_grade_9_8_price: localVerified.fmv_usd,
+      gcd_source_id: gcdSourceId || benchmarkEntry?.comicOrgId || null,
+      pp_grade_9_8_price: resolvedPrice98,
       comicbase_price: null,
-      baseline_grade_9_8_value: localVerified.fmv_usd,
+      baseline_grade_9_8_value: resolvedPrice98,
       baseline_grade_9_8_sources: "PriceCharting / Panel Profits Benchmark",
       baseline_grade_9_8_observation_count: 24,
+      pricecharting_data: benchmarkEntry?.pricecharting || null,
       panel_profits_data: {
         ticker: localVerified.ticker,
         era: localVerified.origin_era,
-        "PP - Grade 9.8 Market Price": localVerified.fmv_usd,
-        grade_9_8_value: localVerified.fmv_usd,
+        "PP - Grade 9.8 Market Price": resolvedPrice98,
+        grade_9_8_value: resolvedPrice98,
+        pricecharting: benchmarkEntry?.pricecharting || null,
+        spreads: benchmarkEntry?.spreads || null,
+        deltas: benchmarkEntry?.deltas || null,
+        volume: benchmarkEntry?.volume || null,
+        is_key_issue: benchmarkEntry?.isKeyIssue || false,
+        ...(benchmarkEntry?.pricecharting ? {
+          "PP - Grade RAW Market Price": benchmarkEntry.pricecharting.raw,
+          "PP - Grade 2.0 Market Price": benchmarkEntry.pricecharting.grade_2_0,
+          "PP - Grade 3.0 Market Price": benchmarkEntry.pricecharting.grade_3_0,
+          "PP - Grade 4.0 Market Price": benchmarkEntry.pricecharting.grade_4_0,
+          "PP - Grade 6.0 Market Price": benchmarkEntry.pricecharting.grade_6_0,
+          "PP - Grade 8.0 Market Price": benchmarkEntry.pricecharting.grade_8_0,
+          "PP - Grade 9.0 Market Price": benchmarkEntry.pricecharting.grade_9_0,
+          "PP - Grade 9.2 Market Price": benchmarkEntry.pricecharting.grade_9_2,
+          "PP - Grade 9.4 Market Price": benchmarkEntry.pricecharting.grade_9_4,
+          "PP - Grade 9.6 Market Price": benchmarkEntry.pricecharting.grade_9_6,
+          "PP - Grade 9.8 Market Price": benchmarkEntry.pricecharting.grade_9_8,
+          "PP - Grade 10.0 Market Price": benchmarkEntry.pricecharting.grade_10_0,
+        } : {}),
       } as any,
+      cgc_data: benchmarkEntry?.cgc ? ({ cgc_grades: benchmarkEntry.cgc } as any) : null,
       comicbase_data: null,
       gcd_data: gcdSourceId ? { "GCD - gcd_issue.id": gcdSourceId } : null,
       search_document: null,

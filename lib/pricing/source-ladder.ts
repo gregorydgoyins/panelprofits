@@ -335,8 +335,20 @@ export function getHighestGradedPrice(
  * Corresponds to the bid/ask execution spreads in the 115k dataset and translation layer.
  */
 export function panelProfitsSpreads(comic: Partial<ComicRecord>, grade: Grade): ExecutionSpreads {
-  const ppData = comic.panel_profits_data as Record<string, unknown> | undefined;
+  const ppData = comic.panel_profits_data as Record<string, any> | undefined;
   if (!ppData) return { buy: null, sell: null };
+
+  // 1. Direct structured spreads object
+  if (ppData.spreads && typeof ppData.spreads === "object") {
+    const s = ppData.spreads[grade];
+    if (s && typeof s === "object") {
+      const b = positivePrice(s.buy);
+      const sl = positivePrice(s.sell);
+      if (b !== null || sl !== null) {
+        return { buy: b, sell: sl };
+      }
+    }
+  }
 
   const gradeKey = grade.replace(".", "_");
 
@@ -414,6 +426,26 @@ export function panelProfitsSpreads(comic: Partial<ComicRecord>, grade: Grade): 
   }
 
   return { buy, sell };
+}
+
+export function panelProfitsDelta(
+  comic: Partial<ComicRecord>,
+  grade: Grade
+): number | null {
+  const ppData = comic.panel_profits_data as Record<string, any> | undefined;
+  if (!ppData?.deltas) return null;
+  const val = ppData.deltas[grade];
+  return typeof val === "number" ? val : null;
+}
+
+export function panelProfitsVolume(
+  comic: Partial<ComicRecord>,
+  grade: Grade
+): string | null {
+  const ppData = comic.panel_profits_data as Record<string, any> | undefined;
+  if (!ppData?.volume) return null;
+  const val = ppData.volume[grade];
+  return typeof val === "string" ? val : null;
 }
 
 export function comicBaseReference(comic: Partial<ComicRecord>): number | null {

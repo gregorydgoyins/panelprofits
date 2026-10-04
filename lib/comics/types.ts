@@ -28,6 +28,7 @@ export interface ComicRecord {
   gcd_data: Record<string, any> | null;
   gocollect_data?: Record<string, any> | null;
   cgc_data?: Record<string, any> | null;
+  pricecharting_data?: Record<string, any> | null;
 
   search_document: string | null;
   created_at: string;

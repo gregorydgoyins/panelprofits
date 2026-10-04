@@ -22718,5 +22718,85 @@
         "date": "2026-09-04T06:03:34.063537"
       }
     ]
+  },
+  "Absolute Batman #1": {
+    "series": "Absolute Batman",
+    "issueNumber": "1",
+    "publicationDate": "2024-10-09",
+    "publisher": "DC Comics",
+    "upc": "76194138584600111",
+    "pricechartingId": "7566442",
+    "comicOrgId": "2663120",
+    "isKeyIssue": true,
+    "pricecharting": {
+      "raw": 308.77,
+      "grade_2_0": 208,
+      "grade_3_0": 260,
+      "grade_4_0": 325.4,
+      "grade_6_0": 346.47,
+      "grade_8_0": 416,
+      "grade_9_0": 255.25,
+      "grade_9_2": 541,
+      "grade_9_4": 262.5,
+      "grade_9_6": 357.37,
+      "grade_9_8": 559.98,
+      "grade_10_0": 728
+    },
+    "deltas": {
+      "RAW": 20.24,
+      "4.0": -18.47,
+      "6.0": -19.32,
+      "8.0": -23,
+      "9.2": -30,
+      "9.8": 29.98
+    },
+    "volume": {
+      "RAW": "3 sales per day",
+      "4.0": "rare",
+      "6.0": "rare",
+      "8.0": "5 sales per year",
+      "9.2": "1 sale per month",
+      "9.8": "3 sales per day"
+    },
+    "spreads": {
+      "RAW": {
+        "buy": 170,
+        "sell": 340
+      },
+      "4.0": {
+        "buy": 179,
+        "sell": 358
+      },
+      "6.0": {
+        "buy": 190.5,
+        "sell": 381
+      },
+      "8.0": {
+        "buy": 229,
+        "sell": 458
+      },
+      "9.2": {
+        "buy": 357,
+        "sell": 595
+      },
+      "9.8": {
+        "buy": 369.6,
+        "sell": 616
+      }
+    },
+    "cgc": [
+      {
+        "grade": "9.8",
+        "amount": 559.98,
+        "observedAt": "2024-10-09T00:00:00.000000",
+        "authority": "CGC"
+      },
+      {
+        "grade": "10.0",
+        "amount": 728,
+        "observedAt": "2024-10-09T00:00:00.000000",
+        "authority": "CGC"
+      }
+    ]
   }
 }

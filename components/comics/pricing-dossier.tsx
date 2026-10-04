@@ -11,6 +11,8 @@ import {
   type Grade,
   panelProfitsGrades,
   panelProfitsSpreads,
+  panelProfitsDelta,
+  panelProfitsVolume,
   priceChartingGrades,
   psaGrades,
 } from "@/lib/pricing/source-ladder";
@@ -98,8 +100,10 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
           {PRIMARY_EXCHANGE_GRADES.map(({ grade, label, sublabel }) => {
-            const price = pp[grade] ?? pcGrades[grade] ?? null;
+            const price = pcGrades[grade] ?? pp[grade] ?? null;
             const spreads = panelProfitsSpreads(comic, grade);
+            const delta = panelProfitsDelta(comic, grade);
+            const volume = panelProfitsVolume(comic, grade);
             const isPriced = price !== null && price > 0;
 
             return (
@@ -116,15 +120,29 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
                     <span className="text-xs font-semibold text-slate-200">{label}</span>
                     <span className="text-[9px] text-slate-500 font-mono">{grade}</span>
                   </div>
-                  <div className="text-[10px] text-slate-400 mb-1.5">{sublabel}</div>
-
-                  <div className="text-base sm:text-lg font-bold tabular-nums tracking-tight">
-                    {isPriced ? (
-                      <span className={grade === "9.8" ? "text-cyan-300" : grade === "RAW" ? "text-amber-300" : "text-emerald-300"}>
-                        {formatCurrency(price)}
+                  <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1.5">
+                    <span>{sublabel}</span>
+                    {volume && (
+                      <span className="text-[9px] font-mono text-cyan-400/90 truncate max-w-[95px]" title={volume}>
+                        {volume}
                       </span>
-                    ) : (
-                      <span className="text-slate-600 text-sm">Unpriced</span>
+                    )}
+                  </div>
+
+                  <div className="flex items-baseline justify-between gap-1">
+                    <div className="text-base sm:text-lg font-bold tabular-nums tracking-tight">
+                      {isPriced ? (
+                        <span className={grade === "9.8" ? "text-cyan-300" : grade === "RAW" ? "text-amber-300" : "text-emerald-300"}>
+                          {formatCurrency(price)}
+                        </span>
+                      ) : (
+                        <span className="text-slate-600 text-sm">Unpriced</span>
+                      )}
+                    </div>
+                    {delta !== null && delta !== undefined && (
+                      <div className={`text-[10px] font-mono font-semibold ${delta >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                        {delta >= 0 ? `+${formatCurrency(delta)}` : `-${formatCurrency(Math.abs(delta))}`}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -133,13 +151,13 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
                 <div className="mt-3 pt-2 border-t border-slate-800/80 font-mono text-[10.5px] space-y-0.5">
                   <div className="flex items-center justify-between">
                     <span className="text-slate-500 text-[9.5px]">BUY:</span>
-                    <span className={spreads.buy ? "text-blue-400" : "text-slate-600"}>
+                    <span className={spreads.buy ? "text-blue-400 font-medium" : "text-slate-600"}>
                       {spreads.buy ? formatCurrency(spreads.buy) : "—"}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-slate-500 text-[9.5px]">SELL:</span>
-                    <span className={spreads.sell ? "text-emerald-400" : "text-slate-600"}>
+                    <span className={spreads.sell ? "text-emerald-400 font-medium" : "text-slate-600"}>
                       {spreads.sell ? formatCurrency(spreads.sell) : "—"}
                     </span>
                   </div>
