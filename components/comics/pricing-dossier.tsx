@@ -25,6 +25,7 @@ import {
 import { formatCurrency } from "@/lib/utils";
 import { getCleanPricingEvidence } from "@/lib/pricing/clean";
 import { TrendingUp, ArrowDownRight, ArrowUpRight, ShieldCheck } from "lucide-react";
+import { TierJumpControls } from "./tier-jump-controls";
 
 const SOURCES = [
   "Panel Profits",
@@ -203,28 +204,46 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
 
       {/* Multi-Authority Comparison Table with Explicit Buy/Sell & Graded Lines */}
       <div>
-        <div className="text-[11px] font-mono uppercase tracking-wider text-slate-400 mb-2 flex items-center justify-between">
-          <span>Cross-Authority Evidence Registry</span>
-          <span className="text-[10px] text-slate-500">continuous buy/sell order book depth & certified slab isolation</span>
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+          <div className="text-[11px] font-mono uppercase tracking-wider text-slate-300 flex items-center gap-2">
+            <span className="font-bold text-cyan-300">Cross-Authority Evidence Registry</span>
+            <span className="text-slate-600">·</span>
+            <span className="text-[10px] text-slate-400">Continuous 26-Grade Matrix (0.5 – 10.0 + RAW)</span>
+          </div>
+
+          {/* Quick Grade Tier Jump Controls */}
+          <TierJumpControls />
         </div>
 
         <div
-          className="overflow-x-auto rounded-lg border border-slate-700 focus-visible:ring-2 focus-visible:ring-cyan-400"
+          className="overflow-x-auto rounded-lg border border-slate-700/80 bg-[#080B11] focus-visible:ring-2 focus-visible:ring-cyan-400 shadow-inner"
           role="region"
           aria-label="Pricing evidence ladder by source and grade tier"
           tabIndex={0}
         >
-          <table className="w-full min-w-[1120px] border-collapse text-left text-xs tabular-nums">
-            <thead className="bg-slate-900 text-slate-300">
+          <table className="w-full min-w-[2450px] border-collapse text-left text-xs tabular-nums">
+            <thead className="bg-[#0C1017] text-slate-300 border-b border-slate-700">
               <tr>
-                <th scope="col" className="sticky left-0 z-10 bg-slate-900 px-3 py-3 font-medium border-r border-slate-800 min-w-[280px]">
+                <th
+                  scope="col"
+                  className="sticky left-0 z-20 bg-[#0C1017] shadow-[4px_0_12px_rgba(0,0,0,0.6)] px-3.5 py-3 font-semibold text-slate-200 border-r border-slate-700/80 min-w-[280px] w-[280px]"
+                >
                   Authority Source / Metric
                 </th>
                 {GRADES.map((grade) => (
                   <th
                     scope="col"
                     key={grade}
-                    className={`px-2 py-3 text-right font-medium ${grade === "RAW" ? "text-amber-300 font-semibold" : ""}`}
+                    id={`grade-col-${grade.replace(".", "-")}`}
+                    className={`w-[82px] min-w-[82px] px-2.5 py-3 text-right font-medium tracking-tight ${
+                      grade === "RAW"
+                        ? "text-amber-300 font-bold bg-amber-950/20"
+                        : grade === "9.8"
+                        ? "text-cyan-300 font-bold bg-cyan-950/20"
+                        : grade === "10.0"
+                        ? "text-emerald-300 font-bold bg-emerald-950/20"
+                        : ""
+                    }`}
                   >
                     {grade}
                   </th>
@@ -473,7 +492,7 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
                 <tr key={row.id} className="hover:bg-slate-800/40 transition-colors">
                   <th
                     scope="row"
-                    className="sticky left-0 bg-[#111319] px-3 py-2.5 whitespace-nowrap font-medium text-slate-100 border-r border-slate-800"
+                    className="sticky left-0 z-10 bg-[#0C1017] shadow-[4px_0_12px_rgba(0,0,0,0.6)] px-3.5 py-2.5 whitespace-nowrap font-medium text-slate-100 border-r border-slate-700/80 min-w-[280px] w-[280px]"
                   >
                     <div className="flex items-center gap-1.5">
                       <span className="text-slate-200">{row.source}</span>
@@ -485,7 +504,10 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
                   {GRADES.map((grade) => {
                     if (grade === "RAW" && row.isGradedOnly) {
                       return (
-                        <td key={grade} className="px-2 py-2.5 text-right text-slate-600 font-mono">
+                        <td
+                          key={grade}
+                          className="w-[82px] min-w-[82px] px-2.5 py-2.5 text-right text-slate-600 font-mono bg-slate-950/20"
+                        >
                           —
                         </td>
                       );
@@ -494,7 +516,15 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
                     return (
                       <td
                         key={grade}
-                        className={`px-2 py-2.5 text-right ${colorClass || "text-slate-600"}`}
+                        className={`w-[82px] min-w-[82px] px-2.5 py-2.5 text-right whitespace-nowrap font-mono ${colorClass || "text-slate-600"} ${
+                          grade === "RAW"
+                            ? "bg-amber-950/5 font-semibold"
+                            : grade === "9.8"
+                            ? "bg-cyan-950/5 font-semibold"
+                            : grade === "10.0"
+                            ? "bg-emerald-950/5 font-semibold"
+                            : ""
+                        }`}
                       >
                         {display}
                       </td>

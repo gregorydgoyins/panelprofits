@@ -23,6 +23,7 @@ import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
 import { Sparkles, BookOpen, Activity, ArrowUpRight } from "lucide-react";
 import { GcdBibliographicDossier } from "@/components/comics/gcd-bibliographic-dossier";
 import { AtomicVariantsAndInternationalMatrix } from "@/components/comics/atomic-variants-and-international-matrix";
+import { BlendedHoldingDossier } from "@/components/comics/blended-holding-dossier";
 import { getGcdRelationalData } from "@/lib/comics/gcd-relational-service";
 import { InvestopediaValuationLens } from "@/components/finance/investopedia-valuation-lens";
 import { computeComicValuationMetrics } from "@/lib/finance/investopedia-service";
@@ -709,6 +710,13 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
               </Link>
             </div>
           </div>
+
+          {/* 0. Blended Position Ledger: My Stuff (Portfolio Holdings) × Your Stuff (Terminal Market Intelligence) */}
+          <BlendedHoldingDossier
+            comic={comic}
+            userStatus={userStatus}
+            isAuthenticated={Boolean(user)}
+          />
 
           {/* 1. Canonical Multi-Grade Pricing Dossier */}
           <PricingDossier comic={comic} />
