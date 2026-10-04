@@ -75,7 +75,7 @@ import { getVerifiedEquityByIdOrTicker, getVerifiedRealEquities } from "@/lib/eq
 import ppix100Data from "@/lib/equity/ppix-100-constituents.json";
 
 function enrichWithConnoisseurDossier(comic: ComicRecord): ComicRecord {
-  // Look for matching CE70 dossier
+  // Look for matching CE70 dossier ONLY for authenticated CE70 benchmark seats
   const cleanSeries = (comic.series || "").toLowerCase().trim();
   const cleanIssue = (comic.issue_number || "").toLowerCase().trim();
 
@@ -91,14 +91,13 @@ function enrichWithConnoisseurDossier(comic: ComicRecord): ComicRecord {
     );
   });
 
+  const existingPp = (comic.panel_profits_data && typeof comic.panel_profits_data === "object") ? comic.panel_profits_data : {};
+
   if (matchedDossier) {
     const bench = lookupReferenceFmv(matchedDossier.seatNumber, matchedDossier.title, matchedDossier.canonicalId);
-    // Grounded 9.8 valuation ONLY if verified 9.8 benchmark exists; non-9.8 holdings never receive 9.8 value
     const fmv98 = bench?.grade98FmvUsd ?? null;
     const rawFmv = bench?.rawFmvUsd ?? null;
     const coverPrice = bench?.coverPrice ?? null;
-
-    const existingPp = (comic.panel_profits_data && typeof comic.panel_profits_data === "object") ? comic.panel_profits_data : {};
 
     const panelProfitsData = {
       ...existingPp,
@@ -133,32 +132,8 @@ function enrichWithConnoisseurDossier(comic: ComicRecord): ComicRecord {
         "9.6": bench.grade96FmvUsd,
         "9.8": fmv98,
       } : undefined),
-      video_discussions: (existingPp as any).video_discussions || [
-        {
-          title: `${matchedDossier.title} - Certified Census & Market Appraisal`,
-          channel: "Comic Book Market Intelligence",
-          duration: "14:28",
-          views: "28.4K views",
-          topics: ["Census Population", "CGC 9.8 Universal Anchor", "Historical Auction Hammers"],
-        },
-        {
-          title: `${matchedDossier.title} - Connoisseurial Deep Dive & Gregory Room Test`,
-          channel: "Panel Profits Forensic Desk",
-          duration: "18:45",
-          views: "15.2K views",
-          topics: ["Authorial Presence", "Aesthetic Lineage", "Physical Specimen Preservation"],
-        },
-        {
-          title: `Why ${matchedDossier.title} Commands Historic Institutional Capital`,
-          channel: "The Obsidian Bourse Journal",
-          duration: "11:15",
-          views: "19.8K views",
-          topics: ["Economic Float", "Vault Lockup Ratio", "Secondary Liquidity"],
-        },
-      ],
     };
 
-    // ComicBase is an entirely separate pricing source and must never be forged from benchmarks
     return {
       ...comic,
       pp_grade_9_8_price: comic.pp_grade_9_8_price ?? fmv98,
@@ -172,25 +147,10 @@ function enrichWithConnoisseurDossier(comic: ComicRecord): ComicRecord {
     };
   }
 
-  // Non-CE70 catalog items: Preserve authentic market data without synthetic connoisseur scores
+  // Non-CE70 catalog items: Preserve authentic market data without synthetic connoisseur scores or fake video cards
   const panelProfitsData = {
-    era: comic.publication_year && comic.publication_year < 1956 ? "Golden Age" : comic.publication_year && comic.publication_year < 1970 ? "Silver Age" : comic.publication_year && comic.publication_year < 1985 ? "Bronze Age" : "Modern Age",
-    video_discussions: [
-      {
-        title: `${comic.series} #${comic.issue_number} - Census Analysis & Market Valuation`,
-        channel: "Comic Book Market Intelligence",
-        duration: "12:15",
-        views: "18.2K views",
-        topics: ["CGC Census Breakdown", "Recent Auction Sales", "Price Trend Trajectory"],
-      },
-      {
-        title: `${comic.series} #${comic.issue_number} - Collector Review & Historical Significance`,
-        channel: "The Comic Collector Vlog",
-        duration: "15:40",
-        views: "12.5K views",
-        topics: ["Key Issue Debuts", "Cover Art Analysis", "Condition & Preservation"],
-      },
-    ],
+    ...existingPp,
+    era: (existingPp as any).era || (comic.publication_year && comic.publication_year < 1956 ? "Golden Age" : comic.publication_year && comic.publication_year < 1970 ? "Silver Age" : comic.publication_year && comic.publication_year < 1985 ? "Bronze Age" : "Modern Age"),
   };
 
   return {
@@ -203,7 +163,24 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
   if (!id || typeof id !== "string") return null;
   const cleanId = id.trim();
 
-  // 1. High-speed local verified equities check (<1ms)
+  // 1. Direct Database ID check (SHA hash, UUID, or pp-id): Always prioritize authentic database record
+  const isDirectDbId = /^[a-f0-9]{32,64}$/i.test(cleanId) || /^pp-/i.test(cleanId) || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanId);
+  if (isDirectDbId) {
+    const supabase = createAdminServerClient();
+    let comicQuery = supabase.from("comics").select("*");
+    if (/^pp-/i.test(cleanId)) {
+      const ppNum = cleanId.replace(/^pp-/i, "");
+      comicQuery = comicQuery.eq("pp_source_id", ppNum);
+    } else {
+      comicQuery = comicQuery.eq("id", cleanId);
+    }
+    const { data, error } = await comicQuery.maybeSingle();
+    if (!error && data) {
+      return enrichWithConnoisseurDossier(data as ComicRecord);
+    }
+  }
+
+  // 2. High-speed local verified equities check (<1ms)
   const localVerified = getVerifiedEquityByIdOrTicker(cleanId);
   if (localVerified) {
     const timestamp = new Date().toISOString();
@@ -230,7 +207,6 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
       baseline_grade_9_8_sources: "PriceCharting / Panel Profits Benchmark",
       baseline_grade_9_8_observation_count: 24,
       panel_profits_data: {
-        gregory_score: localVerified.gregory_score || 192.5,
         ticker: localVerified.ticker,
         era: localVerified.origin_era,
       } as any,

@@ -22,6 +22,8 @@ import { resolveAuthoritativePublisher } from "@/lib/comics/publisher-authority"
 import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
 import { Sparkles, BookOpen, Activity, ArrowUpRight } from "lucide-react";
 import { GcdBibliographicDossier } from "@/components/comics/gcd-bibliographic-dossier";
+import { AtomicVariantsAndInternationalMatrix } from "@/components/comics/atomic-variants-and-international-matrix";
+import { getGcdRelationalData } from "@/lib/comics/gcd-relational-service";
 import { InvestopediaValuationLens } from "@/components/finance/investopedia-valuation-lens";
 import { computeComicValuationMetrics } from "@/lib/finance/investopedia-service";
 
@@ -61,7 +63,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     notFound();
   }
 
-  const [coverEvidence, censusDossier, userStatus] = await Promise.all([
+  const [coverEvidence, censusDossier, userStatus, gcdRelational] = await Promise.all([
     getComicCoverEvidence(comic.id).catch((err) => {
       console.warn("Cover evidence read unavailable:", err);
       return null;
@@ -86,6 +88,14 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
           isInWatchlist: false,
           watchlistItem: null,
         }),
+    getGcdRelationalData(
+      comic.gcd_source_id || (comic.gcd_data as any)?.["GCD - gcd_issue.id"],
+      comic.series,
+      comic.issue_number
+    ).catch((err) => {
+      console.warn("GCD relational read unavailable:", err);
+      return null;
+    }),
   ]);
   const seriesLabel = displaySeries(comic.series, comic.issue_number);
   const issueLabel = displayIssue(comic.issue_number);
@@ -408,7 +418,15 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
             />
           </div>
 
-          {/* 6. GCD Archival Bibliographic Dossier: Creators, Physical Specs & Story Arc */}
+          {/* 6. Atomic Tradeable Instrument Matrix: Published Variants, International Editions & Creators */}
+          <AtomicVariantsAndInternationalMatrix
+            relationalData={gcdRelational}
+            currentComicId={comic.id}
+            series={comic.series}
+            issueNumber={comic.issue_number}
+          />
+
+          {/* 7. GCD Archival Bibliographic Dossier: Physical Specs & Archival Notes */}
           <GcdBibliographicDossier
             gcdData={comic.gcd_data as any}
             publisher={authoritativePublisher}
