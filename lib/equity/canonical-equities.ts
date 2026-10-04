@@ -39,6 +39,7 @@ export interface SovereignEquityItem {
   year?: number;
   publisher?: string;
   variant?: string | null;
+  keyBadge?: string | null;
 }
 
 export interface CanonicalAssetSurface {

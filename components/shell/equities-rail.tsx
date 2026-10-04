@@ -6,6 +6,11 @@ import type { MarketIndexRecord } from "@/lib/market/indices";
 import type { EquityItem, EquityResponse } from "@/lib/equity/ticker-types";
 import { lookupReferenceFmv, isProvenSovereignCopy } from "@/lib/pricing/reference-benchmarks";
 import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
+import {
+  resolveHistoricalKeyBadge,
+  resolveHistoricalScarcityTier,
+  resolveHistoricalMarketClass,
+} from "@/lib/equity/significance-classifier";
 import { TickerHeader } from "@/components/tickers/ticker-header";
 import { EquityCard } from "@/components/tickers/equity-card";
 
@@ -31,21 +36,31 @@ export function EquitiesRail({ items: initialItems = [], indices = [], initialOf
     return initialItems.map((item, idx) => {
       const eraKey = (item.productionAge || item.originEra || "modern").toLowerCase().replace(/_age$/, "").replace(/\s+age$/, "");
       const fmv = item.referenceFmvUsd || 0;
-      let tier = "rare";
-      if (fmv >= 50000) tier = "mythic";
-      else if (fmv >= 15000) tier = "legendary";
-      else if (fmv >= 4000) tier = "epic";
-      else if (fmv >= 1000) tier = "rare";
-      else if (fmv >= 300) tier = "uncommon";
-      else tier = "common";
-
       const itemGrade = String(item.referenceGrade || "9.8").trim();
+
       const bench = lookupReferenceFmv(item.seatNumber, item.title, item.canonicalIssueId);
       const isTrulySovereign = !item.variant && isProvenSovereignCopy(itemGrade, bench, {
         isVariant: Boolean(item.variant),
         variantName: item.variant,
       });
-      const marketClass = fmv >= 45 ? "PREMIUM" : fmv >= 20 ? "STD" : "OTC";
+
+      // Enforce Price Firewall: Scarcity Tier & Market Class gated by Historical & Cultural Significance
+      const keyBadge = item.keyBadge || resolveHistoricalKeyBadge(item.series, item.issueNumber);
+      const tier = resolveHistoricalScarcityTier({
+        year: item.year,
+        era: eraKey,
+        keyBadge,
+        isSovereign: isTrulySovereign,
+        gregoryScore: item.gregoryScore,
+        variant: item.variant,
+      });
+      const marketClass = resolveHistoricalMarketClass({
+        isSovereign: isTrulySovereign,
+        keyBadge,
+        year: item.year,
+        era: eraKey,
+        variant: item.variant,
+      });
       const effectiveAssetClass = isTrulySovereign ? "SOV" : marketClass;
 
       const cleanTicker = (
@@ -98,6 +113,7 @@ export function EquitiesRail({ items: initialItems = [], indices = [], initialOf
           coverSuppressReason: null,
           identityConfidence: 99,
           quarantined: false,
+          keyBadge,
         },
       };
     });

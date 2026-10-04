@@ -13,6 +13,7 @@ import { createCleanReadOnlyServerClient } from "@/lib/supabase/admin";
 import { formatComicEquityTicker } from "./ticker-formatting";
 import { resolveProductionAge } from "./ticker-utils";
 import { resolveAuthoritativePublisher } from "@/lib/comics/publisher-authority";
+import { resolveHistoricalKeyBadge } from "./significance-classifier";
 import type { SovereignEquityItem } from "./canonical-equities";
 import landmarkSovereignsJson from "./landmark-sovereigns.json";
 
@@ -126,6 +127,7 @@ function mapDbRow(r: any, idx: number, offset: number, blockIndex: number): Sove
   const fmv = Number(r.fmv_usd || 24.50);
   const cover = upgradeCoverUrl(r.cover_url);
   const ticker = formatComicEquityTicker(r.series, r.issue_number);
+  const keyBadge = resolveHistoricalKeyBadge(r.series, r.issue_number);
 
   return {
     id: r.id || `block-${blockIndex}-${idx}`,
@@ -141,7 +143,7 @@ function mapDbRow(r: any, idx: number, offset: number, blockIndex: number): Sove
     referenceGrade: r.reference_grade || "9.8",
     referenceFmvUsd: fmv,
     priceFormatted: `$${fmv.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-    gregoryScore: 192.5,
+    gregoryScore: Number(r.gregory_score) || 192.5,
     deltaPercent: Number(r.delta_percent || 0.45),
     status: "ACTIVE",
     coverUrl: cover,
@@ -149,6 +151,7 @@ function mapDbRow(r: any, idx: number, offset: number, blockIndex: number): Sove
     year: rawYear || (eraKey === "golden" ? 1945 : eraKey === "silver" ? 1964 : eraKey === "bronze" ? 1978 : eraKey === "copper" ? 1988 : 2005),
     publisher: resolveAuthoritativePublisher(r.series, r.publisher),
     variant: r.variant || null,
+    keyBadge,
   };
 }
 
@@ -177,6 +180,7 @@ function interleaveItems(
 
 /**
  * Loads a full 5,000-comic queue block from storage (SQLite or PostgreSQL)
+ * Gated by Historical & Cultural Significance rather than raw dollar price.
  */
 async function loadQueueBlock(blockIndex: number, era?: string): Promise<SovereignEquityItem[]> {
   const cacheKey = `${blockIndex}:${era || "all"}`;
@@ -198,14 +202,14 @@ async function loadQueueBlock(blockIndex: number, era?: string): Promise<Soverei
                fmv_usd, price_formatted, cover_url, ticker, origin_era, production_age, 
                reference_grade, gregory_score, delta_percent, status, variant 
         FROM verified_equities 
-        WHERE fmv_usd >= 17.01 AND cover_url IS NOT NULL AND cover_url != '' AND (variant IS NULL OR variant = '')
+        WHERE cover_url IS NOT NULL AND cover_url != '' AND (variant IS NULL OR variant = '')
       `;
       let varSql = `
         SELECT id, series, issue_number, title, publication_year, publisher, 
                fmv_usd, price_formatted, cover_url, ticker, origin_era, production_age, 
                reference_grade, gregory_score, delta_percent, status, variant 
         FROM verified_equities 
-        WHERE fmv_usd >= 17.01 AND cover_url IS NOT NULL AND cover_url != '' AND variant IS NOT NULL AND variant != ''
+        WHERE cover_url IS NOT NULL AND cover_url != '' AND variant IS NOT NULL AND variant != ''
       `;
       const baseParams: any[] = [];
       const varParams: any[] = [];
@@ -215,10 +219,27 @@ async function loadQueueBlock(blockIndex: number, era?: string): Promise<Soverei
         varSql += ` AND (LOWER(production_age) = ? OR LOWER(origin_era) = ?)`;
         varParams.push(era.toLowerCase(), era.toLowerCase());
       }
-      baseSql += ` ORDER BY fmv_usd DESC, id ASC LIMIT ? OFFSET ?`;
+
+      const historicalSort = `
+        ORDER BY 
+          CASE 
+            WHEN publication_year <= 1945 THEN 1
+            WHEN publication_year <= 1955 THEN 2
+            WHEN publication_year <= 1969 THEN 3
+            WHEN publication_year <= 1983 THEN 4
+            WHEN publication_year <= 1991 THEN 5
+            ELSE 6
+          END ASC, 
+          gregory_score DESC, 
+          publication_year ASC, 
+          id ASC 
+        LIMIT ? OFFSET ?
+      `;
+
+      baseSql += historicalSort;
       baseParams.push(Math.floor(limit * 0.8), (offset % 38957));
 
-      varSql += ` ORDER BY fmv_usd DESC, id ASC LIMIT ? OFFSET ?`;
+      varSql += historicalSort;
       varParams.push(Math.ceil(limit * 0.25), Math.floor((offset * 0.2) % 3445));
 
       const baseRows = sqlite.prepare(baseSql).all(...baseParams) as any[];
@@ -239,8 +260,7 @@ async function loadQueueBlock(blockIndex: number, era?: string): Promise<Soverei
       const db = createCleanReadOnlyServerClient();
       let baseQuery = db
         .from("verified_equities")
-        .select("id, series, issue_number, title, publication_year, publisher, fmv_usd, price_formatted, cover_url, ticker, origin_era, production_age, reference_grade, delta_percent, variant")
-        .gte("fmv_usd", 17.01)
+        .select("id, series, issue_number, title, publication_year, publisher, fmv_usd, price_formatted, cover_url, ticker, origin_era, production_age, reference_grade, gregory_score, delta_percent, variant")
         .or("variant.is.null,variant.eq.")
         .not("cover_url", "is", null)
         .neq("cover_url", "")
@@ -249,8 +269,7 @@ async function loadQueueBlock(blockIndex: number, era?: string): Promise<Soverei
 
       let varQuery = db
         .from("verified_equities")
-        .select("id, series, issue_number, title, publication_year, publisher, fmv_usd, price_formatted, cover_url, ticker, origin_era, production_age, reference_grade, delta_percent, variant")
-        .gte("fmv_usd", 17.01)
+        .select("id, series, issue_number, title, publication_year, publisher, fmv_usd, price_formatted, cover_url, ticker, origin_era, production_age, reference_grade, gregory_score, delta_percent, variant")
         .not("variant", "is", null)
         .neq("variant", "")
         .not("cover_url", "is", null)
@@ -267,8 +286,8 @@ async function loadQueueBlock(blockIndex: number, era?: string): Promise<Soverei
       const safeVarOffset = Math.floor((offset * 0.2) % 3445);
 
       const [baseRes, varRes] = await Promise.all([
-        baseQuery.order("fmv_usd", { ascending: false }).order("id", { ascending: true }).range(safeBaseOffset, safeBaseOffset + Math.floor(limit * 0.8) - 1),
-        varQuery.order("fmv_usd", { ascending: false }).order("id", { ascending: true }).range(safeVarOffset, safeVarOffset + Math.ceil(limit * 0.25) - 1),
+        baseQuery.order("gregory_score", { ascending: false }).order("publication_year", { ascending: true }).order("id", { ascending: true }).range(safeBaseOffset, safeBaseOffset + Math.floor(limit * 0.8) - 1),
+        varQuery.order("gregory_score", { ascending: false }).order("publication_year", { ascending: true }).order("id", { ascending: true }).range(safeVarOffset, safeVarOffset + Math.ceil(limit * 0.25) - 1),
       ]);
 
       const mappedBase = (baseRes.data || []).map((r, idx) => mapDbRow(r, idx, offset, blockIndex));
@@ -304,6 +323,7 @@ async function loadQueueBlock(blockIndex: number, era?: string): Promise<Soverei
       year: lm.year,
       publisher: lm.publisher,
       variant: null,
+      keyBadge: resolveHistoricalKeyBadge(lm.series, lm.issueNumber) || "Sovereign Landmark",
     }));
 
     const seen = new Set(landmarkItems.map(l => `${l.series} #${l.issueNumber}`.toLowerCase()));

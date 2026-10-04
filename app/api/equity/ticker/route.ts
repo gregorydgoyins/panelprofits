@@ -3,6 +3,11 @@ import { getContinuousQueueSlice, TOTAL_CATALOG_UNIVERSE } from "@/lib/equity/co
 import { getAuthoritativeCoverStrict } from "@/lib/comics/cover-authority";
 import { resolveAuthoritativePublisher } from "@/lib/comics/publisher-authority";
 import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
+import {
+  resolveHistoricalKeyBadge,
+  resolveHistoricalScarcityTier,
+  resolveHistoricalMarketClass,
+} from "@/lib/equity/significance-classifier";
 import type { EquityItem, EquityResponse } from "@/lib/equity/ticker-types";
 
 export const dynamic = "force-dynamic";
@@ -25,13 +30,12 @@ export async function GET(request: Request) {
   const queueResult = await getContinuousQueueSlice(effectiveOffset, limitParam, eraParam);
   const baseItems = queueResult.items;
 
-  // Pre-Queue verification gate: cover must be valid image URL & FMV >= $17.01
+  // Pre-Queue verification gate: cover must be valid image URL
   const validBaseItems = baseItems.filter((item) => {
     const authoritativePublisher = resolveAuthoritativePublisher(item.series, item.publisher);
     const cover = item.coverUrl || getAuthoritativeCoverStrict(item.series, item.issueNumber, authoritativePublisher, item.year || 1990);
     if (!cover) return false;
     if (cover.includes("svg") || cover.startsWith("data:image/svg")) return false;
-    if ((item.referenceFmvUsd || 0) < 17.01) return false;
     return true;
   });
 
@@ -40,21 +44,6 @@ export async function GET(request: Request) {
       .toLowerCase()
       .replace(/_age$/, "")
       .replace(/\s+age$/, "");
-
-    let tier = "rare";
-    if (item.referenceFmvUsd >= 50000) {
-      tier = "mythic";
-    } else if (item.referenceFmvUsd >= 15000) {
-      tier = "legendary";
-    } else if (item.referenceFmvUsd >= 4000) {
-      tier = "epic";
-    } else if (item.referenceFmvUsd >= 1000) {
-      tier = "rare";
-    } else if (item.referenceFmvUsd >= 300) {
-      tier = "uncommon";
-    } else {
-      tier = "common";
-    }
 
     const itemGrade = String(item.referenceGrade || "9.8").trim();
 
@@ -68,7 +57,25 @@ export async function GET(request: Request) {
       (String(item.id).startsWith("seat-") && (item as any).seatNumber <= 65)
     );
 
-    const marketClass = item.referenceFmvUsd >= 45 ? "PREMIUM" : item.referenceFmvUsd >= 20 ? "STD" : "OTC";
+    // Enforce Price Firewall (Rule C of CE70 Constitution):
+    // Scarcity Tier and Market Class are determined by Historical Significance,
+    // Cultural Gravity, and Milestone Status — NOT raw dollar prices.
+    const keyBadge = item.keyBadge || resolveHistoricalKeyBadge(item.series, item.issueNumber);
+    const tier = resolveHistoricalScarcityTier({
+      year: item.year,
+      era: eraKey,
+      keyBadge,
+      isSovereign: isTrulySovereign,
+      gregoryScore: (item as any).gregoryScore,
+      variant: item.variant,
+    });
+    const marketClass = resolveHistoricalMarketClass({
+      isSovereign: isTrulySovereign,
+      keyBadge,
+      year: item.year,
+      era: eraKey,
+      variant: item.variant,
+    });
     const effectiveAssetClass = isTrulySovereign ? "SOV" : marketClass;
 
     const authoritativePublisher = resolveAuthoritativePublisher(item.series, item.publisher);
@@ -118,7 +125,7 @@ export async function GET(request: Request) {
         quarantined: false,
         writer: (item as any).writer || (item as any).creators || null,
         penciler: (item as any).penciler || null,
-        keyBadge: (item as any).keyBadge || null,
+        keyBadge: keyBadge || (item as any).keyBadge || null,
         genre: (item as any).genre || null,
       },
     };
