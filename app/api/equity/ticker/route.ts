@@ -1,18 +1,27 @@
 import { NextResponse } from "next/server";
 import { getContinuousQueueSlice, TOTAL_CATALOG_UNIVERSE } from "@/lib/equity/continuous-queue-engine";
 import { getAuthoritativeCoverStrict } from "@/lib/comics/cover-authority";
+import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
 import type { EquityItem, EquityResponse } from "@/lib/equity/ticker-types";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const limitParam = parseInt(searchParams.get("limit") || "80", 10);
+  const limitParam = Math.min(Math.max(parseInt(searchParams.get("limit") || "80", 10), 10), 200);
   const offsetParam = parseInt(searchParams.get("offset") || "0", 10);
   const eraParam = searchParams.get("era") || undefined;
+  const randomStart = searchParams.get("randomStart") === "1" || searchParams.get("reload") === "1";
+
+  let effectiveOffset = offsetParam;
+  if (randomStart) {
+    const totalChunks = Math.floor(TOTAL_CATALOG_UNIVERSE / 260);
+    const randomChunk = Math.floor(Math.random() * totalChunks);
+    effectiveOffset = randomChunk * 260;
+  }
 
   // Stream continuous 5,000-comic blocks across 115,712 catalog
-  const queueResult = await getContinuousQueueSlice(offsetParam, limitParam, eraParam);
+  const queueResult = await getContinuousQueueSlice(effectiveOffset, limitParam, eraParam);
   const baseItems = queueResult.items;
 
   // Pre-Queue verification gate: cover must be valid image URL & FMV >= $17.01
@@ -51,6 +60,7 @@ export async function GET(request: Request) {
     const effectiveAssetClass = isTrulySovereign ? "SOV" : marketClass;
 
     const resolvedCover = item.coverUrl || getAuthoritativeCoverStrict(item.series, item.issueNumber, item.publisher || "Independent", item.year || 1990);
+    const canonicalTicker = formatComicEquityTicker(item.series, item.issueNumber);
 
     return {
       entryId: `eq-${item.id || idx}`,
@@ -64,7 +74,7 @@ export async function GET(request: Request) {
         asset_class: effectiveAssetClass,
       },
       identity: {
-        assetId: item.ticker,
+        assetId: canonicalTicker,
         productName: item.variant
           ? `${item.series} #${item.issueNumber} [${item.variant}]`
           : `${item.series} #${item.issueNumber}`,
@@ -73,7 +83,7 @@ export async function GET(request: Request) {
         variant: item.variant || null,
         productionAge: eraKey,
         scarcityTier: tier,
-        detailUrl: `/comics/${encodeURIComponent(item.canonicalIssueId || item.id || item.ticker)}`,
+        detailUrl: `/comics/${encodeURIComponent(item.canonicalIssueId || item.id || canonicalTicker)}`,
         assetClass: effectiveAssetClass,
         marketPriceClass: marketClass,
         isSovereign: isTrulySovereign,
@@ -91,6 +101,9 @@ export async function GET(request: Request) {
       },
     };
   });
+
+  // Next continuous batch advances by 260 comics to load non-overlapping fresh pieces
+  const nextOffset = (effectiveOffset + 260) % TOTAL_CATALOG_UNIVERSE;
 
   const response: EquityResponse = {
     surface: "EQUITY",

@@ -173,10 +173,17 @@ export function validateCe70Constituent(item: {
  * Resolves the server-side initial render hydration gap by querying the continuous
  * 5,000-comic queue engine, ensuring authentic unrounded pennies, verified covers, and real publication years.
  */
-async function fetchSovereignEquitiesRaw(limit = 150): Promise<SovereignEquityItem[]> {
+async function fetchSovereignEquitiesRaw(limit = 80, offset?: number): Promise<SovereignEquityItem[]> {
   try {
-    const { getContinuousQueueSlice } = await import("./continuous-queue-engine");
-    const result = await getContinuousQueueSlice(0, limit);
+    const { getContinuousQueueSlice, TOTAL_CATALOG_UNIVERSE } = await import("./continuous-queue-engine");
+    let startingOffset = offset;
+    if (startingOffset === undefined) {
+      // Pick a randomized 260-comic chunk across the 115,712 catalog
+      const totalChunks = Math.floor(TOTAL_CATALOG_UNIVERSE / 260);
+      const randomChunk = Math.floor(Math.random() * totalChunks);
+      startingOffset = randomChunk * 260;
+    }
+    const result = await getContinuousQueueSlice(startingOffset, limit);
     if (result.items && result.items.length > 0) {
       return result.items;
     }
@@ -187,8 +194,8 @@ async function fetchSovereignEquitiesRaw(limit = 150): Promise<SovereignEquityIt
   }
 }
 
-export async function getSovereignEquities(limit = 150): Promise<SovereignEquityItem[]> {
-  return fetchSovereignEquitiesRaw(limit);
+export async function getSovereignEquities(limit = 80, offset?: number): Promise<SovereignEquityItem[]> {
+  return fetchSovereignEquitiesRaw(limit, offset);
 }
 
 /**

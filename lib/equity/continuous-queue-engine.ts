@@ -159,7 +159,7 @@ async function loadQueueBlock(blockIndex: number, era?: string): Promise<Soverei
           const eraKey = resolveEra(rawYear, r.origin_era || r.production_age);
           const fmv = Number(r.fmv_usd || 24.50);
           const cover = upgradeCoverUrl(r.cover_url);
-          const ticker = r.ticker || formatComicEquityTicker(r.series, r.issue_number);
+          const ticker = formatComicEquityTicker(r.series, r.issue_number);
 
           return {
             id: r.id || `block-${blockIndex}-${idx}`,
@@ -222,7 +222,7 @@ async function loadQueueBlock(blockIndex: number, era?: string): Promise<Soverei
           const eraKey = resolveEra(rawYear, r.origin_era || r.production_age);
           const fmv = Number(r.fmv_usd || 24.50);
           const cover = upgradeCoverUrl(r.cover_url);
-          const ticker = r.ticker || formatComicEquityTicker(r.series, r.issue_number);
+          const ticker = formatComicEquityTicker(r.series, r.issue_number);
 
           return {
             id: r.id || `pg-block-${blockIndex}-${idx}`,
@@ -260,7 +260,7 @@ async function loadQueueBlock(blockIndex: number, era?: string): Promise<Soverei
       id: `landmark-${lm.ticker.toLowerCase()}-${idx}`,
       seatNumber: idx + 1,
       seatType: "PRIMARY_DOMESTIC",
-      ticker: lm.ticker,
+      ticker: formatComicEquityTicker(lm.series, lm.issueNumber) || lm.ticker,
       series: lm.series,
       issueNumber: lm.issueNumber,
       title: `${lm.series} #${lm.issueNumber}`,

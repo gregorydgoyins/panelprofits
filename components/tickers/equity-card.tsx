@@ -113,18 +113,24 @@ export const EquityCard = React.memo(function EquityCard({
   const isRawCopy = !rawGrade || rawGrade === "RAW" || rawGrade.toUpperCase() === "RAW";
   const isTrueVariant = Boolean(variantTag && !["direct", "base", "regular", "standard"].includes(variantTag.toLowerCase()));
 
-  // Clean pure ticker symbol: strip any legacy .SOV, .ANC, or classification suffixes
-  const cleanTicker = String(identity.assetId || "")
+  // Pure canonical exchange ticker:
+  const rawTickerCandidate = String(identity.assetId || (item as any)?.ticker || "")
+    .replace(/^\$/, "")
     .replace(/\.(SOV|ANC|STD|OTC|PREMIUM)$/i, "")
-    .replace(/^CE70\.\d+\.?/i, "")
     .trim();
 
-  const isInternalOrHash = !cleanTicker || /^(eq-|ppix-|seat-)/i.test(cleanTicker) || /^[0-9a-f]{16,}$/i.test(cleanTicker);
-  const fallbackTicker = formatComicEquityTicker(series, issueNum);
+  const isInvalidTicker =
+    !rawTickerCandidate ||
+    /^CE70/i.test(rawTickerCandidate) ||
+    /^(RAW|SOV|STD|OTC|PREMIUM|NULL|UNDEFINED|UNKNOWN|UNPRICED)$/i.test(rawTickerCandidate) ||
+    /^(eq-|ppix-|seat-|landmark-|comic-)/i.test(rawTickerCandidate) ||
+    /^[0-9a-f]{12,}$/i.test(rawTickerCandidate) ||
+    rawTickerCandidate.length > 8;
+
   const effectiveTicker = (
-    !isInternalOrHash
-      ? cleanTicker
-      : fallbackTicker
+    !isInvalidTicker
+      ? rawTickerCandidate
+      : formatComicEquityTicker(series, issueNum)
   )
     .replace(/^\$/, "")
     .replace(/\.(SOV|ANC|STD|OTC|PREMIUM)$/i, "")
@@ -168,7 +174,7 @@ export const EquityCard = React.memo(function EquityCard({
 
   const detailHref =
     identity.detailUrl ||
-    (cleanTicker ? `/comics/${encodeURIComponent(cleanTicker)}` : `/equity/${assetId || "CE70"}`);
+    (effectiveTicker ? `/comics/${encodeURIComponent(effectiveTicker)}` : `/equity/${assetId || "CE70"}`);
 
   return (
     <Link

@@ -27,13 +27,18 @@ export async function MarketShell({ children }: MarketShellProps) {
   const isFrontDoor = pathname === "/sign-in" || pathname === "/sign-up";
   if (isFrontDoor) return <AuthFrontDoor>{children}</AuthFrontDoor>;
 
+  // Seed random starting chunk across the 115,712 catalog in 260-comic queue increments
+  // (445 continuous 260-comic chunks across 24 5,000-comic blocks)
+  const randomChunk = Math.floor(Math.random() * 445);
+  const randomInitialOffset = randomChunk * 260;
+
   // Fetch bounded rails concurrently
   const user = await getCurrentUser();
   const [telemetry, newsStories, assetSurfaces, sovereignEquities, marketIndices, diaryEntries] = await Promise.all([
     getMarketTelemetry(),
     getNewsStories(32),
     getCanonicalAssetSurfaces(70),
-    getSovereignEquities(150),
+    getSovereignEquities(80, randomInitialOffset),
     calculateMarketIndices(),
     user ? getDiaryEntries(user.id) : Promise.resolve([]),
   ]);
@@ -43,7 +48,7 @@ export async function MarketShell({ children }: MarketShellProps) {
       <Header />
       <RailVisibility setting="newsTicker"><NewsRail initialStories={newsStories} /></RailVisibility>
       <RailVisibility setting="marketTelemetry"><MarketTelemetryRail telemetry={telemetry} /></RailVisibility>
-      <RailVisibility setting="equities"><EquitiesRail items={sovereignEquities} indices={marketIndices} /></RailVisibility>
+      <RailVisibility setting="equities"><EquitiesRail items={sovereignEquities} indices={marketIndices} initialOffset={randomInitialOffset} /></RailVisibility>
       <RailVisibility setting="assets"><AssetsRail items={assetSurfaces} /></RailVisibility>
       <RailVisibility setting="diary"><DiaryRail entries={diaryEntries} /></RailVisibility>
       <main className="flex-1">{children}</main>

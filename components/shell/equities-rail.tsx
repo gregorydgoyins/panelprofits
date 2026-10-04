@@ -17,12 +17,14 @@ const MAX_FETCHES = 100_000; // Continuous rotation across 115,712 Panel Profits
 interface EquitiesRailProps {
   items: SovereignEquityItem[];
   indices?: MarketIndexRecord[];
+  initialOffset?: number;
 }
 
-export function EquitiesRail({ items: initialItems = [], indices = [] }: EquitiesRailProps) {
+export function EquitiesRail({ items: initialItems = [], indices = [], initialOffset }: EquitiesRailProps) {
   const trackRef = React.useRef<HTMLDivElement>(null);
   const fetchCount = React.useRef(0);
-  const nextOffset = React.useRef(0);
+  const seedOffset = initialOffset ?? (initialItems[0]?.seatNumber ? initialItems[0].seatNumber - 1 : 0);
+  const nextOffset = React.useRef(seedOffset);
   const [selectedEra, setSelectedEra] = React.useState<string | null>(null);
 
   // Convert initial SovereignEquityItem[] to EquityItem[] for instant first-paint
@@ -47,10 +49,14 @@ export function EquitiesRail({ items: initialItems = [], indices = [] }: Equitie
       const marketClass = fmv >= 45 ? "PREMIUM" : fmv >= 20 ? "STD" : "OTC";
       const effectiveAssetClass = isTrulySovereign ? "SOV" : marketClass;
 
-      const cleanTicker = (item.ticker || formatComicEquityTicker(item.series, item.issueNumber))
-        .replace(/\.(SOV|ANC|STD|OTC|PREMIUM)$/i, "")
-        .replace(/^CE70\.\d+\.?/i, "")
-        .trim();
+      const cleanTicker = (
+        item.ticker &&
+        !item.ticker.startsWith("CE70") &&
+        !/^(RAW|SOV|STD|OTC|PREMIUM)$/i.test(item.ticker) &&
+        !item.ticker.includes("seat")
+      )
+        ? item.ticker.replace(/^\$/, "").replace(/\.(SOV|ANC|STD|OTC|PREMIUM)$/i, "").trim()
+        : formatComicEquityTicker(item.series, item.issueNumber);
 
       return {
         entryId: `eq-${item.id || idx}`,
@@ -66,7 +72,7 @@ export function EquitiesRail({ items: initialItems = [], indices = [] }: Equitie
         identity: {
           assetId: cleanTicker,
           productName: `${item.series} #${item.issueNumber}`,
-          year: item.year || 1970,
+          year: item.year || 1990,
           publisher: item.publisher || (item.lineage.includes("DC") ? "DC Comics" : item.lineage.includes("Marvel") ? "Marvel" : "Independent"),
           variant: item.variant || null,
           productionAge: eraKey,
@@ -173,7 +179,7 @@ export function EquitiesRail({ items: initialItems = [], indices = [] }: Equitie
         setErrored(false);
 
         fetchCount.current += 1;
-        const next = json.nextOffset ?? ((offset + newItems.length) % (json.totalEligible || 1));
+        const next = json.nextOffset ?? ((offset + 260) % (json.totalEligible || 115712));
         nextOffset.current = next;
         try {
           sessionStorage.setItem("pp_rail_offset", String(next));
@@ -197,14 +203,30 @@ export function EquitiesRail({ items: initialItems = [], indices = [] }: Equitie
   }, [fetchBatch]);
 
   React.useEffect(() => {
+    // Check if user has an existing queue offset in sessionStorage
     try {
-      sessionStorage.removeItem("pp_rail_offset");
+      const stored = sessionStorage.getItem("pp_rail_offset");
+      if (stored !== null) {
+        // Advance by 260 comics on page reload so user gets a piece of the next batch!
+        const nextReloadOffset = (parseInt(stored, 10) + 260) % 115712;
+        nextOffset.current = nextReloadOffset;
+        sessionStorage.setItem("pp_rail_offset", String(nextReloadOffset));
+        fetchBatch(nextReloadOffset);
+        return;
+      }
     } catch {}
-    nextOffset.current = initialEquityItems.length > 0 ? initialEquityItems.length : 0;
+
+    // First visit in session: seed with the SSR offset and stage the next 260 chunk
+    const nextStep = (seedOffset + 260) % 115712;
+    nextOffset.current = nextStep;
+    try {
+      sessionStorage.setItem("pp_rail_offset", String(nextStep));
+    } catch {}
+
     if (initialEquityItems.length === 0) {
-      fetchBatch(0);
+      fetchBatch(seedOffset);
     }
-  }, [fetchBatch, initialEquityItems.length]);
+  }, [fetchBatch, initialEquityItems.length, seedOffset]);
 
   React.useEffect(() => {
     const id = setInterval(fetchBatch, FETCH_MS);

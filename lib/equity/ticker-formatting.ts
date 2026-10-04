@@ -77,6 +77,18 @@ export function formatComicEquityTicker(series: string, issue: string | number, 
   else if (normSeries === "sensational spider-man") root = "SNS";
   else if (normSeries === "friendly neighborhood spider-man") root = "FNS";
   else if (normSeries === "web of spider-man") root = "WOS";
+  else if (normSeries === "walking dead" || normSeries === "the walking dead") root = "WKD";
+  else if (normSeries === "kingdom come") root = "KGC";
+  else if (normSeries === "invincible" || normSeries === "invincible (image)") root = "INV";
+  else if (normSeries === "preacher") root = "PRC";
+  else if (normSeries === "y: the last man" || normSeries === "y the last man") root = "YLM";
+  else if (normSeries === "brave and the bold" || normSeries === "the brave and the bold") root = "BTB";
+  else if (normSeries === "justice league of america" || normSeries === "justice league") root = "JLA";
+  else if (normSeries === "teen titans" || normSeries === "new teen titans") root = "NTT";
+  else if (normSeries === "swamp thing") root = "SWP";
+  else if (normSeries === "hellblazer" || normSeries === "john constantine, hellblazer") root = "HLB";
+  else if (normSeries === "sandman" || normSeries === "the sandman") root = "SND";
+  else if (normSeries === "raw") root = "RAW";
   // Flagship titles (strict matches)
   else if (normSeries === "action comics") root = "ACT";
   else if (normSeries === "detective comics") root = "DET";
@@ -93,7 +105,8 @@ export function formatComicEquityTicker(series: string, issue: string | number, 
   else if (normSeries === "strange tales") root = "ST";
   else if (normSeries === "daredevil") root = "DD";
   else if (normSeries === "iron man" || normSeries === "invincible iron man") root = "IRM";
-  else if (normSeries === "captain america") root = "CAP";
+  else if (normSeries === "captain america" || normSeries === "captain america comics") root = "CAP";
+  else if (normSeries === "all star comics") root = "ASC";
   else if (normSeries === "thor") root = "TH";
   else if (normSeries === "wonder woman") root = "WW";
   else if (normSeries === "silver surfer") root = "SS";
@@ -109,7 +122,7 @@ export function formatComicEquityTicker(series: string, issue: string | number, 
 
   // Combine with issue digits preserving full canonical acronym
   if (!cleanNum) {
-    return root.padEnd(4, "X");
+    return `${root}01`;
   }
 
   if (cleanNum.length === 1) {

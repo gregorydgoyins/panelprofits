@@ -385,5 +385,47 @@ describe("Canonical Equities Symbology & 16 Asset Families Canon", () => {
     });
     expect(variantViolation.some((v) => v.rule === "VARIANT_PROHIBITION")).toBe(true);
   });
+
+  it("formats canonical exchange tickers for modern and landmark indie/key titles without CE70 or RAW contamination", () => {
+    expect(formatComicEquityTicker("The Walking Dead", "1")).toBe("WKD01");
+    expect(formatComicEquityTicker("Spawn", "1")).toBe("SPW01");
+    expect(formatComicEquityTicker("Kingdom Come", "1")).toBe("KGC01");
+    expect(formatComicEquityTicker("Invincible", "1")).toBe("INV01");
+    expect(formatComicEquityTicker("Preacher", "1")).toBe("PRC01");
+    expect(formatComicEquityTicker("Y: The Last Man", "1")).toBe("YLM01");
+    expect(formatComicEquityTicker("The Brave and the Bold", "28")).toBe("BTB28");
+    expect(formatComicEquityTicker("Justice League of America", "1")).toBe("JLA01");
+    expect(formatComicEquityTicker("Teen Titans", "1")).toBe("NTT01");
+    expect(formatComicEquityTicker("Action Comics", "1")).toBe("ACT01");
+    expect(formatComicEquityTicker("Detective Comics", "27")).toBe("DET27");
+  });
+
+  it("streams distinct non-repeating chunks across 260-comic queue offsets in 5,000-comic blocks", async () => {
+    const { getContinuousQueueSlice } = await import("@/lib/equity/continuous-queue-engine");
+
+    const batch0 = await getContinuousQueueSlice(0, 10);
+    const batch260 = await getContinuousQueueSlice(260, 10);
+    const batch5000 = await getContinuousQueueSlice(5000, 10);
+
+    expect(batch0.items.length).toBe(10);
+    expect(batch260.items.length).toBe(10);
+    expect(batch5000.items.length).toBe(10);
+
+    const titles0 = new Set(batch0.items.map((i) => `${i.series} #${i.issueNumber}`));
+    const titles260 = new Set(batch260.items.map((i) => `${i.series} #${i.issueNumber}`));
+
+    // Offset 0 and Offset 260 must be completely non-overlapping
+    const overlap = [...titles0].filter((t) => titles260.has(t));
+    expect(overlap.length).toBe(0);
+
+    // Ensure tickers are clean canonical exchange symbols
+    for (const item of [...batch0.items, ...batch260.items, ...batch5000.items]) {
+      expect(item.ticker).toBeDefined();
+      expect(item.ticker).not.toMatch(/^CE70/i);
+      expect(item.ticker.toUpperCase()).not.toBe("RAW");
+      expect(item.ticker).not.toMatch(/^(SOV|STD|OTC|PREMIUM)$/i);
+      expect(item.year).toBeGreaterThan(1930);
+    }
+  });
 });
 
