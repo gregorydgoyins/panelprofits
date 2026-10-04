@@ -24,6 +24,8 @@ import { Sparkles, BookOpen, Activity, ArrowUpRight } from "lucide-react";
 import { GcdBibliographicDossier } from "@/components/comics/gcd-bibliographic-dossier";
 import { AtomicVariantsAndInternationalMatrix } from "@/components/comics/atomic-variants-and-international-matrix";
 import { BlendedHoldingDossier } from "@/components/comics/blended-holding-dossier";
+import { findComicBaseVideoForComic } from "@/lib/video/comicbase-archive";
+import { ComicBaseVideoPlayer } from "@/components/comics/comicbase-video-player";
 import { getGcdRelationalData } from "@/lib/comics/gcd-relational-service";
 import { InvestopediaValuationLens } from "@/components/finance/investopedia-valuation-lens";
 import { computeComicValuationMetrics } from "@/lib/finance/investopedia-service";
@@ -89,6 +91,8 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
   if (!comic) {
     notFound();
   }
+
+  const cbVideo = findComicBaseVideoForComic(comic.series, comic.issue_number);
 
   const [coverEvidence, censusDossier, userStatus, gcdRelational] = await Promise.all([
     getComicCoverEvidence(comic.id).catch((err) => {
@@ -717,6 +721,9 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
             userStatus={userStatus}
             isAuthenticated={Boolean(user)}
           />
+
+          {/* 0.5. Primary-Source Archival Creator Interview & Retrospective Video Brief */}
+          {cbVideo && <ComicBaseVideoPlayer video={cbVideo} />}
 
           {/* 1. Canonical Multi-Grade Pricing Dossier */}
           <PricingDossier comic={comic} />

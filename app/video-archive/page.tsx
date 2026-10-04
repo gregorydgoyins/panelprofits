@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Tv, ArrowLeft, Radio, Archive } from "lucide-react";
 import { VideoArchiveTheater } from "@/components/video/video-archive-theater";
 import { XMenMasterclassSerialization } from "@/components/video/XMenMasterclassSerialization";
+import { ComicBaseArchiveTheater } from "@/components/video/comicbase-archive-theater";
 
 export const dynamic = "force-dynamic";
 
@@ -48,6 +49,9 @@ export default function VideoArchivePage() {
           </div>
         </div>
       </header>
+
+      {/* Primary-Source ComicBase Vault: Creator Interviews & Masterclass Retrospectives */}
+      <ComicBaseArchiveTheater />
 
       {/* ComicBookGirl19 3.5-Hour Serialized X-Men Masterclass (Chopped into Precision Chapters) */}
       <XMenMasterclassSerialization />
