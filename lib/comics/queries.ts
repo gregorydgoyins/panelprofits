@@ -178,6 +178,7 @@ function enrichWithBenchmarkData(comic: ComicRecord): ComicRecord {
     spreads: spreads || comic.panel_profits_data?.spreads,
     deltas: deltas || comic.panel_profits_data?.deltas,
     volume: volume || comic.panel_profits_data?.volume,
+    salesListings: benchmarkEntry.salesListings || comic.panel_profits_data?.salesListings || null,
     coverPrice: benchmarkEntry.coverPrice ?? comic.panel_profits_data?.coverPrice,
     is_key_issue: benchmarkEntry.isKeyIssue ?? comic.panel_profits_data?.is_key_issue,
     ...(pricecharting ? {
@@ -296,6 +297,7 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
         spreads: benchmarkEntry?.spreads || null,
         deltas: benchmarkEntry?.deltas || null,
         volume: benchmarkEntry?.volume || null,
+        salesListings: benchmarkEntry?.salesListings || null,
         is_key_issue: benchmarkEntry?.isKeyIssue || false,
         ...(benchmarkEntry?.pricecharting ? {
           "PP - Grade RAW Market Price": benchmarkEntry.pricecharting.raw,

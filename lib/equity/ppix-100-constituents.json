@@ -8,7 +8,7 @@
     "year": 1937,
     "era": "golden",
     "referenceGrade": "8.0",
-    "fmv": 48000.0,
+    "fmv": 48000,
     "coverUrl": "/covers/seat_1_detective_comics_2.jpg"
   },
   {
@@ -20,7 +20,7 @@
     "year": 1975,
     "era": "silver",
     "referenceGrade": "9.2",
-    "fmv": 47905.0,
+    "fmv": 47905,
     "coverUrl": "/covers/action_comics_252.jpg"
   },
   {
@@ -32,7 +32,7 @@
     "year": 1942,
     "era": "golden",
     "referenceGrade": "8.0",
-    "fmv": 2200.0,
+    "fmv": 2200,
     "coverUrl": "/covers/seat_2_four_color_9.jpg"
   },
   {
@@ -56,7 +56,7 @@
     "year": 1942,
     "era": "golden",
     "referenceGrade": "8.0",
-    "fmv": 3200.0,
+    "fmv": 3200,
     "coverUrl": "/covers/seat_3_crime_does_not_pay_22.jpg"
   },
   {
@@ -68,7 +68,7 @@
     "year": 1975,
     "era": "silver",
     "referenceGrade": "9.0",
-    "fmv": 12000.0,
+    "fmv": 12000,
     "coverUrl": "/covers/wonder_woman_98.jpg"
   },
   {
@@ -80,7 +80,7 @@
     "year": 1939,
     "era": "golden",
     "referenceGrade": "6.0",
-    "fmv": 5500.0,
+    "fmv": 5500,
     "coverUrl": "/covers/seat_4_les_aventures_de_tintin_8.jpg"
   },
   {
@@ -92,7 +92,7 @@
     "year": 1975,
     "era": "golden",
     "referenceGrade": "9.0",
-    "fmv": 28000.0,
+    "fmv": 28000,
     "coverUrl": "/covers/captain_marvel_adventures_18.jpg"
   },
   {
@@ -104,7 +104,7 @@
     "year": 1942,
     "era": "golden",
     "referenceGrade": "6.0",
-    "fmv": 45000.0,
+    "fmv": 45000,
     "coverUrl": "/covers/seat_5_wonder_woman_1.jpg"
   },
   {
@@ -116,7 +116,7 @@
     "year": 1975,
     "era": "atomic",
     "referenceGrade": "9.2",
-    "fmv": 13155.0,
+    "fmv": 13155,
     "coverUrl": "/covers/mad_1.jpg"
   },
   {
@@ -128,7 +128,7 @@
     "year": 1941,
     "era": "golden",
     "referenceGrade": "6.0",
-    "fmv": 8500.0,
+    "fmv": 8500,
     "coverUrl": "/covers/seat_6_daredevil_1.jpg"
   },
   {
@@ -152,7 +152,7 @@
     "year": 1942,
     "era": "golden",
     "referenceGrade": "6.0",
-    "fmv": 5600.0,
+    "fmv": 5600,
     "coverUrl": "/covers/seat_7_captain_america_comics_10.jpg"
   },
   {
@@ -164,7 +164,7 @@
     "year": 1975,
     "era": "atomic",
     "referenceGrade": "9.0",
-    "fmv": 32000.0,
+    "fmv": 32000,
     "coverUrl": "/covers/young_romance_1.jpg"
   },
   {
@@ -176,7 +176,7 @@
     "year": 1941,
     "era": "golden",
     "referenceGrade": "6.0",
-    "fmv": 3800.0,
+    "fmv": 3800,
     "coverUrl": "/covers/seat_8_military_comics_1.jpg"
   },
   {
@@ -188,7 +188,7 @@
     "year": 1975,
     "era": "atomic",
     "referenceGrade": "9.0",
-    "fmv": 42000.0,
+    "fmv": 42000,
     "coverUrl": "/covers/tales_from_the_crypt_20.jpg"
   },
   {
@@ -200,7 +200,7 @@
     "year": 1945,
     "era": "golden",
     "referenceGrade": "6.0",
-    "fmv": 2800.0,
+    "fmv": 2800,
     "coverUrl": "/covers/seat_9_jumbo_comics_69.jpg"
   },
   {
@@ -212,7 +212,7 @@
     "year": 1975,
     "era": "silver",
     "referenceGrade": "9.0",
-    "fmv": 48000.0,
+    "fmv": 48000,
     "coverUrl": "/covers/journey_into_mystery_85.jpg"
   },
   {
@@ -224,7 +224,7 @@
     "year": 1949,
     "era": "golden",
     "referenceGrade": "6.0",
-    "fmv": 4200.0,
+    "fmv": 4200,
     "coverUrl": "/covers/seat_10_les_aventures_de_tintin_14.jpg"
   },
   {
@@ -236,7 +236,7 @@
     "year": 1975,
     "era": "silver",
     "referenceGrade": "9.0",
-    "fmv": 52000.0,
+    "fmv": 52000,
     "coverUrl": "/covers/strange_tales_110.jpg"
   },
   {
@@ -248,7 +248,7 @@
     "year": 1952,
     "era": "golden",
     "referenceGrade": "8.0",
-    "fmv": 3800.0,
+    "fmv": 3800,
     "coverUrl": "/covers/seat_11_four_color_386.jpg"
   },
   {
@@ -272,7 +272,7 @@
     "year": 1975,
     "era": "silver",
     "referenceGrade": "9.2",
-    "fmv": 1159.0,
+    "fmv": 1159,
     "coverUrl": "/covers/amazing_spider_man_33.jpg"
   },
   {
@@ -284,7 +284,7 @@
     "year": 1953,
     "era": "golden",
     "referenceGrade": "8.0",
-    "fmv": 2400.0,
+    "fmv": 2400,
     "coverUrl": "/covers/seat_13_two_fisted_tales_35.jpg"
   },
   {
@@ -308,7 +308,7 @@
     "year": 1949,
     "era": "golden",
     "referenceGrade": "8.0",
-    "fmv": 1950.0,
+    "fmv": 1950,
     "coverUrl": "/covers/seat_14_four_color_223.jpg"
   },
   {
@@ -320,7 +320,7 @@
     "year": 1975,
     "era": "silver",
     "referenceGrade": "9.2",
-    "fmv": 10125.0,
+    "fmv": 10125,
     "coverUrl": "/covers/avengers_4.jpg"
   },
   {
@@ -332,7 +332,7 @@
     "year": 1955,
     "era": "golden",
     "referenceGrade": "8.0",
-    "fmv": 1450.0,
+    "fmv": 1450,
     "coverUrl": "/covers/seat_15_impact_1.jpg"
   },
   {
@@ -368,7 +368,7 @@
     "year": 1950,
     "era": "golden",
     "referenceGrade": "8.0",
-    "fmv": 4200.0,
+    "fmv": 4200,
     "coverUrl": "/covers/seat_17_it_rhymes_with_lust_1.jpg"
   },
   {
@@ -380,7 +380,7 @@
     "year": 1975,
     "era": "silver",
     "referenceGrade": "9.2",
-    "fmv": 4868.0,
+    "fmv": 4868,
     "coverUrl": "/covers/silver_surfer_1.jpg"
   },
   {
@@ -392,7 +392,7 @@
     "year": 1960,
     "era": "silver",
     "referenceGrade": "6.0",
-    "fmv": 2800.0,
+    "fmv": 2800,
     "coverUrl": "/covers/seat_18_les_aventures_de_tintin_20.jpg"
   },
   {
@@ -416,8 +416,8 @@
     "year": 1966,
     "era": "silver",
     "referenceGrade": "9.2",
-    "fmv": 1159.0,
-    "coverUrl": "/covers/the_amazing_spider_man_33.jpg"
+    "fmv": 1159,
+    "coverUrl": "/covers/amazing_spider_man_33.jpg"
   },
   {
     "key": "The Saga of Swamp Thing #21",
@@ -428,7 +428,7 @@
     "year": 1984,
     "era": "copper",
     "referenceGrade": "9.2",
-    "fmv": 147.0,
+    "fmv": 147,
     "coverUrl": "/covers/the_saga_of_swamp_thing_21.jpg"
   },
   {
@@ -440,7 +440,7 @@
     "year": 1966,
     "era": "silver",
     "referenceGrade": "9.2",
-    "fmv": 750.0,
+    "fmv": 750,
     "coverUrl": "/covers/seat_20_fantastic_four_51.jpg"
   },
   {
@@ -488,7 +488,7 @@
     "year": 1975,
     "era": "bronze",
     "referenceGrade": "9.2",
-    "fmv": 12600.0,
+    "fmv": 12600,
     "coverUrl": "/covers/cerebus_1.jpg"
   },
   {
@@ -500,7 +500,7 @@
     "year": 1975,
     "era": "bronze",
     "referenceGrade": "9.2",
-    "fmv": 333.0,
+    "fmv": 333,
     "coverUrl": "/covers/love_and_rockets_1.jpg"
   },
   {
@@ -548,7 +548,7 @@
     "year": 1975,
     "era": "copper",
     "referenceGrade": "9.2",
-    "fmv": 68.0,
+    "fmv": 68,
     "coverUrl": "/covers/the_sandman_8.jpg"
   },
   {
@@ -560,7 +560,7 @@
     "year": 1975,
     "era": "copper",
     "referenceGrade": "9.2",
-    "fmv": 1985.0,
+    "fmv": 1985,
     "coverUrl": "/covers/bone_1.jpg"
   },
   {
@@ -572,8 +572,8 @@
     "year": 1973,
     "era": "bronze",
     "referenceGrade": "9.2",
-    "fmv": 1650.0,
-    "coverUrl": "/covers/the_amazing_spider_man_121.jpg"
+    "fmv": 1650,
+    "coverUrl": "/covers/seat_30_the_amazing_spider_man_121.jpg"
   },
   {
     "key": "Infinity Gauntlet #1",
@@ -596,7 +596,7 @@
     "year": 1975,
     "era": "copper",
     "referenceGrade": "9.2",
-    "fmv": 29.0,
+    "fmv": 29,
     "coverUrl": "/covers/crisis_on_infinite_earths_1.jpg"
   },
   {
@@ -632,7 +632,7 @@
     "year": 1975,
     "era": "modern",
     "referenceGrade": "9.2",
-    "fmv": 37.0,
+    "fmv": 37,
     "coverUrl": "/covers/kingdom_come_1.jpg"
   },
   {
@@ -680,7 +680,7 @@
     "year": 1975,
     "era": "modern",
     "referenceGrade": "9.2",
-    "fmv": 2650.0,
+    "fmv": 2650,
     "coverUrl": "/covers/invincible_1.jpg"
   },
   {
@@ -692,8 +692,8 @@
     "year": 1986,
     "era": "copper",
     "referenceGrade": "9.8",
-    "fmv": 150.0,
-    "coverUrl": "/covers/raw_8.jpg"
+    "fmv": 150,
+    "coverUrl": "/covers/seat_39_raw_8.jpg"
   },
   {
     "key": "All-Star Superman #1",
@@ -704,7 +704,7 @@
     "year": 1975,
     "era": "independent",
     "referenceGrade": "9.0",
-    "fmv": 150.0,
+    "fmv": 150,
     "coverUrl": "/covers/all_star_superman_1.jpg"
   },
   {
@@ -728,7 +728,7 @@
     "year": 1987,
     "era": "copper",
     "referenceGrade": "9.8",
-    "fmv": 150.0,
+    "fmv": 150,
     "coverUrl": "/covers/seat_41_love_and_rockets_21.jpg"
   },
   {
@@ -740,7 +740,7 @@
     "year": 1975,
     "era": "independent",
     "referenceGrade": "9.0",
-    "fmv": 350.0,
+    "fmv": 350,
     "coverUrl": "/covers/scott_pilgrim_1.jpg"
   },
   {
@@ -752,7 +752,7 @@
     "year": 1994,
     "era": "modern",
     "referenceGrade": "9.8",
-    "fmv": 150.0,
+    "fmv": 150,
     "coverUrl": "/covers/seat_42_marvels_1.jpg"
   },
   {
@@ -764,7 +764,7 @@
     "year": 1975,
     "era": "independent",
     "referenceGrade": "9.0",
-    "fmv": 180.0,
+    "fmv": 180,
     "coverUrl": "/covers/hawkeye_1.jpg"
   },
   {
@@ -776,8 +776,8 @@
     "year": 1999,
     "era": "modern",
     "referenceGrade": "9.8",
-    "fmv": 150.0,
-    "coverUrl": "/covers/the_acme_novelty_library_13.jpg"
+    "fmv": 150,
+    "coverUrl": "/covers/seat_43_the_acme_novelty_library_13.jpg"
   },
   {
     "key": "Monstress #1",
@@ -788,7 +788,7 @@
     "year": 2015,
     "era": "modern",
     "referenceGrade": "9.8",
-    "fmv": 95.0,
+    "fmv": 95,
     "coverUrl": "/covers/monstress_1.jpg"
   },
   {
@@ -800,7 +800,7 @@
     "year": 1996,
     "era": "modern",
     "referenceGrade": "9.8",
-    "fmv": 150.0,
+    "fmv": 150,
     "coverUrl": "/covers/seat_44_eightball_17.jpg"
   },
   {
@@ -812,7 +812,7 @@
     "year": 1975,
     "era": "independent",
     "referenceGrade": "9.0",
-    "fmv": 140.0,
+    "fmv": 140,
     "coverUrl": "/covers/ms_marvel_1.jpg"
   },
   {
@@ -824,8 +824,8 @@
     "year": 1995,
     "era": "modern",
     "referenceGrade": "9.8",
-    "fmv": 150.0,
-    "coverUrl": "/covers/black_hole_1.jpg"
+    "fmv": 150,
+    "coverUrl": "/covers/seat_45_black_hole_1.jpg"
   },
   {
     "key": "Batman (2011) #1",
@@ -836,7 +836,7 @@
     "year": 1975,
     "era": "independent",
     "referenceGrade": "9.0",
-    "fmv": 180.0,
+    "fmv": 180,
     "coverUrl": "/covers/batman_2011_1.jpg"
   },
   {
@@ -848,7 +848,7 @@
     "year": 1975,
     "era": "postmodern",
     "referenceGrade": "9.0",
-    "fmv": 90.0,
+    "fmv": 90,
     "coverUrl": "/covers/mister_miracle_2017_1.jpg"
   },
   {
@@ -860,7 +860,7 @@
     "year": 1994,
     "era": "modern",
     "referenceGrade": "9.8",
-    "fmv": 280.0,
+    "fmv": 280,
     "coverUrl": "/covers/seat_47_hellboy_seed_of_destruction_1.jpg"
   },
   {
@@ -872,7 +872,7 @@
     "year": 2019,
     "era": "modern",
     "referenceGrade": "9.8",
-    "fmv": 56.0,
+    "fmv": 56,
     "coverUrl": "/covers/house_of_x_1.jpg"
   },
   {
@@ -884,7 +884,7 @@
     "year": 1975,
     "era": "postmodern",
     "referenceGrade": "9.0",
-    "fmv": 120.0,
+    "fmv": 120,
     "coverUrl": "/covers/immortal_hulk_1.jpg"
   },
   {
@@ -896,7 +896,7 @@
     "year": 1995,
     "era": "modern",
     "referenceGrade": "9.8",
-    "fmv": 85.0,
+    "fmv": 85,
     "coverUrl": "/covers/seat_49_kurt_busiek_s_astro_city_1.jpg"
   },
   {
@@ -908,7 +908,7 @@
     "year": 1975,
     "era": "postmodern",
     "referenceGrade": "9.0",
-    "fmv": 650.0,
+    "fmv": 650,
     "coverUrl": "/covers/something_is_killing_the_children_1.jpg"
   },
   {
@@ -932,7 +932,7 @@
     "year": 1975,
     "era": "postmodern",
     "referenceGrade": "9.0",
-    "fmv": 75.0,
+    "fmv": 75,
     "coverUrl": "/covers/the_nice_house_on_the_lake_1.jpg"
   },
   {
@@ -944,8 +944,8 @@
     "year": 2006,
     "era": "modern",
     "referenceGrade": "9.8",
-    "fmv": 95.0,
-    "coverUrl": "/covers/fun_home_a_family_tragicomic_[nn].jpg"
+    "fmv": 95,
+    "coverUrl": "/covers/seat_51_fun_home_a_family_tragicomic_nn.jpg"
   },
   {
     "key": "Nightwing (2021) #78",
@@ -956,7 +956,7 @@
     "year": 1975,
     "era": "postmodern",
     "referenceGrade": "9.0",
-    "fmv": 65.0,
+    "fmv": 65,
     "coverUrl": "/covers/nightwing_2021_78.jpg"
   },
   {
@@ -968,8 +968,8 @@
     "year": 2009,
     "era": "modern",
     "referenceGrade": "9.8",
-    "fmv": 95.0,
-    "coverUrl": "/covers/asterios_polyp_[nn].jpg"
+    "fmv": 95,
+    "coverUrl": "/covers/asterios_polyp_nn.jpg"
   },
   {
     "key": "Ultimate Spider-Man (2024) #1",
@@ -980,7 +980,7 @@
     "year": 1975,
     "era": "postmodern",
     "referenceGrade": "9.0",
-    "fmv": 110.0,
+    "fmv": 110,
     "coverUrl": "/covers/ultimate_spider_man_2024_1.jpg"
   },
   {
@@ -992,8 +992,8 @@
     "year": 2018,
     "era": "modern",
     "referenceGrade": "9.8",
-    "fmv": 95.0,
-    "coverUrl": "/covers/sabrina_[nn].jpg"
+    "fmv": 95,
+    "coverUrl": "/covers/seat_64_sabrina_nn.jpg"
   },
   {
     "key": "Tintin: Objectif Lune #1",
@@ -1004,7 +1004,7 @@
     "year": 1975,
     "era": "atomic",
     "referenceGrade": "9.0",
-    "fmv": 8500.0,
+    "fmv": 8500,
     "coverUrl": "/covers/tintin_objectif_lune_1.jpg"
   },
   {
@@ -1016,19 +1016,19 @@
     "year": 2022,
     "era": "modern",
     "referenceGrade": "9.8",
-    "fmv": 95.0,
-    "coverUrl": "/covers/it_s_lonely_at_the_centre_of_the_earth_[nn].jpg"
+    "fmv": 95,
+    "coverUrl": "/covers/seat_65_it_s_lonely_at_the_centre_of_the_earth_nn.jpg"
   },
   {
-    "key": "Ast\u00e9rix le Gaulois #1",
-    "series": "Ast\u00e9rix le Gaulois",
+    "key": "Astérix le Gaulois #1",
+    "series": "Astérix le Gaulois",
     "issueNumber": "1",
-    "title": "Ast\u00e9rix le Gaulois #1",
+    "title": "Astérix le Gaulois #1",
     "publisher": "Dargaud",
     "year": 1975,
     "era": "silver",
     "referenceGrade": "9.0",
-    "fmv": 12000.0,
+    "fmv": 12000,
     "coverUrl": "/covers/ast_rix_le_gaulois_1.jpg"
   },
   {
@@ -1036,11 +1036,11 @@
     "series": "The Incal",
     "issueNumber": "1",
     "title": "The Incal #1",
-    "publisher": "Les Humano\u00efdes Associ\u00e9s",
+    "publisher": "Les Humanoïdes Associés",
     "year": 1975,
     "era": "bronze",
     "referenceGrade": "9.0",
-    "fmv": 5200.0,
+    "fmv": 5200,
     "coverUrl": "/covers/the_incal_1.jpg"
   },
   {
@@ -1052,7 +1052,7 @@
     "year": 1975,
     "era": "copper",
     "referenceGrade": "9.0",
-    "fmv": 2500.0,
+    "fmv": 2500,
     "coverUrl": "/covers/akira_1.jpg"
   },
   {
@@ -1064,7 +1064,7 @@
     "year": 1975,
     "era": "modern",
     "referenceGrade": "9.0",
-    "fmv": 2200.0,
+    "fmv": 2200,
     "coverUrl": "/covers/one_piece_1.jpg"
   },
   {
@@ -1076,7 +1076,7 @@
     "year": 1975,
     "era": "independent",
     "referenceGrade": "9.0",
-    "fmv": 450.0,
+    "fmv": 450,
     "coverUrl": "/covers/death_note_1.jpg"
   },
   {
@@ -1088,7 +1088,7 @@
     "year": 1975,
     "era": "postmodern",
     "referenceGrade": "9.0",
-    "fmv": 180.0,
+    "fmv": 180,
     "coverUrl": "/covers/chainsaw_man_1.jpg"
   },
   {
@@ -1100,8 +1100,8 @@
     "year": 2012,
     "era": "modern",
     "referenceGrade": "9.8",
-    "fmv": 95.0,
-    "coverUrl": "/covers/building_stories_[a].jpg"
+    "fmv": 95,
+    "coverUrl": "/covers/seat_53_building_stories_a.jpg"
   },
   {
     "key": "Building Stories #1",
@@ -1112,8 +1112,8 @@
     "year": 1975,
     "era": "independent",
     "referenceGrade": "9.0",
-    "fmv": 65.0,
-    "coverUrl": "/covers/building_stories_1.jpg"
+    "fmv": 65,
+    "coverUrl": "/covers/seat_53_building_stories_a.jpg"
   },
   {
     "key": "54",
@@ -1124,7 +1124,7 @@
     "year": 2013,
     "era": "modern",
     "referenceGrade": "9.8",
-    "fmv": 95.0,
+    "fmv": 95,
     "coverUrl": "/covers/seat_54_hawkeye_11.jpg"
   },
   {
@@ -1136,7 +1136,7 @@
     "year": 2010,
     "era": "modern",
     "referenceGrade": "9.8",
-    "fmv": 95.0,
+    "fmv": 95,
     "coverUrl": "/covers/seat_56_daytripper_1.jpg"
   }
 ]

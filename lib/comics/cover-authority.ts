@@ -157,6 +157,18 @@ const VERIFIED_COVER_REGISTRY: Record<string, string> = {
   "kurt busiek s astro city:1": "/covers/seat_49_kurt_busiek_s_astro_city_1.jpg",
   "daytripper:1": "/covers/seat_56_daytripper_1.jpg",
   "uncanny x men:137": "/covers/uncanny_x_men_137.jpg",
+  "four color:223": "/covers/seat_14_four_color_223.jpg",
+  "asterios polyp:nn": "/covers/asterios_polyp_nn.jpg",
+  "asterios polyp:1": "/covers/asterios_polyp_nn.jpg",
+  "tintin objectif lune:1": "/covers/tintin_objectif_lune_1.jpg",
+  "astérix le gaulois:1": "/covers/ast_rix_le_gaulois_1.jpg",
+  "ast rix le gaulois:1": "/covers/ast_rix_le_gaulois_1.jpg",
+  "the incal:1": "/covers/the_incal_1.jpg",
+  "akira:1": "/covers/akira_1.jpg",
+  "sabrina:nn": "/covers/seat_64_sabrina_nn.jpg",
+  "it s lonely at the centre of the earth:nn": "/covers/seat_65_it_s_lonely_at_the_centre_of_the_earth_nn.jpg",
+  "building stories:a": "/covers/seat_53_building_stories_a.jpg",
+  "building stories:1": "/covers/seat_53_building_stories_a.jpg",
 };
 
 /**

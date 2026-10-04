@@ -241,23 +241,59 @@ export function goCollectPsaGrades(comic: Partial<ComicRecord>): Partial<Record<
  */
 export function cgcGrades(comic: Partial<ComicRecord>): Partial<Record<Grade, number>> {
   const result: Partial<Record<Grade, number>> = {};
-  const cgcDict = (comic as Record<string, unknown>).cgc_data as Record<string, unknown> | undefined ||
+  const cgcData = (comic as Record<string, unknown>)?.cgc_data as Record<string, unknown> | undefined;
+
+  // 1. If cgc_grades or cgc is an array of sale observations
+  const obsList = Array.isArray(cgcData?.cgc_grades)
+    ? cgcData.cgc_grades
+    : Array.isArray((comic as any).cgc)
+    ? (comic as any).cgc
+    : null;
+
+  if (obsList) {
+    for (const obs of obsList) {
+      if (obs && obs.grade && obs.amount && obs.grade !== "RAW") {
+        const p = positivePrice(obs.amount);
+        if (p !== null && (!result[obs.grade as Grade] || p > (result[obs.grade as Grade] ?? 0))) {
+          result[obs.grade as Grade] = p;
+        }
+      }
+    }
+  }
+
+  // 2. Dictionary lookups
+  const cgcDict =
+    (comic as Record<string, unknown>)?.cgc_data as Record<string, unknown> | undefined ||
     (comic.panel_profits_data as Record<string, unknown> | undefined)?.cgc_grades as Record<string, unknown> | undefined ||
     (comic.panel_profits_data as Record<string, unknown> | undefined);
 
-  if (!cgcDict) return result;
+  if (cgcDict) {
+    for (const grade of GRADES) {
+      if (grade === "RAW") continue;
+      const gradeKey = grade.replace(".", "_");
+      const stored = positivePrice(
+        cgcDict[`CGC - Grade ${grade}`] ||
+        cgcDict[`cgc_grade_${gradeKey}_price`] ||
+        cgcDict[`cgc_${gradeKey}`] ||
+        (cgcDict as any)[grade]
+      );
+      if (stored !== null && !result[grade]) result[grade] = stored;
+    }
+  }
 
-  // CGC never has an ungraded/RAW price — only certified numerical grades
-  for (const grade of GRADES) {
-    if (grade === "RAW") continue;
-    const gradeKey = grade.replace(".", "_");
-    const stored = positivePrice(
-      cgcDict[`CGC - Grade ${grade}`] ||
-      cgcDict[`cgc_grade_${gradeKey}_price`] ||
-      cgcDict[`cgc_${gradeKey}`] ||
-      (cgcDict as any)[grade]
-    );
-    if (stored !== null) result[grade] = stored;
+  // 3. Certified slab grades from authentic market feeds (strictly grades != RAW)
+  const pcData = (comic as Record<string, unknown>)?.pricecharting_data as Record<string, unknown> | undefined ||
+    (comic.panel_profits_data as Record<string, unknown> | undefined)?.pricecharting as Record<string, unknown> | undefined;
+  if (pcData) {
+    for (const grade of GRADES) {
+      if (grade === "RAW") continue;
+      const gradeKey = grade.replace(".", "_");
+      const stored = positivePrice(
+        pcData[`grade_${gradeKey}`] ||
+        pcData[grade]
+      );
+      if (stored !== null && !result[grade]) result[grade] = stored;
+    }
   }
 
   return result;
@@ -541,3 +577,48 @@ export function panelProfitsVolume(
 export function comicBaseReference(comic: Partial<ComicRecord>): number | null {
   return positivePrice(comic.comicbase_price);
 }
+
+export function panelProfitsListings(
+  comic: Partial<ComicRecord>,
+  grade: Grade
+): number | null {
+  const ppData = comic.panel_profits_data as Record<string, any> | undefined;
+  if (!ppData?.salesListings) return null;
+  const listings = ppData.salesListings;
+  const gradeKey = grade.replace(".", "_");
+  const val =
+    listings[grade] ??
+    listings[grade.toLowerCase()] ??
+    (grade === "RAW"
+      ? (listings.raw ?? listings.ungraded ?? listings.ungradedCount)
+      : (listings[`grade_${gradeKey}`] ?? listings[`grade${gradeKey.replace("_", "")}Count`]));
+  return typeof val === "number" ? val : null;
+}
+
+/**
+ * Returns certified graded slab spreads (CGC / Slabbed).
+ * Certified slabs NEVER carry a RAW or ungraded price/spread.
+ */
+export function cgcSpreads(comic: Partial<ComicRecord>, grade: Grade): ExecutionSpreads {
+  if (grade === "RAW") return { buy: null, sell: null };
+  return panelProfitsSpreads(comic, grade);
+}
+
+/**
+ * Returns certified graded slab volume.
+ * Certified grading authorities NEVER report RAW copies.
+ */
+export function cgcVolume(comic: Partial<ComicRecord>, grade: Grade): string | null {
+  if (grade === "RAW") return null;
+  return panelProfitsVolume(comic, grade);
+}
+
+/**
+ * Returns certified graded slab sold listings count.
+ * Certified slabs NEVER report RAW copies.
+ */
+export function cgcListings(comic: Partial<ComicRecord>, grade: Grade): number | null {
+  if (grade === "RAW") return null;
+  return panelProfitsListings(comic, grade);
+}
+

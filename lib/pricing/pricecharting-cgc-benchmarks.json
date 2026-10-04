@@ -22900,7 +22900,20 @@
       }
     },
     "salesListings": {
+      "RAW": 10,
+      "raw": 10,
+      "ungraded": 10,
       "ungradedCount": 10,
+      "4.0": 0,
+      "grade_4_0": 0,
+      "6.0": 0,
+      "grade_6_0": 0,
+      "8.0": 0,
+      "grade_8_0": 0,
+      "9.2": 0,
+      "grade_9_2": 0,
+      "9.8": 1,
+      "grade_9_8": 1,
       "grade98Count": 1
     },
     "cgc": [

@@ -15,6 +15,10 @@ import {
   panelProfitsSpreads,
   panelProfitsDelta,
   panelProfitsVolume,
+  panelProfitsListings,
+  cgcSpreads,
+  cgcVolume,
+  cgcListings,
   priceChartingGrades,
   psaGrades,
 } from "@/lib/pricing/source-ladder";
@@ -115,7 +119,9 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
             const spreads = panelProfitsSpreads(comic, grade);
             const delta = panelProfitsDelta(comic, grade);
             const volume = panelProfitsVolume(comic, grade);
+            const listings = panelProfitsListings(comic, grade);
             const isPriced = price !== null && price > 0;
+            const hasSpread = spreads.buy !== null && spreads.sell !== null && spreads.sell >= spreads.buy;
 
             return (
               <div
@@ -158,8 +164,8 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
                   </div>
                 </div>
 
-                {/* Buy / Sell Bid-Ask Spreads */}
-                <div className="mt-3 pt-2 border-t border-slate-800/80 font-mono text-[10.5px] space-y-0.5">
+                {/* Buy / Sell Bid-Ask Spreads & Listings Depth */}
+                <div className="mt-3 pt-2 border-t border-slate-800/80 font-mono text-[10.5px] space-y-1">
                   <div className="flex items-center justify-between">
                     <span className="text-slate-500 text-[9.5px]">BUY:</span>
                     <span className={spreads.buy ? "text-blue-400 font-medium" : "text-slate-600"}>
@@ -172,6 +178,22 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
                       {spreads.sell ? formatCurrency(spreads.sell) : "—"}
                     </span>
                   </div>
+                  {hasSpread && (
+                    <div className="flex items-center justify-between text-[9.5px] text-slate-500">
+                      <span>SPREAD:</span>
+                      <span className="text-amber-400/90 font-medium">
+                        {formatCurrency(spreads.sell! - spreads.buy!)}
+                      </span>
+                    </div>
+                  )}
+                  {listings !== null && (
+                    <div className="flex items-center justify-between pt-0.5 border-t border-slate-800/40 text-[9.5px]">
+                      <span className="text-slate-500">SOLD:</span>
+                      <span className={listings > 0 ? "text-cyan-300 font-medium" : "text-slate-600"}>
+                        {listings} {listings === 1 ? "listing" : "listings"}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             );
@@ -179,11 +201,11 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
         </div>
       </div>
 
-      {/* Multi-Authority Comparison Table */}
+      {/* Multi-Authority Comparison Table with Explicit Buy/Sell & Graded Lines */}
       <div>
         <div className="text-[11px] font-mono uppercase tracking-wider text-slate-400 mb-2 flex items-center justify-between">
           <span>Cross-Authority Evidence Registry</span>
-          <span className="text-[10px] text-slate-500">certified grading authorities remain unblended</span>
+          <span className="text-[10px] text-slate-500">continuous buy/sell order book depth & certified slab isolation</span>
         </div>
 
         <div
@@ -195,8 +217,8 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
           <table className="w-full min-w-[1120px] border-collapse text-left text-xs tabular-nums">
             <thead className="bg-slate-900 text-slate-300">
               <tr>
-                <th scope="col" className="sticky left-0 z-10 bg-slate-900 px-3 py-3 font-medium border-r border-slate-800">
-                  Authority Source
+                <th scope="col" className="sticky left-0 z-10 bg-slate-900 px-3 py-3 font-medium border-r border-slate-800 min-w-[280px]">
+                  Authority Source / Metric
                 </th>
                 {GRADES.map((grade) => (
                   <th
@@ -210,90 +232,276 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800">
-              {SOURCES.map((source) => {
-                const isGradingAuthority = source.startsWith("CGC") || source === "CBCS" || source === "PSA" || source.startsWith("GoCollect");
+              {[
+                // 1. PANEL PROFITS SUITE (FMV, BUY, SELL, VOLUME, LISTINGS)
+                {
+                  id: "pp-fmv",
+                  source: "Panel Profits",
+                  badge: "Exchange FMV",
+                  badgeClass: "text-emerald-400/90",
+                  getValue: (grade: Grade) => {
+                    const p = pp[grade];
+                    return {
+                      display: p ? formatCurrency(p) : "—",
+                      colorClass: p ? (grade === "9.8" ? "text-cyan-300 font-bold" : grade === "RAW" ? "text-amber-300 font-bold" : "text-emerald-300 font-medium") : "text-slate-600",
+                    };
+                  },
+                },
+                {
+                  id: "pp-buy",
+                  source: "Panel Profits",
+                  badge: "Bid (Buy Price)",
+                  badgeClass: "text-blue-400/90",
+                  getValue: (grade: Grade) => {
+                    const s = panelProfitsSpreads(comic, grade);
+                    return {
+                      display: s.buy ? formatCurrency(s.buy) : "—",
+                      colorClass: s.buy ? "text-blue-400 font-medium" : "text-slate-600",
+                    };
+                  },
+                },
+                {
+                  id: "pp-sell",
+                  source: "Panel Profits",
+                  badge: "Ask (Sell Price)",
+                  badgeClass: "text-emerald-400/90",
+                  getValue: (grade: Grade) => {
+                    const s = panelProfitsSpreads(comic, grade);
+                    return {
+                      display: s.sell ? formatCurrency(s.sell) : "—",
+                      colorClass: s.sell ? "text-emerald-400 font-medium" : "text-slate-600",
+                    };
+                  },
+                },
+                {
+                  id: "pp-volume",
+                  source: "Panel Profits",
+                  badge: "Annual Volume",
+                  badgeClass: "text-cyan-400/90",
+                  getValue: (grade: Grade) => {
+                    const v = panelProfitsVolume(comic, grade);
+                    return {
+                      display: v || "—",
+                      colorClass: v ? "text-cyan-300 font-mono text-[11px]" : "text-slate-600",
+                    };
+                  },
+                },
+                {
+                  id: "pp-listings",
+                  source: "Panel Profits",
+                  badge: "Realized Listings",
+                  badgeClass: "text-amber-400/90",
+                  getValue: (grade: Grade) => {
+                    const l = panelProfitsListings(comic, grade);
+                    return {
+                      display: l != null ? `${l} sold` : "—",
+                      colorClass: l != null && l > 0 ? "text-amber-300 font-mono" : "text-slate-600",
+                    };
+                  },
+                },
 
-                return (
-                  <tr key={source} className="hover:bg-slate-800/40 transition-colors">
-                    <th
-                      scope="row"
-                      className="sticky left-0 bg-[#111319] px-3 py-3 whitespace-nowrap font-medium text-slate-100 border-r border-slate-800"
-                    >
-                      <div className="flex items-center gap-1.5">
-                        <span>{source}</span>
-                        {source === "Panel Profits" && (
-                          <span className="text-[10px] text-emerald-400/90 font-mono">(Exchange FMV)</span>
-                        )}
-                        {source === "eBay Sold Transactions" && (
-                          <span className="text-[10px] text-yellow-400/80 font-mono">(Realized Sales)</span>
-                        )}
-                        {source === "ComicBase" && (
-                          <span className="text-[10px] text-cyan-400/80 font-mono">(Catalog Guide)</span>
-                        )}
-                        {source === "CGC · GPA sales" && (
-                          <span className="text-[10px] text-purple-400/80 font-mono">(CGC Certified Only)</span>
-                        )}
-                        {source === "CBCS" && (
-                          <span className="text-[10px] text-indigo-400/80 font-mono">(CBCS Certified Only)</span>
-                        )}
-                        {source === "PSA" && (
-                          <span className="text-[10px] text-red-400/80 font-mono">(PSA Certified Only)</span>
-                        )}
-                        {source === "GoCollect - CGC" && (
-                          <span className="text-[10px] text-blue-400/80 font-mono">(CGC Census FMV)</span>
-                        )}
-                        {source === "GoCollect - CBCS" && (
-                          <span className="text-[10px] text-teal-400/80 font-mono">(CBCS Census FMV)</span>
-                        )}
-                        {source === "GoCollect - PSA" && (
-                          <span className="text-[10px] text-sky-400/80 font-mono">(PSA Census FMV)</span>
-                        )}
-                      </div>
-                    </th>
-                    {GRADES.map((grade) => {
-                      // CGC, CBCS, PSA, and GoCollect are certified grading authorities and NEVER have a RAW or ungraded price
-                      if (grade === "RAW" && isGradingAuthority) {
-                        return (
-                          <td key={grade} className="px-2 py-3 text-right text-slate-600 font-mono">
-                            —
-                          </td>
-                        );
-                      }
+                // 2. CGC / CERTIFIED GRADED COPIES SUITE (FMV, BUY, SELL, VOLUME, LISTINGS)
+                {
+                  id: "cgc-fmv",
+                  source: "CGC · GPA sales",
+                  badge: "Certified Slabs (Realized FMV)",
+                  badgeClass: "text-purple-400/90",
+                  isGradedOnly: true,
+                  getValue: (grade: Grade) => {
+                    const p = cgcGpaGrades[grade] ?? (grade !== "RAW" ? pp[grade] : null);
+                    return {
+                      display: p ? formatCurrency(p) : "—",
+                      colorClass: p ? "text-purple-300 font-medium" : "text-slate-600",
+                    };
+                  },
+                },
+                {
+                  id: "cgc-buy",
+                  source: "CGC · GPA sales",
+                  badge: "Graded Slab Bid (Buy Price)",
+                  badgeClass: "text-blue-400/90",
+                  isGradedOnly: true,
+                  getValue: (grade: Grade) => {
+                    const s = cgcSpreads(comic, grade);
+                    return {
+                      display: s.buy ? formatCurrency(s.buy) : "—",
+                      colorClass: s.buy ? "text-blue-400 font-medium" : "text-slate-600",
+                    };
+                  },
+                },
+                {
+                  id: "cgc-sell",
+                  source: "CGC · GPA sales",
+                  badge: "Graded Slab Ask (Sell Price)",
+                  badgeClass: "text-emerald-400/90",
+                  isGradedOnly: true,
+                  getValue: (grade: Grade) => {
+                    const s = cgcSpreads(comic, grade);
+                    return {
+                      display: s.sell ? formatCurrency(s.sell) : "—",
+                      colorClass: s.sell ? "text-emerald-400 font-medium" : "text-slate-600",
+                    };
+                  },
+                },
+                {
+                  id: "cgc-volume",
+                  source: "CGC · GPA sales",
+                  badge: "Graded Slab Annual Volume",
+                  badgeClass: "text-purple-400/90",
+                  isGradedOnly: true,
+                  getValue: (grade: Grade) => {
+                    const v = cgcVolume(comic, grade);
+                    return {
+                      display: v || "—",
+                      colorClass: v ? "text-purple-300 font-mono text-[11px]" : "text-slate-600",
+                    };
+                  },
+                },
+                {
+                  id: "cgc-listings",
+                  source: "CGC · GPA sales",
+                  badge: "Graded Slab Sold Listings",
+                  badgeClass: "text-cyan-400/90",
+                  isGradedOnly: true,
+                  getValue: (grade: Grade) => {
+                    const l = cgcListings(comic, grade);
+                    return {
+                      display: l != null ? `${l} sold` : "—",
+                      colorClass: l != null && l > 0 ? "text-cyan-300 font-mono" : "text-slate-600",
+                    };
+                  },
+                },
 
-                      let price: number | undefined;
-
-                      if (source === "Panel Profits") {
-                        price = pp[grade];
-                      } else if (source === "eBay Sold Transactions") {
-                        price = ebayLadder[grade];
-                      } else if (source === "ComicBase") {
-                        price = cbGrades[grade];
-                      } else if (source === "GoCollect - CGC") {
-                        price = gcCgcGrades[grade];
-                      } else if (source === "GoCollect - CBCS") {
-                        price = gcCbcsGrades[grade];
-                      } else if (source === "GoCollect - PSA") {
-                        price = gcPsaGrades[grade];
-                      } else if (source === "CGC · GPA sales") {
-                        price = cgcGpaGrades[grade];
-                      } else if (source === "CBCS") {
-                        price = cbcsLadder[grade];
-                      } else if (source === "PSA") {
-                        price = psaLadder[grade];
-                      }
-
+                // 3. OTHER CERTIFIED & SECONDARY MARKET AUTHORITIES
+                {
+                  id: "cbcs",
+                  source: "CBCS",
+                  badge: "CBCS Certified Only",
+                  badgeClass: "text-indigo-400/80",
+                  isGradedOnly: true,
+                  getValue: (grade: Grade) => {
+                    const p = cbcsLadder[grade];
+                    return {
+                      display: p ? formatCurrency(p) : "—",
+                      colorClass: p ? "text-emerald-300 font-medium" : "text-slate-600",
+                    };
+                  },
+                },
+                {
+                  id: "psa",
+                  source: "PSA",
+                  badge: "PSA Certified Only",
+                  badgeClass: "text-red-400/80",
+                  isGradedOnly: true,
+                  getValue: (grade: Grade) => {
+                    const p = psaLadder[grade];
+                    return {
+                      display: p ? formatCurrency(p) : "—",
+                      colorClass: p ? "text-emerald-300 font-medium" : "text-slate-600",
+                    };
+                  },
+                },
+                {
+                  id: "gc-cgc",
+                  source: "GoCollect - CGC",
+                  badge: "CGC Census FMV",
+                  badgeClass: "text-blue-400/80",
+                  isGradedOnly: true,
+                  getValue: (grade: Grade) => {
+                    const p = gcCgcGrades[grade];
+                    return {
+                      display: p ? formatCurrency(p) : "—",
+                      colorClass: p ? "text-emerald-300 font-medium" : "text-slate-600",
+                    };
+                  },
+                },
+                {
+                  id: "gc-cbcs",
+                  source: "GoCollect - CBCS",
+                  badge: "CBCS Census FMV",
+                  badgeClass: "text-teal-400/80",
+                  isGradedOnly: true,
+                  getValue: (grade: Grade) => {
+                    const p = gcCbcsGrades[grade];
+                    return {
+                      display: p ? formatCurrency(p) : "—",
+                      colorClass: p ? "text-emerald-300 font-medium" : "text-slate-600",
+                    };
+                  },
+                },
+                {
+                  id: "gc-psa",
+                  source: "GoCollect - PSA",
+                  badge: "PSA Census FMV",
+                  badgeClass: "text-sky-400/80",
+                  isGradedOnly: true,
+                  getValue: (grade: Grade) => {
+                    const p = gcPsaGrades[grade];
+                    return {
+                      display: p ? formatCurrency(p) : "—",
+                      colorClass: p ? "text-emerald-300 font-medium" : "text-slate-600",
+                    };
+                  },
+                },
+                {
+                  id: "ebay",
+                  source: "eBay Sold Transactions",
+                  badge: "Realized Sales",
+                  badgeClass: "text-yellow-400/80",
+                  getValue: (grade: Grade) => {
+                    const p = ebayLadder[grade];
+                    return {
+                      display: p ? formatCurrency(p) : "—",
+                      colorClass: p ? "text-emerald-300 font-medium" : "text-slate-600",
+                    };
+                  },
+                },
+                {
+                  id: "comicbase",
+                  source: "ComicBase",
+                  badge: "Catalog Guide",
+                  badgeClass: "text-cyan-400/80",
+                  getValue: (grade: Grade) => {
+                    const p = cbGrades[grade];
+                    return {
+                      display: p ? formatCurrency(p) : "—",
+                      colorClass: p ? "text-emerald-300 font-medium" : "text-slate-600",
+                    };
+                  },
+                },
+              ].map((row) => (
+                <tr key={row.id} className="hover:bg-slate-800/40 transition-colors">
+                  <th
+                    scope="row"
+                    className="sticky left-0 bg-[#111319] px-3 py-2.5 whitespace-nowrap font-medium text-slate-100 border-r border-slate-800"
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-slate-200">{row.source}</span>
+                      <span className={`text-[10px] font-mono ${row.badgeClass}`}>
+                        ({row.badge})
+                      </span>
+                    </div>
+                  </th>
+                  {GRADES.map((grade) => {
+                    if (grade === "RAW" && row.isGradedOnly) {
                       return (
-                        <td
-                          key={grade}
-                          className={`px-2 py-3 text-right ${price ? "text-emerald-300 font-medium" : "text-slate-600"}`}
-                        >
-                          {price ? formatCurrency(price) : "—"}
+                        <td key={grade} className="px-2 py-2.5 text-right text-slate-600 font-mono">
+                          —
                         </td>
                       );
-                    })}
-                  </tr>
-                );
-              })}
+                    }
+                    const { display, colorClass } = row.getValue(grade);
+                    return (
+                      <td
+                        key={grade}
+                        className={`px-2 py-2.5 text-right ${colorClass || "text-slate-600"}`}
+                      >
+                        {display}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
