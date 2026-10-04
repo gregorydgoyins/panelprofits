@@ -17,7 +17,7 @@ export async function Header() {
     <header className="sticky top-0 z-40 w-full border-b border-slate-800/80 bg-[#090A0E]/95 backdrop-blur-md">
       {/* Top Compact Identity Row */}
       <div className="border-b border-slate-800/50 px-4 py-1.5 bg-[#06070A] sm:px-6 lg:px-8">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+        <div className="flex w-full items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <span className="flex h-5 w-5 items-center justify-center rounded bg-purple-600 text-white text-[10px] tracking-wider font-light">
               PP
@@ -48,7 +48,7 @@ export async function Header() {
       <MarketClocks />
 
       <div className="px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto flex min-h-12 max-w-7xl items-center justify-between gap-4">
+        <div className="flex min-h-12 w-full items-center justify-between gap-4">
         <PrimaryNav />
 
         {/* Right Action: Account or Sign In */}

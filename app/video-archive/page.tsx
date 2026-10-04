@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Tv, ArrowLeft, Radio, Archive } from "lucide-react";
 import { VideoArchiveTheater } from "@/components/video/video-archive-theater";
+import { XMenMasterclassSerialization } from "@/components/video/XMenMasterclassSerialization";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +12,7 @@ export const metadata = {
 
 export default function VideoArchivePage() {
   return (
-    <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10 space-y-8">
+    <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10 space-y-10">
       {/* Navigation Breadcrumb */}
       <div>
         <Link
@@ -48,7 +49,10 @@ export default function VideoArchivePage() {
         </div>
       </header>
 
-      {/* Theater Component */}
+      {/* ComicBookGirl19 3.5-Hour Serialized X-Men Masterclass (Chopped into Precision Chapters) */}
+      <XMenMasterclassSerialization />
+
+      {/* Full Video Archive Theater */}
       <VideoArchiveTheater />
     </main>
   );

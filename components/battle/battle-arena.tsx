@@ -24,6 +24,7 @@ import {
   BattleSimulationResult,
   CANONICAL_DREAM_MATCHUPS,
   simulateSuperheroBattle,
+  type ContenderCategory,
 } from "@/lib/battle/battle-engine";
 import { formatCurrency } from "@/lib/utils";
 
@@ -36,6 +37,7 @@ export function BattleArena({ initialContenders }: BattleArenaProps) {
   const defaultA = initialContenders.find((h) => h.name === "Batman") || initialContenders[0];
   const defaultB = initialContenders.find((h) => h.name === "Spider-Man") || initialContenders[1];
 
+  const [selectedCategory, setSelectedCategory] = React.useState<ContenderCategory | "all">("all");
   const [heroA, setHeroA] = React.useState<SuperheroContender>(defaultA);
   const [heroB, setHeroB] = React.useState<SuperheroContender>(defaultB);
   const [searchA, setSearchA] = React.useState("");
@@ -47,22 +49,24 @@ export function BattleArena({ initialContenders }: BattleArenaProps) {
   );
   const [isSimulating, setIsSimulating] = React.useState(false);
 
-  // Filter contenders for search
+  // Filter contenders for search by active category
   const filteredA = React.useMemo(() => {
-    if (!searchA.trim()) return initialContenders.slice(0, 15);
+    const pool = selectedCategory === "all" ? initialContenders : initialContenders.filter((h) => h.category === selectedCategory);
+    if (!searchA.trim()) return pool.slice(0, 15);
     const q = searchA.toLowerCase();
-    return initialContenders.filter(
+    return pool.filter(
       (h) => h.name.toLowerCase().includes(q) || h.fullName.toLowerCase().includes(q)
     ).slice(0, 20);
-  }, [searchA, initialContenders]);
+  }, [searchA, initialContenders, selectedCategory]);
 
   const filteredB = React.useMemo(() => {
-    if (!searchB.trim()) return initialContenders.slice(0, 15);
+    const pool = selectedCategory === "all" ? initialContenders : initialContenders.filter((h) => h.category === selectedCategory);
+    if (!searchB.trim()) return pool.slice(0, 15);
     const q = searchB.toLowerCase();
-    return initialContenders.filter(
+    return pool.filter(
       (h) => h.name.toLowerCase().includes(q) || h.fullName.toLowerCase().includes(q)
     ).slice(0, 20);
-  }, [searchB, initialContenders]);
+  }, [searchB, initialContenders, selectedCategory]);
 
   // Execute battle simulation
   const handleSimulate = (a: SuperheroContender, b: SuperheroContender) => {
@@ -84,15 +88,23 @@ export function BattleArena({ initialContenders }: BattleArenaProps) {
     }
   };
 
-  // Shuffle two random contenders
+  // Filter dream matchups based on selectedCategory
+  const displayedDreamMatchups = React.useMemo(() => {
+    if (selectedCategory === "all") return CANONICAL_DREAM_MATCHUPS;
+    return CANONICAL_DREAM_MATCHUPS.filter((m) => m.category === selectedCategory);
+  }, [selectedCategory]);
+
+  // Shuffle two random contenders from current pool
   const handleRandomize = () => {
-    const idxA = Math.floor(Math.random() * initialContenders.length);
-    let idxB = Math.floor(Math.random() * initialContenders.length);
-    while (idxB === idxA) {
-      idxB = Math.floor(Math.random() * initialContenders.length);
+    const pool = selectedCategory === "all" ? initialContenders : initialContenders.filter((h) => h.category === selectedCategory);
+    if (pool.length < 2) return;
+    const idxA = Math.floor(Math.random() * pool.length);
+    let idxB = Math.floor(Math.random() * pool.length);
+    while (idxB === idxA && pool.length > 1) {
+      idxB = Math.floor(Math.random() * pool.length);
     }
-    const a = initialContenders[idxA];
-    const b = initialContenders[idxB];
+    const a = pool[idxA];
+    const b = pool[idxB];
     setHeroA(a);
     setHeroB(b);
     handleSimulate(a, b);
@@ -140,13 +152,52 @@ export function BattleArena({ initialContenders }: BattleArenaProps) {
           </div>
         </div>
 
+        {/* ── Category Filter Bar ── */}
+        <div className="mt-6 pt-5 border-t border-slate-800/80 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] uppercase font-mono tracking-wider text-cyan-400 font-semibold flex items-center gap-1.5">
+              <Sparkles className="h-3 w-3" /> Select Combat Dimension / Arena Category:
+            </span>
+            <span className="text-[10px] font-mono text-slate-400">
+              {displayedDreamMatchups.length} Preset Matchups
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { id: "all", label: "All Matchups", icon: "🌌" },
+              { id: "heroes", label: "Heroes & Anti-Heroes", icon: "🦸" },
+              { id: "sidekicks", label: "Sidekicks & Henchmen", icon: "🐕" },
+              { id: "weapons", label: "Weapons & Relics", icon: "🗡️" },
+              { id: "vehicles", label: "Vehicles & Transit", icon: "🏎️" },
+              { id: "teams", label: "Teams & Factions", icon: "🛡️" },
+              { id: "creators", label: "Creators & Architects", icon: "✍️" },
+            ].map((cat) => {
+              const isSelected = selectedCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedCategory(cat.id as any)}
+                  className={`text-xs px-3 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 ${
+                    isSelected
+                      ? "border-cyan-400 bg-cyan-500/20 text-cyan-200 font-bold shadow-md shadow-cyan-950/50"
+                      : "border-slate-800 bg-slate-900/60 text-slate-400 hover:text-slate-200 hover:border-slate-700"
+                  }`}
+                >
+                  <span>{cat.icon}</span>
+                  <span>{cat.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* ── Dream Matchups Roster Pills ── */}
-        <div className="mt-6 pt-5 border-t border-slate-800/80 space-y-2.5">
+        <div className="mt-4 pt-3 border-t border-slate-800/50 space-y-2.5">
           <span className="text-[10px] uppercase font-mono tracking-wider text-slate-400 font-semibold block">
-            Legendary Unfought Dream Matchups:
+            Featured Legendary Matchups ({selectedCategory.toUpperCase()}):
           </span>
           <div className="flex flex-wrap gap-2">
-            {CANONICAL_DREAM_MATCHUPS.map((match) => {
+            {displayedDreamMatchups.map((match) => {
               const active =
                 (heroA.name.toLowerCase() === match.heroA.toLowerCase() &&
                   heroB.name.toLowerCase() === match.heroB.toLowerCase()) ||
@@ -244,6 +295,9 @@ export function BattleArena({ initialContenders }: BattleArenaProps) {
                   </h2>
                   <Badge variant="outline" className="border-cyan-500/50 text-[10px] text-cyan-300 font-mono">
                     {heroA.publisher}
+                  </Badge>
+                  <Badge variant="secondary" className="bg-slate-800 text-cyan-300 text-[9px] font-mono capitalize">
+                    {heroA.category || "heroes"}
                   </Badge>
                 </div>
                 <p className="text-xs text-slate-400 truncate">
@@ -389,6 +443,9 @@ export function BattleArena({ initialContenders }: BattleArenaProps) {
                   </h2>
                   <Badge variant="outline" className="border-amber-500/50 text-[10px] text-amber-300 font-mono">
                     {heroB.publisher}
+                  </Badge>
+                  <Badge variant="secondary" className="bg-slate-800 text-amber-300 text-[9px] font-mono capitalize">
+                    {heroB.category || "heroes"}
                   </Badge>
                 </div>
                 <p className="text-xs text-slate-400 truncate">

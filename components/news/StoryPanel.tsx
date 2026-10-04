@@ -13,6 +13,8 @@ import { MarketReactionCard } from "@/components/news/MarketReactionCard";
 import { AudioBriefingPlayer } from "@/components/news/AudioBriefingPlayer";
 import { AnalystDeskMemo } from "@/components/news/AnalystDeskMemo";
 import { parseAndSynthesizeArticle } from "@/lib/news/article-parser";
+import { ForeignLanguageTranslationBar } from "@/components/news/ForeignLanguageTranslationBar";
+import { type SupportedLanguage, translateNewsText, COMIC_FINANCIAL_GLOSSARY } from "@/lib/i18n/news-translation";
 
 function relativeTime(d: string | null) {
   if (!d) return "Recently";
@@ -44,6 +46,10 @@ export function StoryPanel({ story }: { story: NewsStory }) {
   const authenticVideo = extractAuthenticVideo(story.summary, story.url);
   const catalyst = article.catalyst;
   const allEntities = entities;
+
+  const [currentLanguage, setCurrentLanguage] = React.useState<SupportedLanguage>("en");
+  const displayHeadline = React.useMemo(() => translateNewsText(article.headline, currentLanguage), [article.headline, currentLanguage]);
+  const displayParagraphs = React.useMemo(() => article.paragraphs.map((p) => translateNewsText(p, currentLanguage)), [article.paragraphs, currentLanguage]);
 
   const hasEditorialImage = Boolean(story.imageUrl && !story.imageUrl.includes("google.com/s2/favicons"));
 
@@ -80,9 +86,17 @@ export function StoryPanel({ story }: { story: NewsStory }) {
           )}
         </div>
 
+        {/* Foreign Language Editions Translation Bar */}
+        <div className="mt-4">
+          <ForeignLanguageTranslationBar
+            currentLanguage={currentLanguage}
+            onLanguageChange={setCurrentLanguage}
+          />
+        </div>
+
         {/* Lead Headline with Live Entity Tokenization */}
         <h1 className="mt-4 text-2xl sm:text-3xl font-semibold text-slate-100 leading-tight tracking-tight">
-          <LinkedBriefing text={article.headline} entities={allEntities} />
+          <LinkedBriefing text={displayHeadline} entities={allEntities} />
         </h1>
 
         {/* Authentic Video Player or Editorial Artwork */}
@@ -119,7 +133,7 @@ export function StoryPanel({ story }: { story: NewsStory }) {
 
         {/* Authentic Story Body with Live Entity Tokenization */}
         <div className="mt-6 space-y-4 text-sm sm:text-base leading-relaxed text-slate-200">
-          {article.paragraphs.map((p, idx) => (
+          {displayParagraphs.map((p, idx) => (
             <p key={idx} className="leading-relaxed">
               <LinkedBriefing text={p} entities={allEntities} />
             </p>

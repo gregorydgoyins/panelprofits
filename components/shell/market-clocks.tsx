@@ -149,7 +149,7 @@ export function MarketClocks() {
   if (!mounted) {
     return (
       <div className="relative border-b border-slate-800/70 bg-[#07090d] px-4 py-1.5 sm:px-6 lg:px-8">
-        <div className="mx-auto flex max-w-7xl items-center gap-4 overflow-x-auto whitespace-nowrap text-[11px] uppercase tracking-[0.12em]">
+        <div className="flex w-full items-center gap-4 overflow-x-auto whitespace-nowrap text-[11px] uppercase tracking-[0.12em]">
           <div className="flex shrink-0 items-center gap-2 border-r border-slate-800 pr-3 text-cyan-300">
             <Clock3 className="h-3.5 w-3.5" /> MARKET CLOCKS
           </div>
@@ -171,7 +171,7 @@ export function MarketClocks() {
 
   return (
     <div className="relative border-b border-slate-800/70 bg-[#07090d] px-4 py-1.5 sm:px-6 lg:px-8">
-      <div className="mx-auto flex max-w-7xl items-center gap-4 overflow-x-auto whitespace-nowrap text-[11px] uppercase tracking-[0.12em]">
+      <div className="flex w-full items-center gap-4 overflow-x-auto whitespace-nowrap text-[11px] uppercase tracking-[0.12em]">
         <div className="flex shrink-0 items-center gap-2 border-r border-slate-800 pr-3 text-cyan-300">
           <Clock3 className="h-3.5 w-3.5" /> MARKET CLOCKS
         </div>

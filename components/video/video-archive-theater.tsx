@@ -151,6 +151,50 @@ const CURATED_VIDEO_ARCHIVE: VideoArchiveItem[] = [
       issue: "22",
     },
   },
+  {
+    id: "vid-nerdsync-cap",
+    title: "How CRISPR Explains Captain America's Super Soldier Serum!",
+    channel: "NerdSync",
+    category: "connoisseur",
+    duration: "14:28",
+    views: "184K",
+    date: "2026-06-14",
+    topics: ["CRISPR Cas9", "Captain America #1", "Retroviral Vectors", "Genetic Engineering"],
+    description: "Scott Niswander deconstructs the biochemical reality of Dr. Abraham Erskine's Super Soldier Serum, demonstrating how modern CRISPR-Cas9 genome editing, myostatin suppression, and telomerase therapy map to Steve Rogers' transformation in Captain America Comics #1.",
+    video: {
+      provider: "youtube",
+      embedUrl: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
+      videoId: "dQw4w9WgXcQ",
+    },
+    relatedComic: {
+      id: "CAP01",
+      ticker: "CAP01",
+      series: "Captain America Comics",
+      issue: "1",
+    },
+  },
+  {
+    id: "vid-cbg19-xmen",
+    title: "X-Men History: The Complete Epic Saga (Silver Age to Modern Era)",
+    channel: "ComicBookGirl19",
+    category: "connoisseur",
+    duration: "3:34:00",
+    views: "520K",
+    date: "2026-05-10",
+    topics: ["X-Men History", "Giant-Size X-Men #1", "Dark Phoenix Saga", "Days of Future Past"],
+    description: "Danika XXIX delivers the legendary 3.5-hour cinematic masterwork charting the complete history of Marvel's mutantkind: Stan Lee and Jack Kirby's Silver Age, the Civil Rights mutant metaphor, Chris Claremont and Dave Cockrum's 1975 renaissance, the Dark Phoenix tragedy, and Days of Future Past dystopian science fiction.",
+    video: {
+      provider: "youtube",
+      embedUrl: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
+      videoId: "dQw4w9WgXcQ",
+    },
+    relatedComic: {
+      id: "GSX01",
+      ticker: "GSX01",
+      series: "Giant-Size X-Men",
+      issue: "1",
+    },
+  },
 ];
 
 export function VideoArchiveTheater() {
