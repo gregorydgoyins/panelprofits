@@ -131,25 +131,85 @@ export function comicBaseGrades(comic: Partial<ComicRecord>): Partial<Record<Gra
  * Reads authentic GoCollect price ladder if present in payload or metadata.
  */
 export function goCollectGrades(comic: Partial<ComicRecord>): Partial<Record<Grade, number>> {
+  return goCollectCgcGrades(comic);
+}
+
+/**
+ * Reads authentic GoCollect - CGC certified observation ladder.
+ * CGC is exclusively a certified grading company — it NEVER issues a RAW or ungraded price.
+ */
+export function goCollectCgcGrades(comic: Partial<ComicRecord>): Partial<Record<Grade, number>> {
   const result: Partial<Record<Grade, number>> = {};
-  const data = (comic as Record<string, unknown>).gocollect_data as Record<string, unknown> | undefined ||
+  const data = (comic as Record<string, unknown>).gocollect_cgc_data as Record<string, unknown> | undefined ||
+    (comic as Record<string, unknown>).gocollect_data as Record<string, unknown> | undefined ||
+    (comic.panel_profits_data as Record<string, unknown> | undefined)?.gocollect_cgc as Record<string, unknown> | undefined ||
+    (comic.panel_profits_data as Record<string, unknown> | undefined)?.gocollect as Record<string, unknown> | undefined ||
     comic.panel_profits_data;
   if (!data) return result;
-
-  const raw = positivePrice(data["GoCollect - Grade RAW"] || data["gc_raw_price"]);
-  if (raw !== null) result["RAW"] = raw;
 
   for (const grade of GRADES) {
     if (grade === "RAW") continue;
     const gradeKey = grade.replace(".", "_");
     const stored = positivePrice(
+      data[`GoCollect - CGC - Grade ${grade}`] ||
       data[`GoCollect - Grade ${grade}`] ||
+      data[`gc_cgc_grade_${gradeKey}_price`] ||
       data[`gc_grade_${gradeKey}_price`] ||
-      data[`gocollect_${gradeKey}`]
+      data[`gocollect_${gradeKey}`] ||
+      (data as any)[grade]
     );
     if (stored !== null) result[grade] = stored;
   }
+  return result;
+}
 
+/**
+ * Reads authentic GoCollect - CBCS certified observation ladder.
+ * CBCS is exclusively a certified grading company — it NEVER issues a RAW or ungraded price.
+ */
+export function goCollectCbcsGrades(comic: Partial<ComicRecord>): Partial<Record<Grade, number>> {
+  const result: Partial<Record<Grade, number>> = {};
+  const data = (comic as Record<string, unknown>).gocollect_cbcs_data as Record<string, unknown> | undefined ||
+    (comic.panel_profits_data as Record<string, unknown> | undefined)?.gocollect_cbcs as Record<string, unknown> | undefined ||
+    (comic.panel_profits_data as Record<string, unknown> | undefined)?.cbcs_grades as Record<string, unknown> | undefined ||
+    comic.panel_profits_data;
+  if (!data) return result;
+
+  for (const grade of GRADES) {
+    if (grade === "RAW") continue;
+    const gradeKey = grade.replace(".", "_");
+    const stored = positivePrice(
+      data[`GoCollect - CBCS - Grade ${grade}`] ||
+      data[`gc_cbcs_grade_${gradeKey}_price`] ||
+      (data as any)[`cbcs_${gradeKey}`]
+    );
+    if (stored !== null) result[grade] = stored;
+  }
+  return result;
+}
+
+/**
+ * Reads authentic GoCollect - PSA certified observation ladder.
+ * PSA is exclusively a certified grading company — it NEVER issues a RAW or ungraded price.
+ */
+export function goCollectPsaGrades(comic: Partial<ComicRecord>): Partial<Record<Grade, number>> {
+  const result: Partial<Record<Grade, number>> = {};
+  const data = (comic as Record<string, unknown>).gocollect_psa_data as Record<string, unknown> | undefined ||
+    (comic.panel_profits_data as Record<string, unknown> | undefined)?.gocollect_psa as Record<string, unknown> | undefined ||
+    (comic.panel_profits_data as Record<string, unknown> | undefined)?.psa_grades as Record<string, unknown> | undefined ||
+    comic.panel_profits_data;
+  if (!data) return result;
+
+  for (const grade of GRADES) {
+    if (grade === "RAW") continue;
+    const gradeKey = grade.replace(".", "_");
+    const stored = positivePrice(
+      data[`GoCollect - PSA - Grade ${grade}`] ||
+      data[`gc_psa_grade_${gradeKey}_price`] ||
+      (data as any)[`psa_${gradeKey}`]
+    );
+    if (stored !== null) result[grade] = stored;
+  }
   return result;
 }
 

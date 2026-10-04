@@ -433,6 +433,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
             currentComicId={comic.id}
             series={comic.series}
             issueNumber={comic.issue_number}
+            baseFmv={Number(comic.baseline_grade_9_8_value || comic.pp_grade_9_8_price || 0)}
           />
 
           {/* 8. GCD Archival Bibliographic Dossier: Physical Specs & Archival Notes */}

@@ -13,6 +13,7 @@ import {
   Users
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { formatCurrency } from "@/lib/utils";
 import type { GcdRelationalData } from "@/lib/comics/gcd-relational-service";
 
 interface AtomicVariantsAndInternationalMatrixProps {
@@ -20,6 +21,22 @@ interface AtomicVariantsAndInternationalMatrixProps {
   currentComicId?: string;
   series: string;
   issueNumber: string;
+  baseFmv?: number;
+}
+
+function getVariantFormulaMultiplier(name: string): { multiplier: number; label: string; badgeColor: string } {
+  const n = name.toLowerCase();
+  if (n.includes("1:500") || n.includes("1/500")) return { multiplier: 5.0, label: "1:500 Ratio Incentive (5.0x)", badgeColor: "text-amber-300 border-amber-500/50 bg-amber-950/60" };
+  if (n.includes("1:100") || n.includes("1/100")) return { multiplier: 4.0, label: "1:100 Ratio Incentive (4.0x)", badgeColor: "text-amber-300 border-amber-500/50 bg-amber-950/60" };
+  if (n.includes("1:50") || n.includes("1/50")) return { multiplier: 2.5, label: "1:50 Ratio Incentive (2.5x)", badgeColor: "text-yellow-300 border-yellow-500/50 bg-yellow-950/60" };
+  if (n.includes("1:25") || n.includes("1/25")) return { multiplier: 1.75, label: "1:25 Ratio Incentive (1.75x)", badgeColor: "text-yellow-300 border-yellow-500/50 bg-yellow-950/60" };
+  if (n.includes("foil")) return { multiplier: 1.5, label: "Foil Edition (1.5x)", badgeColor: "text-purple-300 border-purple-500/50 bg-purple-950/60" };
+  if (n.includes("noir")) return { multiplier: 1.25, label: "Noir Edition (1.25x)", badgeColor: "text-slate-300 border-slate-500/50 bg-slate-900/60" };
+  if (n.includes("second printing") || n.includes("2nd printing")) return { multiplier: 0.85, label: "2nd Printing (0.85x)", badgeColor: "text-blue-300 border-blue-500/50 bg-blue-950/60" };
+  if (n.includes("third printing") || n.includes("3rd printing")) return { multiplier: 0.75, label: "3rd Printing (0.75x)", badgeColor: "text-blue-300 border-blue-500/50 bg-blue-950/60" };
+  if (n.includes("fourth printing") || n.includes("4th printing")) return { multiplier: 0.70, label: "4th Printing (0.70x)", badgeColor: "text-blue-300 border-blue-500/50 bg-blue-950/60" };
+  if (n.includes("blank")) return { multiplier: 0.80, label: "Blank Sketch Cover (0.80x)", badgeColor: "text-zinc-300 border-zinc-500/50 bg-zinc-900/60" };
+  return { multiplier: 1.0, label: "Universal Parity (1.0x)", badgeColor: "text-cyan-300 border-cyan-500/50 bg-cyan-950/60" };
 }
 
 export function AtomicVariantsAndInternationalMatrix({
@@ -27,6 +44,7 @@ export function AtomicVariantsAndInternationalMatrix({
   currentComicId,
   series,
   issueNumber,
+  baseFmv = 0,
 }: AtomicVariantsAndInternationalMatrixProps) {
   if (!relationalData) {
     return null;
@@ -95,9 +113,12 @@ export function AtomicVariantsAndInternationalMatrix({
             Each cover variant, retailer incentive, and subsequent printing represents an independent atomic tradeable instrument with unique supply elasticity, barcode registration, and secondary market demand.
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[380px] overflow-y-auto pr-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[480px] overflow-y-auto pr-1">
             {variants.map((v) => {
               const isBase = v.id === relationalData.baseIssueId;
+              const formula = getVariantFormulaMultiplier(v.variantName);
+              const estFmv = baseFmv > 0 ? baseFmv * formula.multiplier : null;
+
               return (
                 <div
                   key={v.id}
@@ -107,22 +128,36 @@ export function AtomicVariantsAndInternationalMatrix({
                       : "border-slate-800 bg-[#0E131F] hover:border-slate-700"
                   }`}
                 >
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between gap-1">
+                  <div className="space-y-1.5">
+                    <div className="flex items-start justify-between gap-1">
                       <span className="text-xs font-semibold text-slate-100 line-clamp-2">
                         {v.variantName}
                       </span>
-                      {isBase && (
+                      {isBase ? (
                         <span className="shrink-0 text-[9px] font-mono px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-500/40">
                           PRIMARY
+                        </span>
+                      ) : (
+                        <span className={`shrink-0 text-[8.5px] font-mono px-1.5 py-0.5 rounded border ${formula.badgeColor}`}>
+                          {formula.multiplier}x
                         </span>
                       )}
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-400 pt-1 font-mono">
+                    {/* Formulaic Pricing Parity Guidance */}
+                    <div className="flex items-center justify-between text-[10px] font-mono pt-0.5">
+                      <span className="text-slate-400">{formula.label}</span>
+                      {estFmv !== null && (
+                        <span className="text-emerald-400 font-bold">
+                          Est. 9.8: {formatCurrency(estFmv)}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-400 pt-0.5 font-mono">
                       {v.price && (
-                        <span className="inline-flex items-center gap-0.5 text-emerald-400">
-                          <DollarSign className="h-3 w-3" />
+                        <span className="inline-flex items-center gap-0.5 text-slate-300">
+                          <DollarSign className="h-3 w-3 text-emerald-400" />
                           <span>{v.price}</span>
                         </span>
                       )}
@@ -143,12 +178,21 @@ export function AtomicVariantsAndInternationalMatrix({
                   </div>
 
                   <div className="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10.5px]">
-                    <span className="text-slate-500 font-mono text-[9px]">GCD #{v.id}</span>
+                    <a
+                      href={`https://www.comics.org/issue/${v.id}/`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-slate-400 hover:text-slate-200 font-mono text-[9px] inline-flex items-center gap-1"
+                      title="Inspect record in Grand Comics Database"
+                    >
+                      <span>GCD #{v.id}</span>
+                      <ExternalLink className="h-2.5 w-2.5 text-slate-500" />
+                    </a>
                     <Link
                       href={`/comics?q=${encodeURIComponent(series)}`}
-                      className="text-cyan-400 hover:text-cyan-300 font-medium inline-flex items-center gap-0.5"
+                      className="text-cyan-400 hover:text-cyan-300 font-medium inline-flex items-center gap-0.5 text-[11px]"
                     >
-                      <span>Explore Instrument</span>
+                      <span>Explore Series</span>
                       <ExternalLink className="h-2.5 w-2.5" />
                     </Link>
                   </div>
@@ -187,7 +231,7 @@ export function AtomicVariantsAndInternationalMatrix({
                 key={f.reprintId}
                 className="rounded-lg border border-slate-800 bg-[#0E131F] p-3 flex flex-col justify-between hover:border-indigo-500/50 transition-colors"
               >
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-sm font-semibold text-slate-100 flex items-center gap-1.5">
                       <span>{getCountryFlag(f.country)}</span>
@@ -205,11 +249,29 @@ export function AtomicVariantsAndInternationalMatrix({
                   <div className="text-[10px] text-slate-400 font-mono pt-1">
                     <span>Pub Date: {f.publicationDate || "Archived Edition"}</span>
                   </div>
+
+                  <div className="text-[9.5px] font-mono text-emerald-400/90 pt-0.5">
+                    Licensed Translation Peg · Global Arbitrage
+                  </div>
                 </div>
 
                 <div className="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-mono text-slate-500">
-                  <span>Target GCD #{f.targetIssueId}</span>
-                  <span className="text-indigo-400 font-medium">Tradeable Global</span>
+                  <a
+                    href={`https://www.comics.org/issue/${f.targetIssueId}/`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-indigo-400 hover:text-indigo-300 inline-flex items-center gap-1 font-medium"
+                    title="View foreign edition on Grand Comics Database"
+                  >
+                    <span>GCD #{f.targetIssueId}</span>
+                    <ExternalLink className="h-2.5 w-2.5" />
+                  </a>
+                  <Link
+                    href={`/comics?q=${encodeURIComponent(f.seriesName)}`}
+                    className="text-slate-400 hover:text-slate-200"
+                  >
+                    Search Edition
+                  </Link>
                 </div>
               </div>
             ))}

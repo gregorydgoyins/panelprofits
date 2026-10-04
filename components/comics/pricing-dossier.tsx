@@ -6,7 +6,9 @@ import {
   comicBaseReference,
   ebayGrades,
   getHighestGradedPrice,
-  goCollectGrades,
+  goCollectCgcGrades,
+  goCollectCbcsGrades,
+  goCollectPsaGrades,
   GRADES,
   type Grade,
   panelProfitsGrades,
@@ -28,7 +30,9 @@ const SOURCES = [
   "CGC · GPA sales",
   "CBCS",
   "PSA",
-  "GoCollect",
+  "GoCollect - CGC",
+  "GoCollect - CBCS",
+  "GoCollect - PSA",
 ] as const;
 
 const PRIMARY_EXCHANGE_GRADES: Array<{
@@ -51,7 +55,9 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
   const ebayLadder = ebayGrades(comic);
   const cbGrades = comicBaseGrades(comic);
   const cb = comicBaseReference(comic);
-  const gcGrades = goCollectGrades(comic);
+  const gcCgcGrades = goCollectCgcGrades(comic);
+  const gcCbcsGrades = goCollectCbcsGrades(comic);
+  const gcPsaGrades = goCollectPsaGrades(comic);
   const cgcGpaGrades = cgcGrades(comic);
   const cbcsLadder = cbcsGrades(comic);
   const psaLadder = psaGrades(comic);
@@ -63,10 +69,12 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
     "PriceCharting": pcGrades,
     "eBay Sold Transactions": ebayLadder,
     "ComicBase": cbGrades,
-    "GoCollect": gcGrades,
     "CGC · GPA sales": cgcGpaGrades,
     "CBCS": cbcsLadder,
     "PSA": psaLadder,
+    "GoCollect - CGC": gcCgcGrades,
+    "GoCollect - CBCS": gcCbcsGrades,
+    "GoCollect - PSA": gcPsaGrades,
   });
 
   return (
@@ -200,7 +208,7 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
             </thead>
             <tbody className="divide-y divide-slate-800">
               {SOURCES.map((source) => {
-                const isGradingAuthority = source.startsWith("CGC") || source === "CBCS" || source === "PSA";
+                const isGradingAuthority = source.startsWith("CGC") || source === "CBCS" || source === "PSA" || source.startsWith("GoCollect");
 
                 return (
                   <tr key={source} className="hover:bg-slate-800/40 transition-colors">
@@ -222,16 +230,28 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
                         {source === "ComicBase" && (
                           <span className="text-[10px] text-cyan-400/80 font-mono">(Catalog Guide)</span>
                         )}
-                        {isGradingAuthority && (
-                          <span className="text-[10px] text-purple-400/80 font-mono">(Certified Only)</span>
+                        {source === "CGC · GPA sales" && (
+                          <span className="text-[10px] text-purple-400/80 font-mono">(CGC Certified Only)</span>
                         )}
-                        {source === "GoCollect" && (
-                          <span className="text-[10px] text-blue-400/80 font-mono">(Census/CPI)</span>
+                        {source === "CBCS" && (
+                          <span className="text-[10px] text-indigo-400/80 font-mono">(CBCS Certified Only)</span>
+                        )}
+                        {source === "PSA" && (
+                          <span className="text-[10px] text-red-400/80 font-mono">(PSA Certified Only)</span>
+                        )}
+                        {source === "GoCollect - CGC" && (
+                          <span className="text-[10px] text-blue-400/80 font-mono">(CGC Census FMV)</span>
+                        )}
+                        {source === "GoCollect - CBCS" && (
+                          <span className="text-[10px] text-teal-400/80 font-mono">(CBCS Census FMV)</span>
+                        )}
+                        {source === "GoCollect - PSA" && (
+                          <span className="text-[10px] text-sky-400/80 font-mono">(PSA Census FMV)</span>
                         )}
                       </div>
                     </th>
                     {GRADES.map((grade) => {
-                      // CGC, CBCS, and PSA are grading companies and NEVER have a RAW or ungraded price
+                      // CGC, CBCS, PSA, and GoCollect are certified grading authorities and NEVER have a RAW or ungraded price
                       if (grade === "RAW" && isGradingAuthority) {
                         return (
                           <td key={grade} className="px-2 py-3 text-right text-slate-600 font-mono">
@@ -250,8 +270,12 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
                         price = ebayLadder[grade];
                       } else if (source === "ComicBase") {
                         price = cbGrades[grade];
-                      } else if (source === "GoCollect") {
-                        price = gcGrades[grade];
+                      } else if (source === "GoCollect - CGC") {
+                        price = gcCgcGrades[grade];
+                      } else if (source === "GoCollect - CBCS") {
+                        price = gcCbcsGrades[grade];
+                      } else if (source === "GoCollect - PSA") {
+                        price = gcPsaGrades[grade];
                       } else if (source === "CGC · GPA sales") {
                         price = cgcGpaGrades[grade];
                       } else if (source === "CBCS") {
