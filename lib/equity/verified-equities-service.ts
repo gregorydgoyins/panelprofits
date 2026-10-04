@@ -449,3 +449,33 @@ export function searchVerifiedEquities(queryText = "", limit = 48, era?: string)
   }
 }
 
+/**
+ * Looks up full catalog row from comics table in SQLite by source_product_id or series/issue.
+ * Connects verified equity to authentic gcd_id, comicbase_id, and catalog publisher.
+ */
+export function getCatalogComicBySourceProductId(
+  sourceProductId?: string | null,
+  series?: string | null,
+  issueNumber?: string | null
+): any | null {
+  const db = getDb();
+  if (!db) return null;
+  try {
+    if (sourceProductId) {
+      const cleanNum = sourceProductId.replace(/^pp-/i, "").trim();
+      const row = db.prepare("SELECT * FROM comics WHERE source_product_id = ? OR id = ? LIMIT 1").get(cleanNum, `pp-${cleanNum}`);
+      if (row) return row;
+    }
+    if (series && issueNumber) {
+      const cleanSeries = series.trim();
+      const cleanIssue = issueNumber.trim().replace(/^#/, "");
+      const row = db.prepare("SELECT * FROM comics WHERE series = ? AND issue_number = ? LIMIT 1").get(cleanSeries, cleanIssue);
+      if (row) return row;
+    }
+    return null;
+  } catch (err) {
+    console.warn("Error looking up catalog comic in sqlite:", err);
+    return null;
+  }
+}
+

@@ -71,7 +71,7 @@ import verifiedCoversJson from "@/lib/equity/verified-covers.json";
 import { lookupReferenceFmv } from "@/lib/pricing/reference-benchmarks";
 import { getAuthoritativeCover } from "@/lib/comics/cover-authority";
 import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
-import { getVerifiedEquityByIdOrTicker, getVerifiedRealEquities } from "@/lib/equity/verified-equities-service";
+import { getCatalogComicBySourceProductId, getVerifiedEquityByIdOrTicker, getVerifiedRealEquities } from "@/lib/equity/verified-equities-service";
 import ppix100Data from "@/lib/equity/ppix-100-constituents.json";
 
 function enrichWithConnoisseurDossier(comic: ComicRecord): ComicRecord {
@@ -184,6 +184,17 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
   const localVerified = getVerifiedEquityByIdOrTicker(cleanId);
   if (localVerified) {
     const timestamp = new Date().toISOString();
+    const catalogRow = getCatalogComicBySourceProductId(
+      (localVerified as any).source_product_id,
+      localVerified.series,
+      localVerified.issue_number
+    );
+    const gcdSourceId = catalogRow?.gcd_id || null;
+    const comicbaseSourceId = catalogRow?.comicbase_id || null;
+    const publisher = (catalogRow?.publisher && !catalogRow.publisher.includes("Independent /")) 
+      ? catalogRow.publisher 
+      : (localVerified.publisher || "Independent");
+
     const baseRecord: ComicRecord = {
       id: localVerified.id,
       series: localVerified.series,
@@ -191,16 +202,16 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
       issue_number: localVerified.issue_number,
       volume: "1",
       printing: "1",
-      direct_or_variant: localVerified.variant || null,
+      direct_or_variant: localVerified.variant || catalogRow?.variant || null,
       cover_variant: null,
-      publisher: localVerified.publisher || "Independent",
+      publisher,
       publication_date: localVerified.publication_year ? `${localVerified.publication_year}-01-01` : null,
       publication_year: localVerified.publication_year || null,
       upc: null,
       alt_upc: null,
       pp_source_id: (localVerified as any).source_product_id || null,
-      comicbase_source_id: null,
-      gcd_source_id: null,
+      comicbase_source_id: comicbaseSourceId,
+      gcd_source_id: gcdSourceId,
       pp_grade_9_8_price: localVerified.fmv_usd,
       comicbase_price: null,
       baseline_grade_9_8_value: localVerified.fmv_usd,
@@ -209,9 +220,11 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
       panel_profits_data: {
         ticker: localVerified.ticker,
         era: localVerified.origin_era,
+        "PP - Grade 9.8 Market Price": localVerified.fmv_usd,
+        grade_9_8_value: localVerified.fmv_usd,
       } as any,
       comicbase_data: null,
-      gcd_data: null,
+      gcd_data: gcdSourceId ? { "GCD - gcd_issue.id": gcdSourceId } : null,
       search_document: null,
       created_at: timestamp,
       updated_at: timestamp,

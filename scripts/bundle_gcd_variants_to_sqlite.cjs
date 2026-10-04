@@ -23,15 +23,17 @@ for (const r of gcdIdsRows) {
 }
 
 // Also get the base IDs for these issues
-const baseIdSet = new Set(issueIdSet);
+const baseIdSet = new Set();
 console.log("Resolving base issue IDs...");
 for (const id of issueIdSet) {
   const row = gcdDb.prepare("SELECT variant_of_id FROM gcd_issue WHERE id = ?").get(id);
   if (row && row.variant_of_id) {
     baseIdSet.add(row.variant_of_id);
+  } else {
+    baseIdSet.add(id);
   }
 }
-console.log(`Resolved ${baseIdSet.size} total base and variant issue IDs.`);
+console.log(`Resolved ${baseIdSet.size} total root base issue IDs.`);
 
 const insertVariant = targetDb.prepare(`
   INSERT OR REPLACE INTO gcd_variants (base_issue_id, variant_issue_id, number, publication_date, variant_name, price, barcode)
@@ -44,6 +46,7 @@ const insertForeign = targetDb.prepare(`
 `);
 
 targetDb.exec("BEGIN TRANSACTION;");
+targetDb.exec("DELETE FROM gcd_variants; DELETE FROM gcd_foreign_editions;");
 
 let varCount = 0;
 let forCount = 0;

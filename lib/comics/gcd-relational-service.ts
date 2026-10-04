@@ -1,5 +1,8 @@
 import fs from "fs";
 import path from "path";
+import { createRequire } from "node:module";
+
+const requireModule = createRequire(import.meta.url);
 
 export interface GcdVariantItem {
   id: number;
@@ -66,8 +69,7 @@ function getGcdDatabase(): any | null {
   if (dbAvailable === false) return null;
   if (dbInstance) return dbInstance;
 
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { DatabaseSync } = require("node:sqlite");
+  const { DatabaseSync } = requireModule("node:sqlite");
 
   try {
     // 1. Check if 6.3GB local GCD database exists

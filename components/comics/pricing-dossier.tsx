@@ -4,6 +4,7 @@ import {
   cgcGrades,
   comicBaseGrades,
   comicBaseReference,
+  ebayGrades,
   getHighestGradedPrice,
   goCollectGrades,
   GRADES,
@@ -20,6 +21,7 @@ import { TrendingUp, ArrowDownRight, ArrowUpRight, ShieldCheck } from "lucide-re
 const SOURCES = [
   "Panel Profits",
   "PriceCharting",
+  "eBay Sold Transactions",
   "ComicBase",
   "CGC · GPA sales",
   "CBCS",
@@ -44,6 +46,7 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
   const cleanEvidence = await getCleanPricingEvidence(comic.id);
   const pp = Object.keys(cleanEvidence.grades).length ? cleanEvidence.grades : panelProfitsGrades(comic);
   const pcGrades = priceChartingGrades(comic);
+  const ebayLadder = ebayGrades(comic);
   const cbGrades = comicBaseGrades(comic);
   const cb = comicBaseReference(comic);
   const gcGrades = goCollectGrades(comic);
@@ -56,6 +59,7 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
   const highest = getHighestGradedPrice({
     "Panel Profits": pp,
     "PriceCharting": pcGrades,
+    "eBay Sold Transactions": ebayLadder,
     "ComicBase": cbGrades,
     "GoCollect": gcGrades,
     "CGC · GPA sales": cgcGpaGrades,
@@ -194,6 +198,9 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
                         {source === "PriceCharting" && (
                           <span className="text-[10px] text-amber-400/80 font-mono">(Auction Sales)</span>
                         )}
+                        {source === "eBay Sold Transactions" && (
+                          <span className="text-[10px] text-yellow-400/80 font-mono">(Realized Sales)</span>
+                        )}
                         {source === "ComicBase" && (
                           <span className="text-[10px] text-cyan-400/80 font-mono">(Catalog Guide)</span>
                         )}
@@ -221,6 +228,8 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
                         price = pp[grade];
                       } else if (source === "PriceCharting") {
                         price = pcGrades[grade];
+                      } else if (source === "eBay Sold Transactions") {
+                        price = ebayLadder[grade];
                       } else if (source === "ComicBase") {
                         price = cbGrades[grade];
                       } else if (source === "GoCollect") {

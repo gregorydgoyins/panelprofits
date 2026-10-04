@@ -255,6 +255,37 @@ export function psaGrades(comic: Partial<ComicRecord>): Partial<Record<Grade, nu
   return result;
 }
 
+/**
+ * Reads verified eBay sold transaction observations ladder.
+ * Isolated on its own line to prevent conflating realized auction sales with baseline FMV.
+ */
+export function ebayGrades(comic: Partial<ComicRecord>): Partial<Record<Grade, number>> {
+  const result: Partial<Record<Grade, number>> = {};
+  const ebayData =
+    (comic as Record<string, unknown>).ebay_data as Record<string, unknown> | undefined ||
+    (comic as Record<string, unknown>).ebay_sales as Record<string, unknown> | undefined ||
+    (comic.panel_profits_data as Record<string, unknown> | undefined)?.ebay as Record<string, unknown> | undefined;
+
+  if (ebayData) {
+    const rawVal = positivePrice(ebayData["raw"] || ebayData["RAW"] || ebayData["raw_price"] || ebayData["Ungraded"]);
+    if (rawVal !== null) result["RAW"] = rawVal;
+
+    for (const grade of GRADES) {
+      if (grade === "RAW") continue;
+      const gradeKey = grade.replace(".", "_");
+      const stored = positivePrice(
+        ebayData[`eBay - Grade ${grade}`] ||
+        ebayData[`ebay_grade_${gradeKey}_price`] ||
+        ebayData[`grade_${gradeKey}`] ||
+        ebayData[grade]
+      );
+      if (stored !== null) result[grade] = stored;
+    }
+  }
+
+  return result;
+}
+
 export interface HighestGradedPriceResult {
   grade: Grade;
   price: number;
