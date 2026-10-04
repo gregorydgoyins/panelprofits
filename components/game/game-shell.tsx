@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, BookOpen, CircleUserRound, Layers3, Radar, Settings2, ShieldCheck, TrendingUp, DollarSign, Briefcase, Zap } from "lucide-react";
+import { ArrowUpRight, BookOpen, CircleUserRound, Layers3, Radar, Settings2, ShieldCheck, TrendingUp, DollarSign, Briefcase, Zap, Swords } from "lucide-react";
 import { Profile } from "@/lib/account/types";
 import { PlayerFirmContext } from "@/lib/game/player-state";
 import { SignOutButton } from "@/components/shell/sign-out-button";
@@ -89,6 +89,13 @@ export function GameShell({ profile, firmContext }: { profile: Profile; firmCont
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <Link
+              href="/battle"
+              className="inline-flex items-center gap-1.5 rounded border border-red-500/40 bg-red-950/40 px-3 py-1.5 text-xs font-semibold text-red-200 hover:border-red-400 hover:bg-red-900/50 transition-colors"
+            >
+              <Swords className="h-3 w-3 text-red-400" />
+              Battle Arena
+            </Link>
             <Link
               href="/market"
               className="inline-flex items-center gap-1.5 rounded border border-slate-700 bg-slate-800/50 px-3 py-1.5 text-xs font-medium text-slate-200 hover:border-cyan-400 transition-colors"

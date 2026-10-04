@@ -22,6 +22,7 @@ import {
   Watch,
   Wallet,
   X,
+  Swords,
 } from "lucide-react";
 
 interface NavLink { href: string; label: string; icon: typeof LayoutDashboard; }
@@ -69,6 +70,7 @@ const NAV_GROUPS: NavGroup[] = [
     color: "#06b6d4",
     children: [
       { href: "/comics", label: "Comic Catalog", icon: Search },
+      { href: "/battle", label: "Superhero Battle Arena", icon: Swords },
       { href: "/wiki", label: "Encyclopedia (PPedia)", icon: FileText },
       { href: "/lexicon", label: "Market Lexicon", icon: FileText },
     ],
