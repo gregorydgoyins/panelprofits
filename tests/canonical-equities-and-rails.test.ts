@@ -11,12 +11,12 @@ import { getCleanEquityDetail } from "@/lib/panel-profits/assets";
 import { getComicById } from "@/lib/comics/queries";
 
 describe("Canonical Equities Symbology & 16 Asset Families Canon", () => {
-  it("formats canonical comic equity tickers following NASDAQ/NYSE 4-5 character standard", () => {
-    expect(formatComicEquityTicker("Action Comics", "252")).toBe("AC252");
-    expect(formatComicEquityTicker("Amazing Spider-Man", "300")).toBe("AS300");
-    expect(formatComicEquityTicker("Batman", "251")).toBe("BA251");
+  it("formats canonical comic equity tickers following canonical series acronym standard", () => {
+    expect(formatComicEquityTicker("Action Comics", "252")).toBe("ACT252");
+    expect(formatComicEquityTicker("Amazing Spider-Man", "300")).toBe("ASM300");
+    expect(formatComicEquityTicker("Batman", "251")).toBe("BAT251");
     expect(formatComicEquityTicker("Crime SuspenStories", "22")).toBe("CSS22");
-    expect(formatComicEquityTicker("Incredible Hulk", "181")).toBe("HK181");
+    expect(formatComicEquityTicker("Incredible Hulk", "181")).toBe("HLK181");
     expect(formatComicEquityTicker("Teenage Mutant Ninja Turtles", "1")).toBe("TMNT1");
     expect(formatComicEquityTicker("Fantastic Four", "48")).toBe("FF048");
     expect(formatComicEquityTicker("Avengers", "4")).toBe("AVG04");

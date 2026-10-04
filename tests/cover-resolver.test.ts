@@ -54,6 +54,27 @@ describe("Comic Cover Resolver Ladder", () => {
     expect(result.checksum).toBe("abc123sha");
   });
 
+  it("upgrades 240px thumbnails to 1600px high-res masters and prioritizes cover_retrieval_url", () => {
+    const upgradedResult = resolveComicCover({
+      id: "test-pc-upgrade",
+      cover_url: "https://storage.googleapis.com/images.pricecharting.com/kla3rxyg7priwkia/240.jpg",
+      cover_retrieval_url: "https://storage.googleapis.com/images.pricecharting.com/kla3rxyg7priwkia/1600.jpg",
+    });
+    expect(upgradedResult.url).toBe("https://storage.googleapis.com/images.pricecharting.com/kla3rxyg7priwkia/1600.jpg");
+
+    const rewriteResult = resolveComicCover({
+      id: "test-pc-rewrite",
+      cover_url: "https://storage.googleapis.com/images.pricecharting.com/kla3rxyg7priwkia/240.jpg",
+    });
+    expect(rewriteResult.url).toBe("https://storage.googleapis.com/images.pricecharting.com/kla3rxyg7priwkia/1600.jpg");
+
+    const wikiaResult = resolveComicCover({
+      id: "test-wikia",
+      cover_url: "https://static.wikia.nocookie.net/marvel_dc/images/d/d2/Superman_Special_Vol_1_2.jpg/revision/latest/scale-to-width-down/258?cb=20101127225159",
+    });
+    expect(wikiaResult.url).toBe("https://static.wikia.nocookie.net/marvel_dc/images/d/d2/Superman_Special_Vol_1_2.jpg/revision/latest?cb=20101127225159");
+  });
+
   it("resolves Tier 3: Grand Comics Database (GCD) source ID", () => {
     const result = resolveComicCover({
       id: "test-3",

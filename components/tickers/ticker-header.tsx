@@ -141,7 +141,7 @@ export function TickerHeader({
           flexShrink: 0,
         }}
       >
-        CE70
+        CE70 · 115K UNIVERSE
       </span>
 
       {total > 0 && (

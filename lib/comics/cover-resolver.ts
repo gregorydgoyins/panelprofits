@@ -186,11 +186,20 @@ export function resolveComicCover(comic: ComicCoverInput): ResolvedCover {
     }
   }
 
-  // Tier 2: Authoritative Direct Cover URL
-  const directCandidates = [comic.cover_url, comic.cover_retrieval_url, comic.cover_original_url];
+  // Tier 2: Authoritative High-Resolution Direct Cover URL
+  // Prioritize cover_retrieval_url (1600px master) over cover_url (240px thumbnail)
+  const directCandidates = [comic.cover_retrieval_url, comic.cover_url, comic.cover_original_url];
   for (const candidate of directCandidates) {
     if (candidate && typeof candidate === "string" && candidate.trim().length > 0) {
-      const trimmed = candidate.trim();
+      let trimmed = candidate.trim();
+      // Upgrade PriceCharting 240px thumbnails to 1600px master high-resolution
+      if (trimmed.includes("images.pricecharting.com") && trimmed.includes("/240.jpg")) {
+        trimmed = trimmed.replace("/240.jpg", "/1600.jpg");
+      }
+      // Uncap Wikia/Fandom images by removing downscale query parameter
+      if (trimmed.includes("static.wikia.nocookie.net") && trimmed.includes("/scale-to-width-down/")) {
+        trimmed = trimmed.replace(/\/scale-to-width-down\/\d+/, "");
+      }
       if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
         if (!/doubleclick|adserver|pixel\.gif|blank\.gif/i.test(trimmed)) {
           return {
@@ -205,7 +214,19 @@ export function resolveComicCover(comic: ComicCoverInput): ResolvedCover {
     }
   }
 
-  // Tier 3: Grand Comics Database (GCD) Archival Archive by ID (Prioritized over PriceCharting)
+  // Tier 3: PriceCharting Verified ID Cover Link (Fallback if direct URL absent)
+  const pcUrl = buildPriceChartingCoverUrl(comic.panel_profits_data);
+  if (pcUrl) {
+    return {
+      url: pcUrl,
+      isFallback: false,
+      sourceTier: "pricecharting",
+      qualityTier: "unverified",
+      checksum: comic.cover_sha256 || null,
+    };
+  }
+
+  // Tier 4: Grand Comics Database (GCD) Archival Archive by ID
   const gcdId =
     comic.gcd_source_id ||
     (comic.gcd_data && typeof comic.gcd_data === "object"
@@ -218,18 +239,6 @@ export function resolveComicCover(comic: ComicCoverInput): ResolvedCover {
       url: gcdUrl,
       isFallback: false,
       sourceTier: "gcd_archive",
-      qualityTier: "unverified",
-      checksum: comic.cover_sha256 || null,
-    };
-  }
-
-  // Tier 4: PriceCharting Verified ID Cover Link (Fallback if GCD ID absent)
-  const pcUrl = buildPriceChartingCoverUrl(comic.panel_profits_data);
-  if (pcUrl) {
-    return {
-      url: pcUrl,
-      isFallback: false,
-      sourceTier: "pricecharting",
       qualityTier: "unverified",
       checksum: comic.cover_sha256 || null,
     };

@@ -172,22 +172,8 @@ function enrichWithConnoisseurDossier(comic: ComicRecord): ComicRecord {
     };
   }
 
-  // Default forensic connoisseurship assessment for non-CE70 catalog items
-  const fallbackScore = 188.5;
+  // Non-CE70 catalog items: Preserve authentic market data without synthetic connoisseur scores
   const panelProfitsData = {
-    gregory_score: fallbackScore,
-    quality_scores: [
-      { dimension: "Authorial Presence", score: 9.4, rationale: "Distinct creative voice and sequential narrative clarity" },
-      { dimension: "Artistic Merit", score: 9.5, rationale: "Dynamic graphic draftsmanship and compositional balance" },
-      { dimension: "Narrative Power", score: 9.3, rationale: "Compelling thematic arc and character trajectory" },
-      { dimension: "Technical Mastery", score: 9.5, rationale: "Rigorous panel rhythm, anatomical control, and visual pacing" },
-      { dimension: "Cultural Gravity", score: 9.4, rationale: "Recognized canon stature within its respective publishing era" },
-      { dimension: "Symbolic Density", score: 9.2, rationale: "Resonant visual iconography and layered sequential storytelling" },
-      { dimension: "Historical Significance", score: 9.5, rationale: "Important milestone in the creator and publisher lineage" },
-      { dimension: "Rarity & Irreplaceability", score: 9.4, rationale: "Census survivorship and collector preservation demand" },
-    ],
-    essay: `The critical adjudication of ${comic.series} #${comic.issue_number} reflects its position within modern sequential graphic art. Evaluated under the strict connoisseurship criteria of the Gregory Room Test, authentic specimens demonstrate commanding visual execution, narrative intentionality, and enduring collector gravity.\n\nFrom a material and preservation perspective, high-grade certified copies preserve original four-color newsprint integrity, crisp plate registration, and uncompromised structural bindery. The sequential page transitions showcase complete mastery over the spatial and temporal mechanics of graphic literature.\n\nHistorically, this release represents an important chapter within the publishing catalog, continuing to command critical respect and secondary market liquidity across collectors and institutional vaults.`,
-    justification: `Certified Specimen: Key benchmark issue within the ${comic.publisher || "Independent"} catalog.`,
     era: comic.publication_year && comic.publication_year < 1956 ? "Golden Age" : comic.publication_year && comic.publication_year < 1970 ? "Silver Age" : comic.publication_year && comic.publication_year < 1985 ? "Bronze Age" : "Modern Age",
     video_discussions: [
       {

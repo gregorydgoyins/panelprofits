@@ -1,5 +1,5 @@
-// Constructs clean 4 to 5 character equity ticker symbols (NASDAQ / NYSE style)
-// e.g., ASM01, AS300, ACT01, AC252, DET27, HK181, FF048, XMN94, BAT01, BA251, GSX01, TMNT1
+// Constructs clean, canonical equity ticker symbols for comic assets
+// e.g., ASM01, ASM300, ACT01, ACT252, DET27, HLK181, FF048, XMN94, BAT01, BAT251, GSX01, TMNT1
 export function formatComicEquityTicker(series: string, issue: string | number, _assetClass?: string): string {
   const cleanSeries = String(series || "").trim().toLowerCase();
   const normSeries = cleanSeries
@@ -11,12 +11,12 @@ export function formatComicEquityTicker(series: string, issue: string | number, 
 
   // Curated canonical mapping for landmark high-profile issues (strict on core flagship titles)
   if (normSeries === "action comics" && cleanNum === "1") return "ACT01";
-  if (normSeries === "action comics" && cleanNum === "252") return "AC252";
+  if (normSeries === "action comics" && cleanNum === "252") return "ACT252";
   if (normSeries === "detective comics" && cleanNum === "27") return "DET27";
   if (normSeries === "amazing spider-man" && cleanNum === "1") return "ASM01";
-  if (normSeries === "amazing spider-man" && cleanNum === "300") return "AS300";
-  if (normSeries === "amazing spider-man" && cleanNum === "129") return "AS129";
-  if ((normSeries === "incredible hulk" || normSeries === "hulk") && cleanNum === "181") return "HK181";
+  if (normSeries === "amazing spider-man" && cleanNum === "300") return "ASM300";
+  if (normSeries === "amazing spider-man" && cleanNum === "129") return "ASM129";
+  if ((normSeries === "incredible hulk" || normSeries === "hulk") && cleanNum === "181") return "HLK181";
   if ((normSeries === "incredible hulk" || normSeries === "hulk") && cleanNum === "1") return "HLK01";
   if (normSeries === "fantastic four" && cleanNum === "48") return "FF048";
   if (normSeries === "fantastic four" && cleanNum === "1") return "FF001";
@@ -25,7 +25,7 @@ export function formatComicEquityTicker(series: string, issue: string | number, 
   if ((normSeries === "x-men" || normSeries === "uncanny x-men") && cleanNum === "94") return "XMN94";
   if (normSeries === "giant-size x-men" && cleanNum === "1") return "GSX01";
   if (normSeries === "batman" && cleanNum === "1") return "BAT01";
-  if (normSeries === "batman" && cleanNum === "251") return "BA251";
+  if (normSeries === "batman" && cleanNum === "251") return "BAT251";
   if (normSeries === "tales of suspense" && cleanNum === "39") return "TOS39";
   if (normSeries === "tales of suspense" && cleanNum === "40") return "TOS40";
   if (normSeries === "journey into mystery" && cleanNum === "83") return "JIM83";
@@ -107,22 +107,16 @@ export function formatComicEquityTicker(series: string, issue: string | number, 
     else root = words.map((w) => w[0]).join("").slice(0, 3).toUpperCase();
   }
 
-  // Combine with issue digits to guarantee strictly 4-5 characters
+  // Combine with issue digits preserving full canonical acronym
   if (!cleanNum) {
-    return root.padEnd(4, "X").slice(0, 5);
+    return root.padEnd(4, "X");
   }
 
   if (cleanNum.length === 1) {
-    const prefix = root.length >= 3 ? root.slice(0, 3) : root.padEnd(3, "0");
-    return `${prefix}0${cleanNum}`.slice(0, 5);
+    return `${root}0${cleanNum}`;
   } else if (cleanNum.length === 2) {
-    const prefix = root.length >= 3 ? root.slice(0, 3) : root.padEnd(3, "0");
-    return `${prefix}${cleanNum}`.slice(0, 5);
-  } else if (cleanNum.length === 3) {
-    const prefix = root.length >= 2 ? root.slice(0, 2) : root.padEnd(2, "X");
-    return `${prefix}${cleanNum}`.slice(0, 5);
+    return `${root}${cleanNum}`;
   } else {
-    const prefix = root.slice(0, 1) || "C";
-    return `${prefix}${cleanNum.slice(-4)}`;
+    return `${root}${cleanNum}`;
   }
 }

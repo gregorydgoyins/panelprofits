@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 const { Client } = require('pg');
 
 let dbUrl = '';
@@ -8,6 +9,9 @@ for (const line of env.split('\n')) {
     dbUrl = line.split('=')[1].trim().replace(/^["']|["']$/g, '');
   }
 }
+
+const PROGRESS_FILE = path.join(__dirname, '.gcd_enrich_progress.json');
+const COMPLETION_FILE = path.join(__dirname, '../data/gcd_enrichment_completed.json');
 
 function extractKeyBadges(charactersStr, synopsisStr) {
   const badges = [];
@@ -40,26 +44,37 @@ function extractKeyBadges(charactersStr, synopsisStr) {
 async function runFullCatalogEnrichment() {
   const client = new Client({ connectionString: dbUrl, ssl: { rejectUnauthorized: false } });
   await client.connect();
+  await client.query('SET statement_timeout = 0;');
 
   console.log('================================================================');
   console.log('       PANEL PROFITS: 115K FULL GCD METADATA ENRICHMENT        ');
   console.log('================================================================');
-  console.log('1. Creative Credits: Writer, Penciler, Inker, Colorist, Letterer, Editor');
-  console.log('2. Key Collector Debuts: 1st Appearances, Origins, Character Cameos');
-  console.log('3. Physical Specs: Cover Price, Page Count, Dimensions, Paper, Binding');
-  console.log('4. Story & Lore: Story Title, Feature, Genre, Plot Synopsis');
-  console.log('5. Publishing Identity: Authoritative Publisher & Series Lifespan');
-  console.log('================================================================\n');
+
+  let lastId = '';
+  let totalProcessed = 0;
+  let totalEnriched = 0;
+  let publishersFilled = 0;
+
+  if (fs.existsSync(PROGRESS_FILE)) {
+    try {
+      const saved = JSON.parse(fs.readFileSync(PROGRESS_FILE, 'utf8'));
+      lastId = saved.lastId || '';
+      totalProcessed = saved.totalProcessed || 0;
+      totalEnriched = saved.totalEnriched || 0;
+      publishersFilled = saved.publishersFilled || 0;
+      console.log(`[Resuming] Resuming from checkpoint: processed ${totalProcessed}/115712, enriched ${totalEnriched}, lastId: '${lastId}'\n`);
+    } catch (e) {
+      console.warn('Could not parse progress file, starting fresh:', e.message);
+    }
+  }
 
   console.log('[Step 1/3] Preloading GCD identity links, snapshots, and series profiles...');
   console.time('preload_time');
 
-  // Preload verified links
   const linksRes = await client.query('SELECT pp_source_product_id, gcd_issue_id FROM pp_verified_gcd_identity_links;');
   const verifiedMap = new Map();
   for (const l of linksRes.rows) verifiedMap.set(l.pp_source_product_id, String(l.gcd_issue_id));
 
-  // Preload candidate snapshots
   const snapsRes = await client.query('SELECT gcd_issue_id, gcd_series_id, series_name, issue_number, publication_date, barcode, isbn, issue_title FROM pp_gcd_issue_candidate_snapshots;');
   const snapshotById = new Map();
   const snapshotByTitle = new Map();
@@ -75,7 +90,6 @@ async function runFullCatalogEnrichment() {
     }
   }
 
-  // Preload relevant series
   const seriesRes = await client.query(`
     SELECT 
       s.gcd_series_id, s.name::text as series_name, s.year_began, s.year_ended,
@@ -95,10 +109,6 @@ async function runFullCatalogEnrichment() {
   console.log('[Step 2/3] Processing 115,712 catalog books in keyset batches of 1,000...');
   console.time('catalog_enrichment_total');
 
-  let lastId = '';
-  let totalProcessed = 0;
-  let totalEnriched = 0;
-  let publishersFilled = 0;
   const batchSize = 1000;
 
   while (true) {
@@ -136,7 +146,6 @@ async function runFullCatalogEnrichment() {
     let creditsByStory = new Map();
 
     if (uniqueIssueIds.length > 0) {
-      // Stories
       const storiesRes = await client.query(`
         SELECT 
           gcd_story_id, gcd_issue_id, sequence_number, title, feature, script, pencils, inks, colors, letters, editing, characters, genre, synopsis, page_count
@@ -147,12 +156,12 @@ async function runFullCatalogEnrichment() {
 
       const storyIds = [];
       for (const st of storiesRes.rows) {
-        if (!storiesByIssue.has(st.gcd_issue_id)) storiesByIssue.set(st.gcd_issue_id, []);
-        storiesByIssue.get(st.gcd_issue_id).push(st);
+        const k = String(st.gcd_issue_id);
+        if (!storiesByIssue.has(k)) storiesByIssue.set(k, []);
+        storiesByIssue.get(k).push(st);
         storyIds.push(parseInt(st.gcd_story_id, 10));
       }
 
-      // Relational story credits
       if (storyIds.length > 0) {
         const creditsRes = await client.query(`
           SELECT sc.gcd_story_id, sc.credit_type_id, cr.official_name
@@ -162,17 +171,16 @@ async function runFullCatalogEnrichment() {
         `, [storyIds]);
 
         for (const cr of creditsRes.rows) {
-          const sId = parseInt(cr.gcd_story_id, 10);
+          const sId = String(cr.gcd_story_id);
           if (!creditsByStory.has(sId)) creditsByStory.set(sId, []);
           creditsByStory.get(sId).push(cr);
         }
       }
     }
 
-    // Assemble updates
     const updates = [];
     for (const { comic, issueId } of comicToIssue) {
-      const stories = storiesByIssue.get(issueId) || [];
+      const stories = storiesByIssue.get(String(issueId)) || [];
       const snap = snapshotById.get(String(issueId)) || {};
       const sInfo = snap.gcd_series_id ? seriesMap.get(String(snap.gcd_series_id)) : null;
 
@@ -184,15 +192,16 @@ async function runFullCatalogEnrichment() {
       let editor = '';
 
       for (const st of stories) {
-        const sId = parseInt(st.gcd_story_id, 10);
+        const sId = String(st.gcd_story_id);
         const creds = creditsByStory.get(sId) || [];
         for (const c of creds) {
-          if (c.credit_type_id === '1' && !writer) writer = c.official_name;
-          if (c.credit_type_id === '2' && !penciler) penciler = c.official_name;
-          if (c.credit_type_id === '3' && !inker) inker = c.official_name;
-          if (c.credit_type_id === '4' && !colorist) colorist = c.official_name;
-          if (c.credit_type_id === '5' && !letterer) letterer = c.official_name;
-          if (c.credit_type_id === '6' && !editor) editor = c.official_name;
+          const cType = String(c.credit_type_id);
+          if (cType === '1' && !writer) writer = c.official_name;
+          if (cType === '2' && !penciler) penciler = c.official_name;
+          if (cType === '3' && !inker) inker = c.official_name;
+          if (cType === '4' && !colorist) colorist = c.official_name;
+          if (cType === '5' && !letterer) letterer = c.official_name;
+          if (cType === '6' && !editor) editor = c.official_name;
         }
 
         if (!writer && st.script && st.script !== '?' && st.script.trim()) writer = st.script.trim();
@@ -204,6 +213,7 @@ async function runFullCatalogEnrichment() {
       }
 
       const leadStory = stories.find(s => s.synopsis && s.synopsis.trim()) || 
+                         stories.find(s => s.title && s.title.trim()) ||
                          stories.find(s => s.characters && s.characters.trim()) || 
                          stories[0] || {};
       const allChars = stories.map(s => s.characters).filter(Boolean).join('; ');
@@ -223,7 +233,6 @@ async function runFullCatalogEnrichment() {
         publisher: newPublisher,
         publication_date: snap.publication_date || existingData.publication_date || '',
         barcode: snap.barcode || existingData.barcode || '',
-        // Physical specifications
         cover_price: existingData['GCD - gcd_issue.price'] || existingData.cover_price || '',
         page_count: leadStory.page_count || existingData['GCD - gcd_issue.page_count'] || '',
         dimensions: sInfo?.dimensions || existingData.dimensions || '',
@@ -232,14 +241,12 @@ async function runFullCatalogEnrichment() {
         series_year_began: sInfo?.year_began || existingData.series_year_began || null,
         series_year_ended: sInfo?.year_ended || existingData.series_year_ended || null,
         series_issue_count: sInfo?.issue_count || existingData.series_issue_count || null,
-        // Production team
         writer: writer || existingData.writer || '',
         penciler: penciler || existingData.penciler || '',
         inker: inker || existingData.inker || '',
         colorist: colorist || existingData.colorist || '',
         letterer: letterer || existingData.letterer || '',
         editor: editor || existingData.editor || '',
-        // Story and Collector Badges
         story_title: leadStory.title || snap.issue_title || existingData.story_title || '',
         feature: leadStory.feature || existingData.feature || '',
         genre: leadStory.genre || existingData.genre || '',
@@ -258,35 +265,60 @@ async function runFullCatalogEnrichment() {
     }
 
     if (updates.length > 0) {
-      const ids = updates.map(u => u.id);
-      const gcdIds = updates.map(u => u.gcd_source_id);
-      const pubs = updates.map(u => u.publisher);
-      const gcdDatas = updates.map(u => u.gcd_data);
+      const CHUNK_SIZE = 200;
+      for (let i = 0; i < updates.length; i += CHUNK_SIZE) {
+        const slice = updates.slice(i, i + CHUNK_SIZE);
+        const ids = slice.map(u => u.id);
+        const gcdIds = slice.map(u => u.gcd_source_id);
+        const pubs = slice.map(u => u.publisher);
+        const gcdDatas = slice.map(u => u.gcd_data);
 
-      await client.query(`
-        UPDATE comics AS c
-        SET 
-          gcd_source_id = v.gcd_id,
-          publisher = v.pub,
-          gcd_data = v.gdata::jsonb,
-          updated_at = NOW()
-        FROM (
-          SELECT 
-            UNNEST($1::text[]) AS id,
-            UNNEST($2::text[]) AS gcd_id,
-            UNNEST($3::text[]) AS pub,
-            UNNEST($4::text[]) AS gdata
-        ) AS v
-        WHERE c.id = v.id;
-      `, [ids, gcdIds, pubs, gcdDatas]);
-
+        let retries = 3;
+        while (retries > 0) {
+          try {
+            await client.query(`
+              UPDATE comics AS c
+              SET 
+                gcd_source_id = v.gcd_id,
+                publisher = v.pub,
+                gcd_data = v.gdata::jsonb,
+                updated_at = NOW()
+              FROM (
+                SELECT 
+                  UNNEST($1::text[]) AS id,
+                  UNNEST($2::text[]) AS gcd_id,
+                  UNNEST($3::text[]) AS pub,
+                  UNNEST($4::text[]) AS gdata
+              ) AS v
+              WHERE c.id = v.id;
+            `, [ids, gcdIds, pubs, gcdDatas]);
+            break;
+          } catch (err) {
+            retries--;
+            console.error(`[Retry] Update chunk failed (${err.message}). Retries left: ${retries}`);
+            if (retries === 0) throw err;
+            await new Promise(r => setTimeout(r, 2000));
+          }
+        }
+      }
       totalEnriched += updates.length;
     }
 
     totalProcessed += batchComics.length;
+
+    // Save checkpoint
+    fs.writeFileSync(PROGRESS_FILE, JSON.stringify({
+      lastId,
+      totalProcessed,
+      totalEnriched,
+      publishersFilled,
+      updatedAt: new Date().toISOString()
+    }, null, 2));
+
     const dur = ((Date.now() - t0) / 1000).toFixed(2);
     if (totalProcessed % 5000 === 0 || batchComics.length < batchSize) {
-      console.log(`[Batch] Processed: ${totalProcessed}/115712 | Enriched: ${totalEnriched} | Pubs Filled: ${publishersFilled} (${dur}s)`);
+      const pct = ((totalProcessed / 115712) * 100).toFixed(1);
+      console.log(`[Batch] Progress: ${totalProcessed}/115712 (${pct}%) | Enriched: ${totalEnriched} | Pubs Filled: ${publishersFilled} (${dur}s)`);
     }
   }
 
@@ -298,6 +330,19 @@ async function runFullCatalogEnrichment() {
   console.log(`Total Comics Enriched with Full GCD Metadata: ${totalEnriched}`);
   console.log(`Total Blank Publishers Backfilled: ${publishersFilled}`);
   console.log('================================================================\n');
+
+  // Write final completion artifact
+  fs.writeFileSync(COMPLETION_FILE, JSON.stringify({
+    completedAt: new Date().toISOString(),
+    totalCatalog: 115712,
+    totalProcessed,
+    totalEnriched,
+    publishersFilled,
+    status: 'COMPLETE'
+  }, null, 2));
+
+  // Clean up progress file
+  if (fs.existsSync(PROGRESS_FILE)) fs.unlinkSync(PROGRESS_FILE);
 
   await client.end();
 }

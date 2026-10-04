@@ -170,64 +170,16 @@ export function validateCe70Constituent(item: {
 
 /**
  * Raw query for Sovereign Equities Universe with real market pricing and tickers.
- * Resolves the server-side initial render hydration gap by querying the high-speed
- * verified SQLite catalog first, ensuring authentic unrounded pennies and unique covers.
+ * Resolves the server-side initial render hydration gap by querying the continuous
+ * 5,000-comic queue engine, ensuring authentic unrounded pennies, verified covers, and real publication years.
  */
 async function fetchSovereignEquitiesRaw(limit = 150): Promise<SovereignEquityItem[]> {
   try {
-    // 1. Primary Source: High-speed verified equities from local SQLite catalog
-    // Genuine unrounded pennies, unique Supabase Storage covers, and authentic tickers
-    // Clean initial batch anchored by multi-era landmark sovereigns
-    const verified = getVerifiedRealEquities(0, limit, false);
-    if (verified.items && verified.items.length > 0) {
-      return verified.items;
+    const { getContinuousQueueSlice } = await import("./continuous-queue-engine");
+    const result = await getContinuousQueueSlice(0, limit);
+    if (result.items && result.items.length > 0) {
+      return result.items;
     }
-
-    // 2. Secondary source: query Supabase clean comics catalog
-    const db = createCleanReadOnlyServerClient();
-    const { data, error } = await db
-      .from("comics")
-      .select("id, series, issue_number, publisher, publication_year, cover_url, pp_grade_9_8_price, baseline_grade_9_8_value, pp_source_id")
-      .neq("pp_source_id", "")
-      .neq("cover_url", "")
-      .not("cover_url", "is", null)
-      .not("cover_url", "like", "%files1.comics.org%")
-      .not("cover_url", "like", "%526.jpg%")
-      .order("pp_source_id", { ascending: true })
-      .limit(limit);
-
-    if (error && !isMissingTableError(error)) {
-      console.warn("Notice querying comics catalog for equities rail:", error.message);
-    }
-
-    if (data && data.length > 0) {
-      return data.map((c, idx) => {
-        const fmv = Number(c.pp_grade_9_8_price || c.baseline_grade_9_8_value || 24.50);
-        return {
-          id: c.id,
-          seatNumber: idx + 1,
-          seatType: "PRIMARY_DOMESTIC",
-          ticker: formatComicEquityTicker(c.series, c.issue_number || "1", "SOV"),
-          series: c.series,
-          issueNumber: c.issue_number || "1",
-          title: `${c.series} #${c.issue_number || "1"}`,
-          originEra: "MODERN",
-          productionAge: "MODERN",
-          lineage: `${c.publisher || "Verified"} Benchmark Constituent`,
-          referenceGrade: "9.8",
-          referenceFmvUsd: fmv,
-          priceFormatted: `$${fmv.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-          gregoryScore: 192.5,
-          deltaPercent: 0.45,
-          status: "ACTIVE",
-          coverUrl: c.cover_url,
-          canonicalIssueId: c.id,
-          year: c.publication_year || 1975,
-          publisher: c.publisher || "Independent",
-        };
-      });
-    }
-
     return [];
   } catch (err) {
     console.error("Exception in fetchSovereignEquitiesRaw:", err);

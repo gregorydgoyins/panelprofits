@@ -21,6 +21,8 @@ import { getAuthoritativeCover } from "@/lib/comics/cover-authority";
 import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
 import { Sparkles, BookOpen, Activity, ArrowUpRight } from "lucide-react";
 import { GcdBibliographicDossier } from "@/components/comics/gcd-bibliographic-dossier";
+import { InvestopediaValuationLens } from "@/components/finance/investopedia-valuation-lens";
+import { computeComicValuationMetrics } from "@/lib/finance/investopedia-service";
 
 export const dynamic = "force-dynamic";
 
@@ -104,6 +106,22 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
 
   const gcdData = (comic.gcd_data as Record<string, any>) || {};
   const gcdBadges = (gcdData.key_badges as string[]) || [];
+
+  const investopediaMetrics = computeComicValuationMetrics({
+    baseline_grade_9_8_value: comic.baseline_grade_9_8_value,
+    pp_grade_9_8_price: comic.pp_grade_9_8_price,
+    publication_year: comic.publication_year,
+    publisher: comic.publisher,
+    series: comic.series,
+    issue_number: comic.issue_number,
+    census_total: censusDossier?.snapshot?.total_graded || 0,
+  });
+
+  const isCe70Seat = Boolean(
+    (comic as any).seat_number ||
+    (comic.panel_profits_data as any)?.seat_number ||
+    (comic as any).is_ce70_seat
+  );
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-8">
@@ -374,6 +392,13 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
           {/* Pricing Dossier */}
           <PricingDossier comic={comic} />
 
+          {/* Investopedia Financial Valuation Lens & Cost Basis Calculator */}
+          <InvestopediaValuationLens
+            metrics={investopediaMetrics}
+            series={comic.series}
+            issueNumber={comic.issue_number}
+          />
+
           {/* GCD Archival Bibliographic Dossier: Creators, Physical Specs & Story Arc */}
           <GcdBibliographicDossier
             gcdData={comic.gcd_data as any}
@@ -385,12 +410,14 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
           {/* Census and Graded Market Evidence */}
           <CensusDossier dossier={censusDossier} />
 
-          {/* Connoisseur Dossier (20 Dimensions of Gregory Room Adjudication) */}
-          <ConnoisseurDossier
-            data={(comic as any).connoisseur_dossier || (comic.panel_profits_data as any)}
-            series={comic.series}
-            issueNumber={comic.issue_number}
-          />
+          {/* Connoisseur Dossier: Strictly calibrated for authenticated CE70 index constituent seats */}
+          {isCe70Seat && (
+            <ConnoisseurDossier
+              data={(comic as any).connoisseur_dossier || (comic.panel_profits_data as any)}
+              series={comic.series}
+              issueNumber={comic.issue_number}
+            />
+          )}
 
           {/* Provenance & Source Inspection */}
           <ProvenanceCard comic={comic} />
