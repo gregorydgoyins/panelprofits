@@ -565,13 +565,19 @@ export function panelProfitsVolume(
   grade: Grade
 ): string | null {
   const ppData = comic.panel_profits_data as Record<string, any> | undefined;
-  if (!ppData?.volume) return null;
-  const gradeKey = grade.replace(".", "_");
-  const val =
-    ppData.volume[grade] ??
-    ppData.volume[grade.toLowerCase()] ??
-    (grade === "RAW" ? ppData.volume.raw : ppData.volume[`grade_${gradeKey}`]);
-  return typeof val === "string" ? val : null;
+  if (!ppData) return null;
+  if (ppData.volume) {
+    const gradeKey = grade.replace(".", "_");
+    const val =
+      ppData.volume[grade] ??
+      ppData.volume[grade.toLowerCase()] ??
+      (grade === "RAW" ? ppData.volume.raw : ppData.volume[`grade_${gradeKey}`]);
+    if (typeof val === "string") return val;
+  }
+  if (grade === "RAW" && typeof ppData["PP - Sales Volume"] === "string") {
+    return ppData["PP - Sales Volume"];
+  }
+  return null;
 }
 
 export function comicBaseReference(comic: Partial<ComicRecord>): number | null {
@@ -583,16 +589,33 @@ export function panelProfitsListings(
   grade: Grade
 ): number | null {
   const ppData = comic.panel_profits_data as Record<string, any> | undefined;
-  if (!ppData?.salesListings) return null;
-  const listings = ppData.salesListings;
-  const gradeKey = grade.replace(".", "_");
-  const val =
-    listings[grade] ??
-    listings[grade.toLowerCase()] ??
-    (grade === "RAW"
-      ? (listings.raw ?? listings.ungraded ?? listings.ungradedCount)
-      : (listings[`grade_${gradeKey}`] ?? listings[`grade${gradeKey.replace("_", "")}Count`]));
-  return typeof val === "number" ? val : null;
+  if (!ppData) return null;
+  if (ppData.salesListings) {
+    const listings = ppData.salesListings;
+    const gradeKey = grade.replace(".", "_");
+    const val =
+      listings[grade] ??
+      listings[grade.toLowerCase()] ??
+      (grade === "RAW"
+        ? (listings.raw ?? listings.ungraded ?? listings.ungradedCount)
+        : (listings[`grade_${gradeKey}`] ?? listings[`grade${gradeKey.replace("_", "")}Count`]));
+    if (typeof val === "number") return val;
+  }
+  if (grade === "9.8") {
+    const countVal = ppData["Panel Profits Baseline Grade 9.8 Observation Count"] ?? ppData["PP - Grade 9.8 Observation Count"];
+    if (countVal !== undefined && countVal !== null) {
+      const n = Number(countVal);
+      if (!isNaN(n) && n >= 0) return n;
+    }
+  }
+  if (grade === "RAW") {
+    const rawVal = ppData["PP - Grade RAW Observation Count"] ?? ppData["PP - Ungraded Observation Count"];
+    if (rawVal !== undefined && rawVal !== null) {
+      const n = Number(rawVal);
+      if (!isNaN(n) && n >= 0) return n;
+    }
+  }
+  return null;
 }
 
 /**
