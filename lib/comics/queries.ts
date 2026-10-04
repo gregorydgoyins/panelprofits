@@ -223,7 +223,11 @@ function enrichWithBenchmarkData(comic: ComicRecord): ComicRecord {
 
 export async function getComicById(id: string): Promise<ComicRecord | null> {
   if (!id || typeof id !== "string") return null;
-  const cleanId = id.trim();
+  let cleanId = id.trim().replace(/^(?:var-)+/i, "");
+  // Alias typo redirect for Blue Book #4
+  if (cleanId === "7cd12c0bab811858f9abdbbf427c00f23a74979f90bd90f022cf1721f81047d4") {
+    cleanId = "7ed12c0bab811858f9abdbbf427c00f23a74979f90bd90f022cf1721f81047d4";
+  }
 
   // 1. Direct Database ID check (SHA hash, UUID, or pp-id): Always prioritize authentic database record
   const isDirectDbId = /^[a-f0-9]{32,64}$/i.test(cleanId) || /^pp-/i.test(cleanId) || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanId);

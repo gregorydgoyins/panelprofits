@@ -169,6 +169,8 @@ const VERIFIED_COVER_REGISTRY: Record<string, string> = {
   "it s lonely at the centre of the earth:nn": "/covers/seat_65_it_s_lonely_at_the_centre_of_the_earth_nn.jpg",
   "building stories:a": "/covers/seat_53_building_stories_a.jpg",
   "building stories:1": "/covers/seat_53_building_stories_a.jpg",
+  "blue book 1947:4": "/covers/blue_book_1947_4.jpg",
+  "blue book:4": "/covers/blue_book_1947_4.jpg",
 };
 
 /**
