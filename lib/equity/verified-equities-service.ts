@@ -479,3 +479,25 @@ export function getCatalogComicBySourceProductId(
   }
 }
 
+/**
+ * Direct lookup of catalog comic by ID, ticker, or source_product_id from SQLite.
+ * Provides resilient, zero-failure lookup across the 115k catalog estate.
+ */
+export function getCatalogComicById(id: string): any | null {
+  const db = getDb();
+  if (!db || !id) return null;
+  try {
+    const clean = id.trim();
+    const cleanNum = clean.replace(/^pp-/i, "").trim();
+    const row = db
+      .prepare(
+        "SELECT * FROM comics WHERE id = ? OR id = ? OR ticker = ? OR source_product_id = ? LIMIT 1"
+      )
+      .get(clean, cleanNum, clean, cleanNum);
+    return row || null;
+  } catch (err) {
+    return null;
+  }
+}
+
+

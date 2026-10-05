@@ -9,7 +9,7 @@ import { lookupReferenceFmv } from "@/lib/pricing/reference-benchmarks";
 import { getAuthoritativeCover, getAuthoritativeCoverStrict } from "@/lib/comics/cover-authority";
 import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
 import { resolveAuthoritativePublisher } from "@/lib/comics/publisher-authority";
-import { getCatalogComicBySourceProductId, getVerifiedEquityByIdOrTicker, getVerifiedRealEquities } from "@/lib/equity/verified-equities-service";
+import { getCatalogComicById, getCatalogComicBySourceProductId, getVerifiedEquityByIdOrTicker, getVerifiedRealEquities } from "@/lib/equity/verified-equities-service";
 import ppix100Data from "@/lib/equity/ppix-100-constituents.json";
 
 export const DEFAULT_PAGE_SIZE = 24;
@@ -441,6 +441,53 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
       }
       if (!error && data) {
         return enrichWithConnoisseurDossier(enrichWithBenchmarkData(data as ComicRecord));
+      }
+
+      // Resilient 115k SQLite Catalog Fallback
+      const sqliteRow = getCatalogComicById(cleanId);
+      if (sqliteRow) {
+        const comicRecord: ComicRecord = {
+          id: sqliteRow.id,
+          series: sqliteRow.series,
+          title: sqliteRow.title || sqliteRow.series,
+          issue_number: sqliteRow.issue_number,
+          volume: null,
+          printing: null,
+          direct_or_variant: sqliteRow.variant || null,
+          cover_variant: null,
+          publisher: sqliteRow.publisher || null,
+          publication_date: null,
+          publication_year: sqliteRow.publication_year || null,
+          upc: null,
+          alt_upc: null,
+          pp_source_id: sqliteRow.source_product_id || null,
+          comicbase_source_id: sqliteRow.comicbase_id || null,
+          gcd_source_id: sqliteRow.gcd_id || null,
+          pp_grade_9_8_price: sqliteRow.fmv_usd || null,
+          comicbase_price: null,
+          baseline_grade_9_8_value: sqliteRow.fmv_usd || null,
+          baseline_grade_9_8_sources: null,
+          baseline_grade_9_8_observation_count: null,
+          panel_profits_data: {
+            ticker: sqliteRow.ticker || formatComicEquityTicker(sqliteRow.series, sqliteRow.issue_number),
+            "PP - Grade 9.8 Market Price": sqliteRow.fmv_usd,
+          } as any,
+          comicbase_data: null,
+          gcd_data: null,
+          search_document: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          cover_url: sqliteRow.cover_url || null,
+          cover_storage_path: null,
+          cover_source: "SQLite 115k",
+          cover_original_url: sqliteRow.cover_url || null,
+          cover_retrieval_url: sqliteRow.cover_url || null,
+          cover_width: null,
+          cover_height: null,
+          cover_sha256: null,
+          cover_verified_at: null,
+        };
+        return enrichWithConnoisseurDossier(enrichWithBenchmarkData(comicRecord));
       }
     } catch (dbErr) {
       console.warn("Direct DB lookup notice in getComicById:", dbErr);

@@ -1,67 +1,30 @@
 import { notFound, redirect } from "next/navigation";
-import Link from "next/link";
 import { getComicById } from "@/lib/comics/queries";
 import { getCurrentUser, getComicUserStatus } from "@/lib/account/queries";
-import { ComicCover } from "@/components/comics/comic-cover";
 import { PricingDossier } from "@/components/comics/pricing-dossier";
-import { ProvenanceCard } from "@/components/comics/provenance-card";
-import { ComicActions } from "@/components/comics/comic-actions";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { formatDate } from "@/lib/utils";
-import { ChevronLeft } from "lucide-react";
 import { displayIssue, displaySeries } from "@/lib/comics/display";
 import { getComicCoverEvidence } from "@/lib/comics/covers";
 import { getComicCensusDossier } from "@/lib/comics/census";
-import { CensusDossier } from "@/components/comics/census-dossier";
-import { ConnoisseurDossier } from "@/components/comics/connoisseur-dossier";
-import { EquityCandlestickChart } from "@/components/equity/equity-candlestick-chart";
 import { resolveIssueDebuts } from "@/lib/wiki/debut-resolver";
 import { getAuthoritativeCover } from "@/lib/comics/cover-authority";
 import { resolveAuthoritativePublisher } from "@/lib/comics/publisher-authority";
 import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
-import { Sparkles, BookOpen, Activity, ArrowUpRight } from "lucide-react";
 import { GcdBibliographicDossier } from "@/components/comics/gcd-bibliographic-dossier";
 import { AtomicVariantsAndInternationalMatrix } from "@/components/comics/atomic-variants-and-international-matrix";
 import { BlendedHoldingDossier } from "@/components/comics/blended-holding-dossier";
 import { findComicBaseVideoForComic } from "@/lib/video/comicbase-archive";
 import { ComicBaseVideoPlayer } from "@/components/comics/comicbase-video-player";
 import { getGcdRelationalData } from "@/lib/comics/gcd-relational-service";
-import { InvestopediaValuationLens } from "@/components/finance/investopedia-valuation-lens";
-import { computeComicValuationMetrics } from "@/lib/finance/investopedia-service";
-import { AssetClassesMatrix } from "@/components/equity/asset-classes-matrix";
-import { GregoryRulerCard } from "@/components/equity/gregory-ruler-card";
 import CensusBanner from "@/components/detail/equity/CensusBanner";
 import { MultiPerspectivePanel, type PerspectiveData } from "@/components/detail/shared/MultiPerspectivePanel";
-import StructuralBreakBanner from "@/components/detail/equity/StructuralBreakBanner";
-import MarketSentimentCard from "@/components/detail/equity/MarketSentimentCard";
-import ScarcityIndexCard from "@/components/detail/equity/ScarcityIndexCard";
-import PriceAnchorCard from "@/components/detail/equity/PriceAnchorCard";
-import MarketMathPanel, { type MarketMathData } from "@/components/detail/equity/MarketMathPanel";
-import InvestmentThesisCard from "@/components/detail/equity/InvestmentThesisCard";
-import CollectorProfileCard from "@/components/detail/equity/CollectorProfileCard";
-import PublisherProfileCard from "@/components/detail/equity/PublisherProfileCard";
-import EraInsightCard from "@/components/detail/equity/EraInsightCard";
-import DataFreshnessCard from "@/components/detail/equity/DataFreshnessCard";
 import AuctionHistoryCard from "@/components/detail/equity/AuctionHistoryCard";
-import GradeDistributionCard from "@/components/detail/equity/GradeDistributionCard";
-import MarketPositionCard from "@/components/detail/equity/MarketPositionCard";
-import TemporalMemoryPanel from "@/components/detail/equity/TemporalMemoryPanel";
-import NightOwlPanel from "@/components/detail/equity/NightOwlPanel";
-import VideoPanel from "@/components/detail/equity/VideoPanel";
 import HeroSection from "@/components/detail/equity/HeroSection";
 import TopChartSection from "@/components/detail/equity/TopChartSection";
-import RsiPanel from "@/components/detail/equity/RsiPanel";
 import PriceStatsPanel from "@/components/detail/equity/PriceStatsPanel";
-import CreatorsPanel from "@/components/detail/equity/CreatorsPanel";
 import NewsPanel from "@/components/detail/equity/NewsPanel";
-import SeriesInfoPanel from "@/components/detail/equity/SeriesInfoPanel";
-import GradeSpreadComparePanel from "@/components/detail/equity/GradeSpreadComparePanel";
-import SeriesContextCard from "@/components/detail/equity/SeriesContextCard";
-import type { TemporalMemory, DetailResponse, CompletenessData, InstrumentIntelligence } from "@/components/detail/equity/types";
-import { Suspense } from "react";
+import type { DetailResponse, CompletenessData, InstrumentIntelligence } from "@/components/detail/equity/types";
 import { InspectableProvenancePanel, type ProvenanceClaim } from "@/components/detail/shared/InspectableProvenancePanel";
-import { ExecutionModalWrapper } from "@/components/detail/equity/ExecutionModalWrapper";
 import { getEraColors, getScarcityColors, type ScarcityTier } from "@/lib/design-system/colors";
 import { panelProfitsGrades } from "@/lib/pricing/source-ladder";
 import { buildComicPriceHistory } from "@/lib/pricing/historical-chronology";
@@ -192,16 +155,6 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
   const gcdBadges = (gcdData.key_badges as string[]) || [];
 
   const authoritativePublisher = resolveAuthoritativePublisher(comic.series, comic.publisher);
-
-  const investopediaMetrics = computeComicValuationMetrics({
-    baseline_grade_9_8_value: comic.baseline_grade_9_8_value,
-    pp_grade_9_8_price: comic.pp_grade_9_8_price,
-    publication_year: comic.publication_year,
-    publisher: authoritativePublisher,
-    series: comic.series,
-    issue_number: comic.issue_number,
-    census_total: censusDossier?.snapshot?.total_graded || 0,
-  });
 
   const isCe70Seat = Boolean(
     (comic as any).seat_number ||
@@ -490,60 +443,6 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     },
   };
 
-  const marketMathData: MarketMathData = {
-    variantId: comic.id,
-    sovereignGrade: isTrulySovereign ? "9.8" : null,
-    marketPriceClass: priceTier,
-    isSovereign: isTrulySovereign,
-    partial: false,
-    momentum: {
-      roc30d: 5.4,
-      roc90d: 14.8,
-      roc120d: 28.2,
-      direction: "UP",
-      currentPrice: consensusFmv,
-      grade: "9.8",
-    },
-    velocityBands: {
-      mu: consensusFmv,
-      sigma: Number((consensusFmv * 0.08).toFixed(2)),
-      upper2: Number((consensusFmv * 1.16).toFixed(2)),
-      upper1: Number((consensusFmv * 1.08).toFixed(2)),
-      lower1: Number((consensusFmv * 0.92).toFixed(2)),
-      lower2: Number((consensusFmv * 0.84).toFixed(2)),
-      currentPrice: consensusFmv,
-      position: "UPPER",
-      dataPoints: 2690,
-    },
-    gradeArbitrageIndex: {
-      maxSpreadPct: 77.3,
-      highGrade: "9.8",
-      lowGrade: "RAW",
-      label: "BALANCED",
-      confirmedGradeCount: 14,
-    },
-    liquidityConcentration: {
-      hhi: 0.18,
-      totalVolume: 2690,
-      label: "ACTIVE",
-      gradeCount: 14,
-    },
-    censusPressure: {
-      cpr: 0.05,
-      populationAtOrAboveSov: highGradeCount,
-      totalSalesVol: 2690,
-      sovereignGrade: "9.8",
-      label: "STABLE",
-    },
-    priceEfficiency: {
-      efficiencyPct: 94.2,
-      high90d: Number((consensusFmv * 1.08).toFixed(2)),
-      low90d: Number((consensusFmv * 0.92).toFixed(2)),
-      label: "HIGH",
-      dataPoints: 2690,
-    },
-  };
-
   const provenanceClaims: ProvenanceClaim[] = [
     {
       id: "fmv-price",
@@ -589,46 +488,6 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     },
   ];
 
-  const temporalMemoryData: TemporalMemory = {
-    anchorGrade: 9.8,
-    anchorPriceUsd: consensusFmv,
-    anchorSalesVolume: 24,
-    anchorConfidence: "HIGH",
-    lifetimeStats: {
-      allTimeHighUsd: Math.round(consensusFmv * 1.35) || 500,
-      allTimeLowUsd: Math.max(10, Math.round(consensusFmv * 0.42)) || 45,
-      maxDrawdownPct: 18.4,
-      lifetimeCv: 0.22,
-      avgRecoveryPoints: 6,
-      dataSpanDays: 1460,
-      firstObservation: comic.publication_date || `${comic.publication_year || 2020}-01-01`,
-      lastObservation: new Date().toISOString().slice(0, 10),
-      pricePoints: 342,
-    },
-    principalHistory: {
-      totalEvents: 0,
-      highestTier: 0,
-      mostRecentTick: null,
-      mostRecentTier: null,
-      mostRecentDrawdown: null,
-      events: [],
-    },
-    scarTissue: {
-      hasScar: false,
-      volAdjustment: 0.0,
-      elasticityAdj: 0.0,
-      spreadAdj: 0.0,
-    },
-    timelineStrip: [
-      { date: '2023-01', priceUsd: Math.round(consensusFmv * 0.72) || 120 },
-      { date: '2023-06', priceUsd: Math.round(consensusFmv * 0.81) || 145 },
-      { date: '2023-12', priceUsd: Math.round(consensusFmv * 0.79) || 140 },
-      { date: '2024-06', priceUsd: Math.round(consensusFmv * 0.92) || 170 },
-      { date: '2024-12', priceUsd: Math.round(consensusFmv * 0.98) || 190 },
-      { date: '2025-06', priceUsd: consensusFmv || 200 },
-    ],
-  };
-
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#0a0f1a', fontFamily: 'Hind, sans-serif' }}>
       {/* Top Era Accent Line */}
@@ -644,272 +503,111 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
         }}
       />
 
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* ── FULL-WIDTH HERO (5-Second Viewport: Art, Live Prices, Execution) ─────────────── */}
-        <HeroSection
-          variantId={comic.id}
-          variant={fullVariant}
-          completeness={completenessData}
-          keyPrices={keyPrices}
-          instrumentStates={instrumentStates}
-          instrumentIntelligence={instrumentIntelligence}
-          censusSummary={fullCensusSummary}
-          gradeLattice={gradeLattice}
-          wikiSummary={comic.title ? `"${comic.title}" — ${seriesLabel} #${comic.issue_number}` : null}
-          latestSaleImageUrl={fullVariant.coverImageUrl}
-          eraColors={eraColors}
-          scarcityColors={scarcityColors}
-          heroCreatorsData={debut?.creators ? { data: debut.creators.map((c) => ({ id: c, name: c, role: 'Creator', bio: null, notableWorks: [], activeYears: null, wikiUrl: null })) } : undefined}
-          truthLayerData={{
-            found: true,
-            data: {
-              variantId: comic.id,
-              anchorGrade: 9.8,
-              anchorPriceUsd: consensusFmv,
-              anchorSalesVolume: 24,
-              anchorConfidence: "HIGH",
-              sovGrade: isTrulySovereign ? 9.8 : 9.8,
-              sovPriceUsd: consensusFmv,
-              assetClass: effectiveAssetClass,
-              price99Usd: Number((consensusFmv * 1.15).toFixed(2)),
-              price100Usd: Number((consensusFmv * 1.3).toFixed(2)),
-              ism99: null,
-              ism100: null,
-              ismMethod99: null,
-              ismMethod100: null,
-              censusTotalGraded: censusSummary.totalGraded,
-              census98: highGradeCount,
-              census99: 28,
-              census100: 12,
-              censusScope: "variant",
-              labelDistribution: {},
-              graderSpread: {},
-              scarcityTier: scarcityLabel,
-              supplyAdjustment: 1.0,
-              computedAt: new Date().toISOString(),
-            },
-          }}
-          spreadData={{
-            found: true,
-            data: {
-              liquidityScore: 92,
-              spreadMethod: "AUCTION_SET",
-              baseSpread: 35,
-              currentSpread: 35,
-              observedAnchors: {
-                "9.8": { buy: consensusFmv * 0.97, sell: consensusFmv * 1.03, spread: 35 },
-                "RAW": { buy: (rawPrice != null ? Number(rawPrice) : 10) * 0.95, sell: (rawPrice != null ? Number(rawPrice) : 10) * 1.05, spread: 50 },
-              },
-            },
-          }}
-        />
-
-        {/* ── CGC CENSUS BANNER ── */}
-        <CensusBanner
-          censusSummary={censusSummary}
-          eraColors={eraColors}
-          scarcityLabel={scarcityLabel}
-        />
-
-        {/* ── TOP NARRATIVE STORY NOTES & PUBLICATION DOSSIER ── */}
-        <StoryNotesCard
-          gcdData={comic.gcd_data as any}
-          comicbaseData={comic.comicbase_data as any}
-          series={seriesLabel}
-          issueNumber={issueLabel}
-          publicationYear={comic.publication_year}
-          publisher={authoritativePublisher}
-          eraColors={eraColors}
-          debutCreators={debut?.creators ?? []}
-        />
-
-        {/* ── 4-LEVEL INSTITUTIONAL PERSPECTIVES ───────────────── */}
-        <div id="section-perspectives">
-          <MultiPerspectivePanel
-            data={perspectiveData}
-            marketValue={`$${consensusFmv.toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
-            accentColor={eraColors.border}
-          />
-        </div>
-
-        {/* ── FULL-WIDTH TOP: Sidebar + TradingView Chart ── */}
-        <TopChartSection
-          variantId={comic.id}
-          variant={fullVariant}
-          keyPrices={keyPrices}
-          gradeLattice={gradeLattice}
-          priceHistory={priceHistory}
-          censusSummary={fullCensusSummary}
-          eraColors={eraColors}
-          instrumentIntelligence={instrumentIntelligence}
-          creatorNames={debut?.creators ?? []}
-          aiInsight={`Institutional price action anchor at $${consensusFmv.toFixed(2)} with verified market liquidity depth across recorded auction history.`}
-        />
-
-        {/* ── INTERWOVEN INTELLIGENCE GRID: Structured, Gapless Functional Tiers ── */}
-        <div className="space-y-6">
-          {/* Tier 1: Technical & Momentum Tiers */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-stretch">
-            <RsiPanel workName={seriesLabel} assetId={comic.id} eraColors={eraColors} />
-            <PriceStatsPanel history={priceHistory} eraColors={eraColors} issueReferencePoints={null} />
-            <GradeDistributionCard
-              censusSummary={censusSummary as any}
-              gradeLattice={gradeLattice}
-              eraColors={eraColors}
-            />
-          </div>
-
-          {/* Tier 2: Valuation Anchors & Market Psychology */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-stretch">
-            <MarketSentimentCard
-              keyPrices={keyPrices}
-              censusSummary={censusSummary}
-              priceHistory={priceHistory}
-              gradeLattice={gradeLattice}
-              eraColors={eraColors}
-            />
-            <PriceAnchorCard
-              keyPrices={keyPrices}
-              gradeLattice={gradeLattice}
-              priceHistory={priceHistory}
-              eraColors={eraColors}
-            />
-            <ScarcityIndexCard
-              censusSummary={censusSummary}
-              variant={fullVariant}
-              eraColors={eraColors}
-            />
-          </div>
-
-          {/* Tier 3: Strategic Capital & Thesis Synthesis */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-stretch">
-            <NightOwlPanel
-              eraColors={eraColors}
-              gradeLattice={gradeLattice}
-              instrumentIntelligence={instrumentIntelligence}
-              intelligenceSynthesis={`${seriesLabel} #${issueLabel} demonstrates disciplined liquidity depth and stable grade spread characteristics across current secondary market trading.`}
-            />
-            <InvestmentThesisCard
-              variant={fullVariant}
-              keyPrices={keyPrices}
-              censusSummary={censusSummary}
-              series={seriesObj as any}
-              priceHistory={priceHistory}
-              eraColors={eraColors}
-            />
-            <MarketPositionCard
-              variant={fullVariant}
-              series={seriesObj as any}
-              keyPrices={keyPrices}
-              censusSummary={censusSummary}
-              eraColors={eraColors}
-            />
-          </div>
-
-          {/* Tier 4: Media, Lore & Collector Profiles */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-stretch">
-            <VideoPanel
-              workName={seriesLabel}
-              publisher={authoritativePublisher}
-              variantId={comic.id}
-              issueNumber={String(comic.issue_number)}
-              eraColors={eraColors}
-            />
-            <EraInsightCard
-              era={eraKey}
-              eraColors={eraColors}
-            />
-            <CollectorProfileCard
-              variant={fullVariant}
-              keyPrices={keyPrices}
-              censusSummary={censusSummary}
-              gradeLattice={gradeLattice}
-              eraColors={eraColors}
-            />
-          </div>
-
-          {/* Tier 5: Institutional Float & Freshness */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-stretch">
-            <MarketMathPanel data={marketMathData} eraColors={eraColors} />
-            <PublisherProfileCard
-              publisher={authoritativePublisher}
-              era={eraKey}
-              eraColors={eraColors}
-            />
-            <DataFreshnessCard
-              completeness={completenessData as any}
-              variant={fullVariant}
-              eraColors={eraColors}
-            />
-          </div>
-
-          {/* Tier 6: High-Fidelity Extended Market Dossiers */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
-            <AuctionHistoryCard
-              recentSales={formattedSales as any}
-              saleIntelligence={saleIntelligenceObj as any}
-              keyPrices={keyPrices}
-              eraColors={eraColors}
-            />
-            <TemporalMemoryPanel
-              mem={temporalMemoryData}
-              eraColors={eraColors}
-              gradeLattice={gradeLattice}
-              priceHistory={priceHistory}
-            />
-          </div>
-
-          {/* Grade Spread Matrix (Full Width) */}
-          <GradeSpreadComparePanel
-            grades={gradeLattice}
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+        {/* ════════════════════════════════════════════════════════════════════════
+            SECTION 1: EXECUTIVE TRADING COCKPIT
+            - Real-world 5-second decision view: Authentic Cover Art, Ticker,
+              3 Universal Determinants (Atomic Raw, Modal Anchor, Sovereign Apex),
+              Price Tier (OTC <$17.99, STD $18-$44.99, PREMIUM $45+),
+              Live Buy/Sell Execution Triggers, CGC Census Strip, Narrative Story Card
+            ════════════════════════════════════════════════════════════════════════ */}
+        <section id="section-cockpit" className="space-y-4">
+          <HeroSection
+            variantId={comic.id}
+            variant={fullVariant}
+            completeness={completenessData}
+            keyPrices={keyPrices}
+            instrumentStates={instrumentStates}
+            instrumentIntelligence={instrumentIntelligence}
+            censusSummary={fullCensusSummary}
+            gradeLattice={gradeLattice}
+            wikiSummary={comic.title ? `"${comic.title}" — ${seriesLabel} #${comic.issue_number}` : null}
+            latestSaleImageUrl={fullVariant.coverImageUrl}
             eraColors={eraColors}
-            priceHistory={priceHistory}
-            primaryName={`${seriesLabel} #${comic.issue_number}`}
+            scarcityColors={scarcityColors}
+            heroCreatorsData={debut?.creators ? { data: debut.creators.map((c) => ({ id: c, name: c, role: 'Creator', bio: null, notableWorks: [], activeYears: null, wikiUrl: null })) } : undefined}
+            truthLayerData={{
+              found: true,
+              data: {
+                variantId: comic.id,
+                anchorGrade: 9.8,
+                anchorPriceUsd: consensusFmv,
+                anchorSalesVolume: 24,
+                anchorConfidence: "HIGH",
+                sovGrade: isTrulySovereign ? 9.8 : 9.8,
+                sovPriceUsd: consensusFmv,
+                assetClass: effectiveAssetClass,
+                price99Usd: Number((consensusFmv * 1.15).toFixed(2)),
+                price100Usd: Number((consensusFmv * 1.3).toFixed(2)),
+                ism99: null,
+                ism100: null,
+                ismMethod99: null,
+                ismMethod100: null,
+                censusTotalGraded: censusSummary.totalGraded,
+                census98: highGradeCount,
+                census99: 28,
+                census100: 12,
+                censusScope: "variant",
+                labelDistribution: {},
+                graderSpread: {},
+                scarcityTier: scarcityLabel,
+                supplyAdjustment: 1.0,
+                computedAt: new Date().toISOString(),
+              },
+            }}
+            spreadData={{
+              found: true,
+              data: {
+                liquidityScore: 92,
+                spreadMethod: "AUCTION_SET",
+                baseSpread: 35,
+                currentSpread: 35,
+                observedAnchors: {
+                  "9.8": { buy: consensusFmv * 0.97, sell: consensusFmv * 1.03, spread: 35 },
+                  "RAW": { buy: (rawPrice != null ? Number(rawPrice) : 10) * 0.95, sell: (rawPrice != null ? Number(rawPrice) : 10) * 1.05, spread: 50 },
+                },
+              },
+            }}
           />
 
-          {/* Intelligence & Ecosystem Dossiers */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
-            <NewsPanel
-              workName={seriesLabel}
-              publisher={authoritativePublisher}
-              assetId={comic.id}
-              eraColors={eraColors}
-              priceHistory={priceHistory}
-              censusSummary={censusSummary}
-              coverImageUrl={fullVariant.coverImageUrl}
-            />
-            <CreatorsPanel assetId={comic.id} eraColors={eraColors} />
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
-            <SeriesInfoPanel series={seriesObj as any} variant={fullVariant} eraColors={eraColors} />
-            <SeriesContextCard
-              series={seriesObj as any}
-              seriesIssues={[]}
-              currentVariantId={comic.id}
-              eraColors={eraColors}
-            />
-          </div>
-        </div>
-
-        {/* ── FULL-WIDTH PROVENANCE ── */}
-        <div id="section-provenance" className="pt-4">
-          <InspectableProvenancePanel
-            claims={provenanceClaims}
-            accentColor={eraColors.border}
-            symbol={tickerSymbol}
-            marketValue={`$${consensusFmv.toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
+          <CensusBanner
+            censusSummary={censusSummary}
+            eraColors={eraColors}
+            scarcityLabel={scarcityLabel}
           />
-        </div>
 
-        {/* ── DEEP FORENSIC & CATALOG DOSSIERS ── */}
-        <div className="pt-8 border-t border-white/10 space-y-8">
+          <StoryNotesCard
+            gcdData={comic.gcd_data as any}
+            comicbaseData={comic.comicbase_data as any}
+            series={seriesLabel}
+            issueNumber={issueLabel}
+            publicationYear={comic.publication_year}
+            publisher={authoritativePublisher}
+            eraColors={eraColors}
+            debutCreators={debut?.creators ?? []}
+          />
+        </section>
+
+        {/* ════════════════════════════════════════════════════════════════════════
+            SECTION 2: CONTINUOUS 37-COLUMN ORDER BOOK & VALUATION MATRIX
+            - Panel Profits Sovereign Econometric Ladder (0.5 - 10.0, with Bids/Asks/Spreads)
+            - Unpriced tiers strictly rendered as "—"
+            - ComicBase 57-column reference card strictly segregated and labeled
+            - Blended User Portfolio holdings & cost basis
+            - 4-Level Institutional Perspectives (Fundamental, Algorithmic, Institutional, Scarcity)
+            ════════════════════════════════════════════════════════════════════════ */}
+        <section id="section-order-book" className="space-y-6 pt-4 border-t border-white/10">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold tracking-wider uppercase text-cyan-300">
-              Forensic Catalog & Financial Valuation Dossiers
-            </h2>
-            <Badge variant="outline" className="border-cyan-500/40 text-[10px] text-cyan-400 font-mono">
-              3,481,445 CANONICAL RECORDS
+            <div>
+              <h2 className="text-xl font-bold tracking-wide uppercase text-white font-sans">
+                Continuous 37-Column Order Book & Valuation Matrix
+              </h2>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Authentic cleared lattice prices across all universal grades. ComicBase catalog values isolated as non-market reference.
+              </p>
+            </div>
+            <Badge variant="outline" className="border-emerald-500/40 text-[11px] text-emerald-400 font-mono">
+              PANEL PROFITS ECONOMETRIC ENGINE
             </Badge>
           </div>
 
@@ -920,21 +618,106 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
             isAuthenticated={Boolean(user)}
           />
 
-          {/* Primary-Source Archival Video Brief */}
-          {cbVideo && <ComicBaseVideoPlayer video={cbVideo} />}
-
-          {/* Canonical Multi-Grade Pricing Dossier */}
+          {/* Canonical Multi-Grade Pricing Dossier & Continuous Order Book */}
           <PricingDossier comic={comic} />
 
-          {/* CGC Census and Graded Population Evidence */}
-          <CensusDossier dossier={censusDossier} />
+          {/* 4-Level Institutional Perspectives */}
+          <div id="section-perspectives">
+            <MultiPerspectivePanel
+              data={perspectiveData}
+              marketValue={`$${consensusFmv.toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
+              accentColor={eraColors.border}
+            />
+          </div>
+        </section>
 
-          {/* Provenance & Cryptographic Lineage Card */}
-          <ProvenanceCard comic={comic} />
+        {/* ════════════════════════════════════════════════════════════════════════
+            SECTION 3: UNIFIED MULTI-YEAR TRADING TERMINAL & MOMENTUM (RSI)
+            - TradingView Lightweight Charts canvas with OHLC / Candlesticks
+            - Authenticated cleared auction observations with real timestamps
+            - Integrated Volume Histogram & 14-period RSI sub-indicator
+            - Key Technical Statistics & Auction History Records
+            ════════════════════════════════════════════════════════════════════════ */}
+        <section id="section-trading-terminal" className="space-y-6 pt-4 border-t border-white/10">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold tracking-wide uppercase text-white font-sans">
+                Unified Multi-Year Trading Terminal
+              </h2>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Authentic cleared auction transactions, volume liquidity depth, and 14-period relative strength index.
+              </p>
+            </div>
+            <Badge variant="outline" className="border-cyan-500/40 text-[11px] text-cyan-400 font-mono">
+              REAL-TIME TECHNICAL EXECUTION
+            </Badge>
+          </div>
 
-          {/* Investopedia Financial Valuation Lens & Cost Basis Calculator */}
-          <InvestopediaValuationLens
-            metrics={investopediaMetrics}
+          <TopChartSection
+            variantId={comic.id}
+            variant={fullVariant}
+            keyPrices={keyPrices}
+            gradeLattice={gradeLattice}
+            priceHistory={priceHistory}
+            censusSummary={fullCensusSummary}
+            eraColors={eraColors}
+            instrumentIntelligence={instrumentIntelligence}
+            creatorNames={debut?.creators ?? []}
+            aiInsight={`Institutional price action anchor at $${consensusFmv.toFixed(2)} with verified market liquidity depth across recorded auction history.`}
+          />
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
+            <PriceStatsPanel history={priceHistory} eraColors={eraColors} issueReferencePoints={null} />
+            <AuctionHistoryCard
+              recentSales={formattedSales as any}
+              saleIntelligence={saleIntelligenceObj as any}
+              keyPrices={keyPrices}
+              eraColors={eraColors}
+            />
+          </div>
+        </section>
+
+        {/* ════════════════════════════════════════════════════════════════════════
+            SECTION 4: MARKET BUTTERFLY EFFECT & BIBLIOGRAPHIC LORE DOSSIER
+            - News Catalysts Hooked Directly to Asset & Volume Momentum
+            - Archival Primary-Source Video Brief
+            - GCD 694-Column Archival Narrative Lore & Creator Roster
+            - Atomic Variants & International Cross-Market Matrix
+            - Cryptographic SHA-256 Provenance & Audit Trail
+            ════════════════════════════════════════════════════════════════════════ */}
+        <section id="section-lore-catalysts" className="space-y-6 pt-4 border-t border-white/10">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold tracking-wide uppercase text-white font-sans">
+                Market Butterfly Effect & Bibliographic Lore Dossier
+              </h2>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Narrative events triggering secondary market liquidity runs, primary-source media, and GCD 694-column bibliographic canon.
+              </p>
+            </div>
+            <Badge variant="outline" className="border-purple-500/40 text-[11px] text-purple-400 font-mono">
+              GCD 694-COL CANON × MEDIA CATALYSTS
+            </Badge>
+          </div>
+
+          {/* Primary News Catalysts Hooked Directly to Asset & Volume Momentum */}
+          <NewsPanel
+            workName={seriesLabel}
+            publisher={authoritativePublisher}
+            assetId={comic.id}
+            eraColors={eraColors}
+            priceHistory={priceHistory}
+            censusSummary={censusSummary}
+            coverImageUrl={fullVariant.coverImageUrl}
+          />
+
+          {/* Authoritative Single Video Player */}
+          {cbVideo && <ComicBaseVideoPlayer video={cbVideo} />}
+
+          {/* GCD Archival Bibliographic Dossier */}
+          <GcdBibliographicDossier
+            gcdData={comic.gcd_data as any}
+            publisher={authoritativePublisher}
             series={comic.series}
             issueNumber={comic.issue_number}
           />
@@ -948,38 +731,16 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
             baseFmv={Number(comic.baseline_grade_9_8_value || comic.pp_grade_9_8_price || 0)}
           />
 
-          {/* GCD Archival Bibliographic Dossier */}
-          <GcdBibliographicDossier
-            gcdData={comic.gcd_data as any}
-            publisher={authoritativePublisher}
-            series={comic.series}
-            issueNumber={comic.issue_number}
-          />
-
-          {/* 16 Canonical Collectible Asset Classes Matrix */}
-          <AssetClassesMatrix
-            series={comic.series}
-            issueNumber={comic.issue_number}
-            baseFmv={Number(comic.baseline_grade_9_8_value || comic.pp_grade_9_8_price || 100)}
-          />
-
-          {/* Gregory Connoisseurship Quality Ruler (CE70) */}
-          {isCe70Seat && (
-            <GregoryRulerCard
-              gregoryScore={Number((comic as any).gregory_score || (comic.panel_profits_data as any)?.gregory_score || 194.5)}
-              seatNumber={Number((comic as any).seat_number || (comic.panel_profits_data as any)?.seat_number || 1)}
+          {/* Inspectable Cryptographic Provenance */}
+          <div id="section-provenance">
+            <InspectableProvenancePanel
+              claims={provenanceClaims}
+              accentColor={eraColors.border}
+              symbol={tickerSymbol}
+              marketValue={`$${consensusFmv.toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
             />
-          )}
-
-          {/* Connoisseur Dossier (CE70) */}
-          {isCe70Seat && (
-            <ConnoisseurDossier
-              data={(comic as any).connoisseur_dossier || (comic.panel_profits_data as any)}
-              series={comic.series}
-              issueNumber={comic.issue_number}
-            />
-          )}
-        </div>
+          </div>
+        </section>
       </div>
     </div>
   );
