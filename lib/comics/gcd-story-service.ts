@@ -217,6 +217,26 @@ export async function resolveGcdStoryDossier(
     } catch (_) {}
   }
 
+  // If 0 stories, resolve variant-to-base issue via bundled pp115k.sqlite gcd_variants
+  if ((!rawStories || rawStories.length === 0) && bundledDb && issueId) {
+    try {
+      const varRow = bundledDb.prepare("SELECT base_issue_id FROM gcd_variants WHERE variant_issue_id = ?").get(issueId) as any;
+      if (varRow && varRow.base_issue_id) {
+        const baseId = varRow.base_issue_id;
+        const supabase = createAdminServerClient();
+        const { data: baseStories } = await supabase
+          .from("ppcf_gcd_stories")
+          .select("*")
+          .eq("gcd_issue_id", baseId)
+          .order("sequence_number", { ascending: true });
+        if (baseStories && baseStories.length > 0) {
+          rawStories = baseStories;
+          issueId = baseId;
+        }
+      }
+    } catch (_) {}
+  }
+
   // If still 0 stories, check snapshots for alternate issue ids of this issue
   if ((!rawStories || rawStories.length === 0) && cleanSeries && cleanIssue) {
     try {
