@@ -1,3 +1,5 @@
+import { lookupSqliteCover } from "./sqlite-covers";
+
 /**
  * Normalizes series and issue strings for deterministic, collision-free lookup.
  */
@@ -217,7 +219,13 @@ export function getAuthoritativeCover(
     return VERIFIED_COVER_REGISTRY[strippedKey];
   }
 
-  // 3. No verified image found -> Return null (NO SVG placeholders allowed)
+  // 3. High-Speed 115k Catalog Database Cover Lookup (Supabase Storage WebP & GCD)
+  const sqliteCover = lookupSqliteCover(cleanSeries, cleanIssue);
+  if (sqliteCover) {
+    return sqliteCover;
+  }
+
+  // 4. No verified image found -> Return null (NO SVG placeholders allowed)
   return null;
 }
 
@@ -258,6 +266,11 @@ export function getAuthoritativeCoverStrict(
   const strippedKey = normalizeKey(strippedSeries, cleanIssue);
   if (VERIFIED_COVER_REGISTRY[strippedKey]) {
     return VERIFIED_COVER_REGISTRY[strippedKey];
+  }
+
+  const sqliteCover = lookupSqliteCover(cleanSeries, cleanIssue);
+  if (sqliteCover) {
+    return sqliteCover;
   }
 
   return null;

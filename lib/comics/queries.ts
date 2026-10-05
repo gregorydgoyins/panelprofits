@@ -398,6 +398,14 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
   if (cleanId === "7cd12c0bab811858f9abdbbf427c00f23a74979f90bd90f022cf1721f81047d4") {
     cleanId = "7ed12c0bab811858f9abdbbf427c00f23a74979f90bd90f022cf1721f81047d4";
   }
+  // Fantastic Four Annual #7 typo redirect
+  if (
+    cleanId === "9eba4562c5d04bbacb9c33d4c073d25901cf87cda8d1531b7f4bdd3cc21a1390" ||
+    cleanId.startsWith("9eba4562c5") ||
+    cleanId.startsWith("9eba4562")
+  ) {
+    cleanId = "9eba4562c6d04bbacb9e33d4c073d25901ef87ede8d1631b7f4bdd3ce21a1390";
+  }
 
   // Layer 1: Direct Primary Key Database Match (Hex SHA-256 / UUID / Numeric pp_source_id)
   const isHexOrUuid = /^[a-f0-9]{32,64}$/i.test(cleanId) || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanId);

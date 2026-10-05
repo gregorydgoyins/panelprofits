@@ -1,5 +1,6 @@
 import { displayIssue, displaySeries } from "./display";
 import type { ComicRecord } from "./types";
+import { lookupSqliteCover } from "./sqlite-covers";
 
 export interface ResolvedCover {
   url: string;
@@ -255,6 +256,20 @@ export function resolveComicCover(comic: ComicCoverInput): ResolvedCover {
         sourceTier: "external_provider",
         qualityTier: "unverified",
         checksum: null,
+      };
+    }
+  }
+
+  // Tier 5.5: 115k Catalog Database High-Res Storage Cover (Supabase WebP & GCD)
+  if (comic.series && comic.issue_number) {
+    const sqliteUrl = lookupSqliteCover(comic.series, comic.issue_number);
+    if (sqliteUrl) {
+      return {
+        url: sqliteUrl,
+        isFallback: false,
+        sourceTier: sqliteUrl.includes("supabase.co") ? "storage" : "gcd_archive",
+        qualityTier: "verified",
+        checksum: comic.cover_sha256 || null,
       };
     }
   }

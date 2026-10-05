@@ -100,6 +100,15 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     redirect("/comics/71d3934caf37bf272f668bc5c9d4bcecbcee347e3bf2f3d3b0c954f783433792");
   }
 
+  // Fantastic Four Annual #7 typo redirect if user lands on OCR typo hash
+  if (
+    id === "9eba4562c5d04bbacb9c33d4c073d25901cf87cda8d1531b7f4bdd3cc21a1390" ||
+    id.startsWith("9eba4562c5") ||
+    id.startsWith("9eba4562")
+  ) {
+    redirect("/comics/9eba4562c6d04bbacb9e33d4c073d25901ef87ede8d1631b7f4bdd3ce21a1390");
+  }
+
   let comic = null;
   let user = null;
 
@@ -718,8 +727,8 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
           aiInsight={`Institutional price action anchor at $${consensusFmv.toFixed(2)} with verified market liquidity depth across recorded auction history.`}
         />
 
-        {/* ── MASONRY WALL: Authentic Cards & Panels ── */}
-        <div className="columns-1 md:columns-2 xl:columns-3 gap-4 [&>*]:break-inside-avoid [&>*]:mb-4">
+        {/* ── INTERWOVEN INTELLIGENCE GRID: Gapless, Structured 3-Column Grid ── */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-start">
           <RsiPanel workName={seriesLabel} assetId={comic.id} eraColors={eraColors} />
           <PriceStatsPanel history={priceHistory} eraColors={eraColors} issueReferencePoints={null} />
           <NightOwlPanel
