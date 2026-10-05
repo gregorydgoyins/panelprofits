@@ -3,6 +3,13 @@ import { ComicRecord, ComicSearchParams, ComicQueryResult } from "@/lib/comics/t
 import { getComicCoverEvidence } from "@/lib/comics/covers";
 import { createCachedQuery } from "@/lib/cache/wrapper";
 import benchmarksData from "@/lib/pricing/pricecharting-cgc-benchmarks.json";
+import ce70Dossiers from "@/lib/equity/ce70-dossiers-data.json";
+import verifiedCoversJson from "@/lib/equity/verified-covers.json";
+import { lookupReferenceFmv } from "@/lib/pricing/reference-benchmarks";
+import { getAuthoritativeCover, getAuthoritativeCoverStrict } from "@/lib/comics/cover-authority";
+import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
+import { getCatalogComicBySourceProductId, getVerifiedEquityByIdOrTicker, getVerifiedRealEquities } from "@/lib/equity/verified-equities-service";
+import ppix100Data from "@/lib/equity/ppix-100-constituents.json";
 
 export const DEFAULT_PAGE_SIZE = 24;
 
@@ -67,13 +74,153 @@ export async function getComics(params: ComicSearchParams): Promise<ComicQueryRe
   };
 }
 
-import ce70Dossiers from "@/lib/equity/ce70-dossiers-data.json";
-import verifiedCoversJson from "@/lib/equity/verified-covers.json";
-import { lookupReferenceFmv } from "@/lib/pricing/reference-benchmarks";
-import { getAuthoritativeCover, getAuthoritativeCoverStrict } from "@/lib/comics/cover-authority";
-import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
-import { getCatalogComicBySourceProductId, getVerifiedEquityByIdOrTicker, getVerifiedRealEquities } from "@/lib/equity/verified-equities-service";
-import ppix100Data from "@/lib/equity/ppix-100-constituents.json";
+export interface ParsedComicSlug {
+  rawSeriesSlug: string;
+  candidateSeries: string[];
+  issueNumber: string;
+  year?: number;
+  variant?: string;
+}
+
+const KNOWN_TICKER_ROOTS: Record<string, string[]> = {
+  tra: ["The Transformers", "Transformers"],
+  asm: ["Amazing Spider-Man", "The Amazing Spider-Man"],
+  bat: ["Batman", "Detective Comics"],
+  act: ["Action Comics", "Superman"],
+  det: ["Detective Comics", "Batman"],
+  xmn: ["X-Men", "Uncanny X-Men", "The X-Men"],
+  gsx: ["Giant-Size X-Men", "X-Men"],
+  ff: ["Fantastic Four"],
+  hul: ["Incredible Hulk", "The Incredible Hulk"],
+  ih: ["Incredible Hulk", "The Incredible Hulk"],
+  tos: ["Tales of Suspense", "Iron Man"],
+  tta: ["Tales to Astonish", "Hulk"],
+  ji: ["Journey into Mystery", "Thor"],
+  sm: ["Spider-Man", "Peter Parker, The Spectacular Spider-Man"],
+  jim: ["Journey into Mystery", "Thor"],
+  cap: ["Captain America"],
+  av: ["Avengers", "The Avengers"],
+  ave: ["Avengers", "The Avengers"],
+  gl: ["Green Lantern"],
+  fla: ["The Flash", "Flash"],
+  dare: ["Daredevil"],
+  dd: ["Daredevil"],
+  sw: ["Secret Wars", "Marvel Super Heroes Secret Wars", "Star Wars"],
+  tmnt: ["Teenage Mutant Ninja Turtles"],
+  spawn: ["Spawn"],
+  wd: ["The Walking Dead", "Walking Dead"],
+};
+
+/**
+ * Robust slug parser that breaks URLs, web slugs, and compound keys into canonical candidate series titles,
+ * issue numbers, and optional publication years.
+ * Examples:
+ *   - "the-transformers-4-1985" -> series: ["The Transformers", "Transformers"], issue: "4", year: 1985
+ *   - "amazing-spider-man-300" -> series: ["Amazing Spider-Man", "The Amazing Spider-Man", ...], issue: "300"
+ *   - "https://www.pricecharting.com/game/comic-books-transformers/the-transformers-4-1985" -> extracted & resolved
+ */
+export function parseComicSlug(slug: string): ParsedComicSlug {
+  const clean = slug
+    .trim()
+    .replace(/^https?:\/\/[^\/]+\/(?:game\/[^\/]+\/)?/i, "")
+    .replace(/^\/comics\//i, "")
+    .replace(/^\/equity\//i, "")
+    .replace(/[\/\?#].*$/, "")
+    .trim();
+
+  // Pattern 0: Standard Financial Equity Ticker (e.g. TRA.004.SOV, ASM.300.SOV, BAT.251.SOV)
+  const tickerMatch = clean.match(/^([a-z]{2,5})\.(\d{1,4})(?:\.[a-z0-9]+)?$/i);
+  if (tickerMatch) {
+    const root = tickerMatch[1].toLowerCase();
+    const issue = String(parseInt(tickerMatch[2], 10));
+    const candidateSeries = KNOWN_TICKER_ROOTS[root] || [];
+    return {
+      rawSeriesSlug: root,
+      candidateSeries,
+      issueNumber: issue,
+    };
+  }
+
+  // Pattern 1: series-issue-year (e.g. the-transformers-4-1985, amazing-spider-man-300-1988)
+  const patternYear = clean.match(/^(.*?)[-_](\d+[\w.]*)[-_](19\d\d|20\d\d)(?:[-_](.*))?$/i);
+  let rawSeries = "";
+  let issue = "1";
+  let year: number | undefined = undefined;
+  let variant: string | undefined = undefined;
+
+  if (patternYear) {
+    rawSeries = patternYear[1];
+    issue = patternYear[2];
+    year = parseInt(patternYear[3], 10);
+    variant = patternYear[4];
+  } else {
+    // Pattern 2: series-issue (e.g. the-transformers-4, amazing-spider-man-300)
+    const patternStandard = clean.match(/^(.*?)[-_](\d+[\w.]*)(?:[-_](.*))?$/i);
+    if (patternStandard) {
+      rawSeries = patternStandard[1];
+      issue = patternStandard[2];
+      variant = patternStandard[3];
+    } else {
+      rawSeries = clean;
+      issue = "1";
+    }
+  }
+
+  const words = rawSeries.replace(/[-_]+/g, " ").trim().split(/\s+/).filter(Boolean);
+  const titleCased = words.map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+
+  const candidates = new Set<string>();
+  if (titleCased) {
+    candidates.add(titleCased);
+
+    if (/^the\s+/i.test(titleCased)) {
+      candidates.add(titleCased.replace(/^the\s+/i, ""));
+    } else {
+      candidates.add(`The ${titleCased}`);
+    }
+
+    const hyphenated = titleCased
+      .replace(/\bSpider Man\b/i, "Spider-Man")
+      .replace(/\bX Men\b/i, "X-Men")
+      .replace(/\bIron Man\b/i, "Iron-Man")
+      .replace(/\bAnt Man\b/i, "Ant-Man")
+      .replace(/\bBat Man\b/i, "Batman")
+      .replace(/\bSuper Man\b/i, "Superman");
+    candidates.add(hyphenated);
+    if (/^the\s+/i.test(hyphenated)) {
+      candidates.add(hyphenated.replace(/^the\s+/i, ""));
+    } else {
+      candidates.add(`The ${hyphenated}`);
+    }
+
+    if (titleCased.toLowerCase().includes(" and ")) {
+      candidates.add(titleCased.replace(/\band\b/gi, "&"));
+    }
+    if (titleCased.includes("&")) {
+      candidates.add(titleCased.replace(/&/g, "and"));
+    }
+    if (titleCased.toLowerCase().includes("vs")) {
+      candidates.add(titleCased.replace(/\bvs\.?\b/gi, "vs."));
+      candidates.add(titleCased.replace(/\bvs\.?\b/gi, "Vs"));
+      candidates.add(titleCased.replace(/\bvs\.?\b/gi, "Vs."));
+    }
+
+    if (year) {
+      candidates.add(`${titleCased} (${year})`);
+      candidates.add(`${titleCased} (${year - 1})`);
+      candidates.add(`${hyphenated} (${year})`);
+      candidates.add(`${hyphenated} (${year - 1})`);
+    }
+  }
+
+  return {
+    rawSeriesSlug: rawSeries,
+    candidateSeries: Array.from(candidates),
+    issueNumber: issue,
+    year,
+    variant,
+  };
+}
 
 function enrichWithConnoisseurDossier(comic: ComicRecord): ComicRecord {
   // Look for matching CE70 dossier ONLY for authenticated CE70 benchmark seats
@@ -163,38 +310,37 @@ function enrichWithConnoisseurDossier(comic: ComicRecord): ComicRecord {
 function enrichWithBenchmarkData(comic: ComicRecord): ComicRecord {
   const benchmarkKey = `${comic.series} #${comic.issue_number}`;
   const benchmarkEntry = (benchmarksData as Record<string, any>)[benchmarkKey];
-  if (!benchmarkEntry) return comic;
 
-  const pricecharting = benchmarkEntry.pricecharting;
-  const spreads = benchmarkEntry.spreads;
-  const deltas = benchmarkEntry.deltas;
-  const volume = benchmarkEntry.volume;
+  const pcData = benchmarkEntry?.pricecharting || (comic.panel_profits_data as any)?.pricecharting || comic.pricecharting_data;
+  const spreads = benchmarkEntry?.spreads || (comic.panel_profits_data as any)?.spreads;
+  const deltas = benchmarkEntry?.deltas || (comic.panel_profits_data as any)?.deltas;
+  const volume = benchmarkEntry?.volume || (comic.panel_profits_data as any)?.volume;
 
-  const resolvedPrice98 = pricecharting?.grade_9_8 || comic.pp_grade_9_8_price || comic.baseline_grade_9_8_value;
+  const resolvedPrice98 = pcData?.grade_9_8 || comic.pp_grade_9_8_price || comic.baseline_grade_9_8_value;
 
   const updatedPanelProfitsData = {
     ...(comic.panel_profits_data || {}),
-    pricecharting: pricecharting || comic.panel_profits_data?.pricecharting,
-    spreads: spreads || comic.panel_profits_data?.spreads,
-    deltas: deltas || comic.panel_profits_data?.deltas,
-    volume: volume || comic.panel_profits_data?.volume,
-    salesListings: benchmarkEntry.salesListings || comic.panel_profits_data?.salesListings || null,
-    coverPrice: benchmarkEntry.coverPrice ?? comic.panel_profits_data?.coverPrice,
-    is_key_issue: benchmarkEntry.isKeyIssue ?? comic.panel_profits_data?.is_key_issue,
-    ...(pricecharting ? {
-      "PP - Grade RAW Market Price": pricecharting.raw,
-      "PP - Grade 2.0 Market Price": pricecharting.grade_2_0,
-      "PP - Grade 3.0 Market Price": pricecharting.grade_3_0,
-      "PP - Grade 4.0 Market Price": pricecharting.grade_4_0,
-      "PP - Grade 6.0 Market Price": pricecharting.grade_6_0,
-      "PP - Grade 8.0 Market Price": pricecharting.grade_8_0,
-      "PP - Grade 9.0 Market Price": pricecharting.grade_9_0,
-      "PP - Grade 9.2 Market Price": pricecharting.grade_9_2,
-      "PP - Grade 9.4 Market Price": pricecharting.grade_9_4,
-      "PP - Grade 9.6 Market Price": pricecharting.grade_9_6,
-      "PP - Grade 9.8 Market Price": pricecharting.grade_9_8,
-      "PP - Grade 9.9 Market Price": pricecharting.grade_9_9,
-      "PP - Grade 10.0 Market Price": pricecharting.grade_10_0,
+    pricecharting: pcData || (comic.panel_profits_data as any)?.pricecharting,
+    spreads: spreads || (comic.panel_profits_data as any)?.spreads,
+    deltas: deltas || (comic.panel_profits_data as any)?.deltas,
+    volume: volume || (comic.panel_profits_data as any)?.volume,
+    salesListings: benchmarkEntry?.salesListings || (comic.panel_profits_data as any)?.salesListings || null,
+    coverPrice: benchmarkEntry?.coverPrice ?? (comic.panel_profits_data as any)?.coverPrice,
+    is_key_issue: benchmarkEntry?.isKeyIssue ?? (comic.panel_profits_data as any)?.is_key_issue,
+    ...(pcData ? {
+      "PP - Grade RAW Market Price": pcData.raw ?? (comic.panel_profits_data as any)?.["PP - Grade RAW Market Price"],
+      "PP - Grade 2.0 Market Price": pcData.grade_2_0 ?? (comic.panel_profits_data as any)?.["PP - Grade 2.0 Market Price"],
+      "PP - Grade 3.0 Market Price": pcData.grade_3_0 ?? (comic.panel_profits_data as any)?.["PP - Grade 3.0 Market Price"],
+      "PP - Grade 4.0 Market Price": pcData.grade_4_0 ?? (comic.panel_profits_data as any)?.["PP - Grade 4.0 Market Price"],
+      "PP - Grade 6.0 Market Price": pcData.grade_6_0 ?? (comic.panel_profits_data as any)?.["PP - Grade 6.0 Market Price"],
+      "PP - Grade 8.0 Market Price": pcData.grade_8_0 ?? (comic.panel_profits_data as any)?.["PP - Grade 8.0 Market Price"],
+      "PP - Grade 9.0 Market Price": pcData.grade_9_0 ?? (comic.panel_profits_data as any)?.["PP - Grade 9.0 Market Price"],
+      "PP - Grade 9.2 Market Price": pcData.grade_9_2 ?? (comic.panel_profits_data as any)?.["PP - Grade 9.2 Market Price"],
+      "PP - Grade 9.4 Market Price": pcData.grade_9_4 ?? (comic.panel_profits_data as any)?.["PP - Grade 9.4 Market Price"],
+      "PP - Grade 9.6 Market Price": pcData.grade_9_6 ?? (comic.panel_profits_data as any)?.["PP - Grade 9.6 Market Price"],
+      "PP - Grade 9.8 Market Price": pcData.grade_9_8 ?? (comic.panel_profits_data as any)?.["PP - Grade 9.8 Market Price"],
+      "PP - Grade 9.9 Market Price": pcData.grade_9_9 ?? (comic.panel_profits_data as any)?.["PP - Grade 9.9 Market Price"],
+      "PP - Grade 10.0 Market Price": pcData.grade_10_0 ?? (comic.panel_profits_data as any)?.["PP - Grade 10.0 Market Price"],
     } : {}),
   };
 
@@ -208,45 +354,66 @@ function enrichWithBenchmarkData(comic: ComicRecord): ComicRecord {
       cover_retrieval_url: authCover,
       cover_source: "VERIFIED_REGISTRY",
     } : {}),
-    publisher: comic.publisher && !comic.publisher.includes("Independent /") ? comic.publisher : (benchmarkEntry.publisher || comic.publisher),
-    upc: benchmarkEntry.upc || comic.upc,
-    publication_date: benchmarkEntry.publicationDate || comic.publication_date,
-    pp_source_id: comic.pp_source_id || benchmarkEntry.pricechartingId || null,
-    gcd_source_id: comic.gcd_source_id || benchmarkEntry.comicOrgId || null,
+    publisher: comic.publisher && !comic.publisher.includes("Independent /") ? comic.publisher : (benchmarkEntry?.publisher || comic.publisher),
+    upc: benchmarkEntry?.upc || comic.upc,
+    publication_date: benchmarkEntry?.publicationDate || comic.publication_date,
+    pp_source_id: comic.pp_source_id || benchmarkEntry?.pricechartingId || null,
+    gcd_source_id: comic.gcd_source_id || benchmarkEntry?.comicOrgId || null,
     pp_grade_9_8_price: resolvedPrice98,
     baseline_grade_9_8_value: resolvedPrice98,
-    pricecharting_data: pricecharting || comic.pricecharting_data,
+    pricecharting_data: pcData || comic.pricecharting_data,
     panel_profits_data: updatedPanelProfitsData,
-    cgc_data: benchmarkEntry.cgc ? ({ cgc_grades: benchmarkEntry.cgc } as any) : comic.cgc_data,
+    cgc_data: benchmarkEntry?.cgc ? ({ cgc_grades: benchmarkEntry.cgc } as any) : comic.cgc_data,
   };
 }
 
 export async function getComicById(id: string): Promise<ComicRecord | null> {
   if (!id || typeof id !== "string") return null;
-  let cleanId = id.trim().replace(/^(?:var-)+/i, "");
-  // Alias typo redirect for Blue Book #4
+
+  // Layer 0: Normalization & Alias resolution
+  let cleanId = decodeURIComponent(id)
+    .trim()
+    .replace(/^https?:\/\/[^\/]+\/(?:game\/[^\/]+\/)?/i, "")
+    .replace(/^\/comics\//i, "")
+    .replace(/^\/equity\//i, "")
+    .replace(/[\/\?#].*$/, "")
+    .trim()
+    .replace(/^(?:var-)+/i, "");
+
+  // Alias redirects
+  // 1985 Transformers #4 Skybound reprint -> original Marvel 1985 #4
+  if (cleanId === "c2fd6ba5cc9177887397a07fb5c804b7eb1cdc7c33c8ab51dada672679073c2") {
+    cleanId = "f461f7228539e44876fde6b1e331bda11357a7556b13bafd28afd5cdab5add12";
+  }
+  // Blue Book #4 typo redirect
   if (cleanId === "7cd12c0bab811858f9abdbbf427c00f23a74979f90bd90f022cf1721f81047d4") {
     cleanId = "7ed12c0bab811858f9abdbbf427c00f23a74979f90bd90f022cf1721f81047d4";
   }
 
-  // 1. Direct Database ID check (SHA hash, UUID, or pp-id): Always prioritize authentic database record
-  const isDirectDbId = /^[a-f0-9]{32,64}$/i.test(cleanId) || /^pp-/i.test(cleanId) || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanId);
-  if (isDirectDbId) {
-    const supabase = createAdminServerClient();
-    let comicQuery = supabase.from("comics").select("*");
-    if (/^pp-/i.test(cleanId)) {
-      const ppNum = cleanId.replace(/^pp-/i, "");
-      comicQuery = comicQuery.eq("pp_source_id", ppNum);
-    } else {
-      comicQuery = comicQuery.eq("id", cleanId);
-    }
-    const { data, error } = await comicQuery.maybeSingle();
-    if (!error && data) {
-      return enrichWithConnoisseurDossier(enrichWithBenchmarkData(data as ComicRecord));
+  // Layer 1: Direct Primary Key Database Match (Hex SHA-256 / UUID / Numeric pp_source_id)
+  const isHexOrUuid = /^[a-f0-9]{32,64}$/i.test(cleanId) || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanId);
+  const isPpNumeric = /^pp-\d+$/i.test(cleanId) || /^\d{4,10}$/.test(cleanId);
+
+  if (isHexOrUuid || isPpNumeric) {
+    try {
+      const supabase = createAdminServerClient();
+      let query = supabase.from("comics").select("*");
+      if (isPpNumeric) {
+        const numId = cleanId.replace(/^pp-/i, "");
+        query = query.eq("pp_source_id", numId).order("pp_grade_9_8_price", { ascending: false, nullsFirst: false }).limit(1);
+      } else {
+        query = query.eq("id", cleanId).limit(1);
+      }
+      const { data, error } = await query.maybeSingle();
+      if (!error && data) {
+        return enrichWithConnoisseurDossier(enrichWithBenchmarkData(data as ComicRecord));
+      }
+    } catch (dbErr) {
+      console.warn("Direct DB lookup notice in getComicById:", dbErr);
     }
   }
 
-  // 2. High-speed local verified equities check (<1ms)
+  // Layer 2: Fast In-Memory Equities & CE70 Constitutional Master Index Dossier (<1ms)
   const localVerified = getVerifiedEquityByIdOrTicker(cleanId);
   if (localVerified) {
     const timestamp = new Date().toISOString();
@@ -257,13 +424,13 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
     );
     const gcdSourceId = catalogRow?.gcd_id || null;
     const comicbaseSourceId = catalogRow?.comicbase_id || null;
-    const publisher = (catalogRow?.publisher && !catalogRow.publisher.includes("Independent /")) 
-      ? catalogRow.publisher 
+    const publisher = (catalogRow?.publisher && !catalogRow.publisher.includes("Independent /"))
+      ? catalogRow.publisher
       : (localVerified.publisher || "Independent");
 
     const benchmarkKey = `${localVerified.series} #${localVerified.issue_number}`;
     const benchmarkEntry = (benchmarksData as Record<string, any>)[benchmarkKey];
-    
+
     const resolvedPrice98 = localVerified.fmv_usd || benchmarkEntry?.pricecharting?.grade_9_8;
     const resolvedPubDate = benchmarkEntry?.publicationDate || (localVerified.publication_year ? `${localVerified.publication_year}-01-01` : null);
     const resolvedUpc = benchmarkEntry?.upc || (localVerified as any).upc || null;
@@ -338,8 +505,7 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
     return enrichWithConnoisseurDossier(baseRecord);
   }
 
-  // 2. Local CE70 Constitutional Master Index Dossier resolution (<1ms)
-  // Handles identifiers such as seat-16, ce70-16, seat_16, canonical IDs, or exact title
+  // CE70 Constitutional Master Index Dossier resolution (<1ms)
   const seatMatch = cleanId.match(/^(?:seat|ce70)[-_]?(\d+)$/i) || (cleanId.match(/^(\d+)$/) ? [null, cleanId] : null);
   const targetSeatNum = seatMatch ? parseInt(seatMatch[1], 10) : null;
 
@@ -445,7 +611,7 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
     return sovereignRecord;
   }
 
-  // 3. Local PPIX 100 Constituent resolution (<1ms)
+  // PPIX 100 Constituent resolution (<1ms)
   const ppixMatch = cleanId.match(/^ppix[-_]?100[-_]?(\d+)$/i);
   if (ppixMatch) {
     const idx = parseInt(ppixMatch[1], 10) - 1;
@@ -499,95 +665,80 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
     }
   }
 
-  // 4. Check primary comics table in Supabase
-  const supabase = createAdminServerClient();
-  let comicQuery = supabase.from("comics").select("*");
-  if (/^pp-/i.test(cleanId) || /^\d+$/.test(cleanId)) {
-    const ppNum = cleanId.replace(/^pp-/i, "");
-    comicQuery = comicQuery.eq("pp_source_id", ppNum);
-  } else {
-    comicQuery = comicQuery.eq("id", cleanId);
+  // Layer 3: Check PPCF canonical comics table
+  if (/^ppcf[-_]/i.test(cleanId) || cleanId.startsWith("PPCF-")) {
+    try {
+      const cleanDb = createCleanReadOnlyServerClient();
+      const { data: ppcf, error: cleanError } = await cleanDb
+        .from("ppcf_canonical_comics")
+        .select("ppcf_id,series_name,issue_number,publication_date,issue_title,variant_name,created_at,cover_url,cover_storage_path,cover_source")
+        .eq("ppcf_id", cleanId)
+        .maybeSingle();
+
+      if (!cleanError && ppcf) {
+        const timestamp = ppcf.created_at || new Date().toISOString();
+        const series = ppcf.series_name || "Verified Comic";
+        const year = ppcf.publication_date ? parseInt(ppcf.publication_date.slice(0, 4), 10) || null : null;
+
+        const baseRecord: ComicRecord = {
+          id: ppcf.ppcf_id,
+          series,
+          title: ppcf.issue_title || series,
+          issue_number: ppcf.issue_number || "",
+          volume: null,
+          printing: null,
+          direct_or_variant: ppcf.variant_name || null,
+          cover_variant: null,
+          publisher: null,
+          publication_date: ppcf.publication_date || null,
+          publication_year: year,
+          upc: null,
+          alt_upc: null,
+          pp_source_id: null,
+          comicbase_source_id: null,
+          gcd_source_id: null,
+          pp_grade_9_8_price: null,
+          comicbase_price: null,
+          baseline_grade_9_8_value: null,
+          baseline_grade_9_8_sources: null,
+          baseline_grade_9_8_observation_count: null,
+          panel_profits_data: null,
+          comicbase_data: null,
+          gcd_data: null,
+          search_document: null,
+          created_at: timestamp,
+          updated_at: timestamp,
+          cover_url: ppcf.cover_url || null,
+          cover_storage_path: ppcf.cover_storage_path || null,
+          cover_source: ppcf.cover_source || null,
+          cover_original_url: ppcf.cover_url || null,
+          cover_retrieval_url: ppcf.cover_url || null,
+          cover_width: null,
+          cover_height: null,
+          cover_sha256: null,
+          cover_verified_at: ppcf.cover_url ? timestamp : null,
+        };
+
+        return enrichWithConnoisseurDossier(baseRecord);
+      }
+    } catch (ppcfErr) {
+      console.warn("Notice querying ppcf_canonical_comics:", ppcfErr);
+    }
   }
 
-  const { data, error } = await comicQuery.maybeSingle();
-
-  if (error) {
-    console.error(`Error fetching comic with ID ${cleanId}:`, error);
-  }
-
-  if (data) {
-    return enrichWithConnoisseurDossier(data as ComicRecord);
-  }
-
-  // 2. Check PPCF canonical comics table
-  const cleanDb = createCleanReadOnlyServerClient();
-  const { data: ppcf, error: cleanError } = await cleanDb
-    .from("ppcf_canonical_comics")
-    .select("ppcf_id,series_name,issue_number,publication_date,issue_title,variant_name,created_at,cover_url,cover_storage_path,cover_source")
-    .eq("ppcf_id", cleanId)
-    .maybeSingle();
-
-  if (!cleanError && ppcf) {
-    const timestamp = ppcf.created_at || new Date().toISOString();
-    const series = ppcf.series_name || "Verified Comic";
-    const year = ppcf.publication_date ? parseInt(ppcf.publication_date.slice(0, 4), 10) || null : null;
-
-    const baseRecord: ComicRecord = {
-      id: ppcf.ppcf_id,
-      series,
-      title: ppcf.issue_title || series,
-      issue_number: ppcf.issue_number || "",
-      volume: null,
-      printing: null,
-      direct_or_variant: ppcf.variant_name || null,
-      cover_variant: null,
-      publisher: null,
-      publication_date: ppcf.publication_date || null,
-      publication_year: year,
-      upc: null,
-      alt_upc: null,
-      pp_source_id: null,
-      comicbase_source_id: null,
-      gcd_source_id: null,
-      pp_grade_9_8_price: null,
-      comicbase_price: null,
-      baseline_grade_9_8_value: null,
-      baseline_grade_9_8_sources: null,
-      baseline_grade_9_8_observation_count: null,
-      panel_profits_data: null,
-      comicbase_data: null,
-      gcd_data: null,
-      search_document: null,
-      created_at: timestamp,
-      updated_at: timestamp,
-      cover_url: ppcf.cover_url || null,
-      cover_storage_path: ppcf.cover_storage_path || null,
-      cover_source: ppcf.cover_source || null,
-      cover_original_url: ppcf.cover_url || null,
-      cover_retrieval_url: ppcf.cover_url || null,
-      cover_width: null,
-      cover_height: null,
-      cover_sha256: null,
-      cover_verified_at: ppcf.cover_url ? timestamp : null,
-    };
-
-    return enrichWithConnoisseurDossier(baseRecord);
-  }
-
-  // 3. Check CE70 Equity Universe for Sovereign Equities, Tickers, Slugs, and Canonical IDs
-  // Resolves IDs like ce70_seat_13_CE70-8.5, issue_series_pub_marvel_x_men_1963_v1_1, XMN.001.SOV, x_men_1, etc.
+  // Layer 4: Check CE70 Equity Universe for Sovereign Equities, Tickers, Slugs, and Canonical IDs
+  // Resolves IDs like ce70_seat_13_CE70-8.5, issue_series_pub_marvel_x_men_1963_v1_1, XMN.001.SOV, BAT.251.SOV, action_comics_252, etc.
   try {
+    const cleanDb = createCleanReadOnlyServerClient();
     const normalizedId = cleanId.toLowerCase();
     const cleanSlug = normalizedId.replace(/[^a-z0-9]/g, "");
 
-    // Exact query on id or canonical_issue_id first
     let { data: eqRow } = await cleanDb
       .from("ce70_equity_universe")
       .select("*")
       .or(`id.eq.${cleanId},canonical_issue_id.eq.${cleanId}`)
       .maybeSingle();
 
-    // If not found, search all universe constituents for ticker, slug, or title match
     if (!eqRow) {
       const { data: allEquities } = await cleanDb
         .from("ce70_equity_universe")
@@ -765,7 +916,72 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
     console.warn("Notice querying ce70_equity_universe in getComicById:", err);
   }
 
-  // 6. Estate-Wide Dynamic Fallback for 115,000 September Comic Records & Standardized Tickers
+  // Layer 5: Smart Slug & Title/Issue Resolution Engine (Web Slugs, PriceCharting URLs, Canonical Titles)
+  // Prevents "Record Not Found" 404s when navigating by slug like "the-transformers-4-1985" or "amazing-spider-man-300"
+  const parsedSlug = parseComicSlug(cleanId);
+  if (parsedSlug.candidateSeries.length > 0 && parsedSlug.issueNumber) {
+    try {
+      const supabase = createAdminServerClient();
+
+      // Step 5a: Query Supabase comics table using exact candidate series list & issue number
+      let slugQuery = supabase
+        .from("comics")
+        .select("*")
+        .in("series", parsedSlug.candidateSeries)
+        .eq("issue_number", parsedSlug.issueNumber);
+
+      if (parsedSlug.year) {
+        slugQuery = slugQuery.eq("publication_year", parsedSlug.year);
+      }
+
+      slugQuery = slugQuery.order("pp_grade_9_8_price", { ascending: false, nullsFirst: false }).limit(1);
+      let { data: slugComic, error: slugErr } = await slugQuery.maybeSingle();
+
+      // If year was specified but no row matched, retry without year restriction
+      if (!slugComic && parsedSlug.year) {
+        const retryQuery = supabase
+          .from("comics")
+          .select("*")
+          .in("series", parsedSlug.candidateSeries)
+          .eq("issue_number", parsedSlug.issueNumber)
+          .order("pp_grade_9_8_price", { ascending: false, nullsFirst: false })
+          .limit(1);
+        const retryRes = await retryQuery.maybeSingle();
+        if (retryRes.data) {
+          slugComic = retryRes.data;
+        }
+      }
+
+      if (slugComic) {
+        return enrichWithConnoisseurDossier(enrichWithBenchmarkData(slugComic as ComicRecord));
+      }
+    } catch (slugDbErr) {
+      console.warn("Notice in slug resolution query against Supabase:", slugDbErr);
+    }
+
+    // Step 5b: High-speed local SQLite catalog fallback (<1ms)
+    try {
+      for (const candSeries of parsedSlug.candidateSeries) {
+        const catalogMatch = getCatalogComicBySourceProductId(null, candSeries, parsedSlug.issueNumber);
+        if (catalogMatch?.source_product_id) {
+          const supabase = createAdminServerClient();
+          const { data: byProdId } = await supabase
+            .from("comics")
+            .select("*")
+            .eq("pp_source_id", catalogMatch.source_product_id)
+            .limit(1)
+            .maybeSingle();
+          if (byProdId) {
+            return enrichWithConnoisseurDossier(enrichWithBenchmarkData(byProdId as ComicRecord));
+          }
+        }
+      }
+    } catch (sqliteErr) {
+      console.warn("Notice in SQLite slug fallback:", sqliteErr);
+    }
+  }
+
+  // Layer 6: Estate-Wide Dynamic Fallback for 115,000 September Comic Records & Standardized Tickers
   const parsedRef = lookupReferenceFmv(cleanId, cleanId);
   if (parsedRef) {
     const coverPath = getAuthoritativeCover(parsedRef.series, parsedRef.issueNumber, parsedRef.publisher, parsedRef.year);
