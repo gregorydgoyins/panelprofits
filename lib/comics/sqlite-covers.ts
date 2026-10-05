@@ -5,7 +5,6 @@ function getSqliteDb() {
   if (dbInstance) return dbInstance;
   try {
     // eval('require') completely hides node native modules from webpack client bundle analysis
-    // eslint-disable-next-line @typescript-eslint/no-implied-eval
     const req = eval("require");
     const fs = req("fs");
     const path = req("path");

@@ -3,6 +3,7 @@ import benchmarksData from "@/lib/pricing/pricecharting-cgc-benchmarks.json";
 import { computeRsi14 } from "@/components/detail/equity/shared";
 import type { RsiPoint } from "@/components/detail/equity/types";
 import { createAdminServerClient } from "@/lib/supabase/admin";
+import { buildComicPriceHistory } from "@/lib/pricing/historical-chronology";
 
 interface RawObservation {
   date: string;
@@ -79,8 +80,11 @@ export async function getComicRsiReal(assetId: string): Promise<RsiPoint[]> {
   // Sort observations chronologically
   rawObs.sort((a, b) => a.date.localeCompare(b.date));
 
-  // If we have at least 3 historical observations, compute authentic RSI points
-  if (rawObs.length >= 3) {
+  // Check if raw observations have distinct dates spanning time
+  const distinctDates = new Set(rawObs.map(o => o.date));
+
+  // If we have at least 3 historical observations with distinct dates, compute authentic RSI points
+  if (rawObs.length >= 3 && distinctDates.size >= 3) {
     const prices = rawObs.map((o) => o.amount);
     const rsiValues = computeRsi14(prices);
 
@@ -111,40 +115,32 @@ export async function getComicRsiReal(assetId: string): Promise<RsiPoint[]> {
     return points;
   }
 
-  // 3. If the comic only has static grade ladder points (e.g. 6 PriceCharting tiers: raw -> 9.8)
-  // construct genuine grade ladder progression points reflecting verified price tiers
-  const pc = comic.panel_profits_data?.pricecharting as Record<string, any> | undefined;
-  if (pc && typeof pc === "object") {
-    const gradeLadder: Array<{ grade: string; price: number }> = [];
-    if (pc.raw) gradeLadder.push({ grade: "RAW", price: Number(pc.raw) });
-    if (pc.grade_4_0) gradeLadder.push({ grade: "4.0", price: Number(pc.grade_4_0) });
-    if (pc.grade_6_0) gradeLadder.push({ grade: "6.0", price: Number(pc.grade_6_0) });
-    if (pc.grade_8_0) gradeLadder.push({ grade: "8.0", price: Number(pc.grade_8_0) });
-    if (pc.grade_9_2) gradeLadder.push({ grade: "9.2", price: Number(pc.grade_9_2) });
-    if (pc.grade_9_8) gradeLadder.push({ grade: "9.8", price: Number(pc.grade_9_8) });
+  // 3. Fallback: use authentic multi-year chronology from buildComicPriceHistory
+  const history = buildComicPriceHistory(comic);
+  const targetGrade = (comic.pp_grade_9_8_price || comic.baseline_grade_9_8_value) ? "9.8" : (history[0]?.grade || "9.8");
+  const gradeHistory = history.filter(h => h.grade === targetGrade);
+  const chronPoints = gradeHistory.length >= 3 ? gradeHistory : history;
 
-    if (gradeLadder.length >= 2) {
-      const anchor98 = pc.grade_9_8 ? Number(pc.grade_9_8) : gradeLadder[gradeLadder.length - 1].price;
-      const rawP = pc.raw ? Number(pc.raw) : gradeLadder[0].price;
-      const ratio = rawP > 0 ? anchor98 / rawP : 10;
-
-      // Authentic Relative Strength index based on 9.8/Raw premium:
-      // Normal ratio 2x-8x maps to 45-60 (Neutral/Firm); Wide ratio 10x-25x maps to 65-75 (Firm/Overbought)
-      const baseRsi = Math.min(85, Math.max(35, 40 + Math.log2(ratio) * 8));
-
-      const points: RsiPoint[] = gradeLadder.map((g, idx) => {
-        const stepProgress = idx / (gradeLadder.length - 1);
-        const rsiVal = Math.round((baseRsi + (stepProgress - 0.5) * 8) * 10) / 10;
-        const now = new Date();
-        now.setDate(now.getDate() - (gradeLadder.length - 1 - idx) * 7);
-        return {
-          date: now.toISOString().slice(0, 10),
-          rsi: rsiVal,
-          price: g.price,
-        };
-      });
-      return points;
-    }
+  if (chronPoints.length >= 2) {
+    const prices = chronPoints.map(h => h.priceUsd);
+    const rsiVals = computeRsi14(prices);
+    return chronPoints.map((h, i) => {
+      let rsi = rsiVals[i];
+      if (rsi === null && i >= 1) {
+        const sub = prices.slice(0, i + 1);
+        const ch = sub.slice(1).map((v, idx) => v - sub[idx]);
+        const g = ch.filter(c => c > 0).reduce((a, b) => a + b, 0);
+        const l = ch.filter(c => c < 0).reduce((a, b) => a - b, 0);
+        rsi = l === 0 ? (g > 0 ? 70 : 50) : 100 - (100 / (1 + (g / (l || 1))));
+      } else if (rsi === null) {
+        rsi = 50.0;
+      }
+      return {
+        date: h.observedAt.slice(0, 10),
+        rsi: Math.round(Number(rsi) * 10) / 10,
+        price: h.priceUsd,
+      };
+    });
   }
 
   return [];

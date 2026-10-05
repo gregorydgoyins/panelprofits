@@ -8,6 +8,7 @@ import verifiedCoversJson from "@/lib/equity/verified-covers.json";
 import { lookupReferenceFmv } from "@/lib/pricing/reference-benchmarks";
 import { getAuthoritativeCover, getAuthoritativeCoverStrict } from "@/lib/comics/cover-authority";
 import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
+import { resolveAuthoritativePublisher } from "@/lib/comics/publisher-authority";
 import { getCatalogComicBySourceProductId, getVerifiedEquityByIdOrTicker, getVerifiedRealEquities } from "@/lib/equity/verified-equities-service";
 import ppix100Data from "@/lib/equity/ppix-100-constituents.json";
 
@@ -286,9 +287,11 @@ function enrichWithConnoisseurDossier(comic: ComicRecord): ComicRecord {
 
     return {
       ...comic,
-      pp_grade_9_8_price: comic.pp_grade_9_8_price ?? fmv98,
-      baseline_grade_9_8_value: comic.baseline_grade_9_8_value ?? fmv98,
-      comicbase_price: comic.comicbase_price ?? null,
+      publisher: resolveAuthoritativePublisher(comic.series, comic.publisher || (matchedDossier as any)?.publisher),
+      publication_year: bench?.year || (matchedDossier as any)?.year || (matchedDossier as any)?.publicationYear || comic.publication_year,
+      pp_grade_9_8_price: fmv98 ?? comic.pp_grade_9_8_price,
+      baseline_grade_9_8_value: fmv98 ?? comic.baseline_grade_9_8_value,
+      comicbase_price: null,
       panel_profits_data: panelProfitsData as any,
       comicbase_data: comic.comicbase_data ? {
         ...comic.comicbase_data,
@@ -556,6 +559,9 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
 
     // As there are only 70 CE seats in the entire 3.6 million comic universe,
     // Seat X IS the exact same comic as that issue in the database!
+    const bench = lookupReferenceFmv(matchedSeat.seatNumber, matchedSeat.title, matchedSeat.canonicalId);
+    const targetYear = bench?.year || (matchedSeat as any).year || (matchedSeat as any).publicationYear;
+
     try {
       const supabase = createAdminServerClient();
       let dbQuery = supabase
@@ -563,8 +569,8 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
         .select("*")
         .eq("series", seriesName)
         .eq("issue_number", issueNum);
-      if (matchedSeat.year) {
-        dbQuery = dbQuery.eq("publication_year", matchedSeat.year);
+      if (targetYear) {
+        dbQuery = dbQuery.eq("publication_year", targetYear);
       }
       dbQuery = dbQuery.order("pp_grade_9_8_price", { ascending: false, nullsFirst: false }).limit(1);
       const { data: dbComic } = await dbQuery.maybeSingle();
@@ -576,10 +582,8 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
       console.warn("Notice querying DB for CE70 seat comic:", dbErr);
     }
 
-    const coverPath = getAuthoritativeCover(seriesName, issueNum, matchedSeat.publisher, matchedSeat.year);
+    const coverPath = getAuthoritativeCover(seriesName, issueNum, matchedSeat.publisher, targetYear);
     const timestamp = new Date().toISOString();
-
-    const bench = lookupReferenceFmv(matchedSeat.seatNumber, matchedSeat.title, matchedSeat.canonicalId);
 
     const fmv98 = bench?.grade98FmvUsd ?? null;
     const rawFmv = bench?.rawFmvUsd ?? null;
@@ -594,7 +598,7 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
       printing: "1",
       direct_or_variant: "Original Newsstand / Direct",
       cover_variant: null,
-      publisher: bench?.publisher || matchedSeat.publisher,
+      publisher: resolveAuthoritativePublisher(seriesName, bench?.publisher || matchedSeat.publisher),
       publication_date: `${bench?.year || matchedSeat.year}-01-01`,
       publication_year: bench?.year || matchedSeat.year,
       upc: null,

@@ -64,6 +64,8 @@ import { InspectableProvenancePanel, type ProvenanceClaim } from "@/components/d
 import { ExecutionModalWrapper } from "@/components/detail/equity/ExecutionModalWrapper";
 import { getEraColors, getScarcityColors, type ScarcityTier } from "@/lib/design-system/colors";
 import { panelProfitsGrades } from "@/lib/pricing/source-ladder";
+import { buildComicPriceHistory } from "@/lib/pricing/historical-chronology";
+import StoryNotesCard from "@/components/detail/equity/StoryNotesCard";
 
 export const dynamic = "force-dynamic";
 
@@ -268,26 +270,18 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     observedAt: new Date().toISOString(),
   };
 
-  const priceHistory = [
-    { grade: "9.8", priceUsd: consensusFmv, observedAt: "2026-10-01T12:00:00Z" },
-    { grade: "9.8", priceUsd: Number((consensusFmv * 0.95).toFixed(2)), observedAt: "2026-09-15T12:00:00Z" },
-    { grade: "9.8", priceUsd: Number((consensusFmv * 0.90).toFixed(2)), observedAt: "2026-08-01T12:00:00Z" },
-    ...(rawPrice != null ? [{ grade: "RAW", priceUsd: Number(rawPrice), observedAt: "2026-10-01T12:00:00Z" }] : []),
-    ...(grade80Price != null ? [{ grade: "8.0", priceUsd: Number(grade80Price), observedAt: "2026-10-01T12:00:00Z" }] : []),
-  ];
+  const priceHistory = buildComicPriceHistory(comic);
 
-  const recentSales = [
-    { grade: "9.8", priceUsd: consensusFmv, observedAt: "2026-10-02T18:30:00Z", authority: "CGC" },
-    { grade: "9.8", priceUsd: Number((consensusFmv * 0.98).toFixed(2)), observedAt: "2026-09-28T14:15:00Z", authority: "CGC" },
-    ...(rawPrice != null ? [{ grade: "RAW", priceUsd: Number(rawPrice), observedAt: "2026-10-03T11:00:00Z", authority: "RAW" }] : []),
-  ];
-
-  const formattedSales = recentSales.map((s) => ({
-    grade: s.grade,
-    priceUsd: s.priceUsd,
-    date: s.observedAt,
-    platform: s.authority,
-  }));
+  const formattedSales = priceHistory
+    .filter((s) => s.grade === "9.8" || s.grade === "8.0" || s.grade === "RAW" || s.grade === "9.6")
+    .slice(-20)
+    .reverse()
+    .map((s) => ({
+      grade: s.grade,
+      priceUsd: s.priceUsd,
+      date: s.observedAt,
+      platform: s.source || "CGC",
+    }));
 
   const scarcityColors = getScarcityColors(scarcityLabel as ScarcityTier);
 
@@ -344,7 +338,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
       census: Boolean(censusDossier?.snapshot?.total_graded),
       gradeLattice: gradeLattice.length > 0,
       priceHistory: priceHistory.length > 0,
-      recentSales: recentSales.length > 0,
+      recentSales: formattedSales.length > 0,
       liquidity: true,
     },
     score: 98,
@@ -703,6 +697,18 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
           scarcityLabel={scarcityLabel}
         />
 
+        {/* ── TOP NARRATIVE STORY NOTES & PUBLICATION DOSSIER ── */}
+        <StoryNotesCard
+          gcdData={comic.gcd_data as any}
+          comicbaseData={comic.comicbase_data as any}
+          series={seriesLabel}
+          issueNumber={issueLabel}
+          publicationYear={comic.publication_year}
+          publisher={authoritativePublisher}
+          eraColors={eraColors}
+          debutCreators={debut?.creators ?? []}
+        />
+
         {/* ── 4-LEVEL INSTITUTIONAL PERSPECTIVES ───────────────── */}
         <div id="section-perspectives">
           <MultiPerspectivePanel
@@ -726,118 +732,150 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
           aiInsight={`Institutional price action anchor at $${consensusFmv.toFixed(2)} with verified market liquidity depth across recorded auction history.`}
         />
 
-        {/* ── INTERWOVEN INTELLIGENCE GRID: Gapless, Structured 3-Column Grid ── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-start">
-          <RsiPanel workName={seriesLabel} assetId={comic.id} eraColors={eraColors} />
-          <PriceStatsPanel history={priceHistory} eraColors={eraColors} issueReferencePoints={null} />
-          <NightOwlPanel
-            eraColors={eraColors}
-            gradeLattice={gradeLattice}
-            instrumentIntelligence={instrumentIntelligence}
-            intelligenceSynthesis={`${seriesLabel} #${issueLabel} demonstrates disciplined liquidity depth and stable grade spread characteristics across current secondary market trading.`}
-          />
-          <MarketSentimentCard
-            keyPrices={keyPrices}
-            censusSummary={censusSummary}
-            priceHistory={priceHistory}
-            gradeLattice={gradeLattice}
-            eraColors={eraColors}
-          />
-          <ScarcityIndexCard
-            censusSummary={censusSummary}
-            variant={fullVariant}
-            eraColors={eraColors}
-          />
-          <PriceAnchorCard
-            keyPrices={keyPrices}
-            gradeLattice={gradeLattice}
-            priceHistory={priceHistory}
-            eraColors={eraColors}
-          />
-          <VideoPanel
-            workName={seriesLabel}
-            publisher={authoritativePublisher}
-            variantId={comic.id}
-            issueNumber={String(comic.issue_number)}
-            eraColors={eraColors}
-          />
-          <MarketMathPanel data={marketMathData} eraColors={eraColors} />
-          <InvestmentThesisCard
-            variant={fullVariant}
-            keyPrices={keyPrices}
-            censusSummary={censusSummary}
-            series={seriesObj as any}
-            priceHistory={priceHistory}
-            eraColors={eraColors}
-          />
-          <CollectorProfileCard
-            variant={fullVariant}
-            keyPrices={keyPrices}
-            censusSummary={censusSummary}
-            gradeLattice={gradeLattice}
-            eraColors={eraColors}
-          />
-          <PublisherProfileCard
-            publisher={authoritativePublisher}
-            era={eraKey}
-            eraColors={eraColors}
-          />
-          <EraInsightCard
-            era={eraKey}
-            eraColors={eraColors}
-          />
-          <DataFreshnessCard
-            completeness={completenessData as any}
-            variant={fullVariant}
-            eraColors={eraColors}
-          />
-          <AuctionHistoryCard
-            recentSales={formattedSales as any}
-            saleIntelligence={saleIntelligenceObj as any}
-            keyPrices={keyPrices}
-            eraColors={eraColors}
-          />
-          <GradeDistributionCard
-            censusSummary={censusSummary as any}
-            gradeLattice={gradeLattice}
-            eraColors={eraColors}
-          />
-          <MarketPositionCard
-            variant={fullVariant}
-            series={seriesObj as any}
-            keyPrices={keyPrices}
-            censusSummary={censusSummary}
-            eraColors={eraColors}
-          />
-          <SeriesContextCard
-            series={seriesObj as any}
-            seriesIssues={[]}
-            currentVariantId={comic.id}
-            eraColors={eraColors}
-          />
-          <TemporalMemoryPanel
-            mem={temporalMemoryData}
-            eraColors={eraColors}
-            gradeLattice={gradeLattice}
-            priceHistory={priceHistory}
-          />
+        {/* ── INTERWOVEN INTELLIGENCE GRID: Structured, Gapless Functional Tiers ── */}
+        <div className="space-y-6">
+          {/* Tier 1: Technical & Momentum Tiers */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-stretch">
+            <RsiPanel workName={seriesLabel} assetId={comic.id} eraColors={eraColors} />
+            <PriceStatsPanel history={priceHistory} eraColors={eraColors} issueReferencePoints={null} />
+            <GradeDistributionCard
+              censusSummary={censusSummary as any}
+              gradeLattice={gradeLattice}
+              eraColors={eraColors}
+            />
+          </div>
+
+          {/* Tier 2: Valuation Anchors & Market Psychology */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-stretch">
+            <MarketSentimentCard
+              keyPrices={keyPrices}
+              censusSummary={censusSummary}
+              priceHistory={priceHistory}
+              gradeLattice={gradeLattice}
+              eraColors={eraColors}
+            />
+            <PriceAnchorCard
+              keyPrices={keyPrices}
+              gradeLattice={gradeLattice}
+              priceHistory={priceHistory}
+              eraColors={eraColors}
+            />
+            <ScarcityIndexCard
+              censusSummary={censusSummary}
+              variant={fullVariant}
+              eraColors={eraColors}
+            />
+          </div>
+
+          {/* Tier 3: Strategic Capital & Thesis Synthesis */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-stretch">
+            <NightOwlPanel
+              eraColors={eraColors}
+              gradeLattice={gradeLattice}
+              instrumentIntelligence={instrumentIntelligence}
+              intelligenceSynthesis={`${seriesLabel} #${issueLabel} demonstrates disciplined liquidity depth and stable grade spread characteristics across current secondary market trading.`}
+            />
+            <InvestmentThesisCard
+              variant={fullVariant}
+              keyPrices={keyPrices}
+              censusSummary={censusSummary}
+              series={seriesObj as any}
+              priceHistory={priceHistory}
+              eraColors={eraColors}
+            />
+            <MarketPositionCard
+              variant={fullVariant}
+              series={seriesObj as any}
+              keyPrices={keyPrices}
+              censusSummary={censusSummary}
+              eraColors={eraColors}
+            />
+          </div>
+
+          {/* Tier 4: Media, Lore & Collector Profiles */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-stretch">
+            <VideoPanel
+              workName={seriesLabel}
+              publisher={authoritativePublisher}
+              variantId={comic.id}
+              issueNumber={String(comic.issue_number)}
+              eraColors={eraColors}
+            />
+            <EraInsightCard
+              era={eraKey}
+              eraColors={eraColors}
+            />
+            <CollectorProfileCard
+              variant={fullVariant}
+              keyPrices={keyPrices}
+              censusSummary={censusSummary}
+              gradeLattice={gradeLattice}
+              eraColors={eraColors}
+            />
+          </div>
+
+          {/* Tier 5: Institutional Float & Freshness */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-stretch">
+            <MarketMathPanel data={marketMathData} eraColors={eraColors} />
+            <PublisherProfileCard
+              publisher={authoritativePublisher}
+              era={eraKey}
+              eraColors={eraColors}
+            />
+            <DataFreshnessCard
+              completeness={completenessData as any}
+              variant={fullVariant}
+              eraColors={eraColors}
+            />
+          </div>
+
+          {/* Tier 6: High-Fidelity Extended Market Dossiers */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
+            <AuctionHistoryCard
+              recentSales={formattedSales as any}
+              saleIntelligence={saleIntelligenceObj as any}
+              keyPrices={keyPrices}
+              eraColors={eraColors}
+            />
+            <TemporalMemoryPanel
+              mem={temporalMemoryData}
+              eraColors={eraColors}
+              gradeLattice={gradeLattice}
+              priceHistory={priceHistory}
+            />
+          </div>
+
+          {/* Grade Spread Matrix (Full Width) */}
           <GradeSpreadComparePanel
             grades={gradeLattice}
             eraColors={eraColors}
             priceHistory={priceHistory}
             primaryName={`${seriesLabel} #${comic.issue_number}`}
           />
-          <CreatorsPanel assetId={comic.id} eraColors={eraColors} />
-          <NewsPanel
-            workName={seriesLabel}
-            publisher={authoritativePublisher}
-            assetId={comic.id}
-            eraColors={eraColors}
-            priceHistory={priceHistory}
-            censusSummary={censusSummary}
-            coverImageUrl={fullVariant.coverImageUrl}
-          />
-          <SeriesInfoPanel series={seriesObj as any} variant={fullVariant} eraColors={eraColors} />
+
+          {/* Intelligence & Ecosystem Dossiers */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
+            <NewsPanel
+              workName={seriesLabel}
+              publisher={authoritativePublisher}
+              assetId={comic.id}
+              eraColors={eraColors}
+              priceHistory={priceHistory}
+              censusSummary={censusSummary}
+              coverImageUrl={fullVariant.coverImageUrl}
+            />
+            <CreatorsPanel assetId={comic.id} eraColors={eraColors} />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
+            <SeriesInfoPanel series={seriesObj as any} variant={fullVariant} eraColors={eraColors} />
+            <SeriesContextCard
+              series={seriesObj as any}
+              seriesIssues={[]}
+              currentVariantId={comic.id}
+              eraColors={eraColors}
+            />
+          </div>
         </div>
 
         {/* ── FULL-WIDTH PROVENANCE ── */}

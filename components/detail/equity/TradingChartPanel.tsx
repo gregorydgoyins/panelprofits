@@ -174,24 +174,40 @@ export default function TradingChartPanel({
     return { macd, signal, hist, times: aggTimes, isAggregated: true };
   }, [pricePoints, history]);
 
-  // ── Client-side RSI fallback (computed from the grade price series) ────────
+  // ── Client-side RSI (computed directly from the grade price series) ────────
   const rsiClientFallback = useMemo<[number, number][]>(() => {
-    if (pricePoints.length < 15) return [];
+    if (pricePoints.length < 2) return [];
     const prices = pricePoints.map(p => p[1]);
     const times  = pricePoints.map(p => p[0]);
     const vals   = computeRsi14(prices);
-    return vals
-      .map((v, i) => (v != null ? [times[i], v] : null) as [number, number] | null)
-      .filter((p): p is [number, number] => p !== null);
+    const result: [number, number][] = [];
+    for (let i = 0; i < prices.length; i++) {
+      let val = vals[i];
+      if (val === null && i >= 1) {
+        const sub = prices.slice(0, i + 1);
+        const ch = sub.slice(1).map((v, idx) => v - sub[idx]);
+        const g = ch.filter(c => c > 0).reduce((a, b) => a + b, 0);
+        const l = ch.filter(c => c < 0).reduce((a, b) => a - b, 0);
+        val = l === 0 ? (g > 0 ? 70 : 50) : 100 - (100 / (1 + (g / (l || 1))));
+      } else if (val === null) {
+        val = 50.0;
+      }
+      result.push([times[i], Math.round(Number(val) * 10) / 10]);
+    }
+    return result;
   }, [pricePoints]);
 
   // ── RSI aligned to price x-axis ───────────────────────────────────────────
   const rsiAligned = useMemo(() => {
     if (subIndicator !== 'rsi') return [];
+    // Prioritize direct 1:1 time alignment with the price chart:
+    if (rsiClientFallback.length > 0) {
+      return rsiClientFallback;
+    }
     if (rsiPoints.length > 0) {
       return rsiPoints.map(d => [+new Date(d.date ?? ''), d.rsi] as [number, number]).filter(p => !isNaN(p[0]));
     }
-    return rsiClientFallback;
+    return [];
   }, [rsiPoints, rsiClientFallback, subIndicator]);
 
   const latestRsi = rsiAligned.length ? rsiAligned.at(-1)![1] : null;

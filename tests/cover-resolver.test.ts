@@ -113,18 +113,18 @@ describe("Comic Cover Resolver Ladder", () => {
   it("resolves Tier 5: Universal Dynamic SVG when no remote image is found", () => {
     const result = resolveComicCover({
       id: "test-5",
-      series: "Action Comics",
-      issue_number: "1",
-      publisher: "DC Comics",
-      publication_year: 1938,
+      series: "Quantum Horizon Mystery",
+      issue_number: "999",
+      publisher: "Indie Press",
+      publication_year: 2025,
     });
 
     expect(result.sourceTier).toBe("dynamic_badge");
     expect(result.isFallback).toBe(true);
     expect(result.qualityTier).toBe("synthetic");
     expect(result.url.startsWith("data:image/svg+xml")).toBe(true);
-    expect(result.url).toContain("Action%20Comics");
-    expect(result.url).toContain("DC%20COMICS");
+    expect(result.url).toContain("Quantum%20Horizon%20Mystery");
+    expect(result.url).toContain("INDIE%20PRESS");
   });
 
   it("batch resolves an array of comics", () => {
