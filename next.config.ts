@@ -12,8 +12,8 @@ const nextConfig: NextConfig = {
     ],
   },
   outputFileTracingIncludes: {
-    "/comics/[id]": ["./data/pp115k.sqlite"],
-    "/api/**/*": ["./data/pp115k.sqlite"],
+    "/comics/[id]": ["./data/pp115k.sqlite", "./data/gcd_variant_map.json"],
+    "/api/**/*": ["./data/pp115k.sqlite", "./data/gcd_variant_map.json"],
   },
   images: {
     formats: ["image/avif", "image/webp"],

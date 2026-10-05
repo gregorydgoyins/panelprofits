@@ -88,6 +88,31 @@ function getBundled115kDb(): any | null {
   return null;
 }
 
+let variantMap: Record<string, number> | null = null;
+let variantMapChecked = false;
+
+function getVariantBaseId(issueId: number): number | null {
+  if (!variantMapChecked) {
+    variantMapChecked = true;
+    try {
+      const candidatePaths = [
+        path.join(process.cwd(), "data", "gcd_variant_map.json"),
+        path.join(process.cwd(), "panel-profits", "data", "gcd_variant_map.json"),
+      ];
+      for (const p of candidatePaths) {
+        if (fs.existsSync(p)) {
+          variantMap = JSON.parse(fs.readFileSync(p, "utf8"));
+          break;
+        }
+      }
+    } catch (_) {}
+  }
+  if (variantMap && variantMap[String(issueId)]) {
+    return variantMap[String(issueId)];
+  }
+  return null;
+}
+
 /**
  * Resolves authentic GCD story rips (titles, synopses, characters, creative credits)
  * using multi-tier fallback:
@@ -217,12 +242,11 @@ export async function resolveGcdStoryDossier(
     } catch (_) {}
   }
 
-  // If 0 stories, resolve variant-to-base issue via bundled pp115k.sqlite gcd_variants
-  if ((!rawStories || rawStories.length === 0) && bundledDb && issueId) {
-    try {
-      const varRow = bundledDb.prepare("SELECT base_issue_id FROM gcd_variants WHERE variant_issue_id = ?").get(issueId) as any;
-      if (varRow && varRow.base_issue_id) {
-        const baseId = varRow.base_issue_id;
+  // If 0 stories, resolve variant-to-base issue via static map or bundled pp115k.sqlite gcd_variants
+  if ((!rawStories || rawStories.length === 0) && issueId) {
+    const baseId = getVariantBaseId(issueId);
+    if (baseId) {
+      try {
         const supabase = createAdminServerClient();
         const { data: baseStories } = await supabase
           .from("ppcf_gcd_stories")
@@ -233,8 +257,25 @@ export async function resolveGcdStoryDossier(
           rawStories = baseStories;
           issueId = baseId;
         }
-      }
-    } catch (_) {}
+      } catch (_) {}
+    } else if (bundledDb) {
+      try {
+        const varRow = bundledDb.prepare("SELECT base_issue_id FROM gcd_variants WHERE variant_issue_id = ?").get(issueId) as any;
+        if (varRow && varRow.base_issue_id) {
+          const bId = varRow.base_issue_id;
+          const supabase = createAdminServerClient();
+          const { data: baseStories } = await supabase
+            .from("ppcf_gcd_stories")
+            .select("*")
+            .eq("gcd_issue_id", bId)
+            .order("sequence_number", { ascending: true });
+          if (baseStories && baseStories.length > 0) {
+            rawStories = baseStories;
+            issueId = bId;
+          }
+        }
+      } catch (_) {}
+    }
   }
 
   // If still 0 stories, check snapshots for alternate issue ids of this issue
