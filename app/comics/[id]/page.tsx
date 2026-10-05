@@ -115,7 +115,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
       console.warn("Cover evidence read unavailable:", err);
       return null;
     }),
-    getComicCensusDossier(comic.series, comic.issue_number).catch((err) => {
+    getComicCensusDossier(comic.series, comic.issue_number, { publicationYear: comic.publication_year }).catch((err) => {
       console.warn("Census dossier read unavailable:", err);
       return null;
     }),

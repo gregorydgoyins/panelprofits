@@ -83,15 +83,27 @@ function resolveCensusSourceAuthority(gradingCompany: string, provider: string):
   return "Secondary Provider";
 }
 
-export async function getComicCensusDossier(series: string, issueNumber: string): Promise<ComicCensusDossier | null> {
+export async function getComicCensusDossier(
+  series: string,
+  issueNumber: string,
+  options?: { publicationYear?: number | null; edition?: string | null }
+): Promise<ComicCensusDossier | null> {
   try {
     if (!series || !issueNumber) return null;
     const db = createCleanReadOnlyServerClient();
-    const { data: snapshots, error: snapshotError } = await db
+    let snapshotQuery = db
       .from("graded_census_snapshots")
       .select("id,title_name,issue_number_raw,edition_name,variant_name,snapshot_timestamp,source_url,total_graded,provider_id,grading_company_id")
       .ilike("title_name", series)
-      .eq("issue_number_raw", issueNumber)
+      .eq("issue_number_raw", issueNumber);
+
+    if (options?.publicationYear === 2017 || options?.edition === "v2") {
+      snapshotQuery = snapshotQuery.eq("edition_name", "v2");
+    } else if (options?.publicationYear === 2013 || options?.edition === "v1") {
+      snapshotQuery = snapshotQuery.eq("edition_name", "v1");
+    }
+
+    const { data: snapshots, error: snapshotError } = await snapshotQuery
       .order("snapshot_timestamp", { ascending: false })
       .limit(1);
 
