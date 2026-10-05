@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { MarketShell } from "@/components/shell/market-shell";
+import { QueryProvider } from "@/components/providers/query-provider";
 
 export const metadata: Metadata = {
   title: "Panel Profits | Comic Market Intelligence & Valuation",
@@ -23,7 +24,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark font-hind">
       <body className="flex min-h-screen flex-col bg-[#07080B] text-slate-100 antialiased">
-        <MarketShell>{children}</MarketShell>
+        <QueryProvider>
+          <MarketShell>{children}</MarketShell>
+        </QueryProvider>
       </body>
     </html>
   );
