@@ -390,10 +390,29 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
     .replace(/^\/comics\//i, "")
     .replace(/^\/equity\//i, "")
     .replace(/[\/\?#].*$/, "")
-    .trim()
-    .replace(/^(?:var-)+/i, "");
+    .trim();
 
   // Alias redirects
+  // Spawn #300 (4th Printing) alias redirect for variant prefix or OCR typo hash
+  if (
+    cleanId.includes("9100c0db") ||
+    cleanId.includes("9100cedb") ||
+    cleanId.includes("9100ccdb") ||
+    (cleanId.startsWith("var-prt4") && cleanId.includes("33455"))
+  ) {
+    cleanId = "9100cedb288d14d461a02acb8fe23bc9d8bb2fbbbea33455e3996ada7fe4d562";
+  }
+
+  // Strip variant prefixes like var-prt4-, var-cvr-a-, or extract embedded 64-char hex ID
+  if (cleanId.startsWith("var-")) {
+    const embeddedHex = cleanId.match(/([a-f0-9]{64})/i)?.[1];
+    if (embeddedHex) {
+      cleanId = embeddedHex;
+    } else {
+      cleanId = cleanId.replace(/^var-(?:[a-z0-9]+-)+/i, "").replace(/^(?:var-)+/i, "");
+    }
+  }
+
   // 1985 Transformers #4 Skybound reprint or typo hash -> original Marvel 1985 #4
   if (
     cleanId === "c2fd6ba5cc9177887397a07fb5c804b7eb1cdc7c33c8ab51dada672679073c2" ||

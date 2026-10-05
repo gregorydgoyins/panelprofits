@@ -75,6 +75,16 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     redirect("/comics/9eba4562c6d04bbacb9e33d4c073d25901ef87ede8d1631b7f4bdd3ce21a1390");
   }
 
+  // Spawn #300 (4th Printing) alias redirect for variant prefix or OCR typo hash
+  if (
+    id.includes("9100c0db") ||
+    id.includes("9100cedb") ||
+    id.includes("9100ccdb") ||
+    (id.startsWith("var-prt4") && id.includes("33455"))
+  ) {
+    redirect("/comics/9100cedb288d14d461a02acb8fe23bc9d8bb2fbbbea33455e3996ada7fe4d562");
+  }
+
   let comic = null;
   let user = null;
 

@@ -242,8 +242,9 @@ export async function resolveGcdStoryDossier(
     } catch (_) {}
   }
 
-  // If 0 stories, resolve variant-to-base issue via static map or bundled pp115k.sqlite gcd_variants
-  if ((!rawStories || rawStories.length === 0) && issueId) {
+  // If 0 stories or only cover illustration, resolve variant-to-base issue via static map or bundled pp115k.sqlite gcd_variants
+  const hasInteriorStories = rawStories.some((s) => s.sequence_number > 0 && (s.title || s.synopsis || s.script));
+  if (!hasInteriorStories && issueId) {
     const baseId = getVariantBaseId(issueId);
     if (baseId) {
       try {
