@@ -103,8 +103,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
   // Fantastic Four Annual #7 typo redirect if user lands on OCR typo hash
   if (
     id === "9eba4562c5d04bbacb9c33d4c073d25901cf87cda8d1531b7f4bdd3cc21a1390" ||
-    id.startsWith("9eba4562c5") ||
-    id.startsWith("9eba4562")
+    id.startsWith("9eba4562c5")
   ) {
     redirect("/comics/9eba4562c6d04bbacb9e33d4c073d25901ef87ede8d1631b7f4bdd3ce21a1390");
   }
