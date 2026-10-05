@@ -21,8 +21,8 @@ import {
 } from "@/lib/pricing/source-ladder";
 import { formatCurrency } from "@/lib/utils";
 import { getCleanPricingEvidence } from "@/lib/pricing/clean";
-import { TrendingUp, ArrowDownRight, ArrowUpRight, ShieldCheck, Database, CheckCircle2 } from "lucide-react";
-import { TierJumpControls } from "./tier-jump-controls";
+import { ArrowDownRight, ArrowUpRight, ShieldCheck, Database } from "lucide-react";
+import { EvidenceRegistryTable, type EvidenceRowData } from "./evidence-registry-table";
 
 const PRIMARY_EXCHANGE_GRADES: Array<{
   grade: Grade;
@@ -72,8 +72,18 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
     "ComicBase": cbGrades,
   });
 
-  // Master definition of candidate evidence rows
-  const allCandidateRows = [
+  // Build candidate rows and evaluate all 26 grades
+  const buildRowValues = (
+    evaluator: (grade: Grade) => { display: string; colorClass?: string }
+  ): Record<Grade, { display: string; colorClass?: string }> => {
+    const res: Record<string, { display: string; colorClass?: string }> = {};
+    for (const g of GRADES) {
+      res[g] = evaluator(g);
+    }
+    return res as Record<Grade, { display: string; colorClass?: string }>;
+  };
+
+  const allCandidateRows: Array<EvidenceRowData & { alwaysShow?: boolean }> = [
     // 1. PANEL PROFITS SUITE (FMV, BUY, SELL, VOLUME, LISTINGS)
     {
       id: "pp-fmv",
@@ -81,7 +91,7 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
       badge: "Exchange FMV",
       badgeClass: "text-emerald-400/90",
       alwaysShow: true,
-      getValue: (grade: Grade) => {
+      values: buildRowValues((grade: Grade) => {
         const p = pp[grade] ?? pcGrades[grade] ?? null;
         return {
           display: p ? formatCurrency(p) : "—",
@@ -93,7 +103,7 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
               : "text-emerald-300 font-medium"
             : "text-slate-600",
         };
-      },
+      }),
     },
     {
       id: "pp-buy",
@@ -101,14 +111,14 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
       badge: "Bid (Buy Price)",
       badgeClass: "text-blue-400/90",
       alwaysShow: true,
-      getValue: (grade: Grade) => {
+      values: buildRowValues((grade: Grade) => {
         const fallbackPrice = pp[grade] ?? pcGrades[grade] ?? null;
         const s = panelProfitsSpreads(comic, grade, fallbackPrice);
         return {
           display: s.buy ? formatCurrency(s.buy) : "—",
           colorClass: s.buy ? "text-blue-400 font-medium" : "text-slate-600",
         };
-      },
+      }),
     },
     {
       id: "pp-sell",
@@ -116,14 +126,14 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
       badge: "Ask (Sell Price)",
       badgeClass: "text-emerald-400/90",
       alwaysShow: true,
-      getValue: (grade: Grade) => {
+      values: buildRowValues((grade: Grade) => {
         const fallbackPrice = pp[grade] ?? pcGrades[grade] ?? null;
         const s = panelProfitsSpreads(comic, grade, fallbackPrice);
         return {
           display: s.sell ? formatCurrency(s.sell) : "—",
           colorClass: s.sell ? "text-emerald-400 font-medium" : "text-slate-600",
         };
-      },
+      }),
     },
     {
       id: "pp-volume",
@@ -131,13 +141,13 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
       badge: "Annual Volume",
       badgeClass: "text-cyan-400/90",
       alwaysShow: false,
-      getValue: (grade: Grade) => {
+      values: buildRowValues((grade: Grade) => {
         const v = panelProfitsVolume(comic, grade);
         return {
           display: v || "—",
           colorClass: v ? "text-cyan-300 font-mono text-[11px]" : "text-slate-600",
         };
-      },
+      }),
     },
     {
       id: "pp-listings",
@@ -145,13 +155,13 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
       badge: "Realized Listings",
       badgeClass: "text-amber-400/90",
       alwaysShow: false,
-      getValue: (grade: Grade) => {
+      values: buildRowValues((grade: Grade) => {
         const l = panelProfitsListings(comic, grade);
         return {
           display: l != null ? `${l} sold` : "—",
           colorClass: l != null && l > 0 ? "text-amber-300 font-mono" : "text-slate-600",
         };
-      },
+      }),
     },
 
     // 2. PRICECHARTING DEDICATED SECONDARY MARKET EVIDENCE
@@ -161,7 +171,7 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
       badge: "Historical Sales Index",
       badgeClass: "text-sky-400/90",
       alwaysShow: false,
-      getValue: (grade: Grade) => {
+      values: buildRowValues((grade: Grade) => {
         const p = pcGrades[grade];
         return {
           display: p ? formatCurrency(p) : "—",
@@ -173,7 +183,7 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
               : "text-sky-300 font-medium"
             : "text-slate-600",
         };
-      },
+      }),
     },
 
     // 3. COMICBASE 1.1M CATALOG REFERENCE
@@ -183,13 +193,13 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
       badge: "Catalog Guide Price",
       badgeClass: "text-amber-400/90",
       alwaysShow: false,
-      getValue: (grade: Grade) => {
+      values: buildRowValues((grade: Grade) => {
         const p = cbGrades[grade] ?? (grade === "9.2" || grade === "RAW" ? cb : null);
         return {
           display: p ? formatCurrency(p) : "—",
           colorClass: p ? "text-amber-300 font-medium" : "text-slate-600",
         };
-      },
+      }),
     },
 
     // 4. CGC · GPA SALES (CERTIFIED SLABS)
@@ -200,13 +210,13 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
       badgeClass: "text-purple-400/90",
       isGradedOnly: true,
       alwaysShow: false,
-      getValue: (grade: Grade) => {
+      values: buildRowValues((grade: Grade) => {
         const p = cgcGpaGrades[grade];
         return {
           display: p ? formatCurrency(p) : "—",
           colorClass: p ? "text-purple-300 font-medium" : "text-slate-600",
         };
-      },
+      }),
     },
 
     // 5. EBAY SOLD TRANSACTIONS
@@ -216,13 +226,13 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
       badge: "Realized Sales",
       badgeClass: "text-yellow-400/80",
       alwaysShow: false,
-      getValue: (grade: Grade) => {
+      values: buildRowValues((grade: Grade) => {
         const p = ebayLadder[grade];
         return {
           display: p ? formatCurrency(p) : "—",
           colorClass: p ? "text-yellow-300 font-medium" : "text-slate-600",
         };
-      },
+      }),
     },
 
     // 6. GOCOLLECT - CGC
@@ -233,13 +243,13 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
       badgeClass: "text-blue-400/80",
       isGradedOnly: true,
       alwaysShow: false,
-      getValue: (grade: Grade) => {
+      values: buildRowValues((grade: Grade) => {
         const p = gcCgcGrades[grade];
         return {
           display: p ? formatCurrency(p) : "—",
           colorClass: p ? "text-blue-300 font-medium" : "text-slate-600",
         };
-      },
+      }),
     },
 
     // 7. CBCS CERTIFIED OBSERVATIONS
@@ -250,13 +260,13 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
       badgeClass: "text-indigo-400/80",
       isGradedOnly: true,
       alwaysShow: false,
-      getValue: (grade: Grade) => {
+      values: buildRowValues((grade: Grade) => {
         const p = cbcsLadder[grade] ?? gcCbcsGrades[grade];
         return {
           display: p ? formatCurrency(p) : "—",
           colorClass: p ? "text-indigo-300 font-medium" : "text-slate-600",
         };
-      },
+      }),
     },
 
     // 8. PSA CERTIFIED OBSERVATIONS
@@ -267,27 +277,25 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
       badgeClass: "text-red-400/80",
       isGradedOnly: true,
       alwaysShow: false,
-      getValue: (grade: Grade) => {
+      values: buildRowValues((grade: Grade) => {
         const p = psaLadder[grade] ?? gcPsaGrades[grade];
         return {
           display: p ? formatCurrency(p) : "—",
           colorClass: p ? "text-red-300 font-medium" : "text-slate-600",
         };
-      },
+      }),
     },
   ];
 
   // Dynamic Filtering: Render rows that have at least 1 verified data point for this comic.
-  // Never show endless rows of 26 blank dashes for unrecorded authorities.
-  const activeRows = allCandidateRows.filter((row) => {
+  const activeRows: EvidenceRowData[] = allCandidateRows.filter((row) => {
     if (row.alwaysShow) return true;
     return GRADES.some((grade) => {
-      const { display } = row.getValue(grade);
-      return display !== "—";
+      const cell = row.values[grade];
+      return cell && cell.display !== "—";
     });
   });
 
-  // Track unrecorded authorities to display cleanly in metadata rather than 26 empty dashes
   const unrecordedAuthorities = [
     { name: "PriceCharting", count: Object.keys(pcGrades).length },
     { name: "ComicBase", count: Object.keys(cbGrades).length + (cb ? 1 : 0) },
@@ -412,115 +420,24 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
         </div>
       </div>
 
-      {/* Cross-Authority Evidence Registry Table */}
+      {/* Cross-Authority Evidence Registry (Full Complete Ladder with View Controls) */}
       <div>
-        <div className="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-mono uppercase tracking-wider text-cyan-400">
-              Cross-Authority Evidence Registry (Full 26-Tier Matrix)
+              Cross-Authority Evidence Registry
             </span>
             <span className="text-[10px] text-slate-500 font-mono">
-              · Verified recorded evidence only
+              · Full Continuous Multi-Tier Matrix
             </span>
           </div>
-          <TierJumpControls />
         </div>
 
-        <div className="overflow-x-auto rounded-lg border border-slate-800 bg-[#0A0D14] shadow-inner">
-          <table className="w-full text-xs text-left text-slate-300">
-            <thead className="bg-[#0C1017] text-[10px] uppercase font-mono tracking-wider text-slate-400 border-b border-slate-800">
-              <tr>
-                <th
-                  scope="col"
-                  className="sticky left-0 z-20 bg-[#0C1017] shadow-[4px_0_12px_rgba(0,0,0,0.6)] px-3.5 py-3 whitespace-nowrap min-w-[280px] w-[280px] border-r border-slate-700/80"
-                >
-                  Authority Source / Metric
-                </th>
-                {GRADES.map((grade) => (
-                  <th
-                    scope="col"
-                    key={grade}
-                    id={`grade-col-${grade.replace(".", "-")}`}
-                    className={`w-[82px] min-w-[82px] px-2.5 py-3 text-right font-medium tracking-tight ${
-                      grade === "RAW"
-                        ? "text-amber-300 font-bold bg-amber-950/20"
-                        : grade === "9.8"
-                        ? "text-cyan-300 font-bold bg-cyan-950/20"
-                        : grade === "10.0"
-                        ? "text-emerald-300 font-bold bg-emerald-950/20"
-                        : ""
-                    }`}
-                  >
-                    {grade}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800">
-              {activeRows.map((row) => (
-                <tr key={row.id} className="hover:bg-slate-800/40 transition-colors">
-                  <th
-                    scope="row"
-                    className="sticky left-0 z-10 bg-[#0C1017] shadow-[4px_0_12px_rgba(0,0,0,0.6)] px-3.5 py-2.5 whitespace-nowrap font-medium text-slate-100 border-r border-slate-700/80 min-w-[280px] w-[280px]"
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-slate-200">{row.source}</span>
-                      <span className={`text-[10px] font-mono ${row.badgeClass}`}>
-                        ({row.badge})
-                      </span>
-                    </div>
-                  </th>
-                  {GRADES.map((grade) => {
-                    if (grade === "RAW" && row.isGradedOnly) {
-                      return (
-                        <td
-                          key={grade}
-                          className="w-[82px] min-w-[82px] px-2.5 py-2.5 text-right text-slate-600 font-mono bg-slate-950/20"
-                        >
-                          —
-                        </td>
-                      );
-                    }
-                    const { display, colorClass } = row.getValue(grade);
-                    return (
-                      <td
-                        key={grade}
-                        className={`w-[82px] min-w-[82px] px-2.5 py-2.5 text-right whitespace-nowrap font-mono ${colorClass || "text-slate-600"} ${
-                          grade === "RAW"
-                            ? "bg-amber-950/5 font-semibold"
-                            : grade === "9.8"
-                            ? "bg-cyan-950/5 font-semibold"
-                            : grade === "10.0"
-                            ? "bg-emerald-950/5 font-semibold"
-                            : ""
-                        }`}
-                      >
-                        {display}
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Coverage Integrity Note */}
-        {unrecordedAuthorities.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 pt-3 text-[11px] text-slate-500">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
-              Unrecorded Secondary Registries:
-            </span>
-            {unrecordedAuthorities.map((auth) => (
-              <span
-                key={auth.name}
-                className="rounded bg-slate-900/80 border border-slate-800 px-2 py-0.5 font-mono text-[10px] text-slate-500"
-              >
-                {auth.name}: 0 sales on file
-              </span>
-            ))}
-          </div>
-        )}
+        {/* Interactive Evidence Registry Table */}
+        <EvidenceRegistryTable
+          rows={activeRows}
+          unrecordedAuthorities={unrecordedAuthorities}
+        />
       </div>
 
       {/* Summary Footer Cards */}
