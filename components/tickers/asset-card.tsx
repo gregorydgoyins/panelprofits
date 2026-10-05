@@ -157,8 +157,9 @@ export const AssetCard = React.memo(function AssetCard({
                 alt={displayName}
                 loading={index < 8 ? "eager" : "lazy"}
                 decoding="async"
-                onLoad={() => setImgLoaded(true)}
-                onError={() => setImgError(true)}
+                draggable={false}
+                onLoad={() => React.startTransition(() => setImgLoaded(true))}
+                onError={() => React.startTransition(() => setImgError(true))}
                 style={{
                   position: "absolute",
                   inset: 0,
@@ -169,6 +170,7 @@ export const AssetCard = React.memo(function AssetCard({
                   display: "block",
                   opacity: imgLoaded ? 1 : 0,
                   transition: "opacity 350ms ease",
+                  pointerEvents: "none",
                 }}
               />
 
@@ -178,6 +180,7 @@ export const AssetCard = React.memo(function AssetCard({
                   src={displayImage}
                   alt=""
                   aria-hidden="true"
+                  draggable={false}
                   style={{
                     position: "absolute",
                     inset: 0,
@@ -191,6 +194,7 @@ export const AssetCard = React.memo(function AssetCard({
                     clipPath: "polygon(0 0, 50% 0, 50% 100%, 0 100%)",
                     zIndex: 1,
                     transition: "opacity 350ms ease",
+                    pointerEvents: "none",
                   }}
                 />
               )}

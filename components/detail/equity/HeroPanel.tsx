@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, type CSSProperties } from 'react';
+import { useState, useEffect, useTransition, type CSSProperties } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { TrendingUp, TrendingDown, Crown, Gem, Shield, Zap, Flame, Clock, type LucideIcon } from 'lucide-react';
 import { proxyCoverUrl as proxyHeroCoverUrl } from '@/lib/coverProxy';
@@ -59,6 +60,7 @@ export default function HeroPanel({
   censusSummary, gradeLattice = [], wikiSummary, latestSaleImageUrl, eraColors, scarcityColors,
   heroCreatorsData, truthLayerData, spreadData, onOpenExecModal, onBrokenImageReport,
 }: HeroPanelProps) {
+  const [isPending, startTransition] = useTransition();
   const [showCoverLightbox, setShowCoverLightbox] = useState(false);
   const [heroImgFailStage, setHeroImgFailStage] = useState(0);
   const [coverVerifyState, setCoverVerifyState] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
@@ -131,22 +133,38 @@ export default function HeroPanel({
           <div id="no-cover-badge" className="flex-shrink-0">
             {heroSrc ? (
               <button
-                onClick={() => setShowCoverLightbox(true)}
+                type="button"
+                onClick={() => {
+                  startTransition(() => {
+                    setShowCoverLightbox(true);
+                  });
+                }}
                 title="Click to enlarge"
                 className="block relative cursor-zoom-in pp-hover-cover"
                 style={{ width: '210px', background: 'none', border: 'none', padding: 0, ['--pp-hover-color' as string]: eraColors.border } as CSSProperties}
               >
-                <div className="rounded-lg overflow-hidden flex items-center justify-center" style={{ width: '210px', height: '310px', backgroundColor: 'rgba(0,0,0,0.3)', border: `2px solid ${eraColors.border}60`, boxShadow: heroBoxShadow }}>
-                  <img src={heroSrc} alt={`${variant.workName} #${variant.issueNumber}`} width={210} height={310} loading="lazy" decoding="async"
-                    style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', filter: imgFilter }}
+                <div className="rounded-lg overflow-hidden flex items-center justify-center pointer-events-none" style={{ width: '210px', height: '310px', backgroundColor: 'rgba(0,0,0,0.3)', border: `2px solid ${eraColors.border}60`, boxShadow: heroBoxShadow, pointerEvents: 'none' }}>
+                  <img
+                    src={heroSrc}
+                    alt={`${variant.workName} #${variant.issueNumber}`}
+                    width={210}
+                    height={310}
+                    loading="lazy"
+                    decoding="async"
+                    draggable={false}
+                    className="pointer-events-none"
+                    style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', filter: imgFilter, pointerEvents: 'none' }}
                     onError={() => {
-                      setHeroImgFailStage(s => Math.min(s + 1, 2));
-                      if (heroImgFailStage === 0 && proxiedSaleUrl) onBrokenImageReport?.({ url: latestSaleImageUrl, variantId, stage: 0 });
-                    }} />
+                      startTransition(() => {
+                        setHeroImgFailStage(s => Math.min(s + 1, 2));
+                        if (heroImgFailStage === 0 && proxiedSaleUrl) onBrokenImageReport?.({ url: latestSaleImageUrl, variantId, stage: 0 });
+                      });
+                    }}
+                  />
                 </div>
-                <div className="absolute inset-0 rounded-lg flex items-end justify-center pb-2" style={{ pointerEvents: 'none' }}>
-                  <div className="cover-overlay-bg absolute inset-0 rounded-lg" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 60%)', opacity: 0, transition: 'opacity 150ms ease' }} />
-                  <span className="cover-enlarge-label relative flex items-center gap-1 text-[9px] uppercase tracking-widest" style={{ color: `${eraColors.border}00`, transition: 'color 150ms ease' }}>⊕ Enlarge</span>
+                <div className="absolute inset-0 rounded-lg flex items-end justify-center pb-2 pointer-events-none" style={{ pointerEvents: 'none' }}>
+                  <div className="cover-overlay-bg absolute inset-0 rounded-lg pointer-events-none" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 60%)', opacity: 0, transition: 'opacity 150ms ease', pointerEvents: 'none' }} />
+                  <span className="cover-enlarge-label relative flex items-center gap-1 text-[9px] uppercase tracking-widest pointer-events-none" style={{ color: `${eraColors.border}00`, transition: 'color 150ms ease', pointerEvents: 'none' }}>⊕ Enlarge</span>
                 </div>
               </button>
             ) : (
@@ -649,19 +667,101 @@ export default function HeroPanel({
         </div>
       </div>
 
-      {/* Cover lightbox */}
-      {showCoverLightbox && heroSrc && (
-        <div className="lightbox-overlay fixed inset-0 flex items-center justify-center" style={{ zIndex: 200, backgroundColor: 'rgba(0,0,0,0.92)', cursor: 'zoom-out' }} onClick={() => setShowCoverLightbox(false)} onKeyDown={(e) => e.key === 'Escape' && setShowCoverLightbox(false)} tabIndex={0}>
-          <div className="lightbox-content relative flex flex-col items-center gap-4" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '90vw', maxHeight: '90vh' }}>
-            <div className="flex items-center justify-between w-full px-1">
-              <span className="text-sm" style={{ color: 'rgba(255,255,255,0.5)', fontFamily: 'Hind, sans-serif' }}>{variant.workName} #{variant.issueNumber} · {variant.year}</span>
-              <button onClick={() => setShowCoverLightbox(false)} className="text-xs px-3 py-1 rounded" style={{ color: eraColors.border, border: `1px solid ${eraColors.border}40`, backgroundColor: `${eraColors.border}10` }}>Close ✕</button>
-            </div>
-            <img src={heroSrc} alt={`${variant.workName} #${variant.issueNumber}`} style={{ width: 'min(480px, 80vw)', height: 'auto', display: 'block', imageRendering: '-webkit-optimize-contrast', boxShadow: `0 0 80px rgba(0,0,0,0.9), 0 0 40px ${eraColors.border}25`, border: `1px solid ${eraColors.border}35`, borderRadius: '4px' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-            <p className="text-[10px]" style={{ color: latestSaleImageUrl ? eraColors.border : 'rgba(255,255,255,0.2)' }}>{heroImageLabel} · Click outside to close · Escape</p>
-          </div>
-        </div>
-      )}
+      {/* Cover lightbox portal */}
+      <CoverLightboxPortal
+        isOpen={showCoverLightbox && !!heroSrc}
+        onClose={() => {
+          startTransition(() => {
+            setShowCoverLightbox(false);
+          });
+        }}
+        heroSrc={heroSrc || ''}
+        workName={variant.workName}
+        issueNumber={variant.issueNumber}
+        year={variant.year}
+        eraBorder={eraColors.border}
+        heroImageLabel={heroImageLabel}
+        latestSaleImageUrl={latestSaleImageUrl}
+      />
     </>
+  );
+}
+
+function CoverLightboxPortal({
+  isOpen,
+  onClose,
+  heroSrc,
+  workName,
+  issueNumber,
+  year,
+  eraBorder,
+  heroImageLabel,
+  latestSaleImageUrl,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  heroSrc: string;
+  workName: string;
+  issueNumber: string;
+  year: number | null;
+  eraBorder: string;
+  heroImageLabel: string;
+  latestSaleImageUrl: string | null;
+}) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
+  if (!isOpen || !mounted || typeof document === 'undefined') return null;
+
+  return createPortal(
+    <div
+      role="dialog"
+      aria-modal="true"
+      className="lightbox-overlay fixed inset-0 flex items-center justify-center"
+      style={{ zIndex: 9999, backgroundColor: 'rgba(0,0,0,0.92)', cursor: 'zoom-out' }}
+      onClick={onClose}
+      onKeyDown={(e) => e.key === 'Escape' && onClose()}
+      tabIndex={0}
+    >
+      <div
+        className="lightbox-content relative flex flex-col items-center gap-4"
+        onClick={(e) => e.stopPropagation()}
+        style={{ maxWidth: '90vw', maxHeight: '90vh' }}
+      >
+        <div className="flex items-center justify-between w-full px-1">
+          <span className="text-sm font-sans" style={{ color: 'rgba(255,255,255,0.7)', fontFamily: 'Hind, sans-serif' }}>
+            {workName} #{issueNumber} {year ? `· ${year}` : ''}
+          </span>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-xs px-3 py-1 rounded transition-colors"
+            style={{ color: eraBorder, border: `1px solid ${eraBorder}40`, backgroundColor: `${eraBorder}15` }}
+          >
+            Close ✕
+          </button>
+        </div>
+        <img
+          src={heroSrc}
+          alt={`${workName} #${issueNumber}`}
+          loading="eager"
+          decoding="async"
+          style={{
+            maxWidth: 'min(480px, 80vw)',
+            maxHeight: '75vh',
+            objectFit: 'contain',
+            display: 'block',
+            boxShadow: `0 0 60px rgba(0,0,0,0.9), 0 0 30px ${eraBorder}25`,
+            border: `1px solid ${eraBorder}35`,
+            borderRadius: '4px',
+          }}
+          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+        />
+        <p className="text-[10px] font-mono" style={{ color: latestSaleImageUrl ? eraBorder : 'rgba(255,255,255,0.4)' }}>
+          {heroImageLabel} · Click outside to close · Escape
+        </p>
+      </div>
+    </div>,
+    document.body
   );
 }

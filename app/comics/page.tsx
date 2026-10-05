@@ -184,7 +184,9 @@ export default async function ComicsPage({ searchParams }: ComicsPageProps) {
                             src={comic.cover_url}
                             alt={`${comic.series} #${comic.issue_number}`}
                             loading="lazy"
-                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            decoding="async"
+                            draggable={false}
+                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 pointer-events-none"
                           />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center p-4 text-center text-xs text-slate-600">

@@ -31,6 +31,7 @@ import { buildComicPriceHistory } from "@/lib/pricing/historical-chronology";
 import { resolvePriceTier, isDirectEdition } from "@/lib/pricing/market-tiers";
 import StoryNotesCard from "@/components/detail/equity/StoryNotesCard";
 import { resolveGcdStoryDossier } from "@/lib/comics/gcd-story-service";
+import { createAdminServerClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -260,7 +261,25 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     observedAt: new Date().toISOString(),
   };
 
-  const priceHistory = buildComicPriceHistory(comic);
+  let dbObservations: any[] = [];
+  if (comic.pp_source_id) {
+    try {
+      const supabase = createAdminServerClient();
+      const { data: obsData } = await supabase
+        .from("ppcf_price_observations")
+        .select("amount, observed_at, grade_label, price_field")
+        .eq("source_system", "PANEL_PROFITS")
+        .eq("source_record_id", String(comic.pp_source_id))
+        .gt("amount", 0)
+        .order("observed_at", { ascending: true })
+        .limit(100);
+      if (obsData && obsData.length > 0) {
+        dbObservations = obsData;
+      }
+    } catch (_) {}
+  }
+
+  const priceHistory = buildComicPriceHistory(comic, { dbObservations });
 
   const formattedSales = priceHistory
     .filter((s) => s.grade === "9.8" || s.grade === "8.0" || s.grade === "RAW" || s.grade === "9.6")
