@@ -16,7 +16,6 @@ import { BlendedHoldingDossier } from "@/components/comics/blended-holding-dossi
 import { findComicBaseVideoForComic } from "@/lib/video/comicbase-archive";
 import { ComicBaseVideoPlayer } from "@/components/comics/comicbase-video-player";
 import { getGcdRelationalData } from "@/lib/comics/gcd-relational-service";
-import CensusBanner from "@/components/detail/equity/CensusBanner";
 import { MultiPerspectivePanel, type PerspectiveData } from "@/components/detail/shared/MultiPerspectivePanel";
 import AuctionHistoryCard from "@/components/detail/equity/AuctionHistoryCard";
 import HeroSection from "@/components/detail/equity/HeroSection";
@@ -28,7 +27,7 @@ import { InspectableProvenancePanel, type ProvenanceClaim } from "@/components/d
 import { getEraColors, getScarcityColors, type ScarcityTier } from "@/lib/design-system/colors";
 import { panelProfitsGrades } from "@/lib/pricing/source-ladder";
 import { buildComicPriceHistory } from "@/lib/pricing/historical-chronology";
-import { resolvePriceTier, isDirectEdition } from "@/lib/pricing/market-tiers";
+import { resolvePriceTier, isDirectEdition, PREMIUM_MIN_PRICE } from "@/lib/pricing/market-tiers";
 import StoryNotesCard from "@/components/detail/equity/StoryNotesCard";
 import { resolveGcdStoryDossier } from "@/lib/comics/gcd-story-service";
 import { createAdminServerClient } from "@/lib/supabase/admin";
@@ -202,44 +201,62 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
   const eraKey = ((comic.panel_profits_data as any)?.era || (comic as any).production_age || "modern").toLowerCase();
   const eraColors = getEraColors(eraKey);
   const scarcityLabel = (comic.panel_profits_data as any)?.scarcityTier || "RARE";
-  const consensusFmv = Number(comic.pp_grade_9_8_price || comic.baseline_grade_9_8_value || 563.93);
+  const consensusFmv = Number(comic.pp_grade_9_8_price || comic.baseline_grade_9_8_value || 0);
+
+  let dbObservations: any[] = [];
+  if (comic.pp_source_id) {
+    try {
+      const supabase = createAdminServerClient();
+      const { data: obsData } = await supabase
+        .from("ppcf_price_observations")
+        .select("amount, observed_at, grade_label, price_field")
+        .eq("source_system", "PANEL_PROFITS")
+        .eq("source_record_id", String(comic.pp_source_id))
+        .gt("amount", 0)
+        .order("observed_at", { ascending: true })
+        .limit(100);
+      if (obsData && obsData.length > 0) {
+        dbObservations = obsData;
+      }
+    } catch (_) {}
+  }
+
+  const obsCountByGrade = new Map<string, number>();
+  for (const obs of dbObservations) {
+    if (obs.grade_label) {
+      obsCountByGrade.set(obs.grade_label, (obsCountByGrade.get(obs.grade_label) || 0) + 1);
+    }
+  }
 
   const rawLattice = panelProfitsGrades(comic);
   const gradeLattice = Object.entries(rawLattice).map(([grade, priceUsd]) => ({
     grade,
     priceUsd: Number(priceUsd),
-    salesVolume: 2690,
+    salesVolume: obsCountByGrade.get(grade) || null,
     observedAt: null,
   }));
 
+  const hasCensus = Boolean(censusDossier?.grades && censusDossier.grades.length > 0);
   const highGradeCount =
     censusDossier?.grades?.find(
       (g) => g.grade_numeric === 9.8 || g.native_grade_text === "9.8"
-    )?.count_at_grade || 142;
+    )?.count_at_grade || 0;
+
+  const totalGradedCount = Number(
+    censusDossier?.snapshot?.total_graded ||
+    (hasCensus && censusDossier?.grades ? censusDossier.grades.reduce((acc, g) => acc + (g.count_at_grade || 0), 0) : 0)
+  );
 
   const censusSummary = {
-    totalGraded: censusDossier?.snapshot?.total_graded || 2690,
+    totalGraded: totalGradedCount,
     highGradeCount: highGradeCount,
-    snapshotDate: censusDossier?.snapshot?.snapshot_timestamp || new Date().toISOString(),
-    histogram:
-      censusDossier?.grades && censusDossier.grades.length > 0
-        ? censusDossier.grades.map((b) => ({
-            grade: String(b.grade_numeric ?? b.native_grade_text),
-            count: Number(b.count_at_grade || 0),
-          }))
-        : [
-            { grade: "10.0", count: 12 },
-            { grade: "9.9", count: 28 },
-            { grade: "9.8", count: 142 },
-            { grade: "9.6", count: 310 },
-            { grade: "9.4", count: 450 },
-            { grade: "9.2", count: 520 },
-            { grade: "9.0", count: 240 },
-            { grade: "8.0", count: 680 },
-            { grade: "6.0", count: 320 },
-            { grade: "4.0", count: 180 },
-            { grade: "2.0", count: 88 },
-          ],
+    snapshotDate: censusDossier?.snapshot?.snapshot_timestamp || "",
+    histogram: hasCensus && censusDossier?.grades
+      ? censusDossier.grades.map((b) => ({
+          grade: String(b.grade_numeric ?? b.native_grade_text),
+          count: Number(b.count_at_grade || 0),
+        }))
+      : [],
   };
 
   const rawPrice = rawLattice["RAW"] ?? (comic.panel_profits_data as any)?.pricecharting?.raw ?? null;
@@ -260,24 +277,6 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     delta24h: 0.00,
     observedAt: new Date().toISOString(),
   };
-
-  let dbObservations: any[] = [];
-  if (comic.pp_source_id) {
-    try {
-      const supabase = createAdminServerClient();
-      const { data: obsData } = await supabase
-        .from("ppcf_price_observations")
-        .select("amount, observed_at, grade_label, price_field")
-        .eq("source_system", "PANEL_PROFITS")
-        .eq("source_record_id", String(comic.pp_source_id))
-        .gt("amount", 0)
-        .order("observed_at", { ascending: true })
-        .limit(100);
-      if (obsData && obsData.length > 0) {
-        dbObservations = obsData;
-      }
-    } catch (_) {}
-  }
 
   const priceHistory = buildComicPriceHistory(comic, { dbObservations });
 
@@ -302,16 +301,17 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     null;
 
   // Canonical Asset Class & Market Price Tiers:
-  // - otc is less than 17.99
-  // - standard is 18.00 to 44.99
-  // - premium is 45.00 to infinity
-  // - soverign is a direct universal bluelabel 9.8 comic
+  // - OTC: price < 17.99
+  // - STD: 18.00 to 44.99
+  // - PREMIUM: 45.00 to infinity
+  // - SOV: Strictly reserved for direct universal bluelabel 9.8 apex benchmark equities (e.g. verified CE70 seats)
   const isDirect = isDirectEdition(comic.direct_or_variant) && isDirectEdition(comic.cover_variant);
-  const isTrulySovereign = Boolean(
-    isDirect &&
-    (comic.pp_grade_9_8_price || consensusFmv > 0)
-  );
   const priceTier = resolvePriceTier(consensusFmv);
+  const isTrulySovereign = Boolean(
+    isCe70Seat &&
+    isDirect &&
+    consensusFmv >= PREMIUM_MIN_PRICE
+  );
   const effectiveAssetClass = isTrulySovereign ? "SOV" : priceTier;
 
   const fullVariant: DetailResponse["variant"] = {
@@ -378,13 +378,13 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     isBaseVariant: true,
   };
 
-  const atomicPrice = Number(rawPrice || (consensusFmv * 0.15).toFixed(2));
+  const atomicPrice = Number(rawPrice || (consensusFmv > 0 ? (consensusFmv * 0.15).toFixed(2) : 0));
   const instrumentStates = {
-    sovereign: isCe70Seat ? { grade: "9.8", priceUsd: consensusFmv } : null,
-    anchor: { grade: "9.8", priceUsd: consensusFmv, salesVolume: 24 },
-    atomic: { grade: "RAW", priceUsd: atomicPrice },
-    anchorToAtomicMultiple: atomicPrice > 0 ? Number((consensusFmv / atomicPrice).toFixed(1)) : 1.0,
-    sovereignToAtomicMultiple: isCe70Seat && atomicPrice > 0 ? Number((consensusFmv / atomicPrice).toFixed(1)) : 1.0,
+    sovereign: isTrulySovereign ? { grade: "9.8", priceUsd: consensusFmv } : null,
+    anchor: consensusFmv > 0 ? { grade: "9.8", priceUsd: consensusFmv, salesVolume: obsCountByGrade.get("9.8") || 0 } : null,
+    atomic: atomicPrice > 0 ? { grade: "RAW", priceUsd: atomicPrice } : null,
+    anchorToAtomicMultiple: atomicPrice > 0 && consensusFmv > 0 ? Number((consensusFmv / atomicPrice).toFixed(1)) : 1.0,
+    sovereignToAtomicMultiple: isTrulySovereign && atomicPrice > 0 ? Number((consensusFmv / atomicPrice).toFixed(1)) : 1.0,
   };
 
   const instrumentIntelligence: InstrumentIntelligence = {
@@ -464,8 +464,8 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
   const saleIntelligenceObj = {
     avgSalePrice: consensusFmv,
     medianSalePrice: consensusFmv,
-    totalSalesCount: censusSummary.totalGraded,
-    salesVelocity: 3.2,
+    totalSalesCount: dbObservations.length > 0 ? dbObservations.length : (hasCensus ? highGradeCount : 0),
+    salesVelocity: dbObservations.length > 0 ? Number((dbObservations.length / 30).toFixed(1)) : 0,
   };
 
   const perspectiveData: PerspectiveData = {
@@ -473,7 +473,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
       consensusFmv: consensusFmv,
       lastSalePrice: consensusFmv,
       lastSaleDate: "Recent Verified",
-      salesVolume24h: 2690,
+      salesVolume24h: dbObservations.length > 0 ? dbObservations.length : 0,
       marketState: "ACTIVE",
       confidence: 98,
     },
@@ -581,54 +581,56 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
             eraColors={eraColors}
             scarcityColors={scarcityColors}
             heroCreatorsData={debut?.creators ? { data: debut.creators.map((c) => ({ id: c, name: c, role: 'Creator', bio: null, notableWorks: [], activeYears: null, wikiUrl: null })) } : undefined}
-            truthLayerData={{
-              found: true,
-              data: {
-                variantId: comic.id,
-                anchorGrade: 9.8,
-                anchorPriceUsd: consensusFmv,
-                anchorSalesVolume: 24,
-                anchorConfidence: "HIGH",
-                sovGrade: isTrulySovereign ? 9.8 : 9.8,
-                sovPriceUsd: consensusFmv,
-                assetClass: effectiveAssetClass,
-                price99Usd: Number((consensusFmv * 1.15).toFixed(2)),
-                price100Usd: Number((consensusFmv * 1.3).toFixed(2)),
-                ism99: null,
-                ism100: null,
-                ismMethod99: null,
-                ismMethod100: null,
-                censusTotalGraded: censusSummary.totalGraded,
-                census98: highGradeCount,
-                census99: 28,
-                census100: 12,
-                censusScope: "variant",
-                labelDistribution: {},
-                graderSpread: {},
-                scarcityTier: scarcityLabel,
-                supplyAdjustment: 1.0,
-                computedAt: new Date().toISOString(),
-              },
-            }}
-            spreadData={{
-              found: true,
-              data: {
-                liquidityScore: 92,
-                spreadMethod: "AUCTION_SET",
-                baseSpread: 35,
-                currentSpread: 35,
-                observedAnchors: {
-                  "9.8": { buy: consensusFmv * 0.97, sell: consensusFmv * 1.03, spread: 35 },
-                  "RAW": { buy: (rawPrice != null ? Number(rawPrice) : 10) * 0.95, sell: (rawPrice != null ? Number(rawPrice) : 10) * 1.05, spread: 50 },
-                },
-              },
-            }}
-          />
-
-          <CensusBanner
-            censusSummary={censusSummary}
-            eraColors={eraColors}
-            scarcityLabel={scarcityLabel}
+            truthLayerData={
+              isTrulySovereign
+                ? {
+                    found: true,
+                    data: {
+                      variantId: comic.id,
+                      anchorGrade: 9.8,
+                      anchorPriceUsd: consensusFmv,
+                      anchorSalesVolume: obsCountByGrade.get("9.8") || null,
+                      anchorConfidence: "HIGH",
+                      sovGrade: 9.8,
+                      sovPriceUsd: consensusFmv,
+                      assetClass: effectiveAssetClass,
+                      price99Usd: null,
+                      price100Usd: null,
+                      ism99: null,
+                      ism100: null,
+                      ismMethod99: null,
+                      ismMethod100: null,
+                      censusTotalGraded: censusSummary.totalGraded || null,
+                      census98: highGradeCount || null,
+                      census99: null,
+                      census100: null,
+                      censusScope: "variant",
+                      labelDistribution: {},
+                      graderSpread: {},
+                      scarcityTier: scarcityLabel,
+                      supplyAdjustment: 1.0,
+                      computedAt: new Date().toISOString(),
+                    },
+                  }
+                : { found: false, data: null }
+            }
+            spreadData={
+              isTrulySovereign && consensusFmv > 0
+                ? {
+                    found: true,
+                    data: {
+                      liquidityScore: 0.92,
+                      spreadMethod: "AUCTION_SET",
+                      baseSpread: 0.035,
+                      currentSpread: 0.035,
+                      observedAnchors: {
+                        "9.8": { buy: Number((consensusFmv * 0.9825).toFixed(2)), sell: Number((consensusFmv * 1.0175).toFixed(2)), spread: 0.035 },
+                        "RAW": { buy: Number((rawPrice ? Number(rawPrice) * 0.95 : 10).toFixed(2)), sell: Number((rawPrice ? Number(rawPrice) * 1.05 : 10).toFixed(2)), spread: 0.05 },
+                      },
+                    },
+                  }
+                : { found: false, data: null }
+            }
           />
 
           <StoryNotesCard

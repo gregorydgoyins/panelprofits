@@ -42,8 +42,8 @@ export default function CensusBanner({
   eraColors,
   scarcityLabel,
 }: CensusBannerProps) {
-  // Guard: If censusSummary is null/undefined, do not render
-  if (!censusSummary) return null;
+  // Guard: If censusSummary is null/undefined or totalGraded is 0, do not render
+  if (!censusSummary || !censusSummary.totalGraded || censusSummary.totalGraded <= 0) return null;
 
   const totalGraded = typeof censusSummary.totalGraded === 'number' ? censusSummary.totalGraded : 0;
   const highGradeCount = typeof censusSummary.highGradeCount === 'number' ? censusSummary.highGradeCount : 0;

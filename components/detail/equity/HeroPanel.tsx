@@ -455,7 +455,7 @@ export default function HeroPanel({
             })()}
 
             {/* CGC Census Histogram */}
-            {censusSummary && censusSummary.totalGraded > 0 && (() => {
+            {censusSummary && censusSummary.totalGraded > 0 && censusSummary.histogram.length > 0 && (() => {
               const sovereignGrade = instrumentStates?.sovereign?.grade, anchorGrade = instrumentStates?.anchor?.grade;
               const maxCount = Math.max(...censusSummary.histogram.map(g => g.count), 1);
               const gradePriceDetailMap = new Map<string, GradePrice>(
@@ -467,7 +467,7 @@ export default function HeroPanel({
                     <span className="text-[9px] uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.60)' }}>CGC Census · {censusSummary.totalGraded.toLocaleString()}{censusSummary.scope === 'issue' && !censusSummary.isBaseVariant ? <span style={{ color: 'rgba(255,200,100,0.80)', fontStyle: 'italic', textTransform: 'none', letterSpacing: 0 }}> series total · all printings</span> : <span> graded</span>}</span>
                     <span className="text-[8px]" style={{ color: 'rgba(255,255,255,0.70)', fontFamily: 'monospace' }}>snapshot {censusSummary.snapshotDate}</span>
                   </div>
-                  <div className="space-y-0.5">
+                  <div className="space-y-0.5 max-w-xl">
                     {censusSummary.histogram.map(g => {
                       const isSov = g.grade === sovereignGrade, isAnc = g.grade === anchorGrade && !isSov, isPeak = g.count === maxCount;
                       const barPct = Math.max(2, (g.count / maxCount) * 100);
@@ -632,13 +632,24 @@ export default function HeroPanel({
             {/* Spread Microstructure */}
             {spreadData?.found && spreadData.data && (() => {
               const sp = spreadData.data;
-              const liqColor = sp.liquidityScore >= 0.6 ? '#22c55e' : sp.liquidityScore >= 0.3 ? '#eab308' : '#ef4444';
+              const liqVal = sp.liquidityScore > 1 ? sp.liquidityScore / 100 : sp.liquidityScore;
+              const liqColor = liqVal >= 0.6 ? '#22c55e' : liqVal >= 0.3 ? '#eab308' : '#ef4444';
               const anchorKeys = Object.keys(sp.observedAnchors || {});
+              const formatPct = (val: number | null | undefined): string => {
+                if (val == null || isNaN(val)) return '—';
+                const pct = val > 1 ? val : val * 100;
+                return `${pct.toFixed(1)}%`;
+              };
+              const formatLiq = (val: number | null | undefined): string => {
+                if (val == null || isNaN(val)) return '—';
+                const pct = val > 1 ? val : val * 100;
+                return `${pct.toFixed(0)}%`;
+              };
               return (
                 <div className="mt-4 pt-4" style={{ borderTop: `1px solid ${eraColors.border}22` }}>
                   <div className="text-[9px] uppercase tracking-wider mb-3" style={{ color: 'rgba(255,255,255,0.60)', letterSpacing: '0.14em' }}>Spread Microstructure <span className="ml-2 px-1.5 rounded text-[7px]" style={{ backgroundColor: `${liqColor}15`, color: liqColor, border: `1px solid ${liqColor}40` }}>{sp.spreadMethod}</span></div>
                   <div className="grid grid-cols-3 gap-x-4 gap-y-2 mb-3">
-                    {[{ label: 'Base Spread', val: `${(sp.baseSpread * 100).toFixed(1)}%`, col: '#fff' }, { label: 'Live Spread', val: `${(sp.currentSpread * 100).toFixed(1)}%`, col: sp.currentSpread > sp.baseSpread * 1.5 ? '#ef4444' : '#fff' }, { label: 'Liquidity', val: `${(sp.liquidityScore * 100).toFixed(0)}%`, col: liqColor }].map(({ label, val, col }) => (
+                    {[{ label: 'Base Spread', val: formatPct(sp.baseSpread), col: '#fff' }, { label: 'Live Spread', val: formatPct(sp.currentSpread), col: sp.currentSpread > sp.baseSpread * 1.5 ? '#ef4444' : '#fff' }, { label: 'Liquidity', val: formatLiq(sp.liquidityScore), col: liqColor }].map(({ label, val, col }) => (
                       <div key={label}><div className="text-[8px] uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.45)' }}>{label}</div><div className="text-sm" style={{ color: col, fontFamily: 'monospace' }}>{val}</div></div>
                     ))}
                   </div>
@@ -646,7 +657,7 @@ export default function HeroPanel({
                     <div className="pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
                       <div className="text-[8px] uppercase tracking-wider mb-2" style={{ color: 'rgba(255,255,255,0.45)' }}>Observed Spread Anchors</div>
                       <div className="flex gap-3 flex-wrap">
-                        {anchorKeys.map(tier => { const a = sp.observedAnchors[tier]; return <div key={tier} className="px-2 py-1 rounded" style={{ backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}><div className="text-[7px] uppercase" style={{ color: 'rgba(255,255,255,0.50)' }}>{tier}</div><div className="text-[9px]" style={{ color: '#e2e8f0', fontFamily: 'monospace' }}>{fmt(a.buy)} / {fmt(a.sell)}</div><div className="text-[7px]" style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'monospace' }}>{(a.spread * 100).toFixed(1)}%</div></div>; })}
+                        {anchorKeys.map(tier => { const a = sp.observedAnchors[tier]; return <div key={tier} className="px-2 py-1 rounded" style={{ backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}><div className="text-[7px] uppercase" style={{ color: 'rgba(255,255,255,0.50)' }}>{tier}</div><div className="text-[9px]" style={{ color: '#e2e8f0', fontFamily: 'monospace' }}>{fmt(a.buy)} / {fmt(a.sell)}</div><div className="text-[7px]" style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'monospace' }}>{formatPct(a.spread)}</div></div>; })}
                       </div>
                     </div>
                   )}
