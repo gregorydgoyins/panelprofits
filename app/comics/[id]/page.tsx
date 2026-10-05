@@ -30,6 +30,7 @@ import { panelProfitsGrades } from "@/lib/pricing/source-ladder";
 import { buildComicPriceHistory } from "@/lib/pricing/historical-chronology";
 import { resolvePriceTier, isDirectEdition } from "@/lib/pricing/market-tiers";
 import StoryNotesCard from "@/components/detail/equity/StoryNotesCard";
+import { resolveGcdStoryDossier } from "@/lib/comics/gcd-story-service";
 
 export const dynamic = "force-dynamic";
 
@@ -97,7 +98,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
 
   const cbVideo = findComicBaseVideoForComic(comic.series, comic.issue_number);
 
-  const [coverEvidence, censusDossier, userStatus, gcdRelational] = await Promise.all([
+  const [coverEvidence, censusDossier, userStatus, gcdRelational, gcdStoryDossier] = await Promise.all([
     getComicCoverEvidence(comic.id).catch((err) => {
       console.warn("Cover evidence read unavailable:", err);
       return null;
@@ -132,6 +133,15 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
       console.warn("GCD relational read unavailable:", err);
       return null;
     }),
+    resolveGcdStoryDossier(
+      comic.gcd_source_id || (comic.gcd_data as any)?.["GCD - gcd_issue.id"] || (comic.gcd_data as any)?.["GCD Source ID"],
+      comic.series,
+      comic.issue_number,
+      comic.publication_year
+    ).catch((err) => {
+      console.warn("GCD story dossier read unavailable:", err);
+      return null;
+    }),
   ]);
   const seriesLabel = displaySeries(comic.series, comic.issue_number);
   const issueLabel = displayIssue(comic.issue_number);
@@ -155,6 +165,20 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
   const gcdBadges = (gcdData.key_badges as string[]) || [];
 
   const authoritativePublisher = resolveAuthoritativePublisher(comic.series, comic.publisher);
+
+  const enrichedGcdData = {
+    ...gcdData,
+    story_title: gcdStoryDossier?.leadStoryTitle || gcdData.story_title || gcdData["GCD - story.lead_title"] || "",
+    synopsis: gcdStoryDossier?.leadSynopsis || gcdData.synopsis || gcdData["GCD - story.synopsis"] || (comic.comicbase_data as any)?.["CB - Notes"] || "",
+    characters: gcdStoryDossier?.leadCharacters || gcdData.characters || gcdData["GCD - story.characters"] || "",
+    writer: gcdStoryDossier?.leadWriter || gcdData.writer || gcdData["GCD - story.writer"] || (comic.comicbase_data as any)?.["CB - Writer"] || debut?.creators?.[0] || "",
+    penciler: gcdStoryDossier?.leadPenciler || gcdData.penciler || gcdData["GCD - story.penciler"] || (comic.comicbase_data as any)?.["CB - Artist"] || debut?.creators?.[1] || "",
+    inker: gcdStoryDossier?.leadInker || gcdData.inker || gcdData["GCD - story.inker"] || "",
+    colorist: gcdStoryDossier?.leadColorist || gcdData.colorist || gcdData["GCD - story.colorist"] || "",
+    letterer: gcdStoryDossier?.leadLetterer || gcdData.letterer || gcdData["GCD - story.letterer"] || "",
+    editor: gcdStoryDossier?.leadEditor || gcdData.editor || gcdData["GCD - story.editor"] || "",
+    genre: gcdStoryDossier?.leadGenre || gcdData.genre || gcdData["GCD - story.genre"] || "Superhero",
+  };
 
   const isCe70Seat = Boolean(
     (comic as any).seat_number ||
@@ -577,8 +601,9 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
           />
 
           <StoryNotesCard
-            gcdData={comic.gcd_data as any}
+            gcdData={enrichedGcdData as any}
             comicbaseData={comic.comicbase_data as any}
+            storyDossier={gcdStoryDossier}
             series={seriesLabel}
             issueNumber={issueLabel}
             publicationYear={comic.publication_year}
@@ -716,7 +741,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
 
           {/* GCD Archival Bibliographic Dossier */}
           <GcdBibliographicDossier
-            gcdData={comic.gcd_data as any}
+            gcdData={enrichedGcdData as any}
             publisher={authoritativePublisher}
             series={comic.series}
             issueNumber={comic.issue_number}

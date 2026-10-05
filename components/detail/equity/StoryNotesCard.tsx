@@ -1,13 +1,15 @@
 'use client';
 
-import React from 'react';
-import { BookOpen, Sparkles, Feather, Calendar, ShieldCheck, Tag, Info, User } from 'lucide-react';
+import React, { useState } from 'react';
+import { BookOpen, Sparkles, Feather, Calendar, ShieldCheck, Tag, Info, User, ChevronDown, ChevronUp, Layers } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { getEraColors } from '@/lib/design-system/colors';
+import type { GcdStoryDossier } from '@/lib/comics/gcd-story-service';
 
 interface StoryNotesCardProps {
   gcdData?: Record<string, any> | null;
   comicbaseData?: Record<string, any> | null;
+  storyDossier?: GcdStoryDossier | null;
   series: string;
   issueNumber: string;
   publicationYear?: number | null;
@@ -19,6 +21,7 @@ interface StoryNotesCardProps {
 export default function StoryNotesCard({
   gcdData,
   comicbaseData,
+  storyDossier,
   series,
   issueNumber,
   publicationYear,
@@ -26,30 +29,79 @@ export default function StoryNotesCard({
   eraColors,
   debutCreators = [],
 }: StoryNotesCardProps) {
+  const [showAllStories, setShowAllStories] = useState(false);
   const gcd = gcdData || {};
   const cb = comicbaseData || {};
 
-  // Story & Arc title
-  const storyTitle = gcd.story_title || gcd['GCD - story.lead_title'] || gcd['GCD - gcd_issue.title'] || '';
+  // Story & Arc title — Prioritize authentic GCD story dossier
+  const storyTitle =
+    storyDossier?.leadStoryTitle ||
+    gcd.story_title ||
+    gcd['GCD - story.lead_title'] ||
+    gcd['GCD - gcd_issue.title'] ||
+    '';
   const feature = gcd.feature || gcd['GCD - story.feature'] || series;
-  const genre = gcd.genre || gcd['GCD - story.genre'] || 'Superhero';
-  const synopsis = gcd.synopsis || gcd['GCD - story.synopsis'] || cb['CB - Notes'] || '';
+  const genre = storyDossier?.leadGenre || gcd.genre || gcd['GCD - story.genre'] || 'Superhero';
+  const synopsis =
+    storyDossier?.leadSynopsis ||
+    gcd.synopsis ||
+    gcd['GCD - story.synopsis'] ||
+    cb['CB - Notes'] ||
+    '';
   const keyBadges: string[] = Array.isArray(gcd.key_badges) ? gcd.key_badges : [];
 
   // Creative credits
-  const writer = gcd.writer || gcd['GCD - story.writer'] || cb['CB - Writer'] || (debutCreators[0] ?? '');
-  const penciler = gcd.penciler || gcd['GCD - story.penciler'] || cb['CB - Artist'] || (debutCreators[1] ?? '');
-  const inker = gcd.inker || gcd['GCD - story.inker'] || '';
-  const coverArtist = gcd.cover_artist || gcd['GCD - cover.artist'] || cb['CB - Cover Artist'] || '';
-  const letterer = gcd.letterer || gcd['GCD - story.letterer'] || '';
+  const writer =
+    storyDossier?.leadWriter ||
+    gcd.writer ||
+    gcd['GCD - story.writer'] ||
+    cb['CB - Writer'] ||
+    (debutCreators[0] ?? '');
+  const penciler =
+    storyDossier?.leadPenciler ||
+    gcd.penciler ||
+    gcd['GCD - story.penciler'] ||
+    cb['CB - Artist'] ||
+    (debutCreators[1] ?? '');
+  const inker =
+    storyDossier?.leadInker ||
+    gcd.inker ||
+    gcd['GCD - story.inker'] ||
+    '';
+  const coverArtist =
+    gcd.cover_artist ||
+    gcd['GCD - cover.artist'] ||
+    cb['CB - Cover Artist'] ||
+    '';
+  const letterer =
+    storyDossier?.leadLetterer ||
+    gcd.letterer ||
+    gcd['GCD - story.letterer'] ||
+    '';
+  const editor =
+    storyDossier?.leadEditor ||
+    gcd.editor ||
+    gcd['GCD - story.editing'] ||
+    '';
 
   // Publication notes
   const onSaleDate = gcd.on_sale_date || gcd['GCD - gcd_issue.on_sale_date'] || '';
-  const pubDate = gcd.publication_date || gcd['GCD - gcd_issue.publication_date'] || (publicationYear ? String(publicationYear) : '');
+  const pubDate =
+    gcd.publication_date ||
+    gcd['GCD - gcd_issue.publication_date'] ||
+    (publicationYear ? String(publicationYear) : '');
   const pageCount = gcd.page_count || gcd['GCD - gcd_issue.page_count'] || '';
   const coverPrice = gcd.cover_price || gcd['GCD - gcd_issue.price'] || cb['CB - Cover Price'] || '';
   const notes = gcd.notes || gcd['GCD - gcd_issue.notes'] || gcd['GCD - gcd_series.notes'] || '';
-  const characters = gcd.characters || gcd['GCD - story.characters'] || '';
+  const characters =
+    storyDossier?.leadCharacters ||
+    gcd.characters ||
+    gcd['GCD - story.characters'] ||
+    '';
+
+  const otherStories = (storyDossier?.allStories || []).filter(
+    (s) => s.title !== storyTitle || (s.synopsis && s.synopsis !== synopsis)
+  );
 
   const genresList = genre
     ? genre.split(/;|\//).map((g: string) => g.trim()).filter(Boolean)
@@ -229,6 +281,62 @@ export default function StoryNotesCard({
           )}
         </div>
       </div>
+
+      {/* Complete Issue Anthology & Multi-Story Sequences */}
+      {otherStories.length > 0 && (
+        <div className="mt-4 pt-4 border-t border-white/10">
+          <button
+            type="button"
+            onClick={() => setShowAllStories(!showAllStories)}
+            className="flex items-center justify-between w-full text-left text-xs font-mono text-cyan-400 hover:text-cyan-300 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <Layers className="h-3.5 w-3.5" />
+              <span>
+                {otherStories.length} Additional Story & Feature Sequences in this Issue
+              </span>
+            </div>
+            <div className="flex items-center gap-1 text-[11px] text-slate-400">
+              <span>{showAllStories ? 'Hide Sequences' : 'View All Stories'}</span>
+              {showAllStories ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+            </div>
+          </button>
+
+          {showAllStories && (
+            <div className="mt-3 space-y-2.5">
+              {otherStories.map((st, sIdx) => (
+                <div
+                  key={sIdx}
+                  className="rounded-lg bg-black/40 border border-white/5 p-3 space-y-1 text-xs"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-amber-300 text-xs">
+                      Sequence {st.sequence}: "{st.title}"
+                    </span>
+                    {st.pageCount && (
+                      <span className="text-[10px] font-mono text-slate-400">{st.pageCount} pages</span>
+                    )}
+                  </div>
+                  {st.synopsis && (
+                    <p className="text-slate-300 text-[11px] leading-relaxed font-light">{st.synopsis}</p>
+                  )}
+                  {st.characters && (
+                    <p className="text-slate-400 text-[10px]">
+                      <span className="text-slate-300 font-mono">Cast:</span> {st.characters}
+                    </p>
+                  )}
+                  {(st.writer || st.penciler) && (
+                    <p className="text-[10px] text-slate-400 flex items-center gap-3 pt-1">
+                      {st.writer && <span><strong className="text-slate-300">Writer:</strong> {st.writer}</span>}
+                      {st.penciler && <span><strong className="text-slate-300">Artist:</strong> {st.penciler}</span>}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
