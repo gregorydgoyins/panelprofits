@@ -86,8 +86,12 @@ function formatPrinting(value: string | number | null): string {
 export default async function ComicDetailPage({ params }: ComicDetailPageProps) {
   const { id } = await params;
 
-  // 1985 Transformers #4 alias redirect if user lands on 2024 Skybound reprint
-  if (id === "c2fd6ba5cc9177887397a07fb5c804b7eb1cdc7c33c8ab51dada672679073c2") {
+  // 1985 Transformers #4 alias redirect if user lands on 2024 Skybound reprint or typo hash
+  if (
+    id === "c2fd6ba5cc9177887397a07fb5c804b7eb1cdc7c33c8ab51dada672679073c2" ||
+    id === "f461f722956cfb813b19b7a421b44ec74a9eb492211ea7c6999a36f6d0f666f3" ||
+    id.startsWith("f461f722956")
+  ) {
     redirect("/comics/f461f7228539e44876fde6b1e331bda11357a7556b13bafd28afd5cdab5add12");
   }
 

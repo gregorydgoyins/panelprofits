@@ -386,8 +386,12 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
     .replace(/^(?:var-)+/i, "");
 
   // Alias redirects
-  // 1985 Transformers #4 Skybound reprint -> original Marvel 1985 #4
-  if (cleanId === "c2fd6ba5cc9177887397a07fb5c804b7eb1cdc7c33c8ab51dada672679073c2") {
+  // 1985 Transformers #4 Skybound reprint or typo hash -> original Marvel 1985 #4
+  if (
+    cleanId === "c2fd6ba5cc9177887397a07fb5c804b7eb1cdc7c33c8ab51dada672679073c2" ||
+    cleanId === "f461f722956cfb813b19b7a421b44ec74a9eb492211ea7c6999a36f6d0f666f3" ||
+    cleanId.startsWith("f461f722956")
+  ) {
     cleanId = "f461f7228539e44876fde6b1e331bda11357a7556b13bafd28afd5cdab5add12";
   }
   // Blue Book #4 typo redirect
