@@ -91,6 +91,11 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     redirect("/comics/f461f7228539e44876fde6b1e331bda11357a7556b13bafd28afd5cdab5add12");
   }
 
+  // TMNT The Last Ronin Lost Day Special #1 alias redirect if user lands on OCR typo hash
+  if (id === "71d3934cef37bf272f668bc5c9d4bcccbcaa347c3bf2f3d3b0c9541783433792") {
+    redirect("/comics/71d3934caf37bf272f668bc5c9d4bcecbcee347e3bf2f3d3b0c954f783433792");
+  }
+
   let comic = null;
   let user = null;
 
@@ -105,6 +110,11 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
 
   if (!comic) {
     notFound();
+  }
+
+  // Canonical redirection: If accessed via seat alias (e.g. seat-16, BAT.251.SOV, slug), redirect to authentic DB comic ID
+  if (comic.id && comic.id !== id) {
+    redirect(`/comics/${comic.id}`);
   }
 
   const cbVideo = findComicBaseVideoForComic(comic.series, comic.issue_number);
@@ -286,7 +296,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     artifactType: "comic_issue",
     assetClass: isCe70Seat ? "SOV" : "PREMIUM",
     marketLane: "investment_grade",
-    isSovereign: true,
+    isSovereign: isCe70Seat,
     marketPriceClass: "A_PRIME",
     certificationState: "CGC_CERTIFIED",
     editionForm: comic.direct_or_variant || "Direct",
@@ -342,11 +352,11 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
 
   const atomicPrice = Number(rawPrice || (consensusFmv * 0.15).toFixed(2));
   const instrumentStates = {
-    sovereign: { grade: "9.8", priceUsd: consensusFmv },
+    sovereign: isCe70Seat ? { grade: "9.8", priceUsd: consensusFmv } : null,
     anchor: { grade: "9.8", priceUsd: consensusFmv, salesVolume: 24 },
     atomic: { grade: "RAW", priceUsd: atomicPrice },
     anchorToAtomicMultiple: atomicPrice > 0 ? Number((consensusFmv / atomicPrice).toFixed(1)) : 1.0,
-    sovereignToAtomicMultiple: atomicPrice > 0 ? Number((consensusFmv / atomicPrice).toFixed(1)) : 1.0,
+    sovereignToAtomicMultiple: isCe70Seat && atomicPrice > 0 ? Number((consensusFmv / atomicPrice).toFixed(1)) : 1.0,
   };
 
   const instrumentIntelligence: InstrumentIntelligence = {
@@ -443,7 +453,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
       firmName: "ARNVELD CAPITAL / PANEL EXCHANGE",
       firmAumAllocation: "STRATEGIC OVERWEIGHT",
       targetPrice: Math.round(consensusFmv * 1.15),
-      convictionRating: "TIER 1 SOVEREIGN",
+      convictionRating: isCe70Seat ? "TIER 1 SOVEREIGN" : "TIER 1 BENCHMARK",
       firmExposures: [comic.series, "Modern Blue Chip"],
     },
     deskView: {
@@ -464,7 +474,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     variantId: comic.id,
     sovereignGrade: "9.8",
     marketPriceClass: "A_PRIME",
-    isSovereign: true,
+    isSovereign: isCe70Seat,
     partial: false,
     momentum: {
       roc30d: 5.4,
@@ -517,15 +527,17 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
   const provenanceClaims: ProvenanceClaim[] = [
     {
       id: "fmv-price",
-      claimTitle: "Panel Profits Sovereign Market Order Book",
+      claimTitle: isCe70Seat ? "Panel Profits Sovereign Market Order Book" : "Panel Profits Continuous Market Order Book",
       claimValue: `$${consensusFmv.toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
-      whyBelieved: "Decoded 37-column sovereign continuous market order book with verified bid/ask execution depth.",
+      whyBelieved: isCe70Seat
+        ? "Decoded 37-column sovereign continuous market order book with verified bid/ask execution depth."
+        : "Decoded 37-column continuous market order book with verified bid/ask execution depth.",
       confidenceScore: 98,
       freshnessLabel: "Real-time Sync",
       canonicalAuthority: "Panel Profits Market Valuation Engine",
       sourceObservations: [
         {
-          provider: "Panel Profits Sovereign Exchange",
+          provider: isCe70Seat ? "Panel Profits Sovereign Exchange" : "Panel Profits Market Exchange",
           timestamp: "Recent",
           rawObservation: `Verified 9.8 anchor at $${consensusFmv.toFixed(2)} with 2,690 recorded transactions`,
           verifiedStatus: "VERIFIED",
@@ -710,7 +722,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
             eraColors={eraColors}
             gradeLattice={gradeLattice}
             instrumentIntelligence={instrumentIntelligence}
-            intelligenceSynthesis={`${seriesLabel} #${issueLabel} demonstrates disciplined liquidity depth and stable sovereign grade spread characteristics across current secondary market trading.`}
+            intelligenceSynthesis={`${seriesLabel} #${issueLabel} demonstrates disciplined liquidity depth and stable grade spread characteristics across current secondary market trading.`}
           />
           <MarketSentimentCard
             keyPrices={keyPrices}
