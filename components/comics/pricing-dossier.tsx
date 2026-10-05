@@ -16,28 +16,13 @@ import {
   panelProfitsDelta,
   panelProfitsVolume,
   panelProfitsListings,
-  cgcSpreads,
-  cgcVolume,
-  cgcListings,
   priceChartingGrades,
   psaGrades,
 } from "@/lib/pricing/source-ladder";
 import { formatCurrency } from "@/lib/utils";
 import { getCleanPricingEvidence } from "@/lib/pricing/clean";
-import { TrendingUp, ArrowDownRight, ArrowUpRight, ShieldCheck } from "lucide-react";
+import { TrendingUp, ArrowDownRight, ArrowUpRight, ShieldCheck, Database, CheckCircle2 } from "lucide-react";
 import { TierJumpControls } from "./tier-jump-controls";
-
-const SOURCES = [
-  "Panel Profits",
-  "GoCollect - CGC",
-  "GoCollect - CBCS",
-  "GoCollect - PSA",
-  "CGC · GPA sales",
-  "CBCS",
-  "PSA",
-  "eBay Sold Transactions",
-  "ComicBase",
-] as const;
 
 const PRIMARY_EXCHANGE_GRADES: Array<{
   grade: Grade;
@@ -65,6 +50,7 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
   const cgcGpaGrades = cgcGrades(comic);
   const cbcsLadder = cbcsGrades(comic);
   const psaLadder = psaGrades(comic);
+
   const rawCoverPrice =
     (comic.panel_profits_data as any)?.coverPrice ??
     (comic.panel_profits_data as any)?.cover_price ??
@@ -75,6 +61,7 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
 
   const highest = getHighestGradedPrice({
     "Panel Profits": pp,
+    "PriceCharting": pcGrades,
     "GoCollect - CGC": gcCgcGrades,
     "GoCollect - CBCS": gcCbcsGrades,
     "GoCollect - PSA": gcPsaGrades,
@@ -84,6 +71,232 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
     "eBay Sold Transactions": ebayLadder,
     "ComicBase": cbGrades,
   });
+
+  // Master definition of candidate evidence rows
+  const allCandidateRows = [
+    // 1. PANEL PROFITS SUITE (FMV, BUY, SELL, VOLUME, LISTINGS)
+    {
+      id: "pp-fmv",
+      source: "Panel Profits",
+      badge: "Exchange FMV",
+      badgeClass: "text-emerald-400/90",
+      alwaysShow: true,
+      getValue: (grade: Grade) => {
+        const p = pp[grade] ?? pcGrades[grade] ?? null;
+        return {
+          display: p ? formatCurrency(p) : "—",
+          colorClass: p
+            ? grade === "9.8"
+              ? "text-cyan-300 font-bold"
+              : grade === "RAW"
+              ? "text-amber-300 font-bold"
+              : "text-emerald-300 font-medium"
+            : "text-slate-600",
+        };
+      },
+    },
+    {
+      id: "pp-buy",
+      source: "Panel Profits",
+      badge: "Bid (Buy Price)",
+      badgeClass: "text-blue-400/90",
+      alwaysShow: true,
+      getValue: (grade: Grade) => {
+        const fallbackPrice = pp[grade] ?? pcGrades[grade] ?? null;
+        const s = panelProfitsSpreads(comic, grade, fallbackPrice);
+        return {
+          display: s.buy ? formatCurrency(s.buy) : "—",
+          colorClass: s.buy ? "text-blue-400 font-medium" : "text-slate-600",
+        };
+      },
+    },
+    {
+      id: "pp-sell",
+      source: "Panel Profits",
+      badge: "Ask (Sell Price)",
+      badgeClass: "text-emerald-400/90",
+      alwaysShow: true,
+      getValue: (grade: Grade) => {
+        const fallbackPrice = pp[grade] ?? pcGrades[grade] ?? null;
+        const s = panelProfitsSpreads(comic, grade, fallbackPrice);
+        return {
+          display: s.sell ? formatCurrency(s.sell) : "—",
+          colorClass: s.sell ? "text-emerald-400 font-medium" : "text-slate-600",
+        };
+      },
+    },
+    {
+      id: "pp-volume",
+      source: "Panel Profits",
+      badge: "Annual Volume",
+      badgeClass: "text-cyan-400/90",
+      alwaysShow: false,
+      getValue: (grade: Grade) => {
+        const v = panelProfitsVolume(comic, grade);
+        return {
+          display: v || "—",
+          colorClass: v ? "text-cyan-300 font-mono text-[11px]" : "text-slate-600",
+        };
+      },
+    },
+    {
+      id: "pp-listings",
+      source: "Panel Profits",
+      badge: "Realized Listings",
+      badgeClass: "text-amber-400/90",
+      alwaysShow: false,
+      getValue: (grade: Grade) => {
+        const l = panelProfitsListings(comic, grade);
+        return {
+          display: l != null ? `${l} sold` : "—",
+          colorClass: l != null && l > 0 ? "text-amber-300 font-mono" : "text-slate-600",
+        };
+      },
+    },
+
+    // 2. PRICECHARTING DEDICATED SECONDARY MARKET EVIDENCE
+    {
+      id: "pricecharting",
+      source: "PriceCharting",
+      badge: "Historical Sales Index",
+      badgeClass: "text-sky-400/90",
+      alwaysShow: false,
+      getValue: (grade: Grade) => {
+        const p = pcGrades[grade];
+        return {
+          display: p ? formatCurrency(p) : "—",
+          colorClass: p
+            ? grade === "9.8"
+              ? "text-cyan-300 font-bold"
+              : grade === "RAW"
+              ? "text-amber-300 font-bold"
+              : "text-sky-300 font-medium"
+            : "text-slate-600",
+        };
+      },
+    },
+
+    // 3. COMICBASE 1.1M CATALOG REFERENCE
+    {
+      id: "comicbase",
+      source: "ComicBase",
+      badge: "Catalog Guide Price",
+      badgeClass: "text-amber-400/90",
+      alwaysShow: false,
+      getValue: (grade: Grade) => {
+        const p = cbGrades[grade] ?? (grade === "9.2" || grade === "RAW" ? cb : null);
+        return {
+          display: p ? formatCurrency(p) : "—",
+          colorClass: p ? "text-amber-300 font-medium" : "text-slate-600",
+        };
+      },
+    },
+
+    // 4. CGC · GPA SALES (CERTIFIED SLABS)
+    {
+      id: "cgc-fmv",
+      source: "CGC · GPA sales",
+      badge: "Certified Slabs (Realized FMV)",
+      badgeClass: "text-purple-400/90",
+      isGradedOnly: true,
+      alwaysShow: false,
+      getValue: (grade: Grade) => {
+        const p = cgcGpaGrades[grade];
+        return {
+          display: p ? formatCurrency(p) : "—",
+          colorClass: p ? "text-purple-300 font-medium" : "text-slate-600",
+        };
+      },
+    },
+
+    // 5. EBAY SOLD TRANSACTIONS
+    {
+      id: "ebay",
+      source: "eBay Sold Transactions",
+      badge: "Realized Sales",
+      badgeClass: "text-yellow-400/80",
+      alwaysShow: false,
+      getValue: (grade: Grade) => {
+        const p = ebayLadder[grade];
+        return {
+          display: p ? formatCurrency(p) : "—",
+          colorClass: p ? "text-yellow-300 font-medium" : "text-slate-600",
+        };
+      },
+    },
+
+    // 6. GOCOLLECT - CGC
+    {
+      id: "gc-cgc",
+      source: "GoCollect - CGC",
+      badge: "CGC Census FMV",
+      badgeClass: "text-blue-400/80",
+      isGradedOnly: true,
+      alwaysShow: false,
+      getValue: (grade: Grade) => {
+        const p = gcCgcGrades[grade];
+        return {
+          display: p ? formatCurrency(p) : "—",
+          colorClass: p ? "text-blue-300 font-medium" : "text-slate-600",
+        };
+      },
+    },
+
+    // 7. CBCS CERTIFIED OBSERVATIONS
+    {
+      id: "cbcs",
+      source: "CBCS",
+      badge: "CBCS Certified Only",
+      badgeClass: "text-indigo-400/80",
+      isGradedOnly: true,
+      alwaysShow: false,
+      getValue: (grade: Grade) => {
+        const p = cbcsLadder[grade] ?? gcCbcsGrades[grade];
+        return {
+          display: p ? formatCurrency(p) : "—",
+          colorClass: p ? "text-indigo-300 font-medium" : "text-slate-600",
+        };
+      },
+    },
+
+    // 8. PSA CERTIFIED OBSERVATIONS
+    {
+      id: "psa",
+      source: "PSA",
+      badge: "PSA Certified Only",
+      badgeClass: "text-red-400/80",
+      isGradedOnly: true,
+      alwaysShow: false,
+      getValue: (grade: Grade) => {
+        const p = psaLadder[grade] ?? gcPsaGrades[grade];
+        return {
+          display: p ? formatCurrency(p) : "—",
+          colorClass: p ? "text-red-300 font-medium" : "text-slate-600",
+        };
+      },
+    },
+  ];
+
+  // Dynamic Filtering: Render rows that have at least 1 verified data point for this comic.
+  // Never show endless rows of 26 blank dashes for unrecorded authorities.
+  const activeRows = allCandidateRows.filter((row) => {
+    if (row.alwaysShow) return true;
+    return GRADES.some((grade) => {
+      const { display } = row.getValue(grade);
+      return display !== "—";
+    });
+  });
+
+  // Track unrecorded authorities to display cleanly in metadata rather than 26 empty dashes
+  const unrecordedAuthorities = [
+    { name: "PriceCharting", count: Object.keys(pcGrades).length },
+    { name: "ComicBase", count: Object.keys(cbGrades).length + (cb ? 1 : 0) },
+    { name: "CGC · GPA", count: Object.keys(cgcGpaGrades).length },
+    { name: "CBCS", count: Object.keys(cbcsLadder).length + Object.keys(gcCbcsGrades).length },
+    { name: "PSA", count: Object.keys(psaLadder).length + Object.keys(gcPsaGrades).length },
+    { name: "eBay Sold", count: Object.keys(ebayLadder).length },
+    { name: "GoCollect", count: Object.keys(gcCgcGrades).length },
+  ].filter((a) => a.count === 0);
 
   return (
     <section aria-labelledby="pricing-heading" className="rounded-xl border border-slate-700 bg-[#111319] p-4 sm:p-6 shadow-lg space-y-6">
@@ -100,12 +313,18 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
             </span>
           </div>
           <p className="mt-1 text-xs text-slate-400">
-            Recorded price evidence by source and grade tier. Ungraded / RAW pricing represents loose physical copies; certified grading authorities (CGC, CBCS, PSA) record authenticated slabbed grades only. Unpriced grades remain unpriced.
+            Recorded price evidence by source and grade tier. Ungraded / RAW pricing represents loose physical copies; certified grading authorities record authenticated slabbed grades only. Unpriced grades remain unpriced.
           </p>
         </div>
-        <span className="text-xs text-slate-400 font-mono">
-          {GRADES.length} grade tiers · Multi-source market ladder
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-slate-400 font-mono">
+            {GRADES.length} grade tiers · Multi-source market ladder
+          </span>
+          <span className="inline-flex items-center gap-1 text-[11px] font-mono text-cyan-400 bg-cyan-950/40 border border-cyan-800/50 rounded px-2 py-0.5">
+            <Database className="h-3 w-3" />
+            {activeRows.length} Active Authority Streams
+          </span>
+        </div>
       </div>
 
       {/* 6-Grade Market Order Book Shelf */}
@@ -117,10 +336,9 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
           {PRIMARY_EXCHANGE_GRADES.map(({ grade, label, sublabel }) => {
             const price = pp[grade] ?? pcGrades[grade] ?? null;
-            const spreads = panelProfitsSpreads(comic, grade);
+            const spreads = panelProfitsSpreads(comic, grade, price);
             const delta = panelProfitsDelta(comic, grade);
             const volume = panelProfitsVolume(comic, grade);
-            const listings = panelProfitsListings(comic, grade);
             const isPriced = price !== null && price > 0;
             const hasSpread = spreads.buy !== null && spreads.sell !== null && spreads.sell >= spreads.buy;
 
@@ -158,41 +376,33 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
                       )}
                     </div>
                     {delta !== null && delta !== undefined && (
-                      <div className={`text-[10px] font-mono font-semibold ${delta >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
-                        {delta >= 0 ? `+${formatCurrency(delta)}` : `-${formatCurrency(Math.abs(delta))}`}
-                      </div>
+                      <span
+                        className={`inline-flex items-center text-[10px] font-mono font-medium ${
+                          delta >= 0 ? "text-emerald-400" : "text-rose-400"
+                        }`}
+                      >
+                        {delta >= 0 ? <ArrowUpRight className="h-3 w-3 mr-0.5" /> : <ArrowDownRight className="h-3 w-3 mr-0.5" />}
+                        {delta >= 0 ? `+${delta.toFixed(1)}%` : `${delta.toFixed(1)}%`}
+                      </span>
                     )}
                   </div>
                 </div>
 
-                {/* Buy / Sell Bid-Ask Spreads & Listings Depth */}
-                <div className="mt-3 pt-2 border-t border-slate-800/80 font-mono text-[10.5px] space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-500 text-[9.5px]">BUY:</span>
-                    <span className={spreads.buy ? "text-blue-400 font-medium" : "text-slate-600"}>
-                      {spreads.buy ? formatCurrency(spreads.buy) : "—"}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-500 text-[9.5px]">SELL:</span>
-                    <span className={spreads.sell ? "text-emerald-400 font-medium" : "text-slate-600"}>
-                      {spreads.sell ? formatCurrency(spreads.sell) : "—"}
-                    </span>
-                  </div>
-                  {hasSpread && (
-                    <div className="flex items-center justify-between text-[9.5px] text-slate-500">
-                      <span>SPREAD:</span>
-                      <span className="text-amber-400/90 font-medium">
-                        {formatCurrency(spreads.sell! - spreads.buy!)}
+                {/* Execution Spreads (Bid/Ask) */}
+                <div className="mt-2.5 pt-2 border-t border-slate-800/80 text-[10px] font-mono">
+                  {hasSpread ? (
+                    <div className="flex items-center justify-between text-slate-400">
+                      <span className="text-blue-400/90" title="Exchange Institutional Bid">
+                        Bid: {formatCurrency(spreads.buy!)}
+                      </span>
+                      <span className="text-emerald-400/90" title="Exchange Institutional Ask">
+                        Ask: {formatCurrency(spreads.sell!)}
                       </span>
                     </div>
-                  )}
-                  {listings !== null && (
-                    <div className="flex items-center justify-between pt-0.5 border-t border-slate-800/40 text-[9.5px]">
-                      <span className="text-slate-500">SOLD:</span>
-                      <span className={listings > 0 ? "text-cyan-300 font-medium" : "text-slate-600"}>
-                        {listings} {listings === 1 ? "listing" : "listings"}
-                      </span>
+                  ) : (
+                    <div className="text-slate-600 flex justify-between">
+                      <span>Bid: —</span>
+                      <span>Ask: —</span>
                     </div>
                   )}
                 </div>
@@ -202,31 +412,27 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
         </div>
       </div>
 
-      {/* Multi-Authority Comparison Table with Explicit Buy/Sell & Graded Lines */}
+      {/* Cross-Authority Evidence Registry Table */}
       <div>
         <div className="flex flex-wrap items-center justify-between gap-2 mb-2.5">
-          <div className="text-[11px] font-mono uppercase tracking-wider text-slate-300 flex items-center gap-2">
-            <span className="font-bold text-cyan-300">Cross-Authority Evidence Registry</span>
-            <span className="text-slate-600">·</span>
-            <span className="text-[10px] text-slate-400">Continuous 26-Grade Matrix (0.5 – 10.0 + RAW)</span>
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-mono uppercase tracking-wider text-cyan-400">
+              Cross-Authority Evidence Registry (Full 26-Tier Matrix)
+            </span>
+            <span className="text-[10px] text-slate-500 font-mono">
+              · Verified recorded evidence only
+            </span>
           </div>
-
-          {/* Quick Grade Tier Jump Controls */}
           <TierJumpControls />
         </div>
 
-        <div
-          className="overflow-x-auto rounded-lg border border-slate-700/80 bg-[#080B11] focus-visible:ring-2 focus-visible:ring-cyan-400 shadow-inner"
-          role="region"
-          aria-label="Pricing evidence ladder by source and grade tier"
-          tabIndex={0}
-        >
-          <table className="w-full min-w-[2450px] border-collapse text-left text-xs tabular-nums">
-            <thead className="bg-[#0C1017] text-slate-300 border-b border-slate-700">
+        <div className="overflow-x-auto rounded-lg border border-slate-800 bg-[#0A0D14] shadow-inner">
+          <table className="w-full text-xs text-left text-slate-300">
+            <thead className="bg-[#0C1017] text-[10px] uppercase font-mono tracking-wider text-slate-400 border-b border-slate-800">
               <tr>
                 <th
                   scope="col"
-                  className="sticky left-0 z-20 bg-[#0C1017] shadow-[4px_0_12px_rgba(0,0,0,0.6)] px-3.5 py-3 font-semibold text-slate-200 border-r border-slate-700/80 min-w-[280px] w-[280px]"
+                  className="sticky left-0 z-20 bg-[#0C1017] shadow-[4px_0_12px_rgba(0,0,0,0.6)] px-3.5 py-3 whitespace-nowrap min-w-[280px] w-[280px] border-r border-slate-700/80"
                 >
                   Authority Source / Metric
                 </th>
@@ -251,244 +457,7 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800">
-              {[
-                // 1. PANEL PROFITS SUITE (FMV, BUY, SELL, VOLUME, LISTINGS)
-                {
-                  id: "pp-fmv",
-                  source: "Panel Profits",
-                  badge: "Exchange FMV",
-                  badgeClass: "text-emerald-400/90",
-                  getValue: (grade: Grade) => {
-                    const p = pp[grade];
-                    return {
-                      display: p ? formatCurrency(p) : "—",
-                      colorClass: p ? (grade === "9.8" ? "text-cyan-300 font-bold" : grade === "RAW" ? "text-amber-300 font-bold" : "text-emerald-300 font-medium") : "text-slate-600",
-                    };
-                  },
-                },
-                {
-                  id: "pp-buy",
-                  source: "Panel Profits",
-                  badge: "Bid (Buy Price)",
-                  badgeClass: "text-blue-400/90",
-                  getValue: (grade: Grade) => {
-                    const s = panelProfitsSpreads(comic, grade);
-                    return {
-                      display: s.buy ? formatCurrency(s.buy) : "—",
-                      colorClass: s.buy ? "text-blue-400 font-medium" : "text-slate-600",
-                    };
-                  },
-                },
-                {
-                  id: "pp-sell",
-                  source: "Panel Profits",
-                  badge: "Ask (Sell Price)",
-                  badgeClass: "text-emerald-400/90",
-                  getValue: (grade: Grade) => {
-                    const s = panelProfitsSpreads(comic, grade);
-                    return {
-                      display: s.sell ? formatCurrency(s.sell) : "—",
-                      colorClass: s.sell ? "text-emerald-400 font-medium" : "text-slate-600",
-                    };
-                  },
-                },
-                {
-                  id: "pp-volume",
-                  source: "Panel Profits",
-                  badge: "Annual Volume",
-                  badgeClass: "text-cyan-400/90",
-                  getValue: (grade: Grade) => {
-                    const v = panelProfitsVolume(comic, grade);
-                    return {
-                      display: v || "—",
-                      colorClass: v ? "text-cyan-300 font-mono text-[11px]" : "text-slate-600",
-                    };
-                  },
-                },
-                {
-                  id: "pp-listings",
-                  source: "Panel Profits",
-                  badge: "Realized Listings",
-                  badgeClass: "text-amber-400/90",
-                  getValue: (grade: Grade) => {
-                    const l = panelProfitsListings(comic, grade);
-                    return {
-                      display: l != null ? `${l} sold` : "—",
-                      colorClass: l != null && l > 0 ? "text-amber-300 font-mono" : "text-slate-600",
-                    };
-                  },
-                },
-
-                // 2. CGC / CERTIFIED GRADED COPIES SUITE (FMV, BUY, SELL, VOLUME, LISTINGS)
-                {
-                  id: "cgc-fmv",
-                  source: "CGC · GPA sales",
-                  badge: "Certified Slabs (Realized FMV)",
-                  badgeClass: "text-purple-400/90",
-                  isGradedOnly: true,
-                  getValue: (grade: Grade) => {
-                    const p = cgcGpaGrades[grade] ?? (grade !== "RAW" ? pp[grade] : null);
-                    return {
-                      display: p ? formatCurrency(p) : "—",
-                      colorClass: p ? "text-purple-300 font-medium" : "text-slate-600",
-                    };
-                  },
-                },
-                {
-                  id: "cgc-buy",
-                  source: "CGC · GPA sales",
-                  badge: "Graded Slab Bid (Buy Price)",
-                  badgeClass: "text-blue-400/90",
-                  isGradedOnly: true,
-                  getValue: (grade: Grade) => {
-                    const s = cgcSpreads(comic, grade);
-                    return {
-                      display: s.buy ? formatCurrency(s.buy) : "—",
-                      colorClass: s.buy ? "text-blue-400 font-medium" : "text-slate-600",
-                    };
-                  },
-                },
-                {
-                  id: "cgc-sell",
-                  source: "CGC · GPA sales",
-                  badge: "Graded Slab Ask (Sell Price)",
-                  badgeClass: "text-emerald-400/90",
-                  isGradedOnly: true,
-                  getValue: (grade: Grade) => {
-                    const s = cgcSpreads(comic, grade);
-                    return {
-                      display: s.sell ? formatCurrency(s.sell) : "—",
-                      colorClass: s.sell ? "text-emerald-400 font-medium" : "text-slate-600",
-                    };
-                  },
-                },
-                {
-                  id: "cgc-volume",
-                  source: "CGC · GPA sales",
-                  badge: "Graded Slab Annual Volume",
-                  badgeClass: "text-purple-400/90",
-                  isGradedOnly: true,
-                  getValue: (grade: Grade) => {
-                    const v = cgcVolume(comic, grade);
-                    return {
-                      display: v || "—",
-                      colorClass: v ? "text-purple-300 font-mono text-[11px]" : "text-slate-600",
-                    };
-                  },
-                },
-                {
-                  id: "cgc-listings",
-                  source: "CGC · GPA sales",
-                  badge: "Graded Slab Sold Listings",
-                  badgeClass: "text-cyan-400/90",
-                  isGradedOnly: true,
-                  getValue: (grade: Grade) => {
-                    const l = cgcListings(comic, grade);
-                    return {
-                      display: l != null ? `${l} sold` : "—",
-                      colorClass: l != null && l > 0 ? "text-cyan-300 font-mono" : "text-slate-600",
-                    };
-                  },
-                },
-
-                // 3. OTHER CERTIFIED & SECONDARY MARKET AUTHORITIES
-                {
-                  id: "cbcs",
-                  source: "CBCS",
-                  badge: "CBCS Certified Only",
-                  badgeClass: "text-indigo-400/80",
-                  isGradedOnly: true,
-                  getValue: (grade: Grade) => {
-                    const p = cbcsLadder[grade];
-                    return {
-                      display: p ? formatCurrency(p) : "—",
-                      colorClass: p ? "text-emerald-300 font-medium" : "text-slate-600",
-                    };
-                  },
-                },
-                {
-                  id: "psa",
-                  source: "PSA",
-                  badge: "PSA Certified Only",
-                  badgeClass: "text-red-400/80",
-                  isGradedOnly: true,
-                  getValue: (grade: Grade) => {
-                    const p = psaLadder[grade];
-                    return {
-                      display: p ? formatCurrency(p) : "—",
-                      colorClass: p ? "text-emerald-300 font-medium" : "text-slate-600",
-                    };
-                  },
-                },
-                {
-                  id: "gc-cgc",
-                  source: "GoCollect - CGC",
-                  badge: "CGC Census FMV",
-                  badgeClass: "text-blue-400/80",
-                  isGradedOnly: true,
-                  getValue: (grade: Grade) => {
-                    const p = gcCgcGrades[grade];
-                    return {
-                      display: p ? formatCurrency(p) : "—",
-                      colorClass: p ? "text-emerald-300 font-medium" : "text-slate-600",
-                    };
-                  },
-                },
-                {
-                  id: "gc-cbcs",
-                  source: "GoCollect - CBCS",
-                  badge: "CBCS Census FMV",
-                  badgeClass: "text-teal-400/80",
-                  isGradedOnly: true,
-                  getValue: (grade: Grade) => {
-                    const p = gcCbcsGrades[grade];
-                    return {
-                      display: p ? formatCurrency(p) : "—",
-                      colorClass: p ? "text-emerald-300 font-medium" : "text-slate-600",
-                    };
-                  },
-                },
-                {
-                  id: "gc-psa",
-                  source: "GoCollect - PSA",
-                  badge: "PSA Census FMV",
-                  badgeClass: "text-sky-400/80",
-                  isGradedOnly: true,
-                  getValue: (grade: Grade) => {
-                    const p = gcPsaGrades[grade];
-                    return {
-                      display: p ? formatCurrency(p) : "—",
-                      colorClass: p ? "text-emerald-300 font-medium" : "text-slate-600",
-                    };
-                  },
-                },
-                {
-                  id: "ebay",
-                  source: "eBay Sold Transactions",
-                  badge: "Realized Sales",
-                  badgeClass: "text-yellow-400/80",
-                  getValue: (grade: Grade) => {
-                    const p = ebayLadder[grade];
-                    return {
-                      display: p ? formatCurrency(p) : "—",
-                      colorClass: p ? "text-emerald-300 font-medium" : "text-slate-600",
-                    };
-                  },
-                },
-                {
-                  id: "comicbase",
-                  source: "ComicBase",
-                  badge: "Catalog Guide",
-                  badgeClass: "text-cyan-400/80",
-                  getValue: (grade: Grade) => {
-                    const p = cbGrades[grade];
-                    return {
-                      display: p ? formatCurrency(p) : "—",
-                      colorClass: p ? "text-emerald-300 font-medium" : "text-slate-600",
-                    };
-                  },
-                },
-              ].map((row) => (
+              {activeRows.map((row) => (
                 <tr key={row.id} className="hover:bg-slate-800/40 transition-colors">
                   <th
                     scope="row"
@@ -535,6 +504,23 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
             </tbody>
           </table>
         </div>
+
+        {/* Coverage Integrity Note */}
+        {unrecordedAuthorities.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 pt-3 text-[11px] text-slate-500">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
+              Unrecorded Secondary Registries:
+            </span>
+            {unrecordedAuthorities.map((auth) => (
+              <span
+                key={auth.name}
+                className="rounded bg-slate-900/80 border border-slate-800 px-2 py-0.5 font-mono text-[10px] text-slate-500"
+              >
+                {auth.name}: 0 sales on file
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Summary Footer Cards */}

@@ -44,9 +44,9 @@ export interface ExecutionSpreads {
 }
 
 /**
- * Reads exact grade market values ONLY from authentic Panel Profits fields.
- * Never blends ComicBase, PriceCharting, or GoCollect fields into this function.
- * Supports RAW (ungraded market price).
+ * Reads exact grade market values from authentic Panel Profits fields.
+ * Extracts explicitly stored Panel Profits market grades including RAW.
+ * Supports PriceCharting ladder embedded in panel_profits_data.
  */
 export function panelProfitsGrades(comic: Partial<ComicRecord>): Partial<Record<Grade, number>> {
   const result: Partial<Record<Grade, number>> = {};
@@ -71,9 +71,6 @@ export function panelProfitsGrades(comic: Partial<ComicRecord>): Partial<Record<
     let stored = positivePrice(comic.panel_profits_data[key]);
     if (stored === null && comic.panel_profits_data?.pricecharting) {
       stored = positivePrice(comic.panel_profits_data.pricecharting[key] || comic.panel_profits_data.pricecharting.raw);
-    }
-    if (stored === null && (comic as any).pricecharting_data) {
-      stored = positivePrice((comic as any).pricecharting_data[key] || (comic as any).pricecharting_data.raw);
     }
     if (stored !== null) {
       result["RAW"] = stored;
@@ -102,13 +99,6 @@ export function panelProfitsGrades(comic: Partial<ComicRecord>): Partial<Record<
           comic.panel_profits_data.pricecharting[grade]
         );
       }
-      if (stored === null && (comic as any).pricecharting_data) {
-        stored = positivePrice(
-          (comic as any).pricecharting_data[key] ||
-          (comic as any).pricecharting_data[`grade_${gradeKey}`] ||
-          (comic as any).pricecharting_data[grade]
-        );
-      }
       if (stored !== null) {
         result[grade] = stored;
         break;
@@ -122,30 +112,46 @@ export function panelProfitsGrades(comic: Partial<ComicRecord>): Partial<Record<
 }
 
 /**
- * Reads ComicBase 1.1M dataset pricing independently without polluting Panel Profits or CGC data.
+ * Reads ComicBase 1.1M dataset pricing independently.
+ * Extracts catalog guide valuation for RAW and standard Near Mint (9.2) loose condition.
  */
 export function comicBaseGrades(comic: Partial<ComicRecord>): Partial<Record<Grade, number>> {
   const result: Partial<Record<Grade, number>> = {};
   if (!comic.comicbase_data && !comic.comicbase_price) return result;
 
-  // RAW / Catalog reference
-  const rawStored = positivePrice(
+  const cbPrice = positivePrice(
     comic.comicbase_data?.["ComicBase - Grade RAW"] ||
     comic.comicbase_data?.["CB - Raw Price"] ||
-    comic.comicbase_data?.["CB - Ungraded Price"]
+    comic.comicbase_data?.["CB - Ungraded Price"] ||
+    comic.comicbase_data?.["CB - Price"] ||
+    comic.comicbase_price
   );
-  if (rawStored !== null) {
-    result["RAW"] = rawStored;
+
+  if (cbPrice !== null) {
+    result["RAW"] = cbPrice;
+    // Map ComicBase standard guide condition (Near Mint / NM) to 9.2
+    const condition = String(comic.comicbase_data?.["CB - Condition"] || "").toUpperCase().trim();
+    if (condition === "NM" || condition === "NEAR MINT" || !condition) {
+      result["9.2"] = cbPrice;
+    } else if (condition === "VF" || condition === "VERY FINE") {
+      result["8.0"] = cbPrice;
+    } else if (condition === "FN" || condition === "FINE") {
+      result["6.0"] = cbPrice;
+    } else if (condition === "VG" || condition === "VERY GOOD") {
+      result["4.0"] = cbPrice;
+    }
   }
 
+  // Explicit grade keys if present in ComicBase payload
   if (comic.comicbase_data) {
     for (const grade of GRADES) {
-      if (grade === "RAW") continue;
+      if (grade === "RAW" && result["RAW"]) continue;
       const key = `ComicBase - Grade ${grade}`;
       const stored = positivePrice(comic.comicbase_data[key] || comic.comicbase_data[grade]);
       if (stored !== null) result[grade] = stored;
     }
   }
+
   return result;
 }
 
@@ -165,8 +171,7 @@ export function goCollectCgcGrades(comic: Partial<ComicRecord>): Partial<Record<
   const data = (comic as Record<string, unknown>).gocollect_cgc_data as Record<string, unknown> | undefined ||
     (comic as Record<string, unknown>).gocollect_data as Record<string, unknown> | undefined ||
     (comic.panel_profits_data as Record<string, unknown> | undefined)?.gocollect_cgc as Record<string, unknown> | undefined ||
-    (comic.panel_profits_data as Record<string, unknown> | undefined)?.gocollect as Record<string, unknown> | undefined ||
-    comic.panel_profits_data;
+    (comic.panel_profits_data as Record<string, unknown> | undefined)?.gocollect as Record<string, unknown> | undefined;
   if (!data) return result;
 
   for (const grade of GRADES) {
@@ -193,8 +198,7 @@ export function goCollectCbcsGrades(comic: Partial<ComicRecord>): Partial<Record
   const result: Partial<Record<Grade, number>> = {};
   const data = (comic as Record<string, unknown>).gocollect_cbcs_data as Record<string, unknown> | undefined ||
     (comic.panel_profits_data as Record<string, unknown> | undefined)?.gocollect_cbcs as Record<string, unknown> | undefined ||
-    (comic.panel_profits_data as Record<string, unknown> | undefined)?.cbcs_grades as Record<string, unknown> | undefined ||
-    comic.panel_profits_data;
+    (comic.panel_profits_data as Record<string, unknown> | undefined)?.cbcs_grades as Record<string, unknown> | undefined;
   if (!data) return result;
 
   for (const grade of GRADES) {
@@ -218,8 +222,7 @@ export function goCollectPsaGrades(comic: Partial<ComicRecord>): Partial<Record<
   const result: Partial<Record<Grade, number>> = {};
   const data = (comic as Record<string, unknown>).gocollect_psa_data as Record<string, unknown> | undefined ||
     (comic.panel_profits_data as Record<string, unknown> | undefined)?.gocollect_psa as Record<string, unknown> | undefined ||
-    (comic.panel_profits_data as Record<string, unknown> | undefined)?.psa_grades as Record<string, unknown> | undefined ||
-    comic.panel_profits_data;
+    (comic.panel_profits_data as Record<string, unknown> | undefined)?.psa_grades as Record<string, unknown> | undefined;
   if (!data) return result;
 
   for (const grade of GRADES) {
@@ -243,7 +246,7 @@ export function cgcGrades(comic: Partial<ComicRecord>): Partial<Record<Grade, nu
   const result: Partial<Record<Grade, number>> = {};
   const cgcData = (comic as Record<string, unknown>)?.cgc_data as Record<string, unknown> | undefined;
 
-  // 1. If cgc_grades or cgc is an array of sale observations
+  // 1. Array of sale observations
   const obsList = Array.isArray(cgcData?.cgc_grades)
     ? cgcData.cgc_grades
     : Array.isArray((comic as any).cgc)
@@ -264,8 +267,7 @@ export function cgcGrades(comic: Partial<ComicRecord>): Partial<Record<Grade, nu
   // 2. Dictionary lookups
   const cgcDict =
     (comic as Record<string, unknown>)?.cgc_data as Record<string, unknown> | undefined ||
-    (comic.panel_profits_data as Record<string, unknown> | undefined)?.cgc_grades as Record<string, unknown> | undefined ||
-    (comic.panel_profits_data as Record<string, unknown> | undefined);
+    (comic.panel_profits_data as Record<string, unknown> | undefined)?.cgc_grades as Record<string, unknown> | undefined;
 
   if (cgcDict) {
     for (const grade of GRADES) {
@@ -281,28 +283,12 @@ export function cgcGrades(comic: Partial<ComicRecord>): Partial<Record<Grade, nu
     }
   }
 
-  // 3. Certified slab grades from authentic market feeds (strictly grades != RAW)
-  const pcData = (comic as Record<string, unknown>)?.pricecharting_data as Record<string, unknown> | undefined ||
-    (comic.panel_profits_data as Record<string, unknown> | undefined)?.pricecharting as Record<string, unknown> | undefined;
-  if (pcData) {
-    for (const grade of GRADES) {
-      if (grade === "RAW") continue;
-      const gradeKey = grade.replace(".", "_");
-      const stored = positivePrice(
-        pcData[`grade_${gradeKey}`] ||
-        pcData[grade]
-      );
-      if (stored !== null && !result[grade]) result[grade] = stored;
-    }
-  }
-
   return result;
 }
 
 /**
  * Reads PriceCharting secondary market auction/sales observation ladder.
- * Operates as an independent pricing authority. Never blends with ComicBase or Panel Profits.
- * RAW indicates uncertified market transactions; rarely if ever exceeds 9.8 certified pricing.
+ * Operates as an independent pricing authority.
  */
 export function priceChartingGrades(comic: Partial<ComicRecord>): Partial<Record<Grade, number>> {
   const result: Partial<Record<Grade, number>> = {};
@@ -311,7 +297,7 @@ export function priceChartingGrades(comic: Partial<ComicRecord>): Partial<Record
     (comic.panel_profits_data as Record<string, unknown> | undefined)?.pricecharting as Record<string, unknown> | undefined;
 
   if (pcData) {
-    const rawVal = positivePrice(pcData["raw"] || pcData["RAW"] || pcData["raw_price"]);
+    const rawVal = positivePrice(pcData["raw"] || pcData["RAW"] || pcData["raw_price"] || pcData["ungraded"]);
     if (rawVal !== null) result["RAW"] = rawVal;
 
     for (const grade of GRADES) {
@@ -375,7 +361,6 @@ export function psaGrades(comic: Partial<ComicRecord>): Partial<Record<Grade, nu
 
 /**
  * Reads verified eBay sold transaction observations ladder.
- * Isolated on its own line to prevent conflating realized auction sales with baseline FMV.
  */
 export function ebayGrades(comic: Partial<ComicRecord>): Partial<Record<Grade, number>> {
   const result: Partial<Record<Grade, number>> = {};
@@ -449,16 +434,24 @@ export function getHighestGradedPrice(
 }
 
 /**
- * Reads order-book execution spreads (_buy and _sell) for key anchor grades.
- * Corresponds to the bid/ask execution spreads in the 115k dataset and translation layer.
+ * Returns continuous market execution spreads (Buy / Sell).
+ * Prioritizes explicitly recorded spreads from dataset.
+ * If unrecorded, derives realistic exchange execution spreads:
+ * Bid (Buy): 0.88 * FMV
+ * Ask (Sell): 1.12 * FMV
  */
-export function panelProfitsSpreads(comic: Partial<ComicRecord>, grade: Grade): ExecutionSpreads {
+export function panelProfitsSpreads(
+  comic: Partial<ComicRecord>,
+  grade: Grade,
+  fallbackPrice?: number | null
+): ExecutionSpreads {
   const ppData = comic.panel_profits_data as Record<string, any> | undefined;
-  if (!ppData) return { buy: null, sell: null };
+  if (!ppData && !fallbackPrice) return { buy: null, sell: null };
 
-  // 1. Direct structured spreads object
-  if (ppData.spreads && typeof ppData.spreads === "object") {
-    const gradeKey = grade.replace(".", "_");
+  const gradeKey = grade.replace(".", "_");
+
+  // 1. Direct structured spreads object from benchmark / dataset
+  if (ppData?.spreads && typeof ppData.spreads === "object") {
     const s =
       ppData.spreads[grade] ??
       ppData.spreads[grade.toLowerCase()] ??
@@ -472,79 +465,71 @@ export function panelProfitsSpreads(comic: Partial<ComicRecord>, grade: Grade): 
     }
   }
 
-  const gradeKey = grade.replace(".", "_");
-
-  const rawBuyKeys = [
-    "ungraded_buy",
-    "PP - Ungraded Buy Price",
-    "raw_buy",
-    "loose_buy",
-    "PP - Raw Buy Price",
-  ];
-  const rawSellKeys = [
-    "ungraded_sell",
-    "PP - Ungraded Sell Price",
-    "raw_sell",
-    "loose_sell",
-    "PP - Raw Sell Price",
-  ];
-
   let buy: number | null = null;
   let sell: number | null = null;
 
-  if (grade === "RAW") {
-    for (const key of rawBuyKeys) {
-      const v = positivePrice(ppData[key]);
-      if (v !== null) {
-        buy = v;
-        break;
+  // 2. Check explicit individual bid/ask spread keys if present
+  if (ppData) {
+    if (grade === "RAW") {
+      const rawBuyKeys = [
+        "raw_buy",
+        "ungraded_buy",
+        "PP - Grade RAW Buy Price",
+        "PP - Ungraded Buy Price",
+        "raw_bid",
+      ];
+      const rawSellKeys = [
+        "raw_sell",
+        "ungraded_sell",
+        "PP - Grade RAW Sell Price",
+        "PP - Ungraded Sell Price",
+        "raw_ask",
+      ];
+      for (const key of rawBuyKeys) {
+        const v = positivePrice(ppData[key]);
+        if (v !== null) { buy = v; break; }
       }
-    }
-    for (const key of rawSellKeys) {
-      const v = positivePrice(ppData[key]);
-      if (v !== null) {
-        sell = v;
-        break;
+      for (const key of rawSellKeys) {
+        const v = positivePrice(ppData[key]);
+        if (v !== null) { sell = v; break; }
       }
-    }
-  } else {
-    const buyKeys = [
-      `grade_${gradeKey}_buy`,
-      `PP - Grade ${grade} Buy Price`,
-      `${grade}_buy`,
-      `grade_${gradeKey.replace("_", "")}_buy`,
-    ];
-    const sellKeys = [
-      `grade_${gradeKey}_sell`,
-      `PP - Grade ${grade} Sell Price`,
-      `${grade}_sell`,
-      `grade_${gradeKey.replace("_", "")}_sell`,
-    ];
-
-    for (const key of buyKeys) {
-      const v = positivePrice(ppData[key]);
-      if (v !== null) {
-        buy = v;
-        break;
+    } else {
+      const buyKeys = [
+        `grade_${gradeKey}_buy`,
+        `PP - Grade ${grade} Buy Price`,
+        `${grade}_buy`,
+        `grade_${gradeKey.replace("_", "")}_buy`,
+      ];
+      const sellKeys = [
+        `grade_${gradeKey}_sell`,
+        `PP - Grade ${grade} Sell Price`,
+        `${grade}_sell`,
+        `grade_${gradeKey.replace("_", "")}_sell`,
+      ];
+      for (const key of buyKeys) {
+        const v = positivePrice(ppData[key]);
+        if (v !== null) { buy = v; break; }
       }
-    }
-    for (const key of sellKeys) {
-      const v = positivePrice(ppData[key]);
-      if (v !== null) {
-        sell = v;
-        break;
+      for (const key of sellKeys) {
+        const v = positivePrice(ppData[key]);
+        if (v !== null) { sell = v; break; }
       }
     }
   }
 
-  // Fallback to translation layer deterministic spread (0.66 buy / 1.10 sell) if explicit spreads are unrecorded
+  // If explicit spreads were partially or completely found
+  if (buy !== null || sell !== null) {
+    return { buy, sell };
+  }
+
+  // 3. Fallback to continuous market execution spreads if price is confirmed
   const gradesMap = panelProfitsGrades(comic);
-  const marketPrice = gradesMap[grade];
-  if (marketPrice && buy === null) {
-    buy = Number((marketPrice * 0.66).toFixed(2));
-  }
-  if (marketPrice && sell === null) {
-    sell = Number((marketPrice * 1.10).toFixed(2));
+  const pcMap = priceChartingGrades(comic);
+  const marketPrice = fallbackPrice ?? gradesMap[grade] ?? pcMap[grade] ?? (grade === "9.8" ? positivePrice(comic.pp_grade_9_8_price) : null);
+
+  if (marketPrice && marketPrice > 0) {
+    buy = Number((marketPrice * 0.88).toFixed(2));
+    sell = Number((marketPrice * 1.12).toFixed(2));
   }
 
   return { buy, sell };
@@ -574,14 +559,20 @@ export function panelProfitsVolume(
       (grade === "RAW" ? ppData.volume.raw : ppData.volume[`grade_${gradeKey}`]);
     if (typeof val === "string") return val;
   }
+  if (ppData.pricecharting?.volume_score) {
+    return String(ppData.pricecharting.volume_score);
+  }
   if (grade === "RAW" && typeof ppData["PP - Sales Volume"] === "string") {
     return ppData["PP - Sales Volume"];
+  }
+  if (grade === "9.8" && ppData["Panel Profits Baseline Grade 9.8 Observation Count"]) {
+    return `${ppData["Panel Profits Baseline Grade 9.8 Observation Count"]} tracked sales`;
   }
   return null;
 }
 
 export function comicBaseReference(comic: Partial<ComicRecord>): number | null {
-  return positivePrice(comic.comicbase_price);
+  return positivePrice(comic.comicbase_price) || positivePrice(comic.comicbase_data?.["CB - Price"]);
 }
 
 export function panelProfitsListings(
@@ -644,4 +635,3 @@ export function cgcListings(comic: Partial<ComicRecord>, grade: Grade): number |
   if (grade === "RAW") return null;
   return panelProfitsListings(comic, grade);
 }
-
