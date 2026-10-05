@@ -16,3 +16,9 @@ export function createAdminServerClient() {
 export function createCleanReadOnlyServerClient() {
   return createAdminServerClient();
 }
+
+export function createPublicReadOnlyClient() {
+  const cleanKey = (anonKey || CANONICAL_SUPABASE_ANON_KEY).trim().replace(/^["']|["']$/g, "");
+  const cleanUrl = (url || CANONICAL_SUPABASE_URL).trim().replace(/^["']|["']$/g, "");
+  return createClient(cleanUrl, cleanKey, { auth: { persistSession: false, autoRefreshToken: false } });
+}

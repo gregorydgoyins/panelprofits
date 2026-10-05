@@ -1,5 +1,4 @@
-import { createAdminServerClient, createCleanReadOnlyServerClient } from "@/lib/supabase/admin";
-import { createPublicServerClient } from "@/lib/supabase/server";
+import { createAdminServerClient, createCleanReadOnlyServerClient, createPublicReadOnlyClient } from "@/lib/supabase/admin";
 import { ComicRecord, ComicSearchParams, ComicQueryResult } from "@/lib/comics/types";
 import { getComicCoverEvidence } from "@/lib/comics/covers";
 import { createCachedQuery } from "@/lib/cache/wrapper";
@@ -413,7 +412,7 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
       let { data, error } = await query.maybeSingle();
       if ((error || !data) && !isPpNumeric) {
         try {
-          const pub = createPublicServerClient();
+          const pub = createPublicReadOnlyClient();
           const pubRes = await pub.from("comics").select("*").eq("id", cleanId).maybeSingle();
           if (pubRes.data) {
             data = pubRes.data;
