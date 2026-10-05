@@ -123,22 +123,36 @@ export function resolveHistoricalScarcityTier(params: {
 
 /**
  * Assigns Market Security Class based on Canonical System Map & Asset Ontology:
- * - SOV: Certified Sovereign CE70 Benchmark Constituents.
- * - PREMIUM: Certified Key Historical Issues (Character Debuts, Milestone #1s, Pre-Code / Golden survivors).
- * - STD: Standard verified series issues.
- * - OTC: Secondary or peripheral uncatalogued items.
+ * - SOV: Direct universal bluelabel 9.8 comic.
+ * - PREMIUM: 45.00 to infinity (or landmark key issues).
+ * - STD: Standard issues (18.00 to 44.99).
+ * - OTC: Over-the-counter issues (less than 17.99).
  */
 export function resolveHistoricalMarketClass(params: {
   isSovereign: boolean;
+  fmv?: number | null;
+  price?: number | null;
   keyBadge?: string | null;
   year?: number | null;
   era?: string | null;
   variant?: string | null;
 }): "SOV" | "PREMIUM" | "STD" | "OTC" {
-  const { isSovereign, keyBadge, year, era, variant } = params;
+  const { isSovereign, fmv, price, keyBadge, year, era, variant } = params;
 
   if (isSovereign) {
     return "SOV";
+  }
+
+  // Exact Price Thresholds:
+  // - otc is less than 17.99
+  // - standard is 18.00 to 44.99
+  // - premium is 45.00 to infinity
+  const priceVal = price ?? fmv;
+  if (priceVal != null && !isNaN(Number(priceVal)) && Number(priceVal) > 0) {
+    const p = Number(priceVal);
+    if (p < 17.99) return "OTC";
+    if (p <= 44.99) return "STD";
+    return "PREMIUM";
   }
 
   const eraNormalized = (era || "").toLowerCase().trim();

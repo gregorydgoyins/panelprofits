@@ -11,6 +11,7 @@ import type {
 } from './types';
 import { OraclePriceSparkline } from '@/components/ui/OraclePriceSparkline';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
+import { resolvePriceTier } from '@/lib/pricing/market-tiers';
 
 type EraColors = { border: string; bg: string; bgHover: string; glow: string; };
 type ScarcityColors = { border: string; bgGradient?: string; bg?: string; label: string; [key: string]: any; };
@@ -20,11 +21,11 @@ const SCARCITY_ICONS: Record<string, LucideIcon> = {
 };
 
 const ASSET_CLASS_HERO_CONFIG: Record<string, { label: string; color: string; glowColor: string; desc: string }> = {
-  PREMIUM: { label: 'PREMIUM', color: '#eab308', glowColor: '#eab30880', desc: 'Premium class. High-value asset exceeding standard market thresholds. Represents top-tier confirmed sales.' },
-  SOV:     { label: 'SOV',     color: '#3b82f6', glowColor: '#3b82f680', desc: 'Sovereign class. Base-set artifact with confirmed market sales at the highest observed grade. Eligible for primary order flow.' },
+  PREMIUM: { label: 'PREMIUM', color: '#eab308', glowColor: '#eab30880', desc: 'Premium class ($45.00 to infinity). High-value asset exceeding standard market thresholds. Represents top-tier confirmed sales.' },
+  SOV:     { label: 'SOV',     color: '#3b82f6', glowColor: '#3b82f680', desc: 'Sovereign class. Direct universal bluelabel 9.8 comic. Primary order flow anchor.' },
   VARIANT: { label: 'VARIANT', color: '#a78bfa', glowColor: '#a78bfa60', desc: 'Variant class. Scarcity-driven instrument — newsstand, price variant, retailer incentive, or insert edition with confirmed $30+ market price.' },
-  STD:     { label: 'STD',     color: '#94a3b8', glowColor: '#94a3b830', desc: 'Standard class. Confirmed market with verified sales volume at top grade.' },
-  OTC:     { label: 'OTC',     color: '#fb923c', glowColor: '#fb923c50', desc: 'Over-the-counter. Thin or unconfirmed market. Price is indicative only.' },
+  STD:     { label: 'STD',     color: '#94a3b8', glowColor: '#94a3b830', desc: 'Standard class ($18.00 to $44.99). Confirmed market with verified sales volume on standard exchange floor.' },
+  OTC:     { label: 'OTC',     color: '#fb923c', glowColor: '#fb923c50', desc: 'Over-the-counter (less than $17.99). Bilateral dealer desks / off-exchange.' },
   RAW:     { label: 'RAW',     color: '#94a3b8', glowColor: '#94a3b830', desc: 'Raw/Ungraded. Artifact has not been third-party certified. Pricing reflects average raw condition.' },
 };
 
@@ -233,8 +234,7 @@ export default function HeroPanel({
                 const isTrueVariant = !!variantTag && !['direct', 'base', 'regular'].includes((variantTag || '').toLowerCase());
                 
                 const isSovereign = variant.isSovereign === true;
-                const priceTierClass = (usd: number) => (usd || 0) >= 45 ? 'PREMIUM' : (usd || 0) >= 20 ? 'STD' : 'OTC';
-                const marketPriceClass = variant.marketPriceClass || priceTierClass(keyPrices.display_fmv_usd || 0);
+                const marketPriceClass = variant.marketPriceClass || resolvePriceTier(keyPrices.display_fmv_usd || 0);
 
                 const displayAssetClass: string = isRawCopy
                   ? 'RAW'
@@ -421,8 +421,7 @@ export default function HeroPanel({
               const variantTag = variant.variantDescription;
               const isTrueVariant = !!variantTag && !['direct', 'base', 'regular'].includes((variantTag || '').toLowerCase());
               const isSovereign = variant.isSovereign === true;
-              const priceTierClass = (usd: number) => (usd || 0) >= 45 ? 'PREMIUM' : (usd || 0) >= 20 ? 'STD' : 'OTC';
-              const marketPriceClass = variant.marketPriceClass || priceTierClass(keyPrices.display_fmv_usd || 0);
+              const marketPriceClass = variant.marketPriceClass || resolvePriceTier(keyPrices.display_fmv_usd || 0);
               const displayAssetClass: string = isRawCopy ? 'RAW' : isSovereign && rawGrade === '9.8' && !isTrueVariant ? 'SOV' : marketPriceClass;
               const assetKey = displayAssetClass.toUpperCase();
               if (assetKey !== 'STD' && assetKey !== 'OTC' && assetKey !== 'PREMIUM') return null;

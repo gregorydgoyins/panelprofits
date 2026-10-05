@@ -142,8 +142,8 @@ export const EquityCard = React.memo(function EquityCard({
   const isReprint = identity.editionForm === "REPRINT" || Boolean(variantTag && (variantTag.toLowerCase().includes("print") || variantTag.toLowerCase().includes("printing")));
   const isOtherVariant = isTrueVariant && !isNewsstand && !isReprint;
 
-  // Strict Sovereign check: ONLY authenticated CE70 benchmark seats.
-  const isProvenSovereign = identity.isSovereign === true && !isTrueVariant && !isNewsstand && !isReprint;
+  // Strict Sovereign check: "soverign is a direct universal bluelabel 9.8 comic"
+  const isProvenSovereign = identity.isSovereign === true && pricing.grade === "9.8" && !isTrueVariant && !isNewsstand && !isReprint;
 
   const coverUrl = item?.coverImageUrl || null;
   React.useEffect(() => {

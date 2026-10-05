@@ -248,10 +248,15 @@ function enrichWithConnoisseurDossier(comic: ComicRecord): ComicRecord {
     const rawFmv = bench?.rawFmvUsd ?? null;
     const coverPrice = bench?.coverPrice ?? null;
 
+    const isDirect = !comic.direct_or_variant ||
+      ["direct", "base", "regular", "standard"].includes(comic.direct_or_variant.toLowerCase());
+    const isSovereign = Boolean(isDirect && fmv98 != null && fmv98 > 0);
+    const baseTicker = formatComicEquityTicker(comic.series, comic.issue_number);
+
     const panelProfitsData = {
       ...existingPp,
-      is_sovereign: true,
-      ticker: `${formatComicEquityTicker(comic.series, comic.issue_number)}.SOV`,
+      is_sovereign: isSovereign,
+      ticker: isSovereign ? `${baseTicker}.SOV` : baseTicker,
       seat_number: matchedDossier.seatNumber,
       gregory_score: matchedDossier.gregoryScore,
       quality_scores: matchedDossier.qualityScores,

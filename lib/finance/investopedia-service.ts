@@ -26,16 +26,31 @@ export function computeComicValuationMetrics(comic: {
   series?: string | null;
   issue_number?: string | null;
   census_total?: number | null;
+  is_sovereign?: boolean | null;
+  isSovereign?: boolean | null;
+  grade?: string | number | null;
+  variant?: string | null;
+  editionForm?: string | null;
+  labelType?: string | null;
 }): ComicValuationMetrics {
   const fmvUsd = Number(comic.baseline_grade_9_8_value || comic.pp_grade_9_8_price || 0);
 
-  // Asset Class determination
+  // Asset Class determination:
+  // - Sovereign: direct universal bluelabel 9.8 comic
+  // - Premium: 45.00 to infinity
+  // - Standard: 18.00 to 44.99
+  // - OTC: less than 17.99
+  const isDirect = !comic.variant || ["direct", "base", "regular", "standard"].includes(comic.variant.toLowerCase());
+  const isBlueLabel = !comic.labelType || !["SIGNATURE", "QUALIFIED", "RESTORED", "CONSERVED"].some(t => (comic.labelType || "").toUpperCase().includes(t));
+  const is98 = !comic.grade || String(comic.grade).trim() === "9.8";
+  const isTrulySovereign = Boolean((comic.is_sovereign || comic.isSovereign) && isDirect && isBlueLabel && is98);
+
   let assetClass = "OTC";
-  if (fmvUsd >= 50000) {
+  if (isTrulySovereign) {
     assetClass = "SOV";
-  } else if (fmvUsd >= 45) {
+  } else if (fmvUsd >= 45.0) {
     assetClass = "PREMIUM";
-  } else if (fmvUsd >= 20) {
+  } else if (fmvUsd >= 18.0) {
     assetClass = "STD";
   } else if (fmvUsd > 0) {
     assetClass = "OTC";

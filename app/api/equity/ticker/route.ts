@@ -48,18 +48,20 @@ export async function GET(request: Request) {
     const itemGrade = String(item.referenceGrade || "9.8").trim();
 
     // Strict Sovereign Constitutional Gating:
-    // ONLY authenticated CE70 benchmark constituent seats or certified landmark grails are Sovereign.
-    // Variants, newsstands, reprints, and general catalog equities are strictly non-sovereign.
-    const isTrulySovereign = !item.variant && Boolean(
+    // "soverign is a direct universal bluelabel 9.8 comic"
+    // Strictly requires grade 9.8, direct edition (no variants, newsstands, reprints), and universal label.
+    const isTrulySovereign = itemGrade === "9.8" && !item.variant && Boolean(
       (item as any).isSovereign === true ||
       String(item.id).startsWith("landmark-") ||
       String(item.lineage || "").toLowerCase().includes("sovereign landmark") ||
       (String(item.id).startsWith("seat-") && (item as any).seatNumber <= 65)
     );
 
-    // Enforce Price Firewall (Rule C of CE70 Constitution):
-    // Scarcity Tier and Market Class are determined by Historical Significance,
-    // Cultural Gravity, and Milestone Status — NOT raw dollar prices.
+    // Enforce Price Firewall & Market Class:
+    // - otc is less than 17.99
+    // - standard is 18.00 to 44.99
+    // - premium is 45.00 to infinity
+    // - soverign is a direct universal bluelabel 9.8 comic
     const keyBadge = item.keyBadge || resolveHistoricalKeyBadge(item.series, item.issueNumber);
     const tier = resolveHistoricalScarcityTier({
       year: item.year,
@@ -71,6 +73,7 @@ export async function GET(request: Request) {
     });
     const marketClass = resolveHistoricalMarketClass({
       isSovereign: isTrulySovereign,
+      fmv: item.referenceFmvUsd,
       keyBadge,
       year: item.year,
       era: eraKey,

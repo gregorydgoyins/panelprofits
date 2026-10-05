@@ -149,13 +149,12 @@ export function getTopRecordedGrade(b: Partial<ComicBenchmarkPricing> | Record<s
 
 /**
  * Strict Sovereign Verification Gate:
- * A Sovereign copy of a comic is:
- * 1. A direct copy (universal blue label, NOT variant, NOT signature, NOT qualified, NOT modified/restored).
- * 2. The top verified sale of the book verified by one of our verified sources.
- * 3. Typically a 9.8 copy.
- * 4. Can be a lower grade (e.g. 9.4, 9.2, 9.0) ONLY IF that grade is proven to be the absolute highest
- *    known verified sale on record for that comic across all sources (i.e. NO 9.8 or higher sale exists).
- * 5. If it cannot be proven to be a sovereign copy, it CANNOT be labeled a sovereign copy.
+ * "soverign is a direct universal bluelabel 9.8 comic"
+ *
+ * 1. Must be a direct copy (NOT a variant, NOT newsstand, NOT reprint).
+ * 2. Must be universal blue label (NOT signature series, NOT qualified, NOT restored/conserved).
+ * 3. Must be strictly 9.8 grade.
+ * 4. If it cannot be proven to be a sovereign copy, it CANNOT be labeled a sovereign copy.
  */
 export function isProvenSovereignCopy(
   specimenGrade: string | number | null,
@@ -165,52 +164,62 @@ export function isProvenSovereignCopy(
     variantName?: string | null;
     labelType?: string | null;
     isSignature?: boolean | null;
+    isNewsstand?: boolean | null;
+    isReprint?: boolean | null;
+    editionForm?: string | null;
   }
 ): boolean {
-  // Disqualifiers: variant, signature, qualified, restored/conserved
-  if (options?.isVariant) return false;
-  if (options?.variantName && !["direct", "base", "regular", "standard"].includes(String(options.variantName).toLowerCase())) {
+  // Disqualifiers: variant, newsstand, reprint, signature, qualified, restored/conserved
+  if (options?.isVariant || options?.isNewsstand || options?.isReprint) return false;
+  if (
+    options?.variantName &&
+    !["direct", "base", "regular", "standard"].includes(String(options.variantName).toLowerCase())
+  ) {
+    return false;
+  }
+  if (
+    options?.editionForm &&
+    !["direct", "base", "regular", "standard"].includes(String(options.editionForm).toLowerCase())
+  ) {
     return false;
   }
   if (options?.isSignature) return false;
   const label = String(options?.labelType || "").toUpperCase();
-  if (label.includes("SIGNATURE") || label.includes("QUALIFIED") || label.includes("RESTORED") || label.includes("CONSERVED")) {
+  if (
+    label.includes("SIGNATURE") ||
+    label.includes("QUALIFIED") ||
+    label.includes("RESTORED") ||
+    label.includes("CONSERVED") ||
+    label.includes("PURPLE") ||
+    label.includes("PEDIGREE GREEN")
+  ) {
     return false;
   }
 
   if (!specimenGrade) return false;
   const cleanGrade = String(specimenGrade).trim();
 
+  // Strict sovereign requirement: must be 9.8
+  if (cleanGrade !== "9.8") {
+    return false;
+  }
+
   const num = (v?: number | null) => (v != null && v > 0 ? v : 0);
   const grade98Price = benchmark
     ? num(benchmark.grade98FmvUsd) || num((benchmark as any).grade98_fmv) || num((benchmark as any)["Grade 9.8 Market Price"])
     : 0;
 
-  // 1. If specimen is 9.8 and has verified 9.8 pricing / top sale, it is Sovereign
-  if (cleanGrade === "9.8" && grade98Price > 0) {
-    return true;
-  }
-
-  // 2. If a 9.8 sale exists on record, ANY lower grade (9.6, 9.4, 9.2, 9.0, etc.) CANNOT be Sovereign
-  if (grade98Price > 0) {
+  // If a benchmark is provided, verify 9.8 pricing / existence
+  if (benchmark && grade98Price <= 0) {
     return false;
   }
 
-  // 3. If NO 9.8 sale exists on record (e.g. rare vintage golden age issue),
-  // then the specimen is Sovereign ONLY IF it matches the proven highest recorded sale for this issue.
-  if (!benchmark) return false;
-  const topGrade = getTopRecordedGrade(benchmark);
-  if (!topGrade || topGrade === "9.8") {
-    // No lower grade can be proven sovereign without explicit sale benchmark
-    return false;
-  }
-
-  return cleanGrade === topGrade;
+  return true;
 }
 
 /**
  * Evaluates whether a specific specimen grade is Sovereign (SOV).
- * Strictly enforces that non-9.8 copies cannot be labeled Sovereign if a 9.8 exists.
+ * Strictly enforces that only direct universal blue label 9.8 copies are Sovereign.
  */
 export function isSpecimenSovereign(
   specimenGrade: string | number | null,
@@ -220,6 +229,9 @@ export function isSpecimenSovereign(
     variantName?: string | null;
     labelType?: string | null;
     isSignature?: boolean | null;
+    isNewsstand?: boolean | null;
+    isReprint?: boolean | null;
+    editionForm?: string | null;
   }
 ): boolean {
   return isProvenSovereignCopy(specimenGrade, benchmark, options);

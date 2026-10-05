@@ -56,7 +56,7 @@ export const ASSET_CLASS_CONFIG: Record<string, AssetClassConfig> = {
     fullName: 'Sovereign Graded Equity',
     venue: 'Continuous Central Bourse / Sovereign Vault Collateral',
     marginHaircut: '25%',
-    description: 'Universal graded, direct copy of a comic at its highest verified sold grade (typically a 9.8, or the highest known verified grade on record for that issue). Eligible as institutional vault collateral.',
+    description: 'Direct universal bluelabel 9.8 comic. Eligible as institutional vault collateral.',
   },
   PREMIUM: {
     color: '#c084fc',
@@ -64,7 +64,7 @@ export const ASSET_CLASS_CONFIG: Record<string, AssetClassConfig> = {
     fullName: 'Premium Market Equity',
     venue: 'Tier-1 Continuous Central Bourse',
     marginHaircut: '35%',
-    description: 'High-liquidity blue-chip key issues (FMV >= $45). Continuous dealer bid-ask depth and high trade velocity.',
+    description: 'High-liquidity blue-chip issues ($45.00 to infinity). Continuous dealer bid-ask depth and high trade velocity.',
   },
   STD: {
     color: '#38bdf8',
@@ -72,7 +72,7 @@ export const ASSET_CLASS_CONFIG: Record<string, AssetClassConfig> = {
     fullName: 'Standard Market Equity',
     venue: 'Standard Exchange Floor',
     marginHaircut: '50%',
-    description: 'Continuous circulation issues ($20 <= FMV < $45). Regular secondary market trading pool with standard exchange collateral haircut.',
+    description: 'Continuous circulation issues ($18.00 to $44.99). Regular secondary market trading pool with standard exchange collateral haircut.',
   },
   OTC: {
     color: '#fb923c',
@@ -80,7 +80,7 @@ export const ASSET_CLASS_CONFIG: Record<string, AssetClassConfig> = {
     fullName: 'Over-The-Counter Equity',
     venue: 'Bilateral Dealer Desks / Off-Exchange',
     marginHaircut: '75%',
-    description: 'Lower-liquidity, unlisted, or sub-$20 issues traded through bilateral broker desks rather than continuous exchange matching.',
+    description: 'Over-the-counter issues (less than $17.99). Traded through bilateral broker desks rather than continuous exchange matching.',
   },
   VAR: {
     color: '#a78bfa',

@@ -65,6 +65,7 @@ import { ExecutionModalWrapper } from "@/components/detail/equity/ExecutionModal
 import { getEraColors, getScarcityColors, type ScarcityTier } from "@/lib/design-system/colors";
 import { panelProfitsGrades } from "@/lib/pricing/source-ladder";
 import { buildComicPriceHistory } from "@/lib/pricing/historical-chronology";
+import { resolvePriceTier, isDirectEdition } from "@/lib/pricing/market-tiers";
 import StoryNotesCard from "@/components/detail/equity/StoryNotesCard";
 
 export const dynamic = "force-dynamic";
@@ -292,6 +293,19 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     coverEvidence?.image_url ||
     null;
 
+  // Canonical Asset Class & Market Price Tiers:
+  // - otc is less than 17.99
+  // - standard is 18.00 to 44.99
+  // - premium is 45.00 to infinity
+  // - soverign is a direct universal bluelabel 9.8 comic
+  const isDirect = isDirectEdition(comic.direct_or_variant) && isDirectEdition(comic.cover_variant);
+  const isTrulySovereign = Boolean(
+    isDirect &&
+    (comic.pp_grade_9_8_price || consensusFmv > 0)
+  );
+  const priceTier = resolvePriceTier(consensusFmv);
+  const effectiveAssetClass = isTrulySovereign ? "SOV" : priceTier;
+
   const fullVariant: DetailResponse["variant"] = {
     id: comic.id,
     workId: null,
@@ -300,10 +314,10 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     variantDescription: comic.direct_or_variant || comic.cover_variant || null,
     variantKey: `${comic.series}-${comic.issue_number}`,
     artifactType: "comic_issue",
-    assetClass: isCe70Seat ? "SOV" : "PREMIUM",
-    marketLane: "investment_grade",
-    isSovereign: isCe70Seat,
-    marketPriceClass: "A_PRIME",
+    assetClass: effectiveAssetClass,
+    marketLane: consensusFmv >= 45 ? "investment_grade" : consensusFmv >= 18 ? "standard_exchange" : "over_the_counter",
+    isSovereign: isTrulySovereign,
+    marketPriceClass: priceTier,
     certificationState: "CGC_CERTIFIED",
     editionForm: comic.direct_or_variant || "Direct",
     productId: comic.id,
@@ -478,9 +492,9 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
 
   const marketMathData: MarketMathData = {
     variantId: comic.id,
-    sovereignGrade: "9.8",
-    marketPriceClass: "A_PRIME",
-    isSovereign: isCe70Seat,
+    sovereignGrade: isTrulySovereign ? "9.8" : null,
+    marketPriceClass: priceTier,
+    isSovereign: isTrulySovereign,
     partial: false,
     momentum: {
       roc30d: 5.4,
@@ -654,9 +668,9 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
               anchorPriceUsd: consensusFmv,
               anchorSalesVolume: 24,
               anchorConfidence: "HIGH",
-              sovGrade: 9.8,
+              sovGrade: isTrulySovereign ? 9.8 : 9.8,
               sovPriceUsd: consensusFmv,
-              assetClass: isCe70Seat ? "SOV" : "PREMIUM",
+              assetClass: effectiveAssetClass,
               price99Usd: Number((consensusFmv * 1.15).toFixed(2)),
               price100Usd: Number((consensusFmv * 1.3).toFixed(2)),
               ism99: null,
