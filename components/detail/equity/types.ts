@@ -265,7 +265,7 @@ export interface DetailResponse {
   };
   wikiSummary: string | null;
   series: { totalIssues: number; totalPriced: number; lastCrawled: string | null; category: string; };
-  keyPrices: { fmv98Usd: number; fmv10Usd: number; fmvRawUsd: number; sovPriceUsd: number; sovGrade: string | null; premiumPct: number | null; gradeCount: number; observedAt: string | null; anchor9_8: number; display_fmv_usd: number | null; display_grade: string | null; delta24h?: number | null; };
+  keyPrices: { fmv98Usd: number; fmv10Usd: number | null; fmvRawUsd: number | null; sovPriceUsd: number; sovGrade: string | null; premiumPct: number | null; gradeCount: number; observedAt: string | null; anchor9_8: number; display_fmv_usd: number | null; display_grade: string | null; delta24h?: number | null; };
   gradeLattice: GradePrice[];
   priceHistory: HistoryEntry[];
   otherPrintings: OtherPrinting[];

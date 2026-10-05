@@ -7,7 +7,7 @@ import { getEraColors } from '@/lib/design-system/colors';
 export interface AuctionHistoryCardProps {
   recentSales?: Array<{ grade: string; priceUsd: number; date: string; platform?: string }> | null;
   saleIntelligence?: { avgSalePrice?: number; medianSalePrice?: number; totalSalesCount?: number; salesVelocity?: number } | null;
-  keyPrices?: { sovPriceUsd?: number; fmvRawUsd?: number; fmv98Usd?: number } | null;
+  keyPrices?: { sovPriceUsd?: number | null; fmvRawUsd?: number | null; fmv98Usd?: number | null } | null;
   eraColors: { border: string; bg: string; bgHover: string; glow: string };
 }
 

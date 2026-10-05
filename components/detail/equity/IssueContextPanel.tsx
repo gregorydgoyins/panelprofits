@@ -64,9 +64,9 @@ export default function IssueContextPanel({ variant, keyPrices, series, eraColor
     ((issueMeta.first_appearances?.length ?? 0) > 0) || ((issueMeta.key_events?.length ?? 0) > 0)
   ));
 
-  const rawTo98Premium = keyPrices.fmvRawUsd > 0 && keyPrices.fmv98Usd > 0
+  const rawTo98Premium = keyPrices.fmvRawUsd != null && keyPrices.fmvRawUsd > 0 && keyPrices.fmv98Usd > 0
     ? Math.round(((keyPrices.fmv98Usd - keyPrices.fmvRawUsd) / keyPrices.fmvRawUsd) * 100) : null;
-  const to10Premium = keyPrices.fmv10Usd > 0 && keyPrices.fmv98Usd > 0
+  const to10Premium = keyPrices.fmv10Usd != null && keyPrices.fmv10Usd > 0 && keyPrices.fmv98Usd > 0
     ? Math.round(((keyPrices.fmv10Usd - keyPrices.fmv98Usd) / keyPrices.fmv98Usd) * 100) : null;
   const eraText = ERA_CONTEXT[variant.era] || null;
 
@@ -165,7 +165,7 @@ export default function IssueContextPanel({ variant, keyPrices, series, eraColor
           <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '1rem' }}>
             <p className="text-[9px] uppercase tracking-wider mb-2" style={{ color: `${eraColors.border}90` }}>Grade Premium</p>
             <div className="space-y-2">
-              {rawTo98Premium !== null && (
+              {rawTo98Premium !== null && keyPrices.fmvRawUsd != null && (
                 <div className="flex items-center justify-between rounded px-3 py-2" style={{ backgroundColor: 'rgba(255,255,255,0.025)', border: 'rgba(255,255,255,0.06) solid 1px' }}>
                   <div>
                     <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.6)' }}>RAW → CGC 9.8</p>
@@ -174,7 +174,7 @@ export default function IssueContextPanel({ variant, keyPrices, series, eraColor
                   <span className="text-lg" style={{ color: rawTo98Premium > 200 ? '#fbbf24' : '#4ade80', fontFamily: 'monospace' }}>+{rawTo98Premium}%</span>
                 </div>
               )}
-              {to10Premium !== null && (
+              {to10Premium !== null && keyPrices.fmv10Usd != null && (
                 <div className="flex items-center justify-between rounded px-3 py-2" style={{ backgroundColor: 'rgba(255,255,255,0.025)', border: 'rgba(255,255,255,0.06) solid 1px' }}>
                   <div>
                     <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.6)' }}>CGC 9.8 → CGC 10.0</p>

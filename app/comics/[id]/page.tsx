@@ -265,8 +265,8 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
 
   const keyPrices = {
     fmv98Usd: consensusFmv,
-    fmv10Usd: grade10Price != null ? Number(grade10Price) : Number((consensusFmv * 1.3).toFixed(2)),
-    fmvRawUsd: rawPrice != null ? Number(rawPrice) : 0,
+    fmv10Usd: grade10Price != null ? Number(grade10Price) : null,
+    fmvRawUsd: rawPrice != null ? Number(rawPrice) : null,
     sovPriceUsd: consensusFmv,
     sovGrade: "9.8",
     anchor9_8: consensusFmv,
@@ -378,13 +378,13 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     isBaseVariant: true,
   };
 
-  const atomicPrice = Number(rawPrice || (consensusFmv > 0 ? (consensusFmv * 0.15).toFixed(2) : 0));
+  const atomicPrice = rawPrice != null && Number(rawPrice) > 0 ? Number(rawPrice) : null;
   const instrumentStates = {
     sovereign: isTrulySovereign ? { grade: "9.8", priceUsd: consensusFmv } : null,
     anchor: consensusFmv > 0 ? { grade: "9.8", priceUsd: consensusFmv, salesVolume: obsCountByGrade.get("9.8") || 0 } : null,
-    atomic: atomicPrice > 0 ? { grade: "RAW", priceUsd: atomicPrice } : null,
-    anchorToAtomicMultiple: atomicPrice > 0 && consensusFmv > 0 ? Number((consensusFmv / atomicPrice).toFixed(1)) : 1.0,
-    sovereignToAtomicMultiple: isTrulySovereign && atomicPrice > 0 ? Number((consensusFmv / atomicPrice).toFixed(1)) : 1.0,
+    atomic: atomicPrice != null && atomicPrice > 0 ? { grade: "RAW", priceUsd: atomicPrice } : null,
+    anchorToAtomicMultiple: atomicPrice != null && atomicPrice > 0 && consensusFmv > 0 ? Number((consensusFmv / atomicPrice).toFixed(1)) : null,
+    sovereignToAtomicMultiple: isTrulySovereign && atomicPrice != null && atomicPrice > 0 ? Number((consensusFmv / atomicPrice).toFixed(1)) : null,
   };
 
   const instrumentIntelligence: InstrumentIntelligence = {

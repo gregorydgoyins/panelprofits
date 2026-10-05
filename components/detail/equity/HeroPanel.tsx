@@ -393,7 +393,7 @@ export default function HeroPanel({
                     )}
                   </div>
                 )}
-                {instrumentStates?.anchor && instrumentStates.anchor.grade !== instrumentStates.sovereign?.grade && (
+                {instrumentStates?.anchor && (
                   <div>
                     <div className="text-[9px] uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.68)', letterSpacing: '0.12em' }}>Anchor · CGC {instrumentStates.anchor.grade}{instrumentStates.anchor.salesVolume > 0 && <span style={{ color: 'rgba(255,255,255,0.74)', marginLeft: '4px' }}>{instrumentStates.anchor.salesVolume} sales</span>}</div>
                     <div className="text-2xl" style={{ color: '#e2e8f0', fontFamily: 'monospace', fontWeight: 500 }}>{fmt(instrumentStates.anchor.priceUsd)}</div>

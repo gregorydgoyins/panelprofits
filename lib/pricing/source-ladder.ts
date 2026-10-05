@@ -522,17 +522,8 @@ export function panelProfitsSpreads(
     return { buy, sell };
   }
 
-  // 3. Fallback to continuous market execution spreads if price is confirmed
-  const gradesMap = panelProfitsGrades(comic);
-  const pcMap = priceChartingGrades(comic);
-  const marketPrice = fallbackPrice ?? gradesMap[grade] ?? pcMap[grade] ?? (grade === "9.8" ? positivePrice(comic.pp_grade_9_8_price) : null);
-
-  if (marketPrice && marketPrice > 0) {
-    buy = Number((marketPrice * 0.88).toFixed(2));
-    sell = Number((marketPrice * 1.12).toFixed(2));
-  }
-
-  return { buy, sell };
+  // Strictly no synthetic placeholder spreads: if no authentic quotes are recorded, return null
+  return { buy: null, sell: null };
 }
 
 export function panelProfitsDelta(
