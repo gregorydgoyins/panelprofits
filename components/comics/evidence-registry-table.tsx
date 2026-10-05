@@ -195,9 +195,9 @@ export function EvidenceRegistryTable({ rows, unrecordedAuthorities }: EvidenceR
             type="button"
             onClick={scrollToSovereign98}
             className="px-2.5 py-1 rounded bg-gradient-to-r from-cyan-950/90 to-blue-950/90 border border-cyan-500/50 text-cyan-300 hover:border-cyan-400 transition-colors flex items-center gap-1 text-[11px] font-semibold shadow-sm"
-            title="Immediately jump to 9.8 Sovereign Anchor Column"
+            title="Immediately jump to 9.8 Anchor Column"
           >
-            Jump to 9.8 Sovereign →
+            Jump to 9.8 Anchor →
           </button>
           <button
             type="button"
@@ -257,7 +257,7 @@ export function EvidenceRegistryTable({ rows, unrecordedAuthorities }: EvidenceR
                     <div className="flex flex-col items-end">
                       <span>{grade}</span>
                       {is98 && (
-                        <span className="text-[8px] font-mono text-cyan-400 tracking-tighter">SOVEREIGN</span>
+                        <span className="text-[8px] font-mono text-cyan-400 tracking-tighter">ANCHOR</span>
                       )}
                       {isRaw && (
                         <span className="text-[8px] font-mono text-amber-400/90 tracking-tighter">UNGRADED</span>

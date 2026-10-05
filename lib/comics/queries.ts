@@ -1,4 +1,5 @@
 import { createAdminServerClient, createCleanReadOnlyServerClient } from "@/lib/supabase/admin";
+import { createPublicServerClient } from "@/lib/supabase/server";
 import { ComicRecord, ComicSearchParams, ComicQueryResult } from "@/lib/comics/types";
 import { getComicCoverEvidence } from "@/lib/comics/covers";
 import { createCachedQuery } from "@/lib/cache/wrapper";
@@ -249,6 +250,8 @@ function enrichWithConnoisseurDossier(comic: ComicRecord): ComicRecord {
 
     const panelProfitsData = {
       ...existingPp,
+      is_sovereign: true,
+      ticker: `${formatComicEquityTicker(comic.series, comic.issue_number)}.SOV`,
       seat_number: matchedDossier.seatNumber,
       gregory_score: matchedDossier.gregoryScore,
       quality_scores: matchedDossier.qualityScores,
@@ -296,8 +299,11 @@ function enrichWithConnoisseurDossier(comic: ComicRecord): ComicRecord {
   }
 
   // Non-CE70 catalog items: Preserve authentic market data without synthetic connoisseur scores or fake video cards
+  const standardTicker = formatComicEquityTicker(comic.series, comic.issue_number);
   const panelProfitsData = {
     ...existingPp,
+    is_sovereign: false,
+    ticker: (existingPp as any).ticker?.replace(/\.SOV$/i, "") || standardTicker,
     era: (existingPp as any).era || (comic.publication_year && comic.publication_year < 1956 ? "Golden Age" : comic.publication_year && comic.publication_year < 1970 ? "Silver Age" : comic.publication_year && comic.publication_year < 1985 ? "Bronze Age" : "Modern Age"),
   };
 
@@ -404,7 +410,17 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
       } else {
         query = query.eq("id", cleanId).limit(1);
       }
-      const { data, error } = await query.maybeSingle();
+      let { data, error } = await query.maybeSingle();
+      if ((error || !data) && !isPpNumeric) {
+        try {
+          const pub = createPublicServerClient();
+          const pubRes = await pub.from("comics").select("*").eq("id", cleanId).maybeSingle();
+          if (pubRes.data) {
+            data = pubRes.data;
+            error = null;
+          }
+        } catch (_) {}
+      }
       if (!error && data) {
         return enrichWithConnoisseurDossier(enrichWithBenchmarkData(data as ComicRecord));
       }
@@ -527,6 +543,29 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
     const titleParts = matchedSeat.title.split(/#(\d+.*)/);
     const seriesName = titleParts[0]?.trim() || matchedSeat.title;
     const issueNum = titleParts[1]?.trim() || "1";
+
+    // As there are only 70 CE seats in the entire 3.6 million comic universe,
+    // Seat X IS the exact same comic as that issue in the database!
+    try {
+      const supabase = createAdminServerClient();
+      let dbQuery = supabase
+        .from("comics")
+        .select("*")
+        .eq("series", seriesName)
+        .eq("issue_number", issueNum);
+      if (matchedSeat.year) {
+        dbQuery = dbQuery.eq("publication_year", matchedSeat.year);
+      }
+      dbQuery = dbQuery.order("pp_grade_9_8_price", { ascending: false, nullsFirst: false }).limit(1);
+      const { data: dbComic } = await dbQuery.maybeSingle();
+
+      if (dbComic) {
+        return enrichWithConnoisseurDossier(enrichWithBenchmarkData(dbComic as ComicRecord));
+      }
+    } catch (dbErr) {
+      console.warn("Notice querying DB for CE70 seat comic:", dbErr);
+    }
+
     const coverPath = getAuthoritativeCover(seriesName, issueNum, matchedSeat.publisher, matchedSeat.year);
     const timestamp = new Date().toISOString();
 
@@ -769,6 +808,27 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
     if (eqRow) {
       const authenticSeries = eqRow.series || "Verified Sovereign Comic";
       const authenticIssue = eqRow.issue_number || "1";
+
+      // As there are only 70 CE seats in the entire 3.6 million comic universe,
+      // this equity constituent IS the exact comic in the database!
+      try {
+        const supabase = createAdminServerClient();
+        const { data: dbComic } = await supabase
+          .from("comics")
+          .select("*")
+          .eq("series", authenticSeries)
+          .eq("issue_number", authenticIssue)
+          .order("pp_grade_9_8_price", { ascending: false, nullsFirst: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (dbComic) {
+          return enrichWithConnoisseurDossier(enrichWithBenchmarkData(dbComic as ComicRecord));
+        }
+      } catch (dbErr) {
+        console.warn("Notice querying DB for equity universe comic:", dbErr);
+      }
+
       const titleWithIssue = `${authenticSeries} #${authenticIssue}`;
       const bench = lookupReferenceFmv(eqRow.seat_number, titleWithIssue, eqRow.canonical_issue_id) || lookupReferenceFmv(eqRow.seat_number, authenticSeries, eqRow.canonical_issue_id);
 
