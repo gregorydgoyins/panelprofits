@@ -203,11 +203,9 @@ export function proxyCoverUrl(url: string | null | undefined): string | null {
       return parsed.pathname + parsed.search;
     }
 
-    // Rewrite images.pricecharting.com to valid TLS origin if needed
-    if (parsed.hostname === 'images.pricecharting.com') {
-      upgraded = `https://storage.googleapis.com/images.pricecharting.com${parsed.pathname}${parsed.search}`;
-    } else {
-      upgraded = parsed.toString();
+    // Supabase Storage CDN (our authentic storage bucket) has full public access and CORS
+    if (parsed.hostname.endsWith('supabase.co')) {
+      return upgraded;
     }
 
     return `/api/cover-proxy?url=${encodeURIComponent(upgraded)}`;

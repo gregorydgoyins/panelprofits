@@ -67,6 +67,7 @@ const VERIFIED_COVER_REGISTRY: Record<string, string> = {
   "fantastic four:1": "/covers/fantastic_four_1.jpg",
   "fantastic four:48": "/covers/fantastic_four_48.jpg",
   "fantastic four:51": "/covers/seat_20_fantastic_four_51.jpg",
+  "fantastic four annual:7": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/9e/9eba4562c6d04bbacb9e33d4c073d25901ef87ede8d1631b7f4bdd3ce21a1390.webp",
   "amazing fantasy:15": "/covers/amazing_fantasy_15.jpg",
   "amazing spider man:1": "/covers/amazing_spider_man_1.jpg",
   "the amazing spider man:1": "/covers/amazing_spider_man_1.jpg",
