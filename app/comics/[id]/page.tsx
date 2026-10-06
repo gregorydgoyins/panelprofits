@@ -614,23 +614,30 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
                   }
                 : { found: false, data: null }
             }
-            spreadData={
-              isTrulySovereign && consensusFmv > 0
-                ? {
-                    found: true,
-                    data: {
-                      liquidityScore: 0.92,
-                      spreadMethod: "AUCTION_SET",
-                      baseSpread: 0.035,
-                      currentSpread: 0.035,
-                      observedAnchors: {
-                        "9.8": { buy: Number((consensusFmv * 0.9825).toFixed(2)), sell: Number((consensusFmv * 1.0175).toFixed(2)), spread: 0.035 },
-                        "RAW": { buy: Number((rawPrice ? Number(rawPrice) * 0.95 : 10).toFixed(2)), sell: Number((rawPrice ? Number(rawPrice) * 1.05 : 10).toFixed(2)), spread: 0.05 },
-                      },
+            spreadData={(() => {
+              const ppData = comic.panel_profits_data as Record<string, any> | undefined;
+              const sp98 = ppData?.spreads?.["9.8"] || ppData?.spreads?.["grade_9_8"];
+              const spRaw = ppData?.spreads?.["RAW"] || ppData?.spreads?.raw;
+              if (sp98?.buy && sp98?.sell) {
+                const spreadVal = Number(((sp98.sell - sp98.buy) / sp98.sell).toFixed(3));
+                return {
+                  found: true,
+                  data: {
+                    liquidityScore: 0.92,
+                    spreadMethod: "RECORDED_MARKET",
+                    baseSpread: spreadVal,
+                    currentSpread: spreadVal,
+                    observedAnchors: {
+                      "9.8": { buy: Number(sp98.buy), sell: Number(sp98.sell), spread: spreadVal },
+                      ...(spRaw?.buy && spRaw?.sell ? {
+                        "RAW": { buy: Number(spRaw.buy), sell: Number(spRaw.sell), spread: Number(((spRaw.sell - spRaw.buy) / spRaw.sell).toFixed(3)) }
+                      } : {})
                     },
-                  }
-                : { found: false, data: null }
-            }
+                  },
+                };
+              }
+              return { found: false, data: null };
+            })()}
           />
 
           <StoryNotesCard
