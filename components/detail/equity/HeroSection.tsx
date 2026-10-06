@@ -18,6 +18,7 @@ import type {
   GradePrice,
 } from './types';
 import type { getEraColors, getScarcityColors } from '@/lib/design-system/colors';
+import type { GcdRelationalData } from '@/lib/comics/gcd-relational-service';
 
 interface HeroSectionProps {
   variantId: string;
@@ -35,6 +36,7 @@ interface HeroSectionProps {
   heroCreatorsData?: { data: Creator[] };
   truthLayerData?: { found: boolean; data: EquityTruthLayer | null };
   spreadData?: { found: boolean; data: SpreadStateData | null };
+  relationalData?: GcdRelationalData | null;
 }
 
 export function HeroSection({
@@ -53,6 +55,7 @@ export function HeroSection({
   heroCreatorsData,
   truthLayerData,
   spreadData,
+  relationalData,
 }: HeroSectionProps) {
   const { pinnedId, setPinnedId, clearPinnedId, syncError } = usePinnedEquity();
   const isPinned = pinnedId === variantId;
@@ -146,6 +149,7 @@ export function HeroSection({
           heroCreatorsData={heroCreatorsData}
           truthLayerData={truthLayerData}
           spreadData={spreadData}
+          relationalData={relationalData}
           onOpenExecModal={(action) => setExecModal({ open: true, action })}
         />
       </div>

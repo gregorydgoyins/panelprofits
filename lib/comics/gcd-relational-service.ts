@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { createRequire } from "node:module";
+import { createPublicReadOnlyClient, createAdminServerClient } from "@/lib/supabase/admin";
 
 const requireModule = createRequire(import.meta.url);
 
@@ -69,6 +70,19 @@ let isBundledDb = false;
 let dbAvailable: boolean | null = null;
 const memoryCache = new Map<string, GcdRelationalData | null>();
 
+function parseArtistFromVariantName(variantName: string): string | null {
+  if (!variantName) return null;
+  const parts = variantName.split(/\s*-\s*/);
+  if (parts.length > 1) {
+    const candidate = parts[0].trim();
+    const lower = candidate.toLowerCase();
+    if (!lower.startsWith("blank") && !lower.startsWith("7 copy") && !lower.startsWith("10 copy") && !lower.startsWith("15 copy") && !lower.startsWith("20 copy") && !lower.startsWith("25 copy") && !lower.startsWith("30 copy") && !lower.startsWith("40 copy") && !lower.startsWith("50 copy")) {
+      return candidate;
+    }
+  }
+  return null;
+}
+
 function getGcdDatabase(): any | null {
   if (dbAvailable === false) return null;
   if (dbInstance) return dbInstance;
@@ -108,6 +122,147 @@ function getGcdDatabase(): any | null {
   }
 }
 
+async function fetchRelationalFromSupabase(
+  issueId: number,
+  seriesName?: string,
+  issueNumber?: string
+): Promise<GcdRelationalData | null> {
+  try {
+    const supabase = createAdminServerClient();
+    const cleanSeries = String(seriesName || "").trim().replace(/\s*\(\d{4}\)/g, "");
+    const cleanIssue = String(issueNumber || "").trim().replace(/^#/, "");
+
+    // 1. Fetch variant snapshots
+    let snaps: any[] = [];
+    if (cleanSeries && cleanIssue) {
+      const { data } = await supabase
+        .from("gcd_candidate_snapshots")
+        .select("gcd_issue_id, variant_name, barcode, publication_date")
+        .ilike("series_name", cleanSeries)
+        .eq("issue_number", cleanIssue)
+        .order("gcd_issue_id", { ascending: true });
+      snaps = data || [];
+    }
+
+    const seenVar = new Set<number>();
+    const dedupedVars: any[] = [];
+    for (const v of snaps) {
+      if (!seenVar.has(v.gcd_issue_id)) {
+        seenVar.add(v.gcd_issue_id);
+        dedupedVars.push(v);
+      }
+    }
+
+    // Map comics catalog records to variants for direct catalog links and authentic covers
+    const { data: comicsList } = dedupedVars.length > 0
+      ? await supabase
+          .from("comics")
+          .select("id, gcd_source_id, cover_url")
+          .in("gcd_source_id", dedupedVars.map((v) => String(v.gcd_issue_id)))
+      : { data: [] };
+
+    const comicByGcd = new Map<string, any>();
+    comicsList?.forEach((c: any) => comicByGcd.set(c.gcd_source_id, c));
+
+    const variants: GcdVariantItem[] = dedupedVars.map((v) => {
+      const c = comicByGcd.get(String(v.gcd_issue_id));
+      const parsedArtist = parseArtistFromVariantName(v.variant_name);
+      return {
+        id: v.gcd_issue_id,
+        issueNumber: cleanIssue || "1",
+        variantName: v.variant_name || `Variant #${v.gcd_issue_id}`,
+        price: "",
+        barcode: v.barcode || "",
+        publicationDate: v.publication_date || "",
+        coverArtist: parsedArtist || undefined,
+        catalogId: c?.id || undefined,
+        coverUrl: c?.cover_url || undefined,
+      };
+    });
+
+    // 2. Fetch multi-act stories and credits from ppcf_gcd_stories
+    const targetGcdIds = Array.from(new Set([issueId, ...dedupedVars.map((v) => v.gcd_issue_id)]));
+    const { data: storiesData } = await supabase
+      .from("ppcf_gcd_stories")
+      .select("*")
+      .in("gcd_issue_id", targetGcdIds)
+      .order("sequence_number", { ascending: true });
+
+    // Deduplicate stories by sequence_number, preferring non-empty title/synopsis
+    const storyBySeq = new Map<number, any>();
+    for (const st of storiesData || []) {
+      const existing = storyBySeq.get(st.sequence_number);
+      if (!existing || (!existing.synopsis && st.synopsis) || (!existing.title && st.title)) {
+        storyBySeq.set(st.sequence_number, st);
+      }
+    }
+
+    const stories: GcdStoryItem[] = [];
+    const writersSet = new Set<string>();
+    const pencilersSet = new Set<string>();
+    const inkersSet = new Set<string>();
+    const coloristsSet = new Set<string>();
+    const letterersSet = new Set<string>();
+    const editorsSet = new Set<string>();
+    const coverArtistsSet = new Set<string>();
+
+    Array.from(storyBySeq.values())
+      .sort((a, b) => a.sequence_number - b.sequence_number)
+      .forEach((s) => {
+        const credits: GcdCreatorCredit[] = [];
+        const addCr = (role: string, val: string, set: Set<string>) => {
+          if (!val) return;
+          val.split(";").map((x) => x.trim()).filter(Boolean).forEach((name) => {
+            set.add(name);
+            credits.push({ role, name });
+          });
+        };
+
+        addCr("Writer", s.script, writersSet);
+        addCr("Penciler", s.pencils, pencilersSet);
+        addCr("Inker", s.inks, inkersSet);
+        addCr("Colorist", s.colors, coloristsSet);
+        addCr("Letterer", s.letters, letterersSet);
+        addCr("Editor", s.editing, editorsSet);
+
+        if (s.sequence_number === 0 && s.pencils) {
+          s.pencils.split(";").map((x: string) => x.trim()).filter(Boolean).forEach((ca: string) => coverArtistsSet.add(ca));
+        }
+
+        stories.push({
+          id: s.gcd_story_id || s.sequence_number,
+          title: s.title || (s.sequence_number === 0 ? "Cover Gallery" : `Sequence #${s.sequence_number}`),
+          sequenceNumber: s.sequence_number,
+          pageCount: Number(s.page_count) || 0,
+          characters: s.characters || "",
+          synopsis: s.synopsis || "",
+          credits,
+        });
+      });
+
+    return {
+      baseIssueId: issueId,
+      seriesName: cleanSeries,
+      issueNumber: cleanIssue,
+      publicationDate: "",
+      variants,
+      foreignEditions: [],
+      stories,
+      issueCredits: Array.from(editorsSet).map((name) => ({ role: "Editor", name })),
+      allWriters: Array.from(writersSet),
+      allPencilers: Array.from(pencilersSet),
+      allInkers: Array.from(inkersSet),
+      allColorists: Array.from(coloristsSet),
+      allLetterers: Array.from(letterersSet),
+      allEditors: Array.from(editorsSet),
+      allCoverArtists: Array.from(coverArtistsSet),
+    };
+  } catch (err) {
+    console.warn("fetchRelationalFromSupabase failed:", err);
+    return null;
+  }
+}
+
 /**
  * Resolves full GCD relational tree: all variant covers, foreign editions,
  * story sequences, and creator rolls for any comic issue.
@@ -123,7 +278,13 @@ export async function getGcdRelationalData(
   }
 
   const db = getGcdDatabase();
-  if (!db) return null;
+  const numIdParsed = typeof gcdIssueId === "string" ? parseInt(gcdIssueId, 10) : (gcdIssueId || 0);
+
+  if (!db) {
+    const sbResult = await fetchRelationalFromSupabase(numIdParsed, seriesName, issueNumber);
+    memoryCache.set(cacheKey, sbResult);
+    return sbResult;
+  }
 
   try {
     let issue: any = null;
@@ -131,7 +292,7 @@ export async function getGcdRelationalData(
 
     if (isBundledDb) {
       // Bundled database mode (Vercel production)
-      let numId = typeof gcdIssueId === "string" ? parseInt(gcdIssueId, 10) : (gcdIssueId || 0);
+      let numId = numIdParsed;
 
       if (!numId && seriesName && issueNumber) {
         const cleanSeries = seriesName.trim();
@@ -143,8 +304,9 @@ export async function getGcdRelationalData(
       }
 
       if (!numId) {
-        memoryCache.set(cacheKey, null);
-        return null;
+        const sbResult = await fetchRelationalFromSupabase(0, seriesName, issueNumber);
+        memoryCache.set(cacheKey, sbResult);
+        return sbResult;
       }
 
       // Find base issue if this is a variant
@@ -159,6 +321,15 @@ export async function getGcdRelationalData(
         .prepare("SELECT reprint_id, target_issue_id, number, series_name, country, language, publication_date FROM gcd_foreign_editions WHERE origin_issue_id = ? ORDER BY country ASC")
         .all(baseId) as any[];
 
+      // If bundled database has 0 variants, fallback to Supabase
+      if (variantsRaw.length === 0) {
+        const sbResult = await fetchRelationalFromSupabase(baseId, seriesName, issueNumber);
+        if (sbResult && (sbResult.variants.length > 0 || sbResult.stories.length > 0)) {
+          memoryCache.set(cacheKey, sbResult);
+          return sbResult;
+        }
+      }
+
       const variants: GcdVariantItem[] = variantsRaw.map((v) => ({
         id: v.id,
         issueNumber: String(v.number),
@@ -166,6 +337,7 @@ export async function getGcdRelationalData(
         price: v.price || "",
         barcode: v.barcode || "",
         publicationDate: v.publication_date || "",
+        coverArtist: parseArtistFromVariantName(v.variant_name) || undefined,
       }));
 
       const foreignEditions: GcdForeignEditionItem[] = foreignRaw.map((f) => ({
@@ -179,22 +351,25 @@ export async function getGcdRelationalData(
         isDomesticSpecial: f.country === "United States",
       }));
 
+      // Enrich stories from Supabase if bundledDb has none
+      const sbEnrichment = await fetchRelationalFromSupabase(baseId, seriesName, issueNumber);
+
       const result: GcdRelationalData = {
         baseIssueId: baseId,
         seriesName: seriesName || "",
         issueNumber: issueNumber || "",
         publicationDate: "",
-        variants,
+        variants: variants.length > 0 ? variants : (sbEnrichment?.variants || []),
         foreignEditions,
-        stories: [],
-        issueCredits: [],
-        allWriters: [],
-        allPencilers: [],
-        allInkers: [],
-        allColorists: [],
-        allLetterers: [],
-        allEditors: [],
-        allCoverArtists: [],
+        stories: sbEnrichment?.stories || [],
+        issueCredits: sbEnrichment?.issueCredits || [],
+        allWriters: sbEnrichment?.allWriters || [],
+        allPencilers: sbEnrichment?.allPencilers || [],
+        allInkers: sbEnrichment?.allInkers || [],
+        allColorists: sbEnrichment?.allColorists || [],
+        allLetterers: sbEnrichment?.allLetterers || [],
+        allEditors: sbEnrichment?.allEditors || [],
+        allCoverArtists: sbEnrichment?.allCoverArtists || [],
       };
 
       memoryCache.set(cacheKey, result);
@@ -306,15 +481,33 @@ export async function getGcdRelationalData(
       }
     }
 
-    const variants: GcdVariantItem[] = variantsRaw.map((v) => ({
-      id: v.id,
-      issueNumber: String(v.number),
-      variantName: v.variant_name || (v.id === baseId ? "Primary Direct / Regular Cover" : `Variant #${v.id}`),
-      price: v.price || "",
-      barcode: v.barcode || "",
-      publicationDate: v.publication_date || "",
-      coverArtist: variantArtistsMap.get(v.id),
-    }));
+    // Also look up comics catalog rows to bind direct catalogId and coverUrl for these variants
+    let catalogVariantsMap = new Map<string, { id: string; cover_url?: string }>();
+    try {
+      const supabase = createAdminServerClient();
+      const varIdsStr = variantsRaw.map((v) => String(v.id));
+      const { data: cList } = await supabase
+        .from("comics")
+        .select("id, gcd_source_id, cover_url")
+        .in("gcd_source_id", varIdsStr);
+      cList?.forEach((c) => catalogVariantsMap.set(c.gcd_source_id, c));
+    } catch (_) {}
+
+    const variants: GcdVariantItem[] = variantsRaw.map((v) => {
+      const cat = catalogVariantsMap.get(String(v.id));
+      const extractedArtist = parseArtistFromVariantName(v.variant_name);
+      return {
+        id: v.id,
+        issueNumber: String(v.number),
+        variantName: v.variant_name || (v.id === baseId ? "Primary Direct / Regular Cover" : `Variant #${v.id}`),
+        price: v.price || "",
+        barcode: v.barcode || "",
+        publicationDate: v.publication_date || "",
+        coverArtist: variantArtistsMap.get(v.id) || extractedArtist || undefined,
+        catalogId: cat?.id || undefined,
+        coverUrl: cat?.cover_url || undefined,
+      };
+    });
 
     // 2. Get all international & foreign editions linked via gcd_reprint (both direct issue origin & story-level origin)
     const foreignRaw = db
@@ -379,7 +572,7 @@ export async function getGcdRelationalData(
       )
       .all(baseId) as any[];
 
-    const stories: GcdStoryItem[] = [];
+    let stories: GcdStoryItem[] = [];
     const writersSet = new Set<string>();
     const pencilersSet = new Set<string>();
     const inkersSet = new Set<string>();
@@ -418,6 +611,53 @@ export async function getGcdRelationalData(
         synopsis: s.synopsis || "",
         credits: storyCredits,
       });
+    }
+
+    // If SQLite has no multi-act narrative stories, check Supabase ppcf_gcd_stories for rich narrative acts
+    const hasNarrativeStories = stories.some((st) => st.sequenceNumber > 0 && (st.synopsis || st.title));
+    if (!hasNarrativeStories) {
+      try {
+        const supabase = createAdminServerClient();
+        const { data: sbStories } = await supabase
+          .from("ppcf_gcd_stories")
+          .select("*")
+          .in("gcd_issue_id", [baseId, issue.id])
+          .order("sequence_number", { ascending: true });
+
+        if (sbStories && sbStories.some((st) => st.sequence_number > 0)) {
+          stories = [];
+          for (const s of sbStories) {
+            const credits: GcdCreatorCredit[] = [];
+            const addCr = (role: string, val: string, set: Set<string>) => {
+              if (!val) return;
+              val.split(";").map((x) => x.trim()).filter(Boolean).forEach((name) => {
+                set.add(name);
+                credits.push({ role, name });
+              });
+            };
+
+            addCr("Writer", s.script, writersSet);
+            addCr("Penciler", s.pencils, pencilersSet);
+            addCr("Inker", s.inks, inkersSet);
+            addCr("Colorist", s.colors, coloristsSet);
+            addCr("Letterer", s.letters, letterersSet);
+
+            if (s.sequence_number === 0 && s.pencils) {
+              s.pencils.split(";").map((x: string) => x.trim()).filter(Boolean).forEach((ca: string) => coverArtistsSet.add(ca));
+            }
+
+            stories.push({
+              id: s.gcd_story_id || s.sequence_number,
+              title: s.title || (s.sequence_number === 0 ? "Cover Gallery" : `Sequence #${s.sequence_number}`),
+              sequenceNumber: s.sequence_number,
+              pageCount: Number(s.page_count) || 0,
+              characters: s.characters || "",
+              synopsis: s.synopsis || "",
+              credits,
+            });
+          }
+        }
+      } catch (_) {}
     }
 
     // 4. Get issue-level credits (editors, cover artists)

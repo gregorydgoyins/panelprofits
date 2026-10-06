@@ -35,6 +35,8 @@ const ERA_MAP: Record<string, string> = { platinum: 'Platinum', golden: 'Golden'
 const TIER_COLOR = ['#4ade80', '#86efac', '#fde68a', '#f59e0b', '#fb923c', '#f87171', '#dc2626'];
 const REGIME_RING: Record<string, string> = { CALM: 'transparent', NORMAL: 'transparent', ELEVATED: 'rgba(245,158,11,0.20)', PANIC: 'rgba(248,113,113,0.28)' };
 
+import type { GcdRelationalData } from '@/lib/comics/gcd-relational-service';
+
 interface HeroPanelProps {
   variantId: string;
   variant: DetailResponse['variant'];
@@ -51,6 +53,7 @@ interface HeroPanelProps {
   heroCreatorsData: { data: Creator[] } | undefined;
   truthLayerData: { found: boolean; data: EquityTruthLayer | null } | undefined;
   spreadData: { found: boolean; data: SpreadStateData | null } | undefined;
+  relationalData?: GcdRelationalData | null;
   onOpenExecModal: (action: 'buy' | 'sell') => void;
   onBrokenImageReport?: (params: { url: string | null; variantId: string; stage: number }) => void;
 }
@@ -58,7 +61,7 @@ interface HeroPanelProps {
 export default function HeroPanel({
   variantId, variant, completeness, keyPrices, instrumentStates, instrumentIntelligence,
   censusSummary, gradeLattice = [], wikiSummary, latestSaleImageUrl, eraColors, scarcityColors,
-  heroCreatorsData, truthLayerData, spreadData, onOpenExecModal, onBrokenImageReport,
+  heroCreatorsData, truthLayerData, spreadData, relationalData, onOpenExecModal, onBrokenImageReport,
 }: HeroPanelProps) {
   const [isPending, startTransition] = useTransition();
   const [showCoverLightbox, setShowCoverLightbox] = useState(false);
@@ -363,6 +366,64 @@ export default function HeroPanel({
                         </span>
                       </Link>
                     ))}
+                  </div>
+                );
+              })()}
+
+              {/* Variant Lineage Gallery: Sister Covers Strip */}
+              {relationalData?.variants && relationalData.variants.length > 1 && (() => {
+                const totalVars = relationalData.variants.length;
+                const activeGcdId = variant.productId ? parseInt(variant.productId, 10) : null;
+                const activeIdx = relationalData.variants.findIndex((v) => v.id === activeGcdId || v.catalogId === variantId);
+                return (
+                  <div className="my-2 p-2.5 rounded-lg bg-black/40 border border-white/10 space-y-1.5">
+                    <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider">
+                      <span className="text-cyan-400 font-semibold flex items-center gap-1.5">
+                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                        Variant Lineage Gallery ({totalVars} Published Covers)
+                      </span>
+                      {activeIdx !== -1 && (
+                        <span className="text-slate-400">
+                          Viewing Cover {activeIdx + 1} of {totalVars}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
+                      {relationalData.variants.map((v, vIdx) => {
+                        const isCurrent = v.catalogId === variantId || v.id === activeGcdId;
+                        const shortLabel = v.variantName
+                          .replace(/^.*?Cover\s+([A-Z0-9]+).*?$/i, 'Cover $1')
+                          .replace(/^.*?(FOC\s+Bonus.*?Cover\s+[A-Z0-9]+).*?$/i, '$1')
+                          .slice(0, 24);
+
+                        const content = (
+                          <span
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono whitespace-nowrap transition-all border"
+                            style={{
+                              backgroundColor: isCurrent ? 'rgba(6, 182, 212, 0.2)' : 'rgba(255, 255, 255, 0.04)',
+                              borderColor: isCurrent ? '#06b6d4' : 'rgba(255, 255, 255, 0.1)',
+                              color: isCurrent ? '#22d3ee' : '#94a3b8',
+                              fontWeight: isCurrent ? 600 : 400,
+                            }}
+                            title={`${v.variantName}${v.coverArtist ? ` · Art by ${v.coverArtist}` : ''}`}
+                          >
+                            {v.coverArtist && <span className="text-amber-300 font-sans">{v.coverArtist.split(' ').pop()}:</span>}
+                            <span>{shortLabel || `Var #${v.id}`}</span>
+                            {isCurrent && <span className="text-[8px] uppercase tracking-wider bg-cyan-500/20 px-1 rounded ml-0.5">ACTIVE</span>}
+                          </span>
+                        );
+
+                        if (v.catalogId && !isCurrent) {
+                          return (
+                            <Link key={v.id} href={`/comics/${v.catalogId}`}>
+                              {content}
+                            </Link>
+                          );
+                        }
+
+                        return <span key={v.id}>{content}</span>;
+                      })}
+                    </div>
                   </div>
                 );
               })()}

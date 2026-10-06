@@ -182,7 +182,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     if (!val || typeof val !== "string") return "";
     const trimmed = val.trim();
     if (trimmed === "?" || trimmed === "none" || trimmed === "null" || trimmed === "undefined") return "";
-    if (/[\u0400-\u04FF]/.test(trimmed)) return "";
+    if (/[\u0400-\u04FF\uAC00-\uD7AF\u1100-\u11FF]/.test(trimmed)) return "";
     return trimmed;
   };
 
@@ -701,6 +701,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
               }
               return { found: false, data: null };
             })()}
+            relationalData={gcdRelational}
           />
 
           <StoryNotesCard

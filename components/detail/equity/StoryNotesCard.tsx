@@ -29,7 +29,7 @@ export default function StoryNotesCard({
   eraColors,
   debutCreators = [],
 }: StoryNotesCardProps) {
-  const [showAllStories, setShowAllStories] = useState(false);
+  const [showAllStories, setShowAllStories] = useState(true);
   const gcd = gcdData || {};
   const cb = comicbaseData || {};
 
@@ -211,13 +211,27 @@ export default function StoryNotesCard({
 
           {/* Featured Characters / Cast if available */}
           {characters && (
-            <div className="text-xs space-y-1">
-              <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
+            <div className="space-y-1.5 pt-1">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block">
                 Featured Characters & Appearance Roster:
               </span>
-              <p className="text-slate-300 text-[11px] leading-normal line-clamp-2 hover:line-clamp-none transition-all cursor-pointer">
-                {characters}
-              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {String(characters)
+                  .split(/;|\n/)
+                  .map((c: string) => c.trim())
+                  .filter(Boolean)
+                  .map((charName: string, cIdx: number) => (
+                    <a
+                      key={cIdx}
+                      href={`/wiki/${encodeURIComponent(charName.toLowerCase().replace(/\[.*?\]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''))}`}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 hover:text-cyan-300 border border-white/10 hover:border-cyan-500/30 transition-all cursor-pointer"
+                      title={`Explore ${charName} lore & cross-issue continuity`}
+                    >
+                      <User className="h-2.5 w-2.5 text-slate-400" />
+                      <span>{charName}</span>
+                    </a>
+                  ))}
+              </div>
             </div>
           )}
         </div>
@@ -311,44 +325,68 @@ export default function StoryNotesCard({
           >
             <div className="flex items-center gap-2">
               <Layers className="h-3.5 w-3.5" />
-              <span>
-                {otherStories.length} Additional Story & Feature Sequences in this Issue
+              <span className="font-semibold uppercase tracking-wider">
+                {otherStories.length} Multi-Act Story & Narrative Sequences in this Issue
               </span>
             </div>
             <div className="flex items-center gap-1 text-[11px] text-slate-400">
-              <span>{showAllStories ? 'Hide Sequences' : 'View All Stories'}</span>
+              <span>{showAllStories ? 'Collapse Narrative Acts' : 'Expand All Acts & Lore'}</span>
               {showAllStories ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
             </div>
           </button>
 
           {showAllStories && (
-            <div className="mt-3 space-y-2.5">
+            <div className="mt-3 space-y-3">
               {otherStories.map((st, sIdx) => (
                 <div
                   key={sIdx}
-                  className="rounded-lg bg-black/40 border border-white/5 p-3 space-y-1 text-xs"
+                  className="rounded-lg bg-black/50 border border-white/10 p-3.5 space-y-2 text-xs hover:border-cyan-500/30 transition-all"
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold text-amber-300 text-xs">
-                      Sequence {st.sequence}: "{st.title}"
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/5 pb-1.5">
+                    <span className="font-semibold text-amber-300 text-xs tracking-wide">
+                      {st.title.startsWith('Act') ? st.title : `Sequence ${st.sequence}: "${st.title}"`}
                     </span>
-                    {st.pageCount && (
-                      <span className="text-[10px] font-mono text-slate-400">{st.pageCount} pages</span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {st.pageCount ? (
+                        <span className="text-[10px] font-mono text-slate-400">{st.pageCount} pages</span>
+                      ) : null}
+                      <span className="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded bg-white/5 text-slate-400 border border-white/5">
+                        Act {st.sequence || sIdx + 1}
+                      </span>
+                    </div>
                   </div>
                   {st.synopsis && (
-                    <p className="text-slate-300 text-[11px] leading-relaxed font-light">{st.synopsis}</p>
+                    <p className="text-slate-200 text-xs leading-relaxed font-light">{st.synopsis}</p>
                   )}
                   {st.characters && (
-                    <p className="text-slate-400 text-[10px]">
-                      <span className="text-slate-300 font-mono">Cast:</span> {st.characters}
-                    </p>
+                    <div className="text-[10px] space-y-1 pt-1">
+                      <span className="text-slate-400 font-mono uppercase tracking-wider block">Act Cast & Appearances:</span>
+                      <div className="flex flex-wrap gap-1">
+                        {st.characters
+                          .split(/;|\n/)
+                          .map((c) => c.trim())
+                          .filter(Boolean)
+                          .map((charName, charIdx) => (
+                            <span
+                              key={charIdx}
+                              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono bg-white/[0.03] text-slate-300 border border-white/5"
+                            >
+                              <User className="h-2 w-2 text-slate-400" />
+                              <span>{charName}</span>
+                            </span>
+                          ))}
+                      </div>
+                    </div>
                   )}
                   {(st.writer || st.penciler) && (
-                    <p className="text-[10px] text-slate-400 flex items-center gap-3 pt-1">
-                      {st.writer && <span><strong className="text-slate-300">Writer:</strong> {st.writer}</span>}
-                      {st.penciler && <span><strong className="text-slate-300">Artist:</strong> {st.penciler}</span>}
-                    </p>
+                    <div className="text-[10px] text-slate-400 flex flex-wrap items-center gap-4 pt-1.5 border-t border-white/5">
+                      {st.writer && (
+                        <span><strong className="text-slate-300 font-mono uppercase">Script:</strong> {st.writer}</span>
+                      )}
+                      {st.penciler && (
+                        <span><strong className="text-slate-300 font-mono uppercase">Pencils / Art:</strong> {st.penciler}</span>
+                      )}
+                    </div>
                   )}
                 </div>
               ))}

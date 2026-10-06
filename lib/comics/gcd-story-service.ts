@@ -418,8 +418,8 @@ export async function resolveGcdStoryDossier(
     if (!val || typeof val !== "string") return "";
     const trimmed = val.trim();
     if (trimmed === "?" || trimmed === "none" || trimmed === "null" || trimmed === "undefined") return "";
-    // Reject Cyrillic or broken encoding artifacts
-    if (/[\u0400-\u04FF]/.test(trimmed)) return "";
+    // Reject Cyrillic, Hangul, or broken mojibake encoding artifacts
+    if (/[\u0400-\u04FF\uAC00-\uD7AF\u1100-\u11FF]/.test(trimmed)) return "";
     return trimmed;
   };
 
