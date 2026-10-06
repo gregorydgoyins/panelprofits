@@ -202,6 +202,27 @@ export const LANDMARK_MARVEL_DEBUTS: Record<
   "invincible #1": { characters: ["Invincible (Mark Grayson)", "Omni-Man"], creators: ["Robert Kirkman", "Cory Walker"] },
   "the walking dead #1": { characters: ["Rick Grimes"], creators: ["Robert Kirkman", "Tony Moore"] },
   "saga #1": { characters: ["Alana", "Marko"], creators: ["Brian K. Vaughan", "Fiona Staples"] },
+  "rat queens #1": {
+    characters: [
+      "Hannah (Elven Mage)",
+      "Violet (Dwarven Fighter)",
+      "Dee (Human Cleric)",
+      "Betty (Smidgen Thief)",
+      "Captain Sawyer",
+      "Gary",
+      "Bernadette"
+    ],
+    creators: [
+      "Kurtis J. Wiebe",
+      "Roc Upchurch",
+      "Ed Brisson",
+      "Laura Tavishati",
+      "Fiona Staples (Variant Cover A)",
+      "Riley Rossmo (Variant Cover B)"
+    ],
+    locations: ["Palisade", "Tavern of Palisade", "Shadow Spire Mountains"],
+    items: ["Smash Happy Tankard", "Smidgen Candy", "Blood-Stained Daggers", "Void Summoning Orb"]
+  },
   "hellboy: seed of destruction #1": { characters: ["Hellboy", "Abe Sapien"], creators: ["Mike Mignola", "John Byrne"], items: ["Right Hand of Doom"] },
   "star wars #1": { characters: ["Luke Skywalker", "Darth Vader", "Princess Leia"], creators: ["Roy Thomas", "Howard Chaykin"], items: ["Lightsaber"], locations: ["Tatooine", "Death Star"] },
   "transformers #1": { characters: ["Optimus Prime", "Megatron", "Bumblebee"], creators: ["Bob Budiansky", "Bill Mantlo", "Frank Springer"], locations: ["Cybertron"] },

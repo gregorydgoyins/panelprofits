@@ -73,15 +73,22 @@ export default function StoryNotesCard({
     gcd['GCD - cover.artist'] ||
     cb['CB - Cover Artist'] ||
     '';
+  const colorist =
+    storyDossier?.leadColorist ||
+    gcd.colorist ||
+    gcd['GCD - story.colorist'] ||
+    '';
   const letterer =
     storyDossier?.leadLetterer ||
     gcd.letterer ||
     gcd['GCD - story.letterer'] ||
+    cb['CB - Letterer'] ||
     '';
   const editor =
     storyDossier?.leadEditor ||
     gcd.editor ||
     gcd['GCD - story.editing'] ||
+    cb['CB - Editor'] ||
     '';
 
   // Publication notes
@@ -248,10 +255,22 @@ export default function StoryNotesCard({
                   <p className="text-slate-200 truncate">{inker}</p>
                 </div>
               )}
+              {colorist && (
+                <div className="rounded bg-white/[0.02] border border-white/5 p-2">
+                  <span className="text-[9px] uppercase tracking-wider text-slate-400 block">Colorist</span>
+                  <p className="text-slate-200 truncate">{colorist}</p>
+                </div>
+              )}
               {letterer && (
                 <div className="rounded bg-white/[0.02] border border-white/5 p-2">
                   <span className="text-[9px] uppercase tracking-wider text-slate-400 block">Letterer</span>
                   <p className="text-slate-200 truncate">{letterer}</p>
+                </div>
+              )}
+              {editor && (
+                <div className="rounded bg-white/[0.02] border border-white/5 p-2">
+                  <span className="text-[9px] uppercase tracking-wider text-slate-400 block">Editor</span>
+                  <p className="text-slate-200 truncate">{editor}</p>
                 </div>
               )}
             </div>

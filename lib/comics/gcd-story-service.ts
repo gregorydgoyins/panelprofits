@@ -51,14 +51,20 @@ function getLocalGcdDb(): any | null {
   if (localDbChecked) return localGcdDb;
   localDbChecked = true;
 
-  try {
-    const gcdPath = "/Users/macuser/Downloads/gcd-full-As1Act/2026-09-15.db";
-    if (fs.existsSync(gcdPath)) {
-      const { DatabaseSync } = requireModule("node:sqlite");
-      localGcdDb = new DatabaseSync(gcdPath, { readOnly: true });
-      return localGcdDb;
-    }
-  } catch (_) {}
+  const candidatePaths = [
+    "/Users/macuser/Downloads/2026-09-01.db",
+    "/Users/macuser/Downloads/gcd-full-As1Act/2026-09-15.db",
+  ];
+
+  for (const gcdPath of candidatePaths) {
+    try {
+      if (fs.existsSync(gcdPath)) {
+        const { DatabaseSync } = requireModule("node:sqlite");
+        localGcdDb = new DatabaseSync(gcdPath, { readOnly: true });
+        return localGcdDb;
+      }
+    } catch (_) {}
+  }
 
   return null;
 }
@@ -205,10 +211,53 @@ export async function resolveGcdStoryDossier(
     try {
       rawStories = localDb
         .prepare(
-          `SELECT id as gcd_story_id, issue_id as gcd_issue_id, title, synopsis, characters, script, pencils, inks, colors, letters, editing, genre, sequence_number, page_count
-           FROM gcd_story 
-           WHERE issue_id = ? AND deleted = 0 
-           ORDER BY sequence_number ASC`
+          `SELECT 
+            s.id as gcd_story_id, s.issue_id as gcd_issue_id, s.title, s.synopsis, s.characters,
+            COALESCE(NULLIF(s.script, ''), (
+              SELECT GROUP_CONCAT(cnd.name, '; ')
+              FROM gcd_story_credit sc
+              JOIN gcd_credit_type ct ON sc.credit_type_id = ct.id
+              JOIN gcd_creator_name_detail cnd ON sc.creator_id = cnd.id
+              WHERE sc.story_id = s.id AND ct.name = 'script'
+            )) as script,
+            COALESCE(NULLIF(s.pencils, ''), (
+              SELECT GROUP_CONCAT(cnd.name, '; ')
+              FROM gcd_story_credit sc
+              JOIN gcd_credit_type ct ON sc.credit_type_id = ct.id
+              JOIN gcd_creator_name_detail cnd ON sc.creator_id = cnd.id
+              WHERE sc.story_id = s.id AND ct.name = 'pencils'
+            )) as pencils,
+            COALESCE(NULLIF(s.inks, ''), (
+              SELECT GROUP_CONCAT(cnd.name, '; ')
+              FROM gcd_story_credit sc
+              JOIN gcd_credit_type ct ON sc.credit_type_id = ct.id
+              JOIN gcd_creator_name_detail cnd ON sc.creator_id = cnd.id
+              WHERE sc.story_id = s.id AND ct.name = 'inks'
+            )) as inks,
+            COALESCE(NULLIF(s.colors, ''), (
+              SELECT GROUP_CONCAT(cnd.name, '; ')
+              FROM gcd_story_credit sc
+              JOIN gcd_credit_type ct ON sc.credit_type_id = ct.id
+              JOIN gcd_creator_name_detail cnd ON sc.creator_id = cnd.id
+              WHERE sc.story_id = s.id AND ct.name = 'colors'
+            )) as colors,
+            COALESCE(NULLIF(s.letters, ''), (
+              SELECT GROUP_CONCAT(cnd.name, '; ')
+              FROM gcd_story_credit sc
+              JOIN gcd_credit_type ct ON sc.credit_type_id = ct.id
+              JOIN gcd_creator_name_detail cnd ON sc.creator_id = cnd.id
+              WHERE sc.story_id = s.id AND ct.name = 'letters'
+            )) as letters,
+            COALESCE(NULLIF(s.editing, ''), (
+              SELECT GROUP_CONCAT(cnd.name, '; ')
+              FROM gcd_issue_credit ic
+              JOIN gcd_creator_name_detail cnd ON ic.creator_id = cnd.id
+              WHERE ic.issue_id = s.issue_id
+            )) as editing,
+            s.genre, s.sequence_number, s.page_count
+           FROM gcd_story s
+           WHERE s.issue_id = ? AND s.deleted = 0 
+           ORDER BY s.sequence_number ASC`
         )
         .all(issueId) as any[];
 
@@ -219,10 +268,53 @@ export async function resolveGcdStoryDossier(
           issueId = parentRow.variant_of_id;
           rawStories = localDb
             .prepare(
-              `SELECT id as gcd_story_id, issue_id as gcd_issue_id, title, synopsis, characters, script, pencils, inks, colors, letters, editing, genre, sequence_number, page_count
-               FROM gcd_story 
-               WHERE issue_id = ? AND deleted = 0 
-               ORDER BY sequence_number ASC`
+              `SELECT 
+                s.id as gcd_story_id, s.issue_id as gcd_issue_id, s.title, s.synopsis, s.characters,
+                COALESCE(NULLIF(s.script, ''), (
+                  SELECT GROUP_CONCAT(cnd.name, '; ')
+                  FROM gcd_story_credit sc
+                  JOIN gcd_credit_type ct ON sc.credit_type_id = ct.id
+                  JOIN gcd_creator_name_detail cnd ON sc.creator_id = cnd.id
+                  WHERE sc.story_id = s.id AND ct.name = 'script'
+                )) as script,
+                COALESCE(NULLIF(s.pencils, ''), (
+                  SELECT GROUP_CONCAT(cnd.name, '; ')
+                  FROM gcd_story_credit sc
+                  JOIN gcd_credit_type ct ON sc.credit_type_id = ct.id
+                  JOIN gcd_creator_name_detail cnd ON sc.creator_id = cnd.id
+                  WHERE sc.story_id = s.id AND ct.name = 'pencils'
+                )) as pencils,
+                COALESCE(NULLIF(s.inks, ''), (
+                  SELECT GROUP_CONCAT(cnd.name, '; ')
+                  FROM gcd_story_credit sc
+                  JOIN gcd_credit_type ct ON sc.credit_type_id = ct.id
+                  JOIN gcd_creator_name_detail cnd ON sc.creator_id = cnd.id
+                  WHERE sc.story_id = s.id AND ct.name = 'inks'
+                )) as inks,
+                COALESCE(NULLIF(s.colors, ''), (
+                  SELECT GROUP_CONCAT(cnd.name, '; ')
+                  FROM gcd_story_credit sc
+                  JOIN gcd_credit_type ct ON sc.credit_type_id = ct.id
+                  JOIN gcd_creator_name_detail cnd ON sc.creator_id = cnd.id
+                  WHERE sc.story_id = s.id AND ct.name = 'colors'
+                )) as colors,
+                COALESCE(NULLIF(s.letters, ''), (
+                  SELECT GROUP_CONCAT(cnd.name, '; ')
+                  FROM gcd_story_credit sc
+                  JOIN gcd_credit_type ct ON sc.credit_type_id = ct.id
+                  JOIN gcd_creator_name_detail cnd ON sc.creator_id = cnd.id
+                  WHERE sc.story_id = s.id AND ct.name = 'letters'
+                )) as letters,
+                COALESCE(NULLIF(s.editing, ''), (
+                  SELECT GROUP_CONCAT(cnd.name, '; ')
+                  FROM gcd_issue_credit ic
+                  JOIN gcd_creator_name_detail cnd ON ic.creator_id = cnd.id
+                  WHERE ic.issue_id = s.issue_id
+                )) as editing,
+                s.genre, s.sequence_number, s.page_count
+               FROM gcd_story s
+               WHERE s.issue_id = ? AND s.deleted = 0 
+               ORDER BY s.sequence_number ASC`
             )
             .all(issueId) as any[];
         }
