@@ -52,7 +52,7 @@ describe("Canonical Equities Symbology & 16 Asset Families Canon", () => {
     }
   });
 
-  it("fetches sovereign equities universe with real pricing and Gregory scores", async () => {
+  it("fetches sovereign equities universe with real pricing and authentic catalog metadata", async () => {
     const equities = await getSovereignEquities(20);
     expect(Array.isArray(equities)).toBe(true);
     expect(equities.length).toBeGreaterThan(0);
@@ -63,7 +63,8 @@ describe("Canonical Equities Symbology & 16 Asset Families Canon", () => {
     expect(first).toHaveProperty("issueNumber");
     expect(first).toHaveProperty("referenceFmvUsd");
     expect(first.referenceFmvUsd).toBeGreaterThan(0);
-    expect(first.gregoryScore).toBeGreaterThanOrEqual(180);
+    // Gregory Score is strictly restricted to CE70 explanation essays and is undefined on general sovereign equities
+    expect(first.gregoryScore).toBeUndefined();
     expect(first.originEra).toBeDefined();
   });
 

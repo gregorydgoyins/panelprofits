@@ -774,7 +774,6 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
         panel_profits_data: {
           era: String(book.era || "MODERN"),
           ticker: formatComicEquityTicker(book.series, book.issueNumber),
-          gregory_score: 190.0,
         } as any,
         comicbase_data: null,
         gcd_data: null,
@@ -1165,7 +1164,7 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
       baseline_grade_9_8_observation_count: fmv98 ? 24 : null,
       panel_profits_data: {
         seat_number: parsedRef.seatNumber || 999,
-        gregory_score: parsedRef.gregoryScore || 190.0,
+        ...(parsedRef.seatNumber && parsedRef.seatNumber <= 65 && parsedRef.gregoryScore ? { gregory_score: parsedRef.gregoryScore } : {}),
         quality_scores: [
           { dimension: "Authorial Presence", score: 9.6, rationale: `Key historical entry in the ${parsedRef.series} lineage` },
           { dimension: "Artistic Merit", score: 9.5, rationale: `Landmark visual draftsmanship from ${parsedRef.year || 1970}` },
@@ -1325,7 +1324,6 @@ async function fetchFeaturedComicsRaw(limit = 12): Promise<ComicRecord[]> {
           baseline_grade_9_8_sources: "PriceCharting / Panel Profits Benchmark",
           baseline_grade_9_8_observation_count: 24,
           panel_profits_data: {
-            gregory_score: item.gregoryScore ?? null,
             ticker: item.ticker,
             era: item.originEra,
           } as any,

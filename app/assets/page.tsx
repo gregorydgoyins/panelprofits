@@ -156,9 +156,9 @@ export default async function AssetsPage() {
               </div>
 
               <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between">
-                <span className="text-[10px] font-mono text-slate-500">Gregory Score</span>
-                <span className="text-xs font-mono font-bold text-emerald-400">
-                  {seat.gregoryScore.toFixed(1)} / 200
+                <span className="text-[10px] font-mono text-slate-500">Benchmark Index</span>
+                <span className="text-xs font-mono font-bold text-cyan-400">
+                  CE70 Seat #{seat.seatNumber}
                 </span>
               </div>
             </Link>

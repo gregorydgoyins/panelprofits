@@ -52,8 +52,6 @@ export async function GET(request: Request) {
     // Strictly requires grade 9.8, direct edition (no variants, newsstands, reprints), and universal label.
     const isTrulySovereign = itemGrade === "9.8" && !item.variant && Boolean(
       (item as any).isSovereign === true ||
-      String(item.id).startsWith("landmark-") ||
-      String(item.lineage || "").toLowerCase().includes("sovereign landmark") ||
       (String(item.id).startsWith("seat-") && (item as any).seatNumber <= 65)
     );
 
@@ -68,7 +66,6 @@ export async function GET(request: Request) {
       era: eraKey,
       keyBadge,
       isSovereign: isTrulySovereign,
-      gregoryScore: (item as any).gregoryScore,
       variant: item.variant,
     });
     const marketClass = resolveHistoricalMarketClass({

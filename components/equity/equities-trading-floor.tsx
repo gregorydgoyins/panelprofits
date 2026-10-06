@@ -56,7 +56,6 @@ export function EquitiesTradingFloor({
       })
       .sort((a, b) => {
         if (sortBy === "FMV") return b.referenceFmvUsd - a.referenceFmvUsd;
-        if (sortBy === "SCORE") return (b.gregoryScore ?? 0) - (a.gregoryScore ?? 0);
         if (sortBy === "SEAT") return a.seatNumber - b.seatNumber;
         if (sortBy === "DELTA") return (b.deltaPercent ?? 0) - (a.deltaPercent ?? 0);
         return 0;
@@ -167,7 +166,6 @@ export function EquitiesTradingFloor({
                 className="bg-transparent text-slate-300 focus:outline-none cursor-pointer"
               >
                 <option value="FMV" className="bg-[#0A0E18]">Price (High to Low)</option>
-                <option value="SCORE" className="bg-[#0A0E18]">Gregory Score</option>
                 <option value="SEAT" className="bg-[#0A0E18]">Seat Number</option>
                 <option value="DELTA" className="bg-[#0A0E18]">Delta Performance</option>
               </select>
@@ -265,9 +263,6 @@ export function EquitiesTradingFloor({
                       }`}
                     >
                       {deltaVal == null ? "—" : `${isPos ? "▲" : "▼"} ${isPos ? `+${deltaVal}%` : `${deltaVal}%`}`}
-                    </span>
-                    <span className="text-[9px] font-mono text-slate-500 block">
-                      Score: {item.gregoryScore != null ? item.gregoryScore.toFixed(1) : "—"}
                     </span>
                   </div>
                 </div>

@@ -461,23 +461,24 @@ export const EquityCard = React.memo(function EquityCard({
                 lineHeight: 1.2,
               }}
             />
-            <span
-              title="24-hour recorded secondary market sales delta"
-              style={{
-                fontSize: "10px",
-                color: delta.color,
-                fontFamily: "var(--font-sans, system-ui)",
-                fontWeight: 500,
-                flexShrink: 0,
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "2px",
-              }}
-            >
-              <span style={{ fontSize: "8px", opacity: 0.65, fontWeight: 600, letterSpacing: "0.04em" }}>24H</span>
-              <span>{delta.arrow}</span>
-              <span>{delta.text}</span>
-            </span>
+            {delta.text !== "—" && (
+              <span
+                title="Recorded secondary market sales delta"
+                style={{
+                  fontSize: "10px",
+                  color: delta.color,
+                  fontFamily: "var(--font-sans, system-ui)",
+                  fontWeight: 500,
+                  flexShrink: 0,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "2px",
+                }}
+              >
+                <span>{delta.arrow}</span>
+                <span>{delta.text}</span>
+              </span>
+            )}
           </div>
 
           {/* Bottom Card Strip: Dedicated Bold Exchange Ticker Badge + Certification / Scarcity Badges */}

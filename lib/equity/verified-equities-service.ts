@@ -68,21 +68,7 @@ function getDb(): any {
 }
 
 import { resolveProductionAge } from "./ticker-utils";
-import landmarkSovereignsJson from "./landmark-sovereigns.json";
 
-interface LandmarkSovereign {
-  series: string;
-  issueNumber: string;
-  year: number;
-  publisher: string;
-  fmv: number;
-  ticker: string;
-  era: string;
-  grade?: string;
-  coverUrl: string;
-}
-
-const LANDMARK_SOVEREIGNS: LandmarkSovereign[] = landmarkSovereignsJson as LandmarkSovereign[];
 
 const OBSCURE_OUTLIERS_FILTER = "AND series NOT IN ('Phantom Lady', 'Mister Mystery', 'Boy Comics', 'Kid Komics', 'Speed Comics', 'Venus', 'All-Select Comics', 'Clue Comics', 'Cowgirl Romances', 'Diary Secrets', 'Fight Comics', 'Headline Comics', 'Jumbo Comics', 'Punch Comics', 'Zip Comics', 'Romantic Hearts', 'Shocking Mystery Cases', 'Torchy', 'Weird Science-Fantasy', 'Classic Comics', 'The United States Marines', 'Four Color', 'Vault of Horror', 'Haunt of Fear', 'Planet Comics', 'Strange Worlds', 'Tales from the Crypt', 'Blue Bolt Weird Tales of Terror', 'Worlds of Fear', 'Beware! Terror Tales', 'This Magazine Is Haunted', 'This Magazine is Haunted', 'Saddle Justice', 'Torrid Affairs', 'Crime Does Not Pay', 'Frontline Combat', 'Two-Fisted Tales')";
 const PREMIER_PUBLISHERS = "'Marvel', 'DC', 'DC Comics', 'Marvel Comics', 'Image', 'Dark Horse', 'Quality Comics', 'Fawcett', 'Valiant', 'Eclipse', 'Mirage Studios', 'IDW Publishing', 'Independent'";
@@ -94,34 +80,6 @@ const ERA_SQL_CONDITIONS: Record<string, string> = {
   copper: `((publication_year >= 1984 AND publication_year <= 1991) OR LOWER(production_age) = 'copper') ${OBSCURE_OUTLIERS_FILTER} AND publisher IN (${PREMIER_PUBLISHERS})`,
   modern: `(publication_year >= 1992 OR LOWER(production_age) IN ('modern', 'postmodern', 'independent')) ${OBSCURE_OUTLIERS_FILTER} AND publisher IN (${PREMIER_PUBLISHERS})`,
 };
-
-function landmarkToItem(lm: LandmarkSovereign, idx: number): SovereignEquityItem {
-  const eraKey = lm.era.toLowerCase();
-  const originEra = eraKey.toUpperCase();
-  return {
-    id: lm.ticker,
-    seatNumber: idx + 1,
-    seatType: "PRIMARY_DOMESTIC",
-    ticker: lm.ticker,
-    series: lm.series,
-    issueNumber: lm.issueNumber,
-    title: `${lm.series} #${lm.issueNumber}`,
-    originEra,
-    productionAge: eraKey,
-    lineage: `${lm.publisher} Sovereign Landmark`,
-    referenceGrade: lm.grade ? String(lm.grade).trim() : null,
-    referenceFmvUsd: lm.fmv,
-    priceFormatted: `$${lm.fmv.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-    gregoryScore: null,
-    deltaPercent: null,
-    status: "ACTIVE",
-    coverUrl: lm.coverUrl,
-    canonicalIssueId: lm.ticker,
-    year: lm.year,
-    publisher: lm.publisher,
-    variant: null,
-  };
-}
 
 function recordToItem(r: VerifiedEquityRecord, idx: number): SovereignEquityItem {
   const resolvedAge = resolveProductionAge(r.publication_year);
@@ -138,11 +96,10 @@ function recordToItem(r: VerifiedEquityRecord, idx: number): SovereignEquityItem
     title: r.title,
     originEra,
     productionAge: eraKey,
-    lineage: `${r.publisher} Landmark Constituent`,
+    lineage: `${r.publisher} Constituent`,
     referenceGrade: r.reference_grade ? String(r.reference_grade).trim() : null,
     referenceFmvUsd: r.fmv_usd,
     priceFormatted: r.price_formatted,
-    gregoryScore: r.gregory_score != null ? Number(r.gregory_score) : null,
     deltaPercent: r.delta_percent != null ? Number(r.delta_percent) : null,
     status: r.status || "ACTIVE",
     coverUrl: r.cover_url,
@@ -177,40 +134,22 @@ export function getVerifiedRealEquities(
     const cleanEra = era && era !== "all" ? era.toLowerCase().trim() : null;
     const eras = ["golden", "silver", "bronze", "copper", "modern"] as const;
 
-    // Group landmarks by era
-    const landmarksByEra: Record<string, SovereignEquityItem[]> = {
-      golden: [],
-      silver: [],
-      bronze: [],
-      copper: [],
-      modern: [],
-    };
-    for (let i = 0; i < LANDMARK_SOVEREIGNS.length; i++) {
-      const lm = LANDMARK_SOVEREIGNS[i];
-      const e = lm.era.toLowerCase();
-      if (landmarksByEra[e]) {
-        landmarksByEra[e].push(landmarkToItem(lm, i));
-      }
-    }
-
     if (cleanEra) {
       const eraCond = ERA_SQL_CONDITIONS[cleanEra] ?? `(LOWER(production_age) = ? OR LOWER(origin_era) = ?) ${OBSCURE_OUTLIERS_FILTER}`;
       const isNamedEra = Boolean(ERA_SQL_CONDITIONS[cleanEra]);
 
-      const eraLandmarks = landmarksByEra[cleanEra] || [];
       const dbRows = isNamedEra
-        ? (db.prepare(`SELECT id, series, issue_number, title, publication_year, publisher, fmv_usd, price_formatted, cover_url, ticker, origin_era, production_age, reference_grade, gregory_score, delta_percent, status, variant 
+        ? (db.prepare(`SELECT id, series, issue_number, title, publication_year, publisher, fmv_usd, price_formatted, cover_url, ticker, origin_era, production_age, reference_grade, delta_percent, status, variant 
                        FROM verified_equities 
                        WHERE fmv_usd >= 17.01 AND cover_url IS NOT NULL AND cover_url != '' AND ${eraCond}
                        ORDER BY fmv_usd DESC, id ASC LIMIT 300`).all() as unknown as VerifiedEquityRecord[])
-        : (db.prepare(`SELECT id, series, issue_number, title, publication_year, publisher, fmv_usd, price_formatted, cover_url, ticker, origin_era, production_age, reference_grade, gregory_score, delta_percent, status, variant 
+        : (db.prepare(`SELECT id, series, issue_number, title, publication_year, publisher, fmv_usd, price_formatted, cover_url, ticker, origin_era, production_age, reference_grade, delta_percent, status, variant 
                        FROM verified_equities 
                        WHERE fmv_usd >= 17.01 AND cover_url IS NOT NULL AND cover_url != '' AND ${eraCond}
                        ORDER BY fmv_usd DESC, id ASC LIMIT 300`).all(cleanEra, cleanEra) as unknown as VerifiedEquityRecord[]);
 
-      // Combine landmarks + DB items with series#issue deduplication
-      const seen = new Set(eraLandmarks.map((lm) => `${lm.series} #${lm.issueNumber}`.toLowerCase()));
-      const combined: SovereignEquityItem[] = [...eraLandmarks];
+      const seen = new Set<string>();
+      const combined: SovereignEquityItem[] = [];
       for (const r of dbRows) {
         const key = `${r.series} #${r.issue_number}`.toLowerCase();
         if (!seen.has(key)) {
@@ -239,17 +178,15 @@ export function getVerifiedRealEquities(
 
       for (const e of eras) {
         const cond = ERA_SQL_CONDITIONS[e];
-        const eraLandmarks = landmarksByEra[e] || [];
         const dbRows = db
-          .prepare(`SELECT id, series, issue_number, title, publication_year, publisher, fmv_usd, price_formatted, cover_url, ticker, origin_era, production_age, reference_grade, gregory_score, delta_percent, status, variant 
+          .prepare(`SELECT id, series, issue_number, title, publication_year, publisher, fmv_usd, price_formatted, cover_url, ticker, origin_era, production_age, reference_grade, delta_percent, status, variant 
                     FROM verified_equities 
                     WHERE fmv_usd >= 17.01 AND cover_url IS NOT NULL AND cover_url != '' AND ${cond}
                     ORDER BY fmv_usd DESC, id ASC LIMIT 300`)
           .all() as unknown as VerifiedEquityRecord[];
 
-        // Combine landmarks + DB items with series#issue deduplication
-        const seen = new Set(eraLandmarks.map((lm) => `${lm.series} #${lm.issueNumber}`.toLowerCase()));
-        const combined: SovereignEquityItem[] = [...eraLandmarks];
+        const seen = new Set<string>();
+        const combined: SovereignEquityItem[] = [];
         for (const r of dbRows) {
           const key = `${r.series} #${r.issue_number}`.toLowerCase();
           if (!seen.has(key)) {

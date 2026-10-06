@@ -15,25 +15,11 @@ import { resolveProductionAge } from "./ticker-utils";
 import { resolveAuthoritativePublisher } from "@/lib/comics/publisher-authority";
 import { resolveHistoricalKeyBadge } from "./significance-classifier";
 import type { SovereignEquityItem } from "./canonical-equities";
-import landmarkSovereignsJson from "./landmark-sovereigns.json";
+
 
 export const TOTAL_CATALOG_UNIVERSE = 115712;
 export const QUEUE_BLOCK_SIZE = 5000;
 export const TOTAL_QUEUE_BLOCKS = Math.ceil(TOTAL_CATALOG_UNIVERSE / QUEUE_BLOCK_SIZE); // 24 blocks
-
-interface LandmarkSovereign {
-  series: string;
-  issueNumber: string;
-  year: number;
-  publisher: string;
-  fmv: number;
-  ticker: string;
-  era: string;
-  grade?: string;
-  coverUrl: string;
-}
-
-const LANDMARK_SOVEREIGNS: LandmarkSovereign[] = landmarkSovereignsJson as LandmarkSovereign[];
 
 export interface QueueBlockResult {
   items: SovereignEquityItem[];
@@ -128,10 +114,9 @@ function mapDbRow(r: any, idx: number, offset: number, blockIndex: number): Sove
   const rawFmv = r.fmv_usd != null && !isNaN(Number(r.fmv_usd)) ? Number(r.fmv_usd) : null;
   const cover = upgradeCoverUrl(r.cover_url);
   const ticker = formatComicEquityTicker(r.series, r.issue_number);
-  const keyBadge = resolveHistoricalKeyBadge(r.series, r.issue_number);
-  const gregoryScore = r.gregory_score != null && !isNaN(Number(r.gregory_score)) ? Number(r.gregory_score) : null;
   const deltaPercent = r.delta_percent != null && !isNaN(Number(r.delta_percent)) ? Number(r.delta_percent) : null;
   const referenceGrade = r.reference_grade ? String(r.reference_grade).trim() : null;
+  const keyBadge = resolveHistoricalKeyBadge(r.series, r.issue_number);
 
   return {
     id: r.id || `block-${blockIndex}-${idx}`,
@@ -147,7 +132,6 @@ function mapDbRow(r: any, idx: number, offset: number, blockIndex: number): Sove
     referenceGrade,
     referenceFmvUsd: rawFmv ?? 0,
     priceFormatted: rawFmv != null ? `$${rawFmv.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—",
-    gregoryScore,
     deltaPercent,
     status: r.status || "ACTIVE",
     coverUrl: cover,
@@ -303,62 +287,7 @@ async function loadQueueBlock(blockIndex: number, era?: string): Promise<Soverei
     }
   }
 
-  // Prepend & interleave canonical landmark sovereigns in Block 0 with apex variants/newsstands
-  if (blockIndex === 0 && (!era || era === "all")) {
-    const landmarkItems: SovereignEquityItem[] = LANDMARK_SOVEREIGNS.map((lm, idx) => {
-      const canonicalTicker = formatComicEquityTicker(lm.series, lm.issueNumber) || lm.ticker;
-      return {
-        id: canonicalTicker,
-        seatNumber: idx + 1,
-        seatType: "PRIMARY_DOMESTIC",
-        ticker: canonicalTicker,
-        series: lm.series,
-        issueNumber: lm.issueNumber,
-        title: `${lm.series} #${lm.issueNumber}`,
-        originEra: lm.era.toUpperCase(),
-        productionAge: lm.era.toLowerCase(),
-        lineage: `${lm.publisher} Sovereign Landmark`,
-        referenceGrade: lm.grade ? String(lm.grade).trim() : null,
-        referenceFmvUsd: lm.fmv,
-        priceFormatted: `$${lm.fmv.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-        gregoryScore: null,
-        deltaPercent: null,
-        status: "ACTIVE",
-        coverUrl: lm.coverUrl,
-        canonicalIssueId: canonicalTicker,
-        year: lm.year,
-        publisher: lm.publisher,
-        variant: null,
-        keyBadge: resolveHistoricalKeyBadge(lm.series, lm.issueNumber) || "Sovereign Landmark",
-      };
-    });
 
-    const seen = new Set(landmarkItems.map(l => `${l.series} #${l.issueNumber}`.toLowerCase()));
-    const remainingItems = items.filter(i => !seen.has(`${i.series} #${i.issueNumber}`.toLowerCase()));
-
-    const topVariants = remainingItems.filter(i => Boolean(i.variant));
-    const regularItems = remainingItems.filter(i => !i.variant);
-
-    // Interleave landmarks with top variants every 4th slot so Block 0 starts with rich variety
-    const interleavedLandmarks: SovereignEquityItem[] = [];
-    let lIdx = 0;
-    let vIdx = 0;
-    while (lIdx < landmarkItems.length || (vIdx < topVariants.length && vIdx < 20)) {
-      if (interleavedLandmarks.length % 4 === 3 && vIdx < topVariants.length) {
-        interleavedLandmarks.push(topVariants[vIdx++]);
-      } else if (lIdx < landmarkItems.length) {
-        interleavedLandmarks.push(landmarkItems[lIdx++]);
-      } else if (vIdx < topVariants.length) {
-        interleavedLandmarks.push(topVariants[vIdx++]);
-      } else {
-        break;
-      }
-    }
-
-    const remainingVariants = topVariants.slice(vIdx);
-    const tailItems = interleaveItems(regularItems, remainingVariants, QUEUE_BLOCK_SIZE - interleavedLandmarks.length);
-    items = [...interleavedLandmarks, ...tailItems];
-  }
 
   // Save to block cache
   blockCache.set(cacheKey, {

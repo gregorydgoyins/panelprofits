@@ -71,7 +71,6 @@ export function resolveHistoricalScarcityTier(params: {
   // 1. Mythic: CE70 Sovereign Benchmark Seats & Foundational Medium Genesis Keys
   if (
     isSovereign ||
-    score >= 195.0 ||
     (year && year <= 1939) ||
     eraNormalized === "platinum"
   ) {

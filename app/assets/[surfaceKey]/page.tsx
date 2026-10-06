@@ -116,21 +116,12 @@ export default async function AssetSurfacePage({ params }: AssetSurfacePageProps
                 </p>
               </div>
 
-              {asset.gregory_score != null ? (
-                <div className="border border-slate-800 bg-[#070A10] p-3.5 rounded">
-                  <p className="text-[10px] uppercase tracking-wider text-slate-500">Gregory Score</p>
-                  <p className="mt-1 text-xl font-bold text-indigo-300">
-                    {asset.gregory_score.toFixed(1)}
-                  </p>
-                </div>
-              ) : (
-                <div className="border border-slate-800 bg-[#070A10] p-3.5 rounded">
-                  <p className="text-[10px] uppercase tracking-wider text-slate-500">Audit Status</p>
-                  <p className="mt-1 text-sm font-semibold text-cyan-400">
-                    {asset.evidence_confidence || "VERIFIED"}
-                  </p>
-                </div>
-              )}
+              <div className="border border-slate-800 bg-[#070A10] p-3.5 rounded">
+                <p className="text-[10px] uppercase tracking-wider text-slate-500">Audit Status</p>
+                <p className="mt-1 text-sm font-semibold text-cyan-400">
+                  {asset.evidence_confidence || "VERIFIED"}
+                </p>
+              </div>
             </div>
 
             <div className="mt-8 border-t border-slate-800/80 pt-6">
