@@ -77,10 +77,11 @@ function getSqliteDb(): any {
     for (const p of dbPaths) {
       if (fs.existsSync(p)) {
         try {
-          cachedSqliteDb = new DatabaseSync(p);
-          cachedSqliteDb.exec("PRAGMA journal_mode = WAL;");
-          cachedSqliteDb.exec("PRAGMA synchronous = NORMAL;");
-          cachedSqliteDb.exec("PRAGMA cache_size = -65536;"); // 64MB RAM page cache
+          cachedSqliteDb = new DatabaseSync(p, { readOnly: true });
+          try {
+            cachedSqliteDb.exec("PRAGMA query_only = ON;");
+            cachedSqliteDb.exec("PRAGMA cache_size = -65536;"); // 64MB RAM page cache
+          } catch {}
           return cachedSqliteDb;
         } catch {
           // Continue to next path
@@ -124,10 +125,12 @@ function upgradeCoverUrl(url: string | null | undefined): string | null {
 function mapDbRow(r: any, idx: number, offset: number, blockIndex: number): SovereignEquityItem {
   const rawYear = r.publication_year ? Number(r.publication_year) : null;
   const eraKey = resolveEra(rawYear, r.origin_era || r.production_age);
-  const fmv = Number(r.fmv_usd || 24.50);
+  const rawFmv = r.fmv_usd != null && !isNaN(Number(r.fmv_usd)) ? Number(r.fmv_usd) : null;
   const cover = upgradeCoverUrl(r.cover_url);
   const ticker = formatComicEquityTicker(r.series, r.issue_number);
   const keyBadge = resolveHistoricalKeyBadge(r.series, r.issue_number);
+  const gregoryScore = r.gregory_score != null && !isNaN(Number(r.gregory_score)) ? Number(r.gregory_score) : 0;
+  const deltaPercent = r.delta_percent != null && !isNaN(Number(r.delta_percent)) ? Number(r.delta_percent) : 0;
 
   return {
     id: r.id || `block-${blockIndex}-${idx}`,
@@ -141,14 +144,14 @@ function mapDbRow(r: any, idx: number, offset: number, blockIndex: number): Sove
     productionAge: eraKey,
     lineage: `${r.publisher || "Verified"} Benchmark Constituent`,
     referenceGrade: r.reference_grade || "9.8",
-    referenceFmvUsd: fmv,
-    priceFormatted: `$${fmv.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-    gregoryScore: Number(r.gregory_score) || 192.5,
-    deltaPercent: Number(r.delta_percent || 0.45),
-    status: "ACTIVE",
+    referenceFmvUsd: rawFmv ?? 0,
+    priceFormatted: rawFmv != null ? `$${rawFmv.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—",
+    gregoryScore,
+    deltaPercent,
+    status: r.status || "ACTIVE",
     coverUrl: cover,
     canonicalIssueId: r.id,
-    year: rawYear || (eraKey === "golden" ? 1945 : eraKey === "silver" ? 1964 : eraKey === "bronze" ? 1978 : eraKey === "copper" ? 1988 : 2005),
+    year: rawYear || undefined,
     publisher: resolveAuthoritativePublisher(r.series, r.publisher),
     variant: r.variant || null,
     keyBadge,
@@ -202,14 +205,14 @@ async function loadQueueBlock(blockIndex: number, era?: string): Promise<Soverei
                fmv_usd, price_formatted, cover_url, ticker, origin_era, production_age, 
                reference_grade, gregory_score, delta_percent, status, variant 
         FROM verified_equities 
-        WHERE cover_url IS NOT NULL AND cover_url != '' AND (variant IS NULL OR variant = '')
+        WHERE cover_url IS NOT NULL AND cover_url != '' AND (variant IS NULL OR variant = '') AND publication_year > 1930
       `;
       let varSql = `
         SELECT id, series, issue_number, title, publication_year, publisher, 
                fmv_usd, price_formatted, cover_url, ticker, origin_era, production_age, 
                reference_grade, gregory_score, delta_percent, status, variant 
         FROM verified_equities 
-        WHERE cover_url IS NOT NULL AND cover_url != '' AND variant IS NOT NULL AND variant != ''
+        WHERE cover_url IS NOT NULL AND cover_url != '' AND variant IS NOT NULL AND variant != '' AND publication_year > 1930
       `;
       const baseParams: any[] = [];
       const varParams: any[] = [];
@@ -301,30 +304,33 @@ async function loadQueueBlock(blockIndex: number, era?: string): Promise<Soverei
 
   // Prepend & interleave canonical landmark sovereigns in Block 0 with apex variants/newsstands
   if (blockIndex === 0 && (!era || era === "all")) {
-    const landmarkItems: SovereignEquityItem[] = LANDMARK_SOVEREIGNS.map((lm, idx) => ({
-      id: `landmark-${lm.ticker.toLowerCase()}-${idx}`,
-      seatNumber: idx + 1,
-      seatType: "PRIMARY_DOMESTIC",
-      ticker: formatComicEquityTicker(lm.series, lm.issueNumber) || lm.ticker,
-      series: lm.series,
-      issueNumber: lm.issueNumber,
-      title: `${lm.series} #${lm.issueNumber}`,
-      originEra: lm.era.toUpperCase(),
-      productionAge: lm.era.toLowerCase(),
-      lineage: `${lm.publisher} Sovereign Landmark`,
-      referenceGrade: lm.grade || "9.8",
-      referenceFmvUsd: lm.fmv,
-      priceFormatted: `$${lm.fmv.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      gregoryScore: 198.5,
-      deltaPercent: 1.25,
-      status: "ACTIVE",
-      coverUrl: lm.coverUrl,
-      canonicalIssueId: `landmark-${lm.ticker.toLowerCase()}`,
-      year: lm.year,
-      publisher: lm.publisher,
-      variant: null,
-      keyBadge: resolveHistoricalKeyBadge(lm.series, lm.issueNumber) || "Sovereign Landmark",
-    }));
+    const landmarkItems: SovereignEquityItem[] = LANDMARK_SOVEREIGNS.map((lm, idx) => {
+      const canonicalTicker = formatComicEquityTicker(lm.series, lm.issueNumber) || lm.ticker;
+      return {
+        id: canonicalTicker,
+        seatNumber: idx + 1,
+        seatType: "PRIMARY_DOMESTIC",
+        ticker: canonicalTicker,
+        series: lm.series,
+        issueNumber: lm.issueNumber,
+        title: `${lm.series} #${lm.issueNumber}`,
+        originEra: lm.era.toUpperCase(),
+        productionAge: lm.era.toLowerCase(),
+        lineage: `${lm.publisher} Sovereign Landmark`,
+        referenceGrade: lm.grade || "9.8",
+        referenceFmvUsd: lm.fmv,
+        priceFormatted: `$${lm.fmv.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        gregoryScore: 198.5,
+        deltaPercent: 1.25,
+        status: "ACTIVE",
+        coverUrl: lm.coverUrl,
+        canonicalIssueId: canonicalTicker,
+        year: lm.year,
+        publisher: lm.publisher,
+        variant: null,
+        keyBadge: resolveHistoricalKeyBadge(lm.series, lm.issueNumber) || "Sovereign Landmark",
+      };
+    });
 
     const seen = new Set(landmarkItems.map(l => `${l.series} #${l.issueNumber}`.toLowerCase()));
     const remainingItems = items.filter(i => !seen.has(`${i.series} #${i.issueNumber}`.toLowerCase()));

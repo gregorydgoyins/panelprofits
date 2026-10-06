@@ -103,9 +103,14 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     notFound();
   }
 
-  // Canonical redirection: If accessed via seat alias (e.g. seat-16, BAT.251.SOV, slug), redirect to authentic DB comic ID
-  if (comic.id && comic.id !== id) {
-    redirect(`/comics/${comic.id}`);
+  // Canonical redirection: outward-facing URLs use ticker (e.g. /comics/BGN01 or /comics/ACT01)
+  // Internal database IDs/hashes are resolved and masked
+  const canonicalTicker = (comic.panel_profits_data as any)?.ticker || (comic as any).ticker || formatComicEquityTicker(comic.series, comic.issue_number);
+  const targetSlug = canonicalTicker ? canonicalTicker.replace(/^\$/, "") : comic.id;
+  const currentClean = id.trim().replace(/^\$/, "");
+
+  if (targetSlug && targetSlug.toLowerCase() !== currentClean.toLowerCase()) {
+    redirect(`/comics/${targetSlug}`);
   }
 
   const cbVideo = findComicBaseVideoForComic(comic.series, comic.issue_number);

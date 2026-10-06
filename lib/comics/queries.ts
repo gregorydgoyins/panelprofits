@@ -390,6 +390,7 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
     .replace(/^\/comics\//i, "")
     .replace(/^\/equity\//i, "")
     .replace(/[\/\?#].*$/, "")
+    .replace(/^\$/, "")
     .trim();
 
   // Alias redirects
@@ -401,6 +402,11 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
     (cleanId.startsWith("var-prt4") && cleanId.includes("33455"))
   ) {
     cleanId = "9100cedb288d14d461a02acb8fe23bc9d8bb2fbbbea33455e3996ada7fe4d562";
+  }
+
+  // Strip landmark- or lm- prefixes (e.g. landmark-act01, landmark-act01-0, lm-act01)
+  if (/^(?:landmark|lm)-/i.test(cleanId)) {
+    cleanId = cleanId.replace(/^(?:landmark|lm)-/i, "").replace(/-\d+$/, "");
   }
 
   // Strip variant prefixes like var-prt4-, var-cvr-a-, or extract embedded 64-char hex ID

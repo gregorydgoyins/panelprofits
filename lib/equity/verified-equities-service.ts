@@ -45,10 +45,9 @@ function getDb(): any {
     for (const p of dbPaths) {
       if (fs.existsSync(p)) {
         try {
-          cachedDb = new DatabaseSync(p);
+          cachedDb = new DatabaseSync(p, { readOnly: true });
           try {
-            cachedDb.exec("PRAGMA journal_mode = WAL;");
-            cachedDb.exec("PRAGMA synchronous = NORMAL;");
+            cachedDb.exec("PRAGMA query_only = ON;");
             cachedDb.exec("PRAGMA cache_size = -131072;"); // 128 MB RAM page cache
             cachedDb.exec("PRAGMA mmap_size = 268435456;"); // 256 MB zero-copy memory mapping
             cachedDb.exec("PRAGMA temp_store = MEMORY;");
@@ -100,7 +99,7 @@ function landmarkToItem(lm: LandmarkSovereign, idx: number): SovereignEquityItem
   const eraKey = lm.era.toLowerCase();
   const originEra = eraKey.toUpperCase();
   return {
-    id: `lm-${lm.ticker.toLowerCase()}-${idx}`,
+    id: lm.ticker,
     seatNumber: idx + 1,
     seatType: "PRIMARY_DOMESTIC",
     ticker: lm.ticker,
@@ -117,7 +116,7 @@ function landmarkToItem(lm: LandmarkSovereign, idx: number): SovereignEquityItem
     deltaPercent: 1.25,
     status: "ACTIVE",
     coverUrl: lm.coverUrl,
-    canonicalIssueId: `lm-${lm.ticker.toLowerCase()}`,
+    canonicalIssueId: lm.ticker,
     year: lm.year,
     publisher: lm.publisher,
     variant: null,
@@ -302,7 +301,7 @@ export function getVerifiedEquityByIdOrTicker(idOrTicker: string): VerifiedEquit
   if (!db || !idOrTicker) return null;
 
   try {
-    const clean = idOrTicker.trim();
+    const clean = idOrTicker.trim().replace(/^\$/, "");
     
     // 1. Direct match on ID (64-char sha256 or UUID)
     let row = db
@@ -487,7 +486,7 @@ export function getCatalogComicById(id: string): any | null {
   const db = getDb();
   if (!db || !id) return null;
   try {
-    const clean = id.trim();
+    const clean = id.trim().replace(/^\$/, "");
     const cleanNum = clean.replace(/^pp-/i, "").trim();
     const row = db
       .prepare(

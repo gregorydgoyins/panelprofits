@@ -206,7 +206,7 @@ export function EquitiesRail({ items: initialItems = [], indices = [], initialOf
         setErrored(false);
 
         fetchCount.current += 1;
-        const next = json.nextOffset ?? ((offset + 260) % (json.totalEligible || 115712));
+        const next = json.nextOffset ?? ((offset + newItems.length) % (json.totalEligible || 42400));
         nextOffset.current = next;
         try {
           sessionStorage.setItem("pp_rail_offset", String(next));

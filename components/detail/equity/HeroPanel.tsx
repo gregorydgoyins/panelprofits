@@ -267,20 +267,25 @@ export default function HeroPanel({
                 const ac = ASSET_CLASS_HERO_CONFIG[assetKey] ?? ASSET_CLASS_HERO_CONFIG.OTC;
                 return (
                   <div className="mb-2">
-                    <div className="inline-flex items-center gap-3 mb-1">
-                      <span className="text-sm px-3.5 py-1 rounded uppercase tracking-widest font-semibold pp-hover-var-glow" style={{ backgroundColor: `${ac.color}18`, color: ac.color, border: `1px solid ${ac.color}60`, fontFamily: 'monospace', letterSpacing: '0.18em', boxShadow: `0 0 12px ${ac.glowColor}, inset 0 0 8px ${ac.color}08`, cursor: 'default', ['--pp-hover-shadow' as string]: `0 0 32px ${ac.color}cc, 0 0 60px ${ac.color}44, inset 0 0 14px ${ac.color}14`, ['--pp-hover-bg' as string]: `${ac.color}26` } as CSSProperties}>
+                    <div className="inline-flex items-center gap-3 mb-1.5 flex-wrap">
+                      <span className="text-base px-4 py-1.5 rounded uppercase tracking-widest font-semibold pp-hover-var-glow" style={{ backgroundColor: `${ac.color}18`, color: ac.color, border: `1px solid ${ac.color}60`, fontFamily: 'monospace', letterSpacing: '0.18em', boxShadow: `0 0 12px ${ac.glowColor}, inset 0 0 8px ${ac.color}08`, cursor: 'default', ['--pp-hover-shadow' as string]: `0 0 32px ${ac.color}cc, 0 0 60px ${ac.color}44, inset 0 0 14px ${ac.color}14`, ['--pp-hover-bg' as string]: `${ac.color}26` } as CSSProperties}>
                         {ac.label}
                       </span>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] px-2 py-0.5 rounded uppercase tracking-wider font-semibold" style={{ backgroundColor: `${eraColors.border}88`, color: 'rgba(255,255,255,0.95)', border: `1px solid ${eraColors.border}cc`, fontFamily: 'monospace' }}>{variant.publisher}</span>
-                        {variant.era && <span className="text-[10px] px-2 py-0.5 rounded uppercase tracking-wider font-semibold" style={{ backgroundColor: `${eraColors.border}88`, color: 'rgba(255,255,255,0.85)', border: `1px solid ${eraColors.border}cc`, fontFamily: 'monospace' }}>{ERA_MAP[variant.era.toLowerCase()] || variant.era}</span>}
+                      {(variant as any).ticker && (
+                        <span className="text-base px-3.5 py-1 rounded font-mono font-bold tracking-wider" style={{ backgroundColor: 'rgba(6, 182, 212, 0.15)', color: '#22d3ee', border: '1px solid rgba(6, 182, 212, 0.45)' }}>
+                          ${String((variant as any).ticker).replace(/^\$/, '')}
+                        </span>
+                      )}
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs px-2.5 py-1 rounded uppercase tracking-wider font-semibold" style={{ backgroundColor: `${eraColors.border}88`, color: 'rgba(255,255,255,0.95)', border: `1px solid ${eraColors.border}cc`, fontFamily: 'monospace' }}>{variant.publisher}</span>
+                        {variant.era && <span className="text-xs px-2.5 py-1 rounded uppercase tracking-wider font-semibold" style={{ backgroundColor: `${eraColors.border}88`, color: 'rgba(255,255,255,0.85)', border: `1px solid ${eraColors.border}cc`, fontFamily: 'monospace' }}>{ERA_MAP[variant.era.toLowerCase()] || variant.era}</span>}
                         <div className="flex items-center gap-1.5">
-                          <ScarcityIcon className="w-3.5 h-3.5" style={{ color: 'rgba(255,255,255,0.9)', filter: `drop-shadow(0 0 5px ${scarcityColors.border}ff)` }} />
-                          <span className="text-[10px] px-2 py-0.5 rounded uppercase tracking-wider font-semibold" style={{ backgroundColor: `${scarcityColors.border}50`, color: 'rgba(255,255,255,0.92)', border: `1px solid ${scarcityColors.border}ff` }}>{scarcityColors.label}</span>
+                          <ScarcityIcon className="w-4 h-4" style={{ color: 'rgba(255,255,255,0.9)', filter: `drop-shadow(0 0 5px ${scarcityColors.border}ff)` }} />
+                          <span className="text-xs px-2.5 py-1 rounded uppercase tracking-wider font-semibold" style={{ backgroundColor: `${scarcityColors.border}50`, color: 'rgba(255,255,255,0.92)', border: `1px solid ${scarcityColors.border}ff` }}>{scarcityColors.label}</span>
                         </div>
                       </div>
                     </div>
-                    <p className="text-xs" style={{ color: 'rgba(255,255,255,0.78)', fontFamily: 'monospace' }}>{ac.desc}</p>
+                    <p className="text-sm" style={{ color: 'rgba(255,255,255,0.85)', fontFamily: 'monospace' }}>{ac.desc}</p>
                   </div>
                 );
               })()}
@@ -309,7 +314,7 @@ export default function HeroPanel({
                         <span
                           style={{
                             display: 'inline-block',
-                            width: '7px', height: '7px',
+                            width: '8px', height: '8px',
                             borderRadius: '50%',
                             backgroundColor: confTier.color,
                             flexShrink: 0,
@@ -317,7 +322,7 @@ export default function HeroPanel({
                           }}
                         />
                         <span
-                          className="px-1.5 py-0 rounded text-[9px] uppercase tracking-wider"
+                          className="px-2 py-0.5 rounded text-[10px] uppercase tracking-wider"
                           style={{
                             backgroundColor: `${confTier.color}18`,
                             border: `1px solid ${confTier.color}44`,
@@ -329,9 +334,9 @@ export default function HeroPanel({
                         </span>
                       </span>
                     )}
-                    <h1 className="text-3xl mb-0" style={{ fontWeight: 600, lineHeight: 1.1, color: lowConfidence ? 'rgba(241,245,249,0.65)' : '#fff' }}>
+                    <h1 className="text-4xl sm:text-5xl mb-0" style={{ fontWeight: 600, lineHeight: 1.1, color: lowConfidence ? 'rgba(241,245,249,0.65)' : '#fff' }}>
                       {variant.workName} #{variant.issueNumber}
-                      <span style={{ color: 'rgba(255,255,255,0.62)', fontWeight: 400, fontSize: '1.5rem', marginLeft: '0.4rem' }}>({variant.productYear ?? variant.year})</span>
+                      <span style={{ color: 'rgba(255,255,255,0.62)', fontWeight: 400, fontSize: '2rem', marginLeft: '0.6rem' }}>({variant.productYear ?? variant.year})</span>
                     </h1>
                   </div>
                 );
@@ -437,33 +442,33 @@ export default function HeroPanel({
               ) : null}
 
               {/* Instrument states: Sovereign / Anchor / Atomic */}
-              <div className="flex gap-4 flex-wrap">
+              <div className="flex gap-6 flex-wrap">
                 {instrumentStates?.sovereign && (
                   <div>
-                    <div className="text-[9px] uppercase tracking-widest mb-0.5" style={{ color: eraColors.border, letterSpacing: '0.12em' }}>
+                    <div className="text-xs uppercase tracking-widest mb-1 font-semibold" style={{ color: eraColors.border, letterSpacing: '0.12em' }}>
                       Sovereign · CGC {keyPrices.display_grade ?? instrumentStates.sovereign.grade}
                       {instrumentStates.anchor?.grade === instrumentStates.sovereign.grade && instrumentStates.anchor.salesVolume > 0 && <span style={{ color: 'rgba(255,255,255,0.55)', marginLeft: '5px' }}>{instrumentStates.anchor.salesVolume} sales</span>}
                     </div>
-                    <div className="text-2xl" style={{ color: '#fff', fontFamily: 'monospace', fontWeight: 500, textShadow: `0 0 20px ${eraColors.border}40` }}>{fmt(keyPrices.display_fmv_usd ?? instrumentStates.sovereign.priceUsd)}</div>
+                    <div className="text-3xl sm:text-4xl" style={{ color: '#fff', fontFamily: 'monospace', fontWeight: 600, textShadow: `0 0 20px ${eraColors.border}40` }}>{fmt(keyPrices.display_fmv_usd ?? instrumentStates.sovereign.priceUsd)}</div>
                     {keyPrices.delta24h != null && (
-                      <div className="flex items-center gap-1 mt-1">
-                        {keyPrices.delta24h >= 0 ? <TrendingUp className="w-3 h-3" style={{ color: '#4ade80' }} /> : <TrendingDown className="w-3 h-3" style={{ color: '#f87171' }} />}
-                        <span className="text-[11px] tabular-nums" style={{ color: keyPrices.delta24h >= 0 ? '#4ade80' : '#f87171', fontFamily: 'monospace', fontWeight: 600 }}>{keyPrices.delta24h >= 0 ? '+' : ''}{keyPrices.delta24h.toFixed(2)}%</span>
-                        <span className="text-[9px] uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.42)' }}>24h</span>
+                      <div className="flex items-center gap-1.5 mt-1.5">
+                        {keyPrices.delta24h >= 0 ? <TrendingUp className="w-3.5 h-3.5" style={{ color: '#4ade80' }} /> : <TrendingDown className="w-3.5 h-3.5" style={{ color: '#f87171' }} />}
+                        <span className="text-xs tabular-nums" style={{ color: keyPrices.delta24h >= 0 ? '#4ade80' : '#f87171', fontFamily: 'monospace', fontWeight: 600 }}>{keyPrices.delta24h >= 0 ? '+' : ''}{keyPrices.delta24h.toFixed(2)}%</span>
+                        <span className="text-[10px] uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.55)' }}>24h</span>
                       </div>
                     )}
                   </div>
                 )}
                 {instrumentStates?.anchor && (
                   <div>
-                    <div className="text-[9px] uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.68)', letterSpacing: '0.12em' }}>Anchor · CGC {instrumentStates.anchor.grade}{instrumentStates.anchor.salesVolume > 0 && <span style={{ color: 'rgba(255,255,255,0.74)', marginLeft: '4px' }}>{instrumentStates.anchor.salesVolume} sales</span>}</div>
-                    <div className="text-2xl" style={{ color: '#e2e8f0', fontFamily: 'monospace', fontWeight: 500 }}>{fmt(instrumentStates.anchor.priceUsd)}</div>
+                    <div className="text-xs uppercase tracking-widest mb-1 font-semibold" style={{ color: 'rgba(255,255,255,0.75)', letterSpacing: '0.12em' }}>Anchor · CGC {instrumentStates.anchor.grade}{instrumentStates.anchor.salesVolume > 0 && <span style={{ color: 'rgba(255,255,255,0.74)', marginLeft: '4px' }}>{instrumentStates.anchor.salesVolume} sales</span>}</div>
+                    <div className="text-3xl sm:text-4xl" style={{ color: '#e2e8f0', fontFamily: 'monospace', fontWeight: 600 }}>{fmt(instrumentStates.anchor.priceUsd)}</div>
                   </div>
                 )}
                 {instrumentStates?.atomic && (
                   <div>
-                    <div className="text-[9px] uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.58)', letterSpacing: '0.12em' }}>Atomic · Raw</div>
-                    <div className="text-2xl" style={{ color: '#cbd5e1', fontFamily: 'monospace', fontWeight: 500 }}>{fmt(instrumentStates.atomic.priceUsd)}</div>
+                    <div className="text-xs uppercase tracking-widest mb-1 font-semibold" style={{ color: 'rgba(255,255,255,0.68)', letterSpacing: '0.12em' }}>Atomic · Raw</div>
+                    <div className="text-3xl sm:text-4xl" style={{ color: '#cbd5e1', fontFamily: 'monospace', fontWeight: 600 }}>{fmt(instrumentStates.atomic.priceUsd)}</div>
                   </div>
                 )}
                 {!instrumentStates?.sovereign && !instrumentStates?.atomic && !instrumentStates?.anchor && (() => {
@@ -472,13 +477,13 @@ export default function HeroPanel({
                   const gradeLabel = keyPrices.display_grade ? `CGC ${keyPrices.display_grade}` : keyPrices.fmv98Usd ? 'CGC 9.8' : 'Raw';
                   return (
                     <div>
-                      <div className="text-[9px] uppercase tracking-widest mb-0.5" style={{ color: eraColors.border, letterSpacing: '0.12em' }}>{gradeLabel}</div>
-                      <div className="text-2xl" style={{ color: '#fff', fontFamily: 'monospace', fontWeight: 500, textShadow: `0 0 20px ${eraColors.border}40` }}>{fmt(fallbackPrice)}</div>
+                      <div className="text-xs uppercase tracking-widest mb-1 font-semibold" style={{ color: eraColors.border, letterSpacing: '0.12em' }}>{gradeLabel}</div>
+                      <div className="text-3xl sm:text-4xl" style={{ color: '#fff', fontFamily: 'monospace', fontWeight: 600, textShadow: `0 0 20px ${eraColors.border}40` }}>{fmt(fallbackPrice)}</div>
                       {keyPrices.delta24h != null && (
-                        <div className="flex items-center gap-1 mt-1">
-                          {keyPrices.delta24h >= 0 ? <TrendingUp className="w-3 h-3" style={{ color: '#4ade80' }} /> : <TrendingDown className="w-3 h-3" style={{ color: '#f87171' }} />}
-                          <span className="text-[11px] tabular-nums" style={{ color: keyPrices.delta24h >= 0 ? '#4ade80' : '#f87171', fontFamily: 'monospace', fontWeight: 600 }}>{keyPrices.delta24h >= 0 ? '+' : ''}{keyPrices.delta24h.toFixed(2)}%</span>
-                          <span className="text-[9px] uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.42)' }}>24h</span>
+                        <div className="flex items-center gap-1.5 mt-1.5">
+                          {keyPrices.delta24h >= 0 ? <TrendingUp className="w-3.5 h-3.5" style={{ color: '#4ade80' }} /> : <TrendingDown className="w-3.5 h-3.5" style={{ color: '#f87171' }} />}
+                          <span className="text-xs tabular-nums" style={{ color: keyPrices.delta24h >= 0 ? '#4ade80' : '#f87171', fontFamily: 'monospace', fontWeight: 600 }}>{keyPrices.delta24h >= 0 ? '+' : ''}{keyPrices.delta24h.toFixed(2)}%</span>
+                          <span className="text-[10px] uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.55)' }}>24h</span>
                         </div>
                       )}
                     </div>
@@ -486,8 +491,8 @@ export default function HeroPanel({
                 })()}
                 {instrumentStates?.sovereignToAtomicMultiple != null && (
                   <div>
-                    <div className="text-[9px] uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.76)', letterSpacing: '0.12em' }}>Sov / Raw ×</div>
-                    <div className="text-2xl" style={{ color: '#94a3b8', fontFamily: 'monospace', fontWeight: 500 }}>{instrumentStates.sovereignToAtomicMultiple}×</div>
+                    <div className="text-xs uppercase tracking-widest mb-1 font-semibold" style={{ color: 'rgba(255,255,255,0.76)', letterSpacing: '0.12em' }}>Sov / Raw ×</div>
+                    <div className="text-3xl sm:text-4xl" style={{ color: '#94a3b8', fontFamily: 'monospace', fontWeight: 600 }}>{instrumentStates.sovereignToAtomicMultiple}×</div>
                   </div>
                 )}
               </div>

@@ -15,8 +15,7 @@ export default function ComicNotFound() {
             COMIC RECORD NOT FOUND
           </h2>
           <p className="text-xs text-graphite-300 leading-relaxed">
-            The requested comic record ID does not exist in the authoritative
-            Panel Profits Clean database of 3,481,445 comics.
+            The requested comic equity does not exist in the verified exchange catalog.
           </p>
         </div>
 

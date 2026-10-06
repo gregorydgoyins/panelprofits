@@ -187,6 +187,7 @@ export const EquityCard = React.memo(function EquityCard({
   return (
     <Link
       href={detailHref}
+      prefetch={false}
       className="equity-card"
       data-hovered={hovered ? "true" : "false"}
       style={cardStyle}
@@ -461,7 +462,7 @@ export const EquityCard = React.memo(function EquityCard({
               }}
             />
             <span
-              title="30-day recorded secondary market sales delta (CGC/auction historical price guide movement)"
+              title="24-hour recorded secondary market sales delta"
               style={{
                 fontSize: "10px",
                 color: delta.color,
@@ -473,7 +474,7 @@ export const EquityCard = React.memo(function EquityCard({
                 gap: "2px",
               }}
             >
-              <span style={{ fontSize: "8px", opacity: 0.65, fontWeight: 600, letterSpacing: "0.04em" }}>30D</span>
+              <span style={{ fontSize: "8px", opacity: 0.65, fontWeight: 600, letterSpacing: "0.04em" }}>24H</span>
               <span>{delta.arrow}</span>
               <span>{delta.text}</span>
             </span>
