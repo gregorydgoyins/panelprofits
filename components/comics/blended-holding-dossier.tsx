@@ -74,7 +74,7 @@ export function BlendedHoldingDossier({
   const holdingGrade = (holding?.grade as Grade) || "9.8";
   const marketValuationForGrade = pp[holdingGrade] ?? pp["9.8"] ?? pp["RAW"] ?? null;
   const userCost = holding?.acquisition_cost != null ? Number(holding.acquisition_cost) : null;
-  
+
   const unrealizedGain =
     userCost != null && marketValuationForGrade != null
       ? marketValuationForGrade - userCost
@@ -144,10 +144,31 @@ export function BlendedHoldingDossier({
     }
   };
 
-  // Cover price and baseline info
-  const coverPrice =
+  // Authoritative cover price resolution across catalog records
+  const rawCoverPrice =
     (comic.panel_profits_data as Record<string, any>)?.coverPrice ??
-    (comic.gcd_data as Record<string, any>)?.cover_price;
+    (comic.panel_profits_data as Record<string, any>)?.cover_price ??
+    (comic.comicbase_data as Record<string, any>)?.["CB - Cover Price"] ??
+    (comic.gcd_data as Record<string, any>)?.["GCD - gcd_issue.price"] ??
+    (comic.gcd_data as Record<string, any>)?.cover_price ??
+    (comic as any).cover_price;
+
+  const parsedCoverPrice =
+    rawCoverPrice != null
+      ? typeof rawCoverPrice === "number"
+        ? rawCoverPrice
+        : parseFloat(String(rawCoverPrice).replace(/[^0-9.]/g, ""))
+      : null;
+  const formattedCoverPrice =
+    parsedCoverPrice != null && !isNaN(parsedCoverPrice)
+      ? formatCurrency(parsedCoverPrice)
+      : rawCoverPrice
+      ? String(rawCoverPrice)
+      : "—";
+
+  const g98Benchmark = pp["9.8"] ?? null;
+  const rawBenchmark = pp["RAW"] ?? null;
+  const activeBenchmark = g98Benchmark ?? rawBenchmark;
 
   return (
     <section className="rounded-xl border border-slate-700/80 bg-[#0A0D14] p-5 sm:p-6 shadow-xl relative overflow-hidden">
@@ -160,12 +181,12 @@ export function BlendedHoldingDossier({
         <div>
           <div className="flex items-center gap-2">
             <Scale className="h-5 w-5 text-cyan-400" />
-            <h2 className="text-base sm:text-lg font-bold text-slate-100 tracking-wide">
-              BLENDED COMIC LEDGER: MY STUFF &amp; YOUR STUFF
+            <h2 className="text-base sm:text-lg font-bold text-slate-100 tracking-wide uppercase">
+              Portfolio Asset Ledger &amp; Exchange Valuation Intelligence
             </h2>
           </div>
           <p className="text-xs text-slate-400 mt-0.5">
-            Sovereign Dual-Surface Synthesis: Personal Holdings Position Ledger (My Stuff) × Continuous Terminal Intelligence (Your Stuff)
+            Sovereign Position Tracking × Continuous Multi-Source Market Clearing (Panel Profits · ComicBase · Grader Certification Consensus)
           </p>
         </div>
 
@@ -182,7 +203,7 @@ export function BlendedHoldingDossier({
             </span>
           ) : (
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700 text-slate-400 text-xs font-medium uppercase tracking-wider">
-              Unowned Asset
+              Unheld Asset
             </span>
           )}
 
@@ -213,38 +234,38 @@ export function BlendedHoldingDossier({
             {inCollection ? (
               <>
                 <Edit3 className="h-3.5 w-3.5 mr-1.5" />
-                Update My Copy
+                Edit Portfolio Holding
               </>
             ) : (
               <>
                 <Plus className="h-3.5 w-3.5 mr-1.5" />
-                Log My Copy
+                Add Issue to Portfolio
               </>
             )}
           </Button>
         </div>
       </div>
 
-      {/* The Dual Pillars: Left = My Stuff, Right = Your Stuff */}
+      {/* The Dual Pillars: Left = Portfolio Position, Right = Exchange Terminal Intelligence */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
-        {/* ================= PILLAR 1: MY STUFF ================= */}
+        {/* ================= PILLAR 1: PORTFOLIO POSITION & COST-BASIS LEDGER ================= */}
         <div className="rounded-xl border border-slate-800 bg-[#0D111A] p-4 sm:p-5 flex flex-col justify-between relative group hover:border-cyan-500/40 transition-colors">
           <div className="space-y-4">
             <div className="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
               <div className="flex items-center gap-2">
                 <Briefcase className="h-4 w-4 text-cyan-400" />
                 <span className="text-xs font-mono font-bold uppercase tracking-wider text-cyan-300">
-                  MY STUFF — PORTFOLIO POSITION
+                  Portfolio Holdings &amp; Cost-Basis Ledger
                 </span>
               </div>
-              <span className="text-[10px] font-mono text-slate-500 uppercase">Personal Inventory</span>
+              <span className="text-[10px] font-mono text-slate-500 uppercase">Personal Verified Position</span>
             </div>
 
             {inCollection && holding ? (
               <div className="space-y-3.5">
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                   <div className="p-2.5 rounded-lg bg-slate-900/80 border border-slate-800">
-                    <div className="text-[10px] font-mono text-slate-400 uppercase">My Grade / Slab</div>
+                    <div className="text-[10px] font-mono text-slate-400 uppercase">Holding Grade / Slab</div>
                     <div className="text-sm font-bold text-slate-100 mt-0.5">
                       {holding.grading_company ? `${holding.grading_company} ` : ""}
                       {holding.grade || "RAW"}
@@ -257,7 +278,7 @@ export function BlendedHoldingDossier({
                   </div>
 
                   <div className="p-2.5 rounded-lg bg-slate-900/80 border border-slate-800">
-                    <div className="text-[10px] font-mono text-slate-400 uppercase">My Cost Basis</div>
+                    <div className="text-[10px] font-mono text-slate-400 uppercase">Acquisition Cost Basis</div>
                     <div className="text-sm font-bold text-slate-100 mt-0.5">
                       {userCost != null ? formatCurrency(userCost) : "—"}
                     </div>
@@ -323,19 +344,19 @@ export function BlendedHoldingDossier({
                 <Layers className="h-8 w-8 text-slate-600 mx-auto" />
                 <div className="space-y-1">
                   <div className="text-sm font-semibold text-slate-300">
-                    No Copy Logged In Your Portfolio
+                    No Holding Logged in Portfolio
                   </div>
-                  <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                    Log your grade, slab certification number, and purchase cost to activate real-time equity valuation, unrealized ROI, and cost-basis tracking.
+                  <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
+                    Track your physical copy in your portfolio. Record your grade (0.5–10.0 or Raw), grading authority (CGC, CBCS, PSA, or Raw), slab certification number, acquisition cost basis, and purchase date to activate real-time equity valuation, unrealized ROI, and capital gains tracking.
                   </p>
                 </div>
                 <Button
                   size="sm"
                   onClick={handleOpenModal}
-                  className="bg-cyan-600 hover:bg-cyan-500 text-white text-xs"
+                  className="bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-medium"
                 >
                   <Plus className="h-3.5 w-3.5 mr-1" />
-                  Log This Copy (My Stuff)
+                  Add Holding to Portfolio
                 </Button>
               </div>
             )}
@@ -347,14 +368,14 @@ export function BlendedHoldingDossier({
           </div>
         </div>
 
-        {/* ================= PILLAR 2: YOUR STUFF ================= */}
+        {/* ================= PILLAR 2: INSTITUTIONAL MARKET BENCHMARKS ================= */}
         <div className="rounded-xl border border-slate-800 bg-[#0D111A] p-4 sm:p-5 flex flex-col justify-between relative group hover:border-purple-500/40 transition-colors">
           <div className="space-y-4">
             <div className="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
               <div className="flex items-center gap-2">
                 <Zap className="h-4 w-4 text-purple-400" />
                 <span className="text-xs font-mono font-bold uppercase tracking-wider text-purple-300">
-                  YOUR STUFF — TERMINAL MARKET INTELLIGENCE
+                  Institutional Market Benchmarks &amp; Exchange Clearing
                 </span>
               </div>
               <span className="text-[10px] font-mono text-slate-500 uppercase">Panel Profits Terminal</span>
@@ -387,7 +408,7 @@ export function BlendedHoldingDossier({
                   {rawVolume || "Rare / Archival"}
                 </div>
                 <div className="text-[10px] text-slate-500 mt-0.5 truncate">
-                  Original Cover: {coverPrice ? (typeof coverPrice === "number" ? formatCurrency(coverPrice) : String(coverPrice)) : "—"}
+                  Original Cover: {formattedCoverPrice}
                 </div>
               </div>
             </div>
@@ -397,26 +418,26 @@ export function BlendedHoldingDossier({
               <div className="flex items-center justify-between text-xs">
                 <span className="text-slate-400 flex items-center gap-1.5">
                   <ShieldCheck className="h-3.5 w-3.5 text-cyan-400" />
-                  Three-Source Triangulation:
+                  Authoritative Market Triangulation:
                 </span>
-                <span className="text-[11px] font-mono text-cyan-300">GCD · ComicBase · PriceCharting</span>
+                <span className="text-[11px] font-mono text-cyan-300">Multi-Source Verified Clearing</span>
               </div>
               <div className="grid grid-cols-3 gap-2 text-center pt-1 border-t border-slate-800/60 text-[11px]">
                 <div>
-                  <span className="text-slate-500 block text-[9.5px]">GCD COVER</span>
+                  <span className="text-slate-500 block text-[9.5px] uppercase tracking-wider">Original Cover Price</span>
                   <span className="font-semibold text-slate-200">
-                    {coverPrice ? (typeof coverPrice === "number" ? formatCurrency(coverPrice) : String(coverPrice)) : "—"}
+                    {formattedCoverPrice}
                   </span>
                 </div>
                 <div>
-                  <span className="text-slate-500 block text-[9.5px]">PRICECHARTING</span>
+                  <span className="text-slate-500 block text-[9.5px] uppercase tracking-wider">Exchange Benchmark</span>
                   <span className="font-semibold text-emerald-400">
-                    {pp["9.8"] ? formatCurrency(pp["9.8"]) : pp["RAW"] ? formatCurrency(pp["RAW"]) : "Active"}
+                    {activeBenchmark ? formatCurrency(activeBenchmark) : "Active"}
                   </span>
                 </div>
                 <div>
-                  <span className="text-slate-500 block text-[9.5px]">ISOLATION GATE</span>
-                  <span className="font-semibold text-purple-300">Verified Strict</span>
+                  <span className="text-slate-500 block text-[9.5px] uppercase tracking-wider">Consensus Gate</span>
+                  <span className="font-semibold text-purple-300">Verified Clear</span>
                 </div>
               </div>
             </div>
@@ -424,7 +445,7 @@ export function BlendedHoldingDossier({
 
           <div className="pt-3 mt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-500">
             <span>Exchange Engine: Continuous 26-Grade Matrix</span>
-            <span className="text-slate-400 font-mono">Coverage: Full 0.5 — 10.0</span>
+            <span className="text-slate-400 font-mono">Coverage: Universal 0.5 — 10.0</span>
           </div>
         </div>
       </div>
@@ -435,14 +456,19 @@ export function BlendedHoldingDossier({
           <div className="flex items-center gap-2.5">
             <DollarSign className="h-4 w-4 text-cyan-400 shrink-0" />
             <div>
-              <span className="font-semibold text-slate-100">Blended Position Arbitrage: </span>
+              <span className="font-semibold text-slate-100">Portfolio Position Analysis: </span>
               <span className="text-slate-300">
-                You acquired this {holding?.grading_company || ""} {holdingGrade} for{" "}
-                <strong className="text-slate-100 font-mono">{formatCurrency(userCost)}</strong>. Current Panel Profits terminal valuation is{" "}
+                You acquired this {holding?.grading_company ? `${holding.grading_company} ` : ""}{holdingGrade} for{" "}
+                <strong className="text-slate-100 font-mono">{formatCurrency(userCost)}</strong>. Current exchange benchmark valuation is{" "}
                 <strong className="text-cyan-300 font-mono">{formatCurrency(marketValuationForGrade)}</strong> (
                 <span className={unrealizedGain != null && unrealizedGain >= 0 ? "text-emerald-400 font-semibold" : "text-rose-400 font-semibold"}>
                   {unrealizedGain != null && unrealizedGain >= 0 ? `+${formatCurrency(unrealizedGain)}` : formatCurrency(unrealizedGain || 0)}
                 </span>
+                {unrealizedReturnPct != null && (
+                  <span className="ml-1 text-slate-400">
+                    · {unrealizedReturnPct >= 0 ? `+${unrealizedReturnPct.toFixed(1)}%` : `${unrealizedReturnPct.toFixed(1)}%`} ROI
+                  </span>
+                )}
                 ).
               </span>
             </div>
@@ -453,7 +479,7 @@ export function BlendedHoldingDossier({
             onClick={handleOpenModal}
             className="text-xs text-cyan-300 hover:text-cyan-200 hover:bg-cyan-950/40 p-1 h-auto"
           >
-            Adjust Entry Basis <ChevronRight className="h-3 w-3 ml-0.5 inline" />
+            Adjust Cost Basis <ChevronRight className="h-3 w-3 ml-0.5 inline" />
           </Button>
         </div>
       )}
@@ -465,7 +491,7 @@ export function BlendedHoldingDossier({
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div>
                 <h3 className="text-base font-bold text-slate-100">
-                  {inCollection ? "Update Portfolio Holding (My Stuff)" : "Log Copy to Portfolio (My Stuff)"}
+                  {inCollection ? "Edit Portfolio Holding" : "Add Issue to Portfolio"}
                 </h3>
                 <p className="text-xs text-slate-400">
                   {comic.series} #{comic.issue_number}
@@ -602,10 +628,10 @@ export function BlendedHoldingDossier({
                 <Button
                   type="submit"
                   disabled={formLoading}
-                  className="text-xs h-8 bg-cyan-600 hover:bg-cyan-500 text-white"
+                  className="text-xs h-8 bg-cyan-600 hover:bg-cyan-500 text-white font-medium"
                 >
                   {formLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Check className="h-3.5 w-3.5 mr-1.5" />}
-                  Save to My Portfolio
+                  {inCollection ? "Update Portfolio Holding" : "Save Holding to Portfolio"}
                 </Button>
               </div>
             </form>

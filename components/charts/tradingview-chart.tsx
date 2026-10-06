@@ -177,26 +177,26 @@ export function TradingViewChart({
       areaSeries.setData(filteredArea as any);
       activeSeriesRef.current = areaSeries;
 
-      // Add PriceCharting Grade 8.0 Benchmark line if available
+      // Add Exchange Grade 8.0 Benchmark line if available
       if (pricecharting?.grade80) {
         const line80 = chart.addSeries(LineSeries, {
           color: "#f59e0b",
           lineWidth: 1,
           lineStyle: LineStyle.Dashed,
-          title: "PC 8.0 Benchmark",
+          title: "8.0 Benchmark",
         });
         line80.setData(
           filteredArea.map((p) => ({ time: p.time as any, value: pricecharting.grade80! }))
         );
       }
 
-      // Add PriceCharting RAW Benchmark line if available
+      // Add RAW Benchmark line if available
       if (pricecharting?.raw) {
         const lineRaw = chart.addSeries(LineSeries, {
           color: "#94a3b8",
           lineWidth: 1,
           lineStyle: LineStyle.Dotted,
-          title: "PC RAW Market",
+          title: "RAW Benchmark",
         });
         lineRaw.setData(
           filteredArea.map((p) => ({ time: p.time as any, value: pricecharting.raw! }))
@@ -318,7 +318,7 @@ export function TradingViewChart({
                   ? "bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/40"
                   : "text-slate-400 hover:text-slate-200"
               }`}
-              title="Overlay PriceCharting Multi-Grade Benchmarks"
+              title="Overlay Multi-Grade Benchmarks"
             >
               Ladder
             </button>
@@ -379,7 +379,7 @@ export function TradingViewChart({
         <div className="flex items-center gap-2 flex-wrap text-slate-400">
           <span className="flex items-center gap-1.5 rounded bg-emerald-950/40 border border-emerald-500/30 px-2 py-0.5 text-emerald-300 font-medium">
             <ShieldCheck className="h-3 w-3 text-emerald-400" />
-            PriceCharting Guide Benchmark
+            Exchange Secondary Benchmark
           </span>
           <span className="flex items-center gap-1.5 rounded bg-cyan-950/40 border border-cyan-500/30 px-2 py-0.5 text-cyan-300 font-medium">
             <Layers className="h-3 w-3 text-cyan-400" />

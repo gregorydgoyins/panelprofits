@@ -342,7 +342,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     coverImageUrl: authoritativeCoverImage,
     coverSource: "Authoritative Catalog Archive",
     coverMeta: {
-      source: "PriceCharting / CGC Authority",
+      source: "Exchange Benchmark / Certified Grader Consensus",
       verified: Boolean(comic.cover_verified_at),
       eraVerified: true,
       adminVerified: Boolean(comic.cover_verified_at),
@@ -452,7 +452,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     score: 98,
     present: [
       "Authoritative Sourced Cover Artwork",
-      "37-Column Continuous Market Order Book",
+      "Multi-Source Continuous Market Order Book",
       "CGC Census Verified Dossier",
       "GCD Relational Variant & International Graph",
       "Investopedia DCF Valuation & Cost Basis Model",
@@ -654,25 +654,25 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
         </section>
 
         {/* ════════════════════════════════════════════════════════════════════════
-            SECTION 2: CONTINUOUS 37-COLUMN ORDER BOOK & VALUATION MATRIX
+            SECTION 2: MULTI-SOURCE VALUATION MATRIX & CONTINUOUS ORDER BOOK
             - Panel Profits Sovereign Econometric Ladder (0.5 - 10.0, with Bids/Asks/Spreads)
-            - Unpriced tiers strictly rendered as "—"
-            - ComicBase 57-column reference card strictly segregated and labeled
-            - Blended User Portfolio holdings & cost basis
+            - ComicBase 57-column catalog reference card strictly segregated and labeled
+            - GoCollect CGC / CBCS / PSA certified grader consensus transactions
+            - Sovereign User Portfolio holdings & cost-basis ledger
             - 4-Level Institutional Perspectives (Fundamental, Algorithmic, Institutional, Scarcity)
             ════════════════════════════════════════════════════════════════════════ */}
         <section id="section-order-book" className="space-y-6 pt-4 border-t border-white/10">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-xl font-bold tracking-wide uppercase text-white font-sans">
-                Continuous 37-Column Order Book & Valuation Matrix
+                Continuous Multi-Source Order Book &amp; Valuation Matrix
               </h2>
               <p className="text-xs text-slate-400 mt-0.5">
-                Authentic cleared lattice prices across all universal grades. ComicBase catalog values isolated as non-market reference.
+                Authentic cleared lattice prices across all universal grades, synthesizing Panel Profits econometric modeling, ComicBase catalog benchmarks, and certified grader consensus (CGC, CBCS, PSA).
               </p>
             </div>
             <Badge variant="outline" className="border-emerald-500/40 text-[11px] text-emerald-400 font-mono">
-              PANEL PROFITS ECONOMETRIC ENGINE
+              MULTI-SOURCE VALUATION ENGINE
             </Badge>
           </div>
 

@@ -164,11 +164,11 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
       }),
     },
 
-    // 2. PRICECHARTING DEDICATED SECONDARY MARKET EVIDENCE
+    // 2. EXCHANGE BENCHMARK SECONDARY MARKET EVIDENCE
     {
       id: "pricecharting",
-      source: "PriceCharting",
-      badge: "Historical Sales Index",
+      source: "Exchange Benchmark Index",
+      badge: "Continuous Secondary Clearing",
       badgeClass: "text-sky-400/90",
       alwaysShow: false,
       values: buildRowValues((grade: Grade) => {
@@ -297,7 +297,7 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
   });
 
   const unrecordedAuthorities = [
-    { name: "PriceCharting", count: Object.keys(pcGrades).length },
+    { name: "Exchange Benchmark Index", count: Object.keys(pcGrades).length },
     { name: "ComicBase", count: Object.keys(cbGrades).length + (cb ? 1 : 0) },
     { name: "CGC · GPA", count: Object.keys(cgcGpaGrades).length },
     { name: "CBCS", count: Object.keys(cbcsLadder).length + Object.keys(gcCbcsGrades).length },

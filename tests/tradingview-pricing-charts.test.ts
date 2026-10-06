@@ -69,8 +69,8 @@ describe("TradingView Charts & PriceCharting / CGC Pricing Integration", () => {
     expect(html).toContain("Powered by TradingView");
     expect(html).toContain("https://www.tradingview.com/");
 
-    // Verify PriceCharting and CGC data source badges
-    expect(html).toContain("PriceCharting Guide Benchmark");
+    // Verify Exchange and CGC data source badges
+    expect(html).toContain("Exchange Secondary Benchmark");
     expect(html).toContain("CGC Universal Census &amp; Completed Sales");
 
     // Verify valuation and ticker
