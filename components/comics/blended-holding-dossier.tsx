@@ -64,7 +64,6 @@ export function BlendedHoldingDossier({
   const [formLoading, setFormLoading] = useState(false);
   const [grade, setGrade] = useState(holding?.grade || "9.8");
   const [gradingCompany, setGradingCompany] = useState(holding?.grading_company || "CGC");
-  const [certNumber, setCertNumber] = useState(holding?.certification_number || "");
   const [acqCost, setAcqCost] = useState(holding?.acquisition_cost?.toString() || "");
   const [acqDate, setAcqDate] = useState(holding?.acquisition_date || "");
   const [quantity, setQuantity] = useState(holding?.quantity?.toString() || "1");
@@ -113,7 +112,7 @@ export function BlendedHoldingDossier({
     formData.set("quantity", quantity);
     formData.set("grade", grade);
     formData.set("gradingCompany", gradingCompany);
-    formData.set("certificationNumber", certNumber);
+    formData.set("certificationNumber", "");
     formData.set("acquisitionCost", acqCost);
     formData.set("acquisitionDate", acqDate);
     formData.set("notes", notes);
@@ -131,7 +130,7 @@ export function BlendedHoldingDossier({
         quantity: parseInt(quantity, 10) || 1,
         grade: grade || null,
         grading_company: gradingCompany || null,
-        certification_number: certNumber || null,
+        certification_number: null,
         acquisition_cost: acqCost ? parseFloat(acqCost) : null,
         acquisition_date: acqDate || null,
         notes: notes || null,
@@ -265,16 +264,11 @@ export function BlendedHoldingDossier({
               <div className="space-y-3.5">
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                   <div className="p-2.5 rounded-lg bg-slate-900/80 border border-slate-800">
-                    <div className="text-[10px] font-mono text-slate-400 uppercase">Holding Grade / Slab</div>
+                    <div className="text-[10px] font-mono text-slate-400 uppercase">Holding Grade</div>
                     <div className="text-sm font-bold text-slate-100 mt-0.5">
                       {holding.grading_company ? `${holding.grading_company} ` : ""}
                       {holding.grade || "RAW"}
                     </div>
-                    {holding.certification_number && (
-                      <div className="text-[10px] font-mono text-cyan-400 truncate mt-0.5">
-                        Cert #{holding.certification_number}
-                      </div>
-                    )}
                   </div>
 
                   <div className="p-2.5 rounded-lg bg-slate-900/80 border border-slate-800">
@@ -347,7 +341,7 @@ export function BlendedHoldingDossier({
                     No Holding Logged in Portfolio
                   </div>
                   <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
-                    Track your physical copy in your portfolio. Record your grade (0.5–10.0 or Raw), grading authority (CGC, CBCS, PSA, or Raw), slab certification number, acquisition cost basis, and purchase date to activate real-time equity valuation, unrealized ROI, and capital gains tracking.
+                    Track your holding in your portfolio. Record your grade (0.5–10.0 or Raw), grading authority (CGC, CBCS, PSA, or Raw), acquisition cost basis, and purchase date to activate real-time equity valuation, unrealized ROI, and capital gains tracking.
                   </p>
                 </div>
                 <Button
@@ -562,15 +556,6 @@ export function BlendedHoldingDossier({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-medium mb-1">Certification # (Slab)</label>
-                  <Input
-                    placeholder="e.g. 4129840001"
-                    value={certNumber}
-                    onChange={(e) => setCertNumber(e.target.value)}
-                    className="h-8 text-xs bg-slate-900 border-slate-700"
-                  />
-                </div>
-                <div>
                   <label className="block text-slate-300 font-medium mb-1">Cost Basis ($ USD)</label>
                   <Input
                     type="number"
@@ -581,9 +566,6 @@ export function BlendedHoldingDossier({
                     className="h-8 text-xs bg-slate-900 border-slate-700"
                   />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-slate-300 font-medium mb-1">Acquisition Date</label>
                   <Input
@@ -593,16 +575,17 @@ export function BlendedHoldingDossier({
                     className="h-8 text-xs bg-slate-900 border-slate-700"
                   />
                 </div>
-                <div>
-                  <label className="block text-slate-300 font-medium mb-1">Quantity</label>
-                  <Input
-                    type="number"
-                    min="1"
-                    value={quantity}
-                    onChange={(e) => setQuantity(e.target.value)}
-                    className="h-8 text-xs bg-slate-900 border-slate-700"
-                  />
-                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-medium mb-1">Quantity</label>
+                <Input
+                  type="number"
+                  min="1"
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                  className="h-8 text-xs bg-slate-900 border-slate-700 w-32"
+                />
               </div>
 
               <div>

@@ -220,5 +220,34 @@ export async function getHeritageSales(assetId: string) {
     }
   }
 
+  // Supplement with authentic database sales observations if available
+  if (sales.length === 0 && comic.pp_source_id) {
+    try {
+      const db = createAdminServerClient();
+      const cleanSourceId = String(comic.pp_source_id).replace(/^pp-/i, "").trim();
+      const { data: dbObs } = await db
+        .from("ppcf_price_observations")
+        .select("amount, observed_at, grade_label, source_system")
+        .eq("source_record_id", cleanSourceId)
+        .gt("amount", 0)
+        .order("observed_at", { ascending: false })
+        .limit(20);
+
+      if (dbObs && dbObs.length > 0) {
+        for (const o of dbObs) {
+          if (o.amount && o.observed_at) {
+            const gradeStr = o.grade_label ? String(o.grade_label).replace("_", ".") : "9.8";
+            sales.push({
+              grade: gradeStr === "UNGRADED" ? "RAW" : gradeStr,
+              price_usd: Number(o.amount),
+              sold_at: String(o.observed_at),
+              confidence_score: 90,
+            });
+          }
+        }
+      }
+    } catch (_) {}
+  }
+
   return sales;
 }

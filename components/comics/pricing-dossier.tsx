@@ -38,8 +38,12 @@ const PRIMARY_EXCHANGE_GRADES: Array<{
 ];
 
 export async function PricingDossier({ comic }: { comic: ComicRecord }) {
-  const cleanEvidence = await getCleanPricingEvidence(comic.id);
-  const pp = Object.keys(cleanEvidence.grades).length ? cleanEvidence.grades : panelProfitsGrades(comic);
+  const cleanEvidence = await getCleanPricingEvidence(comic.id, comic.pp_source_id);
+  const ppCurrent = panelProfitsGrades(comic);
+  const pp = {
+    ...cleanEvidence.grades,
+    ...ppCurrent,
+  };
   const pcGrades = priceChartingGrades(comic);
   const ebayLadder = ebayGrades(comic);
   const cbGrades = comicBaseGrades(comic);
