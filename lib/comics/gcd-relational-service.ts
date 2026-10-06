@@ -2,6 +2,11 @@ import fs from "fs";
 import path from "path";
 import { createRequire } from "node:module";
 import { createPublicReadOnlyClient, createAdminServerClient } from "@/lib/supabase/admin";
+import { 
+  translateToEnglishSeries, 
+  translateToEnglishPublisher, 
+  translateToEnglishDate 
+} from "@/lib/comics/translation-utils";
 
 const requireModule = createRequire(import.meta.url);
 
@@ -28,6 +33,8 @@ export interface GcdForeignEditionItem {
   publisherName?: string;
   notes?: string;
   isDomesticSpecial?: boolean;
+  catalogId?: string;
+  coverUrl?: string;
 }
 
 export interface GcdCreatorCredit {
@@ -340,16 +347,36 @@ export async function getGcdRelationalData(
         coverArtist: parseArtistFromVariantName(v.variant_name) || undefined,
       }));
 
-      const foreignEditions: GcdForeignEditionItem[] = foreignRaw.map((f) => ({
-        reprintId: f.reprint_id,
-        targetIssueId: f.target_issue_id,
-        seriesName: f.series_name,
-        country: f.country,
-        language: f.language,
-        publicationDate: f.publication_date,
-        issueNumber: String(f.number),
-        isDomesticSpecial: f.country === "United States",
-      }));
+      // Look up target_issue_ids in local comics catalog
+      const targetGcdIds = foreignRaw.map((f) => f.target_issue_id);
+      const foreignCatalogMap = new Map<number, { id: string; cover_url?: string }>();
+      if (targetGcdIds.length > 0) {
+        try {
+          const placeholders = targetGcdIds.map(() => "?").join(",");
+          const matchedComics = db
+            .prepare(`SELECT id, gcd_id, cover_url FROM comics WHERE gcd_id IN (${placeholders})`)
+            .all(...targetGcdIds) as any[];
+          matchedComics.forEach((c) => {
+            if (c.gcd_id) foreignCatalogMap.set(parseInt(c.gcd_id, 10), c);
+          });
+        } catch (_) {}
+      }
+
+      const foreignEditions: GcdForeignEditionItem[] = foreignRaw.map((f) => {
+        const cat = foreignCatalogMap.get(f.target_issue_id);
+        return {
+          reprintId: f.reprint_id,
+          targetIssueId: f.target_issue_id,
+          seriesName: translateToEnglishSeries(f.series_name),
+          country: f.country,
+          language: f.language,
+          publicationDate: translateToEnglishDate(f.publication_date),
+          issueNumber: String(f.number),
+          isDomesticSpecial: f.country === "United States",
+          catalogId: cat?.id || undefined,
+          coverUrl: cat?.cover_url || undefined,
+        };
+      });
 
       // Enrich stories from Supabase if bundledDb has none
       const sbEnrichment = await fetchRelationalFromSupabase(baseId, seriesName, issueNumber);
@@ -542,25 +569,46 @@ export async function getGcdRelationalData(
 
     // Deduplicate foreign editions by target_issue_id
     const seenForeign = new Set<number>();
-    const foreignEditions: GcdForeignEditionItem[] = [];
+    const deduplicatedForeign: any[] = [];
     for (const f of foreignRaw) {
       if (!seenForeign.has(f.target_issue_id)) {
         seenForeign.add(f.target_issue_id);
-        const isDomestic = f.country === "United States";
-        foreignEditions.push({
-          reprintId: f.reprint_id,
-          targetIssueId: f.target_issue_id,
-          seriesName: f.series_name,
-          country: f.country,
-          language: f.language,
-          publicationDate: f.publication_date || "",
-          issueNumber: String(f.number),
-          publisherName: f.publisher_name || undefined,
-          notes: f.notes ? String(f.notes).trim() : undefined,
-          isDomesticSpecial: isDomestic,
-        });
+        deduplicatedForeign.push(f);
       }
     }
+
+    // Look up target_issue_ids in Supabase comics table
+    const foreignGcdIds = deduplicatedForeign.map((f) => String(f.target_issue_id));
+    const foreignCatalogMap = new Map<string, { id: string; cover_url?: string }>();
+    if (foreignGcdIds.length > 0) {
+      try {
+        const supabase = createAdminServerClient();
+        const { data: matchedComics } = await supabase
+          .from("comics")
+          .select("id, gcd_source_id, cover_url")
+          .in("gcd_source_id", foreignGcdIds);
+        matchedComics?.forEach((c: any) => foreignCatalogMap.set(c.gcd_source_id, c));
+      } catch (_) {}
+    }
+
+    const foreignEditions: GcdForeignEditionItem[] = deduplicatedForeign.map((f) => {
+      const cat = foreignCatalogMap.get(String(f.target_issue_id));
+      const isDomestic = f.country === "United States";
+      return {
+        reprintId: f.reprint_id,
+        targetIssueId: f.target_issue_id,
+        seriesName: translateToEnglishSeries(f.series_name),
+        country: f.country,
+        language: f.language,
+        publicationDate: translateToEnglishDate(f.publication_date),
+        issueNumber: String(f.number),
+        publisherName: translateToEnglishPublisher(f.publisher_name) || undefined,
+        notes: f.notes ? String(f.notes).trim() : undefined,
+        isDomesticSpecial: isDomestic,
+        catalogId: cat?.id || undefined,
+        coverUrl: cat?.cover_url || undefined,
+      };
+    });
 
     // 3. Get story contents & synopses
     const storiesRaw = db

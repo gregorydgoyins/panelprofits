@@ -210,19 +210,22 @@ export function AtomicVariantsAndInternationalMatrix({
                   </div>
 
                   <div className="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10.5px]">
-                    <a
-                      href={`https://www.comics.org/issue/${v.id}/`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-slate-400 hover:text-slate-200 font-mono text-[9px] inline-flex items-center gap-1"
-                      title="Inspect record in Grand Comics Database"
-                    >
-                      <span>GCD #{v.id}</span>
-                      <ExternalLink className="h-2.5 w-2.5 text-slate-500" />
-                    </a>
+                    {v.catalogId ? (
+                      <Link
+                        href={`/comics/${v.catalogId}`}
+                        className="text-cyan-400 hover:text-cyan-300 font-medium inline-flex items-center gap-1 text-[11px]"
+                      >
+                        <span>View Variant #{v.id}</span>
+                        <ExternalLink className="h-2.5 w-2.5" />
+                      </Link>
+                    ) : (
+                      <span className="text-slate-500 font-mono text-[9.5px]">
+                        GCD Archival #{v.id}
+                      </span>
+                    )}
                     <Link
                       href={`/comics?q=${encodeURIComponent(series)}`}
-                      className="text-cyan-400 hover:text-cyan-300 font-medium inline-flex items-center gap-0.5 text-[11px]"
+                      className="text-slate-400 hover:text-slate-200 font-medium inline-flex items-center gap-0.5 text-[11px]"
                     >
                       <span>Explore Series</span>
                       <ExternalLink className="h-2.5 w-2.5" />
@@ -300,16 +303,19 @@ export function AtomicVariantsAndInternationalMatrix({
                 </div>
 
                 <div className="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-mono text-slate-500">
-                  <a
-                    href={`https://www.comics.org/issue/${f.targetIssueId}/`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-indigo-400 hover:text-indigo-300 inline-flex items-center gap-1 font-medium"
-                    title="View foreign edition on Grand Comics Database"
-                  >
-                    <span>GCD #{f.targetIssueId}</span>
-                    <ExternalLink className="h-2.5 w-2.5" />
-                  </a>
+                  {f.catalogId ? (
+                    <Link
+                      href={`/comics/${f.catalogId}`}
+                      className="text-indigo-400 hover:text-indigo-300 inline-flex items-center gap-1 font-medium"
+                    >
+                      <span>View Edition</span>
+                      <ExternalLink className="h-2.5 w-2.5" />
+                    </Link>
+                  ) : (
+                    <span className="text-slate-500 font-mono text-[9.5px]">
+                      GCD Reg #{f.targetIssueId}
+                    </span>
+                  )}
                   <Link
                     href={`/comics?q=${encodeURIComponent(f.seriesName)}`}
                     className="text-slate-400 hover:text-slate-200"
@@ -380,16 +386,19 @@ export function AtomicVariantsAndInternationalMatrix({
                 </div>
 
                 <div className="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-mono text-slate-500">
-                  <a
-                    href={`https://www.comics.org/issue/${f.targetIssueId}/`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-amber-400 hover:text-amber-300 inline-flex items-center gap-1 font-medium"
-                    title="View reprint on Grand Comics Database"
-                  >
-                    <span>GCD #{f.targetIssueId}</span>
-                    <ExternalLink className="h-2.5 w-2.5" />
-                  </a>
+                  {f.catalogId ? (
+                    <Link
+                      href={`/comics/${f.catalogId}`}
+                      className="text-amber-400 hover:text-amber-300 inline-flex items-center gap-1 font-medium"
+                    >
+                      <span>View Issue</span>
+                      <ExternalLink className="h-2.5 w-2.5" />
+                    </Link>
+                  ) : (
+                    <span className="text-slate-500 font-mono text-[9.5px]">
+                      GCD Reg #{f.targetIssueId}
+                    </span>
+                  )}
                   <Link
                     href={`/comics?q=${encodeURIComponent(f.seriesName)}`}
                     className="text-slate-400 hover:text-slate-200"

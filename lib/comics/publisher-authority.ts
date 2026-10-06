@@ -6,6 +6,8 @@
  * are never misclassified as "Independent" or generic "Marvel / DC".
  */
 
+import { translateToEnglishPublisher } from "./translation-utils";
+
 const KNOWN_PUBLISHERS: Record<string, string> = {
   marvel: "Marvel",
   "marvel comics": "Marvel",
@@ -277,7 +279,8 @@ const EC_PATTERNS = [
 
 export function resolveAuthoritativePublisher(series: string, rawPublisher?: string | null): string {
   const normSeries = String(series || "").trim();
-  const rawPubClean = String(rawPublisher || "").trim().toLowerCase();
+  const rawEnglish = translateToEnglishPublisher(rawPublisher);
+  const rawPubClean = String(rawEnglish || "").trim().toLowerCase();
 
   // 1. If raw publisher is already specific and recognized (not "Independent" or "Marvel / DC")
   if (
