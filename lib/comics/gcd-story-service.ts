@@ -417,7 +417,10 @@ export async function resolveGcdStoryDossier(
   const cleanField = (val: any): string => {
     if (!val || typeof val !== "string") return "";
     const trimmed = val.trim();
-    return trimmed === "?" || trimmed === "none" ? "" : trimmed;
+    if (trimmed === "?" || trimmed === "none" || trimmed === "null" || trimmed === "undefined") return "";
+    // Reject Cyrillic or broken encoding artifacts
+    if (/[\u0400-\u04FF]/.test(trimmed)) return "";
+    return trimmed;
   };
 
   const writers = [...new Set(rawStories.map((s) => cleanField(s.script)).filter(Boolean))];

@@ -178,17 +178,32 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
 
   const authoritativePublisher = resolveAuthoritativePublisher(comic.series, comic.publisher);
 
+  const sanitizeCreator = (val: any): string => {
+    if (!val || typeof val !== "string") return "";
+    const trimmed = val.trim();
+    if (trimmed === "?" || trimmed === "none" || trimmed === "null" || trimmed === "undefined") return "";
+    if (/[\u0400-\u04FF]/.test(trimmed)) return "";
+    return trimmed;
+  };
+
+  const cleanGcdWriter = sanitizeCreator(gcdStoryDossier?.leadWriter) || sanitizeCreator(gcdData.writer) || sanitizeCreator(gcdData["GCD - story.writer"]) || sanitizeCreator((comic.comicbase_data as any)?.["CB - Writer"]) || (debut?.creators?.[0] ?? "");
+  const cleanGcdPenciler = sanitizeCreator(gcdStoryDossier?.leadPenciler) || sanitizeCreator(gcdData.penciler) || sanitizeCreator(gcdData["GCD - story.penciler"]) || sanitizeCreator((comic.comicbase_data as any)?.["CB - Artist"]) || (debut?.creators?.[1] ?? "");
+  const cleanGcdInker = sanitizeCreator(gcdStoryDossier?.leadInker) || sanitizeCreator(gcdData.inker) || sanitizeCreator(gcdData["GCD - story.inker"]);
+  const cleanGcdColorist = sanitizeCreator(gcdStoryDossier?.leadColorist) || sanitizeCreator(gcdData.colorist) || sanitizeCreator(gcdData["GCD - story.colorist"]);
+  const cleanGcdLetterer = sanitizeCreator(gcdStoryDossier?.leadLetterer) || sanitizeCreator(gcdData.letterer) || sanitizeCreator(gcdData["GCD - story.letterer"]);
+  const cleanGcdEditor = sanitizeCreator(gcdStoryDossier?.leadEditor) || sanitizeCreator(gcdData.editor) || sanitizeCreator(gcdData["GCD - story.editor"]);
+
   const enrichedGcdData = {
     ...gcdData,
     story_title: gcdStoryDossier?.leadStoryTitle || gcdData.story_title || gcdData["GCD - story.lead_title"] || "",
     synopsis: gcdStoryDossier?.leadSynopsis || gcdData.synopsis || gcdData["GCD - story.synopsis"] || (comic.comicbase_data as any)?.["CB - Notes"] || "",
     characters: gcdStoryDossier?.leadCharacters || gcdData.characters || gcdData["GCD - story.characters"] || "",
-    writer: gcdStoryDossier?.leadWriter || gcdData.writer || gcdData["GCD - story.writer"] || (comic.comicbase_data as any)?.["CB - Writer"] || debut?.creators?.[0] || "",
-    penciler: gcdStoryDossier?.leadPenciler || gcdData.penciler || gcdData["GCD - story.penciler"] || (comic.comicbase_data as any)?.["CB - Artist"] || debut?.creators?.[1] || "",
-    inker: gcdStoryDossier?.leadInker || gcdData.inker || gcdData["GCD - story.inker"] || "",
-    colorist: gcdStoryDossier?.leadColorist || gcdData.colorist || gcdData["GCD - story.colorist"] || "",
-    letterer: gcdStoryDossier?.leadLetterer || gcdData.letterer || gcdData["GCD - story.letterer"] || "",
-    editor: gcdStoryDossier?.leadEditor || gcdData.editor || gcdData["GCD - story.editor"] || "",
+    writer: cleanGcdWriter,
+    penciler: cleanGcdPenciler,
+    inker: cleanGcdInker,
+    colorist: cleanGcdColorist,
+    letterer: cleanGcdLetterer,
+    editor: cleanGcdEditor,
     genre: gcdStoryDossier?.leadGenre || gcdData.genre || gcdData["GCD - story.genre"] || "Superhero",
   };
 
@@ -602,7 +617,33 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
             latestSaleImageUrl={fullVariant.coverImageUrl}
             eraColors={eraColors}
             scarcityColors={scarcityColors}
-            heroCreatorsData={debut?.creators ? { data: debut.creators.map((c) => ({ id: c, name: c, role: 'Creator', bio: null, notableWorks: [], activeYears: null, wikiUrl: null })) } : undefined}
+            heroCreatorsData={(() => {
+              const creatorsList: Array<{ id: string; name: string; role: string; bio: null; notableWorks: never[]; activeYears: null; wikiUrl: null }> = [];
+              if (cleanGcdWriter) {
+                creatorsList.push({ id: cleanGcdWriter, name: cleanGcdWriter, role: 'Writer', bio: null, notableWorks: [], activeYears: null, wikiUrl: null });
+              }
+              if (cleanGcdPenciler && cleanGcdPenciler !== cleanGcdWriter) {
+                creatorsList.push({ id: cleanGcdPenciler, name: cleanGcdPenciler, role: 'Penciler', bio: null, notableWorks: [], activeYears: null, wikiUrl: null });
+              }
+              if (cleanGcdInker && cleanGcdInker !== cleanGcdPenciler && cleanGcdInker !== cleanGcdWriter) {
+                creatorsList.push({ id: cleanGcdInker, name: cleanGcdInker, role: 'Inker', bio: null, notableWorks: [], activeYears: null, wikiUrl: null });
+              }
+              if (cleanGcdColorist) {
+                creatorsList.push({ id: cleanGcdColorist, name: cleanGcdColorist, role: 'Colorist', bio: null, notableWorks: [], activeYears: null, wikiUrl: null });
+              }
+              if (cleanGcdLetterer) {
+                creatorsList.push({ id: cleanGcdLetterer, name: cleanGcdLetterer, role: 'Letterer', bio: null, notableWorks: [], activeYears: null, wikiUrl: null });
+              }
+              if (creatorsList.length === 0 && debut?.creators?.length) {
+                debut.creators.forEach((c) => {
+                  const cleaned = sanitizeCreator(c);
+                  if (cleaned) {
+                    creatorsList.push({ id: cleaned, name: cleaned, role: 'Creator', bio: null, notableWorks: [], activeYears: null, wikiUrl: null });
+                  }
+                });
+              }
+              return creatorsList.length > 0 ? { data: creatorsList } : undefined;
+            })()}
             truthLayerData={
               isTrulySovereign
                 ? {
