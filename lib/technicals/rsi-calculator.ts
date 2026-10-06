@@ -220,7 +220,36 @@ export async function getHeritageSales(assetId: string) {
     }
   }
 
-  // Supplement with authentic database sales observations if available
+  // Query authentic completed sales from graded_sales_observations
+  if (comic.series && comic.issue_number) {
+    try {
+      const db = createAdminServerClient();
+      const { data: dbSales } = await db
+        .from("graded_sales_observations")
+        .select("sale_price, sale_date, native_grade_text, venue, native_designation")
+        .ilike("title_name", comic.series)
+        .eq("issue_number_raw", comic.issue_number)
+        .gt("sale_price", 0)
+        .order("sale_date", { ascending: false })
+        .limit(40);
+
+      if (dbSales && dbSales.length > 0) {
+        for (const s of dbSales) {
+          if (s.sale_price && s.sale_date) {
+            const gradeStr = s.native_grade_text ? String(s.native_grade_text).replace("_", ".") : "9.8";
+            sales.push({
+              grade: gradeStr === "UNGRADED" ? "RAW" : gradeStr,
+              price_usd: Number(s.sale_price),
+              sold_at: String(s.sale_date),
+              confidence_score: 95,
+            });
+          }
+        }
+      }
+    } catch (_) {}
+  }
+
+  // Supplement with authentic database clearing observations if needed
   if (sales.length === 0 && comic.pp_source_id) {
     try {
       const db = createAdminServerClient();

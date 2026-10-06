@@ -204,27 +204,49 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
   const consensusFmv = Number(comic.pp_grade_9_8_price || comic.baseline_grade_9_8_value || 0);
 
   let dbObservations: any[] = [];
-  if (comic.pp_source_id) {
-    try {
-      const supabase = createAdminServerClient();
-      const { data: obsData } = await supabase
-        .from("ppcf_price_observations")
-        .select("amount, observed_at, grade_label, price_field")
-        .eq("source_system", "PANEL_PROFITS")
-        .eq("source_record_id", String(comic.pp_source_id))
-        .gt("amount", 0)
-        .order("observed_at", { ascending: true })
-        .limit(100);
-      if (obsData && obsData.length > 0) {
-        dbObservations = obsData;
-      }
-    } catch (_) {}
-  }
+  let salesObservations: any[] = [];
+  try {
+    const supabase = createAdminServerClient();
+    const cleanSourceId = comic.pp_source_id ? String(comic.pp_source_id).replace(/^pp-/i, "").trim() : null;
+    
+    const [obsRes, salesRes] = await Promise.all([
+      cleanSourceId
+        ? supabase
+            .from("ppcf_price_observations")
+            .select("amount, observed_at, grade_label, price_field")
+            .eq("source_record_id", cleanSourceId)
+            .gt("amount", 0)
+            .order("observed_at", { ascending: true })
+            .limit(100)
+        : Promise.resolve({ data: [] }),
+      comic.series && comic.issue_number
+        ? supabase
+            .from("graded_sales_observations")
+            .select("sale_price, sale_date, native_grade_text, venue, native_designation")
+            .ilike("title_name", comic.series)
+            .eq("issue_number_raw", comic.issue_number)
+            .order("sale_date", { ascending: true })
+            .limit(100)
+        : Promise.resolve({ data: [] }),
+    ]);
+
+    if (obsRes.data && obsRes.data.length > 0) {
+      dbObservations = obsRes.data;
+    }
+    if (salesRes.data && salesRes.data.length > 0) {
+      salesObservations = salesRes.data;
+    }
+  } catch (_) {}
 
   const obsCountByGrade = new Map<string, number>();
   for (const obs of dbObservations) {
     if (obs.grade_label) {
       obsCountByGrade.set(obs.grade_label, (obsCountByGrade.get(obs.grade_label) || 0) + 1);
+    }
+  }
+  for (const sale of salesObservations) {
+    if (sale.native_grade_text) {
+      obsCountByGrade.set(sale.native_grade_text, (obsCountByGrade.get(sale.native_grade_text) || 0) + 1);
     }
   }
 
@@ -278,7 +300,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     observedAt: new Date().toISOString(),
   };
 
-  const priceHistory = buildComicPriceHistory(comic, { dbObservations });
+  const priceHistory = buildComicPriceHistory(comic, { dbObservations, salesObservations });
 
   const formattedSales = priceHistory
     .filter((s) => s.grade === "9.8" || s.grade === "8.0" || s.grade === "RAW" || s.grade === "9.6")

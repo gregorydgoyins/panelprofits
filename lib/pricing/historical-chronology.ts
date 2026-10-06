@@ -5,6 +5,7 @@ import benchmarksData from "@/lib/pricing/pricecharting-cgc-benchmarks.json";
 
 export interface ChronologyOptions {
   dbObservations?: Array<{ amount: number; observed_at: string | null; grade_label: string | null; price_field?: string; created_at?: string; source_system?: string }>;
+  salesObservations?: Array<{ sale_price: number; sale_date: string | null; native_grade_text: string | null; venue?: string }>;
 }
 
 /**
@@ -36,6 +37,24 @@ export function buildComicPriceHistory(
           priceUsd: amt,
           observedAt: new Date(dt).toISOString(),
           source: "PANEL_PROFITS_OBSERVATION",
+        });
+      }
+    }
+  }
+
+  // 1b. Ingest verified sales observations (e.g. from graded_sales_observations / eBay / Heritage)
+  if (options.salesObservations && Array.isArray(options.salesObservations)) {
+    for (const sale of options.salesObservations) {
+      const amt = Number(sale.sale_price);
+      const dt = sale.sale_date;
+      if (amt > 0 && dt) {
+        let label = (sale.native_grade_text || "9.8").trim().toUpperCase();
+        if (label === "UNGRADED" || label === "0" || label === "RAW") label = "RAW";
+        history.push({
+          grade: (label as Grade) || "9.8",
+          priceUsd: amt,
+          observedAt: new Date(dt).toISOString(),
+          source: sale.venue ? `SALE_${sale.venue.toUpperCase()}` : "COMPLETED_AUCTION_SALE",
         });
       }
     }
@@ -173,31 +192,22 @@ export function buildComicPriceHistory(
     });
   }
 
-  // 8. Continuous Historical Trajectory Generation for each lattice grade
-  // Prevents sparse 1-point and flat 2-point step lines on financial trading terminals
-  for (const [grade, currentFmv] of Object.entries(rawLattice) as [Grade, number][]) {
-    if (!currentFmv || currentFmv <= 0) continue;
-    const existingGradeObs = history.filter(h => h.grade === grade);
-
-    if (existingGradeObs.length < 5) {
-      // Establish an authentic historical trajectory over trailing 12 months with monthly checkpoints
-      const nowMs = now.getTime();
-      const numMonths = 12;
-      for (let m = numMonths; m >= 1; m--) {
-        const ptMs = nowMs - (m * 30 * 86_400_000);
-        const ptIso = new Date(ptMs).toISOString();
-
-        // Realistic market drift across trailing 12 months: slight secular trend + cyclic micro-variance
-        const trendFactor = 1 - (m * 0.007);
-        const wave = Math.sin(m * 1.4) * 0.012;
-        const projectedPrice = +(currentFmv * (trendFactor + wave)).toFixed(2);
-
-        history.push({
-          grade,
-          priceUsd: Math.max(0.01, projectedPrice),
-          observedAt: ptIso,
-          source: "PANEL_PROFITS_CHRONOLOGY",
-        });
+  // 8. Ingest authentic multi-year monthly series from secondary market tracking (e.g. PriceCharting)
+  const pcSeries = ppData?.pricecharting?.series as Record<string, Array<{ date: string; price: number }>> | undefined;
+  if (pcSeries && typeof pcSeries === "object") {
+    for (const [gLabel, pts] of Object.entries(pcSeries)) {
+      if (Array.isArray(pts)) {
+        for (const pt of pts) {
+          const amt = Number(pt.price);
+          if (amt > 0 && pt.date) {
+            history.push({
+              grade: (gLabel as Grade) || "9.8",
+              priceUsd: amt,
+              observedAt: new Date(pt.date).toISOString(),
+              source: "SECONDARY_MARKET_SERIES",
+            });
+          }
+        }
       }
     }
   }

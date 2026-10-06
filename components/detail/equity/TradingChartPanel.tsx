@@ -107,42 +107,7 @@ export default function TradingChartPanel({
       dayMap.set(d, [t, p]);
     }
     const sortedDays = [...dayMap.keys()].sort();
-    const deduped = sortedDays.map(d => dayMap.get(d)!);
-
-    if (deduped.length === 1) {
-      const [nowT, curP] = deduped[0];
-      const expanded: [number, number][] = [];
-      const numMonths = 12;
-      for (let i = numMonths; i >= 1; i--) {
-        const ptTime = nowT - (i * 30 * 86_400_000);
-        const factor = 1 - (i * 0.007) + (Math.sin(i * 1.4) * 0.012);
-        const p = +(curP * factor).toFixed(2);
-        expanded.push([ptTime, Math.max(0.01, p)]);
-      }
-      expanded.push([nowT, curP]);
-      return expanded;
-    }
-
-    if (deduped.length === 2) {
-      const [t0, p0] = deduped[0];
-      const [t1, p1] = deduped[1];
-      const daySpan = (t1 - t0) / 86_400_000;
-      if (daySpan > 14) {
-        const steps = Math.min(Math.max(Math.floor(daySpan / 14), 4), 24);
-        const expanded: [number, number][] = [[t0, p0]];
-        for (let s = 1; s < steps; s++) {
-          const progress = s / steps;
-          const ptTime = t0 + progress * (t1 - t0);
-          const linearP = p0 + progress * (p1 - p0);
-          const noise = Math.sin(s * 1.8) * (linearP * 0.015);
-          expanded.push([ptTime, +(linearP + noise).toFixed(2)]);
-        }
-        expanded.push([t1, p1]);
-        return expanded;
-      }
-    }
-
-    return deduped;
+    return sortedDays.map(d => dayMap.get(d)!);
   }, [history, grade, heritageSalesData]);
 
   const isOhlc = chartType === 'candlestick' || chartType === 'ohlc';

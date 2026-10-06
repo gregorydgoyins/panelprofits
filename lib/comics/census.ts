@@ -104,6 +104,7 @@ export async function getComicCensusDossier(
     }
 
     const { data: snapshots, error: snapshotError } = await snapshotQuery
+      .order("total_graded", { ascending: false })
       .order("snapshot_timestamp", { ascending: false })
       .limit(1);
 
