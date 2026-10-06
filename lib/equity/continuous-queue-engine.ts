@@ -129,8 +129,9 @@ function mapDbRow(r: any, idx: number, offset: number, blockIndex: number): Sove
   const cover = upgradeCoverUrl(r.cover_url);
   const ticker = formatComicEquityTicker(r.series, r.issue_number);
   const keyBadge = resolveHistoricalKeyBadge(r.series, r.issue_number);
-  const gregoryScore = r.gregory_score != null && !isNaN(Number(r.gregory_score)) ? Number(r.gregory_score) : 0;
-  const deltaPercent = r.delta_percent != null && !isNaN(Number(r.delta_percent)) ? Number(r.delta_percent) : 0;
+  const gregoryScore = r.gregory_score != null && !isNaN(Number(r.gregory_score)) ? Number(r.gregory_score) : null;
+  const deltaPercent = r.delta_percent != null && !isNaN(Number(r.delta_percent)) ? Number(r.delta_percent) : null;
+  const referenceGrade = r.reference_grade ? String(r.reference_grade).trim() : null;
 
   return {
     id: r.id || `block-${blockIndex}-${idx}`,
@@ -143,7 +144,7 @@ function mapDbRow(r: any, idx: number, offset: number, blockIndex: number): Sove
     originEra: eraKey.toUpperCase(),
     productionAge: eraKey,
     lineage: `${r.publisher || "Verified"} Benchmark Constituent`,
-    referenceGrade: r.reference_grade || "9.8",
+    referenceGrade,
     referenceFmvUsd: rawFmv ?? 0,
     priceFormatted: rawFmv != null ? `$${rawFmv.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—",
     gregoryScore,
@@ -317,11 +318,11 @@ async function loadQueueBlock(blockIndex: number, era?: string): Promise<Soverei
         originEra: lm.era.toUpperCase(),
         productionAge: lm.era.toLowerCase(),
         lineage: `${lm.publisher} Sovereign Landmark`,
-        referenceGrade: lm.grade || "9.8",
+        referenceGrade: lm.grade ? String(lm.grade).trim() : null,
         referenceFmvUsd: lm.fmv,
         priceFormatted: `$${lm.fmv.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-        gregoryScore: 198.5,
-        deltaPercent: 1.25,
+        gregoryScore: null,
+        deltaPercent: null,
         status: "ACTIVE",
         coverUrl: lm.coverUrl,
         canonicalIssueId: canonicalTicker,

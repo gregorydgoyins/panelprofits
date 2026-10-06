@@ -13,7 +13,7 @@ export interface EquityItem {
   coverImageUrl: string | null;
   pricing: {
     fmv_usd: number;
-    grade: string;
+    grade: string | null;
     delta_24: number | null;
     delta_30: number | null;
     delta_90: number | null;

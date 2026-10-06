@@ -36,10 +36,10 @@ export function EquitiesRail({ items: initialItems = [], indices = [], initialOf
     return initialItems.map((item, idx) => {
       const eraKey = (item.productionAge || item.originEra || "modern").toLowerCase().replace(/_age$/, "").replace(/\s+age$/, "");
       const fmv = item.referenceFmvUsd || 0;
-      const itemGrade = String(item.referenceGrade || "9.8").trim();
+      const itemGrade = item.referenceGrade ? String(item.referenceGrade).trim() : null;
 
       const bench = lookupReferenceFmv(item.seatNumber, item.title, item.canonicalIssueId);
-      const isTrulySovereign = !item.variant && isProvenSovereignCopy(itemGrade, bench, {
+      const isTrulySovereign = !item.variant && isProvenSovereignCopy(itemGrade || "", bench, {
         isVariant: Boolean(item.variant),
         variantName: item.variant,
       });
@@ -51,7 +51,7 @@ export function EquitiesRail({ items: initialItems = [], indices = [], initialOf
         era: eraKey,
         keyBadge,
         isSovereign: isTrulySovereign,
-        gregoryScore: item.gregoryScore,
+        gregoryScore: item.gregoryScore ?? 0,
         variant: item.variant,
       });
       const marketClass = resolveHistoricalMarketClass({
@@ -88,9 +88,9 @@ export function EquitiesRail({ items: initialItems = [], indices = [], initialOf
         pricing: {
           fmv_usd: fmv,
           grade: itemGrade,
-          delta_24: item.deltaPercent,
-          delta_30: Number((item.deltaPercent * 1.2).toFixed(2)),
-          delta_90: Number((item.deltaPercent * 2.1).toFixed(2)),
+          delta_24: item.deltaPercent ?? null,
+          delta_30: null,
+          delta_90: null,
           asset_class: effectiveAssetClass,
         },
         identity: {

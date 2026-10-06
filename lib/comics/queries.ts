@@ -1325,7 +1325,7 @@ async function fetchFeaturedComicsRaw(limit = 12): Promise<ComicRecord[]> {
           baseline_grade_9_8_sources: "PriceCharting / Panel Profits Benchmark",
           baseline_grade_9_8_observation_count: 24,
           panel_profits_data: {
-            gregory_score: item.gregoryScore || 192.5,
+            gregory_score: item.gregoryScore ?? null,
             ticker: item.ticker,
             era: item.originEra,
           } as any,

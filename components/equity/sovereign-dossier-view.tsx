@@ -31,7 +31,7 @@ interface SovereignDossierViewProps {
 
 export function SovereignDossierView({ dossier }: SovereignDossierViewProps) {
   const [copied, setCopied] = React.useState(false);
-  const isPositive = dossier.deltaPercent >= 0;
+  const isPositive = (dossier.deltaPercent ?? 0) >= 0;
 
   const handleCopyTicker = () => {
     navigator.clipboard.writeText(dossier.ticker);
@@ -168,7 +168,7 @@ export function SovereignDossierView({ dossier }: SovereignDossierViewProps) {
               <div className="rounded bg-[#0B0F1A] border border-slate-800/80 p-3">
                 <span className="text-[10px] uppercase text-slate-500">Gregory Score</span>
                 <p className="mt-1 text-base font-bold text-emerald-300">
-                  {dossier.gregoryScore.toFixed(1)} / 200
+                  {dossier.gregoryScore != null ? `${dossier.gregoryScore.toFixed(1)} / 200` : "—"}
                 </p>
               </div>
 
@@ -239,7 +239,7 @@ export function SovereignDossierView({ dossier }: SovereignDossierViewProps) {
         series={dossier.series}
         issueNumber={dossier.issueNumber}
         currentPrice={dossier.referenceFmvUsd}
-        deltaPercent={dossier.deltaPercent}
+        deltaPercent={dossier.deltaPercent ?? 0}
         dataPoints={dossier.performanceHistory}
       />
 
@@ -252,7 +252,7 @@ export function SovereignDossierView({ dossier }: SovereignDossierViewProps) {
 
       {/* Gregory Connoisseurship Quality Ruler */}
       <GregoryRulerCard
-        gregoryScore={dossier.gregoryScore}
+        gregoryScore={dossier.gregoryScore ?? 0}
         qualityMetrics={dossier.qualityScores}
         adjudicationEssay={dossier.adjudicationEssay}
         historicalJustification={dossier.historicalJustification}

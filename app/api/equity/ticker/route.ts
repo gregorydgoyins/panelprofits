@@ -45,7 +45,7 @@ export async function GET(request: Request) {
       .replace(/_age$/, "")
       .replace(/\s+age$/, "");
 
-    const itemGrade = String(item.referenceGrade || "9.8").trim();
+    const itemGrade = item.referenceGrade ? String(item.referenceGrade).trim() : null;
 
     // Strict Sovereign Constitutional Gating:
     // "soverign is a direct universal bluelabel 9.8 comic"

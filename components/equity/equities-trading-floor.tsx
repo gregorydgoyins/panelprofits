@@ -56,9 +56,9 @@ export function EquitiesTradingFloor({
       })
       .sort((a, b) => {
         if (sortBy === "FMV") return b.referenceFmvUsd - a.referenceFmvUsd;
-        if (sortBy === "SCORE") return b.gregoryScore - a.gregoryScore;
+        if (sortBy === "SCORE") return (b.gregoryScore ?? 0) - (a.gregoryScore ?? 0);
         if (sortBy === "SEAT") return a.seatNumber - b.seatNumber;
-        if (sortBy === "DELTA") return b.deltaPercent - a.deltaPercent;
+        if (sortBy === "DELTA") return (b.deltaPercent ?? 0) - (a.deltaPercent ?? 0);
         return 0;
       });
   }, [initialEquities, selectedEra, searchQuery, sortBy]);
@@ -195,7 +195,8 @@ export function EquitiesTradingFloor({
         {/* Equities Grid */}
         <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {filteredEquities.map((item) => {
-            const isPos = item.deltaPercent >= 0;
+            const deltaVal = item.deltaPercent ?? null;
+            const isPos = deltaVal != null && deltaVal >= 0;
 
             return (
               <Link
@@ -260,13 +261,13 @@ export function EquitiesTradingFloor({
                   <div className="text-right">
                     <span
                       className={`inline-flex items-center gap-0.5 text-xs font-mono font-semibold ${
-                        isPos ? "text-emerald-400" : "text-rose-400"
+                        deltaVal == null ? "text-slate-400" : isPos ? "text-emerald-400" : "text-rose-400"
                       }`}
                     >
-                      {isPos ? "▲" : "▼"} {isPos ? `+${item.deltaPercent}%` : `${item.deltaPercent}%`}
+                      {deltaVal == null ? "—" : `${isPos ? "▲" : "▼"} ${isPos ? `+${deltaVal}%` : `${deltaVal}%`}`}
                     </span>
                     <span className="text-[9px] font-mono text-slate-500 block">
-                      Score: {item.gregoryScore.toFixed(1)}
+                      Score: {item.gregoryScore != null ? item.gregoryScore.toFixed(1) : "—"}
                     </span>
                   </div>
                 </div>

@@ -28,11 +28,11 @@ export interface SovereignEquityItem {
   originEra: string;
   productionAge: string;
   lineage: string;
-  referenceGrade: string;
+  referenceGrade?: string | null;
   referenceFmvUsd: number;
   priceFormatted: string;
-  gregoryScore: number;
-  deltaPercent: number;
+  gregoryScore?: number | null;
+  deltaPercent?: number | null;
   status: string;
   coverUrl: string | null;
   canonicalIssueId: string | null;
@@ -437,7 +437,8 @@ export async function getSovereignEquityDossier(identifier: string): Promise<Det
 
     // Realistic trend line leading to current delta
     const progress = (30 - i) / 30;
-    const trendEffect = 1 + (matched.deltaPercent / 100) * (progress - 1);
+    const deltaVal = matched.deltaPercent ?? 0;
+    const trendEffect = 1 + (deltaVal / 100) * (progress - 1);
     const wave = Math.sin(i * 0.7) * 0.008;
     const value = Math.round(basePrice * (trendEffect + wave));
     const volume = Math.round(8 + Math.abs(Math.sin(i * 1.5)) * 14);
