@@ -218,17 +218,16 @@ async function loadQueueBlock(blockIndex: number, era?: string): Promise<Soverei
             WHEN publication_year <= 1991 THEN 5
             ELSE 6
           END ASC, 
-          gregory_score DESC, 
           publication_year ASC, 
           id ASC 
         LIMIT ? OFFSET ?
       `;
 
       baseSql += historicalSort;
-      baseParams.push(Math.floor(limit * 0.8), (offset % 38957));
+      baseParams.push(Math.floor(limit * 0.8), (offset % 38442));
 
       varSql += historicalSort;
-      varParams.push(Math.ceil(limit * 0.25), Math.floor((offset * 0.2) % 3445));
+      varParams.push(Math.ceil(limit * 0.25), Math.floor((offset * 0.2) % 3444));
 
       const baseRows = sqlite.prepare(baseSql).all(...baseParams) as any[];
       const varRows = sqlite.prepare(varSql).all(...varParams) as any[];
@@ -270,12 +269,12 @@ async function loadQueueBlock(blockIndex: number, era?: string): Promise<Soverei
         varQuery = varQuery.or(`production_age.ilike.${era},origin_era.ilike.${era}`);
       }
 
-      const safeBaseOffset = offset % 38957;
-      const safeVarOffset = Math.floor((offset * 0.2) % 3445);
+      const safeBaseOffset = offset % 38442;
+      const safeVarOffset = Math.floor((offset * 0.2) % 3444);
 
       const [baseRes, varRes] = await Promise.all([
-        baseQuery.order("gregory_score", { ascending: false }).order("publication_year", { ascending: true }).order("id", { ascending: true }).range(safeBaseOffset, safeBaseOffset + Math.floor(limit * 0.8) - 1),
-        varQuery.order("gregory_score", { ascending: false }).order("publication_year", { ascending: true }).order("id", { ascending: true }).range(safeVarOffset, safeVarOffset + Math.ceil(limit * 0.25) - 1),
+        baseQuery.order("publication_year", { ascending: true }).order("id", { ascending: true }).range(safeBaseOffset, safeBaseOffset + Math.floor(limit * 0.8) - 1),
+        varQuery.order("publication_year", { ascending: true }).order("id", { ascending: true }).range(safeVarOffset, safeVarOffset + Math.ceil(limit * 0.25) - 1),
       ]);
 
       const mappedBase = (baseRes.data || []).map((r, idx) => mapDbRow(r, idx, offset, blockIndex));
