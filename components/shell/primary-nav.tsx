@@ -23,6 +23,7 @@ import {
   Wallet,
   X,
   Swords,
+  Crosshair,
 } from "lucide-react";
 
 interface NavLink { href: string; label: string; icon: typeof LayoutDashboard; }
@@ -61,6 +62,7 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/equities", label: "Equities Trading Floor", icon: Activity },
       { href: "/assets", label: "16 Asset Surfaces", icon: BriefcaseBusiness },
       { href: "/telemetry", label: "Barometers & Clocks", icon: Activity },
+      { href: "/sniper", label: "Private Deal Radar (Owner)", icon: Crosshair },
     ],
   },
   {

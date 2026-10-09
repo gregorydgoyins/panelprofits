@@ -28,6 +28,16 @@ export async function MarketShell({ children }: MarketShellProps) {
   const isFrontDoor = pathname === "/sign-in" || pathname === "/sign-up";
   if (isFrontDoor) return <AuthFrontDoor>{children}</AuthFrontDoor>;
 
+  if (pathname.startsWith("/sniper")) {
+    return (
+      <div className="flex min-h-screen flex-col bg-[#07080B] text-slate-100 antialiased">
+        <Header />
+        <main className="flex-1">{children}</main>
+        <Footer />
+      </div>
+    );
+  }
+
   // Random start across the covered-books rail (seq is a stable shuffle, so any window is a mix of publishers/eras)
   const randomInitialOffset = Math.floor(Math.random() * COVERED_BOOKS_TOTAL);
 

@@ -34,6 +34,14 @@ export async function Header() {
           <div className="flex items-center gap-4 text-[11px]">
             <SystemClock />
             <PlayerSettings />
+            <Link
+              href="/sniper"
+              className="flex items-center gap-1.5 rounded px-2 py-0.5 text-[10px] font-mono font-semibold tracking-wider text-amber-400 bg-amber-950/40 border border-amber-500/30 hover:border-amber-400 hover:bg-amber-900/60 transition-colors"
+              title="Private Owner Desk: Collector Deal Radar & Microwave Sniper"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span>DEAL RADAR</span>
+            </Link>
             {user && (
               <div className="hidden sm:flex items-center gap-2 border-l border-slate-800 pl-3">
                 <span className="text-slate-400">OPERATOR:</span>
