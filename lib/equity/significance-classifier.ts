@@ -1,6 +1,7 @@
 import { LANDMARK_MARVEL_DEBUTS } from "@/lib/wiki/entity-extractor";
 import { resolveIssueDebuts } from "@/lib/wiki/debut-resolver";
 import type { ScarcityTier } from "@/lib/design-system/colors";
+import { resolveFloatScarcityTier } from "@/lib/equity/scarcity-float";
 
 /**
  * Resolves the primary historical milestone badge for any comic issue
@@ -52,9 +53,11 @@ export function resolveHistoricalKeyBadge(
 }
 
 /**
- * Assigns Scarcity Tier based strictly on Historical Significance, Cultural Gravity,
- * and Era Scarcity — enforcing the Price Firewall (CE70 Constitution Rule C).
- * Dollar auction prices touch Quality 11 only, never cultural or scarcity tiers.
+ * Scarcity tier from float mechanics (lib/equity/scarcity-float.ts): the issue's age
+ * (era of its own publication year) → assumed print run × survival × 9.0+ share →
+ * estimated census → canon tier cutoffs. Price, key status and variants never move it
+ * (Price Firewall; modifiers never change scarcity). Only a proven CE70 Sovereign seat
+ * is pinned mythic.
  */
 export function resolveHistoricalScarcityTier(params: {
   year?: number | null;
@@ -63,57 +66,8 @@ export function resolveHistoricalScarcityTier(params: {
   isSovereign?: boolean | null;
   variant?: string | null;
 }): ScarcityTier {
-  const { year, era, keyBadge, isSovereign, variant } = params;
-  const eraNormalized = (era || "").toLowerCase().trim();
-
-  // 1. Mythic: CE70 Sovereign Benchmark Seats & Foundational Medium Genesis Keys
-  if (
-    isSovereign ||
-    (year && year <= 1939) ||
-    eraNormalized === "platinum"
-  ) {
-    return "mythic";
-  }
-
-  // 2. Legendary: Primary Mythological Archetype Debuts & Golden Age Survivors (1940-1945)
-  if (
-    (keyBadge && keyBadge.startsWith("1st App.")) ||
-    (year && year <= 1945) ||
-    eraNormalized === "golden"
-  ) {
-    return "legendary";
-  }
-
-  // 3. Epic: Atomic/Pre-Code & Silver Age Milestone Keys (1946-1969), Major Storyline Inflections
-  if (
-    (year && year <= 1969) ||
-    eraNormalized === "atomic" ||
-    eraNormalized === "silver"
-  ) {
-    return "epic";
-  }
-
-  // 4. Rare: Bronze Age Keys (1970-1983), Premiere #1s, Verified Newsstands, Reprints & Variants
-  if (
-    (year && year <= 1983) ||
-    eraNormalized === "bronze" ||
-    keyBadge === "Premiere Issue" ||
-    Boolean(variant)
-  ) {
-    return "rare";
-  }
-
-  // 5. Uncommon: Copper & Early Modern Canonical Series Continuity (1984-2005)
-  if (
-    (year && year <= 2005) ||
-    eraNormalized === "copper" ||
-    eraNormalized === "independent"
-  ) {
-    return "uncommon";
-  }
-
-  // 6. Common: Standard Modern & Postmodern Catalog Issues
-  return "common";
+  if (params.isSovereign) return "mythic";
+  return resolveFloatScarcityTier(params.era, params.year);
 }
 
 /**
