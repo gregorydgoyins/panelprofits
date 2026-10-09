@@ -61,12 +61,10 @@ export function resolveHistoricalScarcityTier(params: {
   era?: string | null;
   keyBadge?: string | null;
   isSovereign?: boolean | null;
-  gregoryScore?: number | null;
   variant?: string | null;
 }): ScarcityTier {
-  const { year, era, keyBadge, isSovereign, gregoryScore, variant } = params;
+  const { year, era, keyBadge, isSovereign, variant } = params;
   const eraNormalized = (era || "").toLowerCase().trim();
-  const score = gregoryScore || 0;
 
   // 1. Mythic: CE70 Sovereign Benchmark Seats & Foundational Medium Genesis Keys
   if (
@@ -81,8 +79,7 @@ export function resolveHistoricalScarcityTier(params: {
   if (
     (keyBadge && keyBadge.startsWith("1st App.")) ||
     (year && year <= 1945) ||
-    eraNormalized === "golden" ||
-    score >= 190.0
+    eraNormalized === "golden"
   ) {
     return "legendary";
   }
@@ -91,8 +88,7 @@ export function resolveHistoricalScarcityTier(params: {
   if (
     (year && year <= 1969) ||
     eraNormalized === "atomic" ||
-    eraNormalized === "silver" ||
-    score >= 180.0
+    eraNormalized === "silver"
   ) {
     return "epic";
   }

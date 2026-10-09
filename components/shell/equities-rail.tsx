@@ -55,7 +55,6 @@ export function EquitiesRail({ items: initialItems = [], seedItems, indices = []
         era: eraKey,
         keyBadge,
         isSovereign: isTrulySovereign,
-        gregoryScore: item.gregoryScore ?? 0,
         variant: item.variant,
       });
       const marketClass = resolveHistoricalMarketClass({
