@@ -1,6 +1,5 @@
 import { createAdminServerClient } from "@/lib/supabase/admin";
 import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
-import { resolveProductionAge } from "@/lib/equity/ticker-utils";
 import {
   resolveHistoricalKeyBadge,
   resolveHistoricalScarcityTier,
@@ -25,7 +24,9 @@ const PP_DISPLAY_ORDER = ["RAW", "2.0", "3.0", "4.0", "5.0", "6.0", "7.0", "8.0"
 interface CoveredBookRow {
   seq: number;
   rail_seq: number;
-  era: string | null;
+  age: string | null;
+  origin_era: string | null;
+  origin_year: number | null;
   edition_form: string | null;
   printing: string | null;
   variant_label: string | null;
@@ -92,7 +93,7 @@ export function mapCoveredBook(row: CoveredBookRow): EquityItem | null {
   }
   if (headlineUsd === null) return null; // no published price from either source → not a rail book
 
-  const era = row.era || resolveProductionAge(row.year);
+  const era = row.age || "unknown"; // age = era of this issue's publication year; origin era = era of the series' issue #1
   const variant = (row.variant_label || "").trim() || null;
   const editionForm = row.edition_form || "DIRECT";
   const keyBadge = resolveHistoricalKeyBadge(series, issue);
@@ -120,6 +121,8 @@ export function mapCoveredBook(row: CoveredBookRow): EquityItem | null {
       publisher: row.publisher_folder || null,
       variant,
       productionAge: era,
+      originEra: row.origin_era,
+      originYear: row.origin_year,
       scarcityTier: tier,
       detailUrl: row.detail_id ? `/comics/${encodeURIComponent(row.detail_id)}` : `/comics/${encodeURIComponent(ticker)}`,
       assetClass: marketClass as EquityItem["identity"]["assetClass"],
@@ -141,7 +144,7 @@ export async function getCoveredBooksSlice(offset: number, limit: number): Promi
   const total = COVERED_BOOKS_TOTAL;
   const start = ((Math.max(0, offset) % total) + total) % total;
   const supabase = createAdminServerClient();
-  const cols = "rail_seq,seq,era,edition_form,printing,variant_label,gcs_key,publisher_folder,series,issue_number,year,pp_id,pp_ladder,detail_id,comicbase_source_id,cb_price,cb_values";
+  const cols = "rail_seq,seq,age,origin_era,origin_year,edition_form,printing,variant_label,gcs_key,publisher_folder,series,issue_number,year,pp_id,pp_ladder,detail_id,comicbase_source_id,cb_price,cb_values";
 
   const fetchRange = async (from: number, to: number): Promise<CoveredBookRow[]> => {
     const { data, error } = await supabase

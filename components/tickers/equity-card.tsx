@@ -132,6 +132,11 @@ export const EquityCard = React.memo(function EquityCard({
       ? rawProductionAge
       : resolveProductionAge(identity.year);
   const eraColors = getEraColors(volumeEra);
+  const originEra = identity.originEra && identity.originEra !== "unknown" ? String(identity.originEra).toLowerCase() : null;
+  const eraLabel =
+    originEra && originEra !== volumeEra
+      ? `${formatEraLabel(originEra)} \u25B8 ${formatEraLabel(volumeEra)}`
+      : formatEraLabel(volumeEra);
 
   const delta = getDelta(pricing.delta_24 ?? pricing.delta_30 ?? pricing.delta_90);
   const { series: rawSeries, issueNum } = parseSeriesIssue(identity.productName || "");
@@ -380,8 +385,9 @@ export const EquityCard = React.memo(function EquityCard({
                   textTransform: "uppercase",
                   flexShrink: 0,
                 }}
+                title={originEra ? `Era (origin issue${identity.originYear ? ` ${identity.originYear}` : ""}) \u25B8 Age (this issue${identity.year ? ` ${identity.year}` : ""})` : undefined}
               >
-                {formatEraLabel(volumeEra)}
+                {eraLabel}
               </span>
             </div>
           );

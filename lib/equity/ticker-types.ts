@@ -36,6 +36,9 @@ export interface EquityItem {
     publisher: string | null;
     variant: string | null;
     productionAge: string;
+    /** Era of the series' origin issue (#1); productionAge is the era of this issue's own publication year. */
+    originEra?: string | null;
+    originYear?: number | null;
     scarcityTier: string;
     detailUrl: string;
     assetClass: 'SOV' | 'PREMIUM' | 'STD' | 'OTC' | 'UNICORN_CALL' | null;
