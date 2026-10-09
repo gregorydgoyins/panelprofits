@@ -70,6 +70,21 @@
 
   <hr class="divider">
 
+  <!-- CGC Population Report census crawl -->
+  <div class="section">
+    <h3>CGC Population Report</h3>
+    <div class="target-info"><span class="label">Status:</span> <span id="cgcStatus" class="value">IDLE</span></div>
+    <div class="target-info"><span class="label">Titles:</span> <span id="cgcTitles" class="value">0 / 0</span></div>
+    <div class="target-info"><span class="label">Records sent:</span> <span id="cgcRows" class="value">0</span></div>
+    <div id="cgcErrRow" class="error-info hidden"><span class="label">Error:</span> <span id="cgcErr" class="value text-danger"></span></div>
+    <div class="action-buttons">
+      <button id="btnCgcStart" class="btn btn-primary">Start / Resume</button>
+      <button id="btnCgcStop" class="btn btn-danger">Stop</button>
+    </div>
+  </div>
+
+  <hr class="divider">
+
   <!-- Settings Collapsible -->
   <details class="settings-details">
     <summary>⚙️ Ingestion Settings</summary>

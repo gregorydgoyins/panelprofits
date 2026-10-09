@@ -14,6 +14,7 @@ import {
   getCheckpoint,
   setCheckpoint,
 } from '../lib/indexeddb.js';
+import { startCgcPop, stopCgcPop, getCgcPopStatus } from '../lib/cgc-pop-crawler.js';
 
 let crawlerState = 'IDLE'; // 'IDLE' | 'RUNNING' | 'PAUSED' | 'HUMAN_REQUIRED'
 let activeGpaTabId = null;
@@ -253,6 +254,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     syncUnsentBatches().then((res) => {
       sendResponse({ success: true, ...res });
     });
+    return true;
+  }
+
+  if (message.type === 'CGC_POP_START') {
+    startCgcPop().then(() => sendResponse({ success: true }));
+    return true;
+  }
+  if (message.type === 'CGC_POP_STOP') {
+    stopCgcPop().then(() => sendResponse({ success: true }));
+    return true;
+  }
+  if (message.type === 'CGC_POP_STATUS') {
+    getCgcPopStatus().then((state) => sendResponse({ success: true, state }));
     return true;
   }
 

@@ -8,7 +8,8 @@
     "tabs",
     "activeTab",
     "scripting",
-    "alarms"
+    "alarms",
+    "unlimitedStorage"
   ],
   "host_permissions": [
     "https://comics.gpanalysis.com/*",
@@ -19,7 +20,8 @@
     "https://comicbookstockexchange.com/*",
     "http://localhost:3000/*",
     "http://127.0.0.1:3000/*",
-    "https://*.supabase.co/*"
+    "https://*.supabase.co/*",
+    "https://production.api.aws.ccg-ops.com/*"
   ],
   "background": {
     "service_worker": "background/service-worker.js",

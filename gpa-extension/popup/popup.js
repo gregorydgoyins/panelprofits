@@ -134,3 +134,28 @@ btnQueueUrl.addEventListener('click', async () => {
 // Refresh every 2 seconds
 refreshStatus();
 setInterval(refreshStatus, 2000);
+
+// ─── CGC Population Report crawl ────────────────────────────────────────────
+const cgcStatus = document.getElementById('cgcStatus');
+const cgcTitles = document.getElementById('cgcTitles');
+const cgcRows = document.getElementById('cgcRows');
+const cgcErrRow = document.getElementById('cgcErrRow');
+const cgcErr = document.getElementById('cgcErr');
+
+function refreshCgc() {
+  chrome.runtime.sendMessage({ type: 'CGC_POP_STATUS' }, (res) => {
+    if (!res || !res.success) return;
+    const s = res.state;
+    cgcStatus.textContent = s.phase === 'groups' && s.status === 'RUNNING' ? 'RUNNING (listing titles)' : s.status;
+    cgcTitles.textContent = `${s.gIdx || 0} / ${s.groupsTotal || 0}`;
+    cgcRows.textContent = (s.rowsSent || 0).toLocaleString();
+    cgcErrRow.classList.toggle('hidden', !s.lastError);
+    cgcErr.textContent = s.lastError || '';
+  });
+}
+document.getElementById('btnCgcStart').addEventListener('click', () =>
+  chrome.runtime.sendMessage({ type: 'CGC_POP_START' }, refreshCgc));
+document.getElementById('btnCgcStop').addEventListener('click', () =>
+  chrome.runtime.sendMessage({ type: 'CGC_POP_STOP' }, refreshCgc));
+refreshCgc();
+setInterval(refreshCgc, 2000);
