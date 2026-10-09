@@ -207,6 +207,45 @@ const VERIFIED_KEY_COMPS: Record<string, MockMarketComp> = {
       { date: "2026-04-20", grade: 9.8, price: 475, venue: "ComicLink" },
     ],
   },
+  "batman #2": {
+    series: "Batman",
+    issue: "2",
+    grade: 9.8,
+    fmv: 210.00,
+    salesCount: 28,
+    keyReason: "New 52 Scott Snyder Run / 1st Court of Owls Cameo",
+    recentSales: [
+      { date: "2026-09-15", grade: 9.8, price: 215, venue: "eBay" },
+      { date: "2026-08-01", grade: 9.8, price: 205, venue: "Heritage" },
+      { date: "2026-05-18", grade: 9.8, price: 220, venue: "eBay" },
+    ],
+  },
+  "the amazing spider-man #361": {
+    series: "The Amazing Spider-Man",
+    issue: "361",
+    grade: 9.8,
+    fmv: 420.00,
+    salesCount: 60,
+    keyReason: "1st Full App. Carnage (Mark Bagley Art / 90s Grail)",
+    recentSales: [
+      { date: "2026-09-22", grade: 9.8, price: 430, venue: "eBay" },
+      { date: "2026-07-19", grade: 9.8, price: 410, venue: "Heritage" },
+      { date: "2026-05-11", grade: 9.8, price: 425, venue: "ComicLink" },
+    ],
+  },
+  "venom: lethal protector #1": {
+    series: "Venom: Lethal Protector",
+    issue: "1",
+    grade: 9.8,
+    fmv: 195.00,
+    salesCount: 44,
+    keyReason: "1st Solo Venom Series / Iconic Red Foil Cover (Mark Bagley)",
+    recentSales: [
+      { date: "2026-09-19", grade: 9.8, price: 200, venue: "eBay" },
+      { date: "2026-07-28", grade: 9.8, price: 190, venue: "Heritage" },
+      { date: "2026-06-05", grade: 9.8, price: 205, venue: "eBay" },
+    ],
+  },
 };
 
 export function evaluateAuctionListing(
@@ -293,9 +332,15 @@ export function evaluateAuctionListing(
     return createRejection(`REJECTED: Era '${parsed.extractedEra.toUpperCase()}' outside target eras (${profile.eras.join(", ")}).`, 3);
   }
 
-  // Grade Range Check (Allow down to minGrade for Silver/Bronze crack & press)
+  // Grade Range Check (High-grade scale: 9.4, 9.6, 9.8, 9.9, 10.0)
   if (parsed.grade < profile.minGrade || parsed.grade > profile.maxGrade) {
-    return createRejection(`REJECTED: Grade ${parsed.grade} outside allowed range (${profile.minGrade} - ${profile.maxGrade}).`, 3);
+    return createRejection(`REJECTED: Grade ${parsed.grade} outside allowed high-grade scale (${profile.minGrade} - ${profile.maxGrade}).`, 3);
+  }
+
+  // Minimum All-In Floor Check ($50 minimum threshold)
+  const minCostFloor = profile.minAllInCost ?? 50.00;
+  if (allInCost < minCostFloor) {
+    return createRejection(`REJECTED (BELOW $${minCostFloor.toFixed(0)} FLOOR): Total cost $${allInCost.toFixed(2)} is below the $${minCostFloor.toFixed(0)} minimum investment floor.`, 3);
   }
 
   // Series Whitelist Filter (if user specified series focus, e.g. "green lantern")
@@ -389,6 +434,11 @@ export function evaluateAuctionListing(
   const netEstimatedProceeds = Math.round((anchorFmv * 0.87 - 5.00) * 100) / 100;
   const projectedNetProfit = Math.round((netEstimatedProceeds - allInCost) * 100) / 100;
   const netRoiPercent = allInCost > 0 ? Math.round((projectedNetProfit / allInCost) * 100) : 0;
+
+  // Strict 100%+ Net ROI Double-Up Guard
+  if (profile.requireDoubleUpOnly && netRoiPercent < 100) {
+    return createRejection(`REJECTED (BELOW 100% MARGIN): Projected net flip ROI ${netRoiPercent}% is below the 100%+ Double-Up threshold.`, 5);
+  }
 
   // Double-Up (100% Net Profit / 2x Money) and 50% Win Prices
   const targetWinPrice100Pct = Math.round(((allInCost * 2 + 5.00) / 0.87) * 100) / 100;

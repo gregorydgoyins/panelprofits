@@ -20,6 +20,7 @@ interface SlabEncasementProps {
   imageUrl?: string;
   size?: "sm" | "md" | "lg";
   className?: string;
+  onClick?: () => void;
 }
 
 export function SlabEncasement({
@@ -38,6 +39,7 @@ export function SlabEncasement({
   imageUrl,
   size = "md",
   className = "",
+  onClick,
 }: SlabEncasementProps) {
   const isCgc = gradingCompany === "CGC";
 
@@ -50,10 +52,17 @@ export function SlabEncasement({
 
   return (
     <div
-      className={`relative select-none flex flex-col rounded-xl border-[2.5px] border-slate-400/40 bg-gradient-to-b from-white/10 via-slate-900/60 to-black/90 p-1.5 shadow-[0_12px_32px_rgba(0,0,0,0.85)] backdrop-blur-md transition hover:border-slate-300/70 ${sizeClasses} ${className}`}
+      onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => { if (e.key === "Enter" || e.key === " ") onClick(); } : undefined}
+      className={`relative select-none flex flex-col rounded-xl border-[2.5px] border-slate-400/40 bg-gradient-to-b from-white/10 via-slate-900/60 to-black/90 p-1.5 shadow-[0_12px_32px_rgba(0,0,0,0.85)] backdrop-blur-md transition ${
+        onClick ? "cursor-zoom-in hover:scale-[1.02] hover:border-cyan-400/80 group" : "hover:border-slate-300/70"
+      } ${sizeClasses} ${className}`}
       style={{
         boxShadow: "0 10px 28px -4px rgba(0,0,0,0.8), inset 0 1px 2px rgba(255,255,255,0.25), inset 0 -2px 4px rgba(0,0,0,0.8)",
       }}
+      title={onClick ? "Click to view full high-resolution front inspection" : undefined}
     >
       {/* Acrylic Hanger Tab Notch at top */}
       <div className="mx-auto -mt-2.5 mb-1 h-2 w-12 rounded-t-md border-t border-x border-slate-300/40 bg-white/10 backdrop-blur-sm" />
@@ -201,6 +210,15 @@ export function SlabEncasement({
             <div className="text-[6.5px] text-slate-500 mt-2 leading-tight uppercase font-medium max-w-[120px]">
               Auction photo not provided by seller · Verified via Cert Registry
             </div>
+          </div>
+        )}
+
+        {/* Inspection Hover Overlay */}
+        {onClick && (
+          <div className="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity pointer-events-none z-10">
+            <span className="text-[8px] font-mono font-bold text-cyan-300 bg-slate-900/95 border border-cyan-500/80 px-2 py-1 rounded shadow flex items-center gap-1 uppercase tracking-wider">
+              <span>🔍</span> Inspect High-Res
+            </span>
           </div>
         )}
       </div>

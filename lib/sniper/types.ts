@@ -26,11 +26,12 @@ export interface SniperFilterProfile {
   // Era Targeting
   eras: ComicEra[];
   
-  // Grade Range
-  minGrade: number; // e.g., 9.2, 9.4, 9.6, 9.8
-  maxGrade: number; // e.g., 9.8, 9.9, 10.0
+  // Grade Range (High Grade Only: 9.4, 9.6, 9.8, 9.9, 10.0)
+  minGrade: number; // e.g. 9.4
+  maxGrade: number; // e.g. 10.0
   
   // Budget Guardrail (All-in: Bid + Shipping + Tax)
+  minAllInCost?: number; // e.g. 50.00 (Hard floor: no penny-ante junk under $50)
   maxAllInBudget: number; // e.g. 150.00, 500.00, 2500.00
   
   // Auction House Sources
@@ -44,10 +45,11 @@ export interface SniperFilterProfile {
   newsstandOnly?: boolean;
   
   // Arbitrage Special Angles
-  crackAndPressCandidate: boolean; // 9.2-9.6 with pressable grader defects
+  crackAndPressCandidate: boolean; // 9.4-9.6 with pressable grader defects
   damagedSlab98: boolean;          // 9.8 in cracked/scuffed case (reholder arb)
   signedLegendary: boolean;        // Yellow label deceased creators (Lee, Kirby, Pérez, etc.)
   belowGradingCost: boolean;       // Books under $45 (selling for less than cost of grading)
+  requireDoubleUpOnly?: boolean;   // Target 100%+ net ROI (double your cash or better)
   
   // Discipline & Impulse Controls
   requireProvenSales: boolean;     // STRICT: Rejects books with 0 sales history

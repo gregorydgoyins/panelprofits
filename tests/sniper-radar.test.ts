@@ -158,6 +158,7 @@ describe("Sniper Radar Engine & Anti-Bullshit Filter", () => {
     const profile: SniperFilterProfile = {
       ...defaultProfile,
       belowGradingCost: true,
+      minAllInCost: 0,
       maxAllInBudget: 50.00,
     };
 
@@ -181,6 +182,31 @@ describe("Sniper Radar Engine & Anti-Bullshit Filter", () => {
     expect(evalResult.strategySummary).toContain("Slab Cost Floor Arbitrage");
     expect(evalResult.anchorFmv).toBe(95.00);
     expect(evalResult.discountPercent).toBeGreaterThanOrEqual(65);
+  });
+
+  it("REJECTS listings below the $50 minimum investment floor", () => {
+    const profile: SniperFilterProfile = {
+      ...defaultProfile,
+      minAllInCost: 50.00,
+      maxAllInBudget: 150.00,
+    };
+
+    const listing: RawAuctionListing = {
+      id: "listing-under-50",
+      source: "ebay",
+      title: "X-Force #1 CGC 9.8 1991 Negative Edition",
+      currentBid: 25.00,
+      shippingCost: 8.00,
+      bidCount: 4,
+      secondsRemaining: 180,
+      url: "https://ebay.com/itm/xforce1",
+      imageUrl: "https://example.com/xforce1.jpg",
+    };
+
+    const evalResult = evaluateAuctionListing(listing, profile);
+    expect(evalResult.passed).toBe(false);
+    expect(evalResult.gateFailed).toBe(3);
+    expect(evalResult.rejectionReason).toContain("minimum investment floor");
   });
 
   it("DETECTS Quad-Signed Harley Quinn #1 ($135+ slabbing fee sunk cost sniped at $80)", () => {
