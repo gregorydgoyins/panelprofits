@@ -14,7 +14,7 @@ import type { EquityItem, LadderSpot } from "@/lib/equity/ticker-types";
  * and/or a ComicBase book (current price + four yearly values). Nothing here is estimated:
  * every spot shown on a card is a value one of those two sources published.
  */
-export const COVERED_BOOKS_TOTAL = 286_955;
+export const COVERED_BOOKS_TOTAL = 189_316; // books with a determined era (year from ComicBase/pp, or a GCD series range inside one era)
 const BUCKET_BASE = "https://storage.googleapis.com/panel-profits-covers-all/";
 const COVER_WIDTH = 384; // allowed Next image size; card is 215px wide
 
@@ -24,6 +24,11 @@ const PP_DISPLAY_ORDER = ["RAW", "2.0", "3.0", "4.0", "5.0", "6.0", "7.0", "8.0"
 
 interface CoveredBookRow {
   seq: number;
+  rail_seq: number;
+  era: string | null;
+  edition_form: string | null;
+  printing: string | null;
+  variant_label: string | null;
   gcs_key: string;
   publisher_folder: string | null;
   series: string | null;
@@ -87,14 +92,16 @@ export function mapCoveredBook(row: CoveredBookRow): EquityItem | null {
   }
   if (headlineUsd === null) return null; // no published price from either source → not a rail book
 
-  const era = resolveProductionAge(row.year);
+  const era = row.era || resolveProductionAge(row.year);
+  const variant = (row.variant_label || "").trim() || null;
+  const editionForm = row.edition_form || "DIRECT";
   const keyBadge = resolveHistoricalKeyBadge(series, issue);
-  const tier = resolveHistoricalScarcityTier({ year: row.year ?? undefined, era, keyBadge, isSovereign: false, variant: undefined });
-  const marketClass = resolveHistoricalMarketClass({ isSovereign: false, fmv: headlineUsd, keyBadge, year: row.year ?? undefined, era, variant: undefined });
+  const tier = resolveHistoricalScarcityTier({ year: row.year ?? undefined, era, keyBadge, isSovereign: false, variant: variant ?? undefined });
+  const marketClass = resolveHistoricalMarketClass({ isSovereign: false, fmv: headlineUsd, keyBadge, year: row.year ?? undefined, era, variant: variant ?? undefined });
   const ticker = formatComicEquityTicker(series, issue);
 
   return {
-    entryId: `cb-${row.seq}`,
+    entryId: `cb-${row.rail_seq}`,
     coverImageUrl: optimizedCoverUrl(row.gcs_key),
     ppLadder: ppLadder.length ? ppLadder : undefined,
     comicbaseSpots: comicbaseSpots.length ? comicbaseSpots : undefined,
@@ -108,10 +115,10 @@ export function mapCoveredBook(row: CoveredBookRow): EquityItem | null {
     },
     identity: {
       assetId: ticker,
-      productName: `${series} #${issue}`,
+      productName: variant ? `${series} #${issue} [${variant}]` : `${series} #${issue}`,
       year: row.year ?? null,
       publisher: row.publisher_folder || null,
-      variant: null,
+      variant,
       productionAge: era,
       scarcityTier: tier,
       detailUrl: row.detail_id ? `/comics/${encodeURIComponent(row.detail_id)}` : `/comics/${encodeURIComponent(ticker)}`,
@@ -119,7 +126,7 @@ export function mapCoveredBook(row: CoveredBookRow): EquityItem | null {
       marketPriceClass: marketClass,
       isSovereign: false,
       certificationState: "OBSERVED",
-      editionForm: "DIRECT",
+      editionForm,
       coverVerified: true,
       yearDivergence: false,
       coverSuppressReason: null,
@@ -134,15 +141,15 @@ export async function getCoveredBooksSlice(offset: number, limit: number): Promi
   const total = COVERED_BOOKS_TOTAL;
   const start = ((Math.max(0, offset) % total) + total) % total;
   const supabase = createAdminServerClient();
-  const cols = "seq,gcs_key,publisher_folder,series,issue_number,year,pp_id,pp_ladder,detail_id,comicbase_source_id,cb_price,cb_values";
+  const cols = "rail_seq,seq,era,edition_form,printing,variant_label,gcs_key,publisher_folder,series,issue_number,year,pp_id,pp_ladder,detail_id,comicbase_source_id,cb_price,cb_values";
 
   const fetchRange = async (from: number, to: number): Promise<CoveredBookRow[]> => {
     const { data, error } = await supabase
       .from("rail_covered_books")
       .select(cols)
-      .gte("seq", from)
-      .lte("seq", to)
-      .order("seq", { ascending: true });
+      .gte("rail_seq", from)
+      .lte("rail_seq", to)
+      .order("rail_seq", { ascending: true });
     if (error) throw new Error(error.message);
     return (data ?? []) as unknown as CoveredBookRow[];
   };
