@@ -51,6 +51,11 @@ const nextConfig: NextConfig = {
         hostname: "storage.googleapis.com",
         pathname: "/images.pricecharting.com/**",
       },
+      {
+        protocol: "https",
+        hostname: "storage.googleapis.com",
+        pathname: "/panel-profits-covers-all/**",
+      },
     ],
   },
   async headers() {

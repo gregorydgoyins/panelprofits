@@ -16,15 +16,18 @@ import { EquityCard } from "@/components/tickers/equity-card";
 
 const CARD_W = 227; // 215px card + 12px gap
 const SCROLL_SPEED = 150; // px/s (rapid live trading floor ticker motion)
-const MAX_FETCHES = 100_000; // Continuous rotation across 115,712 Panel Profits catalog
+const RAIL_TOTAL = 286_955; // covered books: ComicBase cover bucket matched to pp ladders and/or ComicBase prices
+const RAIL_STEP = 80;
 
 interface EquitiesRailProps {
   items: SovereignEquityItem[];
   indices?: MarketIndexRecord[];
+  /** Pre-built covered-book cards (server seed). Takes precedence over `items`. */
+  seedItems?: EquityItem[];
   initialOffset?: number;
 }
 
-export function EquitiesRail({ items: initialItems = [], indices = [], initialOffset }: EquitiesRailProps) {
+export function EquitiesRail({ items: initialItems = [], seedItems, indices = [], initialOffset }: EquitiesRailProps) {
   const trackRef = React.useRef<HTMLDivElement>(null);
   const fetchCount = React.useRef(0);
   const seedOffset = initialOffset ?? (initialItems[0]?.seatNumber ? initialItems[0].seatNumber - 1 : 0);
@@ -33,6 +36,7 @@ export function EquitiesRail({ items: initialItems = [], indices = [], initialOf
 
   // Convert initial SovereignEquityItem[] to EquityItem[] for instant first-paint
   const initialEquityItems = React.useMemo<EquityItem[]>(() => {
+    if (seedItems && seedItems.length > 0) return seedItems;
     return initialItems.map((item, idx) => {
       const eraKey = (item.productionAge || item.originEra || "modern").toLowerCase().replace(/_age$/, "").replace(/\s+age$/, "");
       const fmv = item.referenceFmvUsd || 0;
@@ -118,7 +122,7 @@ export function EquitiesRail({ items: initialItems = [], indices = [], initialOf
         },
       };
     });
-  }, [initialItems]);
+  }, [initialItems, seedItems]);
 
   const [items, setItems] = React.useState<EquityItem[]>(initialEquityItems);
   const [meta, setMeta] = React.useState<{
@@ -166,8 +170,12 @@ export function EquitiesRail({ items: initialItems = [], indices = [], initialOf
     if (noSignalFilter) {
       return tradeableItems.filter((i) => i?.identity?.identityConfidence === 0);
     }
+    if (selectedEra) {
+      const byEra = tradeableItems.filter((i) => i?.identity?.productionAge === selectedEra);
+      if (byEra.length > 0) return byEra;
+    }
     return tradeableItems.length > 0 ? tradeableItems : items;
-  }, [tradeableItems, items, noSignalFilter]);
+  }, [tradeableItems, items, noSignalFilter, selectedEra]);
 
   // Adjust duration dynamically without resetting visual position
   React.useLayoutEffect(() => {
@@ -184,9 +192,9 @@ export function EquitiesRail({ items: initialItems = [], indices = [], initialOf
     try {
       const targetEra = overrideEra !== undefined ? overrideEra : selectedEra;
       const offset = overrideOffset !== undefined ? overrideOffset : nextOffset.current;
-      const eraQuery = targetEra ? `&era=${encodeURIComponent(targetEra)}` : "";
-      const url = `/api/equity/ticker?limit=80&offset=${offset}${eraQuery}`;
-      const res = await fetch(url, { cache: "no-store" });
+      void targetEra; // era is applied client-side on the loaded batch
+      const url = `/api/equity/covered?limit=${RAIL_STEP}&offset=${offset}`;
+      const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json: EquityResponse = await res.json();
 
@@ -206,7 +214,7 @@ export function EquitiesRail({ items: initialItems = [], indices = [], initialOf
         setErrored(false);
 
         fetchCount.current += 1;
-        const next = json.nextOffset ?? ((offset + newItems.length) % (json.totalEligible || 42400));
+        const next = json.nextOffset ?? ((offset + newItems.length) % (json.totalEligible || RAIL_TOTAL));
         nextOffset.current = next;
         try {
           sessionStorage.setItem("pp_rail_offset", String(next));
@@ -235,7 +243,7 @@ export function EquitiesRail({ items: initialItems = [], indices = [], initialOf
       const stored = sessionStorage.getItem("pp_rail_offset");
       if (stored !== null) {
         // Advance by 260 comics on page reload so user gets a piece of the next batch!
-        const nextReloadOffset = (parseInt(stored, 10) + 260) % 115712;
+        const nextReloadOffset = (parseInt(stored, 10) + 260) % RAIL_TOTAL;
         nextOffset.current = nextReloadOffset;
         sessionStorage.setItem("pp_rail_offset", String(nextReloadOffset));
         fetchBatch(nextReloadOffset);
@@ -244,7 +252,7 @@ export function EquitiesRail({ items: initialItems = [], indices = [], initialOf
     } catch {}
 
     // First visit in session: seed with the SSR offset and stage the next 260 chunk
-    const nextStep = (seedOffset + 260) % 115712;
+    const nextStep = (seedOffset + RAIL_STEP) % RAIL_TOTAL;
     nextOffset.current = nextStep;
     try {
       sessionStorage.setItem("pp_rail_offset", String(nextStep));

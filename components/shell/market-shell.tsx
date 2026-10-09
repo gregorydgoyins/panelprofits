@@ -8,7 +8,8 @@ import { EquitiesRail } from "./equities-rail";
 import { DiaryRail } from "./diary-rail";
 import { Footer } from "./footer";
 import { getMarketTelemetry } from "@/lib/dashboard/queries";
-import { getSovereignEquities, getCanonicalAssetSurfaces } from "@/lib/equity/canonical-equities";
+import { getCanonicalAssetSurfaces } from "@/lib/equity/canonical-equities";
+import { getCoveredBooksSlice, COVERED_BOOKS_TOTAL } from "@/lib/equity/covered-books";
 import { calculateMarketIndices } from "@/lib/market/indices";
 import { getNewsStories } from "@/lib/news/feed";
 import { getCurrentUser } from "@/lib/account/queries";
@@ -27,18 +28,16 @@ export async function MarketShell({ children }: MarketShellProps) {
   const isFrontDoor = pathname === "/sign-in" || pathname === "/sign-up";
   if (isFrontDoor) return <AuthFrontDoor>{children}</AuthFrontDoor>;
 
-  // Seed random starting chunk across the 115,712 catalog in 260-comic queue increments
-  // (445 continuous 260-comic chunks across 24 5,000-comic blocks)
-  const randomChunk = Math.floor(Math.random() * 445);
-  const randomInitialOffset = randomChunk * 260;
+  // Random start across the covered-books rail (seq is a stable shuffle, so any window is a mix of publishers/eras)
+  const randomInitialOffset = Math.floor(Math.random() * COVERED_BOOKS_TOTAL);
 
   // Fetch bounded rails concurrently
   const user = await getCurrentUser();
-  const [telemetry, newsStories, assetSurfaces, sovereignEquities, marketIndices, diaryEntries] = await Promise.all([
+  const [telemetry, newsStories, assetSurfaces, coveredSlice, marketIndices, diaryEntries] = await Promise.all([
     getMarketTelemetry(),
     getNewsStories(32),
     getCanonicalAssetSurfaces(70),
-    getSovereignEquities(80, randomInitialOffset),
+    getCoveredBooksSlice(randomInitialOffset, 80).catch(() => ({ items: [], nextOffset: 0, total: COVERED_BOOKS_TOTAL })),
     calculateMarketIndices(),
     user ? getDiaryEntries(user.id) : Promise.resolve([]),
   ]);
@@ -48,7 +47,7 @@ export async function MarketShell({ children }: MarketShellProps) {
       <Header />
       <RailVisibility setting="newsTicker"><NewsRail initialStories={newsStories} /></RailVisibility>
       <RailVisibility setting="marketTelemetry"><MarketTelemetryRail telemetry={telemetry} /></RailVisibility>
-      <RailVisibility setting="equities"><EquitiesRail items={sovereignEquities} indices={marketIndices} initialOffset={randomInitialOffset} /></RailVisibility>
+      <RailVisibility setting="equities"><EquitiesRail items={[]} seedItems={coveredSlice.items} indices={marketIndices} initialOffset={randomInitialOffset} /></RailVisibility>
       <RailVisibility setting="assets"><AssetsRail items={assetSurfaces} /></RailVisibility>
       <RailVisibility setting="diary"><DiaryRail entries={diaryEntries} /></RailVisibility>
       <main className="flex-1">{children}</main>

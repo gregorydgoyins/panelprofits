@@ -8,9 +8,19 @@ export interface TickerMarketRegime {
 }
 
 /** Slim wire format — only the 15 fields EquityCard actually renders. */
+export interface LadderSpot {
+  /** Grade label (RAW, 4.0 … 10.0) or a year label for ComicBase yearly values. */
+  label: string;
+  usd: number;
+}
+
 export interface EquityItem {
   entryId: string;
   coverImageUrl: string | null;
+  /** Panel Profits grade ladder: every grade price the pp source published for this book. */
+  ppLadder?: LadderSpot[];
+  /** ComicBase published values for this book: current price plus the four yearly values. */
+  comicbaseSpots?: LadderSpot[];
   pricing: {
     fmv_usd: number;
     grade: string | null;

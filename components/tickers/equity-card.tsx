@@ -40,6 +40,36 @@ if (typeof document !== "undefined" && !document.getElementById(EQUITY_CARD_STYL
   document.head.appendChild(s);
 }
 
+
+function compactUsd(n: number): string {
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(n >= 10_000_000 ? 0 : 1)}M`;
+  if (n >= 10_000) return `$${Math.round(n / 1000)}K`;
+  if (n >= 1_000) return `$${(n / 1000).toFixed(1)}K`;
+  return `$${Math.round(n)}`;
+}
+
+function SpotRow({ tag, spots }: { tag: string; spots: { label: string; usd: number }[] }) {
+  // Card is 215px: show up to 5 spots; ladders with more grades keep the lowest, middle and top published grades.
+  let shown = spots;
+  if (spots.length > 5) {
+    const mid = Math.floor((spots.length - 1) / 2);
+    shown = [spots[0], spots[Math.floor(mid / 2)], spots[mid], spots[Math.floor((mid + spots.length - 1) / 2)], spots[spots.length - 1]];
+  }
+  return (
+    <div
+      title={spots.map((x) => `${x.label} ${compactUsd(x.usd)}`).join("  ")}
+      style={{ display: "flex", alignItems: "baseline", gap: "6px", overflow: "hidden", whiteSpace: "nowrap", lineHeight: "12px" }}
+    >
+      <span style={{ fontFamily: "monospace", fontSize: "7.5px", letterSpacing: "0.08em", color: "rgba(255,255,255,0.45)", flexShrink: 0 }}>{tag}</span>
+      {shown.map((x) => (
+        <span key={x.label} style={{ fontFamily: "var(--font-sans, system-ui)", fontSize: "9.5px", color: "rgba(255,255,255,0.8)" }}>
+          <span style={{ color: "rgba(255,255,255,0.45)" }}>{x.label}</span> {compactUsd(x.usd)}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export const EquityCard = React.memo(function EquityCard({
   item,
   index = 0,
@@ -480,6 +510,14 @@ export const EquityCard = React.memo(function EquityCard({
               </span>
             )}
           </div>
+
+          {/* Published price spots — pp grade ladder and ComicBase NOW + yearly values, each exactly as the source posted them */}
+          {item.ppLadder && item.ppLadder.length > 0 && (
+            <SpotRow tag="PP" spots={item.ppLadder} />
+          )}
+          {item.comicbaseSpots && item.comicbaseSpots.length > 0 && (
+            <SpotRow tag="CB" spots={item.comicbaseSpots} />
+          )}
 
           {/* Bottom Card Strip: Dedicated Bold Exchange Ticker Badge + Certification / Scarcity Badges */}
           <div
