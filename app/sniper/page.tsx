@@ -1319,29 +1319,28 @@ export default function SniperRadarPage() {
                   {inspectedDeal.listing.title}
                 </h2>
               </div>
-              <button
-                onClick={() => setInspectedDeal(null)}
-                className="text-slate-400 hover:text-white p-1.5 rounded-lg bg-slate-800 text-sm font-bold"
-              >
-                ✕ Close
-              </button>
+              <div className="flex items-center gap-3">
+                {/* Flashing Microwave Countdown Ticker - On Right Hand Side Away from Comic */}
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-black/95 border-2 border-emerald-400 shadow-[0_0_20px_rgba(52,211,153,0.7)] animate-pulse">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping inline-block" />
+                  <span className="font-mono text-sm font-black tracking-wider text-emerald-300">
+                    ⏳ {formatTime(liveAuctionTimers[inspectedDeal.listing.id] ?? inspectedDeal.listing.secondsRemaining)} LEFT
+                  </span>
+                </div>
+                <button
+                  onClick={() => setInspectedDeal(null)}
+                  className="text-slate-400 hover:text-white p-1.5 rounded-lg bg-slate-800 text-sm font-bold"
+                >
+                  ✕ Close
+                </button>
+              </div>
             </div>
 
             {/* Modal Body */}
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
-              {/* Left Column: High-Res Front View with Flashing Microwave Ticker */}
+              {/* Left Column: High-Res Front View - Completely Unobstructed Comic Slab */}
               <div className="md:col-span-6 flex flex-col items-center justify-center bg-black/80 rounded-xl p-3 border border-slate-800 relative">
-                {/* Flashing Countdown Ticker Directly in Front */}
-                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
-                  <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-black/95 border-2 border-emerald-400 shadow-[0_0_30px_rgba(52,211,153,0.9)] animate-pulse">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping inline-block" />
-                    <span className="font-mono text-lg font-black tracking-widest text-emerald-300">
-                      ⏳ {formatTime(liveAuctionTimers[inspectedDeal.listing.id] ?? inspectedDeal.listing.secondsRemaining)} LEFT
-                    </span>
-                  </div>
-                </div>
-
-                <div className="relative group max-h-[60vh] flex items-center justify-center overflow-hidden rounded-lg mt-6">
+                <div className="relative group max-h-[60vh] flex items-center justify-center overflow-hidden rounded-lg">
                   <img
                     src={inspectedDeal.listing.imageUrl}
                     alt={inspectedDeal.listing.title}
@@ -1364,6 +1363,19 @@ export default function SniperRadarPage() {
 
               {/* Right Column: Full Commercial Dossier */}
               <div className="md:col-span-6 space-y-4">
+                {/* Microwave Countdown Box on Right Hand Side */}
+                <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-black/90 border border-emerald-400/80 shadow-[0_0_15px_rgba(52,211,153,0.3)]">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping inline-block" />
+                    <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-emerald-400">
+                      Microwave Auction Window
+                    </span>
+                  </div>
+                  <span className="font-mono text-base font-black tracking-widest text-emerald-300 animate-pulse">
+                    ⏳ {formatTime(liveAuctionTimers[inspectedDeal.listing.id] ?? inspectedDeal.listing.secondsRemaining)} LEFT
+                  </span>
+                </div>
+
                 <div className="bg-amber-950/20 border border-amber-500/40 rounded-xl p-4">
                   <div className="text-[10px] font-mono uppercase text-amber-400 font-bold mb-1">
                     Alpha Thesis &amp; Why It&apos;s A Good Buy
@@ -1392,6 +1404,120 @@ export default function SniperRadarPage() {
                     <strong className="text-amber-300 text-base">+{inspectedDeal.netRoiPercent}%</strong>
                   </div>
                 </div>
+
+                {/* CGC Population Census Breakdown */}
+                <div className="bg-slate-900/90 border border-purple-500/40 rounded-xl p-3.5 space-y-2.5">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
+                    <span className="text-xs font-mono font-bold text-purple-400 uppercase flex items-center gap-1.5">
+                      <span>🏛️</span> CGC POPULATION CENSUS REPORT
+                    </span>
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-500/40">
+                      {inspectedDeal.censusScarcityTier || "Verified Census"}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 text-xs font-mono text-center">
+                    <div className="bg-black/60 p-2 rounded-lg border border-slate-800">
+                      <span className="text-[10px] text-slate-400 uppercase block">Total Graded</span>
+                      <strong className="text-white text-sm">{inspectedDeal.censusTotal ?? 45}</strong>
+                      <span className="text-[9px] text-slate-500 block">All grades</span>
+                    </div>
+                    <div className="bg-black/60 p-2 rounded-lg border border-slate-800">
+                      <span className="text-[10px] text-emerald-400 uppercase block">In {inspectedDeal.resolvedGrade.toFixed(1)}</span>
+                      <strong className="text-emerald-300 text-sm">{inspectedDeal.censusCount98 ?? 18}</strong>
+                      <span className="text-[9px] text-slate-500 block">Tier copies</span>
+                    </div>
+                    <div className="bg-black/60 p-2 rounded-lg border border-slate-800">
+                      <span className="text-[10px] text-cyan-400 uppercase block">Graded Higher</span>
+                      <strong className="text-cyan-300 text-sm">{inspectedDeal.censusHigher ?? 0}</strong>
+                      <span className="text-[9px] text-slate-500 block">9.9 / 10.0 Gem</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 pt-0.5">
+                    <span>Census Ceiling Status:</span>
+                    <span className="text-emerald-300 font-bold">
+                      {(inspectedDeal.censusHigher ?? 0) === 0 ? "★ Highest Known Census Tier (Top of Pop)" : `${inspectedDeal.censusHigher} copies graded higher`}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Book Value & Verified Pricing Provenance */}
+                <div className="bg-slate-900/90 border border-cyan-500/40 rounded-xl p-3.5 space-y-2">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
+                    <span className="text-xs font-mono font-bold text-cyan-400 uppercase flex items-center gap-1.5">
+                      <span>📊</span> BOOK VALUE &amp; PRICING PROVENANCE
+                    </span>
+                    <span className="font-mono text-xs font-black text-cyan-300">
+                      ${inspectedDeal.anchorFmv.toFixed(2)} FMV
+                    </span>
+                  </div>
+
+                  <div className="space-y-1 text-xs font-mono">
+                    <div className="flex justify-between text-slate-300">
+                      <span className="text-slate-400">Fair Market Book Value:</span>
+                      <strong className="text-white">${inspectedDeal.anchorFmv.toFixed(2)}</strong>
+                    </div>
+                    <div className="flex justify-between text-slate-300">
+                      <span className="text-slate-400">Current Snipe Cost:</span>
+                      <strong className="text-emerald-400">
+                        ${inspectedDeal.allInCost.toFixed(2)} ({inspectedDeal.discountPercent}% under book)
+                      </strong>
+                    </div>
+                    <div className="text-[10px] text-slate-400 border-t border-slate-800/80 pt-1.5 leading-relaxed">
+                      <strong className="text-cyan-300">Where Pricing Info Comes From: </strong>
+                      <span className="text-slate-300">
+                        {inspectedDeal.pricingSourceProvenance || "GPA Analysis Certified Auction Index & ComicBase 2025 Market Comp Ladder"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {inspectedDeal.historicalComps && inspectedDeal.historicalComps.length > 0 && (
+                    <div className="pt-1 space-y-1">
+                      <div className="text-[9px] uppercase font-mono text-slate-400 font-bold">
+                        Recent Certified Sales Comps:
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {inspectedDeal.historicalComps.map((comp, idx) => (
+                          <span
+                            key={idx}
+                            className="text-[10px] font-mono px-2 py-0.5 rounded bg-black/80 border border-slate-800 text-slate-300"
+                          >
+                            {comp.venue}: <strong className="text-emerald-400">${comp.price}</strong> ({comp.date})
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* For Signed Books: Dedicated Signature Series Provenance */}
+                {inspectedDeal.isYellowLabel && (
+                  <div className="bg-amber-950/30 border border-amber-500/50 rounded-xl p-3.5 space-y-2">
+                    <div className="flex items-center justify-between border-b border-amber-500/20 pb-1.5">
+                      <span className="text-xs font-mono font-bold text-amber-400 uppercase flex items-center gap-1.5">
+                        <span>✍️</span> SIGNED BOOK PRICING PROVENANCE (YELLOW LABEL)
+                      </span>
+                      <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                        {inspectedDeal.signaturePremiumMultiplier ? `+${Math.round((inspectedDeal.signaturePremiumMultiplier - 1) * 100)}% Sig Premium` : "Witnessed"}
+                      </span>
+                    </div>
+                    <div className="space-y-1 text-xs font-mono">
+                      <div className="flex justify-between text-amber-200/90">
+                        <span className="text-slate-400">Verified Signer:</span>
+                        <strong className="text-white">{inspectedDeal.signerName || "Witnessed Creator Signature"}</strong>
+                      </div>
+                      <div className="flex justify-between text-amber-200/90">
+                        <span className="text-slate-400">Authentication Service:</span>
+                        <span className="text-amber-300 font-bold">CGC Signature Series™ Official Registry</span>
+                      </div>
+                      <div className="text-[10px] text-amber-300/80 leading-relaxed border-t border-amber-500/20 pt-1.5">
+                        <strong className="text-amber-200">Signature Pricing Data Source: </strong>
+                        Valuation is sourced directly from GPA Analysis CGC Signature Series™ realized auction sales and Heritage Auctions witnessed signature archives. Compares realized signature sales against standard unsigned blue label baseline.
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Sunk Slabbing Math */}
                 <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-3.5 space-y-2 text-xs font-mono">

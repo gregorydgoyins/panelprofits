@@ -132,6 +132,11 @@ export interface CandidateEvaluation {
   strategySummary?: string;
   cgcGradingCostFloor?: number; // What it actually cost seller to grade ($30 modern + $15 ship = $45 floor)
   censusCount98?: number;       // Census population in 9.8
+  censusTotal?: number;         // Total copies on Census across all grades
+  censusHigher?: number;        // Copies 9.9/10.0 graded higher than 9.8
+  censusScarcityTier?: string;  // e.g. "Ultra Low Float (<25 Copies)", "Investment Grade"
+  pricingSourceProvenance?: string; // Exact venue & methodology source for valuation
+  signaturePremiumMultiplier?: number; // Verified signature multiplier over unsigned blue label
   lastSalePrice?: number;
   lastSaleDate?: string;
   
