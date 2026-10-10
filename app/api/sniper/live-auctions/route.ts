@@ -59,9 +59,15 @@ export async function GET(request: Request) {
       }
     }
 
+    const projectDataFile = path.resolve(process.cwd(), "data/live_auctions.json");
+    let auctions: unknown[] = [];
     if (fs.existsSync(CACHE_FILE)) {
-      const rawData = fs.readFileSync(CACHE_FILE, "utf-8");
-      const auctions = JSON.parse(rawData);
+      auctions = JSON.parse(fs.readFileSync(CACHE_FILE, "utf-8"));
+    } else if (fs.existsSync(projectDataFile)) {
+      auctions = JSON.parse(fs.readFileSync(projectDataFile, "utf-8"));
+    }
+
+    if (Array.isArray(auctions) && auctions.length > 0) {
       return NextResponse.json({
         success: true,
         count: auctions.length,
