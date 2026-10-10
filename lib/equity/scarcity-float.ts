@@ -96,6 +96,17 @@ export function classifyScarcityTier(censusAt9Plus: number | null): ScarcityTier
   return "common";
 }
 
-export function resolveFloatScarcityTier(age?: string | null, year?: number | null): ScarcityTier {
+/**
+ * Anchored: when the book has a real CGC census (population report, grades >= 9.0), that count
+ * decides the tier. Otherwise the era float estimate is used.
+ */
+export function resolveFloatScarcityTier(
+  age?: string | null,
+  year?: number | null,
+  cgcCensusAt9Plus?: number | null
+): ScarcityTier {
+  if (typeof cgcCensusAt9Plus === "number" && Number.isFinite(cgcCensusAt9Plus) && cgcCensusAt9Plus >= 0) {
+    return classifyScarcityTier(cgcCensusAt9Plus);
+  }
   return classifyScarcityTier(estimateCensusAt9Plus(age, year));
 }

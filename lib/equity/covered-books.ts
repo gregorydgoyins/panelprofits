@@ -41,6 +41,7 @@ interface CoveredBookRow {
   comicbase_source_id: string | null;
   cb_price: number | string | null;
   cb_values: Record<string, number | string> | null;
+  cgc_pop_9_0_plus: number | null;
 }
 
 export function coverBucketUrl(gcsKey: string): string {
@@ -97,7 +98,7 @@ export function mapCoveredBook(row: CoveredBookRow): EquityItem | null {
   const variant = (row.variant_label || "").trim() || null;
   const editionForm = row.edition_form || "DIRECT";
   const keyBadge = resolveHistoricalKeyBadge(series, issue);
-  const tier = resolveHistoricalScarcityTier({ year: row.year ?? undefined, era, keyBadge, isSovereign: false, variant: variant ?? undefined });
+  const tier = resolveHistoricalScarcityTier({ year: row.year ?? undefined, era, keyBadge, isSovereign: false, variant: variant ?? undefined, cgcCensus9Plus: row.cgc_pop_9_0_plus });
   const marketClass = resolveHistoricalMarketClass({ isSovereign: false, fmv: headlineUsd, keyBadge, year: row.year ?? undefined, era, variant: variant ?? undefined });
   const ticker = formatComicEquityTicker(series, issue);
 
@@ -144,7 +145,7 @@ export async function getCoveredBooksSlice(offset: number, limit: number): Promi
   const total = COVERED_BOOKS_TOTAL;
   const start = ((Math.max(0, offset) % total) + total) % total;
   const supabase = createAdminServerClient();
-  const cols = "rail_seq,seq,age,origin_era,origin_year,edition_form,printing,variant_label,gcs_key,publisher_folder,series,issue_number,year,pp_id,pp_ladder,detail_id,comicbase_source_id,cb_price,cb_values";
+  const cols = "rail_seq,seq,age,origin_era,origin_year,edition_form,printing,variant_label,gcs_key,publisher_folder,series,issue_number,year,pp_id,pp_ladder,detail_id,comicbase_source_id,cb_price,cb_values,cgc_pop_9_0_plus";
 
   const fetchRange = async (from: number, to: number): Promise<CoveredBookRow[]> => {
     const { data, error } = await supabase
