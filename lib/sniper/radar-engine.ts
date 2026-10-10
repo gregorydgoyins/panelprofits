@@ -542,9 +542,9 @@ export function evaluateAuctionListing(
     return createRejection(`REJECTED: Grade ${parsed.grade} outside allowed high-grade scale (${profile.minGrade} - ${profile.maxGrade}).`, 3);
   }
 
-  // Minimum All-In Floor Check ($50 minimum threshold)
-  const minCostFloor = profile.minAllInCost ?? 50.00;
-  if (allInCost < minCostFloor) {
+  // Minimum All-In Floor Check ($0.00 / $10.00 floor; sub-$1,500 focus)
+  const minCostFloor = profile.minAllInCost ?? 0.00;
+  if (minCostFloor > 0 && allInCost < minCostFloor) {
     return createRejection(`REJECTED (BELOW $${minCostFloor.toFixed(0)} FLOOR): Total cost $${allInCost.toFixed(2)} is below the $${minCostFloor.toFixed(0)} minimum investment floor.`, 3);
   }
 
