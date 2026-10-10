@@ -16,7 +16,9 @@ export type AuctionSource =
   | "comiclink"
   | "comicconnect"
   | "hipcomic"
-  | "mercari";
+  | "mercari"
+  | "metropolis"
+  | "hakes";
 
 export type ComicEdition = "direct" | "newsstand" | "variant" | "convention" | "foil" | "all";
 
