@@ -10,16 +10,17 @@ const CACHE_FILE = "/tmp/real_live_auctions.json";
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const shouldRefresh = searchParams.get("refresh") === "true";
+  const searchQuery = searchParams.get("q");
 
   try {
-    let shouldRunScrape = shouldRefresh;
+    let shouldRunScrape = shouldRefresh || Boolean(searchQuery);
 
     if (!shouldRunScrape) {
       if (fs.existsSync(CACHE_FILE)) {
         const stats = fs.statSync(CACHE_FILE);
         const ageSec = (Date.now() - stats.mtimeMs) / 1000;
-        if (ageSec > 120) {
-          shouldRunScrape = true; // Auto-refresh if older than 2 minutes
+        if (ageSec > 180) {
+          shouldRunScrape = true; // Auto-refresh if older than 3 minutes
         }
       } else {
         shouldRunScrape = true;
@@ -27,7 +28,6 @@ export async function GET(request: Request) {
     }
 
     if (shouldRunScrape) {
-      // Execute AppleScript dump from active Safari session & parse live auctions
       const extractScript = path.resolve(process.cwd(), "scripts/extract_live_auctions.py");
       const safariScript = "/tmp/get_safari_source.scpt";
       
@@ -36,6 +36,18 @@ export async function GET(request: Request) {
           safariScript,
           'tell application "Safari"\n  tell current tab of window 1\n    return source\n  end tell\nend tell\n'
         );
+      }
+
+      // If user provided a specific search query, navigate the live browser session
+      if (searchQuery && searchQuery.trim().length > 0) {
+        const targetUrl = `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(searchQuery.trim())}&LH_Auction=1&_sop=1`;
+        try {
+          await execAsync(`osascript -e 'tell application "Safari" to set URL of current tab of window 1 to "${targetUrl}"'`);
+          // Brief pause for browser rendering
+          await new Promise((resolve) => setTimeout(resolve, 2500));
+        } catch (e: unknown) {
+          console.warn("Safari navigation notice:", (e as Error)?.message || e);
+        }
       }
 
       try {
@@ -54,7 +66,7 @@ export async function GET(request: Request) {
         success: true,
         count: auctions.length,
         auctions,
-        source: "live_safari_ebay_stream",
+        source: "live_browser_query_stream",
         fetchedAt: new Date().toISOString(),
       });
     }
