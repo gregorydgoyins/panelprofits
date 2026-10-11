@@ -1,0 +1,585 @@
+{
+  "schema": "panel-profits.parameter-spec",
+  "spec_version": "1.0.0",
+  "effective_date_utc": "2026-01-21T00:00:00Z",
+  "status": "LOCKED",
+  "revision_policy": {
+    "change_request_required": true,
+    "revision_id_format": "PP-PARAM-CR-YYYY-NNNN",
+    "requires_migration_notes": true,
+    "requires_systemwide_reprice_ack": true,
+    "requires_dual_approval_roles": [
+      "Market Architect",
+      "Canon Governor"
+    ],
+    "immutability": {
+      "prior_versions_editable": false,
+      "prior_versions_deletable": false
+    }
+  },
+  "globals": {
+    "round_lot_shares": 100,
+    "annualization_factor_A": 252,
+    "calendar_convention": "TRADING_DAYS_252",
+    "money": {
+      "currency": "USD",
+      "precision": 6
+    }
+  },
+  "enums": {
+    "liquidity_state": [
+      "OPEN",
+      "THIN",
+      "STRESSED",
+      "LOCKED"
+    ],
+    "bond_status": [
+      "ACTIVE",
+      "STRESSED",
+      "DISTRESSED",
+      "DEFAULTED",
+      "MATURED"
+    ],
+    "grading_company": [
+      "RAW",
+      "CGC",
+      "CBCS",
+      "PGX"
+    ],
+    "label_state": [
+      "UNIVERSAL",
+      "QUALIFIED",
+      "MODIFIED"
+    ],
+    "distribution": [
+      "DIRECT",
+      "NEWSSTAND",
+      "FOREIGN"
+    ],
+    "publisher_cap_tier": [
+      "MAJOR_X10",
+      "UPPER_INDIE_X6",
+      "MID_X4",
+      "MICRO_X3"
+    ],
+    "bond_subclass": [
+      "INST_ISSUE",
+      "PUB_ISSUER",
+      "MUNICIPAL_MAJ_CITY",
+      "MUNICIPAL_REGION",
+      "MUNICIPAL_DISTRICT",
+      "MUNICIPAL_SPECIAL_ZONE"
+    ],
+    "option_type": [
+      "CALL",
+      "PUT"
+    ],
+    "fund_type": [
+      "INDEX",
+      "ACTIVE",
+      "HEDGED",
+      "THEMATIC"
+    ]
+  },
+  "equity": {
+    "pricing_operator_version": "EQUITY_WAV_TSP_V1",
+    "hard_fail_conditions": {
+      "forbidden_operations": [
+        "divide_grading_cost_by_shares",
+        "apply_label_to_raw",
+        "apply_signatures_before_label",
+        "divide_by_100_anywhere_except_final_TSP",
+        "reuse_equity_pricer_for_bonds_or_derivatives"
+      ]
+    },
+    "constants": {
+      "grade_cost_usd": 25.0,
+      "signature_grade_cost_usd": 25.0,
+      "signature_major_increment": 0.2,
+      "signature_minor_increment": 0.1
+    },
+    "multipliers": {
+      "era": {
+        "GOLDEN": 1.6,
+        "SILVER": 1.35,
+        "EARLY_BRONZE": 1.2,
+        "LATE_BRONZE_COPPER": 1.1,
+        "MODERN_MAINSTREAM_KEY": 1.0,
+        "INDEPENDENT_ELIGIBLE": 0.9
+      },
+      "publisher_tier_multiplier_equity": {
+        "MAJOR_X10": 1.25,
+        "UPPER_INDIE_X6": 1.1,
+        "MID_X4": 0.95,
+        "MICRO_X3": 0.8
+      },
+      "key_issue": {
+        "NONE": 1.0,
+        "MINOR_KEY": 1.2,
+        "MAJOR_KEY": 1.5
+      },
+      "variant": {
+        "BASE": 1.0,
+        "A_COVER": 1.0,
+        "B_COVER": 1.05,
+        "C_COVER": 1.1,
+        "INCENTIVE_RATIO_FUNCTION": {
+          "definition": "mult = clamp(1.10 + 0.35*ln(ratio), 1.10, 2.50)",
+          "ratio_examples": {
+            "1:10": 1.91,
+            "1:25": 2.23,
+            "1:50": 2.5,
+            "1:100": 2.5
+          }
+        },
+        "RETAILER_EXCLUSIVE": 1.25,
+        "FOIL": 1.15,
+        "VIRGIN": 1.35,
+        "SKETCH": 1.6,
+        "ERROR_PRINTING": 1.15,
+        "FACSIMILE": 0.8
+      },
+      "newsstand": {
+        "DIRECT": 1.0,
+        "NEWSSTAND": {
+          "GOLDEN": 1.05,
+          "SILVER": 1.1,
+          "EARLY_BRONZE": 1.2,
+          "LATE_BRONZE_COPPER": 1.35,
+          "MODERN_MAINSTREAM_KEY": 1.15,
+          "INDEPENDENT_ELIGIBLE": 1.05
+        }
+      },
+      "scarcity": {
+        "definition": "mult = clamp( 0.80 + 0.25*ln( max(1, median_pop / pop_est) ), 0.80, 2.00 )",
+        "median_pop_reference": 2000,
+        "requires": [
+          "census_pop_estimate"
+        ],
+        "confidence_interaction": {
+          "VERIFIED": 1.0,
+          "ESTIMATED": 0.9,
+          "UNKNOWN": 0.8
+        }
+      },
+      "raw_condition": {
+        "RAW_MINT": 1.0,
+        "RAW_VF_NM": 0.9,
+        "RAW_VF": 0.8,
+        "RAW_FN_VF": 0.7,
+        "RAW_FN": 0.6,
+        "RAW_VG": 0.5,
+        "RAW_G_OR_LOWER": 0.4
+      },
+      "grade_cgc_scale": {
+        "points": [
+          [
+            0.5,
+            0.4
+          ],
+          [
+            2.0,
+            0.5
+          ],
+          [
+            4.0,
+            0.6
+          ],
+          [
+            6.0,
+            0.75
+          ],
+          [
+            8.0,
+            0.9
+          ],
+          [
+            9.0,
+            0.97
+          ],
+          [
+            9.2,
+            1.0
+          ],
+          [
+            9.4,
+            1.15
+          ],
+          [
+            9.6,
+            1.35
+          ],
+          [
+            9.8,
+            1.6
+          ],
+          [
+            9.9,
+            1.9
+          ],
+          [
+            10.0,
+            2.2
+          ]
+        ],
+        "interpolation": "LINEAR_BETWEEN_POINTS",
+        "below_min_clamp": 0.4,
+        "above_max_clamp": 2.2
+      },
+      "grading_company": {
+        "RAW": 1.0,
+        "CGC": 1.0,
+        "CBCS": 0.95,
+        "PGX": 0.85
+      },
+      "label": {
+        "UNIVERSAL": 1.0,
+        "QUALIFIED": 0.6,
+        "MODIFIED": 0.4
+      },
+      "signature": {
+        "major": {
+          "increment": 0.2,
+          "max_count": 5
+        },
+        "minor": {
+          "increment": 0.1,
+          "max_count": 8
+        },
+        "diminishing_returns": {
+          "enabled": true,
+          "definition": "after_threshold: effective_increment *= 0.70 per additional signature of same class",
+          "threshold_major": 3,
+          "threshold_minor": 4
+        }
+      }
+    },
+    "spread_model": {
+      "definition": "spread = clamp( base + s_liq + s_vol + s_asym, min_spread, max_spread )",
+      "min_spread": 0.005,
+      "max_spread": 0.5,
+      "base": 0.005,
+      "liquidity_component": {
+        "inputs": [
+          "trades_30d",
+          "days_since_trade"
+        ],
+        "trade_count_steps": [
+          {
+            "gte": 50,
+            "spread_add": 0.005
+          },
+          {
+            "gte": 20,
+            "spread_add": 0.01
+          },
+          {
+            "gte": 10,
+            "spread_add": 0.02
+          },
+          {
+            "gte": 5,
+            "spread_add": 0.04
+          },
+          {
+            "lt": 5,
+            "spread_add": 0.08
+          }
+        ],
+        "days_since_trade_steps": [
+          {
+            "lte": 7,
+            "spread_add": 0.0
+          },
+          {
+            "lte": 30,
+            "spread_add": 0.01
+          },
+          {
+            "lte": 180,
+            "spread_add": 0.03
+          },
+          {
+            "lte": 365,
+            "spread_add": 0.06
+          },
+          {
+            "gt": 365,
+            "spread_add": 0.12
+          }
+        ]
+      },
+      "volatility_component": {
+        "input": "ave_volatility",
+        "definition": "s_vol = clamp(0.0, 0.40, 0.80 * ave_volatility)"
+      },
+      "asymmetry_component": {
+        "input": "orderbook_asymmetry_index",
+        "definition": "s_asym = clamp(0.0, 0.10, 0.10 * orderbook_asymmetry_index)",
+        "asymmetry_index_range": [
+          0.0,
+          1.0
+        ]
+      },
+      "house_risk_adjustments": {
+        "bid_discount_max": 0.05,
+        "ask_premium_max": 0.05
+      }
+    }
+  },
+  "bonds": {
+    "coupon_frequency": "ANNUAL",
+    "eligibility_gates": {
+      "ave_volatility_max": 0.15,
+      "wav_confidence_min": 0.7,
+      "census_confidence_min": 0.6
+    },
+    "issuance_cap": {
+      "definition": "sum_outstanding_principal <= 0.40 * WAV_AVE_CONDITIONED",
+      "cap_fraction": 0.4,
+      "interpretation": "CUMULATIVE_OUTSTANDING"
+    },
+    "secondary_market_controls": {
+      "max_trades_per_bond_per_day": 3,
+      "min_hours_between_trades": 6
+    },
+    "treasury_curve": {
+      "definition": "step_function_by_tenor_years",
+      "rates": [
+        {
+          "max_years": 1,
+          "rate": 0.035
+        },
+        {
+          "years": 2,
+          "rate": 0.038
+        },
+        {
+          "min_years": 3,
+          "max_years_2": 5,
+          "rate": 0.04
+        },
+        {
+          "min_years": 6,
+          "max_years_2": 10,
+          "rate": 0.042
+        },
+        {
+          "min_years": 11,
+          "rate": 0.044
+        }
+      ]
+    },
+    "required_yield": {
+      "definition": "y_req = y_rf(T_remaining) + s_credit + s_liq"
+    },
+    "liquidity_spread": {
+      "definition": "s_liq = L_trades + L_float + L_duration",
+      "L_trades": [
+        {
+          "gte_trades_30d": 20,
+          "bps": 0
+        },
+        {
+          "range_trades_30d": [
+            10,
+            19
+          ],
+          "bps": 50
+        },
+        {
+          "range_trades_30d": [
+            5,
+            9
+          ],
+          "bps": 100
+        },
+        {
+          "lt_trades_30d": 5,
+          "bps": 200
+        }
+      ],
+      "L_float": [
+        {
+          "lte_utilization": 0.5,
+          "bps": 0
+        },
+        {
+          "gt_utilization": 0.5,
+          "lte_utilization_2": 0.75,
+          "bps": 50
+        },
+        {
+          "gt_utilization": 0.75,
+          "bps": 100
+        }
+      ],
+      "L_duration": [
+        {
+          "gte_years_remaining": 7,
+          "bps": 50
+        },
+        {
+          "range_years_remaining": [
+            3,
+            6
+          ],
+          "bps": 0
+        },
+        {
+          "lt_years_remaining": 3,
+          "bps": -25
+        }
+      ]
+    },
+    "credit_spreads": {
+      "institutional_by_era": {
+        "GOLDEN": 0.0025,
+        "SILVER": 0.004,
+        "EARLY_BRONZE": 0.006,
+        "LATE_BRONZE_COPPER": 0.0075,
+        "MODERN_MAINSTREAM_KEY": 0.01,
+        "INDEPENDENT_ELIGIBLE": 0.0125
+      },
+      "publisher_by_cap_tier": {
+        "MAJOR_X10": 0.003,
+        "UPPER_INDIE_X6": 0.0055,
+        "MID_X4": 0.0075,
+        "MICRO_X3": 0.01
+      }
+    },
+    "pricing_operator": {
+      "definition": "Price = sum_{k=1..T_remaining} (c*P)/(1+y_req)^k + P/(1+y_req)^{T_remaining}"
+    },
+    "default_state_machine": {
+      "states": [
+        "ACTIVE",
+        "STRESSED",
+        "DISTRESSED",
+        "DEFAULTED"
+      ],
+      "triggers": {
+        "ACTIVE_to_STRESSED": [
+          "underlying_ave_volatility > 0.30",
+          "wav_confidence < 0.60"
+        ],
+        "STRESSED_to_DISTRESSED": [
+          "missed_coupon_payments >= 1",
+          "wav_confidence < 0.50",
+          "census_confidence < 0.40"
+        ],
+        "DISTRESSED_to_DEFAULTED": [
+          "missed_coupon_payments >= 2",
+          "underlying_delisted == true"
+        ]
+      }
+    },
+    "recovery_rates": {
+      "MUNICIPAL_MAJ_CITY": 0.7,
+      "MUNICIPAL_REGION": 0.65,
+      "MUNICIPAL_DISTRICT": 0.4,
+      "MUNICIPAL_SPECIAL_ZONE": 0.25,
+      "INST_ISSUE": {
+        "GOLDEN": 0.75,
+        "SILVER": 0.72,
+        "EARLY_BRONZE": 0.68,
+        "LATE_BRONZE_COPPER": 0.65,
+        "MODERN_MAINSTREAM_KEY": 0.6,
+        "INDEPENDENT_ELIGIBLE": 0.55
+      },
+      "PUB_ISSUER": {
+        "MAJOR_X10": 0.7,
+        "UPPER_INDIE_X6": 0.6,
+        "MID_X4": 0.52,
+        "MICRO_X3": 0.45
+      }
+    }
+  },
+  "options": {
+    "contract_size_Q_shares": 100,
+    "risk_free_rate": {
+      "definition": "r = y_rf(T_expiry_years)"
+    },
+    "volatility": {
+      "source": "REALIZED_LOG_RETURN_VOL",
+      "window_days": 30,
+      "sigma_eff_multiplier_by_liquidity_state_phi": {
+        "OPEN": 1.0,
+        "THIN": 1.15,
+        "STRESSED": 1.35,
+        "LOCKED": 1.0
+      }
+    },
+    "pricing_operator": {
+      "model": "BLACK_SCHOLES",
+      "continuous_compounding": true,
+      "definitions": {
+        "d1": "(ln(S/K) + (r + 0.5*sigma^2)*T) / (sigma*sqrt(T))",
+        "d2": "d1 - sigma*sqrt(T)",
+        "call": "C = S*N(d1) - K*exp(-r*T)*N(d2)",
+        "put": "P = K*exp(-r*T)*N(-d2) - S*N(-d1)"
+      }
+    },
+    "issuance_gates": {
+      "disallow_when_liquidity_state": [
+        "LOCKED"
+      ],
+      "require_wav_confidence_min": 0.7,
+      "require_census_confidence_min": 0.6,
+      "require_ave_volatility_max": 0.45,
+      "require_last_trade_days_max": 365
+    },
+    "margin": {
+      "shared_derivatives_notional_cap_by_career_tier": {
+        "SENIOR_PARTNER": 500000
+      }
+    }
+  },
+  "funds": {
+    "nav": {
+      "definition": "NAV = sum(q_i * p_i) - Fees - Liabilities"
+    },
+    "share_price": {
+      "definition": "FSP = NAV / Shares_fund"
+    },
+    "fees": {
+      "expense_ratio_ER_annual": {
+        "min": 0.0,
+        "max": 0.05
+      },
+      "accrual": "CONTINUOUS_LINEAR",
+      "definition": "Fees(t+dt) = Fees(t) + NAV(t)*ER*dt"
+    },
+    "rebalancing": {
+      "schedule": "DISCRETE",
+      "allowed_intervals_days": [
+        1,
+        7,
+        30
+      ],
+      "definition": "q_i_new = w_i_target * NAV / p_i; Δq_i = q_i_new - q_i"
+    },
+    "redemption_gating": {
+      "definition": "if V_R > LC then g=LC/V_R; V_paid=g*V_R; V_deferred=(1-g)*V_R",
+      "liquidation_capacity_cap_i": {
+        "definition": "cap_i = holding_value_at_bid * haircut(liquidity_state)",
+        "haircuts": {
+          "OPEN": 0.95,
+          "THIN": 0.7,
+          "STRESSED": 0.5,
+          "LOCKED": 0.0
+        }
+      }
+    },
+    "tracking_error": {
+      "definition": "TE = FSP - I_scaled",
+      "index_reference": "frictionless_weighted_price_relatives"
+    },
+    "stress_correlation_multiplier_psi": {
+      "OPEN": 1.0,
+      "THIN": 1.1,
+      "STRESSED": 1.25,
+      "LOCKED": 1.4
+    }
+  }
+}
