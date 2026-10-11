@@ -63,7 +63,13 @@ function getSqliteDb(): any {
     for (const p of dbPaths) {
       if (fs.existsSync(p)) {
         try {
-          cachedSqliteDb = new DatabaseSync(p, { readOnly: true });
+          const absPath = path.resolve(p);
+          try {
+            const uri = `file:${absPath}?mode=ro&immutable=1`;
+            cachedSqliteDb = new DatabaseSync(uri, { readOnly: true });
+          } catch (_) {
+            cachedSqliteDb = new DatabaseSync(absPath, { readOnly: true });
+          }
           try {
             cachedSqliteDb.exec("PRAGMA query_only = ON;");
             cachedSqliteDb.exec("PRAGMA cache_size = -65536;"); // 64MB RAM page cache

@@ -9,7 +9,7 @@ import { lookupReferenceFmv } from "@/lib/pricing/reference-benchmarks";
 import { getAuthoritativeCover, getAuthoritativeCoverStrict } from "@/lib/comics/cover-authority";
 import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
 import { resolveAuthoritativePublisher } from "@/lib/comics/publisher-authority";
-import { getCatalogComicById, getCatalogComicBySourceProductId, getVerifiedEquityByIdOrTicker, getVerifiedRealEquities } from "@/lib/equity/verified-equities-service";
+import { getCatalogComicById, getCatalogComicBySourceProductId, getVerifiedEquityByIdOrTicker, getVerifiedRealEquities, searchVerifiedEquities } from "@/lib/equity/verified-equities-service";
 import ppix100Data from "@/lib/equity/ppix-100-constituents.json";
 
 export const DEFAULT_PAGE_SIZE = 24;
@@ -93,6 +93,7 @@ const KNOWN_TICKER_ROOTS: Record<string, string[]> = {
   gsx: ["Giant-Size X-Men", "X-Men"],
   ff: ["Fantastic Four"],
   hul: ["Incredible Hulk", "The Incredible Hulk"],
+  hlk: ["Incredible Hulk", "The Incredible Hulk"],
   ih: ["Incredible Hulk", "The Incredible Hulk"],
   tos: ["Tales of Suspense", "Iron Man"],
   tta: ["Tales to Astonish", "Hulk"],
@@ -102,6 +103,7 @@ const KNOWN_TICKER_ROOTS: Record<string, string[]> = {
   cap: ["Captain America"],
   av: ["Avengers", "The Avengers"],
   ave: ["Avengers", "The Avengers"],
+  avg: ["Avengers", "The Avengers"],
   gl: ["Green Lantern"],
   fla: ["The Flash", "Flash"],
   dare: ["Daredevil"],
@@ -109,7 +111,66 @@ const KNOWN_TICKER_ROOTS: Record<string, string[]> = {
   sw: ["Secret Wars", "Marvel Super Heroes Secret Wars", "Star Wars"],
   tmnt: ["Teenage Mutant Ninja Turtles"],
   spawn: ["Spawn"],
+  spw: ["Spawn"],
   wd: ["The Walking Dead", "Walking Dead"],
+  wkd: ["The Walking Dead", "Walking Dead"],
+  goc: ["God Country", "Gotham Central"],
+  con: ["DC Connect", "Coneheads"],
+  dkk: ["Batman: The Dark Knight", "The Dark Knight Returns", "Dark Knight Returns", "Batman: Legends of the Dark Knight"],
+  dkr: ["The Dark Knight Returns", "Dark Knight Returns"],
+  dki: ["Dark Knight III: The Master Race"],
+  dks: ["Dark Knight Strikes Again"],
+  ldk: ["Batman: Legends of the Dark Knight"],
+  wch: ["Watchmen"],
+  tod: ["The Tomb of Dracula", "Tomb of Dracula"],
+  uf: ["Ultimate Fallout"],
+  nm: ["New Mutants", "The New Mutants"],
+  shc: ["Showcase"],
+  st: ["Strange Tales"],
+  css: ["Crime SuspenStories"],
+  mad: ["MAD"],
+  aqm: ["Aquaman"],
+  inv: ["Invincible"],
+  prc: ["Preacher"],
+  snd: ["The Sandman", "Sandman"],
+  hlb: ["Hellblazer", "John Constantine, Hellblazer"],
+  swp: ["Swamp Thing", "The Saga of the Swamp Thing"],
+  ntt: ["The New Teen Titans", "New Teen Titans", "Teen Titans"],
+  jla: ["Justice League of America", "Justice League"],
+  btb: ["The Brave and the Bold", "Brave and the Bold"],
+  ylm: ["Y: The Last Man"],
+  kgc: ["Kingdom Come"],
+  wos: ["Web of Spider-Man"],
+  fns: ["Friendly Neighborhood Spider-Man"],
+  sns: ["Sensational Spider-Man"],
+  mms: ["Miles Morales: Spider-Man"],
+  usm: ["Ultimate Spider-Man"],
+  ssm: ["The Spectacular Spider-Man", "Spectacular Spider-Man", "Peter Parker, The Spectacular Spider-Man"],
+  bwk: ["Batman: White Knight"],
+  bsb: ["Batman: Shadow of the Bat"],
+  bdk: ["Batman: The Dark Knight"],
+  asb: ["All-Star Batman"],
+  abm: ["Absolute Batman"],
+  bar: ["Batman and Robin"],
+  bmb: ["Batman Beyond"],
+  bma: ["The Batman Adventures", "Batman Adventures"],
+  wca: ["West Coast Avengers"],
+  yav: ["Young Avengers"],
+  sav: ["Secret Avengers"],
+  nav: ["New Avengers"],
+  uav: ["Uncanny Avengers"],
+  xft: ["X-Factor"],
+  xfc: ["X-Force"],
+  anx: ["All-New X-Men"],
+  nxm: ["New X-Men"],
+  wxm: ["Weapon X"],
+  uxm: ["Ultimate X-Men"],
+  axm: ["Astonishing X-Men"],
+  th: ["Thor", "The Mighty Thor"],
+  ww: ["Wonder Woman"],
+  ss: ["Silver Surfer"],
+  irm: ["Iron Man", "The Invincible Iron Man"],
+  asc: ["All Star Comics"],
 };
 
 /**
@@ -129,12 +190,21 @@ export function parseComicSlug(slug: string): ParsedComicSlug {
     .replace(/[\/\?#].*$/, "")
     .trim();
 
-  // Pattern 0: Standard Financial Equity Ticker (e.g. TRA.004.SOV, ASM.300.SOV, BAT.251.SOV)
-  const tickerMatch = clean.match(/^([a-z]{2,5})\.(\d{1,4})(?:\.[a-z0-9]+)?$/i);
+  // Pattern 0: Standard Financial Equity Ticker (e.g. TRA.004.SOV, ASM.300.SOV, GOC01, CON04, DKK01, ASM300)
+  const tickerMatch = clean.match(/^([a-z]{2,5})[._]?(\d{1,4})(?:\.[a-z0-9]+)?$/i);
   if (tickerMatch) {
     const root = tickerMatch[1].toLowerCase();
     const issue = String(parseInt(tickerMatch[2], 10));
-    const candidateSeries = KNOWN_TICKER_ROOTS[root] || [];
+    const candidateSeries = KNOWN_TICKER_ROOTS[root] ? [...KNOWN_TICKER_ROOTS[root]] : [];
+
+    // Also enrich candidate series from verified equities lookup if available
+    try {
+      const dbMatch = getVerifiedEquityByIdOrTicker(clean);
+      if (dbMatch?.series && !candidateSeries.includes(dbMatch.series)) {
+        candidateSeries.unshift(dbMatch.series);
+      }
+    } catch (_) {}
+
     return {
       rawSeriesSlug: root,
       candidateSeries,
@@ -1235,6 +1305,25 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
       cover_sha256: null,
       cover_verified_at: timestamp,
     };
+  }
+
+  // Layer 7: Resilient Global Search Fallback (Fuzzy Title / Series Search against Supabase)
+  try {
+    const supabase = createAdminServerClient();
+    const cleanSearch = cleanId.replace(/[-_]+/g, " ").trim();
+    if (cleanSearch.length >= 3) {
+      const { data: searchMatches } = await supabase
+        .from("comics")
+        .select("*")
+        .ilike("series", `%${cleanSearch.replace(/[%_]/g, "\\$&")}%`)
+        .order("pp_grade_9_8_price", { ascending: false, nullsFirst: false })
+        .limit(1);
+      if (searchMatches && searchMatches.length > 0) {
+        return enrichWithConnoisseurDossier(enrichWithBenchmarkData(searchMatches[0] as ComicRecord));
+      }
+    }
+  } catch (searchErr) {
+    console.warn("Notice in Layer 7 resilient search fallback:", searchErr);
   }
 
   return null;

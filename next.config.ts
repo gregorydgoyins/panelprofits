@@ -13,6 +13,14 @@ const nextConfig: NextConfig = {
   },
   outputFileTracingIncludes: {
     "/comics/[id]": ["./data/pp115k.sqlite", "./data/gcd_variant_map.json"],
+    "/comics": ["./data/pp115k.sqlite", "./data/gcd_variant_map.json"],
+    "/equity/[id]": ["./data/pp115k.sqlite", "./data/gcd_variant_map.json"],
+    "/equity": ["./data/pp115k.sqlite", "./data/gcd_variant_map.json"],
+    "/equities": ["./data/pp115k.sqlite", "./data/gcd_variant_map.json"],
+    "/market": ["./data/pp115k.sqlite", "./data/gcd_variant_map.json"],
+    "/watchlist": ["./data/pp115k.sqlite", "./data/gcd_variant_map.json"],
+    "/sniper": ["./data/pp115k.sqlite", "./data/gcd_variant_map.json"],
+    "/assets/**/*": ["./data/pp115k.sqlite", "./data/gcd_variant_map.json"],
     "/api/**/*": ["./data/pp115k.sqlite", "./data/gcd_variant_map.json"],
   },
   images: {

@@ -85,7 +85,13 @@ function getBundled115kDb(): any | null {
     try {
       if (fs.existsSync(p)) {
         const { DatabaseSync } = requireModule("node:sqlite");
-        bundled115kDb = new DatabaseSync(p, { readOnly: true });
+        const absPath = path.resolve(p);
+        try {
+          const uri = `file:${absPath}?mode=ro&immutable=1`;
+          bundled115kDb = new DatabaseSync(uri, { readOnly: true });
+        } catch (_) {
+          bundled115kDb = new DatabaseSync(absPath, { readOnly: true });
+        }
         return bundled115kDb;
       }
     } catch (_) {}

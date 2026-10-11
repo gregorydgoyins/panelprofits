@@ -113,7 +113,13 @@ function getGcdDatabase(): any | null {
 
     for (const p of bundledPaths) {
       if (fs.existsSync(p)) {
-        dbInstance = new DatabaseSync(p, { readOnly: true });
+        const absPath = path.resolve(p);
+        try {
+          const uri = `file:${absPath}?mode=ro&immutable=1`;
+          dbInstance = new DatabaseSync(uri, { readOnly: true });
+        } catch (_) {
+          dbInstance = new DatabaseSync(absPath, { readOnly: true });
+        }
         isBundledDb = true;
         dbAvailable = true;
         return dbInstance;

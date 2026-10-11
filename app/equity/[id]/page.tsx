@@ -33,7 +33,9 @@ export default async function EquityDetailPage({ params }: EquityDetailPageProps
   // Redirect directly to the user's authentic September comic detail page (/comics/[id])
   const comic = await getComicById(id);
   if (comic) {
-    redirect(`/comics/${encodeURIComponent(comic.id)}`);
+    const canonicalTicker = (comic.panel_profits_data as any)?.ticker || (comic as any).ticker;
+    const targetSlug = canonicalTicker ? canonicalTicker.replace(/^\$/, "") : comic.id;
+    redirect(`/comics/${encodeURIComponent(targetSlug)}`);
   }
 
   // 3. Fallback: Neither index contract nor sovereign equity exists

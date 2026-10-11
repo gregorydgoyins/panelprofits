@@ -45,7 +45,13 @@ function getDb(): any {
     for (const p of dbPaths) {
       if (fs.existsSync(p)) {
         try {
-          cachedDb = new DatabaseSync(p, { readOnly: true });
+          const absPath = path.resolve(p);
+          try {
+            const uri = `file:${absPath}?mode=ro&immutable=1`;
+            cachedDb = new DatabaseSync(uri, { readOnly: true });
+          } catch (_) {
+            cachedDb = new DatabaseSync(absPath, { readOnly: true });
+          }
           try {
             cachedDb.exec("PRAGMA query_only = ON;");
             cachedDb.exec("PRAGMA cache_size = -131072;"); // 128 MB RAM page cache
@@ -261,6 +267,20 @@ export function getVerifiedEquityByIdOrTicker(idOrTicker: string): VerifiedEquit
       .get(clean.toUpperCase()) as unknown as VerifiedEquityRecord | undefined;
     if (row) return row;
 
+    // 3b. Match on ticker with flexible issue padding (e.g. GOC1 <-> GOC01, ACT1 <-> ACT01)
+    const tickerNumMatch = clean.match(/^([a-z]{2,5})[._]?(\d{1,4})$/i);
+    if (tickerNumMatch) {
+      const root = tickerNumMatch[1].toUpperCase();
+      const num = parseInt(tickerNumMatch[2], 10);
+      const padded2 = `${root}${num < 10 ? "0" + num : num}`;
+      const padded3 = `${root}${num < 10 ? "00" + num : num < 100 ? "0" + num : num}`;
+      const unpadded = `${root}${num}`;
+      row = db
+        .prepare("SELECT * FROM verified_equities WHERE ticker IN (?, ?, ?) COLLATE NOCASE LIMIT 1")
+        .get(padded2, padded3, unpadded) as unknown as VerifiedEquityRecord | undefined;
+      if (row) return row;
+    }
+
     // 4. Match ticker aliases (e.g. ASM300 -> AS300, ASM129 -> AS129, BAT251 -> BA251, HULK181 -> HK181)
     const upper = clean.toUpperCase();
     const aliasMap: Record<string, string> = {
@@ -272,7 +292,9 @@ export function getVerifiedEquityByIdOrTicker(idOrTicker: string): VerifiedEquit
       BAT1: "BAT01",
       BAT251: "BA251",
       HULK181: "HK181",
+      HLK181: "HK181",
       HULK1: "HLK01",
+      HLK1: "HLK01",
       FF1: "FF001",
       FF48: "FF048",
       FF52: "FF052",

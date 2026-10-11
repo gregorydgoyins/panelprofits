@@ -16,7 +16,13 @@ function getSqliteDb() {
     ];
     for (const p of candidates) {
       if (fs.existsSync(p)) {
-        dbInstance = new DatabaseSync(p);
+        const absPath = path.resolve(p);
+        try {
+          const uri = `file:${absPath}?mode=ro&immutable=1`;
+          dbInstance = new DatabaseSync(uri, { readOnly: true });
+        } catch (_) {
+          dbInstance = new DatabaseSync(absPath, { readOnly: true });
+        }
         return dbInstance;
       }
     }
