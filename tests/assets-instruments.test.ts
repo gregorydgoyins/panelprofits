@@ -53,7 +53,10 @@ describe("underlyings and instruments", () => {
     }
     const types = new Set(items.map((i) => i.assetType));
     for (const t of ["OPTIONS", "FUTURES", "NFT", "PRIVATE", "COMMODITY"]) expect(types.has(t)).toBe(true);
-    expect(["CHARACTER", "DC_CHARACTER"].some((t) => types.has(t))).toBe(false);
+    // characters are baskets of equities, never a bare comic seat
+    expect(types.has("COMIC")).toBe(false);
+    for (const it of items.filter((i) => ["CHARACTER", "DC_CHARACTER", "VILLAIN", "SECRET_IDENTITY"].includes(i.assetType)))
+      expect(String(it.pricing.formula).startsWith("Basket")).toBe(true);
   });
   it("symbols are unique", () => {
     const syms = items.map((i) => i.entryId);

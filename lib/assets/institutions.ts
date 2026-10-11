@@ -50,7 +50,7 @@ export function issueInstitutional(shocks: ShockMap, now: number = Date.now()): 
     const sLiq = bondLiquiditySpreadFor(state, years);
     const coupon = treasuryYield(years) + city.hazard0 * (1 - R);
     const yReq = requiredYield(years, hazard * (1 - R), sLiq);
-    out.push(mk("BOND", b++, `${tag}GO`, `${city.name} General Obligation 10Y`, `${(coupon * 100).toFixed(2)}% coupon · hazard ${(hazard * 100).toFixed(1)}%${stress > 0.05 ? " · under stress" : ""}`, bondPrice(1000, coupon, yReq, years) * marketFactor(`${tag}GO`, now, 0.05), "Price=Σ cP/(1+y)^k+P/(1+y)^T, y=y_rf+λ(1−R)+s_liq", { city: city.name, muniClass: city.muniClass, recovery: R, hazard, baselineHazard: city.hazard0, stress, yReq, coupon, state }, trails));
+    out.push(mk("BOND", b++, `${tag}GO`, `${city.name} General Obligation 10Y`, `${(coupon * 100).toFixed(2)}% coupon · hazard ${(hazard * 100).toFixed(1)}%${stress > 0.05 ? " · under stress" : ""}`, bondPrice(1000, coupon, yReq, years) * Math.exp(cond.pressure * 0.5) * marketFactor(`${tag}GO`, now, 0.05), "Price=Σ cP/(1+y)^k+P/(1+y)^T, y=y_rf+λ(1−R)+s_liq", { city: city.name, muniClass: city.muniClass, recovery: R, hazard, baselineHazard: city.hazard0, stress, yReq, coupon, state }, trails));
 
     // CDS: par spread from hazard and recovery; price = annual premium per $1M notional
     const rf = treasuryYield(5);
@@ -61,7 +61,7 @@ export function issueInstitutional(shocks: ShockMap, now: number = Date.now()): 
     const noi = city.noi * (1 - SENSITIVITY.reitOccupancyLoss * stress);
     const cap = city.capRate0 + SENSITIVITY.reitCreditPassThrough * cond.creditAdd + SENSITIVITY.reitCapWidening * stress;
     const unit = reitUnitValue(noi, cap, city.debt, city.units);
-    if (unit > 0) out.push(mk("REIT", r++, `${tag}RE`, `${city.name} Real Estate Trust`, `NOI $${(noi / 1e9).toFixed(2)}B · cap ${(cap * 100).toFixed(2)}%`, unit * marketFactor(`${tag}RE`, now, 0.15), "V=(NOI/cap−debt)/units", { city: city.name, noi, cap, debt: city.debt, units: city.units, stress }, trails));
+    if (unit > 0) out.push(mk("REIT", r++, `${tag}RE`, `${city.name} Real Estate Trust`, `NOI $${(noi / 1e9).toFixed(2)}B · cap ${(cap * 100).toFixed(2)}%`, unit * Math.exp(cond.pressure) * marketFactor(`${tag}RE`, now, 0.15), "V=(NOI/cap−debt)/units", { city: city.name, noi, cap, debt: city.debt, units: city.units, stress }, trails));
   }
 
   // Rated and adjudicated issuance by benefactors

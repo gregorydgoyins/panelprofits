@@ -7,7 +7,7 @@ import { createAdminServerClient } from "@/lib/supabase/admin";
 import { createCachedQuery } from "@/lib/cache/wrapper";
 import { GAME_DESIGN, type EraKey, type LiquidityState, type PublisherCapTier } from "./canon-params";
 import { KEY_ISSUES } from "./key-issues";
-import { entitiesForSeries } from "./entity-graph";
+import { CHARACTER_BOOKS, entitiesForSeries } from "./entity-graph";
 import { conditionsForNodes, degradeState, type ShockMap } from "./shock-propagation";
 import { marketFactor } from "./market-dynamics";
 import { combineSourceVolatilities, newsShockMultiplier, realizedVolatility, realizedVolatilityDated } from "./canon-formulas";
@@ -213,8 +213,9 @@ export function applyShocks(unders: Underlying[], shocks: ShockMap, now: number 
     const c = u.entityIds.length ? conditionsForNodes(u.entityIds, shocks) : null;
     const sigma = c ? u.sigma * c.volMult : u.sigma;
     // market price wanders around value; news never changes value
-    const price = u.value * marketFactor(`book:${u.id}`, now, Math.min(sigma, 0.6));
-    if (!c || (c.volMult === 1 && c.stateSteps === 0 && c.creditAdd === 0)) return { ...u, price, sigma };
+    const pressure = c ? c.pressure : 0;
+    const price = u.value * Math.exp(pressure) * marketFactor(`book:${u.id}`, now, Math.min(sigma, 0.6));
+    if (!c || (c.volMult === 1 && c.stateSteps === 0 && c.creditAdd === 0 && c.pressure === 0)) return { ...u, price, sigma };
     return { ...u, price, sigma, state: degradeState(u.state, c.stateSteps), creditAdd: c.creditAdd, trails: c.trails };
   });
 }
@@ -224,10 +225,11 @@ const RAIL_COLS = "comics_id,series,issue_number,year,publisher,cover_url,pp_id,
 async function fetchUnderlyingsRaw(): Promise<Underlying[]> {
   const supabase = createAdminServerClient();
   // 1. landmark books by (series, issue)
-  const names = [...new Set(KEY_ISSUES.map((k) => k.series))];
-  const issues = [...new Set(KEY_ISSUES.map((k) => k.issue))];
+  const wanted = [...KEY_ISSUES, ...Object.values(CHARACTER_BOOKS).flat()];
+  const names = [...new Set(wanted.map((k) => k.series))];
+  const issues = [...new Set(wanted.map((k) => k.issue))];
   const { data: keyRows } = await supabase.from("rail_books").select(RAIL_COLS).in("series", names).in("issue_number", issues);
-  const keySet = new Set(KEY_ISSUES.map((k) => `${k.series.toLowerCase()}|${k.issue}|${k.year}`));
+  const keySet = new Set(wanted.map((k) => `${k.series.toLowerCase()}|${k.issue}|${k.year}`));
   const landmarks = ((keyRows ?? []) as any[]).filter((r) => keySet.has(`${String(r.series).toLowerCase()}|${r.issue_number}|${r.year}`));
 
   // 2. the highest-valued verified equities, joined to their rail rows

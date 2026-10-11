@@ -5,8 +5,11 @@
 import { createAdminServerClient } from "@/lib/supabase/admin";
 import { createCachedQuery } from "@/lib/cache/wrapper";
 import { eventsFromArticles, propagate, type ShockMap } from "./shock-propagation";
+import { outcomesFromArticles, type Outcome } from "./outcomes";
 
-async function fetchShocksRaw(): Promise<ShockMap> {
+export interface MarketState { shocks: ShockMap; outcomes: Outcome[] }
+
+async function fetchShocksRaw(): Promise<MarketState> {
   const supabase = createAdminServerClient();
   const since = new Date(Date.now() - 30 * 86_400_000).toISOString();
   const { data } = await supabase
@@ -15,7 +18,9 @@ async function fetchShocksRaw(): Promise<ShockMap> {
     .gte("published_at", since)
     .order("published_at", { ascending: false })
     .limit(2000);
-  return propagate(eventsFromArticles((data ?? []) as any[]), Date.now());
+  const articles = (data ?? []) as any[];
+  const outcomes = outcomesFromArticles(articles);
+  return { shocks: propagate(eventsFromArticles(articles), Date.now(), outcomes), outcomes };
 }
 
 export const getShocks = createCachedQuery(fetchShocksRaw, "asset-shocks", {

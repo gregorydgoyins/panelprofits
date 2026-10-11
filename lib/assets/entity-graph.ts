@@ -21,11 +21,13 @@ export interface GraphNode {
   aliases: string[];
   /** Fixed anchors never receive in-universe shocks. */
   fixed?: boolean;
+  /** Personality traits (0..1) that decide how an entity answers a defeat. */
+  traits?: { vindictive?: number };
 }
 export interface GraphEdge { from: string; to: string; rel: string; weight: number }
 
-const n = (id: string, name: string, kind: NodeKind, universe: "DC" | "Marvel", aliases: string[] = [], fixed = false): GraphNode =>
-  ({ id, name, kind, universe, aliases: aliases.map((a) => a.toLowerCase()), fixed });
+const n = (id: string, name: string, kind: NodeKind, universe: "DC" | "Marvel", aliases: string[] = [], fixed = false, traits?: GraphNode["traits"]): GraphNode =>
+  ({ id, name, kind, universe, aliases: aliases.map((a) => a.toLowerCase()), fixed, traits });
 
 export const NODES: GraphNode[] = [
   n("dc", "DC Comics", "PUBLISHER", "DC", ["dc comics", "warner bros"], true),
@@ -35,7 +37,9 @@ export const NODES: GraphNode[] = [
   n("bruce_wayne", "Bruce Wayne", "ALTER_EGO", "DC", ["bruce wayne"]),
   n("alfred", "Alfred Pennyworth", "SIDEKICK", "DC", ["alfred pennyworth", "alfred"]),
   n("robin", "Robin", "SIDEKICK", "DC", ["robin", "dick grayson", "nightwing"]),
-  n("joker", "The Joker", "VILLAIN", "DC", ["joker", "clown prince"]),
+  n("joker", "The Joker", "VILLAIN", "DC", ["joker", "clown prince"], false, { vindictive: 0.8 }),
+  n("harvey_dent", "Harvey Dent", "ALTER_EGO", "DC", ["harvey dent"]),
+  n("two_face", "Two-Face", "VILLAIN", "DC", ["two-face", "two face", "twoface"], false, { vindictive: 0.9 }),
   n("harley", "Harley Quinn", "VILLAIN", "DC", ["harley quinn", "harleen"]),
   n("gotham", "Gotham City", "LOCATION", "DC", ["gotham", "gotham city"]),
   n("wayne_enterprises", "Wayne Enterprises", "COMPANY", "DC", ["wayne enterprises", "wayne tech"]),
@@ -43,7 +47,7 @@ export const NODES: GraphNode[] = [
   n("pennyworth_industries", "Pennyworth Industries", "COMPANY", "DC", ["pennyworth industries"]),
   n("superman", "Superman", "HERO", "DC", ["superman", "man of steel", "kal-el"]),
   n("clark_kent", "Clark Kent", "ALTER_EGO", "DC", ["clark kent"]),
-  n("lex_luthor", "Lex Luthor", "VILLAIN", "DC", ["lex luthor", "luthor"]),
+  n("lex_luthor", "Lex Luthor", "VILLAIN", "DC", ["lex luthor", "luthor"], false, { vindictive: 0.8 }),
   n("lexcorp", "LexCorp", "COMPANY", "DC", ["lexcorp"]),
   n("metropolis", "Metropolis", "LOCATION", "DC", ["metropolis"]),
   n("kryptonite", "Kryptonite", "COMMODITY", "DC", ["kryptonite"]),
@@ -51,11 +55,11 @@ export const NODES: GraphNode[] = [
   // Marvel
   n("spider_man", "Spider-Man", "HERO", "Marvel", ["spider-man", "spiderman", "web-slinger"]),
   n("peter_parker", "Peter Parker", "ALTER_EGO", "Marvel", ["peter parker"]),
-  n("green_goblin", "Green Goblin", "VILLAIN", "Marvel", ["green goblin", "norman osborn"]),
+  n("green_goblin", "Green Goblin", "VILLAIN", "Marvel", ["green goblin", "norman osborn"], false, { vindictive: 0.75 }),
   n("oscorp", "Oscorp", "COMPANY", "Marvel", ["oscorp"]),
   n("new_york", "New York City", "LOCATION", "Marvel", ["new york", "manhattan"]),
   n("daredevil", "Daredevil", "HERO", "Marvel", ["daredevil", "matt murdock"]),
-  n("kingpin", "Kingpin", "VILLAIN", "Marvel", ["kingpin", "wilson fisk"]),
+  n("kingpin", "Kingpin", "VILLAIN", "Marvel", ["kingpin", "wilson fisk"], false, { vindictive: 0.85 }),
   n("fisk_holdings", "Fisk Holdings", "BENEFACTOR", "Marvel", ["fisk holdings"]),
   n("iron_man", "Iron Man", "HERO", "Marvel", ["iron man", "tony stark"]),
   n("stark_industries", "Stark Industries", "COMPANY", "Marvel", ["stark industries"]),
@@ -67,7 +71,7 @@ export const NODES: GraphNode[] = [
   n("wakanda", "Wakanda", "LOCATION", "Marvel", ["wakanda"]),
   n("black_panther", "Black Panther", "HERO", "Marvel", ["black panther", "t'challa"]),
   n("vibranium", "Vibranium", "COMMODITY", "Marvel", ["vibranium"]),
-  n("doom", "Doctor Doom", "VILLAIN", "Marvel", ["doctor doom", "victor von doom", "dr. doom"]),
+  n("doom", "Doctor Doom", "VILLAIN", "Marvel", ["doctor doom", "victor von doom", "dr. doom"], false, { vindictive: 0.95 }),
   n("fantastic_four", "Fantastic Four", "TEAM", "Marvel", ["fantastic four"]),
 ];
 
@@ -76,6 +80,12 @@ export const EDGES: GraphEdge[] = [
   { from: "joker", to: "gotham", rel: "terrorizes", weight: 0.9 },
   { from: "joker", to: "batman", rel: "nemesis", weight: 0.6 },
   { from: "harley", to: "joker", rel: "accomplice", weight: 0.5 },
+  { from: "gotham", to: "harvey_dent", rel: "district attorney", weight: 0.4 },
+  { from: "harvey_dent", to: "gotham", rel: "district attorney", weight: 0.4 },
+  { from: "joker", to: "two_face", rel: "rivalry", weight: 0.4 },
+  { from: "two_face", to: "joker", rel: "rivalry", weight: 0.4 },
+  { from: "two_face", to: "gotham", rel: "terrorizes", weight: 0.6 },
+  { from: "two_face", to: "batman", rel: "nemesis", weight: 0.5 },
   { from: "batman", to: "gotham", rel: "collateral damage", weight: 0.4 },
   { from: "gotham", to: "batman", rel: "home city", weight: 0.5 },
   { from: "batman", to: "bruce_wayne", rel: "same person", weight: 0.9 },
@@ -119,6 +129,29 @@ export const EDGES: GraphEdge[] = [
   { from: "new_york", to: "stark_industries", rel: "home market", weight: 0.3 },
 ];
 
+/** An alter ego that turns into a persona when defeated: Dent's loss is Two-Face's gain. */
+export const TRANSFORMS: Record<string, string> = { harvey_dent: "two_face", norman_osborn_ego: "green_goblin" };
+
+/**
+ * Defining books for character instruments: the first appearances and landmark issues whose market prices make up
+ * a character's basket. A book absent from the rail table with a price is simply not in the basket.
+ */
+export const CHARACTER_BOOKS: Record<string, { series: string; issue: string; year: number }[]> = {
+  batman: [{ series: "Detective Comics", issue: "27", year: 1939 }, { series: "Batman", issue: "1", year: 1940 }, { series: "Batman", issue: "181", year: 1966 }, { series: "Detective Comics", issue: "400", year: 1970 }],
+  joker: [{ series: "Batman", issue: "1", year: 1940 }, { series: "Batman", issue: "251", year: 1973 }],
+  two_face: [{ series: "Detective Comics", issue: "66", year: 1942 }, { series: "Batman", issue: "50", year: 1949 }],
+  harvey_dent: [{ series: "Detective Comics", issue: "66", year: 1942 }],
+  superman: [{ series: "Action Comics", issue: "1", year: 1938 }, { series: "Superman", issue: "1", year: 1939 }, { series: "Action Comics", issue: "252", year: 1959 }],
+  lex_luthor: [{ series: "Action Comics", issue: "23", year: 1940 }, { series: "Superman", issue: "4", year: 1940 }],
+  spider_man: [{ series: "Amazing Fantasy", issue: "15", year: 1962 }, { series: "Amazing Spider-Man", issue: "1", year: 1963 }, { series: "Amazing Spider-Man", issue: "129", year: 1974 }, { series: "Amazing Spider-Man", issue: "300", year: 1988 }],
+  green_goblin: [{ series: "Amazing Spider-Man", issue: "14", year: 1964 }],
+  kingpin: [{ series: "Amazing Spider-Man", issue: "50", year: 1967 }],
+  daredevil: [{ series: "Daredevil", issue: "1", year: 1964 }],
+  iron_man: [{ series: "Tales of Suspense", issue: "39", year: 1963 }, { series: "Iron Man", issue: "1", year: 1968 }],
+  hulk: [{ series: "Incredible Hulk", issue: "1", year: 1962 }, { series: "Incredible Hulk", issue: "181", year: 1974 }],
+  wolverine: [{ series: "Incredible Hulk", issue: "181", year: 1974 }, { series: "Giant-Size X-Men", issue: "1", year: 1975 }],
+};
+
 /** Series (lowercase substring) → the hero or team whose news moves that book. */
 export const SERIES_ENTITIES: { match: string; node: string }[] = [
   { match: "batman", node: "batman" },
@@ -156,4 +189,24 @@ export function matchEntities(text: string): string[] {
     }
   }
   return hit;
+}
+
+/** Nodes named in a text with where they appear (for who-did-what-to-whom parsing). */
+export function matchEntitiesWithPos(text: string): { id: string; idx: number; end: number }[] {
+  const t = text.toLowerCase();
+  const out: { id: string; idx: number; end: number }[] = [];
+  for (const node of NODES) {
+    let best: { idx: number; end: number } | null = null;
+    for (const a of node.aliases.concat(node.name.toLowerCase())) {
+      if (a.length < 4) continue;
+      const re = new RegExp(`(^|[^a-z0-9])${a.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![a-z0-9])`);
+      const m = re.exec(t);
+      if (m) {
+        const idx = m.index + m[1].length;
+        if (!best || idx < best.idx) best = { idx, end: idx + a.length };
+      }
+    }
+    if (best) out.push({ id: node.id, ...best });
+  }
+  return out.sort((x, y) => x.idx - y.idx);
 }

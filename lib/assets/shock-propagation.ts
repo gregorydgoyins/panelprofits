@@ -9,6 +9,7 @@
 import { EDGES, NODES, matchEntities, nodeById, type GraphEdge } from "./entity-graph";
 import type { LiquidityState } from "./canon-params";
 import { regimeMultiplier, timeKernel, transmissionDraw } from "./market-dynamics";
+import { PRESSURE_CAP, effectsOfOutcome, type Outcome } from "./outcomes";
 
 export type EventKind = "DAMAGE" | "SCARE" | "HYPE" | "MARKET" | "CAPITAL";
 export interface MarketEvent {
@@ -77,6 +78,8 @@ export interface NodeShock {
   stress: number;
   hype: number;
   benefit: number;
+  /** Signed log-premium on market price from who-won-who-lost news. Never value. */
+  pressure: number;
   /** The strongest causal trails, for the newsroom's wikilinks and due diligence. */
   trails: { eventId: string; headline: string; url?: string; path: string[]; effect: number }[];
 }
@@ -85,11 +88,11 @@ export type ShockMap = Map<string, NodeShock>;
 const OUT = new Map<string, GraphEdge[]>();
 for (const e of EDGES) OUT.set(e.from, [...(OUT.get(e.from) ?? []), e]);
 
-export function propagate(events: MarketEvent[], now: number): ShockMap {
+export function propagate(events: MarketEvent[], now: number, outcomes: Outcome[] = []): ShockMap {
   const shocks: ShockMap = new Map();
   const get = (id: string) => {
     let s = shocks.get(id);
-    if (!s) shocks.set(id, (s = { stress: 0, hype: 0, benefit: 0, trails: [] }));
+    if (!s) shocks.set(id, (s = { stress: 0, hype: 0, benefit: 0, pressure: 0, trails: [] }));
     return s;
   };
   const regime = regimeMultiplier(events.reduce((a, e) => a + e.intensity * timeKernel(e.kind, Math.max(0, (now - e.at) / 86_400_000)), 0));
@@ -135,6 +138,16 @@ export function propagate(events: MarketEvent[], now: number): ShockMap {
       s.trails.push({ eventId: ev.id, headline: ev.headline, url: ev.url, path, effect: eff });
     }
   }
+  for (const o of outcomes) {
+    for (const [id, fx] of effectsOfOutcome(o, now)) {
+      const s = get(id);
+      s.pressure = Math.max(-PRESSURE_CAP, Math.min(PRESSURE_CAP, s.pressure + fx.pressure));
+      s.stress = 1 - (1 - s.stress) * (1 - Math.min(0.95, fx.stress));
+      s.hype = 1 - (1 - s.hype) * (1 - Math.min(0.95, fx.hype));
+      s.benefit = 1 - (1 - s.benefit) * (1 - Math.min(0.95, fx.benefit));
+      s.trails.push(fx.trail);
+    }
+  }
   for (const s of shocks.values()) s.trails.sort((a, b) => Math.abs(b.effect) - Math.abs(a.effect)), (s.trails = s.trails.slice(0, 5));
   return shocks;
 }
@@ -163,15 +176,18 @@ export interface Conditions {
   creditAdd: number; // decimal spread added
   /** relative change in a benefactor's wealth from capital flows */
   flow: number;
+  /** signed log-premium on market price */
+  pressure: number;
 }
 
 export function conditionsFor(s: NodeShock | undefined): Conditions {
-  if (!s) return { volMult: 1, stateSteps: 0, creditAdd: 0, flow: 0 };
+  if (!s) return { volMult: 1, stateSteps: 0, creditAdd: 0, flow: 0, pressure: 0 };
   return {
     volMult: Math.min(1.75, 1 + SENSITIVITY.volStress * s.stress + SENSITIVITY.volHype * s.hype),
     stateSteps: s.stress >= 0.9 ? 2 : s.stress >= 0.6 ? 1 : 0,
     creditAdd: Math.max(0, SENSITIVITY.creditStress * s.stress - 0.002 * s.benefit),
     flow: 0.04 * s.benefit,
+    pressure: s.pressure,
   };
 }
 
@@ -183,13 +199,14 @@ export function degradeState(state: LiquidityState, steps: number): LiquiditySta
 
 /** Combined conditions for a set of nodes (a book touches its hero, team and so on): worst stress, summed hype/benefit. */
 export function conditionsForNodes(ids: string[], shocks: ShockMap): Conditions & { trails: NodeShock["trails"] } {
-  const merged: NodeShock = { stress: 0, hype: 0, benefit: 0, trails: [] };
+  const merged: NodeShock = { stress: 0, hype: 0, benefit: 0, pressure: 0, trails: [] };
   for (const id of ids) {
     const s = shocks.get(id);
     if (!s) continue;
     merged.stress = Math.max(merged.stress, s.stress);
     merged.hype = Math.min(1, merged.hype + s.hype);
     merged.benefit = Math.min(1, merged.benefit + s.benefit);
+    merged.pressure = Math.max(-PRESSURE_CAP, Math.min(PRESSURE_CAP, merged.pressure + s.pressure));
     merged.trails.push(...s.trails);
   }
   merged.trails.sort((a, b) => Math.abs(b.effect) - Math.abs(a.effect));

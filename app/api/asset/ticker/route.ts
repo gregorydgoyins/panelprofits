@@ -13,9 +13,10 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const randomStart = searchParams.get("randomStart") === "1" || searchParams.get("reload") === "1";
 
-  const [baseUnders, shocks] = await Promise.all([getUnderlyings().catch(() => []), getShocks().catch(() => new Map())]);
-  const unders = applyShocks(baseUnders, shocks, Date.now());
-  const issued = issueInstruments(unders, shocks);
+  const now = Date.now();
+  const [baseUnders, state] = await Promise.all([getUnderlyings().catch(() => []), getShocks().catch(() => ({ shocks: new Map(), outcomes: [] }))]);
+  const unders = applyShocks(baseUnders, state.shocks, now);
+  const issued = issueInstruments(unders, state.shocks, now, state.outcomes);
 
   const surfaces: Partial<Record<SurfaceKey, SurfaceData>> = {};
   let total = 0;
