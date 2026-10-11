@@ -27,9 +27,9 @@ describe("character universe census", () => {
     const now = Date.parse("2026-10-11T12:00:00Z");
     const unders = buildUnderlyings({ rail: [row("a", "Detective Comics", "27", 1939, 900000), row("b", "Batman", "404", 1987, 150)], ppHistory: [], news: [], now });
     const items = issueCharacters(unders, new Map(), now, census);
-    const bat = items.find((i) => i.assetId.endsWith("batman"));
+    const bat = items.find((i) => String(i.assetId).endsWith("batman"));
     expect(!!bat).toBe(true);
-    expect(String(bat!.description)).toContain("12,518 in main continuity");
+    expect(String(bat!.description).includes("12,518 in main continuity")).toBe(true);
     expect((bat!.parameters as any).universe.individuals).toBe(25709);
   });
 });
