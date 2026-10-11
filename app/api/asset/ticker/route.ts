@@ -3,6 +3,7 @@ import { SURFACE_ORDER, type SurfaceKey } from "@/lib/assets/surfaceConfig";
 import type { AssetItem, AssetResponse, SurfaceData } from "@/lib/assets/types";
 import { applyShocks, getUnderlyings } from "@/lib/assets/underlyings";
 import { getShocks } from "@/lib/assets/shocks";
+import { getUniverseCensus } from "@/lib/assets/universe";
 import { issueInstruments } from "@/lib/assets/instruments";
 
 /**
@@ -14,9 +15,9 @@ export async function GET(request: Request) {
   const randomStart = searchParams.get("randomStart") === "1" || searchParams.get("reload") === "1";
 
   const now = Date.now();
-  const [baseUnders, state] = await Promise.all([getUnderlyings().catch(() => []), getShocks().catch(() => ({ shocks: new Map(), outcomes: [] }))]);
+  const [baseUnders, state, census] = await Promise.all([getUnderlyings().catch(() => []), getShocks().catch(() => ({ shocks: new Map(), outcomes: [] })), getUniverseCensus().catch(() => [])]);
   const unders = applyShocks(baseUnders, state.shocks, now);
-  const issued = issueInstruments(unders, state.shocks, now, state.outcomes);
+  const issued = issueInstruments(unders, state.shocks, now, state.outcomes, census);
 
   const surfaces: Partial<Record<SurfaceKey, SurfaceData>> = {};
   let total = 0;
@@ -35,6 +36,7 @@ export async function GET(request: Request) {
     tickId: Math.floor(Date.now() / 30000),
     totalShowing: total,
     totalEligible: total,
+    universeCensus: census,
     surfaces,
   };
   return NextResponse.json(response, {

@@ -8,6 +8,7 @@ import { CHARACTER_BOOKS, nodeById } from "./entity-graph";
 import { marketFactor } from "./market-dynamics";
 import { conditionsFor, type ShockMap } from "./shock-propagation";
 import type { Underlying } from "./underlyings";
+import { censusKey, censusLine, type UniverseCensus } from "./universe";
 
 const r2 = (x: number) => Math.round(x * 100) / 100;
 
@@ -20,7 +21,7 @@ export function characterSurface(id: string): "VILLAIN" | "DC_CHARACTER" | "CHAR
   return null;
 }
 
-export function issueCharacters(unders: Underlying[], shocks: ShockMap, now: number): AssetItem[] {
+export function issueCharacters(unders: Underlying[], shocks: ShockMap, now: number, census: UniverseCensus[] = []): AssetItem[] {
   const out: AssetItem[] = [];
   const idx = new Map(unders.map((u) => [`${u.series.toLowerCase()}|${u.issueNumber}|${u.year ?? ""}`, u]));
   let i = 0;
@@ -43,10 +44,10 @@ export function issueCharacters(unders: Underlying[], shocks: ShockMap, now: num
       diversityBucket: "standard",
       symbol: `$${nodeId.replace(/_/g, "").toUpperCase().slice(0, 5)}`,
       displayName: node.name,
-      description: `Basket of ${basket.length} defining book${basket.length > 1 ? "s" : ""} · ${node.universe}`,
+      description: `Basket of ${basket.length} defining book${basket.length > 1 ? "s" : ""} · ${node.universe}${census.length ? ` · one of ${censusLine(census.find((c) => c.universe === censusKey(node.universe)))}` : ""}`,
       universe: node.universe,
       pricing: { fmv_usd: r2(price), fmv: r2(price), price: r2(price), formula: "Basket = mean(market price of defining books) × news pressure × market texture" },
-      parameters: { books: basket.map((b) => b.label), sigma, trails: shocks.get(nodeId)?.trails ?? [] },
+      parameters: { books: basket.map((b) => b.label), sigma, universe: census.find((c) => c.universe === censusKey(node.universe)) ?? null, trails: shocks.get(nodeId)?.trails ?? [] },
       valueUnit: "USD",
       detailUrl: lead.detailUrl,
       coverImageUrl: lead.coverUrl,

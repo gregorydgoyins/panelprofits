@@ -34,4 +34,5 @@ export interface AssetResponse {
   totalShowing: number;
   totalEligible: number;
   surfaces: Partial<Record<SurfaceKey, SurfaceData>>;
+  universeCensus?: import("./universe").UniverseCensus[];
 }
