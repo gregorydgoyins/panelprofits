@@ -311,11 +311,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
   } catch (_) {}
 
   const obsCountByGrade = new Map<string, number>();
-  for (const obs of dbObservations) {
-    if (obs.grade_label) {
-      obsCountByGrade.set(obs.grade_label, (obsCountByGrade.get(obs.grade_label) || 0) + 1);
-    }
-  }
+  // Volume comes from dated sales only; a count of stored price rows is not sales volume.
   for (const sale of salesObservations) {
     if (sale.native_grade_text) {
       obsCountByGrade.set(sale.native_grade_text, (obsCountByGrade.get(sale.native_grade_text) || 0) + 1);
