@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   extractFandomSynopsis,
+  parseFandomWikitext,
   extractLocgIssue,
   fandomPageTitle,
   normalizeTitle,
@@ -35,6 +36,48 @@ describe("fandom synopsis extraction", () => {
   it("returns null when there is no synopsis section or it is a stub", () => {
     expect(extractFandomSynopsis("<h2>See Also</h2><p>x</p>")).toBeNull();
     expect(extractFandomSynopsis('<h2><span>Synopsis for "A"</span></h2><p>Short.</p>')).toBeNull();
+  });
+});
+
+describe("fandom wikitext parsing", () => {
+  const sampleWikitext = `
+{{Marvel Database:Comic Template
+| StoryTitle1 = We Were Avengers
+| Quotation = Get everyone together, [[James Howlett (Earth-616)|Logan]]... Tell them we're going to [[Mars (Planet)|Mars]].
+| Speaker = [[Steven Rogers (Earth-616)|Captain America]]
+| Writer1_1 = Jonathan Hickman
+| Penciler1_1 = Jerome Opeña
+| Synopsis1 = In the past, Tony and Steve discuss creating this new team. [[Steven Rogers (Earth-616)|Captain America]] leads them to [[Mars (Planet)|Mars]].
+| Appearing1 =
+'''Featured Characters:'''
+* {{Flashback|[[Steven Rogers (Earth-616)|Captain America (Steve Rogers)]]}}
+* {{a|[[Anthony Stark (Earth-616)|Iron Man (Tony Stark)]]}}
+'''Antagonists:'''
+* {{a|[[Ex Nihilo (Earth-616)|Ex Nihilo]]}}
+'''Other Characters:'''
+* {{a|[[Builders]]}} (First appearance)
+'''Locations:'''
+* [[Mars (Planet)|Mars]]
+'''Items:'''
+* [[Mjolnir]]
+}}
+`;
+
+  it("extracts story title, quotation, synopsis with markdown links, credits, and entity census", () => {
+    const res = parseFandomWikitext(sampleWikitext, "marvel.fandom.com")!;
+    expect(res).not.toBeNull();
+    expect(res.storyTitle).toBe("We Were Avengers");
+    expect(res.quote?.text).toContain("[Logan](https://marvel.fandom.com/wiki/James_Howlett_(Earth-616))");
+    expect(res.quote?.speaker).toContain("[Captain America](https://marvel.fandom.com/wiki/Steven_Rogers_(Earth-616))");
+    expect(res.text).toContain("[Captain America](https://marvel.fandom.com/wiki/Steven_Rogers_(Earth-616))");
+    expect(res.credits?.writers).toContain("Jonathan Hickman");
+    expect(res.credits?.pencilers).toContain("Jerome Opeña");
+    expect(res.entities?.featuredCharacters?.length).toBe(2);
+    expect(res.entities?.antagonists?.length).toBe(1);
+    expect(res.entities?.firstAppearances?.length).toBe(1);
+    expect(res.entities?.firstAppearances?.[0].label).toBe("Builders");
+    expect(res.entities?.locations?.length).toBe(1);
+    expect(res.entities?.items?.length).toBe(1);
   });
 });
 

@@ -5,6 +5,7 @@ import {
   comicBaseGrades,
   comicBaseReference,
   ebayGrades,
+  egsGrades,
   getHighestGradedPrice,
   goCollectCgcGrades,
   goCollectCbcsGrades,
@@ -16,6 +17,7 @@ import {
   panelProfitsDelta,
   panelProfitsVolume,
   panelProfitsListings,
+  pgxGrades,
   priceChartingGrades,
   psaGrades,
 } from "@/lib/pricing/source-ladder";
@@ -54,6 +56,8 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
   const cgcGpaGrades = cgcGrades(comic);
   const cbcsLadder = cbcsGrades(comic);
   const psaLadder = psaGrades(comic);
+  const pgxLadder = pgxGrades(comic);
+  const egsLadder = egsGrades(comic);
 
   const rawCoverPrice =
     (comic.panel_profits_data as any)?.coverPrice ??
@@ -72,6 +76,8 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
     "CGC · GPA sales": cgcGpaGrades,
     "CBCS": cbcsLadder,
     "PSA": psaLadder,
+    "PGX": pgxLadder,
+    "EGS / EGA": egsLadder,
     "eBay Sold Transactions": ebayLadder,
     "ComicBase": cbGrades,
   });
@@ -289,6 +295,40 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
         };
       }),
     },
+
+    // 9. PGX CERTIFIED OBSERVATIONS
+    {
+      id: "pgx",
+      source: "PGX",
+      badge: "PGX Certified Only",
+      badgeClass: "text-emerald-400/80",
+      isGradedOnly: true,
+      alwaysShow: false,
+      values: buildRowValues((grade: Grade) => {
+        const p = pgxLadder[grade];
+        return {
+          display: p ? formatCurrency(p) : "—",
+          colorClass: p ? "text-emerald-300 font-medium" : "text-slate-600",
+        };
+      }),
+    },
+
+    // 10. EGS / EGA CERTIFIED OBSERVATIONS
+    {
+      id: "egs",
+      source: "EGS / EGA",
+      badge: "European Grading Service",
+      badgeClass: "text-sky-400/80",
+      isGradedOnly: true,
+      alwaysShow: false,
+      values: buildRowValues((grade: Grade) => {
+        const p = egsLadder[grade];
+        return {
+          display: p ? formatCurrency(p) : "—",
+          colorClass: p ? "text-sky-300 font-medium" : "text-slate-600",
+        };
+      }),
+    },
   ];
 
   // Dynamic Filtering: Render rows that have at least 1 verified data point for this comic.
@@ -306,6 +346,8 @@ export async function PricingDossier({ comic }: { comic: ComicRecord }) {
     { name: "CGC · GPA", count: Object.keys(cgcGpaGrades).length },
     { name: "CBCS", count: Object.keys(cbcsLadder).length + Object.keys(gcCbcsGrades).length },
     { name: "PSA", count: Object.keys(psaLadder).length + Object.keys(gcPsaGrades).length },
+    { name: "PGX", count: Object.keys(pgxLadder).length },
+    { name: "EGS / EGA", count: Object.keys(egsLadder).length },
     { name: "eBay Sold", count: Object.keys(ebayLadder).length },
     { name: "GoCollect", count: Object.keys(gcCgcGrades).length },
   ].filter((a) => a.count === 0);

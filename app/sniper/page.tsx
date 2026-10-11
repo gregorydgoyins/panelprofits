@@ -11,9 +11,9 @@ import {
 import { evaluateAuctionListing } from "@/lib/sniper/radar-engine";
 import { getEraDisplayName } from "@/lib/sniper/anti-bullshit";
 import { SlabEncasement } from "@/components/sniper/SlabEncasement";
+import { SniperStoryLore } from "@/components/sniper/SniperStoryLore";
 import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
 import { EquityCandlestickChart } from "@/components/equity/equity-candlestick-chart";
-import initialLiveAuctions from "@/data/live_auctions.json";
 
 interface PaperSnipeRecord {
   orderId: string;
@@ -23,7 +23,7 @@ interface PaperSnipeRecord {
   source: string;
   bidPrice: number;
   finalSoldPrice: number;
-  status: "WON" | "OUTBID";
+  status: "WON" | "OUTBID" | "ARMED";
   paperAlpha: number;
   whyBought: string;
   targetWinPrice100Pct?: number;
@@ -152,9 +152,7 @@ export default function SniperRadarPage() {
   const [viewMode, setViewMode] = useState<"LIVE" | "MISSED" | "ACQUIRED">("LIVE");
 
   // DYNAMIC LIVE AUCTION STREAM (Active Open-Web Stream)
-  const [auctionsList, setAuctionsList] = useState<RawAuctionListing[]>(
-    initialLiveAuctions as unknown as RawAuctionListing[]
-  );
+  const [auctionsList, setAuctionsList] = useState<RawAuctionListing[]>([]);
   const [isLoadingLive, setIsLoadingLive] = useState<boolean>(false);
   const [lastRefreshedAt, setLastRefreshedAt] = useState<string>("");
   const [liveStreamSource, setLiveStreamSource] = useState<string>("live_ebay_stream");
@@ -229,39 +227,63 @@ export default function SniperRadarPage() {
   const [scannerInput, setScannerInput] = useState<string>("");
   const [scannerMessage, setScannerMessage] = useState<string | null>(null);
 
-  const handleScanItem = (e: React.FormEvent) => {
+  const handleScanItem = async (e: React.FormEvent) => {
     e.preventDefault();
     const query = scannerInput.trim();
     if (!query) return;
 
     const idMatch = query.match(/(\d{10,14})/);
-    const itemId = idMatch ? idMatch[1] : `scan-${Date.now()}`;
+    const itemId = idMatch ? idMatch[1] : null;
 
-    const existing = auctionsList.find(a => a.id.includes(itemId));
+    if (!itemId) {
+      setScannerMessage("Please enter a valid eBay listing URL or 12-digit eBay Item ID.");
+      setTimeout(() => setScannerMessage(null), 4000);
+      return;
+    }
+
+    const existing = auctionsList.find((a) => a.id.includes(itemId));
     if (existing) {
       setScannerMessage(`Listing #${itemId} is already in your live radar!`);
       setTimeout(() => setScannerMessage(null), 4000);
       return;
     }
 
-    const newListing: RawAuctionListing = {
-      id: `ebay-${itemId}`,
-      source: "ebay",
-      title: query.includes("http") ? `Live Graded Key Auction #${itemId} CGC 9.8` : query,
-      currentBid: 72.00,
-      shippingCost: 14.00,
-      bidCount: 5,
-      secondsRemaining: 180,
-      url: query.startsWith("http") ? query : `https://www.ebay.com/itm/${itemId}`,
-      imageUrl: "",
-      certNumber: itemId.slice(0, 10),
-      itemDescription: `Live scanned active auction #${itemId}. Real-time candidate.`,
-    };
+    setScannerMessage(`Fetching verified listing details for #${itemId} from eBay API...`);
 
-    setAuctionsList([newListing, ...auctionsList]);
-    setScannerInput("");
-    setScannerMessage(`Successfully ingested live listing #${itemId}!`);
-    setTimeout(() => setScannerMessage(null), 4000);
+    try {
+      const res = await fetch(`/api/sniper/item-details?id=${encodeURIComponent(itemId)}`);
+      const data = await res.json();
+
+      if (!data.success || !data.details) {
+        setScannerMessage(`Listing #${itemId} not found or details unavailable on eBay API.`);
+        setTimeout(() => setScannerMessage(null), 5000);
+        return;
+      }
+
+      const d = data.details;
+      const newListing: RawAuctionListing = {
+        id: `ebay-${itemId}`,
+        source: "ebay",
+        title: d.title,
+        currentBid: 0,
+        shippingCost: 0,
+        bidCount: 0,
+        secondsRemaining: 900,
+        url: `https://www.ebay.com/itm/${itemId}`,
+        imageUrl: d.images?.[0] || "",
+        galleryImages: d.images || [],
+        certNumber: d.aspects?.certNumber,
+        itemDescription: d.description || `Live scanned active auction #${itemId}.`,
+      };
+
+      setAuctionsList([newListing, ...auctionsList]);
+      setScannerInput("");
+      setScannerMessage(`Successfully ingested verified listing: "${d.title}"!`);
+      setTimeout(() => setScannerMessage(null), 4000);
+    } catch (err) {
+      setScannerMessage(`Failed to reach eBay API for listing #${itemId}.`);
+      setTimeout(() => setScannerMessage(null), 5000);
+    }
   };
 
   // Configurable Hunter Filter Profile (Centered on lower sub-$1500 ranges)
@@ -320,6 +342,37 @@ export default function SniperRadarPage() {
     "all" | "matrix" | "investopedia" | "video" | "financial" | "chart" | "census" | "lore" | "gcd" | "signature"
   >("all");
   const [showPlansModal, setShowPlansModal] = useState<boolean>(false);
+  const [liveComps, setLiveComps] = useState<Array<{ venue: string; date: string; grade: number; price: number; title?: string; url?: string }> | null>(null);
+  const [loadingComps, setLoadingComps] = useState<boolean>(false);
+
+  // Fetch verified real-time eBay and certified sales comps whenever an item is inspected
+  useEffect(() => {
+    if (!inspectedDeal) {
+      setLiveComps(null);
+      return;
+    }
+
+    setLoadingComps(true);
+    const params = new URLSearchParams({
+      series: inspectedDeal.resolvedSeries,
+      issue: inspectedDeal.resolvedIssue,
+    });
+
+    fetch(`/api/sniper/comps?${params.toString()}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.success && Array.isArray(data.comps)) {
+          setLiveComps(data.comps);
+        } else {
+          setLiveComps([]);
+        }
+        setLoadingComps(false);
+      })
+      .catch(() => {
+        setLiveComps([]);
+        setLoadingComps(false);
+      });
+  }, [inspectedDeal?.resolvedSeries, inspectedDeal?.resolvedIssue]);
 
 
   // Paper Snipe Orders Ledger State
@@ -550,14 +603,10 @@ export default function SniperRadarPage() {
     );
     if (isAlreadySniped) return;
 
-    const winProbability = 0.88;
-    const isWon = Math.random() < winProbability;
-    const finalSoldPrice = isWon
-      ? deal.allInCost + 2.5
-      : deal.recommendedMaxBid + 15.0;
-    const profitAlpha = isWon
-      ? Math.max(0, deal.projectedNetProfit)
-      : 0;
+    const isAuction = Boolean(deal.listing.secondsRemaining && deal.listing.secondsRemaining > 0);
+    const finalSoldPrice = deal.allInCost;
+    const profitAlpha = isAuction ? 0 : Math.max(0, deal.projectedNetProfit);
+    const orderStatus: "WON" | "OUTBID" | "ARMED" = isAuction ? "ARMED" : "WON";
 
     const newOrder: PaperSnipeRecord = {
       orderId: `SNIPE-${Date.now().toString().slice(-6)}`,
@@ -565,9 +614,9 @@ export default function SniperRadarPage() {
       comicTitle: deal.listing.title,
       certNumber: deal.certNumber,
       source: deal.listing.source,
-      bidPrice: deal.allInCost,
+      bidPrice: isAuction ? deal.recommendedMaxBid : deal.allInCost,
       finalSoldPrice,
-      status: isWon ? "WON" : "OUTBID",
+      status: orderStatus,
       paperAlpha: profitAlpha,
       whyBought: deal.whyItsAGoodBuy,
       targetWinPrice100Pct: deal.targetWinPrice100Pct,
@@ -575,10 +624,10 @@ export default function SniperRadarPage() {
     };
 
     setPaperOrders([newOrder, ...paperOrders]);
-    if (isWon) {
+    if (orderStatus === "WON") {
       setSimulatedAlpha((prev) => prev + profitAlpha);
       setSnipeSuccessToast(
-        `🎯 SNIPE HIT! Acquired ${deal.resolvedSeries} #${deal.resolvedIssue} at $${finalSoldPrice.toFixed(2)}. Unrealized Alpha: +$${profitAlpha.toFixed(2)}`
+        `🎯 ACQUIRED: ${deal.resolvedSeries} #${deal.resolvedIssue} secured at verified listing floor $${finalSoldPrice.toFixed(2)}. Projected Alpha: +$${profitAlpha.toFixed(2)}`
       );
 
       // Auto-vault won book into "What You've Acquired"
@@ -613,7 +662,7 @@ export default function SniperRadarPage() {
       saveAcquiredBooks([newAcquired, ...acquiredBooks]);
     } else {
       setSnipeSuccessToast(
-        `⚠️ OUTBID: Another sniper bid $${finalSoldPrice.toFixed(2)}. Capital preserved.`
+        `🎯 SNIPE ARMED: Order queued at T-2s for ${deal.resolvedSeries} #${deal.resolvedIssue} with max limit bid $${deal.recommendedMaxBid.toFixed(2)}.`
       );
     }
 
@@ -1992,6 +2041,8 @@ export default function SniperRadarPage() {
                           className={`px-1.5 py-0.2 rounded text-[10px] font-bold ${
                             order.status === "WON"
                               ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                              : order.status === "ARMED"
+                              ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40"
                               : "bg-rose-500/20 text-rose-400 border border-rose-500/40"
                           }`}
                         >
@@ -2416,12 +2467,35 @@ export default function SniperRadarPage() {
                     {/* Financial Concept Hero */}
                     <div className="bg-emerald-950/20 border border-emerald-500/30 rounded-lg p-3 space-y-1.5">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-mono font-bold text-emerald-300 uppercase">
-                          {inspectedDeal.investopediaLens.term}
-                        </span>
-                        <span className="text-[10px] font-mono text-emerald-400/80">
-                          Investopedia Financial Dictionary
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-mono font-bold text-emerald-300 uppercase">
+                            {inspectedDeal.investopediaLens.term}
+                          </span>
+                          <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-950 border border-emerald-500/40 text-emerald-400">
+                            CBR Lexicon Anchor
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px] font-mono">
+                          <a
+                            href={`https://www.investopedia.com/search?q=${encodeURIComponent(inspectedDeal.investopediaLens.term)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-emerald-400 hover:text-emerald-200 underline inline-flex items-center gap-0.5"
+                          >
+                            <span>Investopedia™</span>
+                            <span className="text-[9px]">↗</span>
+                          </a>
+                          <span className="text-slate-600">•</span>
+                          <a
+                            href={`/lexicon?q=${encodeURIComponent(inspectedDeal.investopediaLens.term)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-cyan-400 hover:text-cyan-200 underline inline-flex items-center gap-0.5"
+                          >
+                            <span>CBR Market Lexicon</span>
+                            <span className="text-[9px]">↗</span>
+                          </a>
+                        </div>
                       </div>
                       <p className="text-xs text-slate-300 leading-relaxed font-sans">
                         {inspectedDeal.investopediaLens.definition}
@@ -2688,47 +2762,68 @@ export default function SniperRadarPage() {
                       </div>
 
                       <div className="overflow-x-auto">
-                        <table className="w-full text-[11px] font-mono text-left">
-                          <thead>
-                            <tr className="text-slate-500 border-b border-slate-800 text-[10px] uppercase">
-                              <th className="pb-1.5 font-bold">Venue</th>
-                              <th className="pb-1.5 font-bold">Sale Date</th>
-                              <th className="pb-1.5 font-bold">Grade</th>
-                              <th className="pb-1.5 font-bold text-right">Realized Price</th>
-                              <th className="pb-1.5 font-bold text-right">Trajectory</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-800/60">
-                            {(inspectedDeal.historicalComps && inspectedDeal.historicalComps.length > 0
-                              ? inspectedDeal.historicalComps
-                              : [
-                                  { venue: "eBay Realized", date: "Recent", grade: inspectedDeal.resolvedGrade, price: Math.round(inspectedDeal.anchorFmv * 0.98) },
-                                  { venue: "Heritage Auctions", date: "1 mo ago", grade: inspectedDeal.resolvedGrade, price: Math.round(inspectedDeal.anchorFmv * 1.04) },
-                                  { venue: "eBay Realized", date: "2 mos ago", grade: inspectedDeal.resolvedGrade, price: Math.round(inspectedDeal.anchorFmv * 0.95) },
-                                  { venue: "ComicConnect", date: "3 mos ago", grade: inspectedDeal.resolvedGrade, price: Math.round(inspectedDeal.anchorFmv * 1.02) },
-                                  { venue: "eBay Realized", date: "4 mos ago", grade: inspectedDeal.resolvedGrade, price: Math.round(inspectedDeal.anchorFmv * 0.92) },
-                                  { venue: "MyComicShop", date: "5 mos ago", grade: inspectedDeal.resolvedGrade, price: Math.round(inspectedDeal.anchorFmv * 0.99) },
-                                  { venue: "eBay Realized", date: "6 mos ago", grade: inspectedDeal.resolvedGrade, price: Math.round(inspectedDeal.anchorFmv * 0.94) },
-                                  { venue: "Heritage Auctions", date: "7 mos ago", grade: inspectedDeal.resolvedGrade, price: Math.round(inspectedDeal.anchorFmv * 1.06) },
-                                  { venue: "eBay Realized", date: "8 mos ago", grade: inspectedDeal.resolvedGrade, price: Math.round(inspectedDeal.anchorFmv * 0.91) },
-                                  { venue: "Goldin Auctions", date: "9 mos ago", grade: inspectedDeal.resolvedGrade, price: Math.round(inspectedDeal.anchorFmv * 1.01) },
-                                ]
-                            ).slice(0, 10).map((comp, idx) => {
-                              const delta = ((comp.price - inspectedDeal.allInCost) / inspectedDeal.allInCost) * 100;
+                        {loadingComps ? (
+                          <div className="p-4 text-center text-xs font-mono text-slate-500 animate-pulse">
+                            Querying live eBay Developer API &amp; verified certified comp registers...
+                          </div>
+                        ) : (() => {
+                            const activeComps =
+                              liveComps && liveComps.length > 0
+                                ? liveComps
+                                : inspectedDeal.historicalComps && inspectedDeal.historicalComps.length > 0
+                                ? inspectedDeal.historicalComps
+                                : [];
+
+                            if (activeComps.length === 0) {
                               return (
-                                <tr key={idx} className="hover:bg-slate-900/40">
-                                  <td className="py-1 text-slate-300 font-medium">{comp.venue}</td>
-                                  <td className="py-1 text-slate-400">{comp.date}</td>
-                                  <td className="py-1 text-cyan-300 font-bold">{comp.grade ? comp.grade.toFixed(1) : inspectedDeal.resolvedGrade.toFixed(1)}</td>
-                                  <td className="py-1 text-right text-emerald-400 font-bold">${comp.price.toFixed(2)}</td>
-                                  <td className={`py-1 text-right font-bold ${delta >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                    {delta >= 0 ? `+${Math.round(delta)}%` : `${Math.round(delta)}%`}
-                                  </td>
-                                </tr>
+                                <div className="p-4 text-center text-xs font-mono text-slate-500 bg-black/40 rounded-lg border border-slate-800">
+                                  No certified secondary market sales recorded yet for this specific issue edition. Current bids anchored against universal FMV baseline.
+                                </div>
                               );
-                            })}
-                          </tbody>
-                        </table>
+                            }
+
+                            return (
+                              <table className="w-full text-[11px] font-mono text-left">
+                                <thead>
+                                  <tr className="text-slate-500 border-b border-slate-800 text-[10px] uppercase">
+                                    <th className="pb-1.5 font-bold">Venue</th>
+                                    <th className="pb-1.5 font-bold">Observation Date</th>
+                                    <th className="pb-1.5 font-bold">Grade</th>
+                                    <th className="pb-1.5 font-bold text-right">Realized / Ask Price</th>
+                                    <th className="pb-1.5 font-bold text-right">Trajectory vs Cost</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-800/60">
+                                  {activeComps.slice(0, 12).map((comp, idx) => {
+                                    const delta = ((comp.price - inspectedDeal.allInCost) / inspectedDeal.allInCost) * 100;
+                                    return (
+                                      <tr key={idx} className="hover:bg-slate-900/40">
+                                        <td className="py-1.5 text-slate-300 font-medium flex items-center gap-1.5">
+                                          <span>{comp.venue}</span>
+                                          {comp.url && (
+                                            <a
+                                              href={comp.url}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="text-cyan-400 hover:text-cyan-200"
+                                            >
+                                              ↗
+                                            </a>
+                                          )}
+                                        </td>
+                                        <td className="py-1.5 text-slate-400">{comp.date}</td>
+                                        <td className="py-1.5 text-cyan-300 font-bold">{comp.grade ? comp.grade.toFixed(1) : inspectedDeal.resolvedGrade.toFixed(1)}</td>
+                                        <td className="py-1.5 text-right text-emerald-400 font-bold">${comp.price.toFixed(2)}</td>
+                                        <td className={`py-1.5 text-right font-bold ${delta >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                          {delta >= 0 ? `+${Math.round(delta)}%` : `${Math.round(delta)}%`}
+                                        </td>
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            );
+                          })()}
                       </div>
                     </div>
                   </div>
@@ -2779,42 +2874,39 @@ export default function SniperRadarPage() {
                     PERSPECTIVE 3: HISTORICAL LORE & COLLECTOR CANON
                     ════════════════════════════════════════════════════════════════════════ */}
                 {(modalPerspective === "all" || modalPerspective === "lore") && (
-                  <div className="bg-[#070C18] border border-amber-500/40 rounded-xl p-4 space-y-3 shadow-lg">
+                  <div className="bg-[#070C18] border border-amber-500/40 rounded-xl p-4 space-y-4 shadow-lg">
                     <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                      <span className="text-xs font-mono font-bold text-amber-400 uppercase flex items-center gap-1.5">
-                        <span>📜</span> COLLECTOR LORE &amp; HISTORICAL CANON
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono font-bold text-amber-400 uppercase flex items-center gap-1.5">
+                          <span>📜</span> FANDOM STORY SYNOPSIS &amp; HISTORICAL CANON
+                        </span>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-500/30">
+                          Wiki Cross-Walk
+                        </span>
+                      </div>
                       <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-500/40 uppercase">
                         {inspectedDeal.historicalSignificanceTier || "HISTORIC_LANDMARK"}
                       </span>
                     </div>
 
-                    <div className="space-y-2">
-                      <div className="text-xs text-amber-200/90 leading-relaxed font-sans bg-amber-950/20 border border-amber-500/20 p-3 rounded-lg">
-                        <strong className="text-amber-400 font-mono text-[11px] block uppercase mb-1">
-                          Alpha Thesis &amp; Commercial Arbitrage Rationale:
+                    {/* Integrated Encyclopedic Fandom Lore Dossier */}
+                    <SniperStoryLore
+                      series={inspectedDeal.resolvedSeries}
+                      issueNumber={inspectedDeal.resolvedIssue}
+                      year={inspectedDeal.resolvedYear}
+                      publisher={inspectedDeal.gcdMetadata?.publisher}
+                      fallbackLore={inspectedDeal.historicalSignificanceLore}
+                      whyItsAGoodBuy={inspectedDeal.whyItsAGoodBuy}
+                    />
+
+                    {inspectedDeal.longTermHoldingThesis && (
+                      <div className="text-xs text-purple-200/90 leading-relaxed font-sans bg-purple-950/20 border border-purple-500/20 p-3 rounded-lg">
+                        <strong className="text-purple-400 font-mono text-[11px] block uppercase mb-1">
+                          Long-Term Holding Thesis (Beyond Short Flips):
                         </strong>
-                        {inspectedDeal.whyItsAGoodBuy}
+                        {inspectedDeal.longTermHoldingThesis}
                       </div>
-
-                      {inspectedDeal.historicalSignificanceLore && (
-                        <div className="text-xs text-slate-200 leading-relaxed font-sans bg-black/60 border border-slate-800 p-3 rounded-lg">
-                          <strong className="text-purple-300 font-mono text-[11px] block uppercase mb-1">
-                            Narrative Milestone &amp; Cultural Impact:
-                          </strong>
-                          {inspectedDeal.historicalSignificanceLore}
-                        </div>
-                      )}
-
-                      {inspectedDeal.longTermHoldingThesis && (
-                        <div className="text-xs text-purple-200/90 leading-relaxed font-sans bg-purple-950/20 border border-purple-500/20 p-3 rounded-lg">
-                          <strong className="text-purple-400 font-mono text-[11px] block uppercase mb-1">
-                            Long-Term Holding Thesis (Beyond Short Flips):
-                          </strong>
-                          {inspectedDeal.longTermHoldingThesis}
-                        </div>
-                      )}
-                    </div>
+                    )}
                   </div>
                 )}
 
@@ -2832,35 +2924,89 @@ export default function SniperRadarPage() {
                       </span>
                     </div>
 
-                    <div className="bg-black/60 rounded-lg p-3 border border-slate-800 text-xs font-mono space-y-2">
+                    <div className="bg-black/60 rounded-lg p-3 border border-slate-800 text-xs font-mono space-y-2.5">
                       {inspectedDeal.gcdMetadata?.writers && inspectedDeal.gcdMetadata.writers.length > 0 && (
-                        <div className="flex justify-between text-slate-300">
+                        <div className="flex justify-between items-center text-slate-300">
                           <span className="text-slate-500">Writer(s):</span>
-                          <span className="text-blue-200 font-medium">{inspectedDeal.gcdMetadata.writers.join(", ")}</span>
+                          <div className="flex flex-wrap gap-1.5 justify-end">
+                            {inspectedDeal.gcdMetadata.writers.map((writer, idx) => (
+                              <a
+                                key={idx}
+                                href={`/search?q=${encodeURIComponent(writer)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-cyan-400 hover:text-cyan-200 underline underline-offset-2 transition-colors font-medium"
+                              >
+                                {writer}
+                              </a>
+                            ))}
+                          </div>
                         </div>
                       )}
                       {inspectedDeal.gcdMetadata?.pencilers && inspectedDeal.gcdMetadata.pencilers.length > 0 && (
-                        <div className="flex justify-between text-slate-300">
+                        <div className="flex justify-between items-center text-slate-300">
                           <span className="text-slate-500">Penciler(s):</span>
-                          <span className="text-blue-200 font-medium">{inspectedDeal.gcdMetadata.pencilers.join(", ")}</span>
+                          <div className="flex flex-wrap gap-1.5 justify-end">
+                            {inspectedDeal.gcdMetadata.pencilers.map((penciler, idx) => (
+                              <a
+                                key={idx}
+                                href={`/search?q=${encodeURIComponent(penciler)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-cyan-400 hover:text-cyan-200 underline underline-offset-2 transition-colors font-medium"
+                              >
+                                {penciler}
+                              </a>
+                            ))}
+                          </div>
                         </div>
                       )}
                       {inspectedDeal.gcdMetadata?.coverArtists && inspectedDeal.gcdMetadata.coverArtists.length > 0 && (
-                        <div className="flex justify-between text-slate-300">
+                        <div className="flex justify-between items-center text-slate-300">
                           <span className="text-slate-500">Cover Artist(s):</span>
-                          <span className="text-blue-200 font-medium">{inspectedDeal.gcdMetadata.coverArtists.join(", ")}</span>
+                          <div className="flex flex-wrap gap-1.5 justify-end">
+                            {inspectedDeal.gcdMetadata.coverArtists.map((artist, idx) => (
+                              <a
+                                key={idx}
+                                href={`/search?q=${encodeURIComponent(artist)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-cyan-400 hover:text-cyan-200 underline underline-offset-2 transition-colors font-medium"
+                              >
+                                {artist}
+                              </a>
+                            ))}
+                          </div>
                         </div>
                       )}
                       {inspectedDeal.gcdMetadata?.publisher && (
-                        <div className="flex justify-between text-slate-300">
+                        <div className="flex justify-between items-center text-slate-300">
                           <span className="text-slate-500">Publisher:</span>
-                          <span className="text-slate-200 font-medium">{inspectedDeal.gcdMetadata.publisher} ({inspectedDeal.gcdMetadata.publicationDate || inspectedDeal.resolvedYear})</span>
+                          <span className="text-slate-200 font-medium">
+                            {inspectedDeal.gcdMetadata.publisher} ({inspectedDeal.gcdMetadata.publicationDate || inspectedDeal.resolvedYear})
+                          </span>
+                        </div>
+                      )}
+                      {inspectedDeal.gcdMetadata?.storylines && (
+                        <div className="flex justify-between items-start text-slate-300 pt-1 border-t border-slate-800">
+                          <span className="text-slate-500">Storyline / Arc:</span>
+                          <span className="text-amber-300 font-medium text-right max-w-[70%]">
+                            {inspectedDeal.gcdMetadata.storylines}
+                          </span>
                         </div>
                       )}
                     </div>
 
-                    <div className="pt-1 flex items-center justify-between text-xs font-mono">
-                      <span className="text-slate-500">Verified sovereign record</span>
+                    <div className="pt-1 flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
+                      <a
+                        href={`https://www.comics.org/search/advanced/process/?series=${encodeURIComponent(inspectedDeal.resolvedSeries)}&issue=${encodeURIComponent(inspectedDeal.resolvedIssue)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-slate-400 hover:text-slate-200 underline inline-flex items-center gap-1"
+                      >
+                        <span>Grand Comics Database™ Index</span>
+                        <span className="text-[10px]">↗</span>
+                      </a>
                       <a
                         href={`/search?q=${encodeURIComponent(inspectedDeal.resolvedSeries + " " + inspectedDeal.resolvedIssue)}`}
                         target="_blank"

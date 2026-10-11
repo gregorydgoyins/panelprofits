@@ -34,7 +34,8 @@ function getSqliteDb() {
 
 /**
  * High-speed authoritative cover lookup from the 115k catalog SQLite index.
- * Retrieves authentic Supabase Storage WebP covers and verified GCD covers.
+ * Retrieves authentic Supabase Storage WebP covers and verified GCS covers.
+ * Strictly avoids Cloudflare 403 GCD hotlinks and broken 526.jpg placeholders.
  */
 export function lookupSqliteCover(series: string, issueNumber: string | number): string | null {
   if (typeof window !== "undefined") return null;
@@ -44,10 +45,24 @@ export function lookupSqliteCover(series: string, issueNumber: string | number):
     const cleanSeries = String(series || "").replace(/^the\s+/i, "").trim();
     const cleanIssue = String(issueNumber || "1").replace(/^#/, "").trim();
 
-    // 1. Try highres_covers (Prioritizing high-resolution Supabase Storage WebP)
+    // 1. Try verified_equities (Audited 42k sovereign & market assets with authentic WebP covers)
+    const ve = db.prepare(
+      `SELECT cover_url FROM verified_equities 
+       WHERE (series LIKE ? OR series LIKE ?) AND issue_number = ? 
+       AND cover_url IS NOT NULL AND cover_url != ''
+       LIMIT 1`
+    ).get(cleanSeries, "%" + cleanSeries + "%", cleanIssue);
+
+    if (ve && ve.cover_url && !ve.cover_url.includes("526.jpg") && !ve.cover_url.includes("files1.comics.org")) {
+      return ve.cover_url;
+    }
+
+    // 2. Try highres_covers (Prioritizing high-resolution Supabase Storage WebP)
     const hr = db.prepare(
       `SELECT cover_url FROM highres_covers 
        WHERE (series LIKE ? OR series LIKE ?) AND issue_number = ? 
+       AND cover_url NOT LIKE '%526.jpg%'
+       AND cover_url NOT LIKE '%files1.comics.org%'
        ORDER BY CASE WHEN cover_url LIKE '%supabase.co%' THEN 0 ELSE 1 END 
        LIMIT 1`
     ).get(cleanSeries, "%" + cleanSeries + "%", cleanIssue);
@@ -56,10 +71,12 @@ export function lookupSqliteCover(series: string, issueNumber: string | number):
       return hr.cover_url;
     }
 
-    // 2. Try comics table (GCD & ComicBase authoritative covers)
+    // 3. Try comics table (filtering out broken 526.jpg or files1.comics.org 403 links)
     const c = db.prepare(
       `SELECT cover_url FROM comics 
        WHERE (series LIKE ? OR series LIKE ?) AND issue_number = ? 
+       AND cover_url NOT LIKE '%526.jpg%'
+       AND cover_url NOT LIKE '%files1.comics.org%'
        LIMIT 1`
     ).get(cleanSeries, "%" + cleanSeries + "%", cleanIssue);
 

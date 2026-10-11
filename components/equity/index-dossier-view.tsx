@@ -29,16 +29,20 @@ export function IndexDossierView({
   constituents,
 }: IndexDossierViewProps) {
   const latestObs = observations[0];
-  const currentValue = latestObs?.index_value ?? 2486.45;
-  const delta = latestObs?.percent_change ?? 0.68;
-  const isPositive = delta >= 0;
+  const currentValue = latestObs?.index_value ?? null;
+  const delta = latestObs?.percent_change ?? null;
+  const isPositive = delta !== null ? delta >= 0 : true;
 
-  // Convert observations to chart data points
-  const chartPoints = observations.slice(0, 30).reverse().map((obs, idx) => ({
-    date: obs.observation_time ? obs.observation_time.slice(0, 10) : `T-${idx}`,
-    value: obs.index_value ?? currentValue,
-    volume: obs.valid_constituent_count || 70,
-  }));
+  // Convert observations to chart data points strictly from verified records
+  const chartPoints = observations
+    .filter((obs) => obs.index_value !== null && obs.index_value !== undefined)
+    .slice(0, 30)
+    .reverse()
+    .map((obs, idx) => ({
+      date: obs.observation_time ? obs.observation_time.slice(0, 10) : `T-${idx}`,
+      value: obs.index_value!,
+      volume: obs.valid_constituent_count || contract.expected_constituent_count || 1,
+    }));
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
@@ -86,16 +90,18 @@ export function IndexDossierView({
             </span>
             <div className="mt-1 flex items-baseline lg:justify-end gap-3">
               <span className="text-3xl sm:text-4xl font-mono font-black text-slate-100">
-                ${currentValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {currentValue != null ? `$${currentValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}
               </span>
-              <span
-                className={`inline-flex items-center gap-0.5 text-xs font-mono font-bold ${
-                  isPositive ? "text-emerald-400" : "text-rose-400"
-                }`}
-              >
-                {isPositive ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
-                {isPositive ? `+${delta}%` : `${delta}%`}
-              </span>
+              {delta != null && (
+                <span
+                  className={`inline-flex items-center gap-0.5 text-xs font-mono font-bold ${
+                    isPositive ? "text-emerald-400" : "text-rose-400"
+                  }`}
+                >
+                  {isPositive ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
+                  {isPositive ? `+${delta}%` : `${delta}%`}
+                </span>
+              )}
             </div>
             <span className="text-[10px] font-mono text-slate-500 mt-1 block">
               Version: {contract.methodology_version} · Status: {contract.historical_status}
@@ -135,8 +141,8 @@ export function IndexDossierView({
       {/* Candlestick & Performance Chart */}
       <EquityCandlestickChart
         ticker={contract.index_code}
-        currentPrice={currentValue}
-        deltaPercent={delta}
+        currentPrice={currentValue ?? 0}
+        deltaPercent={delta ?? 0}
         dataPoints={chartPoints}
       />
 

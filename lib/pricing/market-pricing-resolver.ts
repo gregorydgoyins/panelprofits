@@ -133,44 +133,66 @@ export function resolveMarketPricing(
     availableGrades,
   };
 
-  const primaryFmv98 = g98 || fallbackFmv;
+  const primaryFmv98 = g98 || (fallbackFmv > 0 ? fallbackFmv : 0);
 
-  // Synthesize daily TradingView candles and area points anchored to actual data
+  // Build authentic TradingView candles and area points from verified secondary market observations
   const tradingViewArea: TradingViewPoint[] = [];
   const tradingViewCandles: TradingViewCandle[] = [];
   const tradingViewVolume: Array<{ time: string; value: number; color: string }> = [];
 
-  const today = new Date();
-  const totalDays = 90;
-
-  for (let i = totalDays - 1; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    const timeStr = d.toISOString().slice(0, 10);
-
-    // Realistic market movement curve
-    const progress = (totalDays - i) / totalDays;
-    const macroCycle = Math.sin(progress * Math.PI * 2) * 0.04;
-    const dailyNoise = (Math.sin(i * 1.7) * 0.015) + (Math.cos(i * 2.3) * 0.01);
-    const close = Math.round(primaryFmv98 * (1 + macroCycle + dailyNoise));
-    const open = Math.round(close * (1 + (Math.sin(i * 3.1) * 0.008)));
-    const high = Math.round(Math.max(open, close) * (1 + Math.abs(Math.sin(i * 0.9) * 0.012)));
-    const low = Math.round(Math.min(open, close) * (1 - Math.abs(Math.cos(i * 1.1) * 0.012)));
-    const volume = Math.round(12 + Math.abs(Math.sin(i * 1.4) * 28));
-
-    const isUp = close >= open;
-    const volColor = isUp ? "rgba(16, 185, 129, 0.45)" : "rgba(244, 63, 94, 0.45)";
-
-    tradingViewArea.push({ time: timeStr, value: close });
-    tradingViewCandles.push({ time: timeStr, open, high, low, close, volume });
-    tradingViewVolume.push({ time: timeStr, value: volume, color: volColor });
+  // Ingest authentic observations from cgcData or allObservations
+  const rawPoints: Array<{ date: string; amount: number }> = [];
+  if (Array.isArray(cgcData)) {
+    for (const c of cgcData) {
+      if (c && c.amount > 0 && c.observedAt) {
+        const dt = c.observedAt.slice(0, 10);
+        rawPoints.push({ date: dt, amount: c.amount });
+      }
+    }
+  }
+  if (Array.isArray(matchedEntry?.allObservations)) {
+    for (const obs of matchedEntry.allObservations) {
+      if (obs && obs.amount > 0 && obs.date) {
+        const dt = obs.date.slice(0, 10);
+        rawPoints.push({ date: dt, amount: obs.amount });
+      }
+    }
   }
 
-  // Pin latest point to exact current reference FMV
-  if (tradingViewCandles.length > 0) {
-    const last = tradingViewCandles[tradingViewCandles.length - 1];
-    last.close = primaryFmv98;
-    tradingViewArea[tradingViewArea.length - 1].value = primaryFmv98;
+  if (rawPoints.length > 0) {
+    // Sort chronologically
+    rawPoints.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    // Aggregate by day
+    const byDay = new Map<string, number[]>();
+    for (const pt of rawPoints) {
+      const existing = byDay.get(pt.date) ?? [];
+      existing.push(pt.amount);
+      byDay.set(pt.date, existing);
+    }
+
+    for (const [dateStr, amounts] of byDay.entries()) {
+      const open = amounts[0];
+      const close = amounts[amounts.length - 1];
+      const high = Math.max(...amounts);
+      const low = Math.min(...amounts);
+      const volume = amounts.length;
+      const isUp = close >= open;
+
+      tradingViewArea.push({ time: dateStr, value: close });
+      tradingViewCandles.push({ time: dateStr, open, high, low, close, volume });
+      tradingViewVolume.push({
+        time: dateStr,
+        value: volume,
+        color: isUp ? "rgba(16, 185, 129, 0.45)" : "rgba(244, 63, 94, 0.45)",
+      });
+    }
+  } else if (primaryFmv98 > 0) {
+    // If no dated series exist, anchor strictly to single confirmed point for primary verified FMV
+    const todayStr = new Date().toISOString().slice(0, 10);
+    tradingViewArea.push({ time: todayStr, value: primaryFmv98 });
+    tradingViewCandles.push({ time: todayStr, open: primaryFmv98, high: primaryFmv98, low: primaryFmv98, close: primaryFmv98, volume: 1 });
+    tradingViewVolume.push({ time: todayStr, value: 1, color: "rgba(16, 185, 129, 0.45)" });
   }
 
   return {

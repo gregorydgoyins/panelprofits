@@ -8,14 +8,16 @@
   },
   "scripts": {
     "dev": "next dev --webpack",
-    "build": "next build --webpack",
+    "guardrail:verify": "npx tsx scripts/verify_zero_fake_data.ts",
+    "build": "npx tsx scripts/verify_zero_fake_data.ts && next build --webpack",
     "start": "next start",
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
     "worker:sync-equities": "node --experimental-strip-types --env-file=.env.local scripts/workers/sync_verified_equities_to_supabase.ts",
     "worker:sync-equities:daemon": "node --experimental-strip-types --env-file=.env.local scripts/workers/sync_verified_equities_to_supabase.ts --daemon --interval 300",
-    "migrate:overwrite-rounded-prices": "node --experimental-strip-types --env-file=.env.local scripts/workers/overwrite_rounded_prices_in_supabase.ts"
+    "migrate:overwrite-rounded-prices": "node --experimental-strip-types --env-file=.env.local scripts/workers/overwrite_rounded_prices_in_supabase.ts",
+    "fetch:pricecharting": "python3 ../scripts/download_pricecharting_daily.py --wait"
   },
   "dependencies": {
     "@radix-ui/react-select": "^2.1.6",

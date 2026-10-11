@@ -208,6 +208,9 @@ export function parseAndFilterListing(
   } else if (/\bpgx\b/i.test(title)) {
     gradingCompany = "PGX";
     isCertifiedSlab = true;
+  } else if (/\b(?:egs|ega)\b/i.test(title)) {
+    gradingCompany = "EGS";
+    isCertifiedSlab = true;
   }
 
   // Extract Grade: e.g. 10, 9.9, 9.8, 9.6, 9.4, 9.2, 9.0, 8.5
@@ -216,12 +219,12 @@ export function parseAndFilterListing(
     grade = parseFloat(gradeMatch[1]);
   }
 
-  // 2b. Extract Certification Number (CGC / CBCS / PSA cert #)
+  // 2b. Extract Certification Number (CGC / CBCS / PSA / PGX / EGS cert #)
   let certNumber: string | undefined;
   let certLookupUrl: string | undefined;
 
-  const certMatch = fullText.match(/\b(?:cert(?:ification)?|cgc|cbcs|psa|pgx)?\s*(?:#|no\.?|number)?\s*:?\s*([0-9]{7,10}(?:-[0-9]{3})?)\b/i);
-  if (certMatch && certMatch[1] && certMatch[1].length >= 7) {
+  const certMatch = fullText.match(/\b(?:cert(?:ification)?|cgc|cbcs|psa|pgx|egs|ega)?\s*(?:#|no\.?|number)?\s*:?\s*([0-9]{5,10}(?:-[0-9]{3})?)\b/i);
+  if (certMatch && certMatch[1] && certMatch[1].length >= 5) {
     certNumber = certMatch[1];
     const cleanCert = certNumber.replace(/[^0-9]/g, "");
     if (gradingCompany === "CBCS") {
@@ -230,6 +233,8 @@ export function parseAndFilterListing(
       certLookupUrl = `https://www.psacard.com/cert/${cleanCert}`;
     } else if (gradingCompany === "PGX") {
       certLookupUrl = `https://pgxcomics.com/verify-cert/?cert=${cleanCert}`;
+    } else if (gradingCompany === "EGS") {
+      certLookupUrl = `https://egscomics.com/check-cert/?cert=${cleanCert}`;
     } else {
       // Default to CGC lookup
       certLookupUrl = `https://www.cgccomics.com/certlookup/${cleanCert}/`;
@@ -424,7 +429,7 @@ export function getEraDisplayName(era: ComicEra): string {
  * Strips /thumbs/ edge routing and replaces /s-l64, /s-l140, /s-l200, /s-l225, /s-l300, /s-l400, /s-l500, /s-l640, /s-l1200 with /s-l1600.
  */
 export function uprezEbayImage(url?: string | null): string {
-  if (!url || typeof url !== "string") return "/placeholder.png";
+  if (!url || typeof url !== "string") return "";
   let u = url.replace("/thumbs/", "/");
   u = u.replace(/\/s-l\d+/i, "/s-l1600");
   return u;

@@ -1,18 +1,50 @@
 /**
- * Verifiable per-issue story descriptions.
+ * Verifiable per-issue story descriptions and encyclopedic due diligence dossiers.
  *
  * Source order: publisher wiki on Fandom (Marvel Database, DC Database, Image, Dark Horse, Valiant,
- * Dynamite) -> League of Comic Geeks listing description. Nothing is generated or templated: if no
- * source has a description for this exact issue, the result is null and the page shows nothing.
+ * Dynamite) via MediaWiki API / wikitext parser -> League of Comic Geeks listing description.
+ * Nothing is generated or templated: if no source has a description for this exact issue,
+ * the result is null and the page shows nothing.
  *
  * Every hit carries its source name + URL (+ licence) so the page can attribute it.
  * Results (including "checked, none found") are cached in `issue_story_summaries`.
  */
 import { createAdminServerClient } from "@/lib/supabase/admin";
 
+export interface StoryEntityLink {
+  target: string;
+  label: string;
+  url: string;
+  isFirstApp?: boolean;
+  isFlashback?: boolean;
+  isMentioned?: boolean;
+}
+
 export interface StorySummary {
   text: string;
   storyTitle: string | null;
+  quote?: {
+    text: string;
+    speaker: string | null;
+  } | null;
+  entities?: {
+    firstAppearances?: StoryEntityLink[];
+    featuredCharacters?: StoryEntityLink[];
+    antagonists?: StoryEntityLink[];
+    otherCharacters?: StoryEntityLink[];
+    racesAndSpecies?: StoryEntityLink[];
+    realities?: StoryEntityLink[];
+    locations?: StoryEntityLink[];
+    items?: StoryEntityLink[];
+    vehicles?: StoryEntityLink[];
+  };
+  credits?: {
+    writers?: string[];
+    pencilers?: string[];
+    colorists?: string[];
+    letterers?: string[];
+    editors?: string[];
+  };
   source: string;
   sourceUrl: string;
   license: string | null;
@@ -115,6 +147,144 @@ export function extractFandomSynopsis(html: string): { text: string; storyTitle:
   return { text: clipAtSentence(text), storyTitle };
 }
 
+/** Parse structured Fandom MediaWiki wikitext into typed story summary with proper nouns preserved as markdown links */
+export function parseFandomWikitext(wikitext: string, host: string): Omit<StorySummary, "source" | "sourceUrl" | "license"> | null {
+  if (!wikitext) return null;
+
+  function parseWikitextLinks(raw: string): string {
+    if (!raw) return "";
+    let cleaned = raw
+      .replace(/\{\{Flashback\|(.*?)\}\}/gi, "$1 (flashback)")
+      .replace(/\{\{a\|(.*?)\}\}/gi, "$1")
+      .replace(/\{\{[^|}]+\|([^}]+)\}\}/g, "$1")
+      .replace(/\{\{[^}]+\}\}/g, "");
+
+    cleaned = cleaned.replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (_, target, label) => {
+      const textLabel = label ? label.trim() : target.trim();
+      const cleanTarget = target.trim().replace(/ /g, "_");
+      const linkUrl = `https://${host}/wiki/${encodeURIComponent(cleanTarget)}`;
+      return `[${textLabel}](${linkUrl})`;
+    });
+
+    return cleaned.replace(/'''/g, "**").replace(/''/g, "*").trim();
+  }
+
+  // Quotation & Speaker
+  const qM = wikitext.match(/\|\s*Quotation\s*=\s*([\s\S]*?)(?=\n\|)/);
+  const sM = wikitext.match(/\|\s*Speaker\s*=\s*([\s\S]*?)(?=\n\|)/);
+  const quote = qM && qM[1].trim()
+    ? {
+        text: parseWikitextLinks(qM[1]),
+        speaker: sM && sM[1].trim() ? parseWikitextLinks(sM[1]) : null,
+      }
+    : null;
+
+  // Story Title
+  const tM = wikitext.match(/\|\s*StoryTitle1\s*=\s*([^\n|]+)/);
+  const storyTitle = tM ? tM[1].trim() : null;
+
+  // Synopsis
+  const synM = wikitext.match(/\|\s*Synopsis1\s*=\s*([\s\S]*?)(?=\n\|[A-Z]|\n==|\n\}\})/);
+  const rawSynopsis = synM ? synM[1].trim() : "";
+  if (!rawSynopsis || rawSynopsis.length < 40) return null;
+  const text = parseWikitextLinks(rawSynopsis);
+
+  // Appearing
+  const appM = wikitext.match(/\|\s*Appearing1\s*=\s*([\s\S]*?)(?=\n\|[A-Z]|\n==|\n\}\})/);
+  const entities: NonNullable<StorySummary["entities"]> = {
+    firstAppearances: [],
+    featuredCharacters: [],
+    antagonists: [],
+    otherCharacters: [],
+    racesAndSpecies: [],
+    realities: [],
+    locations: [],
+    items: [],
+    vehicles: [],
+  };
+
+  if (appM) {
+    let currentSec: keyof NonNullable<StorySummary["entities"]> = "featuredCharacters";
+    const secMap: Record<string, keyof NonNullable<StorySummary["entities"]>> = {
+      "featured characters": "featuredCharacters",
+      "antagonists": "antagonists",
+      "other characters": "otherCharacters",
+      "races and species": "racesAndSpecies",
+      "realities": "realities",
+      "locations": "locations",
+      "items": "items",
+      "vehicles": "vehicles",
+    };
+
+    for (const line of appM[1].split("\n")) {
+      const trimmed = line.trim();
+      const secH = trimmed.match(/^'''([^:]+):?'''/);
+      if (secH) {
+        const raw = secH[1].toLowerCase().trim();
+        currentSec = secMap[raw] || "otherCharacters";
+        continue;
+      }
+
+      if (trimmed.startsWith("*")) {
+        const linkMatch = trimmed.match(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/);
+        if (linkMatch) {
+          const target = linkMatch[1].trim();
+          const label = (linkMatch[2] || target).trim();
+          const cleanTarget = target.replace(/ /g, "_");
+          const itemUrl = `https://${host}/wiki/${encodeURIComponent(cleanTarget)}`;
+          const isFirstApp = /first appearance/i.test(trimmed);
+          const isFlashback = /flashback/i.test(trimmed);
+          const isMentioned = /mentioned/i.test(trimmed);
+
+          const entityObj: StoryEntityLink = {
+            target,
+            label,
+            url: itemUrl,
+            ...(isFirstApp ? { isFirstApp: true } : {}),
+            ...(isFlashback ? { isFlashback: true } : {}),
+            ...(isMentioned ? { isMentioned: true } : {}),
+          };
+
+          entities[currentSec]?.push(entityObj);
+          if (isFirstApp) {
+            entities.firstAppearances?.push(entityObj);
+          }
+        }
+      }
+    }
+  }
+
+  // Clean empty entity lists
+  for (const k of Object.keys(entities) as Array<keyof NonNullable<StorySummary["entities"]>>) {
+    if (entities[k]?.length === 0) {
+      delete entities[k];
+    }
+  }
+
+  // Credits
+  const writers = [...wikitext.matchAll(/\|\s*Writer\d+_\d+\s*=\s*([^\n|]+)/g)].map((m) => m[1].trim()).filter(Boolean);
+  const pencilers = [...wikitext.matchAll(/\|\s*Penciler\d+_\d+\s*=\s*([^\n|]+)/g)].map((m) => m[1].trim()).filter(Boolean);
+  const colorists = [...wikitext.matchAll(/\|\s*Colorist\d+_\d+\s*=\s*([^\n|]+)/g)].map((m) => m[1].trim()).filter(Boolean);
+  const letterers = [...wikitext.matchAll(/\|\s*Letterer\d+_\d+\s*=\s*([^\n|]+)/g)].map((m) => m[1].trim()).filter(Boolean);
+  const editors = [...wikitext.matchAll(/\|\s*Editor\d+_\d+\s*=\s*([^\n|]+)/g)].map((m) => m[1].trim()).filter(Boolean);
+
+  const credits: StorySummary["credits"] = {
+    ...(writers.length ? { writers } : {}),
+    ...(pencilers.length ? { pencilers } : {}),
+    ...(colorists.length ? { colorists } : {}),
+    ...(letterers.length ? { letterers } : {}),
+    ...(editors.length ? { editors } : {}),
+  };
+
+  return {
+    text,
+    storyTitle,
+    quote,
+    ...(Object.keys(entities).length ? { entities } : {}),
+    ...(Object.keys(credits).length ? { credits } : {}),
+  };
+}
+
 /** League of Comic Geeks issue page: release year, publisher line and the listing description. */
 export function extractLocgIssue(html: string): { publisher: string | null; year: number | null; description: string | null } {
   const text = htmlToText(html);
@@ -170,26 +340,69 @@ async function fetchHtml(url: string): Promise<{ status: number; html: string; f
   }
 }
 
+async function fetchMediaWiki(host: string, pageTitle: string): Promise<string | null> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
+  const apiUrl = `https://${host}/api.php?action=parse&page=${encodeURIComponent(pageTitle)}&prop=wikitext&format=json`;
+  try {
+    const res = await fetch(apiUrl, {
+      headers: { "user-agent": UA, accept: "application/json" },
+      signal: ctrl.signal,
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data?.parse?.wikitext?.["*"] || null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 type ProviderOutcome = { hit: StorySummary | null; errored: boolean };
 
 async function fromFandom(input: StorySummaryInput): Promise<ProviderOutcome> {
   const wiki = FANDOM_WIKIS.find((w) => w.publisher.test(input.publisher || ""));
   if (!wiki) return { hit: null, errored: false };
   // rail volume defaults to 1 for most books, so also try later volumes; the year check below guards false matches.
-  const volumes = Array.from(new Set([input.volume ?? 1, 1, 2, 3, 4, 5].filter((v): v is number => !!v && v > 0)));
+  const volumes = Array.from(new Set([input.volume ?? 1, 1, 2, 3, 4, 5, 6].filter((v): v is number => !!v && v > 0)));
   let errored = false;
+
   for (const vol of volumes) {
     const title = fandomPageTitle(input.series, input.issueNumber, vol);
+
+    // 1. First attempt fast, structured MediaWiki API query
+    try {
+      const wikitext = await fetchMediaWiki(wiki.host, title);
+      if (wikitext) {
+        const parsed = parseFandomWikitext(wikitext, wiki.host);
+        if (parsed) {
+          return {
+            hit: {
+              ...parsed,
+              source: wiki.name,
+              sourceUrl: `https://${wiki.host}/wiki/${encodeURIComponent(title).replace(/%5F/g, "_")}`,
+              license: "CC BY-SA 3.0",
+            },
+            errored: false,
+          };
+        }
+      }
+    } catch {
+      errored = true;
+    }
+
+    // 2. Fallback to HTML scrape if API wikitext was not found
     const url = `https://${wiki.host}/wiki/${encodeURIComponent(title).replace(/%5F/g, "_")}`;
     const res = await fetchHtml(url);
     if (!res) { errored = true; continue; }
     if (res.status === 404) continue;
     if (res.status !== 200) { errored = true; continue; }
-    // The page must be this exact issue (title) and, when we know the year, mention it near the top.
+
     const pageTitle = /<title>([^<]*)<\/title>/i.exec(res.html)?.[1] ?? "";
     const expected = title.replace(/_/g, " ").toLowerCase();
     const pt = decodeEntities(pageTitle).toLowerCase().trim();
-    // exact page: "<title> | Marvel Database | Fandom" — a bare prefix would also match issue 20 for issue 2
     if (!(pt === expected || pt.startsWith(`${expected} |`))) continue;
     if (input.year) {
       const head = htmlToText(res.html.slice(0, Math.min(res.html.length, 120000)));
@@ -253,7 +466,30 @@ export async function getStorySummary(input: StorySummaryInput): Promise<StorySu
     if (data) {
       const age = Date.now() - new Date(data.checked_at).getTime();
       if (data.summary && age < POSITIVE_TTL_MS) {
-        return { text: data.summary, storyTitle: data.story_title, source: data.source, sourceUrl: data.source_url, license: data.license };
+        try {
+          const parsed = JSON.parse(data.summary);
+          if (parsed && typeof parsed === "object" && typeof parsed.text === "string") {
+            return {
+              text: parsed.text,
+              storyTitle: data.story_title || parsed.storyTitle || null,
+              quote: parsed.quote || null,
+              entities: parsed.entities || undefined,
+              credits: parsed.credits || undefined,
+              source: data.source,
+              sourceUrl: data.source_url,
+              license: data.license,
+            };
+          }
+        } catch {
+          // plain text string from earlier cache
+        }
+        return {
+          text: data.summary,
+          storyTitle: data.story_title,
+          source: data.source,
+          sourceUrl: data.source_url,
+          license: data.license,
+        };
       }
       if (!data.summary && age < NEGATIVE_TTL_MS) return null;
     }
@@ -273,13 +509,14 @@ export async function getStorySummary(input: StorySummaryInput): Promise<StorySu
   const clean = !outcomes.some((o) => o.errored);
   if (hit || clean) {
     try {
+      const storedPayload = hit ? JSON.stringify(hit) : null;
       await db.from("issue_story_summaries").upsert({
         comic_key: key,
         series: input.series,
         issue_number: String(input.issueNumber),
         year: input.year,
         publisher: input.publisher,
-        summary: hit?.text ?? null,
+        summary: storedPayload,
         story_title: hit?.storyTitle ?? null,
         source: hit?.source ?? null,
         source_url: hit?.sourceUrl ?? null,

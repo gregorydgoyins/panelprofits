@@ -6,6 +6,10 @@ import {
   ebayGrades,
   goCollectCgcGrades,
   priceChartingGrades,
+  cbcsGrades,
+  psaGrades,
+  pgxGrades,
+  egsGrades,
   type Grade,
 } from "@/lib/pricing/source-ladder";
 
@@ -31,7 +35,11 @@ export function ComparativePriceMatrix({ comic, inspectedGrade = "9.8", ticker }
     { key: "ebay", label: "eBay sold", color: "text-emerald-400", data: ebayGrades(comic) as Partial<Record<string, number>> },
     { key: "pp", label: "Panel Profits", color: "text-cyan-300", data: { ...pc, ...pp } as Partial<Record<string, number>> },
     { key: "cb", label: "ComicBase", color: "text-blue-300", data: comicBaseGrades(comic) as Partial<Record<string, number>> },
-    { key: "gc", label: "GoCollect", color: "text-purple-300", data: goCollectCgcGrades(comic) as Partial<Record<string, number>> },
+    { key: "gc", label: "GoCollect (CGC)", color: "text-purple-300", data: goCollectCgcGrades(comic) as Partial<Record<string, number>> },
+    { key: "cbcs", label: "CBCS", color: "text-indigo-300", data: cbcsGrades(comic) as Partial<Record<string, number>> },
+    { key: "psa", label: "PSA", color: "text-red-300", data: psaGrades(comic) as Partial<Record<string, number>> },
+    { key: "pgx", label: "PGX", color: "text-emerald-300", data: pgxGrades(comic) as Partial<Record<string, number>> },
+    { key: "egs", label: "EGS / EGA", color: "text-sky-300", data: egsGrades(comic) as Partial<Record<string, number>> },
   ].filter((s) => Object.values(s.data).some((v) => typeof v === "number" && v > 0));
 
   const rows = GRADE_ORDER.filter((g) => sources.some((s) => typeof s.data[g] === "number" && (s.data[g] as number) > 0));

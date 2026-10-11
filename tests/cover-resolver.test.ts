@@ -137,4 +137,36 @@ describe("Comic Cover Resolver Ladder", () => {
     expect(batch.get("c1")?.sourceTier).toBe("gcd_archive");
     expect(batch.get("c2")?.sourceTier).toBe("dynamic_badge");
   });
+
+  it("discards cross-universe contradictory cover sources (e.g. Marvel wiki search on DC/Indie comic)", () => {
+    const result = resolveComicCover({
+      id: "test-contradict",
+      series: "Sweet Tooth",
+      issue_number: "1",
+      publisher: "DC",
+      cover_source: "marvel_fandom_search",
+      cover_url: "https://static.wikia.nocookie.net/marveldatabase/images/1/10/Fantastic_Four_Vol_1_134.jpg",
+      cover_storage_path: "pp/a4/a47ebd2e4a7ff633eeb9adbf3729f08e352693c64ddc220450489f0d7670c61f.webp",
+    });
+
+    // Contradictory Marvel cover on DC book must be discarded!
+    expect(result.url).not.toContain("Fantastic_Four");
+    expect(result.url).not.toContain("a47ebd2e4a7ff633eeb9adbf3729f08e352693c64ddc220450489f0d7670c61f");
+  });
+
+  it("skips forbidden/broken GCD 526.jpg placeholder images in direct candidates", () => {
+    const result = resolveComicCover({
+      id: "test-526",
+      series: "Marvel Legacy",
+      issue_number: "1",
+      publisher: "Marvel",
+      cover_url: "https://files1.comics.org//img/gcd/covers_by_id/0/w400/526.jpg",
+      gcd_source_id: "12345",
+    });
+
+    // 526.jpg must be bypassed in favor of legitimate GCD archive or fallback
+    expect(result.url).not.toContain("526.jpg");
+    expect(result.sourceTier).toBe("gcd_archive");
+    expect(result.url).toBe("https://files1.comics.org/img/gcd/covers_by_id/12/12345.jpg");
+  });
 });

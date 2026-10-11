@@ -43,15 +43,15 @@ export function EquityCandlestickChart({
         const prev = idx > 0 ? dataPoints[idx - 1].value : p.value;
         const open = prev;
         const close = p.value;
-        const high = Math.round(Math.max(open, close) * 1.008);
-        const low = Math.round(Math.min(open, close) * 0.992);
+        const high = Math.max(open, close);
+        const low = Math.min(open, close);
         return {
           time: p.date,
           open,
           high,
           low,
           close,
-          volume: p.volume || 25,
+          volume: p.volume || 1,
         };
       });
       const vol = dataPoints.map((p, idx) => {
@@ -59,7 +59,7 @@ export function EquityCandlestickChart({
         const isUp = p.value >= prev;
         return {
           time: p.date,
-          value: p.volume || 25,
+          value: p.volume || 1,
           color: isUp ? "rgba(16, 185, 129, 0.45)" : "rgba(244, 63, 94, 0.45)",
         };
       });

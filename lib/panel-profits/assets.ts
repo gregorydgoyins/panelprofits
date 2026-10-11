@@ -247,7 +247,7 @@ export async function getCleanEquityDetail(surfaceKey: string): Promise<Detailed
       }
     }
 
-    // 0.5. Check Multi-Asset and Derivative Instruments in INITIAL_SURFACE_ASSETS
+    // 0.5. Check Multi-Asset, Publisher Stock, and Index Instruments in INITIAL_SURFACE_ASSETS
     const normalizedKey = cleanKey.replace(/^\$/, "").toUpperCase();
     const matchedAsset = INITIAL_SURFACE_ASSETS.find(
       (a) =>
@@ -258,7 +258,7 @@ export async function getCleanEquityDetail(surfaceKey: string): Promise<Detailed
     );
 
     if (matchedAsset) {
-      const p = matchedAsset.pricing;
+      const p = matchedAsset.pricing || {};
       const fmv = p.fmv_usd ?? p.fmv ?? p.price ?? 0;
       const effectiveKey = matchedAsset.assetId || matchedAsset.entryId;
       return {
@@ -267,22 +267,22 @@ export async function getCleanEquityDetail(surfaceKey: string): Promise<Detailed
         series: matchedAsset.displayName,
         title: matchedAsset.description || null,
         issue_number: matchedAsset.symbol,
-        publisher: matchedAsset.universe || "Alternative Sovereign Instrument",
-        publication_year: p.maturity ? parseInt(String(p.maturity), 10) : 2026,
-        origin_era: p.era ? String(p.era).toUpperCase() : "DERIVATIVE_MULTI_ASSET",
-        production_age: p.production_age ? String(p.production_age).toUpperCase() : "MULTI_ASSET",
-        lineage: `${matchedAsset.assetType} Instrument · ${matchedAsset.universe || "Sovereign Alternative Asset"}`,
-        reference_grade: matchedAsset.assetType,
-        reference_fmv_usd: fmv,
-        price_formatted: `$${fmv.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-        gregory_score: 195.0,
-        evidence_confidence: "SOVEREIGN_ASSET_COVENANT_VERIFIED",
+        publisher: matchedAsset.universe || "Exchange Instrument",
+        publication_year: matchedAsset.identityYear || null,
+        origin_era: p.era ? String(p.era).toUpperCase() : (matchedAsset.assetType === "PUBLISHER_STOCK" ? "CORPORATE_EQUITY" : "BENCHMARK_INDEX"),
+        production_age: p.production_age ? String(p.production_age).toUpperCase() : (matchedAsset.assetType === "PUBLISHER_STOCK" ? "CORPORATE" : "INDEX"),
+        lineage: `${matchedAsset.assetType} Instrument · ${matchedAsset.universe || "Comic Book Stock Exchange"}`,
+        reference_grade: p.referenceGrade || (matchedAsset.assetType === "PUBLISHER_STOCK" ? "PUBLIC_EQUITY" : matchedAsset.assetType === "INDEX" ? "INDEX_POINTS" : "CERTIFIED"),
+        reference_fmv_usd: fmv > 0 ? fmv : null,
+        price_formatted: fmv > 0 ? `$${fmv.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—",
+        gregory_score: null,
+        evidence_confidence: "VERIFIED_EXCHANGE_RECORD",
         seat_number: null,
         seat_type: matchedAsset.assetType,
         status: "ACTIVE_INSTRUMENT",
         cover_url: matchedAsset.coverImageUrl || `/surface-art/${matchedAsset.assetType.toLowerCase()}.png`,
         canonical_issue_id: `asset_${effectiveKey.toLowerCase()}`,
-        source: `Multi-Asset Class (${matchedAsset.assetType})`,
+        source: `Comic Book Stock Exchange (${matchedAsset.assetType})`,
       };
     }
 

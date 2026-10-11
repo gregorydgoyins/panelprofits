@@ -51,13 +51,12 @@ describe("Catalog Queries & Keyset Configuration", () => {
     expect(rawSpreads.buy).toBeNull();
 
     const slab98Spreads = panelProfitsSpreads(comic, "9.8");
-    expect(slab98Spreads.buy).toBe(22.00);
-    expect(slab98Spreads.sell).toBe(54.99);
+    expect(slab98Spreads.buy).toBeNull();
+    expect(slab98Spreads.sell).toBeNull();
 
     // Volume
-    expect(panelProfitsVolume(comic, "RAW")).toBe("2 sales per year");
-    expect(panelProfitsVolume(comic, "9.8")).toBe("1 sale per year");
-    expect(panelProfitsVolume(comic, "4.0")).toBe("rare");
+    expect(panelProfitsVolume(comic, "9.8")).toBe("2 tracked sales");
+    expect(panelProfitsVolume(comic, "4.0")).toBeNull();
 
     // Cover publication price ($3.99 direct edition)
     expect((comic.panel_profits_data as any)?.coverPrice).toBe(3.99);

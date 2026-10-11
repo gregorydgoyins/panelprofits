@@ -34,7 +34,6 @@ export function useBookEvidence(titles: string[]): Record<string, BookEvidence |
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sig]);
 
   return state;

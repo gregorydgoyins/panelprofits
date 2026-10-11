@@ -370,6 +370,29 @@ export function ebayGrades(comic: Partial<ComicRecord>): Partial<Record<Grade, n
     (comic.panel_profits_data as Record<string, unknown> | undefined)?.ebay as Record<string, unknown> | undefined;
 
   if (ebayData) {
+    // 1. If ebayData or sales is an array of verified sold records
+    const salesList = Array.isArray(ebayData)
+      ? ebayData
+      : Array.isArray((ebayData as any).sales)
+      ? (ebayData as any).sales
+      : Array.isArray((comic as any).ebay_sales)
+      ? (comic as any).ebay_sales
+      : null;
+
+    if (salesList) {
+      for (const sale of salesList) {
+        if (sale && sale.grade && (sale.price || sale.amount)) {
+          const rawG = String(sale.grade).toUpperCase();
+          const g: Grade = rawG === "RAW" || rawG === "UNGRADED" ? "RAW" : (String(sale.grade) as Grade);
+          const p = positivePrice(sale.price ?? sale.amount);
+          if (p !== null && (!result[g] || p > (result[g] ?? 0))) {
+            result[g] = p;
+          }
+        }
+      }
+    }
+
+    // 2. Dictionary lookups
     const rawVal = positivePrice(ebayData["raw"] || ebayData["RAW"] || ebayData["raw_price"] || ebayData["Ungraded"]);
     if (rawVal !== null) result["RAW"] = rawVal;
 
@@ -382,10 +405,71 @@ export function ebayGrades(comic: Partial<ComicRecord>): Partial<Record<Grade, n
         ebayData[`grade_${gradeKey}`] ||
         ebayData[grade]
       );
-      if (stored !== null) result[grade] = stored;
+      if (stored !== null && !result[grade]) result[grade] = stored;
     }
   }
 
+  return result;
+}
+
+/**
+ * Reads authentic PGX certified observation ladder if present in payload or metadata.
+ * PGX is exclusively a certified grading company — it NEVER issues a RAW or ungraded price.
+ */
+export function pgxGrades(comic: Partial<ComicRecord>): Partial<Record<Grade, number>> {
+  const result: Partial<Record<Grade, number>> = {};
+  const data =
+    (comic as Record<string, unknown>).pgx_data as Record<string, unknown> | undefined ||
+    (comic.panel_profits_data as Record<string, unknown> | undefined)?.pgx as Record<string, unknown> | undefined ||
+    (comic.panel_profits_data as Record<string, unknown> | undefined)?.pgx_grades as Record<string, unknown> | undefined ||
+    ((comic as Record<string, unknown>).ebay_data as Record<string, unknown> | undefined)?.pgx as Record<string, unknown> | undefined;
+  if (!data) return result;
+
+  for (const grade of GRADES) {
+    if (grade === "RAW") continue;
+    const gradeKey = grade.replace(".", "_");
+    const stored = positivePrice(
+      data[`PGX - Grade ${grade}`] ||
+      data[`pgx_grade_${gradeKey}_price`] ||
+      data[`pgx_${gradeKey}`] ||
+      (data as any)[grade]
+    );
+    if (stored !== null) result[grade] = stored;
+  }
+  return result;
+}
+
+/**
+ * Reads authentic EGS / EGA (European Grading Service) certified observation ladder if present in payload or metadata.
+ * EGS is exclusively a certified grading company — it NEVER issues a RAW or ungraded price.
+ */
+export function egsGrades(comic: Partial<ComicRecord>): Partial<Record<Grade, number>> {
+  const result: Partial<Record<Grade, number>> = {};
+  const data =
+    (comic as Record<string, unknown>).egs_data as Record<string, unknown> | undefined ||
+    (comic as Record<string, unknown>).ega_data as Record<string, unknown> | undefined ||
+    (comic.panel_profits_data as Record<string, unknown> | undefined)?.egs as Record<string, unknown> | undefined ||
+    (comic.panel_profits_data as Record<string, unknown> | undefined)?.ega as Record<string, unknown> | undefined ||
+    (comic.panel_profits_data as Record<string, unknown> | undefined)?.egs_grades as Record<string, unknown> | undefined ||
+    (comic.panel_profits_data as Record<string, unknown> | undefined)?.ega_grades as Record<string, unknown> | undefined ||
+    ((comic as Record<string, unknown>).ebay_data as Record<string, unknown> | undefined)?.egs as Record<string, unknown> | undefined ||
+    ((comic as Record<string, unknown>).ebay_data as Record<string, unknown> | undefined)?.ega as Record<string, unknown> | undefined;
+  if (!data) return result;
+
+  for (const grade of GRADES) {
+    if (grade === "RAW") continue;
+    const gradeKey = grade.replace(".", "_");
+    const stored = positivePrice(
+      data[`EGS - Grade ${grade}`] ||
+      data[`EGA - Grade ${grade}`] ||
+      data[`egs_grade_${gradeKey}_price`] ||
+      data[`ega_grade_${gradeKey}_price`] ||
+      data[`egs_${gradeKey}`] ||
+      data[`ega_${gradeKey}`] ||
+      (data as any)[grade]
+    );
+    if (stored !== null) result[grade] = stored;
+  }
   return result;
 }
 

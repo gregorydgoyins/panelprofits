@@ -4,56 +4,69 @@ import * as React from "react";
 import Link from "next/link";
 import { BarChart3, TrendingUp, TrendingDown, Clock, ShieldCheck, Activity } from "lucide-react";
 
+import type { MarketIndexRecord } from "@/lib/market/indices";
+
 export interface BarometerIndex {
   code: string;
   name: string;
   cadence: string;
-  value: number;
-  changePercent: number;
+  value: number | null;
+  changePercent: number | null;
   description: string;
   href: string;
 }
 
-const BAROMETERS: BarometerIndex[] = [
-  {
-    code: "CE70",
-    name: "CE70 Sovereign Index",
-    cadence: "Real-Time Blue Chip Barometer",
-    value: 2518.03,
-    changePercent: 0.62,
-    description: "Barometer of blue chip comic equity movement over time (70 sovereign seats). Value in index points.",
-    href: "/equity/CE70",
-  },
-  {
-    code: "PPIX 100",
-    name: "PPIX 100 Multi-Era Benchmark",
-    cadence: "100 Books Across Eras",
-    value: 1130.82,
-    changePercent: 0.56,
-    description: "Broader benchmark tracking 100 books across different eras measuring overall equity market health.",
-    href: "/equity/PPIX100",
-  },
-  {
-    code: "GC-CPI",
-    name: "GoCollect CPI Index",
-    cadence: "Checked Mon · Updated Wed",
-    value: 1428.50,
-    changePercent: 0.48,
-    description: "GoCollect Composite Price Index checked every Monday with official updates every Wednesday.",
-    href: "/market",
-  },
-  {
-    code: "PPIX-COMP",
-    name: "PPIX Composite Index",
-    cadence: "Comprehensive Health",
-    value: 1842.15,
-    changePercent: 0.85,
-    description: "Master composite index reflecting the total systemic health across all comic market tiers.",
-    href: "/market",
-  },
-];
+interface MarketBarometerBarProps {
+  indices?: MarketIndexRecord[];
+}
 
-export function MarketBarometerBar() {
+export function MarketBarometerBar({ indices = [] }: MarketBarometerBarProps) {
+  const barometers = React.useMemo<BarometerIndex[]>(() => {
+    const ce70 = indices.find((i) => i.indexCode === "CE70");
+    const ppix100 = indices.find((i) => i.indexCode === "PPIX100");
+    const cpi = indices.find((i) => i.indexCode.includes("CPI"));
+    const comp = indices.find((i) => i.indexCode === "PPIX_COMPOSITE" || i.indexCode === "PPIX60");
+
+    return [
+      {
+        code: "CE70",
+        name: "CE70 Sovereign Index",
+        cadence: "Real-Time Blue Chip Barometer",
+        value: ce70?.currentValue ?? null,
+        changePercent: ce70?.percentChange ?? null,
+        description: "Barometer of blue chip comic equity movement over time (70 sovereign seats). Value in index points.",
+        href: "/equity/CE70",
+      },
+      {
+        code: "PPIX 100",
+        name: "PPIX 100 Multi-Era Benchmark",
+        cadence: "100 Books Across Eras",
+        value: ppix100?.currentValue ?? null,
+        changePercent: ppix100?.percentChange ?? null,
+        description: "Broader benchmark tracking 100 books across different eras measuring overall equity market health.",
+        href: "/equity/PPIX100",
+      },
+      {
+        code: "GC-CPI",
+        name: "GoCollect CPI Index",
+        cadence: "Checked Mon · Updated Wed",
+        value: cpi?.currentValue ?? null,
+        changePercent: cpi?.percentChange ?? null,
+        description: "GoCollect Composite Price Index checked every Monday with official updates every Wednesday.",
+        href: "/market",
+      },
+      {
+        code: "PPIX-COMP",
+        name: "PPIX Composite Index",
+        cadence: "Comprehensive Health",
+        value: comp?.currentValue ?? null,
+        changePercent: comp?.percentChange ?? null,
+        description: "Master composite index reflecting the total systemic health across all comic market tiers.",
+        href: "/market",
+      },
+    ];
+  }, [indices]);
+
   return (
     <section
       aria-label="Core Market Barometers and Health Indices"
@@ -79,8 +92,8 @@ export function MarketBarometerBar() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-        {BAROMETERS.map((baro) => {
-          const isPositive = baro.changePercent >= 0;
+        {barometers.map((baro) => {
+          const isPositive = (baro.changePercent ?? 0) >= 0;
 
           return (
             <Link
@@ -113,9 +126,9 @@ export function MarketBarometerBar() {
                   </span>
                   <div className="flex items-baseline gap-1">
                     <span className="text-xl font-bold text-slate-100">
-                      {baro.value.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      {baro.value != null ? baro.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "—"}
                     </span>
-                    <span className="text-[10px] text-slate-500 font-normal">pts</span>
+                    {baro.value != null && <span className="text-[10px] text-slate-500 font-normal">pts</span>}
                   </div>
                 </div>
 
@@ -123,10 +136,14 @@ export function MarketBarometerBar() {
                   <span className="text-[9px] text-slate-500 uppercase block tracking-wider">
                     24h Delta
                   </span>
-                  <div className={`flex items-center gap-0.5 text-xs font-bold ${isPositive ? "text-emerald-400" : "text-rose-400"}`}>
-                    {isPositive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                    <span>{isPositive ? "+" : ""}{baro.changePercent.toFixed(2)}%</span>
-                  </div>
+                  {baro.changePercent != null ? (
+                    <div className={`flex items-center gap-0.5 text-xs font-bold ${isPositive ? "text-emerald-400" : "text-rose-400"}`}>
+                      {isPositive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                      <span>{isPositive ? "+" : ""}{baro.changePercent.toFixed(2)}%</span>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-slate-600">—</span>
+                  )}
                 </div>
               </div>
             </Link>

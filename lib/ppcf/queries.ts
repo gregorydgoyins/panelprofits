@@ -114,7 +114,7 @@ async function fetchPpcfCoverageRaw() {
     panelProfitsSourceLinkCount: number | null;
     comicbaseSourceLinkCount: number | null;
   }>((resolve) => {
-    setTimeout(() => resolve(FALLBACK_PPCF_COVERAGE), 1500);
+    setTimeout(() => resolve(FALLBACK_PPCF_COVERAGE), 150);
   });
 
   return Promise.race([queryPromise, timeoutPromise]);

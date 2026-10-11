@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createAdminServerClient } from '@/lib/supabase/admin';
 import { processGpaBatchIngestion } from '@/lib/gpa/ingest';
 import { GpaBatchIngestionPayload } from '@/lib/gpa/types';
 
@@ -31,15 +31,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://localhost:54321';
-    const supabaseKey =
-      process.env.SUPABASE_SERVICE_ROLE_KEY ||
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-      '';
-
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      auth: { persistSession: false },
-    });
+    const supabase = createAdminServerClient();
 
     const result = await processGpaBatchIngestion(supabase, body);
 

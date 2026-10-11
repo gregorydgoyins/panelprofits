@@ -76,9 +76,9 @@ export function EquitiesTradingFloor({
         <div className="grid gap-4 md:grid-cols-3">
           {contracts.map((contract) => {
             const indexMeta = indices.find((i) => i.indexCode === contract.index_code);
-            const val = indexMeta?.currentValue ?? (contract.index_code === "CE70" ? 2486.45 : contract.index_code === "PPIX100" ? 1130.82 : 1778.07);
-            const delta = indexMeta?.percentChange ?? (contract.index_code === "CE70" ? 0.68 : contract.index_code === "PPIX100" ? 0.56 : -0.40);
-            const isPos = delta >= 0;
+            const val = indexMeta?.currentValue ?? null;
+            const delta = indexMeta?.percentChange ?? null;
+            const isPos = delta !== null ? delta >= 0 : true;
 
             return (
               <Link
@@ -102,20 +102,22 @@ export function EquitiesTradingFloor({
                   <div>
                     <span className="text-[10px] font-mono text-slate-500 uppercase block">Level</span>
                     <span className="text-xl font-mono font-black text-slate-100">
-                      ${val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      {val != null ? `$${val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}
                     </span>
                   </div>
 
-                  <span
-                    className={`inline-flex items-center gap-0.5 rounded px-2 py-0.5 text-xs font-mono font-bold ${
-                      isPos
-                        ? "bg-emerald-950/60 text-emerald-400 border border-emerald-500/30"
-                        : "bg-rose-950/60 text-rose-400 border border-rose-500/30"
-                    }`}
-                  >
-                    {isPos ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                    {isPos ? `+${delta}%` : `${delta}%`}
-                  </span>
+                  {delta != null && (
+                    <span
+                      className={`inline-flex items-center gap-0.5 rounded px-2 py-0.5 text-xs font-mono font-bold ${
+                        isPos
+                          ? "bg-emerald-950/60 text-emerald-400 border border-emerald-500/30"
+                          : "bg-rose-950/60 text-rose-400 border border-rose-500/30"
+                      }`}
+                    >
+                      {isPos ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                      {isPos ? `+${delta}%` : `${delta}%`}
+                    </span>
+                  )}
                 </div>
 
                 <div className="mt-3 flex items-center justify-between text-[10px] font-mono text-slate-500">

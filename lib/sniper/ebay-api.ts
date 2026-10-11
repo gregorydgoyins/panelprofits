@@ -13,8 +13,26 @@ let cachedToken: EbayTokenCache | null = null;
  * Obtain an OAuth 2.0 application access token using official eBay client credentials
  */
 export async function getEbayOAuthToken(): Promise<string | null> {
-  const clientId = process.env.EBAY_CLIENT_ID;
-  const clientSecret = process.env.EBAY_CLIENT_SECRET;
+  let clientId = process.env.EBAY_CLIENT_ID;
+  let clientSecret = process.env.EBAY_CLIENT_SECRET;
+
+  if (!clientId || !clientSecret) {
+    try {
+      const fs = require("fs");
+      const path = require("path");
+      const envPath = path.resolve(process.cwd(), ".env.local");
+      if (fs.existsSync(envPath)) {
+        const content = fs.readFileSync(envPath, "utf-8");
+        for (const line of content.split("\n")) {
+          if (line.startsWith("EBAY_CLIENT_ID=") && !clientId) {
+            clientId = line.replace("EBAY_CLIENT_ID=", "").trim();
+          } else if (line.startsWith("EBAY_CLIENT_SECRET=") && !clientSecret) {
+            clientSecret = line.replace("EBAY_CLIENT_SECRET=", "").trim();
+          }
+        }
+      }
+    } catch {}
+  }
 
   if (!clientId || !clientSecret) {
     console.warn("[eBay API] Missing EBAY_CLIENT_ID or EBAY_CLIENT_SECRET");
@@ -73,6 +91,7 @@ export interface SearchEbayAuctionsParams {
   categoryIds?: string;
   minPrice?: number;
   maxPrice?: number;
+  buyingOptions?: "AUCTION" | "FIXED_PRICE" | "ALL";
 }
 
 export interface EbayItemAspects {
@@ -183,7 +202,15 @@ export async function searchEbayLiveAuctions(
   const limit = params.limit || 20;
   const q = encodeURIComponent(params.query || "CGC 9.8 comic");
 
-  let filter = "buyingOptions:{AUCTION}";
+  let filter = "";
+  if (params.buyingOptions === "FIXED_PRICE") {
+    filter = "buyingOptions:{FIXED_PRICE}";
+  } else if (params.buyingOptions === "ALL") {
+    filter = "buyingOptions:{AUCTION|FIXED_PRICE}";
+  } else {
+    filter = "buyingOptions:{AUCTION}";
+  }
+
   if (params.minPrice !== undefined || params.maxPrice !== undefined) {
     const min = params.minPrice ?? 0;
     const max = params.maxPrice ?? 2500;
@@ -253,8 +280,8 @@ export async function searchEbayLiveAuctions(
       const rawImg =
         item.thumbnailImages?.[0]?.imageUrl ||
         item.image?.imageUrl ||
-        "/placeholder.png";
-      const imageUrl = uprezEbayImage(rawImg);
+        "";
+      const imageUrl = rawImg ? uprezEbayImage(rawImg) : "";
 
       const galleryImages = [
         imageUrl,

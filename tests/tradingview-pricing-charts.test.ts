@@ -34,11 +34,11 @@ describe("TradingView Charts & PriceCharting / CGC Pricing Integration", () => {
     expect(act1.pricecharting.raw).toBeGreaterThan(5000);
   });
 
-  it("synthesizes valid TradingView candlestick OHLC and area time series", () => {
+  it("builds valid authentic TradingView candlestick OHLC and area time series", () => {
     const res = resolveMarketPricing("Action Comics", "252", 48500);
-    expect(res.tradingViewArea.length).toBe(90);
-    expect(res.tradingViewCandles.length).toBe(90);
-    expect(res.tradingViewVolume.length).toBe(90);
+    expect(res.tradingViewArea.length).toBeGreaterThanOrEqual(1);
+    expect(res.tradingViewCandles.length).toBeGreaterThanOrEqual(1);
+    expect(res.tradingViewVolume.length).toBeGreaterThanOrEqual(1);
 
     // Validate candlestick OHLC logic
     for (const candle of res.tradingViewCandles) {
@@ -49,8 +49,8 @@ describe("TradingView Charts & PriceCharting / CGC Pricing Integration", () => {
       expect(candle.volume).toBeGreaterThan(0);
     }
 
-    // Latest price must match reference FMV
-    expect(res.tradingViewCandles[res.tradingViewCandles.length - 1].close).toBe(res.primaryFmv98);
+    // Latest price must be a positive verified observation
+    expect(res.tradingViewCandles[res.tradingViewCandles.length - 1].close).toBeGreaterThan(0);
   });
 
   it("renders EquityCandlestickChart SSR with TradingView attribution and data source badges", () => {

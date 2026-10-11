@@ -1,6 +1,7 @@
 import { createAdminServerClient } from "@/lib/supabase/admin";
 import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
 import { resolveHistoricalKeyBadge, resolveHistoricalMarketClass } from "@/lib/equity/significance-classifier";
+import { getAuthoritativeCoverStrict } from "@/lib/comics/cover-authority";
 import type { EquityItem, LadderSpot } from "@/lib/equity/ticker-types";
 
 /**
@@ -41,6 +42,9 @@ interface RailBookRow {
 
 /** Cover through the Next image optimizer so 215px cards load ~20–40KB WebP/AVIF, not the full original. */
 export function optimizedCoverUrl(coverUrl: string): string {
+  if (!coverUrl || coverUrl.includes("526.jpg") || coverUrl.includes("files1.comics.org")) {
+    return "";
+  }
   return `/_next/image?url=${encodeURIComponent(coverUrl)}&w=${COVER_WIDTH}&q=75`;
 }
 
@@ -117,9 +121,14 @@ export function mapCoveredBook(row: RailBookRow): EquityItem | null {
   const ticker = formatComicEquityTicker(series, issue);
   const hasComicsRow = !row.comics_id.startsWith("gcs:");
 
+  const rawCover = (row.cover_url || "").trim();
+  const validCover = (rawCover && !rawCover.includes("526.jpg") && !rawCover.includes("files1.comics.org"))
+    ? rawCover
+    : (getAuthoritativeCoverStrict(series, issue) || "");
+
   return {
     entryId: `cb-${row.rail_seq}`,
-    coverImageUrl: optimizedCoverUrl(row.cover_url),
+    coverImageUrl: optimizedCoverUrl(validCover),
     ppLadder: ppLadder.length ? ppLadder : undefined,
     comicbaseSpots: comicbaseSpots.length ? comicbaseSpots : undefined,
     change,

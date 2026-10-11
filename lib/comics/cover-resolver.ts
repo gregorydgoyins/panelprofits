@@ -1,6 +1,8 @@
 import { displayIssue, displaySeries } from "./display";
 import type { ComicRecord } from "./types";
 import { lookupSqliteCover } from "./sqlite-covers";
+import { coverSourceContradictsPublisher, coverUrlContradictsPublisher } from "./cover-trust";
+import { getAuthoritativeCoverStrict } from "./cover-authority";
 
 export interface ResolvedCover {
   url: string;
@@ -170,8 +172,11 @@ export interface ComicCoverInput {
 export function resolveComicCover(comic: ComicCoverInput): ResolvedCover {
   const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://vbcmjmakluyjnsmisoth.supabase.co";
 
-  // Tier 1: Canonical Supabase / Cloud Storage Path
-  if (comic.cover_storage_path && comic.cover_storage_path.trim().length > 0) {
+  // Cross-universe contradiction defense: Discard candidate covers sourced from incompatible publisher wikis
+  const isContradictory = coverSourceContradictsPublisher(comic.cover_source, comic.publisher);
+
+  // Tier 1: Canonical Supabase / Cloud Storage Path (trusted if not contradictory)
+  if (!isContradictory && comic.cover_storage_path && comic.cover_storage_path.trim().length > 0) {
     const cleanPath = comic.cover_storage_path.trim();
     if (!cleanPath.startsWith("http")) {
       const bucketPrefixedPath = cleanPath.startsWith("pp/")
@@ -189,27 +194,33 @@ export function resolveComicCover(comic: ComicCoverInput): ResolvedCover {
 
   // Tier 2: Authoritative High-Resolution Direct Cover URL
   // Prioritize cover_retrieval_url (1600px master) over cover_url (240px thumbnail)
-  const directCandidates = [comic.cover_retrieval_url, comic.cover_url, comic.cover_original_url];
-  for (const candidate of directCandidates) {
-    if (candidate && typeof candidate === "string" && candidate.trim().length > 0) {
-      let trimmed = candidate.trim();
-      // Upgrade PriceCharting 240px thumbnails to 1600px master high-resolution
-      if (trimmed.includes("images.pricecharting.com") && trimmed.includes("/240.jpg")) {
-        trimmed = trimmed.replace("/240.jpg", "/1600.jpg");
-      }
-      // Uncap Wikia/Fandom images by removing downscale query parameter
-      if (trimmed.includes("static.wikia.nocookie.net") && trimmed.includes("/scale-to-width-down/")) {
-        trimmed = trimmed.replace(/\/scale-to-width-down\/\d+/, "");
-      }
-      if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
-        if (!/doubleclick|adserver|pixel\.gif|blank\.gif/i.test(trimmed)) {
-          return {
-            url: trimmed,
-            isFallback: false,
-            sourceTier: "canonical_url",
-            qualityTier: comic.cover_verified_at ? "verified" : "unverified",
-            checksum: comic.cover_sha256 || null,
-          };
+  if (!isContradictory) {
+    const directCandidates = [comic.cover_retrieval_url, comic.cover_url, comic.cover_original_url];
+    for (const candidate of directCandidates) {
+      if (candidate && typeof candidate === "string" && candidate.trim().length > 0) {
+        let trimmed = candidate.trim();
+        // Skip known GCD placeholder image that returns 403 / broken asset
+        if (trimmed.includes("526.jpg")) continue;
+        // Skip any candidate whose URL contradicts the publisher family
+        if (coverUrlContradictsPublisher(trimmed, comic.publisher)) continue;
+        // Upgrade PriceCharting 240px thumbnails to 1600px master high-resolution
+        if (trimmed.includes("images.pricecharting.com") && trimmed.includes("/240.jpg")) {
+          trimmed = trimmed.replace("/240.jpg", "/1600.jpg");
+        }
+        // Uncap Wikia/Fandom images by removing downscale query parameter
+        if (trimmed.includes("static.wikia.nocookie.net") && trimmed.includes("/scale-to-width-down/")) {
+          trimmed = trimmed.replace(/\/scale-to-width-down\/\d+/, "");
+        }
+        if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+          if (!/doubleclick|adserver|pixel\.gif|blank\.gif/i.test(trimmed)) {
+            return {
+              url: trimmed,
+              isFallback: false,
+              sourceTier: "canonical_url",
+              qualityTier: comic.cover_verified_at ? "verified" : "unverified",
+              checksum: comic.cover_sha256 || null,
+            };
+          }
         }
       }
     }
@@ -263,7 +274,7 @@ export function resolveComicCover(comic: ComicCoverInput): ResolvedCover {
   // Tier 5.5: 115k Catalog Database High-Res Storage Cover (Supabase WebP & GCD)
   if (comic.series && comic.issue_number) {
     const sqliteUrl = lookupSqliteCover(comic.series, comic.issue_number);
-    if (sqliteUrl) {
+    if (sqliteUrl && !coverUrlContradictsPublisher(sqliteUrl, comic.publisher)) {
       return {
         url: sqliteUrl,
         isFallback: false,

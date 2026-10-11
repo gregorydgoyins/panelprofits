@@ -100,25 +100,25 @@ const KNOWN_TICKER_MAP: Record<string, string> = {
   'SILVER_AGE_INDEX': '$SILV', 'PP-IDX-SILV': '$SILV',
   'DC_CORE_30': '$DC30', 'PP-IDX-DC30': '$DC30',
 
-  // Gadgets & Artefacts
-  'MJOLNIR': '$MJOL', 'PP-GAD-MJOLNIR': '$MJOL',
-  'INFINITY_GAUNTLET': '$GANT', 'PP-GAD-INFINITY_GAUNTLET': '$GANT',
-  'BATMOBILE': '$BATMB', 'PP-GAD-BATMOBILE': '$BATMB',
-
-  // Locations & Realities
-  'WAKANDA': '$WAK', 'PP-LOC-WAKANDA': '$WAK',
-  'GOTHAM_CITY': '$GOTH', 'PP-LOC-GOTHAM_CITY': '$GOTH',
-  'EARTH_616': '$E616', 'PP-REAL-EARTH_616': '$E616',
-
-  // Commodities
-  'VIBRANIUM': '$VIB', 'PP-CMDT-VIBRANIUM': '$VIB',
-  'ADAMANTIUM': '$ADM', 'PP-CMDT-ADAMANTIUM': '$ADM',
-  'KRYPTONITE': '$KRYP', 'PP-CMDT-KRYPTONITE': '$KRYP',
+  // Sovereign Comic Equities
+  'ACTION_COMICS_252': '$ACT.252', 'PP-COMIC-ACT252': '$ACT.252',
+  'BATMAN_251': '$BAT.251', 'PP-COMIC-BAT251': '$BAT.251',
+  'AMAZING_SPIDER_MAN_300': '$ASM.300', 'PP-COMIC-ASM300': '$ASM.300',
+  'INCREDIBLE_HULK_181': '$HLK.181', 'PP-COMIC-HLK181': '$HLK.181',
+  'FANTASTIC_FOUR_48': '$FF.48', 'PP-COMIC-FF48': '$FF.48',
+  'X_MEN_1': '$XMN.01', 'PP-COMIC-XMN1': '$XMN.01',
+  'GIANT_SIZE_X_MEN_1': '$GSX.01', 'PP-COMIC-GSX1': '$GSX.01',
+  'TEENAGE_MUTANT_NINJA_TURTLES_1': '$TMNT.01', 'PP-COMIC-TMNT1': '$TMNT.01',
+  'WATCHMEN_1': '$WATCH.01', 'PP-COMIC-WATCH1': '$WATCH.01',
+  'DARK_KNIGHT_RETURNS_1': '$DKR.01', 'PP-COMIC-DKR1': '$DKR.01',
+  'SPAWN_1': '$SPAWN.01', 'PP-COMIC-SPAWN1': '$SPAWN.01',
+  'WALKING_DEAD_1': '$TWD.01', 'PP-COMIC-TWD1': '$TWD.01',
 };
 
 export function formatHumanTicker(symbol: any, displayName?: string, assetType?: string): string {
   const sym = String(symbol ?? '').trim();
   if (!sym) return '$ASSET';
+  if (sym.startsWith('$')) return sym;
   const cleanSym = sym.toUpperCase();
 
   if (KNOWN_TICKER_MAP[cleanSym]) {

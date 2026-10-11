@@ -39,28 +39,11 @@ export async function GET(request: Request) {
         // Query official eBay REST API across multi-stream (US, UK, CA, AU, CGC, CBCS, PSA)
         const liveEbay = await searchEbayMultiStream();
 
-        // Load curated baseline data
-        const projectDataFile = path.resolve(process.cwd(), "data/live_auctions.json");
-        let fallbackData: RawAuctionListing[] = [];
-        if (fs.existsSync(projectDataFile)) {
-          try {
-            fallbackData = JSON.parse(fs.readFileSync(projectDataFile, "utf-8"));
-          } catch {
-            // ignore
-          }
-        }
-
-        // Merge, prioritizing official live eBay items first
+        // Deduplicate official live eBay items
         const seenIds = new Set<string>();
         const combined: RawAuctionListing[] = [];
 
         for (const it of liveEbay) {
-          if (!seenIds.has(it.id)) {
-            seenIds.add(it.id);
-            combined.push(it);
-          }
-        }
-        for (const it of fallbackData) {
           if (!seenIds.has(it.id)) {
             seenIds.add(it.id);
             combined.push(it);

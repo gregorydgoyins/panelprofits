@@ -157,7 +157,7 @@ export interface CandidateEvaluation {
   allInCost: number;
   dollarSpread: number;
   discountPercent: number;
-  historicalComps: Array<{ date: string; grade: number; price: number; venue: string }>;
+  historicalComps: Array<{ date: string; grade: number; price: number; venue: string; title?: string; url?: string }>;
   
   // Explicit Reason Why This Is A Good Buy (Alpha Thesis)
   whyItsAGoodBuy: string;
