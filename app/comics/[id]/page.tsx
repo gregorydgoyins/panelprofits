@@ -15,6 +15,10 @@ import { AtomicVariantsAndInternationalMatrix } from "@/components/comics/atomic
 import { BlendedHoldingDossier } from "@/components/comics/blended-holding-dossier";
 import { findComicBaseVideoForComic } from "@/lib/video/comicbase-archive";
 import { ComicBaseVideoPlayer } from "@/components/comics/comicbase-video-player";
+import { InstitutionalMetricsBanner } from "@/components/comics/institutional-metrics-banner";
+import { ComparativePriceMatrix } from "@/components/comics/comparative-price-matrix";
+import { InvestopediaDueDiligence } from "@/components/comics/investopedia-due-diligence";
+import { VideoIntelligenceCard } from "@/components/comics/video-intelligence-card";
 import { getGcdRelationalData } from "@/lib/comics/gcd-relational-service";
 import { MultiPerspectivePanel, type PerspectiveData } from "@/components/detail/shared/MultiPerspectivePanel";
 import AuctionHistoryCard from "@/components/detail/equity/AuctionHistoryCard";
@@ -609,6 +613,17 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
               Live Buy/Sell Execution Triggers, CGC Census Strip, Narrative Story Card
             ════════════════════════════════════════════════════════════════════════ */}
         <section id="section-cockpit" className="space-y-4">
+          {/* Top Institutional Header: FMV Anchor, Census Intel, Acquisition All-In, Double-Up & 50% Win Target Boxes */}
+          <InstitutionalMetricsBanner
+            anchorFmv={consensusFmv}
+            censusTotal={censusSummary.totalGraded}
+            censusCount98={highGradeCount}
+            censusHigher={0}
+            censusScarcityTier={scarcityLabel}
+            resolvedGrade={9.8}
+            ticker={tickerSymbol}
+          />
+
           <HeroSection
             variantId={comic.id}
             variant={fullVariant}
@@ -752,6 +767,32 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
             isAuthenticated={Boolean(user)}
           />
 
+          {/* Multi-Source Comparative Price Matrix (eBay Realized • ComicBase • Panel Profits • GoCollect) */}
+          <ComparativePriceMatrix
+            comic={comic}
+            inspectedGrade="9.8"
+            ticker={tickerSymbol}
+          />
+
+          {/* Investopedia Due Diligence & Valuation Lens */}
+          <InvestopediaDueDiligence
+            fmvPrice={consensusFmv}
+            series={seriesLabel}
+            issueNumber={issueLabel}
+            publicationYear={comic.publication_year}
+            keyStatus={gcdBadges.length > 0 ? gcdBadges[0] : "Major Sovereign Benchmark"}
+            storyTitle={enrichedGcdData.story_title}
+            synopsis={enrichedGcdData.synopsis}
+            characters={enrichedGcdData.characters}
+            writer={cleanGcdWriter}
+            penciler={cleanGcdPenciler}
+            inker={cleanGcdInker}
+            colorist={cleanGcdColorist}
+            letterer={cleanGcdLetterer}
+            editor={cleanGcdEditor}
+            genre={enrichedGcdData.genre}
+          />
+
           {/* Canonical Multi-Grade Pricing Dossier & Continuous Order Book */}
           <PricingDossier comic={comic} />
 
@@ -845,8 +886,14 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
             coverImageUrl={fullVariant.coverImageUrl}
           />
 
-          {/* Authoritative Single Video Player */}
-          {cbVideo && <ComicBaseVideoPlayer video={cbVideo} />}
+          {/* Primary Source Video Intelligence & Archival Retrospective */}
+          <VideoIntelligenceCard
+            series={comic.series}
+            issueNumber={String(comic.issue_number)}
+            cbVideo={cbVideo}
+            writer={cleanGcdWriter}
+            penciler={cleanGcdPenciler}
+          />
 
           {/* GCD Archival Bibliographic Dossier */}
           <GcdBibliographicDossier
