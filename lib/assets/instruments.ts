@@ -38,6 +38,7 @@ import { issueInstitutional } from "./institutions";
 import { issueCharacters } from "./characters";
 import type { UniverseCensus } from "./universe";
 import type { RosterCharacter } from "./roster";
+import type { Footprint } from "./footprint";
 import { issuePredictions } from "./prediction-markets";
 import type { Outcome } from "./outcomes";
 import { conditionsFor, type ShockMap } from "./shock-propagation";
@@ -87,7 +88,7 @@ function item(
 
 const T_OPTION = OPTION.windowDays / 252;
 
-export function issueInstruments(unders: Underlying[], shocks: ShockMap = new Map(), now: number = Date.now(), outcomes: Outcome[] = [], census: UniverseCensus[] = [], roster: RosterCharacter[] = []): AssetItem[] {
+export function issueInstruments(unders: Underlying[], shocks: ShockMap = new Map(), now: number = Date.now(), outcomes: Outcome[] = [], census: UniverseCensus[] = [], roster: RosterCharacter[] = [], footprints: Map<string, Footprint> = new Map()): AssetItem[] {
   const out: AssetItem[] = [];
   const eligible = unders.filter(derivativeEligible);
   const tkr = (u: Underlying) => `${u.series.replace(/[^A-Za-z]/g, "").slice(0, 3).toUpperCase()}${u.issueNumber.replace(/[^0-9A-Za-z]/g, "")}${u.year ? `-${String(u.year).slice(2)}` : ""}`;
@@ -252,7 +253,7 @@ export function issueInstruments(unders: Underlying[], shocks: ShockMap = new Ma
   }
 
   out.push(...issueInstitutional(shocks, now));
-  out.push(...issueCharacters(unders, shocks, now, census, roster));
+  out.push(...issueCharacters(unders, shocks, now, census, roster, footprints));
   out.push(...issuePredictions(outcomes, shocks, now));
 
   return out;
