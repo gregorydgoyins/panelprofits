@@ -4,7 +4,9 @@ import React, { useState } from 'react';
 import DetailSidebar from './DetailSidebar';
 import PriceChartPanel from './PriceChartPanel';
 import ExecutionPreviewModal from './ExecutionPreviewModal';
-import type { DetailResponse, GradePrice, HistoryEntry, BollingerPoint, InstrumentIntelligence, Creator } from './types';
+import type { DetailResponse, GradePrice, HistoryEntry } from './types';
+import type { ChartSale } from './TradingChartPanel';
+import type { ExecutionQuote } from '@/lib/comics/detail-model';
 import type { getEraColors } from '@/lib/design-system/colors';
 import { buildEquityUrl } from '@/lib/urlBuilder';
 
@@ -16,10 +18,9 @@ interface TopChartSectionProps {
   priceHistory: HistoryEntry[];
   censusSummary: DetailResponse['censusSummary'];
   eraColors: ReturnType<typeof getEraColors>;
-  instrumentIntelligence: InstrumentIntelligence;
+  quote: ExecutionQuote | null;
   creatorNames?: string[];
-  bollingerData?: BollingerPoint[];
-  aiInsight?: string | null;
+  sales?: ChartSale[];
 }
 
 export function TopChartSection({
@@ -30,12 +31,10 @@ export function TopChartSection({
   priceHistory,
   censusSummary,
   eraColors,
-  instrumentIntelligence,
+  quote,
   creatorNames = [],
-  bollingerData = [],
-  aiInsight = null,
+  sales = [],
 }: TopChartSectionProps) {
-  const [showBollinger, setShowBollinger] = useState(false);
   const [execModal, setExecModal] = useState<{ open: boolean; action: 'buy' | 'sell' }>({
     open: false,
     action: 'buy',
@@ -58,27 +57,21 @@ export function TopChartSection({
           censusSummary={censusSummary as any}
           detailUrl={variantId ? buildEquityUrl(variantId) : undefined}
           onOpenExecModal={(action) => setExecModal({ open: true, action })}
-          hasIntelligence={!!instrumentIntelligence}
+          hasQuote
           tradeConfirmation={tradeConfirmation}
         />
         <PriceChartPanel
           history={priceHistory}
-          workName={variant.workName}
           eraColors={eraColors}
           gradeLattice={gradeLattice}
-          aiInsight={aiInsight}
-          bollingerData={bollingerData}
-          showBollinger={showBollinger}
-          onBollingerToggle={setShowBollinger}
-          assetId={variant.id}
+          sales={sales}
         />
       </div>
 
       {execModal.open && (
         <ExecutionPreviewModal
           variant={variant}
-          keyPrices={keyPrices}
-          intel={instrumentIntelligence}
+          quote={quote}
           onClose={() => setExecModal({ open: false, action: 'buy' })}
           onConfirm={() => {
             setTradeConfirmation({ action: execModal.action, id: Date.now() });

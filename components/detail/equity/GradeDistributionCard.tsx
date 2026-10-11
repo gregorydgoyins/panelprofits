@@ -10,11 +10,6 @@ export interface GradeDistributionCardProps {
     highGradeCount?: number;
     histogram?: Array<{ grade: string; count: number }>;
   } | null;
-  gradeLattice?: Array<{
-    grade: string;
-    priceUsd: number;
-    salesVolume?: number | null;
-  }> | null;
   eraColors: {
     border: string;
     bg: string;
@@ -76,39 +71,15 @@ function getGradeBarColor(grade: string, accentColor: string): string {
 
 export default function GradeDistributionCard({
   censusSummary,
-  gradeLattice,
   eraColors,
 }: GradeDistributionCardProps) {
-  // 1. Resolve histogram items (census histogram preferred, otherwise synthetic from gradeLattice)
+  // 1. Census histogram only. With no census rows on file the card shows nothing.
   const items: DistributionItem[] = useMemo(() => {
-    if (Array.isArray(censusSummary?.histogram) && censusSummary.histogram.length > 0) {
-      return censusSummary.histogram
-        .filter((h) => h && h.grade != null)
-        .map((h) => ({
-          grade: String(h.grade),
-          count: typeof h.count === 'number' && !isNaN(h.count) ? Math.max(0, h.count) : 0,
-        }));
-    }
-
-    if (Array.isArray(gradeLattice) && gradeLattice.length > 0) {
-      const gradeMap = new Map<string, number>();
-      for (const g of gradeLattice) {
-        if (!g || g.grade == null) continue;
-        const gr = String(g.grade);
-        const vol =
-          typeof g.salesVolume === 'number' && !isNaN(g.salesVolume) && g.salesVolume > 0
-            ? Math.round(g.salesVolume)
-            : 1;
-        gradeMap.set(gr, (gradeMap.get(gr) ?? 0) + vol);
-      }
-      return Array.from(gradeMap.entries()).map(([grade, count]) => ({
-        grade,
-        count,
-      }));
-    }
-
-    return [];
-  }, [censusSummary?.histogram, gradeLattice]);
+    if (!Array.isArray(censusSummary?.histogram)) return [];
+    return censusSummary.histogram
+      .filter((h) => h && h.grade != null && typeof h.count === 'number' && !isNaN(h.count) && h.count >= 0)
+      .map((h) => ({ grade: String(h.grade), count: h.count }));
+  }, [censusSummary?.histogram]);
 
   // 2. Sort grades descending and take top 8 max
   const displayItems = useMemo(() => {
@@ -152,23 +123,7 @@ export default function GradeDistributionCard({
     return '#ef4444';
   }, [concentrationPct]);
 
-  // Fallback: If no data at all
-  if (displayItems.length === 0) {
-    return (
-      <Panel
-        title="Grade Distribution"
-        icon={<BarChart3 className="w-3.5 h-3.5" />}
-        eraColors={eraColors as any}
-      >
-        <div
-          className="text-xs text-center py-5 select-none"
-          style={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'Hind, sans-serif' }}
-        >
-          Census data unavailable
-        </div>
-      </Panel>
-    );
-  }
+  if (displayItems.length === 0) return null;
 
   return (
     <Panel
@@ -316,7 +271,8 @@ export default function GradeDistributionCard({
             <div className="flex items-center gap-1.5 flex-wrap justify-end">
               {Object.entries(
                 (censusSummary as any).authorities.reduce((acc: Record<string, number>, curr: any) => {
-                  const auth = curr.grading_authority || curr.authority || 'CGC';
+                  const auth = curr.grading_authority || curr.authority;
+                  if (!auth) return acc;
                   const cnt = Number(curr.population_count || curr.count || 0);
                   acc[auth] = (acc[auth] || 0) + cnt;
                   return acc;

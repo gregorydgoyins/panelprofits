@@ -2,7 +2,6 @@ import { notFound, redirect } from "next/navigation";
 import { getComicById } from "@/lib/comics/queries";
 import { getCurrentUser, getComicUserStatus } from "@/lib/account/queries";
 import { PricingDossier } from "@/components/comics/pricing-dossier";
-import { Badge } from "@/components/ui/badge";
 import { displayIssue, displaySeries } from "@/lib/comics/display";
 import { getComicCoverEvidence } from "@/lib/comics/covers";
 import { getComicCensusDossier } from "@/lib/comics/census";
@@ -18,25 +17,32 @@ import { BlendedHoldingDossier } from "@/components/comics/blended-holding-dossi
 import { findComicBaseVideoForComic } from "@/lib/video/comicbase-archive";
 import { ComicBaseVideoPlayer } from "@/components/comics/comicbase-video-player";
 import { ComparativePriceMatrix } from "@/components/comics/comparative-price-matrix";
-import { InvestopediaDueDiligence } from "@/components/comics/investopedia-due-diligence";
 import { VideoIntelligenceCard } from "@/components/comics/video-intelligence-card";
 import { getGcdRelationalData } from "@/lib/comics/gcd-relational-service";
-import { MultiPerspectivePanel, type PerspectiveData } from "@/components/detail/shared/MultiPerspectivePanel";
 import AuctionHistoryCard from "@/components/detail/equity/AuctionHistoryCard";
 import HeroSection from "@/components/detail/equity/HeroSection";
 import TopChartSection from "@/components/detail/equity/TopChartSection";
 import PriceStatsPanel from "@/components/detail/equity/PriceStatsPanel";
 import NewsPanel from "@/components/detail/equity/NewsPanel";
-import type { DetailResponse, CompletenessData, InstrumentIntelligence } from "@/components/detail/equity/types";
-import { InspectableProvenancePanel, type ProvenanceClaim } from "@/components/detail/shared/InspectableProvenancePanel";
+import type { DetailResponse } from "@/components/detail/equity/types";
 import { getEraColors, getScarcityColors, type ScarcityTier } from "@/lib/design-system/colors";
 import { panelProfitsGrades } from "@/lib/pricing/source-ladder";
-import { buildComicPriceHistory } from "@/lib/pricing/historical-chronology";
+import { buildComicPriceHistory, normalizeGradeLabel } from "@/lib/pricing/historical-chronology";
 import { resolvePriceTier, isDirectEdition, PREMIUM_MIN_PRICE } from "@/lib/pricing/market-tiers";
 import StorySummaryCard from "@/components/detail/equity/StorySummaryCard";
 import { Suspense } from "react";
 import { resolveGcdStoryDossier } from "@/lib/comics/gcd-story-service";
 import { createAdminServerClient } from "@/lib/supabase/admin";
+
+import { DealerQuotesCard } from "@/components/comics/dealer-quotes-card";
+import { MarketTruthPanel } from "@/components/detail/shared/MarketTruthPanel";
+import { ProvenanceLedger } from "@/components/detail/shared/ProvenanceLedger";
+import { classifyScarcityTier } from "@/lib/equity/scarcity-float";
+import {
+  toSaleList, lastSale, countSalesByGrade, latestSnapshotDate, delta24hPct, ppSpreadAnchors,
+  censusNinePlus, buildCompleteness, buildProvenanceLedger, buildQuote, pickQuoteGrade,
+  type SaleRow, type SnapshotObservation, type ExecutionQuote,
+} from "@/lib/comics/detail-model";
 
 export const dynamic = "force-dynamic";
 
@@ -225,104 +231,98 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     colorist: cleanGcdColorist,
     letterer: cleanGcdLetterer,
     editor: cleanGcdEditor,
-    genre: gcdStoryDossier?.leadGenre || gcdData.genre || gcdData["GCD - story.genre"] || "Superhero",
+    genre: gcdStoryDossier?.leadGenre || gcdData.genre || gcdData["GCD - story.genre"] || "",
   };
-
   const isCe70Seat = Boolean(
     (comic as any).seat_number ||
     (comic.panel_profits_data as any)?.seat_number ||
     (comic as any).is_ce70_seat
   );
 
-  const eraKey = ((comic.panel_profits_data as any)?.era || (comic as any).production_age || "modern").toLowerCase();
-  const eraColors = getEraColors(eraKey);
-  const scarcityLabel = (comic.panel_profits_data as any)?.scarcityTier || "RARE";
+  const ppData = (comic.panel_profits_data ?? {}) as Record<string, any>;
+  const realEra: string | null = ppData.era || (comic as any).production_age || null;
+  const eraColors = getEraColors(String(realEra || "modern").toLowerCase());
   const consensusFmv = Number(comic.pp_grade_9_8_price || comic.baseline_grade_9_8_value || 0);
 
   let railRows: Array<{ comics_id: string; cover_url: string | null; cover_source: string | null; cover_suspect: boolean | null; cgc_total: number | null; printing: string | null; variant_label: string | null; volume: string | null }> = [];
-  let dbObservations: any[] = [];
-  const snapshotObservations: any[] = [];
-  let salesObservations: any[] = [];
+  const snapshotObservations: SnapshotObservation[] = [];
+  let salesObservations: SaleRow[] = [];
   try {
     const supabase = createAdminServerClient();
     const cleanSourceId = comic.pp_source_id ? String(comic.pp_source_id).replace(/^pp-/i, "").trim() : null;
-    
-    const [obsRes, salesRes] = await Promise.all([
-      cleanSourceId
-        ? supabase
-            .from("ppcf_price_observations")
-            .select("amount, observed_at, grade_label, price_field")
-            .eq("source_record_id", cleanSourceId)
-            .gt("amount", 0)
-            .order("observed_at", { ascending: true })
-            .limit(100)
-        : Promise.resolve({ data: [] }),
+
+    // Dated sales for this title and issue. Restored and signed copies are different products, so they are left out.
+    const salesPromise =
       comic.series && comic.issue_number
         ? supabase
             .from("graded_sales_observations")
-            .select("sale_price, sale_date, native_grade_text, venue, native_designation")
-            .ilike("title_name", comic.series)
+            .select("sale_price, sale_date, native_grade_text, venue, native_designation, has_restoration, has_signature")
+            .ilike("title_name", comic.series.replace(/[\\%_]/g, (m: string) => `\\${m}`))
             .eq("issue_number_raw", comic.issue_number)
+            .not("has_restoration", "is", true)
+            .not("has_signature", "is", true)
             .order("sale_date", { ascending: true })
             .limit(100)
-        : Promise.resolve({ data: [] }),
-    ]);
+        : Promise.resolve({ data: [] as SaleRow[] });
 
-    if (obsRes.data && obsRes.data.length > 0) {
-      dbObservations = obsRes.data;
-    }
-    // Real dated Panel Profits prices: one row per PriceCharting snapshot (undated legacy loads are skipped).
-    if (cleanSourceId) {
-      try {
-        const histRes = await supabase
+    const histPromise = cleanSourceId
+      ? supabase
           .from("pp_price_history")
           .select("snapshot_date,pp_price_raw,pp_price_2_0,pp_price_3_0,pp_price_4_0,pp_price_5_0,pp_price_6_0,pp_price_7_0,pp_price_8_0,pp_price_9_0,pp_price_9_2,pp_price_9_4,pp_price_9_6,pp_price_9_8,pp_price_10_0")
           .eq("pp_id", cleanSourceId)
           .not("snapshot_date", "is", null)
           .order("snapshot_date", { ascending: true })
-          .limit(400);
-        const gradeCols: Array<[string, string]> = [
-          ["pp_price_raw", "RAW"], ["pp_price_2_0", "2.0"], ["pp_price_3_0", "3.0"], ["pp_price_4_0", "4.0"], ["pp_price_5_0", "5.0"],
-          ["pp_price_6_0", "6.0"], ["pp_price_7_0", "7.0"], ["pp_price_8_0", "8.0"], ["pp_price_9_0", "9.0"], ["pp_price_9_2", "9.2"],
-          ["pp_price_9_4", "9.4"], ["pp_price_9_6", "9.6"], ["pp_price_9_8", "9.8"], ["pp_price_10_0", "10.0"],
-        ];
-        for (const row of (histRes.data ?? []) as Array<Record<string, any>>) {
-          for (const [col, grade] of gradeCols) {
-            const amount = Number(row[col]);
-            if (amount > 0) snapshotObservations.push({ amount, observed_at: row.snapshot_date, grade_label: grade, source_system: "PANEL_PROFITS_SNAPSHOT" });
-          }
-        }
-      } catch (_) {}
-    }
-    try {
-      let rq = supabase
-        .from("rail_books")
-        .select("comics_id,cover_url,cover_source,cover_suspect,cgc_total,printing,variant_label,volume")
-        .eq("series", comic.series)
-        .eq("issue_number", String(comic.issue_number))
-        .limit(8);
-      if (comic.publication_year) rq = rq.eq("year", comic.publication_year);
-      const railRes = await rq;
-      if (railRes.data) railRows = railRes.data as typeof railRows;
-    } catch (_) {}
-    if (salesRes.data && salesRes.data.length > 0) {
-      salesObservations = salesRes.data;
+          .limit(400)
+      : Promise.resolve({ data: [] as Array<Record<string, any>> });
+
+    let railQuery = supabase
+      .from("rail_books")
+      .select("comics_id,cover_url,cover_source,cover_suspect,cgc_total,printing,variant_label,volume")
+      .eq("series", comic.series)
+      .eq("issue_number", String(comic.issue_number))
+      .limit(8);
+    if (comic.publication_year) railQuery = railQuery.eq("year", comic.publication_year);
+
+    const [salesRes, histRes, railRes] = await Promise.all([
+      salesPromise.then((r: any) => r, () => ({ data: [] })),
+      histPromise.then((r: any) => r, () => ({ data: [] })),
+      railQuery.then((r: any) => r, () => ({ data: null })),
+    ]);
+
+    salesObservations = (salesRes.data ?? []) as SaleRow[];
+    if (railRes.data) railRows = railRes.data as typeof railRows;
+
+    // Real dated Panel Profits prices: one row per PriceCharting snapshot (undated legacy loads are skipped).
+    const gradeCols: Array<[string, string]> = [
+      ["pp_price_raw", "RAW"], ["pp_price_2_0", "2.0"], ["pp_price_3_0", "3.0"], ["pp_price_4_0", "4.0"], ["pp_price_5_0", "5.0"],
+      ["pp_price_6_0", "6.0"], ["pp_price_7_0", "7.0"], ["pp_price_8_0", "8.0"], ["pp_price_9_0", "9.0"], ["pp_price_9_2", "9.2"],
+      ["pp_price_9_4", "9.4"], ["pp_price_9_6", "9.6"], ["pp_price_9_8", "9.8"], ["pp_price_10_0", "10.0"],
+    ];
+    for (const row of (histRes.data ?? []) as Array<Record<string, any>>) {
+      for (const [col, grade] of gradeCols) {
+        const amount = Number(row[col]);
+        if (amount > 0) snapshotObservations.push({ amount, observed_at: row.snapshot_date, grade_label: grade });
+      }
     }
   } catch (_) {}
 
-  const obsCountByGrade = new Map<string, number>();
-  // Volume comes from dated sales only; a count of stored price rows is not sales volume.
-  for (const sale of salesObservations) {
-    if (sale.native_grade_text) {
-      obsCountByGrade.set(sale.native_grade_text, (obsCountByGrade.get(sale.native_grade_text) || 0) + 1);
-    }
-  }
+  const salesByGrade = countSalesByGrade(salesObservations);
+  const formattedSales = toSaleList(salesObservations, 20).map((s) => ({
+    grade: s.grade,
+    priceUsd: s.priceUsd,
+    date: s.date,
+    platform: s.platform ?? undefined,
+  }));
+  const latestSale = lastSale(salesObservations);
+  const saleDates = toSaleList(salesObservations, 1000).map((s) => s.date).sort();
+  const snapshotLatest = latestSnapshotDate(snapshotObservations);
+  const snapshotCount = new Set(snapshotObservations.map((o) => o.observed_at)).size;
 
-  const rawLattice = panelProfitsGrades(comic);
+  const rawLattice = panelProfitsGrades(comic) as Record<string, number | undefined>;
   const gradeLattice = Object.entries(rawLattice).map(([grade, priceUsd]) => ({
     grade,
     priceUsd: Number(priceUsd),
-    salesVolume: obsCountByGrade.get(grade) || null,
+    salesVolume: salesByGrade.get(grade) ?? null,
     observedAt: null,
   }));
 
@@ -330,9 +330,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
   const railVolume = Number.isFinite(railVolumeRaw) && railVolumeRaw > 0 ? railVolumeRaw : null;
   const hasCensus = Boolean(censusDossier?.grades && censusDossier.grades.length > 0);
   const highGradeCount =
-    censusDossier?.grades?.find(
-      (g) => g.grade_numeric === 9.8 || g.native_grade_text === "9.8"
-    )?.count_at_grade || 0;
+    censusDossier?.grades?.find((g) => g.grade_numeric === 9.8 || g.native_grade_text === "9.8")?.count_at_grade || 0;
 
   // CGC total from the catalog rail row when the census dossier has no snapshot for this book.
   const railCgcTotal = Number(
@@ -344,11 +342,12 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     (hasCensus && censusDossier?.grades ? censusDossier.grades.reduce((acc, g) => acc + (g.count_at_grade || 0), 0) : 0) ||
     railCgcTotal
   );
+  const censusSnapshotDate = censusDossier?.snapshot?.snapshot_timestamp || null;
 
   const censusSummary = {
     totalGraded: totalGradedCount,
-    highGradeCount: highGradeCount,
-    snapshotDate: censusDossier?.snapshot?.snapshot_timestamp || "",
+    highGradeCount,
+    snapshotDate: censusSnapshotDate ?? "",
     histogram: hasCensus && censusDossier?.grades
       ? censusDossier.grades.map((b) => ({
           grade: String(b.grade_numeric ?? b.native_grade_text),
@@ -357,9 +356,13 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
       : [],
   };
 
-  const rawPrice = rawLattice["RAW"] ?? (comic.panel_profits_data as any)?.pricecharting?.raw ?? null;
-  const grade10Price = rawLattice["10.0"] ?? (comic.panel_profits_data as any)?.pricecharting?.grade_10_0 ?? null;
-  const grade80Price = rawLattice["8.0"] ?? (comic.panel_profits_data as any)?.pricecharting?.grade_8_0 ?? null;
+  // Scarcity tier comes from the real census count of copies graded 9.0 or higher. No census, no tier.
+  const censusAtOrAbove90 = censusNinePlus(censusDossier?.grades);
+  const scarcityKey: ScarcityTier | null = censusAtOrAbove90 != null ? classifyScarcityTier(censusAtOrAbove90) : null;
+  const scarcityColors = getScarcityColors(scarcityKey);
+
+  const rawPrice = rawLattice["RAW"] ?? ppData.pricecharting?.raw ?? null;
+  const grade10Price = rawLattice["10.0"] ?? ppData.pricecharting?.grade_10_0 ?? null;
 
   const keyPrices = {
     fmv98Usd: consensusFmv,
@@ -370,28 +373,24 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     anchor9_8: consensusFmv,
     display_fmv_usd: consensusFmv,
     display_grade: "9.8",
-    premiumPct: 0.45,
-    gradeCount: Object.keys(rawLattice).length || 1,
-    delta24h: 0.00,
-    observedAt: new Date().toISOString(),
+    premiumPct: null,
+    gradeCount: Object.keys(rawLattice).length,
+    delta24h: delta24hPct(snapshotObservations, "9.8"),
+    observedAt: snapshotLatest,
   };
 
   // ppcf_price_observations stamps every price with the book's RELEASE date (not when the price was seen),
   // so it is not history. Dated history = PriceCharting snapshots (pp_price_history) + dated sales.
-  const priceHistory = buildComicPriceHistory(comic, { dbObservations: snapshotObservations, salesObservations });
-
-  const formattedSales = priceHistory
-    .filter((s) => s.grade === "9.8" || s.grade === "8.0" || s.grade === "RAW" || s.grade === "9.6")
-    .slice(-20)
-    .reverse()
-    .map((s) => ({
-      grade: s.grade,
-      priceUsd: s.priceUsd,
-      date: s.observedAt,
-      platform: s.source || "CGC",
-    }));
-
-  const scarcityColors = getScarcityColors(scarcityLabel as ScarcityTier);
+  const chartSales = toSaleList(salesObservations, 1000).flatMap((s) => {
+    const g = normalizeGradeLabel(s.grade);
+    return g ? [{ grade: g, priceUsd: s.priceUsd, date: s.date }] : [];
+  });
+  const priceHistory = buildComicPriceHistory(comic, {
+    dbObservations: snapshotObservations,
+    salesObservations: toSaleList(salesObservations, 1000).map((x) => ({
+      sale_price: x.priceUsd, sale_date: x.date, native_grade_text: x.grade, venue: x.platform ?? undefined,
+    })),
+  });
 
   // A cover found by a wiki name search for a different publisher is a false match: never show it.
   const dbCoverContradicts = coverSourceContradictsPublisher(comic.cover_source, comic.publisher);
@@ -406,18 +405,21 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
   );
 
   // Canonical Asset Class & Market Price Tiers:
-  // - OTC: price < 17.99
-  // - STD: 18.00 to 44.99
-  // - PREMIUM: 45.00 to infinity
-  // - SOV: Strictly reserved for direct universal bluelabel 9.8 apex benchmark equities (e.g. verified CE70 seats)
+  // - OTC: price < 17.99 · STD: 18.00 to 44.99 · PREMIUM: 45.00 and up
+  // - SOV: reserved for direct universal 9.8 apex benchmark equities (verified CE70 seats)
   const isDirect = isDirectEdition(comic.direct_or_variant) && isDirectEdition(comic.cover_variant);
   const priceTier = resolvePriceTier(consensusFmv);
-  const isTrulySovereign = Boolean(
-    isCe70Seat &&
-    isDirect &&
-    consensusFmv >= PREMIUM_MIN_PRICE
-  );
+  const isTrulySovereign = Boolean(isCe70Seat && isDirect && consensusFmv >= PREMIUM_MIN_PRICE);
   const effectiveAssetClass = isTrulySovereign ? "SOV" : priceTier;
+
+  const completenessData = buildCompleteness({
+    cover: Boolean(authoritativeCoverImage),
+    census: totalGradedCount > 0,
+    gradeLattice: gradeLattice.length > 0,
+    priceHistory: priceHistory.length > 0,
+    recentSales: formattedSales.length > 0,
+    liquidity: salesObservations.length > 0,
+  });
 
   const fullVariant: DetailResponse["variant"] = {
     id: comic.id,
@@ -431,52 +433,38 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     marketLane: consensusFmv >= 45 ? "investment_grade" : consensusFmv >= 18 ? "standard_exchange" : "over_the_counter",
     isSovereign: isTrulySovereign,
     marketPriceClass: priceTier,
-    certificationState: "CGC_CERTIFIED",
-    editionForm: comic.direct_or_variant || "Direct",
+    certificationState: null,
+    editionForm: comic.direct_or_variant || null,
     productId: comic.id,
     sourceSlug: comic.series.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
     issueNumber: String(comic.issue_number),
-    year: comic.publication_year || 1985,
-    productYear: comic.publication_year || 1985,
+    year: comic.publication_year ?? null,
+    productYear: comic.publication_year ?? null,
     yearDivergence: false,
     yearGap: 0,
     workName: seriesLabel,
     publisher: authoritativePublisher,
-    era: eraKey,
-    scarcityTier: scarcityLabel,
+    era: realEra ? String(realEra).toLowerCase() : "",
+    scarcityTier: scarcityKey ?? "",
     coverImageUrl: authoritativeCoverImage,
-    coverSource: "Authoritative Catalog Archive",
+    coverSource: comic.cover_source ?? null,
     coverMeta: {
-      source: "Exchange Benchmark / Certified Grader Consensus",
+      source: comic.cover_source ?? null,
       verified: coverIsTrusted,
-      eraVerified: true,
+      eraVerified: false,
       adminVerified: Boolean(comic.cover_verified_at) && !dbCoverContradicts,
     },
     coverVerified: coverIsTrusted,
-    coverResolvedAt: comic.cover_verified_at || new Date().toISOString(),
+    coverResolvedAt: comic.cover_verified_at ?? null,
     totalGradesPriced: Object.keys(rawLattice).length,
     issueStatus: "ACTIVE",
-    identityConfidence: 98,
-  };
-
-  const completenessData: CompletenessData = {
-    sections: {
-      cover: Boolean(authoritativeCoverImage),
-      census: Boolean(censusDossier?.snapshot?.total_graded),
-      gradeLattice: gradeLattice.length > 0,
-      priceHistory: priceHistory.length > 0,
-      recentSales: formattedSales.length > 0,
-      liquidity: true,
-    },
-    score: 98,
-    total: 100,
-    grade: "A",
+    identityConfidence: null,
   };
 
   const fullCensusSummary: DetailResponse["censusSummary"] = {
     totalGraded: censusSummary.totalGraded,
-    highGradeCount: highGradeCount,
-    floatConcentration: 0.12,
+    highGradeCount,
+    floatConcentration: null,
     snapshotDate: censusSummary.snapshotDate,
     histogram: censusSummary.histogram,
     scope: "variant",
@@ -486,167 +474,56 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
   const atomicPrice = rawPrice != null && Number(rawPrice) > 0 ? Number(rawPrice) : null;
   const instrumentStates = {
     sovereign: isTrulySovereign ? { grade: "9.8", priceUsd: consensusFmv } : null,
-    anchor: consensusFmv > 0 ? { grade: "9.8", priceUsd: consensusFmv, salesVolume: obsCountByGrade.get("9.8") || 0 } : null,
-    atomic: atomicPrice != null && atomicPrice > 0 ? { grade: "RAW", priceUsd: atomicPrice } : null,
-    anchorToAtomicMultiple: atomicPrice != null && atomicPrice > 0 && consensusFmv > 0 ? Number((consensusFmv / atomicPrice).toFixed(1)) : null,
-    sovereignToAtomicMultiple: isTrulySovereign && atomicPrice != null && atomicPrice > 0 ? Number((consensusFmv / atomicPrice).toFixed(1)) : null,
+    anchor: consensusFmv > 0 ? { grade: "9.8", priceUsd: consensusFmv, salesVolume: salesByGrade.get("9.8") ?? 0 } : null,
+    atomic: atomicPrice != null ? { grade: "RAW", priceUsd: atomicPrice } : null,
+    anchorToAtomicMultiple: atomicPrice != null && consensusFmv > 0 ? Number((consensusFmv / atomicPrice).toFixed(1)) : null,
+    sovereignToAtomicMultiple: isTrulySovereign && atomicPrice != null ? Number((consensusFmv / atomicPrice).toFixed(1)) : null,
   };
 
-  const instrumentIntelligence: InstrumentIntelligence = {
-    anchorClass: isCe70Seat ? "SOVEREIGN" : "STD",
-    liquidityScore: 92,
-    liquidityTier: "Active",
-    expectedFillDays: 2.4,
-    volatilityPct: 0.14,
-    volatilityCv: 0.18,
-    volatilityRegime: "CALM",
-    computedExecution: {
-      fillProbability: 0.94,
-      baseFillProbability: 0.92,
-      slippageBps: [25, 40] as [number, number],
-      baseSlippageBps: [20, 35] as [number, number],
-      structuralRiskFlag: false,
-      fillDays: 2.4,
-      regime: 'CALM',
-      policyVersion: '1.0',
-    },
-    marketRegime: {
-      binaryRegime: "CALM",
-      fourStateRegime: "CALM",
-      drawdown: null,
-      tick: 1,
-      stressIndex: null,
-      tectonicTier: 0,
-      tectonicLabel: "STABLE",
-      panicDurationTicks: 0,
-      principalOverlayActive: false,
-      principalOverlayTier: 0,
-      principalOverlayRemaining: 0,
-      principalOverlayTotal: 0,
-      scarVolAdjustment: 0,
-      scarElasticityAdj: 0,
-      scarSpreadAdj: 0,
-    },
-  };
+  // Stored PriceCharting dealer buy / retail sell pairs. Drives the spread strip, the quote card and the quote modal.
+  const spreadAnchors = ppSpreadAnchors(ppData.spreads);
+  const quoteGrade = pickQuoteGrade(spreadAnchors);
+  const quote: ExecutionQuote | null = quoteGrade
+    ? buildQuote(quoteGrade, quoteGrade === "9.8" ? (consensusFmv > 0 ? consensusFmv : null) : (rawLattice[quoteGrade] != null ? Number(rawLattice[quoteGrade]) : null), spreadAnchors, snapshotLatest)
+    : consensusFmv > 0
+      ? buildQuote("9.8", consensusFmv, spreadAnchors, snapshotLatest)
+      : null;
 
-  const variantObj = {
-    id: comic.id,
-    workName: seriesLabel,
-    seriesName: comic.series,
-    productName: `${seriesLabel} #${comic.issue_number}`,
-    issueNumber: String(comic.issue_number),
-    publisher: authoritativePublisher,
-    publicationYear: comic.publication_year || 2024,
-    era: (comic.panel_profits_data as any)?.era || "Modern Age",
-    scarcityTier: scarcityLabel,
-    identityConfidence: 98,
-    coverImageUrl: authoritativeCoverImage,
-    title: comic.title || seriesLabel,
-    keyStatus: gcdBadges.length > 0 ? "KEY" : "MAJOR KEY",
-    firstAppearance: debut?.characters?.[0] || undefined,
-  };
+  const provenanceItems = buildProvenanceLedger({
+    fmv98: consensusFmv > 0 ? consensusFmv : null,
+    ppSnapshotDate: snapshotLatest,
+    ppSnapshotCount: snapshotCount,
+    ppSourceId: comic.pp_source_id ? String(comic.pp_source_id) : null,
+    census: totalGradedCount > 0 ? { total: totalGradedCount, snapshotDate: censusSnapshotDate } : null,
+    sales: salesObservations.length > 0 && saleDates.length > 0 ? { count: saleDates.length, first: saleDates[0], last: saleDates[saleDates.length - 1] } : null,
+    cover: authoritativeCoverImage ? { source: comic.cover_source ?? null, verifiedAt: comic.cover_verified_at ?? null } : null,
+  });
 
-  const seriesObj = {
-    name: comic.series,
-    totalIssues: 50,
-    startYear: comic.publication_year || 2024,
-    endYear: undefined,
-  };
+  const heroCreators = (() => {
+    const list: Array<{ id: string; name: string; role: string; bio: null; notableWorks: never[]; activeYears: null; wikiUrl: null }> = [];
+    const seen = new Set<string>();
+    const add = (name: string, role: string) => {
+      if (!name || seen.has(`${name}|${role}`)) return;
+      if (role !== "Colorist" && role !== "Letterer" && list.some((c) => c.name === name)) return;
+      seen.add(`${name}|${role}`);
+      list.push({ id: name, name, role, bio: null, notableWorks: [], activeYears: null, wikiUrl: null });
+    };
+    add(cleanGcdWriter, "Writer");
+    add(cleanGcdPenciler, "Penciler");
+    add(cleanGcdInker, "Inker");
+    add(cleanGcdColorist, "Colorist");
+    add(cleanGcdLetterer, "Letterer");
+    if (list.length === 0 && debut?.creators?.length) {
+      for (const c of debut.creators) add(sanitizeCreator(c), "Creator");
+    }
+    return list.length > 0 ? { data: list } : undefined;
+  })();
 
-  const completenessObj = {
-    score: 98,
-    present: [
-      "Authoritative Sourced Cover Artwork",
-      "Multi-Source Continuous Market Order Book",
-      "CGC Census Verified Dossier",
-      "GCD Relational Variant & International Graph",
-      "Investopedia DCF Valuation & Cost Basis Model",
-      "Multi-Grade Bid/Ask Spreads",
-    ],
-    missing: [],
-  };
+  const spreadData =
+    Object.keys(spreadAnchors).length > 0
+      ? { found: true, data: { spreadMethod: "PriceCharting", observedAnchors: spreadAnchors } }
+      : { found: false, data: null };
 
-  const saleIntelligenceObj = {
-    avgSalePrice: consensusFmv,
-    medianSalePrice: consensusFmv,
-    totalSalesCount: dbObservations.length > 0 ? dbObservations.length : (hasCensus ? highGradeCount : 0),
-    salesVelocity: dbObservations.length > 0 ? Number((dbObservations.length / 30).toFixed(1)) : 0,
-  };
-
-  const perspectiveData: PerspectiveData = {
-    marketTruth: {
-      consensusFmv: consensusFmv,
-      lastSalePrice: consensusFmv,
-      lastSaleDate: "Recent Verified",
-      salesVolume24h: dbObservations.length > 0 ? dbObservations.length : 0,
-      marketState: "ACTIVE",
-      confidence: 98,
-    },
-    firmView: {
-      firmName: "ARNVELD CAPITAL / PANEL EXCHANGE",
-      firmAumAllocation: "STRATEGIC OVERWEIGHT",
-      targetPrice: Math.round(consensusFmv * 1.15),
-      convictionRating: isCe70Seat ? "TIER 1 SOVEREIGN" : "TIER 1 BENCHMARK",
-      firmExposures: [comic.series, "Modern Blue Chip"],
-    },
-    deskView: {
-      operationalStatus: "ACTIVE CONTINUOUS ROUTING",
-      priorityLevel: "HIGH LIQUIDITY",
-      callbackUrgency: "IMMEDIATE",
-      executionLiquidity: "ORDER BOOK DEPTH ACTIVE",
-    },
-    brokerView: {
-      portfolioPosition: "Exchange Liquid",
-      costBasis: Number((consensusFmv * 0.88).toFixed(2)),
-      unrealizedPl: "+13.6%",
-      recommendedAction: "ACCUMULATE",
-    },
-  };
-
-  const provenanceClaims: ProvenanceClaim[] = [
-    {
-      id: "fmv-price",
-      claimTitle: isCe70Seat ? "Panel Profits Sovereign Market Order Book" : "Panel Profits Continuous Market Order Book",
-      claimValue: `$${consensusFmv.toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
-      whyBelieved: isCe70Seat
-        ? "Decoded 37-column sovereign continuous market order book with verified bid/ask execution depth."
-        : "Decoded 37-column continuous market order book with verified bid/ask execution depth.",
-      confidenceScore: 98,
-      freshnessLabel: "Real-time Sync",
-      canonicalAuthority: "Panel Profits Market Valuation Engine",
-      sourceObservations: [
-        {
-          provider: isCe70Seat ? "Panel Profits Sovereign Exchange" : "Panel Profits Market Exchange",
-          timestamp: "Recent",
-          rawObservation: `Verified 9.8 anchor at $${consensusFmv.toFixed(2)} with 2,690 recorded transactions`,
-          verifiedStatus: "VERIFIED",
-        },
-        {
-          provider: "CGC / GoCollect Census Corroboration",
-          timestamp: "Recent",
-          rawObservation: `Census corroboration across certified slabs`,
-          verifiedStatus: "CORROBORATED",
-        },
-      ],
-    },
-    {
-      id: "census-scarcity",
-      claimTitle: "CGC Census & Graded Population",
-      claimValue: `${censusSummary.totalGraded.toLocaleString()} Copies`,
-      whyBelieved: "Direct synchronization with CGC Census registration logs.",
-      confidenceScore: 99,
-      freshnessLabel: "Daily Sync",
-      canonicalAuthority: "CGC Census Authority",
-      sourceObservations: [
-        {
-          provider: "CGC Census Database",
-          timestamp: "Daily",
-          rawObservation: `Total graded census = ${censusSummary.totalGraded}`,
-          verifiedStatus: "VERIFIED",
-        },
-      ],
-    },
-  ];
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#0a0f1a', fontFamily: 'Hind, sans-serif' }}>
@@ -664,13 +541,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
       />
 
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
-        {/* ════════════════════════════════════════════════════════════════════════
-            SECTION 1: EXECUTIVE TRADING COCKPIT
-            - Real-world 5-second decision view: Authentic Cover Art, Ticker,
-              3 Universal Determinants (Atomic Raw, Modal Anchor, Sovereign Apex),
-              Price Tier (OTC <$17.99, STD $18-$44.99, PREMIUM $45+),
-              Live Buy/Sell Execution Triggers, CGC Census Strip, Narrative Story Card
-            ════════════════════════════════════════════════════════════════════════ */}
+        {/* SECTION 1: cover, ticker, price tier, buy/sell, census, story */}
         <section id="section-cockpit" className="space-y-4">
           <HeroSection
             variantId={comic.id}
@@ -678,97 +549,15 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
             completeness={completenessData}
             keyPrices={keyPrices}
             instrumentStates={instrumentStates}
-            instrumentIntelligence={instrumentIntelligence}
+            quote={quote}
             censusSummary={fullCensusSummary}
             gradeLattice={gradeLattice}
             wikiSummary={null}
             latestSaleImageUrl={fullVariant.coverImageUrl}
             eraColors={eraColors}
             scarcityColors={scarcityColors}
-            heroCreatorsData={(() => {
-              const creatorsList: Array<{ id: string; name: string; role: string; bio: null; notableWorks: never[]; activeYears: null; wikiUrl: null }> = [];
-              if (cleanGcdWriter) {
-                creatorsList.push({ id: cleanGcdWriter, name: cleanGcdWriter, role: 'Writer', bio: null, notableWorks: [], activeYears: null, wikiUrl: null });
-              }
-              if (cleanGcdPenciler && cleanGcdPenciler !== cleanGcdWriter) {
-                creatorsList.push({ id: cleanGcdPenciler, name: cleanGcdPenciler, role: 'Penciler', bio: null, notableWorks: [], activeYears: null, wikiUrl: null });
-              }
-              if (cleanGcdInker && cleanGcdInker !== cleanGcdPenciler && cleanGcdInker !== cleanGcdWriter) {
-                creatorsList.push({ id: cleanGcdInker, name: cleanGcdInker, role: 'Inker', bio: null, notableWorks: [], activeYears: null, wikiUrl: null });
-              }
-              if (cleanGcdColorist) {
-                creatorsList.push({ id: cleanGcdColorist, name: cleanGcdColorist, role: 'Colorist', bio: null, notableWorks: [], activeYears: null, wikiUrl: null });
-              }
-              if (cleanGcdLetterer) {
-                creatorsList.push({ id: cleanGcdLetterer, name: cleanGcdLetterer, role: 'Letterer', bio: null, notableWorks: [], activeYears: null, wikiUrl: null });
-              }
-              if (creatorsList.length === 0 && debut?.creators?.length) {
-                debut.creators.forEach((c) => {
-                  const cleaned = sanitizeCreator(c);
-                  if (cleaned) {
-                    creatorsList.push({ id: cleaned, name: cleaned, role: 'Creator', bio: null, notableWorks: [], activeYears: null, wikiUrl: null });
-                  }
-                });
-              }
-              return creatorsList.length > 0 ? { data: creatorsList } : undefined;
-            })()}
-            truthLayerData={
-              isTrulySovereign
-                ? {
-                    found: true,
-                    data: {
-                      variantId: comic.id,
-                      anchorGrade: 9.8,
-                      anchorPriceUsd: consensusFmv,
-                      anchorSalesVolume: obsCountByGrade.get("9.8") || null,
-                      anchorConfidence: "HIGH",
-                      sovGrade: 9.8,
-                      sovPriceUsd: consensusFmv,
-                      assetClass: effectiveAssetClass,
-                      price99Usd: null,
-                      price100Usd: null,
-                      ism99: null,
-                      ism100: null,
-                      ismMethod99: null,
-                      ismMethod100: null,
-                      censusTotalGraded: censusSummary.totalGraded || null,
-                      census98: highGradeCount || null,
-                      census99: null,
-                      census100: null,
-                      censusScope: "variant",
-                      labelDistribution: {},
-                      graderSpread: {},
-                      scarcityTier: scarcityLabel,
-                      supplyAdjustment: 1.0,
-                      computedAt: new Date().toISOString(),
-                    },
-                  }
-                : { found: false, data: null }
-            }
-            spreadData={(() => {
-              const ppData = comic.panel_profits_data as Record<string, any> | undefined;
-              const sp98 = ppData?.spreads?.["9.8"] || ppData?.spreads?.["grade_9_8"];
-              const spRaw = ppData?.spreads?.["RAW"] || ppData?.spreads?.raw;
-              if (sp98?.buy && sp98?.sell) {
-                const spreadVal = Number(((sp98.sell - sp98.buy) / sp98.sell).toFixed(3));
-                return {
-                  found: true,
-                  data: {
-                    liquidityScore: 0.92,
-                    spreadMethod: "RECORDED_MARKET",
-                    baseSpread: spreadVal,
-                    currentSpread: spreadVal,
-                    observedAnchors: {
-                      "9.8": { buy: Number(sp98.buy), sell: Number(sp98.sell), spread: spreadVal },
-                      ...(spRaw?.buy && spRaw?.sell ? {
-                        "RAW": { buy: Number(spRaw.buy), sell: Number(spRaw.sell), spread: Number(((spRaw.sell - spRaw.buy) / spRaw.sell).toFixed(3)) }
-                      } : {})
-                    },
-                  },
-                };
-              }
-              return { found: false, data: null };
-            })()}
+            heroCreatorsData={heroCreators}
+            spreadData={spreadData}
             relationalData={gcdRelational}
             historyPoints={priceHistory
               .filter((h) => h.grade === "9.8" && h.source !== "PANEL_PROFITS_BASELINE" && h.source !== "PANEL_PROFITS_HISTORICAL_ANNUAL")
@@ -787,95 +576,38 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
           </Suspense>
         </section>
 
-        {/* ════════════════════════════════════════════════════════════════════════
-            SECTION 2: MULTI-SOURCE VALUATION MATRIX & CONTINUOUS ORDER BOOK
-            - Panel Profits Sovereign Econometric Ladder (0.5 - 10.0, with Bids/Asks/Spreads)
-            - ComicBase 57-column catalog reference card strictly segregated and labeled
-            - GoCollect CGC / CBCS / PSA certified grader consensus transactions
-            - Sovereign User Portfolio holdings & cost-basis ledger
-            - 4-Level Institutional Perspectives (Fundamental, Algorithmic, Institutional, Scarcity)
-            ════════════════════════════════════════════════════════════════════════ */}
+        {/* SECTION 2: prices by source and grade, dealer quotes, your holding */}
         <section id="section-order-book" className="space-y-6 pt-4 border-t border-white/10">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-bold tracking-wide uppercase text-white font-sans">
-                Continuous Multi-Source Order Book &amp; Valuation Matrix
-              </h2>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Authentic cleared lattice prices across all universal grades, synthesizing Panel Profits econometric modeling, ComicBase catalog benchmarks, and certified grader consensus (CGC, CBCS, PSA).
-              </p>
-            </div>
-            <Badge variant="outline" className="border-emerald-500/40 text-[11px] text-emerald-400 font-mono">
-              MULTI-SOURCE VALUATION ENGINE
-            </Badge>
+          <div>
+            <h2 className="text-xl font-bold tracking-wide uppercase text-white font-sans">Prices</h2>
+            <p className="text-xs text-slate-400 mt-0.5">Stored prices by grade and source, exactly as recorded. A source with no price for a grade shows a dash.</p>
           </div>
 
-          {/* User Portfolio × Terminal Market Intelligence */}
-          <BlendedHoldingDossier
-            comic={comic}
-            userStatus={userStatus}
-            isAuthenticated={Boolean(user)}
-          />
+          <BlendedHoldingDossier comic={comic} userStatus={userStatus} isAuthenticated={Boolean(user)} />
 
-          {/* Multi-Source Comparative Price Matrix (eBay Realized • ComicBase • Panel Profits • GoCollect) */}
-          <ComparativePriceMatrix
-            comic={comic}
-            inspectedGrade="9.8"
-            ticker={tickerSymbol}
-          />
+          <ComparativePriceMatrix comic={comic} inspectedGrade="9.8" ticker={tickerSymbol} />
 
-          {/* Investopedia Due Diligence & Valuation Lens */}
-          <InvestopediaDueDiligence
-            fmvPrice={consensusFmv}
-            series={seriesLabel}
-            issueNumber={issueLabel}
-            publicationYear={comic.publication_year}
-            keyStatus={gcdBadges.length > 0 ? gcdBadges[0] : "Major Sovereign Benchmark"}
-            storyTitle={enrichedGcdData.story_title}
-            synopsis={enrichedGcdData.synopsis}
-            characters={enrichedGcdData.characters}
-            writer={cleanGcdWriter}
-            penciler={cleanGcdPenciler}
-            inker={cleanGcdInker}
-            colorist={cleanGcdColorist}
-            letterer={cleanGcdLetterer}
-            editor={cleanGcdEditor}
-            genre={enrichedGcdData.genre}
-          />
+          <DealerQuotesCard anchors={spreadAnchors} asOf={snapshotLatest} />
 
-          {/* Canonical Multi-Grade Pricing Dossier & Continuous Order Book */}
           <PricingDossier comic={comic} />
 
-          {/* 4-Level Institutional Perspectives */}
           <div id="section-perspectives">
-            <MultiPerspectivePanel
-              data={perspectiveData}
-              marketValue={`$${consensusFmv.toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
+            <MarketTruthPanel
+              price98={consensusFmv > 0 ? consensusFmv : null}
+              price98AsOf={snapshotLatest}
+              lastSale={latestSale}
+              salesCount={salesObservations.length}
+              census={totalGradedCount > 0 ? { total: totalGradedCount, ninePlus: censusAtOrAbove90, snapshotDate: censusSnapshotDate } : null}
               accentColor={eraColors.border}
             />
           </div>
         </section>
 
-        {/* ════════════════════════════════════════════════════════════════════════
-            SECTION 3: UNIFIED MULTI-YEAR TRADING TERMINAL & MOMENTUM (RSI)
-            - TradingView Lightweight Charts canvas with OHLC / Candlesticks
-            - Authenticated cleared auction observations with real timestamps
-            - Integrated Volume Histogram & 14-period RSI sub-indicator
-            - Key Technical Statistics & Auction History Records
-            ════════════════════════════════════════════════════════════════════════ */}
+        {/* SECTION 3: price history chart and recorded sales */}
         <section id="section-trading-terminal" className="space-y-6 pt-4 border-t border-white/10">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-bold tracking-wide uppercase text-white font-sans">
-                Unified Multi-Year Trading Terminal
-              </h2>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Authentic cleared auction transactions, volume liquidity depth, and 14-period relative strength index.
-              </p>
-            </div>
-            <Badge variant="outline" className="border-cyan-500/40 text-[11px] text-cyan-400 font-mono">
-              REAL-TIME TECHNICAL EXECUTION
-            </Badge>
+          <div>
+            <h2 className="text-xl font-bold tracking-wide uppercase text-white font-sans">Price history and sales</h2>
+            <p className="text-xs text-slate-400 mt-0.5">Dated PriceCharting snapshots and recorded sales. Nothing is drawn where no dated price exists.</p>
           </div>
 
           <TopChartSection
@@ -886,66 +618,28 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
             priceHistory={priceHistory}
             censusSummary={fullCensusSummary}
             eraColors={eraColors}
-            instrumentIntelligence={instrumentIntelligence}
+            quote={quote}
             creatorNames={debut?.creators ?? []}
-            aiInsight={`Institutional price action anchor at $${consensusFmv.toFixed(2)} with verified market liquidity depth across recorded auction history.`}
+            sales={chartSales}
           />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
             <PriceStatsPanel history={priceHistory} eraColors={eraColors} issueReferencePoints={null} />
-            <AuctionHistoryCard
-              recentSales={formattedSales as any}
-              saleIntelligence={saleIntelligenceObj as any}
-              keyPrices={keyPrices}
-              eraColors={eraColors}
-            />
+            <AuctionHistoryCard recentSales={formattedSales} eraColors={eraColors} />
           </div>
         </section>
 
-        {/* ════════════════════════════════════════════════════════════════════════
-            SECTION 4: MARKET BUTTERFLY EFFECT & BIBLIOGRAPHIC LORE DOSSIER
-            - News Catalysts Hooked Directly to Asset & Volume Momentum
-            - Archival Primary-Source Video Brief
-            - GCD 694-Column Archival Narrative Lore & Creator Roster
-            - Atomic Variants & International Cross-Market Matrix
-            - Cryptographic SHA-256 Provenance & Audit Trail
-            ════════════════════════════════════════════════════════════════════════ */}
+        {/* SECTION 4: news, video, bibliographic record, variants, sources */}
         <section id="section-lore-catalysts" className="space-y-6 pt-4 border-t border-white/10">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-bold tracking-wide uppercase text-white font-sans">
-                Market Butterfly Effect & Bibliographic Lore Dossier
-              </h2>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Narrative events triggering secondary market liquidity runs, primary-source media, and GCD 694-column bibliographic canon.
-              </p>
-            </div>
-            <Badge variant="outline" className="border-purple-500/40 text-[11px] text-purple-400 font-mono">
-              GCD 694-COL CANON × MEDIA CATALYSTS
-            </Badge>
+          <div>
+            <h2 className="text-xl font-bold tracking-wide uppercase text-white font-sans">News, record and sources</h2>
+            <p className="text-xs text-slate-400 mt-0.5">News linked to this book, the Grand Comics Database record, variants and the source of each figure.</p>
           </div>
 
-          {/* Primary News Catalysts Hooked Directly to Asset & Volume Momentum */}
-          <NewsPanel
-            workName={seriesLabel}
-            publisher={authoritativePublisher}
-            assetId={comic.id}
-            eraColors={eraColors}
-            priceHistory={priceHistory}
-            censusSummary={censusSummary}
-            coverImageUrl={fullVariant.coverImageUrl}
-          />
+          <NewsPanel workName={seriesLabel} publisher={authoritativePublisher} assetId={comic.id} eraColors={eraColors} />
 
-          {/* Primary Source Video Intelligence & Archival Retrospective */}
-          <VideoIntelligenceCard
-            series={comic.series}
-            issueNumber={String(comic.issue_number)}
-            cbVideo={cbVideo}
-            writer={cleanGcdWriter}
-            penciler={cleanGcdPenciler}
-          />
+          <VideoIntelligenceCard cbVideo={cbVideo} />
 
-          {/* GCD Archival Bibliographic Dossier */}
           <GcdBibliographicDossier
             gcdData={enrichedGcdData as any}
             publisher={authoritativePublisher}
@@ -953,7 +647,6 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
             issueNumber={comic.issue_number}
           />
 
-          {/* Atomic Variants, International Editions & Cross-Market Graph */}
           <AtomicVariantsAndInternationalMatrix
             relationalData={gcdRelational}
             currentComicId={comic.id}
@@ -962,14 +655,8 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
             baseFmv={Number(comic.baseline_grade_9_8_value || comic.pp_grade_9_8_price || 0)}
           />
 
-          {/* Inspectable Cryptographic Provenance */}
           <div id="section-provenance">
-            <InspectableProvenancePanel
-              claims={provenanceClaims}
-              accentColor={eraColors.border}
-              symbol={tickerSymbol}
-              marketValue={`$${consensusFmv.toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
-            />
+            <ProvenanceLedger items={provenanceItems} accentColor={eraColors.border} />
           </div>
         </section>
       </div>

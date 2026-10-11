@@ -94,7 +94,7 @@ function resolveEra(year: number | null | undefined, originEra?: string | null):
   if (originEra && originEra.trim()) {
     return originEra.toLowerCase().replace(/_age$/, "").replace(/\s+age$/, "");
   }
-  return "modern";
+  return "";
 }
 
 function upgradeCoverUrl(url: string | null | undefined): string | null {

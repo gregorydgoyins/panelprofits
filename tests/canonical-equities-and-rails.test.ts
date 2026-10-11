@@ -4,7 +4,6 @@ import {
   CANONICAL_16_ASSET_FAMILIES,
   getSovereignEquities,
   getCanonicalAssetSurfaces,
-  getSovereignEquityDossier,
   validateCe70Constituent,
 } from "@/lib/equity/canonical-equities";
 import { getCleanEquityDetail } from "@/lib/panel-profits/assets";
@@ -78,50 +77,6 @@ describe("Canonical Equities Symbology & 16 Asset Families Canon", () => {
     expect(seat.titleIssue).toBeDefined();
     expect(seat.primaryCreators).toBeDefined();
     expect(seat.gregoryScore).toBeGreaterThan(190);
-  });
-
-  it("resolves sovereign equity dossier with 16 asset classes and performance curve", async () => {
-    // Resolve by ticker
-    const dossier = await getSovereignEquityDossier("CSS.022.SOV");
-    expect(dossier).not.toBeNull();
-    if (dossier) {
-      expect(dossier.series).toContain("Crime SuspenStories");
-      expect(dossier.issueNumber).toBe("22");
-      expect(dossier.referenceFmvUsd).toBeGreaterThan(0);
-      expect(dossier.performanceHistory.length).toBe(30);
-      expect(dossier.assetFamilyValuations.length).toBe(16);
-      expect(dossier.qualityScores.length).toBeGreaterThan(0);
-      expect(dossier.adjudicationEssay.length).toBeGreaterThan(50);
-    }
-  });
-
-  it("resolves X-Men #1 with authentic Jack Kirby cover, Stan Lee/Jack Kirby creators, and canonical benchmark FMV", async () => {
-    const xmen = await getSovereignEquityDossier("XMN.001.SOV");
-    expect(xmen).not.toBeNull();
-    if (xmen) {
-      expect(xmen.series).toBe("X-Men");
-      expect(xmen.issueNumber).toBe("1");
-      // Authoritative CE70 benchmark from 115k CSV: Grade 8.5/9.0 @ $58,668.33
-      expect(xmen.referenceFmvUsd).toBe(58668.33);
-      expect(xmen.publisher).toContain("Marvel");
-      expect(xmen.publicationYear).toBe(1963);
-      expect(xmen.primaryCreators).toContain("Jack Kirby");
-      expect(xmen.primaryCreators).toContain("Stan Lee");
-      expect(xmen.coverUrl).toBe("/covers/x_men_1.jpg");
-    }
-  });
-
-  it("resolves MAD #1 with canonical CE70 benchmark FMV ($30,699.33) and Harvey Kurtzman pedigree", async () => {
-    const mad = await getSovereignEquityDossier("MAD.001.SOV");
-    expect(mad).not.toBeNull();
-    if (mad) {
-      expect(mad.series.toUpperCase()).toContain("MAD");
-      expect(mad.issueNumber).toBe("1");
-      // Authoritative CE70 benchmark from 115k CSV: Grade 9.8 @ $30,699.33
-      expect(mad.referenceFmvUsd).toBe(30699.33);
-      expect(mad.referenceGrade).toBe("9.8");
-      expect(mad.primaryCreators).toContain("Harvey Kurtzman");
-    }
   });
 
   it("resolves constitutional seat detail from getCleanEquityDetail", async () => {
@@ -250,77 +205,27 @@ describe("Canonical Equities Symbology & 16 Asset Families Canon", () => {
     expect(html).toContain("16 FAMILIES · 56 SURFACES");
     expect(html).toContain("DERIVATIVES · FUNDS · INDICES · MUNI BONDS · ALTER EGOS");
     expect(html).toContain("assets-marquee-track");
-    expect(html).toContain("Mjolnir");
-    expect(html).toContain("Batmobile");
+    expect(html).toContain("Action Comics");
+    expect(html).toContain("Batman");
   });
 
-  it("resolves canonical September comic detail records via getComicById with canonical CE70 benchmarks", async () => {
-    // 1. Resolve X-Men #1 via ticker and slug
-    const xmenTicker = await getComicById("XMN.001.SOV");
-    expect(xmenTicker).not.toBeNull();
-    if (xmenTicker) {
-      expect(xmenTicker.series).toBe("X-Men");
-      expect(xmenTicker.issue_number).toBe("1");
-      expect(xmenTicker.publisher).toContain("Marvel");
-      expect(xmenTicker.publication_year).toBe(1963);
-      expect(xmenTicker.cover_url).toBeTruthy();
-      expect(xmenTicker.pp_grade_9_8_price).toBe(452227.28);
-      const ppData = xmenTicker.panel_profits_data as any;
-      expect(ppData?.creators).toContain("Stan Lee");
-      expect(ppData?.creators).toContain("Jack Kirby");
-      expect(ppData?.seat_number).toBe(13);
-    }
-
-    const xmenSlug = await getComicById("x_men_1");
-    expect(xmenSlug).not.toBeNull();
-    if (xmenSlug) {
-      expect(xmenSlug.series).toBe("X-Men");
-      expect(xmenSlug.cover_url).toBeTruthy();
-      expect(xmenSlug.pp_grade_9_8_price).toBe(452227.28);
-    }
-
-    // 2. Resolve MAD #1 via ticker
-    const madTicker = await getComicById("MAD.001.SOV");
-    expect(madTicker).not.toBeNull();
-    if (madTicker) {
-      expect(madTicker.series).toBe("MAD");
-      expect(madTicker.issue_number).toBe("1");
-      const ppData = madTicker.panel_profits_data as any;
-      expect(ppData?.creators).toContain("Harvey Kurtzman");
-      expect(ppData?.seat_number).toBe(5);
-    }
-
-    // 3. Resolve Preacher #1 via ticker
-    const preacherTicker = await getComicById("PREA.001.SOV");
-    expect(preacherTicker).not.toBeNull();
-    if (preacherTicker) {
-      expect(preacherTicker.series).toBe("Preacher");
-      expect(preacherTicker.issue_number).toBe("1");
-      expect(preacherTicker.publisher).toContain("DC");
-      expect(preacherTicker.publication_year).toBe(1995);
-      // ComicBase is kept isolated and not forged from benchmarks
-      expect(preacherTicker.comicbase_price).toBeNull();
-      expect(preacherTicker.pp_grade_9_8_price).toBe(44.48);
-      const ppData = preacherTicker.panel_profits_data as any;
-      expect(ppData?.creators).toBe("Garth Ennis, Steve Dillon");
-    }
-
-    // 4. Resolve Batman #251 via ticker
-    const batmanTicker = await getComicById("BAT.251.SOV");
-    expect(batmanTicker).not.toBeNull();
-    if (batmanTicker) {
-      expect(batmanTicker.series).toBe("Batman");
-      expect(batmanTicker.issue_number).toBe("251");
-      expect(batmanTicker.comicbase_price).toBeNull();
-    }
-
-    // 5. Resolve Action Comics #252 via slug
-    const actSlug = await getComicById("action_comics_252");
-    expect(actSlug).not.toBeNull();
-    if (actSlug) {
-      expect(actSlug.series).toBe("Action Comics");
-      expect(actSlug.issue_number).toBe("252");
-      expect(actSlug.comicbase_price).toBeNull();
+  it("resolves comic detail records via getComicById from stored rows only", async () => {
+    // Each lookup returns a stored comics row or null. No benchmark price, creator list or seat text is injected.
+    for (const [key, series, issue] of [
+      ["XMN.001.SOV", "X-Men", "1"],
+      ["x_men_1", "X-Men", "1"],
+      ["MAD.001.SOV", "MAD", "1"],
+      ["action_comics_252", "Action Comics", "252"],
+    ] as const) {
+      const comic = await getComicById(key);
+      if (!comic) continue;
+      expect(comic.series).toBe(series);
+      expect(comic.issue_number).toBe(issue);
+      expect(comic.comicbase_price).toBeNull();
+      const ppData = (comic.panel_profits_data ?? {}) as any;
+      expect(ppData.essay).toBeUndefined();
+      expect(ppData.quality_scores).toBeUndefined();
+      expect(ppData.video_discussions).toBeUndefined();
     }
   });
 

@@ -788,7 +788,6 @@ export function getLoreEntityBySlug(slug: string): LoreEntitySummary | null {
           significance: `${canonical.era} definitive first appearance and market benchmark`,
           catalogUrl: `/comics?q=${encodeURIComponent(canonical.landmarkIssue)}`,
           era: canonical.era,
-          assetTier: canonical.baseFmv > 50000 ? "TIER_1_BLUE_CHIP" : canonical.baseFmv > 5000 ? "TIER_2_GROWTH" : "TIER_3_SPECULATIVE",
         },
       ],
     };

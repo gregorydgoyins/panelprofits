@@ -5,9 +5,9 @@ import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { TrendingUp, TrendingDown, Crown, Gem, Shield, Zap, Flame, Clock, type LucideIcon } from 'lucide-react';
 import { proxyCoverUrl as proxyHeroCoverUrl } from '@/lib/coverProxy';
-import { fmt, fmtDate, variantTypeLabel, ERA_LABELS, ERA_CONTEXT } from './shared';
+import { fmt, fmtDate, variantTypeLabel, ERA_LABELS } from './shared';
 import type {
-  CompletenessData, InstrumentIntelligence, EquityTruthLayer, Creator, DetailResponse,
+  CompletenessData, EquityTruthLayer, Creator, DetailResponse,
   SpreadAnchor, SpreadStateData, GradePrice,
 } from './types';
 import { OraclePriceSparkline } from '@/components/ui/OraclePriceSparkline';
@@ -32,8 +32,6 @@ const ASSET_CLASS_HERO_CONFIG: Record<string, { label: string; color: string; gl
 
 const GRADE_COLORS: Record<string, string> = { A: '#22c55e', B: '#86efac', C: '#fde68a', D: '#f59e0b', F: '#ef4444' };
 const ERA_MAP: Record<string, string> = { platinum: 'Platinum', golden: 'Golden', atomic: 'Atomic', silver: 'Silver', bronze: 'Bronze', copper: 'Copper', modern: 'Modern', independent: 'Indie', postmodern: 'Post-Mod' };
-const TIER_COLOR = ['#4ade80', '#86efac', '#fde68a', '#f59e0b', '#fb923c', '#f87171', '#dc2626'];
-const REGIME_RING: Record<string, string> = { CALM: 'transparent', NORMAL: 'transparent', ELEVATED: 'rgba(245,158,11,0.20)', PANIC: 'rgba(248,113,113,0.28)' };
 
 import type { GcdRelationalData } from '@/lib/comics/gcd-relational-service';
 
@@ -43,7 +41,6 @@ interface HeroPanelProps {
   completeness: CompletenessData | undefined;
   keyPrices: DetailResponse['keyPrices'];
   instrumentStates: DetailResponse['instrumentStates'];
-  instrumentIntelligence: InstrumentIntelligence;
   censusSummary: DetailResponse['censusSummary'];
   gradeLattice?: GradePrice[];
   wikiSummary: string | null;
@@ -60,7 +57,7 @@ interface HeroPanelProps {
 }
 
 export default function HeroPanel({
-  variantId, variant, completeness, keyPrices, instrumentStates, instrumentIntelligence,
+  variantId, variant, completeness, keyPrices, instrumentStates,
   censusSummary, gradeLattice = [], wikiSummary, latestSaleImageUrl, eraColors, scarcityColors,
   heroCreatorsData, truthLayerData, spreadData, relationalData, historyPoints, onOpenExecModal, onBrokenImageReport,
 }: HeroPanelProps) {
@@ -119,12 +116,7 @@ export default function HeroPanel({
   const isShowingSaleImage = !!(proxiedSaleUrl && heroImgFailStage === 0);
   const heroImageLabel = isShowingSaleImage ? 'Latest sale image' : 'Cover image';
 
-  const mr = instrumentIntelligence?.marketRegime;
-  const tierColor   = mr ? (TIER_COLOR[mr.tectonicTier] ?? eraColors.border) : eraColors.border;
-  const regimeRing  = mr ? (REGIME_RING[mr.fourStateRegime] ?? 'transparent') : 'transparent';
-  const stressBarW  = mr?.stressIndex != null ? Math.min(100, mr.stressIndex * 100) : 0;
-  const imgFilter   = mr?.fourStateRegime === 'PANIC' ? 'saturate(0.85) brightness(0.94)' : 'none';
-  const heroBoxShadow = [`0 8px 32px rgba(0,0,0,0.6)`, `0 0 20px ${eraColors.border}20`, regimeRing !== 'transparent' ? `0 0 0 1px ${regimeRing}` : null].filter(Boolean).join(', ');
+  const heroBoxShadow = `0 8px 32px rgba(0,0,0,0.6), 0 0 20px ${eraColors.border}20`;
 
   const ScarcityIcon = SCARCITY_ICONS[variant.scarcityTier] || Clock;
 
@@ -157,7 +149,7 @@ export default function HeroPanel({
                     decoding="async"
                     draggable={false}
                     className="pointer-events-none"
-                    style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', filter: imgFilter, pointerEvents: 'none' }}
+                    style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', pointerEvents: 'none' }}
                     onError={() => {
                       startTransition(() => {
                         setHeroImgFailStage(s => Math.min(s + 1, 2));
@@ -201,19 +193,6 @@ export default function HeroPanel({
                     {coverVerifyState === 'loading' ? '···' : coverVerifyState === 'done' ? '✓ Verified' : coverVerifyState === 'error' ? '✗ Failed' : 'Verify Cover'}
                   </button>
                 )}
-              </div>
-            )}
-            {mr && mr.tectonicTier != null && (
-              <div className="mt-2" style={{ width: '210px' }}>
-                <div style={{ height: '3px', backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: '2px', overflow: 'hidden' }}>
-                  <div style={{ width: `${stressBarW}%`, height: '100%', backgroundColor: tierColor, borderRadius: '2px', transition: 'width 0.6s ease' }} />
-                </div>
-                <div className="flex items-center justify-between mt-1">
-                  <span style={{ color: tierColor, fontSize: '8px', fontFamily: 'monospace', opacity: 0.75 }}>
-                    T{mr.tectonicTier}{mr.stressIndex != null && !isNaN(mr.stressIndex) ? ` · ${(mr.stressIndex * 100).toFixed(0)}/100` : ''}
-                  </span>
-                  {mr.principalOverlayActive && <span style={{ color: '#fb923c', fontSize: '8px', fontFamily: 'monospace' }}>⊙ {mr.principalOverlayRemaining}t</span>}
-                </div>
               </div>
             )}
             {isShowingSaleImage ? <p className="text-[9px] text-center mt-1" style={{ color: 'rgba(255,255,255,0.46)' }}>Latest sale · click to enlarge</p> : variant.coverSource ? <p className="text-[9px] text-center mt-1" style={{ color: 'rgba(255,255,255,0.46)' }}>Source: {variant.coverSource}</p> : null}
@@ -280,10 +259,12 @@ export default function HeroPanel({
                       <div className="flex items-center gap-2">
                         <span className="text-xs px-2.5 py-1 rounded uppercase tracking-wider font-semibold" style={{ backgroundColor: `${eraColors.border}88`, color: 'rgba(255,255,255,0.95)', border: `1px solid ${eraColors.border}cc`, fontFamily: 'monospace' }}>{variant.publisher}</span>
                         {variant.era && <span className="text-xs px-2.5 py-1 rounded uppercase tracking-wider font-semibold" style={{ backgroundColor: `${eraColors.border}88`, color: 'rgba(255,255,255,0.85)', border: `1px solid ${eraColors.border}cc`, fontFamily: 'monospace' }}>{ERA_MAP[variant.era.toLowerCase()] || variant.era}</span>}
-                        <div className="flex items-center gap-1.5">
+                        {variant.scarcityTier && (
+                          <div className="flex items-center gap-1.5">
                           <ScarcityIcon className="w-4 h-4" style={{ color: 'rgba(255,255,255,0.9)', filter: `drop-shadow(0 0 5px ${scarcityColors.border}ff)` }} />
                           <span className="text-xs px-2.5 py-1 rounded uppercase tracking-wider font-semibold" style={{ backgroundColor: `${scarcityColors.border}50`, color: 'rgba(255,255,255,0.92)', border: `1px solid ${scarcityColors.border}ff` }}>{scarcityColors.label}</span>
-                        </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <p className="text-sm" style={{ color: 'rgba(255,255,255,0.85)', fontFamily: 'monospace' }}>{ac.desc}</p>
@@ -337,7 +318,7 @@ export default function HeroPanel({
                     )}
                     <h1 className="text-4xl sm:text-5xl mb-0" style={{ fontWeight: 600, lineHeight: 1.1, color: lowConfidence ? 'rgba(241,245,249,0.65)' : '#fff' }}>
                       {variant.workName} #{variant.issueNumber}
-                      <span style={{ color: 'rgba(255,255,255,0.62)', fontWeight: 400, fontSize: '2rem', marginLeft: '0.6rem' }}>({variant.productYear ?? variant.year})</span>
+                      <span style={{ color: 'rgba(255,255,255,0.62)', fontWeight: 400, fontSize: '2rem', marginLeft: '0.6rem' }}>{(variant.productYear ?? variant.year) != null ? ` (${variant.productYear ?? variant.year})` : ''}</span>
                     </h1>
                   </div>
                 );
@@ -436,10 +417,6 @@ export default function HeroPanel({
 
               {wikiSummary && !variant.yearDivergence ? (
                 <p className="text-[10px] mb-2 leading-snug" style={{ color: 'rgba(255,255,255,0.75)', maxWidth: '560px' }}>{wikiSummary}</p>
-              ) : !variant.yearDivergence ? (
-                <p className="text-[10px] mb-2 leading-snug" style={{ color: 'rgba(255,255,255,0.62)', maxWidth: '560px' }}>
-                  {variant.workName} #{variant.issueNumber}, published in {variant.productYear ?? variant.year} by {variant.publisher}.{ERA_CONTEXT[variant.era] ? ` ${ERA_CONTEXT[variant.era]}` : ''}
-                </p>
               ) : null}
 
               {/* Instrument states: Sovereign / Anchor / Atomic */}
@@ -696,38 +673,22 @@ export default function HeroPanel({
               );
             })()}
 
-            {/* Spread Microstructure */}
+            {/* Stored buy / sell pairs (PriceCharting) */}
             {spreadData?.found && spreadData.data && (() => {
               const sp = spreadData.data;
-              const liqVal = sp.liquidityScore > 1 ? sp.liquidityScore / 100 : sp.liquidityScore;
-              const liqColor = liqVal >= 0.6 ? '#22c55e' : liqVal >= 0.3 ? '#eab308' : '#ef4444';
               const anchorKeys = Object.keys(sp.observedAnchors || {});
+              if (anchorKeys.length === 0) return null;
               const formatPct = (val: number | null | undefined): string => {
                 if (val == null || isNaN(val)) return '—';
                 const pct = val > 1 ? val : val * 100;
                 return `${pct.toFixed(1)}%`;
               };
-              const formatLiq = (val: number | null | undefined): string => {
-                if (val == null || isNaN(val)) return '—';
-                const pct = val > 1 ? val : val * 100;
-                return `${pct.toFixed(0)}%`;
-              };
               return (
                 <div className="mt-4 pt-4" style={{ borderTop: `1px solid ${eraColors.border}22` }}>
-                  <div className="text-[9px] uppercase tracking-wider mb-3" style={{ color: 'rgba(255,255,255,0.60)', letterSpacing: '0.14em' }}>Spread Microstructure <span className="ml-2 px-1.5 rounded text-[7px]" style={{ backgroundColor: `${liqColor}15`, color: liqColor, border: `1px solid ${liqColor}40` }}>{sp.spreadMethod}</span></div>
-                  <div className="grid grid-cols-3 gap-x-4 gap-y-2 mb-3">
-                    {[{ label: 'Base Spread', val: formatPct(sp.baseSpread), col: '#fff' }, { label: 'Live Spread', val: formatPct(sp.currentSpread), col: sp.currentSpread > sp.baseSpread * 1.5 ? '#ef4444' : '#fff' }, { label: 'Liquidity', val: formatLiq(sp.liquidityScore), col: liqColor }].map(({ label, val, col }) => (
-                      <div key={label}><div className="text-[8px] uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.45)' }}>{label}</div><div className="text-sm" style={{ color: col, fontFamily: 'monospace' }}>{val}</div></div>
-                    ))}
+                  <div className="text-[9px] uppercase tracking-wider mb-3" style={{ color: 'rgba(255,255,255,0.60)', letterSpacing: '0.14em' }}>Dealer buy / retail sell <span className="ml-2 text-[7px]" style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'monospace' }}>{sp.spreadMethod}</span></div>
+                  <div className="flex gap-3 flex-wrap">
+                    {anchorKeys.map(tier => { const a = sp.observedAnchors[tier]; return <div key={tier} className="px-2 py-1 rounded" style={{ backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}><div className="text-[7px] uppercase" style={{ color: 'rgba(255,255,255,0.50)' }}>{tier === 'RAW' ? 'Raw' : tier}</div><div className="text-[9px]" style={{ color: '#e2e8f0', fontFamily: 'monospace' }}>{fmt(a.buy)} / {fmt(a.sell)}</div><div className="text-[7px]" style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'monospace' }}>{formatPct(a.spread)}</div></div>; })}
                   </div>
-                  {anchorKeys.length > 0 && (
-                    <div className="pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                      <div className="text-[8px] uppercase tracking-wider mb-2" style={{ color: 'rgba(255,255,255,0.45)' }}>Observed Spread Anchors</div>
-                      <div className="flex gap-3 flex-wrap">
-                        {anchorKeys.map(tier => { const a = sp.observedAnchors[tier]; return <div key={tier} className="px-2 py-1 rounded" style={{ backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}><div className="text-[7px] uppercase" style={{ color: 'rgba(255,255,255,0.50)' }}>{tier}</div><div className="text-[9px]" style={{ color: '#e2e8f0', fontFamily: 'monospace' }}>{fmt(a.buy)} / {fmt(a.sell)}</div><div className="text-[7px]" style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'monospace' }}>{formatPct(a.spread)}</div></div>; })}
-                      </div>
-                    </div>
-                  )}
                 </div>
               );
             })()}

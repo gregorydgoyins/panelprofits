@@ -46,7 +46,7 @@ export default function DetailSidebar({
   censusSummary,
   detailUrl,
   onOpenExecModal,
-  hasIntelligence = false,
+  hasQuote = false,
   tradeConfirmation = null,
 }: {
   variantId?: string;
@@ -61,7 +61,7 @@ export default function DetailSidebar({
   censusSummary: CensusSummary | null | undefined;
   detailUrl?: string;
   onOpenExecModal?: (action: 'buy' | 'sell') => void;
-  hasIntelligence?: boolean;
+  hasQuote?: boolean;
   tradeConfirmation?: { action: 'buy' | 'sell'; id: number } | null;
 }) {
   const accent = eraColors.border;
@@ -278,7 +278,7 @@ export default function DetailSidebar({
       )}
 
       {/* ── QUICK ACTIONS ── */}
-      {onOpenExecModal && hasIntelligence && (
+      {onOpenExecModal && hasQuote && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <div style={{ display: 'flex', gap: '6px' }}>
             <button

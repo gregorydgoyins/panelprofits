@@ -11,7 +11,6 @@ import { usePinnedEquity } from '@/hooks/usePinnedEquity';
 import type {
   DetailResponse,
   CompletenessData,
-  InstrumentIntelligence,
   EquityTruthLayer,
   SpreadStateData,
   Creator,
@@ -19,6 +18,7 @@ import type {
 } from './types';
 import type { getEraColors, getScarcityColors } from '@/lib/design-system/colors';
 import type { GcdRelationalData } from '@/lib/comics/gcd-relational-service';
+import type { ExecutionQuote } from '@/lib/comics/detail-model';
 
 interface HeroSectionProps {
   variantId: string;
@@ -26,7 +26,8 @@ interface HeroSectionProps {
   completeness: CompletenessData | undefined;
   keyPrices: DetailResponse['keyPrices'];
   instrumentStates: DetailResponse['instrumentStates'];
-  instrumentIntelligence: InstrumentIntelligence;
+  /** Stored PriceCharting buy/sell for the quote modal; null when none is on file. */
+  quote: ExecutionQuote | null;
   censusSummary: DetailResponse['censusSummary'];
   gradeLattice?: GradePrice[];
   wikiSummary: string | null;
@@ -47,7 +48,7 @@ export function HeroSection({
   completeness,
   keyPrices,
   instrumentStates,
-  instrumentIntelligence,
+  quote,
   censusSummary,
   gradeLattice = [],
   wikiSummary,
@@ -78,10 +79,9 @@ export function HeroSection({
         ]}
         sectionChips={[
           { id: 'hero', label: 'Art & 5-Second View' },
-          { id: 'perspectives', label: '4-Level Perspectives' },
+          { id: 'perspectives', label: 'Market Truth' },
           { id: 'chart', label: 'Price Chart' },
-          { id: 'math', label: 'Valuation Math' },
-          { id: 'provenance', label: 'Inspectable Provenance' },
+          { id: 'provenance', label: 'Sources' },
         ]}
         accentColor={eraColors.border}
         onSectionClick={(id) => {
@@ -142,7 +142,6 @@ export function HeroSection({
           completeness={completeness}
           keyPrices={keyPrices}
           instrumentStates={instrumentStates}
-          instrumentIntelligence={instrumentIntelligence}
           censusSummary={censusSummary}
           gradeLattice={gradeLattice}
           wikiSummary={wikiSummary}
@@ -161,8 +160,7 @@ export function HeroSection({
       {execModal.open && (
         <ExecutionPreviewModal
           variant={variant}
-          keyPrices={keyPrices}
-          intel={instrumentIntelligence}
+          quote={quote}
           onClose={() => setExecModal({ open: false, action: 'buy' })}
           onConfirm={() => setExecModal({ open: false, action: 'buy' })}
           eraColors={eraColors}

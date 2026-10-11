@@ -1,5 +1,5 @@
 /**
- * Canonical Curated Encyclopedic Background Lore, Landmark Issues, Creators & FMV Benchmarks.
+ * Canonical Curated Encyclopedic Background Lore, Landmark Issues and Creators.
  * Single source of truth across newsroom, parser, lore dossiers, and entity hover cards.
  */
 
@@ -12,7 +12,6 @@ export interface CanonicalBackground {
   creators: string;
   era: string;
   description: string;
-  baseFmv: number;
 }
 
 export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = {
@@ -26,7 +25,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Sydney Newman, C. E. Webber, Donald Wilson, and John Lucarotti",
     era: "Silver Age (1964)",
     description: "The eccentric renegade Time Lord from Gallifrey traveling through the space-time continuum in the TARDIS, anchoring a 60-year global sci-fi television and publishing phenomenon.",
-    baseFmv: 18500,
   },
   "the doctor": {
     term: "Doctor Who (The Doctor)",
@@ -37,7 +35,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Sydney Newman, C. E. Webber, Donald Wilson, and John Lucarotti",
     era: "Silver Age (1964)",
     description: "The eccentric renegade Time Lord from Gallifrey traveling through the space-time continuum in the TARDIS, anchoring a 60-year global sci-fi television and publishing phenomenon.",
-    baseFmv: 18500,
   },
   "doctor strange": {
     term: "Doctor Strange (Stephen Strange)",
@@ -48,7 +45,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Stan Lee and Steve Ditko",
     era: "Silver Age (1963)",
     description: "The Master of the Mystic Arts and Sorcerer Supreme of Earth-616, whose Silver Age debut in Strange Tales #110 anchors Marvel's supernatural and multiversal market tier.",
-    baseFmv: 88000,
   },
   "stephen strange": {
     term: "Doctor Strange (Stephen Strange)",
@@ -59,7 +55,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Stan Lee and Steve Ditko",
     era: "Silver Age (1963)",
     description: "The Master of the Mystic Arts and Sorcerer Supreme of Earth-616, whose Silver Age debut in Strange Tales #110 anchors Marvel's supernatural and multiversal market tier.",
-    baseFmv: 88000,
   },
   "doctor doom": {
     term: "Doctor Doom (Victor Von Doom)",
@@ -70,7 +65,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Stan Lee and Jack Kirby",
     era: "Silver Age (1962)",
     description: "The sovereign monarch of Latveria whose intellect and mystical prowess have solidified his first appearance as a blue-chip cornerstone of Silver Age Marvel collecting.",
-    baseFmv: 95000,
   },
   "victor von doom": {
     term: "Doctor Doom (Victor Von Doom)",
@@ -81,7 +75,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Stan Lee and Jack Kirby",
     era: "Silver Age (1962)",
     description: "The sovereign monarch of Latveria whose intellect and mystical prowess have solidified his first appearance as a blue-chip cornerstone of Silver Age Marvel collecting.",
-    baseFmv: 95000,
   },
   "doctor octopus": {
     term: "Doctor Octopus (Otto Octavius)",
@@ -92,7 +85,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Stan Lee and Steve Ditko",
     era: "Silver Age (1963)",
     description: "The brilliant nuclear physicist whose four telepathically controlled titanium-steel tentacles and founding leadership of the Sinister Six make ASM #3 a blue-chip cornerstone of Silver Age Marvel collecting.",
-    baseFmv: 45000,
   },
   "doc ock": {
     term: "Doctor Octopus (Otto Octavius)",
@@ -103,7 +95,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Stan Lee and Steve Ditko",
     era: "Silver Age (1963)",
     description: "The brilliant nuclear physicist whose four telepathically controlled titanium-steel tentacles and founding leadership of the Sinister Six make ASM #3 a blue-chip cornerstone of Silver Age Marvel collecting.",
-    baseFmv: 45000,
   },
   "doctor fate": {
     term: "Doctor Fate (Kent Nelson)",
@@ -114,7 +105,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Gardner Fox and Howard Sherman",
     era: "Golden Age (1940)",
     description: "The supreme sorcerer of the DC Universe and founding pillar of the Justice Society of America, wielding the mystical Helmet of Nabu, Amulet of Anubis, and Cloak of Destiny.",
-    baseFmv: 145000,
   },
   "doctor manhattan": {
     term: "Doctor Manhattan (Jon Osterman)",
@@ -125,7 +115,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Alan Moore and Dave Gibbons",
     era: "Copper / Modern Age (1986)",
     description: "The godlike quantum-physicist deity of Alan Moore and Dave Gibbons' Watchmen whose complete perception of non-linear time and atomic mastery transformed graphic narrative history.",
-    baseFmv: 950,
   },
 
   // --- FIRST FAMILY & MULTIVERSE ---
@@ -138,7 +127,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Stan Lee and Jack Kirby",
     era: "Silver Age (1961)",
     description: "The birth certificate of modern Marvel Comics, introducing Mister Fantastic (Reed Richards), Invisible Woman (Sue Storm), Human Torch (Johnny Storm), and the Thing (Ben Grimm).",
-    baseFmv: 165000,
   },
   "mister fantastic": {
     term: "Mister Fantastic (Reed Richards)",
@@ -149,7 +137,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Stan Lee and Jack Kirby",
     era: "Silver Age (1961)",
     description: "The elastic polymath leader of the Fantastic Four and architect of multiversal incursion defense whose intellect anchors the Council of Reeds and Marvel science continuity.",
-    baseFmv: 165000,
   },
   "reed richards": {
     term: "Mister Fantastic (Reed Richards)",
@@ -160,7 +147,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Stan Lee and Jack Kirby",
     era: "Silver Age (1961)",
     description: "The elastic polymath leader of the Fantastic Four and architect of multiversal incursion defense whose intellect anchors the Council of Reeds and Marvel science continuity.",
-    baseFmv: 165000,
   },
   "invisible woman": {
     term: "Invisible Woman (Sue Storm)",
@@ -171,7 +157,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Stan Lee and Jack Kirby",
     era: "Silver Age (1961)",
     description: "The formidable co-founder of the Fantastic Four capable of psionic force field projection and light manipulation, serving as the emotional and tactical bedrock of the team.",
-    baseFmv: 165000,
   },
   "sue storm": {
     term: "Invisible Woman (Sue Storm)",
@@ -182,7 +167,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Stan Lee and Jack Kirby",
     era: "Silver Age (1961)",
     description: "The formidable co-founder of the Fantastic Four capable of psionic force field projection and light manipulation, serving as the emotional and tactical bedrock of the team.",
-    baseFmv: 165000,
   },
   "human torch": {
     term: "Human Torch (Johnny Storm)",
@@ -193,7 +177,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Stan Lee and Jack Kirby",
     era: "Silver Age (1961)",
     description: "The hot-headed cosmic-powered adventurer whose plasma generation and fiery flight made him a generational icon of Silver Age Marvel youth culture.",
-    baseFmv: 165000,
   },
   "the thing": {
     term: "The Thing (Ben Grimm)",
@@ -204,7 +187,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Stan Lee and Jack Kirby",
     era: "Silver Age (1961)",
     description: "The rocky, super-strong heart of the Fantastic Four whose tragic transformation and resilient spirit coined the immortal battle cry 'It's Clobberin' Time!'",
-    baseFmv: 165000,
   },
   "latverian witches": {
     term: "Latverian Witches (Zefiro Sorcery Coven)",
@@ -215,7 +197,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Gerry Conway, Gene Colan, Roger Stern, and Mike Mignola",
     era: "Bronze / Modern Age",
     description: "The mystical Romani coven of Latveria led ancestrally by Cynthia Von Doom. Drawing on ancient Balkan elemental magic and necromancy, their demonic entanglement with Mephisto formed the tragic crucible that drove Victor Von Doom to master the mystic arts alongside advanced quantum cybernetics.",
-    baseFmv: 1200,
   },
   "cynthia von doom": {
     term: "Cynthia Von Doom",
@@ -226,7 +207,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Gerry Conway, Gene Colan, Roger Stern, and Mike Mignola",
     era: "Bronze / Modern Age",
     description: "The sorceress mother of Doctor Doom whose fateful pact with Mephisto to protect her clan condemned her soul to the Nether-Realms, establishing Doom's lifelong annual quest to liberate her spirit and forge his mastery over sorcery.",
-    baseFmv: 1200,
   },
 
   // --- SPIDER-MAN BEDROCK ---
@@ -239,7 +219,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Stan Lee and Steve Ditko",
     era: "Silver Age (1962)",
     description: "The definitive genesis of Peter Parker, representing the pinnacle of Marvel's Silver Age revolution and the single most valuable modern-era superhero investment equity in existence.",
-    baseFmv: 285000,
   },
   "spider-man: brand new day": {
     term: "Spider-Man: Brand New Day",
@@ -250,7 +229,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Dan Slott, Marc Guggenheim, Bob Gale, Zeb Wells, Steve McNiven, and John Romita Jr.",
     era: "Modern Age (2008)",
     description: "A pivotal fresh start for Peter Parker following the controversial 'One More Day' arc, introducing Mr. Negative (Martin Li), Jackpot, and Overdrive while revitalizing the Wall-Crawler's street-level rogues gallery across tri-monthly publishing schedules.",
-    baseFmv: 450,
   },
   "claire temple": {
     term: "Claire Temple (Night Nurse)",
@@ -261,7 +239,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Archie Goodwin and George Tuska / Jean Thomas and Winslow Mortimer",
     era: "Bronze Age (1972)",
     description: "The street-level physician and underground medic of Harlem who treated Luke Cage, Daredevil, Iron Fist, and Spider-Man. Her character synthesizes the classic 1972 Night Nurse comic legacy with modern Marvel street-level continuity.",
-    baseFmv: 850,
   },
 
   // --- GOLDEN & SILVER AGE HOLY GRAILS ---
@@ -274,7 +251,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Bob Kane and Bill Finger",
     era: "Golden Age (1939)",
     description: "The foundational genesis of the Dark Knight and Gotham City, commanding seven-figure clearing prices at sovereign international auction houses.",
-    baseFmv: 850000,
   },
   "superman": {
     term: "Superman (Kal-El / Clark Kent)",
@@ -285,7 +261,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Jerry Siegel and Joe Shuster",
     era: "Golden Age (1938)",
     description: "The foundational birth of the entire superhero genre and the most historically significant printed comic artifact in global cultural history.",
-    baseFmv: 1200000,
   },
   "wolverine": {
     term: "Wolverine (Logan / Weapon X)",
@@ -296,7 +271,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Len Wein, John Romita Sr., and Herb Trimpe",
     era: "Bronze Age (1974)",
     description: "The premier Bronze Age investment holy grail, marking the full introduction of Weapon X / Logan into Marvel continuity.",
-    baseFmv: 42000,
   },
   "the punisher": {
     term: "The Punisher (Frank Castle)",
@@ -307,7 +281,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Gerry Conway, Ross Andru, and John Romita Sr.",
     era: "Bronze Age (1974)",
     description: "The ruthless vigilante Frank Castle's debut, serving as the undisputed bellwether key of Bronze Age Marvel investment and anti-hero storytelling.",
-    baseFmv: 14500,
   },
   "punisher": {
     term: "The Punisher (Frank Castle)",
@@ -318,7 +291,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Gerry Conway, Ross Andru, and John Romita Sr.",
     era: "Bronze Age (1974)",
     description: "The ruthless vigilante Frank Castle's debut, serving as the undisputed bellwether key of Bronze Age Marvel investment and anti-hero storytelling.",
-    baseFmv: 14500,
   },
 
   // --- SCI-FI PRESTIGE ASSETS ---
@@ -331,7 +303,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Gene Roddenberry, Dick Wood, and Nevio Zaccara",
     era: "Silver Age (1967)",
     description: "The pioneering sci-fi franchise exploring strange new worlds, whose sequential art legacy spanning Gold Key, DC, Marvel, and IDW Publishing represents a historic certified collectible category.",
-    baseFmv: 4800,
   },
   "captain kirk": {
     term: "Captain James T. Kirk",
@@ -342,7 +313,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Gene Roddenberry, Dick Wood, and Nevio Zaccara",
     era: "Silver Age (1967)",
     description: "The legendary Starfleet captain of the USS Enterprise whose voyages defined sci-fi exploration and inspired certified sequential art adaptations across four publishers.",
-    baseFmv: 4800,
   },
   "captain picard": {
     term: "Captain Jean-Luc Picard",
@@ -353,7 +323,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Gene Roddenberry, Michael Carlin, and Pablo Marcos",
     era: "Copper Age (1988)",
     description: "The scholarly captain of the Enterprise-D, navigating diplomacy and Borg incursions across acclaimed comic series published by DC Comics and IDW.",
-    baseFmv: 320,
   },
   "the mandalorian": {
     term: "The Mandalorian (Din Djarin & Grogu)",
@@ -364,7 +333,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Jon Favreau, Dave Filoni, and Rodney Barnes",
     era: "Modern Age (2022)",
     description: "The lone beskar-clad bounty hunter and Clan of Two protector of Grogu whose cinematic journey revitalized modern Star Wars lore and secondary market variant demand.",
-    baseFmv: 420,
   },
   "mandalorian": {
     term: "The Mandalorian (Din Djarin & Grogu)",
@@ -375,7 +343,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Jon Favreau, Dave Filoni, and Rodney Barnes",
     era: "Modern Age (2022)",
     description: "The lone beskar-clad bounty hunter and Clan of Two protector of Grogu whose cinematic journey revitalized modern Star Wars lore and secondary market variant demand.",
-    baseFmv: 420,
   },
   "grogu": {
     term: "Grogu (The Child)",
@@ -386,7 +353,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Jon Favreau, Dave Filoni, and Rodney Barnes",
     era: "Modern Age (2022)",
     description: "The Force-sensitive foundling and companion to Din Djarin, representing a global cultural phenomenon and driver of modern Star Wars key variant collecting.",
-    baseFmv: 420,
   },
 
   // --- MUTANTS & X-MEN ---
@@ -399,7 +365,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Stan Lee, Jack Kirby, Len Wein, and Dave Cockrum",
     era: "Silver / Bronze Age",
     description: "Marvel's mutant allegorical masterpiece, anchoring generations of reader engagement and high-grade investment capital across Silver and Bronze Age certified registries.",
-    baseFmv: 48000,
   },
   "x-men": {
     term: "The X-Men",
@@ -410,7 +375,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Stan Lee, Jack Kirby, Len Wein, and Dave Cockrum",
     era: "Silver / Bronze Age",
     description: "Marvel's mutant allegorical masterpiece, anchoring generations of reader engagement and high-grade investment capital across Silver and Bronze Age certified registries.",
-    baseFmv: 48000,
   },
   "magneto": {
     term: "Magneto (Erik Lehnsherr)",
@@ -421,7 +385,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Stan Lee and Jack Kirby",
     era: "Silver Age (1963)",
     description: "The Master of Magnetism, complex mutant liberator and perpetual ideological foil to Professor Charles Xavier, whose first appearance anchors Silver Age villain investment.",
-    baseFmv: 48000,
   },
   "cyclops": {
     term: "Cyclops (Scott Summers)",
@@ -432,7 +395,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Stan Lee and Jack Kirby",
     era: "Silver Age (1963)",
     description: "The foundational field commander of the X-Men whose optic blasts and tactical discipline define the leadership core of mutantkind.",
-    baseFmv: 48000,
   },
   "gambit": {
     term: "Gambit (Remy LeBeau)",
@@ -443,7 +405,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Chris Claremont and Jim Lee",
     era: "Copper Age (1990)",
     description: "The kinetic-charging Cajun thief whose debut in Uncanny X-Men #266 represents one of the most traded and liquid key issues of the 1990s comic era.",
-    baseFmv: 1100,
   },
   "professor x": {
     term: "Professor X (Charles Xavier)",
@@ -454,7 +415,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Stan Lee and Jack Kirby",
     era: "Silver Age (1963)",
     description: "The visionary telepath founder of the X-Men whose dream of peaceful coexistence between humans and mutants anchors the entire ideological architecture of mutant lore.",
-    baseFmv: 48000,
   },
   "charles xavier": {
     term: "Professor X (Charles Xavier)",
@@ -465,7 +425,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Stan Lee and Jack Kirby",
     era: "Silver Age (1963)",
     description: "The visionary telepath founder of the X-Men whose dream of peaceful coexistence between humans and mutants anchors the entire ideological architecture of mutant lore.",
-    baseFmv: 48000,
   },
 
   // --- CREATOR-OWNED & INDIE SOVEREIGNS ---
@@ -478,7 +437,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Todd McFarlane",
     era: "Modern Age (1992)",
     description: "The record-shattering flagship equity of Image Comics whose continuous 300+ issue independent run proved creator sovereignty can outlast corporate studio control.",
-    baseFmv: 180,
   },
   "hellboy": {
     term: "Hellboy (Anung Un Rama)",
@@ -489,7 +447,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Mike Mignola",
     era: "Modern Age (1993)",
     description: "The Right Hand of Doom paranormal investigator whose dark folklore world and creator-owned prestige established Dark Horse's premier key tier.",
-    baseFmv: 4500,
   },
 
   // --- CYBERPUNK & SPECULATIVE SCI-FI ---
@@ -502,7 +459,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "William Gibson, Philip K. Dick, Katsuhiro Otomo, Masamune Shirow, and Warren Ellis",
     era: "Copper Age (1982-1989)",
     description: "The visionary high-tech, low-life speculative sci-fi genre merging artificial intelligence, cybernetics, and dystopian megalopolises, creating blue-chip crossover graphic novel equities.",
-    baseFmv: 450,
   },
   "william gibson": {
     term: "William Gibson (Neuromancer)",
@@ -513,7 +469,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "William Gibson, Tom de Haven, and Bruce Jensen",
     era: "Copper Age (1989)",
     description: "The seminal author who pioneered the cyberpunk movement, coined 'cyberspace', and whose Hugo and Nebula award-winning novel Neuromancer was adapted into Epic Comics' landmark graphic novel.",
-    baseFmv: 220,
   },
   "neuromancer": {
     term: "Neuromancer (William Gibson)",
@@ -524,7 +479,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "William Gibson and Bruce Jensen",
     era: "Copper Age (1989)",
     description: "The foundational cyberpunk literary touchstone following console cowboy Case and razor-girl Molly Millions through the cyberspace matrix, bridging literature and sequential art collecting.",
-    baseFmv: 220,
   },
   "philip k. dick": {
     term: "Philip K. Dick (Do Androids Dream of Electric Sheep?)",
@@ -535,7 +489,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Philip K. Dick and Tony Parker",
     era: "Modern Age (2009)",
     description: "The visionary sci-fi author whose existential questioning of synthetic humanity inspired Blade Runner and BOOM! Studios' complete word-for-word 24-issue sequential art adaptation.",
-    baseFmv: 180,
   },
   "akira": {
     term: "Akira (Kaneda & Tetsuo)",
@@ -546,7 +499,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Katsuhiro Otomo",
     era: "Copper Age (1988)",
     description: "Katsuhiro Otomo's post-apocalyptic Neo-Tokyo magnum opus and international sequential art sensation that triggered the global manga and anime boom across western collecting.",
-    baseFmv: 450,
   },
   "katsuhiro otomo": {
     term: "Katsuhiro Otomo (Akira)",
@@ -557,7 +509,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Katsuhiro Otomo",
     era: "Copper Age (1988)",
     description: "The visionary manga creator, animator, and director whose hyper-detailed cyberpunk worldbuilding redefined visual storytelling in global sequential art.",
-    baseFmv: 450,
   },
   "ghost in the shell": {
     term: "Ghost in the Shell (Major Motoko Kusanagi)",
@@ -568,7 +519,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Masamune Shirow",
     era: "Modern Age (1995)",
     description: "Masamune Shirow's iconic cybernetic intelligence thriller exploring transhuman consciousness, Section 9 tactical espionage, and sentient AI.",
-    baseFmv: 380,
   },
   "masamune shirow": {
     term: "Masamune Shirow (Ghost in the Shell & Appleseed)",
@@ -579,7 +529,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Masamune Shirow",
     era: "Modern Age (1995)",
     description: "The pioneering manga author whose intricate tactical designs and philosophical exploration of cybernetic augmentation defined modern speculative fiction.",
-    baseFmv: 380,
   },
   "transmetropolitan": {
     term: "Transmetropolitan (Spider Jerusalem)",
@@ -590,7 +539,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Warren Ellis and Darick Robertson",
     era: "Modern Age (1997)",
     description: "The satirical cyberpunk masterpiece following renegade gonzo journalist Spider Jerusalem as he takes down corrupt political administrations in a sprawling futuristic city.",
-    baseFmv: 280,
   },
   "judge dredd": {
     term: "Judge Dredd (Joseph Dredd)",
@@ -601,7 +549,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "John Wagner and Carlos Ezquerra",
     era: "Bronze Age (1977)",
     description: "The legendary street judge, jury, and executioner of Mega-City One in British weekly anthology 2000 AD, anchoring one of the most resilient dystopian sci-fi comic legacies.",
-    baseFmv: 3200,
   },
 
   // --- MANGA & ANIME BENCHMARKS ---
@@ -614,7 +561,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Osamu Tezuka, Akira Toriyama, and Eiichiro Oda",
     era: "Showa / Heisei / Reiwa Era",
     description: "The global Japanese sequential art publishing powerhouse that commands the highest print circulations and fastest-growing collector demographic in modern publishing.",
-    baseFmv: 1200,
   },
   "anime": {
     term: "Anime & Animation Media Crossovers",
@@ -625,7 +571,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Osamu Tezuka and Katsuhiro Otomo",
     era: "Silver to Modern Era",
     description: "The global animated media ecosystem driving secondary market liquidity into original Japanese manga tankōbon volumes, magazine debuts, and production cels.",
-    baseFmv: 950,
   },
   "dragon ball": {
     term: "Dragon Ball (Son Goku)",
@@ -636,7 +581,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Akira Toriyama",
     era: "Copper Age (1984)",
     description: "Akira Toriyama's globally transcendent martial arts epic, establishing vintage Shonen Jump magazine issues as sovereign international blue chips.",
-    baseFmv: 8500,
   },
   "one piece": {
     term: "One Piece (Monkey D. Luffy)",
@@ -647,7 +591,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Eiichiro Oda",
     era: "Modern Age (1997)",
     description: "Eiichiro Oda's record-shattering pirate epic, the best-selling comic series in history with over 500 million copies in circulation, commanding record auction bids for debut Jump issues.",
-    baseFmv: 9200,
   },
   "berserk": {
     term: "Berserk (Guts the Black Swordsman)",
@@ -658,7 +601,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Kentaro Miura",
     era: "Copper Age (1989)",
     description: "Kentaro Miura's dark fantasy tour de force, revered for its staggering linework, tragic depth, and dedicated global collector market for original Japanese printings.",
-    baseFmv: 3400,
   },
 
   // --- TABLETOP GAMING & SEQUENTIAL ART CROSSOVERS ---
@@ -671,7 +613,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Jordan Weisman and WizKids",
     era: "Modern Age (2002)",
     description: "The premier collectible miniatures system utilizing the patented Combat Dial, establishing a vibrant physical trading economy linking Marvel, DC, and indie comic characters.",
-    baseFmv: 320,
   },
   "wizkids": {
     term: "WizKids Gaming & Collectibles",
@@ -682,7 +623,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Jordan Weisman",
     era: "Modern Age (2000)",
     description: "The innovative gaming publisher that pioneered the Combat Dial system, creating an enduring crossover bridge between comic collecting and tabletop tactical gaming.",
-    baseFmv: 250,
   },
   "warhammer": {
     term: "Warhammer 40,000 (Games Workshop)",
@@ -693,7 +633,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Rick Priestley and Games Workshop",
     era: "Copper / Modern Age",
     description: "Games Workshop's grimdark gothic sci-fi universe spanning tabletop miniatures, novels, and licensed comics published by Marvel and Boom! Studios.",
-    baseFmv: 450,
   },
 
   // --- VERTIGO & PRESTIGE DARK FANTASY ---
@@ -706,7 +645,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Neil Gaiman, Sam Kieth, and Mike Dringenberg",
     era: "Copper Age (1989)",
     description: "Neil Gaiman's mythological dark fantasy tour de force that elevated comic books to institutional literary prestige, anchoring DC's Vertigo imprint as an enduring blue-chip asset.",
-    baseFmv: 450,
   },
   "the sandman": {
     term: "The Sandman (Morpheus / Dream of the Endless)",
@@ -717,7 +655,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Neil Gaiman, Sam Kieth, and Mike Dringenberg",
     era: "Copper Age (1989)",
     description: "Neil Gaiman's mythological dark fantasy tour de force that elevated comic books to institutional literary prestige, anchoring DC's Vertigo imprint as an enduring blue-chip asset.",
-    baseFmv: 450,
   },
   "swamp thing": {
     term: "Swamp Thing (Alec Holland)",
@@ -728,7 +665,6 @@ export const CANONICAL_COMIC_BACKGROUNDS: Record<string, CanonicalBackground> = 
     creators: "Len Wein, Bernie Wrightson, and Alan Moore",
     era: "Bronze / Copper Age",
     description: "The vegetative elemental avatar of the Green whose deconstructionist Alan Moore run transformed sequential art storytelling and birthed the Vertigo aesthetic.",
-    baseFmv: 4800,
   },
 };
 

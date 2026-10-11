@@ -1,127 +1,45 @@
 import React from 'react';
+import type { HistoryEntry } from './types';
+import { gradeStats } from '@/lib/comics/chart-model';
 
-type Stat = {
-
-  label: string;
-
-  value: string;
-
-  color?: string;
-
-};
-
-function StatCard(
-  {
-    label,
-    value,
-    color
-  }: Stat
-) {
-
-  return (
-
-    <div
-      style={{
-        padding: '12px',
-        borderRadius: '8px',
-        background:
-          'rgba(255,255,255,.02)',
-        border:
-          '1px solid rgba(255,255,255,.06)'
-      }}
-    >
-
-      <div
-        style={{
-          fontSize: '10px',
-          color:
-            'rgba(255,255,255,.55)',
-          marginBottom: '6px',
-          letterSpacing: '.08em',
-          textTransform: 'uppercase'
-        }}
-      >
-        {label}
-      </div>
-
-      <div
-        style={{
-          fontSize: '18px',
-          fontWeight: 600,
-          color:
-            color ||
-            'rgba(255,255,255,.92)'
-        }}
-      >
-        {value}
-      </div>
-
-    </div>
-
-  );
-
+function usd(n: number) {
+  return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function day(iso: string) {
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-export default function PriceStatsPanel(_props?: { history?: any; eraColors?: any; issueReferencePoints?: any }) {
+function StatCard({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: string }) {
+  return (
+    <div style={{ padding: 12, borderRadius: 8, background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.06)' }}>
+      <div style={{ fontSize: 10, color: 'rgba(255,255,255,.55)', marginBottom: 6, letterSpacing: '.08em', textTransform: 'uppercase' }}>{label}</div>
+      <div style={{ fontSize: 18, fontWeight: 600, color: color || 'rgba(255,255,255,.92)' }}>{value}</div>
+      {sub && <div style={{ fontSize: 10, color: 'rgba(255,255,255,.4)', marginTop: 4 }}>{sub}</div>}
+    </div>
+  );
+}
 
-  const stats: Stat[] = [
-
-    {
-      label: 'Momentum',
-      value: '+4.28%',
-      color: '#4ade80'
-    },
-
-    {
-      label: 'Volatility',
-      value: 'Moderate',
-      color: '#fbbf24'
-    },
-
-    {
-      label: 'Liquidity',
-      value: 'High',
-      color: '#60a5fa'
-    },
-
-    {
-      label: 'Spread',
-      value: '2.1%',
-      color: '#f87171'
-    }
-
-  ];
+/**
+ * Statistics of the dated prices on file for the grade with the most of them.
+ * Only figures that can be computed from those prices are shown; with none the panel does not render.
+ */
+export default function PriceStatsPanel({ history }: { history?: HistoryEntry[]; eraColors?: unknown; issueReferencePoints?: unknown }) {
+  const s = gradeStats(history ?? []);
+  if (!s) return null;
+  const label = s.grade === 'RAW' ? 'Raw' : `CGC ${s.grade}`;
 
   return (
-
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns:
-          'repeat(4,minmax(0,1fr))',
-        gap: '12px',
-        width: '100%'
-      }}
-    >
-
-      {stats.map(
-        (
-          stat,
-          i
-        ) => (
-
-          <StatCard
-            
-            label={stat.label}
-            value={stat.value}
-            color={stat.color}
-          />
-
-        )
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, width: '100%' }}>
+      <StatCard label={`Latest ${label}`} value={usd(s.latest.priceUsd)} sub={day(s.latest.date)} />
+      {s.change30dPct != null && (
+        <StatCard
+          label="Change vs 30+ days earlier"
+          value={`${s.change30dPct >= 0 ? '+' : ''}${s.change30dPct.toFixed(2)}%`}
+          color={s.change30dPct >= 0 ? '#4ade80' : '#f87171'}
+        />
       )}
-
+      <StatCard label="Low / high on file" value={`${usd(s.low)} / ${usd(s.high)}`} sub={`since ${day(s.first)}`} />
+      <StatCard label="Dated prices" value={String(s.count)} sub={label} />
     </div>
-
   );
-
 }

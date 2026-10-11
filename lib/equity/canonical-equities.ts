@@ -46,18 +46,18 @@ export interface CanonicalAssetSurface {
   id: string;
   seatNumber: number;
   indexCode: string;
-  era: string;
+  era: string | null;
   titleIssue: string;
   series: string;
   issueNumber: string;
-  year: number;
-  publisher: string;
-  primaryCreators: string;
-  gregoryScore: number;
-  assetClass: string;
-  assetSubclass: string;
-  wordCount: string;
-  dossierPath: string;
+  year: number | null;
+  publisher: string | null;
+  primaryCreators: string | null;
+  gregoryScore: number | null;
+  assetClass: string | null;
+  assetSubclass: string | null;
+  wordCount: string | null;
+  dossierPath: string | null;
   coverUrl: string | null;
 }
 
@@ -232,18 +232,18 @@ async function fetchCanonicalAssetSurfacesRaw(limit = 70): Promise<CanonicalAsse
         id: `seat-${row.seat_number}`,
         seatNumber: row.seat_number,
         indexCode: row.index_code || "CE70",
-        era: String(row.era || "GOLDEN").toUpperCase(),
+        era: row.era ? String(row.era).toUpperCase() : null,
         titleIssue: row.title_issue || `${row.series} #${row.issue_number}`,
         series: row.series,
         issueNumber: row.issue_number || "1",
-        year: row.year || 1960,
-        publisher: row.publisher || "Independent",
-        primaryCreators: row.primary_creators || "Canonical Creative Architects",
-        gregoryScore: Number(row.gregory_score) || 190.0,
-        assetClass: row.asset_class || "EQUITY_INDEX_SEAT",
-        assetSubclass: row.asset_subclass || `${String(row.era || "GOLDEN").toUpperCase()} ERA CONSTITUENT`,
-        wordCount: row.word_count || "475 words",
-        dossierPath: row.dossier_path || `./ce70_adjudication_dossiers/seat_${String(row.seat_number).padStart(2, "0")}.md`,
+        year: row.year ?? null,
+        publisher: row.publisher || null,
+        primaryCreators: row.primary_creators || null,
+        gregoryScore: row.gregory_score != null ? Number(row.gregory_score) : null,
+        assetClass: row.asset_class || null,
+        assetSubclass: row.asset_subclass || null,
+        wordCount: row.word_count || null,
+        dossierPath: row.dossier_path || null,
         coverUrl: resolvedCover,
       };
     });
@@ -279,225 +279,3 @@ export const getCanonicalAssetSurfaces = createCachedQuery(
   "canonical-asset-surfaces",
   { ttlSeconds: 300, staleWhileRevalidateSeconds: 1800, tags: ["assets", "ce70"] }
 );
-
-/**
- * Resolves an individual sovereign comic equity dossier by ticker, seat ID, or series.
- * Returns comprehensive Bloomberg-grade dossier with 16 asset classes and Gregory Quality metrics.
- */
-export async function getSovereignEquityDossier(identifier: string): Promise<DetailedSovereignEquityDossier | null> {
-  if (!identifier) return null;
-  const clean = identifier.trim().toLowerCase().replace(/^\$/, "");
-
-  // 1. Direct match on CE70 Dossiers by ticker, slug, canonicalId, or seat
-  const dossierData = ce70DossiersData.find((d) => {
-    const dClean = d.title.toLowerCase().replace(/^the\s+/, "").replace(/[^a-z0-9]/g, " ").trim();
-    const dSlug = dClean.replace(/\s+/g, "");
-    const dCanon = (d.canonicalId || "").toLowerCase();
-    
-    const seriesTitle = d.title.replace(/\s*#?\d+.*$/, "");
-    const issueMatch = d.title.match(/#?(\d+)/);
-    const issueNum = issueMatch ? issueMatch[1] : "1";
-    const ticker = formatComicEquityTicker(seriesTitle, issueNum, "SOV").toLowerCase();
-    const tickerBase = formatComicEquityTicker(seriesTitle, issueNum).toLowerCase();
-    
-    if (clean === ticker || clean === tickerBase || clean === ticker.replace(/\./g, "-")) return true;
-    if (clean.includes(".")) {
-      const parts = clean.split(".");
-      const root = parts[0].toLowerCase();
-      const num = parseInt((parts[1] || "").replace(/\D/g, ""), 10);
-      const dNum = parseInt(issueNum, 10);
-      if (dNum === num && (
-        ticker.startsWith(root) ||
-        tickerBase.startsWith(root) ||
-        seriesTitle.toLowerCase().includes(root) ||
-        (root === "xmn" && seriesTitle.toLowerCase().includes("x-men")) ||
-        (root === "css" && seriesTitle.toLowerCase().includes("suspen")) ||
-        (root === "mad" && seriesTitle.toLowerCase().includes("mad"))
-      )) return true;
-    }
-
-    if (clean === dCanon || (dCanon.length > 0 && dCanon.includes(clean))) return true;
-    const cleanAlpha = clean.replace(/[^a-z0-9]/g, "");
-    if (cleanAlpha.length > 3 && (dSlug === cleanAlpha || dSlug.includes(cleanAlpha))) return true;
-
-    // Seat match
-    if (/^(?:seat[-_]?|ce70[-_]?seat[-_]?)?\d+$/i.test(clean)) {
-      const cleanNum = parseInt(clean.replace(/\D/g, ""), 10);
-      return !isNaN(cleanNum) && d.seatNumber === cleanNum;
-    }
-    return false;
-  });
-
-  let matched: SovereignEquityItem | null = null;
-
-  if (dossierData) {
-    const seriesTitle = dossierData.title.replace(/\s*#?\d+.*$/, "");
-    const issueMatch = dossierData.title.match(/#?(\d+)/);
-    const issueNum = issueMatch ? issueMatch[1] : "1";
-    const ticker = formatComicEquityTicker(seriesTitle, issueNum, "SOV");
-    const bench = lookupReferenceFmv(dossierData.seatNumber, dossierData.title, dossierData.canonicalId);
-    const baseFmv = bench?.referenceFmvUsd ?? bench?.grade98FmvUsd ?? 150;
-    const refGrade = bench?.referenceGrade ?? "9.8";
-
-    matched = {
-      id: `ce70_seat_${dossierData.seatNumber}`,
-      seatNumber: dossierData.seatNumber,
-      seatType: "PRIMARY_DOMESTIC",
-      ticker,
-      series: seriesTitle,
-      issueNumber: issueNum,
-      title: dossierData.title,
-      originEra: String(dossierData.era || "").replace(/\s*Age$/i, "").toUpperCase() || "MODERN",
-      productionAge: String(dossierData.era || "").replace(/\s*Age$/i, "").toUpperCase() || "MODERN",
-      lineage: `${seriesTitle} Lineage`,
-      referenceGrade: refGrade,
-      referenceFmvUsd: baseFmv,
-      priceFormatted: `$${baseFmv.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      gregoryScore: dossierData.gregoryScore,
-      deltaPercent: Number(((dossierData.gregoryScore - 190.0) * 0.45).toFixed(2)),
-      status: "ACTIVE",
-      coverUrl: getAuthoritativeCover(seriesTitle, issueNum, dossierData.publisher, dossierData.year),
-      canonicalIssueId: dossierData.canonicalId || null,
-      year: dossierData.year,
-      publisher: dossierData.publisher,
-    };
-  }
-
-  // 2. If not a CE70 dossier book, match against the verified equity catalog
-  if (!matched) {
-    const equities = await getSovereignEquities(120);
-
-    matched = equities.find(
-      (e) => e.ticker.toLowerCase() === clean || e.ticker.toLowerCase().replace(/\./g, "-") === clean
-    ) || null;
-
-    if (!matched && clean.includes(".")) {
-      const parts = clean.split(".");
-      const root = parts[0].toLowerCase();
-      const num = parseInt((parts[1] || "").replace(/\D/g, ""), 10);
-      matched = equities.find((e) => {
-        const formatted = formatComicEquityTicker(e.series, e.issueNumber).toLowerCase();
-        const eNum = parseInt(e.issueNumber.replace(/\D/g, ""), 10);
-        return (
-          formatted === clean ||
-          (formatted.startsWith(root) && eNum === num) ||
-          (e.series.toLowerCase().includes(root) && eNum === num)
-        );
-      }) || null;
-    }
-
-    if (!matched) {
-      matched = equities.find((e) => e.id.toLowerCase() === clean) || null;
-    }
-
-    if (!matched) {
-      const seatNum = parseInt(clean.replace(/\D/g, ""), 10);
-      if (!isNaN(seatNum) && (clean.startsWith("seat") || !isNaN(Number(clean)))) {
-        matched = equities.find((e) => e.seatNumber === seatNum) || null;
-      }
-    }
-
-    if (!matched) {
-      matched = equities.find(
-        (e) => e.canonicalIssueId && e.canonicalIssueId.toLowerCase() === clean
-      ) || null;
-    }
-
-    if (!matched) {
-      matched = equities.find((e) => {
-        const full = `${e.series} ${e.issueNumber}`.toLowerCase();
-        return full.includes(clean) || clean.includes(full);
-      }) || null;
-    }
-  }
-
-  if (!matched) return null;
-
-  // Re-align matched reference FMV to authentic PriceCharting benchmark if present
-  const seatBenchmark = lookupReferenceFmv(
-    clean.startsWith("seat") || clean.startsWith("ce70") ? matched.seatNumber : null,
-    `${matched.series} #${matched.issueNumber}`,
-    matched.canonicalIssueId
-  );
-  if (seatBenchmark?.referenceFmvUsd) {
-    matched.referenceFmvUsd = seatBenchmark.referenceFmvUsd;
-    matched.referenceGrade = seatBenchmark.referenceGrade ?? matched.referenceGrade;
-    matched.priceFormatted = `$${seatBenchmark.referenceFmvUsd.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  }
-
-  // Synthesize 30-day continuous valuation history anchored to real reference FMV
-  const basePrice = matched.referenceFmvUsd;
-  const history: Array<{ date: string; value: number; volume: number }> = [];
-  const today = new Date();
-
-  for (let i = 29; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    const dateStr = d.toISOString().slice(0, 10);
-
-    // Realistic trend line leading to current delta
-    const progress = (30 - i) / 30;
-    const deltaVal = matched.deltaPercent ?? 0;
-    const trendEffect = 1 + (deltaVal / 100) * (progress - 1);
-    const wave = Math.sin(i * 0.7) * 0.008;
-    const value = Math.round(basePrice * (trendEffect + wave));
-    const volume = Math.round(8 + Math.abs(Math.sin(i * 1.5)) * 14);
-
-    history.push({ date: dateStr, value, volume });
-  }
-
-  // Calculate valuations across all 16 Canonical Asset Classes
-  const multipliers: Record<string, { factor: number; text: string }> = {
-    GRADED_UNIVERSAL: { factor: 1.0, text: "1.00x Base" },
-    SIGNATURE_SERIES: { factor: 1.5, text: "1.50x Premium" },
-    PEDIGREE_PROVENANCE: { factor: 3.0, text: "3.00x Historical Grail" },
-    NEWSSTAND_EDITION: { factor: 1.35, text: "1.35x Scarcity" },
-    PRICE_VARIANT: { factor: 2.5, text: "2.50x Asymmetry" },
-    RATIO_INCENTIVE_VARIANT: { factor: 1.75, text: "1.75x Allocation" },
-    RAW_UNGRADED: { factor: 0.35, text: "0.35x Arbitrage Base" },
-    COVER_ART_VARIANT: { factor: 1.25, text: "1.25x Aesthetic" },
-    DIRECT_EDITION: { factor: 1.0, text: "1.00x Standard Float" },
-    QUALIFIED_LABEL: { factor: 0.5, text: "0.50x Qualified" },
-    RESTORED_LABEL: { factor: 0.4, text: "0.40x Conservation" },
-    CONSERVED_LABEL: { factor: 0.7, text: "0.70x Archival" },
-    SUBSEQUENT_PRINTING: { factor: 0.65, text: "0.65x Repress" },
-    FOREIGN_TRANSLATION: { factor: 0.8, text: "0.80x Global" },
-    ERROR_PRINTING: { factor: 2.0, text: "2.00x Manufacturing Error" },
-    PROTOTYPE_ASHCAN: { factor: 4.0, text: "4.00x Pre-Publication" },
-  };
-
-  const assetFamilyValuations = CANONICAL_16_ASSET_FAMILIES.map((family) => {
-    const mult = multipliers[family.id] || { factor: 1.0, text: "1.00x" };
-    const est = Math.round(basePrice * mult.factor);
-    return {
-      family,
-      estimatedFmv: est,
-      formattedFmv: `$${est.toLocaleString()}`,
-      premiumFactor: mult.text,
-    };
-  });
-
-  const resolvedPublisher = matched.publisher || seatBenchmark?.publisher || dossierData?.publisher || "Marvel Comics";
-  const resolvedYear = matched.year || seatBenchmark?.year || dossierData?.year || 1963;
-  const resolvedCreators = seatBenchmark?.creators || dossierData?.creators || "Stan Lee, Jack Kirby";
-
-  return {
-    ...matched,
-    publisher: resolvedPublisher,
-    publicationYear: resolvedYear,
-    primaryCreators: resolvedCreators,
-    adjudicationEssay: dossierData?.essay || `${matched.series} #${matched.issueNumber} represents a pivotal benchmark specimen within the Panel Profits Sovereign Equity Canon. Exhibiting exceptional artistic merit, enduring cultural gravity, and profound historical resonance, this key issue anchors its constitutional seat with supreme connoisseurial distinction.`,
-    historicalJustification: dossierData?.justification || `Certified CE70 Sovereign Constituent Seat #${matched.seatNumber}: Benchmark asset anchoring the ${matched.originEra} Age portfolio.`,
-    scarcityTier: basePrice > 25000 ? "SOVEREIGN_GRAIL" : "INVESTMENT_GRADE_ELITE",
-    censusUniversalCount: Math.max(1, Math.round(180000 / (basePrice + 100))),
-    censusTotalGraded: Math.max(5, Math.round(650000 / (basePrice + 100))),
-    qualityScores: [
-      { dimension: "Authorial Presence", score: 9.8, rationale: "Unmistakable creative handwriting and singular auteur vision." },
-      { dimension: "Artistic Merit", score: 9.9, rationale: "Exceptional draftsmanship, iconic composition, and dynamic panel layout." },
-      { dimension: "Cultural Gravity", score: 10.0, rationale: "Enduring multi-generational franchise resonance and transmedia archetype foundation." },
-      { dimension: "Historical Significance", score: 10.0, rationale: "Epochal landmark debut reshaping the sequential graphic literature canon." },
-    ],
-    performanceHistory: history,
-    assetFamilyValuations,
-  };
-}

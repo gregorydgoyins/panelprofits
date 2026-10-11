@@ -3,24 +3,19 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import ExecutionPreviewModal from './ExecutionPreviewModal';
+import type { DetailResponse } from './types';
+import type { ExecutionQuote } from '@/lib/comics/detail-model';
 import { getEraColors } from '@/lib/design-system/colors';
 
 interface ExecutionModalWrapperProps {
-  variant: {
-    workName: string;
-    issueNumber: string;
-    era: string;
-    publisher: string;
-  };
-  keyPrices: {
-    display_fmv_usd?: number;
-    sovPriceUsd?: number;
-    fmv98Usd?: number;
-  };
+  variant: DetailResponse['variant'];
+  /** Stored PriceCharting quote for the grade being traded; null when none is on file. */
+  quote: ExecutionQuote | null;
   eraColors: ReturnType<typeof getEraColors>;
 }
 
-export function ExecutionModalWrapper({ variant, keyPrices, eraColors }: ExecutionModalWrapperProps) {
+/** Opens the quote modal from the ?exec=buy|sell query parameter. Shows only the stored quote it is given. */
+export function ExecutionModalWrapper({ variant, quote, eraColors }: ExecutionModalWrapperProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -29,43 +24,23 @@ export function ExecutionModalWrapper({ variant, keyPrices, eraColors }: Executi
   const [activeAction, setActiveAction] = useState<'buy' | 'sell' | null>(null);
 
   useEffect(() => {
-    if (execParam === 'buy' || execParam === 'sell') {
-      setActiveAction(execParam);
-    } else {
-      setActiveAction(null);
-    }
+    setActiveAction(execParam === 'buy' || execParam === 'sell' ? execParam : null);
   }, [execParam]);
 
   if (!activeAction) return null;
 
   const handleClose = () => {
     setActiveAction(null);
-    // Remove query param cleanly
     const params = new URLSearchParams(searchParams.toString());
     params.delete('exec');
     const newQuery = params.toString();
     router.replace(newQuery ? `${pathname}?${newQuery}` : pathname, { scroll: false });
   };
 
-  const fmv = keyPrices.display_fmv_usd ?? keyPrices.sovPriceUsd ?? keyPrices.fmv98Usd ?? 100;
-
-  const mockIntel = {
-    anchorClass: 'SOVEREIGN',
-    liquidityTier: 'Active',
-    computedExecution: {
-      fillProbability: 0.94,
-      baseFillProbability: 0.92,
-      slippageBps: [25, 40] as [number, number],
-      baseSlippageBps: [20, 35] as [number, number],
-      structuralRiskFlag: false,
-    },
-  };
-
   return (
     <ExecutionPreviewModal
-      variant={variant as any}
-      keyPrices={keyPrices as any}
-      intel={mockIntel as any}
+      variant={variant}
+      quote={quote}
       action={activeAction}
       onClose={handleClose}
       onConfirm={handleClose}

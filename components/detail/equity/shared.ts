@@ -22,65 +22,6 @@ export function fmtDate(iso: string | null): string {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-export function toOhlcv(points: [number, number][]): [number, number, number, number, number][] {
-  return points.map((p, i) => {
-    const close = p[1];
-    const open = i === 0 ? close : points[i - 1][1];
-    const range = Math.abs(close - open);
-    const wick = Math.max(range * 0.45, close * 0.008);
-    const high = Math.max(open, close) + wick;
-    const low = Math.max(0.01, Math.min(open, close) - wick);
-    return [p[0], +open.toFixed(2), +high.toFixed(2), +low.toFixed(2), +close.toFixed(2)];
-  });
-}
-
-// toOhlcvWithHeritage — like toOhlcv but uses real Heritage Auctions high/low
-// ranges for periods where sale records exist, falling back to synthetic ±wicks.
-export function toOhlcvWithHeritage(
-  points: [number, number][],
-  heritageData?: Array<{ grade: string; price_usd: number; sold_at: string }>,
-  grade?: string,
-): [number, number, number, number, number][] {
-  const monthHL = new Map<string, { high: number; low: number }>();
-  if (heritageData && grade) {
-    for (const s of heritageData) {
-      if (s.grade !== grade || !s?.sold_at) continue;
-      const ym = String(s.sold_at).slice(0, 7); // YYYY-MM
-      const cur = monthHL.get(ym);
-      if (!cur) {
-        monthHL.set(ym, { high: s.price_usd, low: s.price_usd });
-      } else {
-        if (s.price_usd > cur.high) cur.high = s.price_usd;
-        if (s.price_usd < cur.low)  cur.low  = s.price_usd;
-      }
-    }
-  }
-  return points.map((p, i) => {
-    const close = p[1];
-    const open  = i === 0 ? close : points[i - 1][1];
-    const ym    = new Date(p[0]).toISOString().slice(0, 7);
-    const realHL = monthHL.get(ym);
-    if (realHL) {
-      return [
-        p[0],
-        +open.toFixed(2),
-        +Math.max(open, close, realHL.high).toFixed(2),
-        +Math.max(0.01, Math.min(open, close, realHL.low)).toFixed(2),
-        +close.toFixed(2),
-      ];
-    }
-    const range = Math.abs(close - open);
-    const wick  = Math.max(range * 0.45, close * 0.008);
-    return [
-      p[0],
-      +open.toFixed(2),
-      +(Math.max(open, close) + wick).toFixed(2),
-      +Math.max(0.01, Math.min(open, close) - wick).toFixed(2),
-      +close.toFixed(2),
-    ];
-  });
-}
-
 export function computeEma(prices: number[], period: number): (number | null)[] {
   if (prices.length < period) return prices.map(() => null);
   const k = 2 / (period + 1);

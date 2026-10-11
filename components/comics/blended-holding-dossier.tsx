@@ -70,8 +70,9 @@ export function BlendedHoldingDossier({
   const [notes, setNotes] = useState(holding?.notes || "");
 
   // Holding calculations
-  const holdingGrade = (holding?.grade as Grade) || "9.8";
-  const marketValuationForGrade = pp[holdingGrade] ?? pp["9.8"] ?? pp["RAW"] ?? null;
+  // A holding is valued only at its own grade. No stored price at that grade means no valuation.
+  const holdingGrade = (holding?.grade as Grade) || null;
+  const marketValuationForGrade = holdingGrade ? (pp[holdingGrade] ?? null) : null;
   const userCost = holding?.acquisition_cost != null ? Number(holding.acquisition_cost) : null;
 
   const unrealizedGain =
@@ -181,11 +182,11 @@ export function BlendedHoldingDossier({
           <div className="flex items-center gap-2">
             <Scale className="h-5 w-5 text-cyan-400" />
             <h2 className="text-base sm:text-lg font-bold text-slate-100 tracking-wide uppercase">
-              Portfolio Asset Ledger &amp; Exchange Valuation Intelligence
+              Your holding and stored prices
             </h2>
           </div>
           <p className="text-xs text-slate-400 mt-0.5">
-            Sovereign Position Tracking × Continuous Multi-Source Market Clearing (Panel Profits · ComicBase · Grader Certification Consensus)
+            Your cost basis next to the stored PriceCharting price for the grade you hold
           </p>
         </div>
 
@@ -369,10 +370,10 @@ export function BlendedHoldingDossier({
               <div className="flex items-center gap-2">
                 <Zap className="h-4 w-4 text-purple-400" />
                 <span className="text-xs font-mono font-bold uppercase tracking-wider text-purple-300">
-                  Institutional Market Benchmarks &amp; Exchange Clearing
+                  Stored prices
                 </span>
               </div>
-              <span className="text-[10px] font-mono text-slate-500 uppercase">Panel Profits Terminal</span>
+              <span className="text-[10px] font-mono text-slate-500 uppercase">PriceCharting</span>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
@@ -382,7 +383,7 @@ export function BlendedHoldingDossier({
                   {pp["9.8"] ? formatCurrency(pp["9.8"]) : "Unpriced"}
                 </div>
                 <div className="text-[10px] text-slate-500 mt-0.5">
-                  Bid: {g98Spread.buy ? formatCurrency(g98Spread.buy) : "—"} / Ask: {g98Spread.sell ? formatCurrency(g98Spread.sell) : "—"}
+                  Dealer buy: {g98Spread.buy ? formatCurrency(g98Spread.buy) : "—"} / Retail sell: {g98Spread.sell ? formatCurrency(g98Spread.sell) : "—"}
                 </div>
               </div>
 
@@ -392,55 +393,22 @@ export function BlendedHoldingDossier({
                   {pp["RAW"] ? formatCurrency(pp["RAW"]) : "Unpriced"}
                 </div>
                 <div className="text-[10px] text-slate-500 mt-0.5">
-                  Bid: {rawSpread.buy ? formatCurrency(rawSpread.buy) : "—"} / Ask: {rawSpread.sell ? formatCurrency(rawSpread.sell) : "—"}
+                  Dealer buy: {rawSpread.buy ? formatCurrency(rawSpread.buy) : "—"} / Retail sell: {rawSpread.sell ? formatCurrency(rawSpread.sell) : "—"}
                 </div>
               </div>
 
               <div className="p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 col-span-2 sm:col-span-1">
                 <div className="text-[10px] font-mono text-slate-400 uppercase">Market Velocity</div>
                 <div className="text-sm font-bold text-slate-100 mt-0.5">
-                  {rawVolume || "Rare / Archival"}
+                  {rawVolume || "—"}
                 </div>
                 <div className="text-[10px] text-slate-500 mt-0.5 truncate">
                   Original Cover: {formattedCoverPrice}
                 </div>
               </div>
             </div>
-
-            {/* Triangulation Evidence Box */}
-            <div className="rounded-lg p-3 border border-slate-800 bg-[#090C13] space-y-2">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-400 flex items-center gap-1.5">
-                  <ShieldCheck className="h-3.5 w-3.5 text-cyan-400" />
-                  Authoritative Market Triangulation:
-                </span>
-                <span className="text-[11px] font-mono text-cyan-300">Multi-Source Verified Clearing</span>
-              </div>
-              <div className="grid grid-cols-3 gap-2 text-center pt-1 border-t border-slate-800/60 text-[11px]">
-                <div>
-                  <span className="text-slate-500 block text-[9.5px] uppercase tracking-wider">Original Cover Price</span>
-                  <span className="font-semibold text-slate-200">
-                    {formattedCoverPrice}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-slate-500 block text-[9.5px] uppercase tracking-wider">Exchange Benchmark</span>
-                  <span className="font-semibold text-emerald-400">
-                    {activeBenchmark ? formatCurrency(activeBenchmark) : "Active"}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-slate-500 block text-[9.5px] uppercase tracking-wider">Consensus Gate</span>
-                  <span className="font-semibold text-purple-300">Verified Clear</span>
-                </div>
-              </div>
-            </div>
           </div>
 
-          <div className="pt-3 mt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-500">
-            <span>Exchange Engine: Continuous 26-Grade Matrix</span>
-            <span className="text-slate-400 font-mono">Coverage: Universal 0.5 — 10.0</span>
-          </div>
         </div>
       </div>
 
@@ -453,7 +421,7 @@ export function BlendedHoldingDossier({
               <span className="font-semibold text-slate-100">Portfolio Position Analysis: </span>
               <span className="text-slate-300">
                 You acquired this {holding?.grading_company ? `${holding.grading_company} ` : ""}{holdingGrade} for{" "}
-                <strong className="text-slate-100 font-mono">{formatCurrency(userCost)}</strong>. Current exchange benchmark valuation is{" "}
+                <strong className="text-slate-100 font-mono">{formatCurrency(userCost)}</strong>. The stored PriceCharting price at that grade is{" "}
                 <strong className="text-cyan-300 font-mono">{formatCurrency(marketValuationForGrade)}</strong> (
                 <span className={unrealizedGain != null && unrealizedGain >= 0 ? "text-emerald-400 font-semibold" : "text-rose-400 font-semibold"}>
                   {unrealizedGain != null && unrealizedGain >= 0 ? `+${formatCurrency(unrealizedGain)}` : formatCurrency(unrealizedGain || 0)}

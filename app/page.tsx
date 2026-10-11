@@ -9,14 +9,16 @@ import { CatalogEntrySurface } from "@/components/dashboard/catalog-entry-surfac
 import { PlatformProvenance } from "@/components/dashboard/platform-provenance";
 import { AuthenticatedSnapshot } from "@/components/dashboard/authenticated-snapshot";
 import { getPpcfCoverage } from "@/lib/ppcf/queries";
+import { calculateMarketIndices } from "@/lib/market/indices";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const [user, featuredComics, ppcfCoverage] = await Promise.all([
+  const [user, featuredComics, ppcfCoverage, marketIndices] = await Promise.all([
     getCurrentUser(),
     getFeaturedUniverseComics(18),
     getPpcfCoverage(),
+    calculateMarketIndices(),
   ]);
 
   const marketMetrics = {
@@ -64,7 +66,7 @@ export default async function DashboardPage() {
       <MarketUniverse metrics={marketMetrics} />
 
       {/* 2. Core Market Barometers & Health Indices */}
-      <MarketBarometerBar />
+      <MarketBarometerBar indices={marketIndices} />
 
       {/* 3. Featured Comic Universe */}
       <FeaturedComicUniverse comics={featuredComics} />

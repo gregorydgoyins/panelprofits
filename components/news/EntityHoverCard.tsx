@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowUpRight, ExternalLink, Sparkles, TrendingUp, BookOpen, Layers } from "lucide-react";
+import { ArrowUpRight, ExternalLink, Sparkles, BookOpen, Layers } from "lucide-react";
 import type { EntityWikiDef } from "@/lib/news/entities";
 import { getCanonicalBackground } from "@/lib/wiki/canonical-backgrounds";
 
@@ -120,7 +120,6 @@ export function EntityHoverCard({ entity, children, className }: EntityHoverCard
     : "CBR Market Lexicon";
 
   const landmarkIssue = canonical?.landmarkIssue || entity.roleDetails?.landmarkIssue;
-  const fmvBenchmark = canonical?.baseFmv ? `$${canonical.baseFmv.toLocaleString()}` : null;
   const creators = canonical?.creators;
   const era = canonical?.era;
 
@@ -181,11 +180,6 @@ export function EntityHoverCard({ entity, children, className }: EntityHoverCard
           {/* Title */}
           <h4 className="mt-2 text-sm font-bold text-slate-100 flex items-center justify-between">
             <span>{entity.term}</span>
-            {fmvBenchmark && (
-              <span className="text-[10px] font-mono font-bold text-emerald-400 flex items-center gap-1">
-                <TrendingUp className="h-3 w-3" /> CGC 9.8: {fmvBenchmark}
-              </span>
-            )}
           </h4>
 
           {/* Canonical Lore & Landmark Issue */}

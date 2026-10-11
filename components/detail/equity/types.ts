@@ -256,7 +256,7 @@ export interface DetailResponse {
     assetClass: string | null; marketLane: string | null;
     isSovereign?: boolean | null; marketPriceClass?: string | null; certificationState?: string | null; editionForm?: string | null;
     productId: string; sourceSlug: string;
-    issueNumber: string; year: number; productYear: number | null; yearDivergence: boolean; yearGap: number;
+    issueNumber: string; year: number | null; productYear: number | null; yearDivergence: boolean; yearGap: number;
     workName: string; publisher: string;
     era: string; scarcityTier: string; coverImageUrl: string | null;
     coverSource: string | null; coverMeta?: { source: string | null; verified: boolean; eraVerified: boolean; adminVerified: boolean }; coverVerified: boolean; coverResolvedAt: string | null;
@@ -273,7 +273,7 @@ export interface DetailResponse {
   recentSales: SaleRecord[];
   latestSaleImageUrl?: string | null;
   saleIntelligence: { totalSales: number; lastSaleDate: string | null; daysSinceLastSale: number | null; confidenceWeightedMeanPrice: number | null; } | null;
-  instrumentIntelligence: InstrumentIntelligence;
+  instrumentIntelligence?: InstrumentIntelligence | null;
   instrumentStates: {
     sovereign: { grade: string; priceUsd: number } | null;
     anchor:    { grade: string; priceUsd: number; salesVolume: number } | null;
@@ -375,8 +375,8 @@ export interface IssueReferencePoints {
 
 export interface SpreadAnchor { buy: number; sell: number; spread: number; }
 export interface SpreadStateData {
-  liquidityScore: number; spreadMethod: string;
-  baseSpread: number; currentSpread: number;
+  liquidityScore?: number | null; spreadMethod: string;
+  baseSpread?: number | null; currentSpread?: number | null;
   observedAnchors: Record<string, SpreadAnchor>;
 }
 
