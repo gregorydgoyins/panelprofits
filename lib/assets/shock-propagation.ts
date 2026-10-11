@@ -28,12 +28,17 @@ export const HALF_LIFE_DAYS: Record<EventKind, number> = { SCARE: 3, DAMAGE: 14,
 export const HOP_DAMPING = 0.7;
 export const MAX_HOPS = 4;
 
+/**
+ * Severity tiers. A threat or a scare is not damage: it barely moves a price. Real harm moves it more, and
+ * only wholesale destruction moves it a lot. (A war scare lifts oil a few percent; an actual outage lifts it tens.)
+ */
 const LEXICON: { kind: EventKind; base: number; terms: string[] }[] = [
-  { kind: "SCARE", base: 0.6, terms: ["scare", "threat", "terror", "hostage", "bomb", "rampage", "chaos", "riot", "siege", "gas attack"] },
-  { kind: "DAMAGE", base: 0.6, terms: ["destroy", "destroyed", "explosion", "collapse", "devastat", "damage", "wreck", "flood", "burn", "invasion"] },
-  { kind: "HYPE", base: 0.5, terms: ["casting", "trailer", "movie", "film", "series", "box office", "adaptation", "reboot", "announced", "debut", "disney+"] },
-  { kind: "MARKET", base: 0.4, terms: ["auction", "record sale", "sold for", "heritage", "sells for", "cgc", "census"] },
-  { kind: "CAPITAL", base: 0.3, terms: ["ipo", "bond", "raises", "funding", "acquire", "acquisition", "merger", "invest"] },
+  { kind: "SCARE", base: 0.15, terms: ["scare", "threat", "threatens", "rumor", "rumour", "warns", "warning", "tension", "fears", "standoff", "plot", "unrest"] },
+  { kind: "DAMAGE", base: 0.5, terms: ["attack", "explosion", "bomb", "rampage", "riot", "hostage", "destroy", "collapse", "flood", "burn", "wreck", "damage", "siege"] },
+  { kind: "DAMAGE", base: 0.85, terms: ["devastat", "leveled", "levelled", "citywide", "invasion", "massacre", "obliterat"] },
+  { kind: "HYPE", base: 0.4, terms: ["casting", "trailer", "movie", "film", "series", "box office", "adaptation", "reboot", "announced", "debut", "disney+"] },
+  { kind: "MARKET", base: 0.3, terms: ["auction", "record sale", "sold for", "heritage", "sells for", "cgc", "census"] },
+  { kind: "CAPITAL", base: 0.25, terms: ["ipo", "bond", "raises", "funding", "acquire", "acquisition", "merger", "invest"] },
 ];
 
 export function classifyText(text: string): { kind: EventKind; intensity: number } | null {
@@ -42,7 +47,7 @@ export function classifyText(text: string): { kind: EventKind; intensity: number
   for (const l of LEXICON) {
     const hits = l.terms.filter((w) => t.includes(w)).length;
     if (hits === 0) continue;
-    const intensity = Math.min(1, l.base + 0.15 * (hits - 1));
+    const intensity = Math.min(1, l.base + Math.min(0.15, 0.05 * (hits - 1)));
     if (!best || intensity > best.intensity) best = { kind: l.kind, intensity };
   }
   return best;
@@ -117,9 +122,9 @@ export function propagate(events: MarketEvent[], now: number): ShockMap {
       if (!node || node.fixed) continue;
       const s = get(id);
       const hype = ev.kind === "HYPE" || ev.kind === "MARKET" || ev.kind === "CAPITAL";
-      if (eff < 0) s.benefit = Math.min(1, s.benefit + -eff);
-      else if (hype) s.hype = Math.min(1, s.hype + eff);
-      else s.stress = Math.min(1, s.stress + eff);
+      if (eff < 0) s.benefit = 1 - (1 - s.benefit) * (1 - -eff);
+      else if (hype) s.hype = 1 - (1 - s.hype) * (1 - eff);
+      else s.stress = 1 - (1 - s.stress) * (1 - eff);
       s.trails.push({ eventId: ev.id, headline: ev.headline, url: ev.url, path, effect: eff });
     }
   }
@@ -134,8 +139,8 @@ export function propagate(events: MarketEvent[], now: number): ShockMap {
  * volatility up by roughly half, municipal spreads out by tens of basis points, a city trust down by low double digits.
  */
 export const SENSITIVITY = {
-  volStress: 0.6,
-  volHype: 0.5,
+  volStress: 0.5,
+  volHype: 0.4,
   creditStress: 0.01,
   /** hazard multiplier: λ = λ0 · (1 + hazardStress · stress) */
   hazardStress: 1.5,
@@ -156,7 +161,7 @@ export interface Conditions {
 export function conditionsFor(s: NodeShock | undefined): Conditions {
   if (!s) return { volMult: 1, stateSteps: 0, creditAdd: 0, flow: 0 };
   return {
-    volMult: Math.min(2, 1 + SENSITIVITY.volStress * s.stress + SENSITIVITY.volHype * s.hype),
+    volMult: Math.min(1.75, 1 + SENSITIVITY.volStress * s.stress + SENSITIVITY.volHype * s.hype),
     stateSteps: s.stress >= 0.9 ? 2 : s.stress >= 0.6 ? 1 : 0,
     creditAdd: Math.max(0, SENSITIVITY.creditStress * s.stress - 0.002 * s.benefit),
     flow: 0.04 * s.benefit,

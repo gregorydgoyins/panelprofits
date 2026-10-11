@@ -14,7 +14,9 @@ describe("entities and events", () => {
     expect(entitiesForSeries("Detective Comics")).toEqual(["batman"]);
   });
   it("classifies scares", () => {
-    expect(classifyText("hostage chaos")!.kind).toBe("SCARE");
+    expect(classifyText("Joker scare in Gotham")!.kind).toBe("SCARE");
+    expect(classifyText("hostages taken")!.kind).toBe("DAMAGE");
+    expect(classifyText("Joker threatens Gotham")!.intensity).toBeLessThan(classifyText("Joker attack on Gotham")!.intensity);
     expect(classifyText("nothing relevant here")).toBeNull();
   });
 });
@@ -78,13 +80,27 @@ describe("credit, REIT, adjudication", () => {
     expect(px(hot, "GOTHCDS")).toBeGreaterThan(px(calm, "GOTHCDS"));
     expect(px(hot, "METRGO")).toBeCloseTo(px(calm, "METRGO"), 6);
   });
-  it("a headline-grade crisis moves prices realistically, not wildly", () => {
+  it("moves scale with severity: threats barely move prices, destruction moves them, nothing explodes", () => {
     const calm = issueInstitutional(new Map());
-    const hot = issueInstitutional(propagate(eventsFromArticles([scare]), NOW));
-    const ratio = (sym: string) => Number(hot.find((i) => i.symbol === sym)!.pricing.fmv_usd) / Number(calm.find((i) => i.symbol === sym)!.pricing.fmv_usd);
-    expect(ratio("GOTHGO")).toBeGreaterThan(0.82); // bond down less than 18%
-    expect(ratio("GOTHRE")).toBeGreaterThan(0.75); // trust down less than 25%
-    expect(ratio("GOTHCDS")).toBeLessThan(3); // CDS under 3x
-    expect(ratio("GOTHCDS")).toBeGreaterThan(1.5);
+    const run = (headline: string) => issueInstitutional(propagate(eventsFromArticles([{ id: "x", headline, summary: "", url: "u", published_at: "2026-10-11T06:00:00Z" }]), NOW));
+    const ratio = (hot: any[], sym: string) => Number(hot.find((i) => i.symbol === sym)!.pricing.fmv_usd) / Number(calm.find((i) => i.symbol === sym)!.pricing.fmv_usd);
+    const threat = run("Joker threatens Gotham, city on edge");
+    const attack = run("Joker gas attack hits Gotham, hostages taken");
+    const ruin = run("Joker devastates Gotham in citywide collapse");
+    // a threat is a few percent at most (50 → 53 territory)
+    expect(ratio(threat, "GOTHGO")).toBeGreaterThan(0.94);
+    expect(ratio(threat, "GOTHRE")).toBeGreaterThan(0.94);
+    expect(ratio(threat, "GOTHCDS")).toBeLessThan(1.4);
+    // real damage is a clear but bounded move
+    expect(ratio(attack, "GOTHGO")).toBeGreaterThan(0.9);
+    expect(ratio(attack, "GOTHRE")).toBeGreaterThan(0.88);
+    expect(ratio(attack, "GOTHCDS")).toBeLessThan(2);
+    // wholesale destruction is the ceiling and still bounded
+    expect(ratio(ruin, "GOTHGO")).toBeGreaterThan(0.8);
+    expect(ratio(ruin, "GOTHRE")).toBeGreaterThan(0.75);
+    expect(ratio(ruin, "GOTHCDS")).toBeLessThan(3);
+    // ordering
+    expect(ratio(attack, "GOTHGO")).toBeLessThan(ratio(threat, "GOTHGO"));
+    expect(ratio(ruin, "GOTHGO")).toBeLessThan(ratio(attack, "GOTHGO"));
   });
 });
