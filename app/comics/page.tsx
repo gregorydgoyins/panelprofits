@@ -19,16 +19,16 @@ interface ComicsPageProps {
 export default async function ComicsPage({ searchParams }: ComicsPageProps) {
   const params = await searchParams;
   const query = params.q?.trim() || "";
-  const currentView = params.view === "ppedia" ? "ppedia" : "equities";
+  const currentView = params.view === "cbr" || params.view === "ppedia" ? "cbr" : "issues";
   const selectedEra = params.era?.toLowerCase();
 
-  // 1. Fetch verified market equities (0.1ms via SQLite / local estate with SQL-indexed era filtering)
+  // 1. Fetch verified market issues (0.1ms via SQLite / local estate with SQL-indexed era filtering)
   const verifiedComics = searchVerifiedEquities(query, 48, selectedEra);
 
-  // 2. Fetch PPCF records when in encyclopedia mode or searching
-  const ppcfComics = currentView === "ppedia" ? await searchPpcfComics(query, 48) : [];
+  // 2. Fetch PPCF records when in archival mode or searching
+  const ppcfComics = currentView === "cbr" ? await searchPpcfComics(query, 48) : [];
 
-  const totalResults = currentView === "ppedia" ? ppcfComics.length : verifiedComics.length;
+  const totalResults = currentView === "cbr" ? ppcfComics.length : verifiedComics.length;
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10 space-y-8">
@@ -36,32 +36,32 @@ export default async function ComicsPage({ searchParams }: ComicsPageProps) {
       <header className="border-b border-cyan-500/40 pb-7 shadow-[0_4px_22px_rgba(6,182,212,0.1)]">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.28em] text-cyan-400">
+            <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.28em] text-cyan-400 font-mono">
               <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>Sovereign Comic Catalog</span>
+              <span>CBR · COMIC BOOK REFERENCE &amp; INVESTOPEDIA™ MARKET AUTHORITY</span>
             </div>
             <h1 className="text-3xl font-semibold tracking-tight text-slate-100 sm:text-4xl">
-              Certified Comic Equities & PPedia Catalog
+              CBR (Comic Book Reference) &amp; Investopedia™ Master Catalog
             </h1>
             <p className="max-w-3xl text-sm leading-6 text-slate-400">
-              Search across 38,957 verified comic equities with authenticated cover art, unrounded secondary market transactions, and complete Connoisseur Dossiers.
+              Search across 38,957 verified canonical comic issues with authenticated cover art, cleared secondary market transactions, and complete CBR Connoisseur Dossiers.
             </p>
           </div>
 
           <div className="flex items-center gap-3">
             <Link
               href="/market"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-slate-700 bg-slate-900/60 hover:bg-slate-800 text-xs text-slate-200 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-slate-700 bg-slate-900/60 hover:bg-slate-800 text-xs text-slate-200 transition-colors font-mono"
             >
               <TrendingUp className="h-3.5 w-3.5 text-cyan-400" />
               <span>Markets Floor</span>
             </Link>
             <Link
-              href="/wiki"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-cyan-500/40 bg-cyan-950/40 hover:bg-cyan-900/50 text-xs text-cyan-300 transition-colors"
+              href="/lexicon"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-cyan-500/40 bg-cyan-950/40 hover:bg-cyan-900/50 text-xs text-cyan-300 transition-colors font-mono"
             >
-              <Sparkles className="h-3.5 w-3.5 text-cyan-400" />
-              <span>Open Encyclopedia</span>
+              <BookOpen className="h-3.5 w-3.5 text-cyan-400" />
+              <span>CBR Market Lexicon</span>
             </Link>
           </div>
         </div>
@@ -80,46 +80,46 @@ export default async function ComicsPage({ searchParams }: ComicsPageProps) {
               placeholder="Search series (e.g. Amazing Spider-Man), ticker (e.g. ASM300, HK181), or issue..."
               className="min-w-0 flex-1 bg-transparent px-2 py-1 text-sm text-slate-100 outline-none placeholder:text-slate-600 focus:outline-none"
             />
-            {currentView === "ppedia" && <input type="hidden" name="view" value="ppedia" />}
+            {currentView === "cbr" && <input type="hidden" name="view" value="cbr" />}
             <button
               type="submit"
-              className="border border-cyan-500/50 bg-[#0C1626] px-3.5 py-1.5 text-[10px] font-medium uppercase tracking-[0.14em] text-cyan-300 hover:bg-[#10223D] hover:text-white transition-colors rounded"
+              className="border border-cyan-500/50 bg-[#0C1626] px-3.5 py-1.5 text-[10px] font-medium uppercase tracking-[0.14em] text-cyan-300 hover:bg-[#10223D] hover:text-white transition-colors rounded font-mono"
             >
               Search
             </button>
           </form>
 
-          {/* View Mode Toggle: Verified Market Equities vs PPedia Encyclopedia */}
-          <div className="flex items-center border border-slate-800 rounded bg-[#0b0f15] p-1 text-xs shrink-0">
+          {/* View Mode Toggle: Verified Market Issues vs CBR Canonical Editions */}
+          <div className="flex items-center border border-slate-800 rounded bg-[#0b0f15] p-1 text-xs shrink-0 font-mono">
             <Link
-              href={`/comics?q=${encodeURIComponent(query)}&view=equities${selectedEra ? `&era=${selectedEra}` : ""}`}
+              href={`/comics?q=${encodeURIComponent(query)}&view=issues${selectedEra ? `&era=${selectedEra}` : ""}`}
               className={`px-3 py-1.5 rounded text-xs transition-colors flex items-center gap-1.5 ${
-                currentView === "equities"
+                currentView === "issues"
                   ? "bg-cyan-950/80 border border-cyan-500/50 text-cyan-300 font-medium"
                   : "text-slate-400 hover:text-slate-200"
               }`}
             >
               <TrendingUp className="h-3 w-3" />
-              <span>Market Equities ({verifiedComics.length})</span>
+              <span>Market Issues ({verifiedComics.length})</span>
             </Link>
             <Link
-              href={`/comics?q=${encodeURIComponent(query)}&view=ppedia`}
+              href={`/comics?q=${encodeURIComponent(query)}&view=cbr`}
               className={`px-3 py-1.5 rounded text-xs transition-colors flex items-center gap-1.5 ${
-                currentView === "ppedia"
+                currentView === "cbr"
                   ? "bg-cyan-950/80 border border-cyan-500/50 text-cyan-300 font-medium"
                   : "text-slate-400 hover:text-slate-200"
               }`}
             >
               <Layers className="h-3 w-3" />
-              <span>PPedia Editions</span>
+              <span>CBR Canonical Editions</span>
             </Link>
           </div>
         </div>
 
-        {/* Era Filter Badges (when in Equities mode) */}
-        {currentView === "equities" && (
+        {/* Era Filter Badges (when in Issues mode) */}
+        {currentView === "issues" && (
           <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
-            <span className="text-slate-500 text-[11px] uppercase tracking-wider mr-1">Filter Era:</span>
+            <span className="text-slate-500 text-[11px] uppercase tracking-wider mr-1 font-mono">Filter Era:</span>
             {[
               { label: "All Eras", value: "all" },
               { label: "Golden Age (Pre-1956)", value: "golden" },
@@ -147,21 +147,21 @@ export default async function ComicsPage({ searchParams }: ComicsPageProps) {
       </div>
 
       {/* Results Header */}
-      <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.16em] text-slate-500 border-b border-slate-800/80 pb-2">
+      <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.16em] text-slate-500 border-b border-slate-800/80 pb-2 font-mono">
         <span aria-live="polite">
           {query
             ? `Showing results for "${query}" (${totalResults})`
-            : currentView === "ppedia"
-            ? `Canonical PPedia Editions (${ppcfComics.length})`
-            : `Featured Verified Equities (${verifiedComics.length})`}
+            : currentView === "cbr"
+            ? `Canonical CBR Editions (${ppcfComics.length})`
+            : `Featured Market Issues (${verifiedComics.length})`}
         </span>
         <span className="text-[10px] text-slate-500 font-mono">
           Page 1 · 48 records displayed
         </span>
       </div>
 
-      {/* Grid: Verified Equities Mode */}
-      {currentView === "equities" && (
+      {/* Grid: Verified Market Issues Mode */}
+      {currentView === "issues" && (
         <>
           {verifiedComics.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -245,22 +245,22 @@ export default async function ComicsPage({ searchParams }: ComicsPageProps) {
               })}
             </div>
           ) : (
-            <div className="border border-slate-800 bg-[#0b0f15] p-12 text-center text-slate-400 rounded-lg space-y-3">
+            <div className="border border-slate-800 bg-[#0b0f15] p-12 text-center text-slate-400 rounded-lg space-y-3 font-mono">
               <Search className="h-8 w-8 text-slate-600 mx-auto" />
-              <p className="text-sm">No verified comic equities matched &ldquo;{query}&rdquo;.</p>
+              <p className="text-sm">No verified market issues matched &ldquo;{query}&rdquo;.</p>
               <Link
                 href="/comics"
                 className="inline-block text-xs text-cyan-400 hover:text-cyan-300 underline"
               >
-                Clear search and view all equities
+                Clear search and view all market issues
               </Link>
             </div>
           )}
         </>
       )}
 
-      {/* Grid: PPedia Encyclopedia Mode */}
-      {currentView === "ppedia" && (
+      {/* Grid: CBR Archival Mode */}
+      {currentView === "cbr" && (
         <>
           {ppcfComics.length > 0 ? (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
@@ -269,14 +269,14 @@ export default async function ComicsPage({ searchParams }: ComicsPageProps) {
               ))}
             </div>
           ) : (
-            <div className="border border-slate-800 bg-[#0b0f15] p-12 text-center text-slate-400 rounded-lg space-y-3">
+            <div className="border border-slate-800 bg-[#0b0f15] p-12 text-center text-slate-400 rounded-lg space-y-3 font-mono">
               <BookOpen className="h-8 w-8 text-slate-600 mx-auto" />
-              <p className="text-sm">No PPedia canonical edition records matched &ldquo;{query}&rdquo;.</p>
+              <p className="text-sm">No CBR canonical edition records matched &ldquo;{query}&rdquo;.</p>
               <Link
-                href="/wiki"
+                href="/lexicon"
                 className="inline-block text-xs text-cyan-400 hover:text-cyan-300 underline"
               >
-                Explore Encyclopedia Directory
+                Explore CBR Market Lexicon &amp; Thesaurus Directory
               </Link>
             </div>
           )}

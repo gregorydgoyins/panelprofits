@@ -35,7 +35,7 @@ export default async function AnalyticsPage() {
       </section>
 
       <aside className="mt-8 flex gap-3 border border-cyan-500/40 bg-[#0C1626] p-4 text-xs leading-5 text-slate-300"><ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-cyan-400" /><p>These are evidence coverage metrics, not synthetic market signals. No moving average, volatility, trend, or cross-source valuation is rendered until the underlying observations satisfy the relevant density, edition, currency, and grade requirements.</p></aside>
-      <div className="mt-6 text-xs text-slate-500"><Link href="/wiki" className="text-blue-200 hover:text-blue-100">Browse the PPedia identity graph</Link></div>
+      <div className="mt-6 text-xs text-slate-500"><Link href="/wiki" className="text-blue-200 hover:text-blue-100">Browse the CBR Identity Graph &amp; Reference</Link></div>
     </main>
   );
 }

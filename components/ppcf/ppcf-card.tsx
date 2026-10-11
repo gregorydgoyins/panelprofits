@@ -26,7 +26,7 @@ export function PpcfCard({ comic }: { comic: PpcfComicRecord }) {
       </div>
       <div className="mt-4 flex items-center justify-between border-t border-slate-800/60 pt-2.5 text-[10px] uppercase tracking-[0.12em] text-slate-500">
         <span>{comic.publication_date || "Publication Date Unavailable"}</span>
-        <span className="text-cyan-400 font-medium group-hover:underline">Open PPedia</span>
+        <span className="text-cyan-400 font-medium group-hover:underline">Open CBR Reference</span>
       </div>
     </Link>
   );

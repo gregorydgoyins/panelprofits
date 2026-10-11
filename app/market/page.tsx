@@ -159,7 +159,7 @@ export default async function MarketPage() {
             </p>
           </div>
           <Link href="/wiki" className="text-xs font-mono uppercase tracking-[0.14em] text-blue-300 hover:text-blue-200">
-            Open PPedia &rarr;
+            Open CBR Reference &rarr;
           </Link>
         </div>
         <div className="mt-5 grid gap-4 sm:grid-cols-4 font-mono">

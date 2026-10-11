@@ -71,10 +71,10 @@ const NAV_GROUPS: NavGroup[] = [
     icon: Search,
     color: "#06b6d4",
     children: [
-      { href: "/comics", label: "Comic Catalog", icon: Search },
+      { href: "/comics", label: "CBR Master Catalog", icon: Search },
       { href: "/battle", label: "Superhero Battle Arena", icon: Swords },
-      { href: "/wiki", label: "Encyclopedia (PPedia)", icon: FileText },
-      { href: "/lexicon", label: "Market Lexicon", icon: FileText },
+      { href: "/wiki", label: "CBR Reference Encyclopedia", icon: FileText },
+      { href: "/lexicon", label: "CBR Market Lexicon", icon: FileText },
     ],
   },
   {
