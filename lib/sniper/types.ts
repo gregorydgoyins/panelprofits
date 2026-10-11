@@ -214,4 +214,52 @@ export interface CandidateEvaluation {
     publicationDate?: string;
     storylines?: string;
   };
+
+  // Multi-Source Price Matrix (eBay vs ComicBase vs Panel Profits)
+  priceMatrix?: PriceMatrixTier[];
+
+  // Purchaser Due Diligence & Investopedia Valuation Lens
+  investopediaLens?: DueDiligenceInvestopediaLens;
+
+  // Video Intelligence & ComicBase Archival Mentions
+  videoDossier?: ComicVideoDossier;
 }
+
+export interface PriceMatrixTier {
+  grade: number | "Raw";
+  gradeLabel: string;
+  ebayPrice: number;
+  ppFmv: number;
+  cbPrice: number;
+  gocollectPrice?: number;
+  spreadPercent: number;
+  isInspectedGrade?: boolean;
+}
+
+export interface DueDiligenceInvestopediaLens {
+  term: string;
+  category: "Arbitrage & Valuation" | "Liquidity & Float" | "Risk & Capital Preservation";
+  definition: string;
+  application: string;
+  bidAskSpreadPercent: number;
+  wholesaleBidUsd: number;
+  retailAskUsd: number;
+  marginHaircutPercent: number;
+  capitalAssetPricingNote: string;
+}
+
+export interface ComicVideoDossier {
+  hasVideo: boolean;
+  comicBaseVideo?: {
+    id: string;
+    title: string;
+    creatorOrSubject: string;
+    type: "interview" | "retrospective";
+    duration: number;
+    videoUrl: string;
+    headline: string;
+    description: string;
+  };
+  youtubeQuery: string;
+}
+

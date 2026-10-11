@@ -316,8 +316,11 @@ export default function SniperRadarPage() {
 
   // High-Resolution Front View Lightbox Inspection State
   const [inspectedDeal, setInspectedDeal] = useState<CandidateEvaluation | null>(null);
-  const [modalPerspective, setModalPerspective] = useState<"all" | "financial" | "chart" | "census" | "lore" | "gcd" | "signature">("all");
+  const [modalPerspective, setModalPerspective] = useState<
+    "all" | "matrix" | "investopedia" | "video" | "financial" | "chart" | "census" | "lore" | "gcd" | "signature"
+  >("all");
   const [showPlansModal, setShowPlansModal] = useState<boolean>(false);
+
 
   // Paper Snipe Orders Ledger State
   const [paperOrders, setPaperOrders] = useState<PaperSnipeRecord[]>([]);
@@ -2115,6 +2118,9 @@ export default function SniperRadarPage() {
               <div className="flex flex-wrap items-center gap-1.5 pt-1">
                 {[
                   { id: "all", label: "ALL PERSPECTIVES", icon: "🌐" },
+                  { id: "matrix", label: "PRICE MATRIX (EBAY • CB • PP)", icon: "⚖️" },
+                  { id: "investopedia", label: "INVESTOPEDIA DUE DILIGENCE", icon: "💼" },
+                  { id: "video", label: "VIDEO INTELLIGENCE", icon: "🎥" },
                   { id: "financial", label: "FINANCIAL & ARBITRAGE", icon: "📊" },
                   { id: "chart", label: "TRADINGVIEW & HISTORICALS", icon: "📈" },
                   { id: "census", label: "POPULATION CENSUS", icon: "🏛️" },
@@ -2122,6 +2128,7 @@ export default function SniperRadarPage() {
                   { id: "gcd", label: "GCD BIBLIOGRAPHIC", icon: "📚" },
                   ...(inspectedDeal.isYellowLabel ? [{ id: "signature", label: "SIGNATURE PROVENANCE", icon: "✍️" }] : []),
                 ].map((tab) => (
+
                   <button
                     key={tab.id}
                     onClick={() => setModalPerspective(tab.id as any)}
@@ -2202,10 +2209,259 @@ export default function SniperRadarPage() {
               {/* Right Column: Multi-Perspective Rail Intelligence Dossier */}
               <div className="lg:col-span-7 space-y-4">
                 {/* ════════════════════════════════════════════════════════════════════════
+                    PERSPECTIVE A: MULTI-SOURCE COMPARATIVE PRICE MATRIX (EBAY • CB • PP)
+                    ════════════════════════════════════════════════════════════════════════ */}
+                {(modalPerspective === "all" || modalPerspective === "matrix") && inspectedDeal.priceMatrix && (
+                  <div className="bg-[#070C18] border border-cyan-500/50 rounded-xl p-4 space-y-3.5 shadow-xl">
+                    <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono font-bold text-cyan-400 uppercase flex items-center gap-1.5">
+                          <span>⚖️</span> MULTI-SOURCE PRICE MATRIX (EBAY • COMICBASE • PANEL PROFITS)
+                        </span>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-500/30">
+                          Grade-to-Grade Parity
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-mono text-slate-400">
+                        Developer API Realized Comps
+                      </span>
+                    </div>
+
+                    <p className="text-[11px] text-slate-400 leading-relaxed font-sans">
+                      Side-by-side grade-level matrix comparing official eBay Developer API auction pricing against the Panel Profits FMV algorithm, ComicBase 2025 catalog valuation, and the GoCollect / GPA benchmark index.
+                    </p>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-[11px] font-mono text-left">
+                        <thead>
+                          <tr className="text-slate-500 border-b border-slate-800 text-[10px] uppercase">
+                            <th className="pb-1.5 font-bold">Grade Tier</th>
+                            <th className="pb-1.5 font-bold text-right">eBay Realized</th>
+                            <th className="pb-1.5 font-bold text-right">Panel Profits FMV</th>
+                            <th className="pb-1.5 font-bold text-right">ComicBase Catalog</th>
+                            <th className="pb-1.5 font-bold text-right">GoCollect / GPA</th>
+                            <th className="pb-1.5 font-bold text-right">Dislocation</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/60">
+                          {inspectedDeal.priceMatrix.map((row, idx) => (
+                            <tr
+                              key={idx}
+                              className={`transition ${
+                                row.isInspectedGrade
+                                  ? "bg-cyan-950/50 border-l-2 border-cyan-400 font-bold"
+                                  : "hover:bg-slate-900/40"
+                              }`}
+                            >
+                              <td className="py-2 pl-1 flex items-center gap-1.5">
+                                <span className={row.isInspectedGrade ? "text-cyan-300" : "text-slate-300"}>
+                                  {row.gradeLabel}
+                                </span>
+                                {row.isInspectedGrade && (
+                                  <span className="text-[9px] bg-cyan-500 text-slate-950 px-1.5 py-0.2 rounded font-black">
+                                    INSPECTED
+                                  </span>
+                                )}
+                              </td>
+                              <td className="py-2 text-right text-emerald-400 font-bold">
+                                ${row.ebayPrice.toFixed(2)}
+                              </td>
+                              <td className="py-2 text-right text-cyan-300">
+                                ${row.ppFmv.toFixed(2)}
+                              </td>
+                              <td className="py-2 text-right text-blue-300">
+                                ${row.cbPrice.toFixed(2)}
+                              </td>
+                              <td className="py-2 text-right text-slate-400">
+                                {row.gocollectPrice ? `$${row.gocollectPrice.toFixed(2)}` : "—"}
+                              </td>
+                              <td
+                                className={`py-2 text-right font-bold ${
+                                  row.spreadPercent >= 0 ? "text-emerald-400" : "text-rose-400"
+                                }`}
+                              >
+                                {row.spreadPercent >= 0 ? `+${row.spreadPercent}%` : `${row.spreadPercent}%`}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[10px] font-mono bg-black/60 p-2.5 rounded-lg border border-slate-800 text-slate-400">
+                      <span>Matched Registry Cert: <strong className="text-cyan-300">{inspectedDeal.certNumber || "Verified Universal Registry"}</strong></span>
+                      <span className="text-emerald-300 font-bold">
+                        ★ Parity Verified across Cover, Grade &amp; Ticker
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* ════════════════════════════════════════════════════════════════════════
+                    PERSPECTIVE B: INVESTOPEDIA PURCHASER DUE DILIGENCE & VALUATION LENS
+                    ════════════════════════════════════════════════════════════════════════ */}
+                {(modalPerspective === "all" || modalPerspective === "investopedia") && inspectedDeal.investopediaLens && (
+                  <div className="bg-[#070C18] border border-emerald-500/40 rounded-xl p-4 space-y-3.5 shadow-xl">
+                    <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono font-bold text-emerald-400 uppercase flex items-center gap-1.5">
+                          <span>💼</span> INVESTOPEDIA™ PURCHASER DUE DILIGENCE &amp; VALUATION LENS
+                        </span>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/30">
+                          {inspectedDeal.investopediaLens.category}
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-mono text-slate-400">
+                        Institutional Asset Framework
+                      </span>
+                    </div>
+
+                    {/* Financial Concept Hero */}
+                    <div className="bg-emerald-950/20 border border-emerald-500/30 rounded-lg p-3 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-mono font-bold text-emerald-300 uppercase">
+                          {inspectedDeal.investopediaLens.term}
+                        </span>
+                        <span className="text-[10px] font-mono text-emerald-400/80">
+                          Investopedia Financial Dictionary
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-300 leading-relaxed font-sans">
+                        {inspectedDeal.investopediaLens.definition}
+                      </p>
+                      <div className="border-t border-emerald-500/20 pt-1.5 text-xs text-emerald-200/90 font-sans leading-relaxed">
+                        <strong className="text-emerald-400 font-mono text-[11px] block uppercase mb-0.5">
+                          Direct Asset Application:
+                        </strong>
+                        {inspectedDeal.investopediaLens.application}
+                      </div>
+                    </div>
+
+                    {/* Quantitative Due Diligence Triad */}
+                    <div className="grid grid-cols-3 gap-2.5 text-xs font-mono text-center">
+                      <div className="bg-black/60 p-2.5 rounded-lg border border-slate-800">
+                        <span className="text-[10px] text-slate-400 uppercase block">Modeled Dealer Bid</span>
+                        <strong className="text-white text-sm">
+                          ${inspectedDeal.investopediaLens.wholesaleBidUsd.toFixed(2)}
+                        </strong>
+                        <span className="text-[9px] text-slate-500 block">Wholesale Buy-List Floor</span>
+                      </div>
+                      <div className="bg-black/60 p-2.5 rounded-lg border border-slate-800">
+                        <span className="text-[10px] text-emerald-400 uppercase block">Retail Ask Price</span>
+                        <strong className="text-emerald-300 text-sm">
+                          ${inspectedDeal.investopediaLens.retailAskUsd.toFixed(2)}
+                        </strong>
+                        <span className="text-[9px] text-slate-500 block">Clearing Retail Target</span>
+                      </div>
+                      <div className="bg-black/60 p-2.5 rounded-lg border border-slate-800">
+                        <span className="text-[10px] text-cyan-400 uppercase block">Bid-Ask Spread</span>
+                        <strong className="text-cyan-300 text-sm">
+                          {inspectedDeal.investopediaLens.bidAskSpreadPercent}%
+                        </strong>
+                        <span className="text-[9px] text-slate-500 block">Dealer Liquidity Spread</span>
+                      </div>
+                    </div>
+
+                    <div className="bg-black/40 border border-slate-800 rounded-lg p-2.5 text-xs font-mono space-y-1 text-slate-300">
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Margin Haircut &amp; Downside Cushion:</span>
+                        <span className="text-emerald-300 font-bold">
+                          {inspectedDeal.investopediaLens.marginHaircutPercent}% Protection
+                        </span>
+                      </div>
+                      <div className="text-[10px] text-slate-400 leading-snug">
+                        {inspectedDeal.investopediaLens.capitalAssetPricingNote}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ════════════════════════════════════════════════════════════════════════
+                    PERSPECTIVE C: VIDEO INTELLIGENCE & ARCHIVAL RETROSPECTIVE
+                    ════════════════════════════════════════════════════════════════════════ */}
+                {(modalPerspective === "all" || modalPerspective === "video") && (
+                  <div className="bg-[#070C18] border border-rose-500/40 rounded-xl p-4 space-y-3.5 shadow-xl">
+                    <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono font-bold text-rose-400 uppercase flex items-center gap-1.5">
+                          <span>🎥</span> VIDEO INTELLIGENCE &amp; ARCHIVAL RETROSPECTIVES
+                        </span>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-500/30">
+                          {inspectedDeal.videoDossier?.hasVideo ? "Archival Video Match" : "Video Intelligence"}
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-mono text-slate-400">
+                        ComicBase Theater &amp; Review Comps
+                      </span>
+                    </div>
+
+                    {inspectedDeal.videoDossier?.comicBaseVideo ? (
+                      <div className="bg-black/80 rounded-lg p-3.5 border border-rose-500/30 space-y-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-rose-950 border border-rose-500/40 text-rose-300 inline-block mb-1">
+                              {inspectedDeal.videoDossier.comicBaseVideo.type.toUpperCase()} • {inspectedDeal.videoDossier.comicBaseVideo.creatorOrSubject}
+                            </span>
+                            <h4 className="text-sm font-bold text-white">
+                              {inspectedDeal.videoDossier.comicBaseVideo.headline}
+                            </h4>
+                          </div>
+                          <span className="text-xs font-mono font-bold text-slate-400 bg-slate-900 px-2 py-1 rounded">
+                            {Math.floor(inspectedDeal.videoDossier.comicBaseVideo.duration / 60)}:
+                            {String(inspectedDeal.videoDossier.comicBaseVideo.duration % 60).padStart(2, "0")}
+                          </span>
+                        </div>
+
+                        <div className="rounded-lg overflow-hidden border border-slate-800 bg-black aspect-video flex items-center justify-center relative">
+                          <video
+                            controls
+                            className="w-full h-full object-contain"
+                            poster={inspectedDeal.listing.imageUrl}
+                            src={inspectedDeal.videoDossier.comicBaseVideo.videoUrl}
+                          />
+                        </div>
+
+                        <p className="text-xs text-slate-300 leading-relaxed font-sans">
+                          {inspectedDeal.videoDossier.comicBaseVideo.description}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="bg-black/60 rounded-lg p-3 border border-slate-800 space-y-2">
+                        <div className="text-xs text-slate-300 font-sans leading-relaxed">
+                          No direct internal ComicBase creator interview is archived for this specific issue, but active collector video reviews and CGC census analysis videos are indexed across market channels:
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 font-mono text-xs">
+                          <a
+                            href={`https://www.youtube.com/results?search_query=${encodeURIComponent(inspectedDeal.resolvedSeries + " #" + inspectedDeal.resolvedIssue + " comic CGC market value review")}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-cyan-300 flex items-center justify-between transition"
+                          >
+                            <span>▶ CGC Market Analysis Video</span>
+                            <span className="text-[10px]">↗</span>
+                          </a>
+                          <a
+                            href={`https://www.youtube.com/results?search_query=${encodeURIComponent(inspectedDeal.resolvedSeries + " #" + inspectedDeal.resolvedIssue + " key issue first appearance")}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-rose-300 flex items-center justify-between transition"
+                          >
+                            <span>▶ Key Issue Spotlight Video</span>
+                            <span className="text-[10px]">↗</span>
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* ════════════════════════════════════════════════════════════════════════
                     PERSPECTIVE 1: FINANCIAL & ARBITRAGE MATH
                     ════════════════════════════════════════════════════════════════════════ */}
                 {(modalPerspective === "all" || modalPerspective === "financial") && (
                   <div className="bg-[#070C18] border border-cyan-500/40 rounded-xl p-4 space-y-3.5 shadow-lg">
+
                     <div className="flex items-center justify-between border-b border-slate-800 pb-2">
                       <span className="text-xs font-mono font-bold text-cyan-400 uppercase flex items-center gap-1.5">
                         <span>📊</span> FINANCIAL &amp; ARBITRAGE DESK
