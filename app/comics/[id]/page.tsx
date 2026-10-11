@@ -10,7 +10,6 @@ import { getAuthoritativeCover } from "@/lib/comics/cover-authority";
 import { coverSourceContradictsPublisher } from "@/lib/comics/cover-trust";
 import { resolveAuthoritativePublisher } from "@/lib/comics/publisher-authority";
 import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
-import { searchVerifiedEquities } from "@/lib/equity/verified-equities-service";
 import { GcdBibliographicDossier } from "@/components/comics/gcd-bibliographic-dossier";
 import { AtomicVariantsAndInternationalMatrix } from "@/components/comics/atomic-variants-and-international-matrix";
 import { BlendedHoldingDossier } from "@/components/comics/blended-holding-dossier";
@@ -112,16 +111,6 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
   }
 
   if (!comic) {
-    try {
-      const candidates = searchVerifiedEquities(id, 1);
-      if (candidates && candidates.length > 0 && candidates[0]) {
-        const fallbackTarget = candidates[0].ticker || candidates[0].id;
-        if (fallbackTarget && fallbackTarget.toLowerCase() !== id.trim().toLowerCase()) {
-          redirect(`/comics/${encodeURIComponent(fallbackTarget.replace(/^\$/, ""))}`);
-        }
-      }
-    } catch (_) {}
-
     notFound();
   }
 
