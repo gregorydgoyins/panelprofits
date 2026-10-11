@@ -131,7 +131,10 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
   const targetSlug = canonicalTicker ? canonicalTicker.replace(/^\$/, "") : comic.id;
   const currentClean = id.trim().replace(/^\$/, "");
 
-  if (targetSlug && targetSlug.toLowerCase() !== currentClean.toLowerCase()) {
+  // A record id (hex/uuid or PriceCharting number) names exactly one stored comic. A ticker does not
+  // (Batman #30 has dozens of records), so never redirect a record id to its ticker.
+  const isRecordId = /^[a-f0-9]{32,64}$/i.test(currentClean) || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(currentClean) || /^(pp-)?\d{4,10}$/i.test(currentClean);
+  if (!isRecordId && targetSlug && targetSlug.toLowerCase() !== currentClean.toLowerCase()) {
     redirect(`/comics/${targetSlug}`);
   }
 

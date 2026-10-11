@@ -141,7 +141,7 @@ export function mapCoveredBook(row: RailBookRow): EquityItem | null {
       originEra: row.origin_era,
       originYear: row.origin_year,
       scarcityTier: tier,
-      detailUrl: hasComicsRow ? `/comics/${encodeURIComponent(row.comics_id)}` : `/comics/${encodeURIComponent(ticker)}`,
+      detailUrl: hasComicsRow ? `/comics/${encodeURIComponent(row.comics_id)}` : row.pp_id ? `/comics/${encodeURIComponent(row.pp_id)}` : `/comics/${encodeURIComponent(ticker)}`,
       assetClass: marketClass as EquityItem["identity"]["assetClass"],
       marketPriceClass: marketClass,
       isSovereign: false,
