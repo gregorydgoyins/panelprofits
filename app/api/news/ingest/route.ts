@@ -13,17 +13,16 @@ export async function POST(request: Request) {
 }
 
 /**
- * Vercel Cron calls this with `Authorization: Bearer $CRON_SECRET` when CRON_SECRET is set on the
- * project, and always with the `vercel-cron/1.0` user agent. (It does not send `x-vercel-cron`.)
- * With a secret configured, only the Bearer token is accepted. With none configured, the cron
- * user agent is accepted; ingestion is an idempotent upsert, so that is the only fallback.
+ * Vercel Cron always sends the `vercel-cron/1.0` user agent, and sends `Authorization: Bearer $CRON_SECRET`
+ * only when CRON_SECRET is set on the project. Accept either: the Bearer token (CRON_SECRET or
+ * GPA_INGESTION_SECRET) for manual/CI calls, or the cron user agent. Ingestion is an idempotent upsert of
+ * public feeds, so a spoofed user agent can only trigger a normal ingest run.
  */
 function isAuthorized(request: Request): boolean {
   const secrets = [process.env.CRON_SECRET, process.env.GPA_INGESTION_SECRET].filter((s): s is string => Boolean(s));
   const bearer = (request.headers.get("authorization") || "").replace(/^Bearer /, "");
   if (bearer && secrets.includes(bearer)) return true;
-  if (secrets.length === 0) return (request.headers.get("user-agent") || "").startsWith("vercel-cron/");
-  return false;
+  return (request.headers.get("user-agent") || "").startsWith("vercel-cron/");
 }
 
 async function handleIngest(request: Request) {
