@@ -246,18 +246,6 @@ export const ADAPTATION_ROLE_CHARACTER_ENTITIES: EntityWikiDef[] = ADAPTATION_AC
  */
 export const KNOWN_NEWS_ENTITIES_MAP: EntityWikiDef[] = [
   // --- ANALYST PERSONAS ---
-  { term: "Marcus Vance", type: "creator", target: "intelligence", wikiPath: "/news/authors/marcus-vance" },
-  { term: "Elena Rostova", type: "creator", target: "intelligence", wikiPath: "/news/authors/elena-rostova" },
-  { term: "Devon Knight", type: "creator", target: "intelligence", wikiPath: "/news/authors/devon-knight" },
-  { term: "Sarah Chen", type: "creator", target: "intelligence", wikiPath: "/news/authors/sarah-chen" },
-  { term: "Thaddeus Pryor", type: "creator", target: "intelligence", wikiPath: "/news/authors/thaddeus-pryor" },
-  { term: "Jax Mercer", type: "creator", target: "intelligence", wikiPath: "/news/authors/jax-mercer" },
-  { term: "Claire Holloway", type: "creator", target: "intelligence", wikiPath: "/news/authors/claire-holloway" },
-  { term: "Gideon Vane", type: "creator", target: "intelligence", wikiPath: "/news/authors/gideon-vane" },
-  { term: "Zara Al-Mansoor", type: "creator", target: "intelligence", wikiPath: "/news/authors/zara-al-mansoor" },
-  { term: "Owen St. Clair", type: "creator", target: "intelligence", wikiPath: "/news/authors/owen-st-clair" },
-  { term: "Remington Cole", type: "creator", target: "intelligence", wikiPath: "/news/authors/remington-cole" },
-  { term: "Nadia Sterling", type: "creator", target: "intelligence", wikiPath: "/news/authors/nadia-sterling" },
 
   // --- PANEL PROFITS FUNDS, BASKETS & INDICES ---
   { term: "CE70 Sovereign Comic Equity Index", ticker: "$CE70", type: "equity", target: "lexicon", wikiPath: "/equity/CE70" },

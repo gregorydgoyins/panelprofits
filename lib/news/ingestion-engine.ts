@@ -84,7 +84,7 @@ function extractImage(block: string): string | null {
 /**
  * Fetch and parse a single RSS/Atom/YouTube feed.
  */
-async function fetchChannelFeed(channel: ActiveFeedChannel): Promise<IngestedStoryDraft[]> {
+async function fetchChannelFeed(channel: ActiveFeedChannel): Promise<{ drafts: IngestedStoryDraft[]; failure: string | null }> {
   try {
     const res = await fetch(channel.url, {
       headers: {
@@ -96,7 +96,7 @@ async function fetchChannelFeed(channel: ActiveFeedChannel): Promise<IngestedSto
     });
 
     if (!res.ok) {
-      return [];
+      return { drafts: [], failure: `${channel.url} -> HTTP ${res.status}` };
     }
 
     const xml = await res.text();
@@ -169,9 +169,9 @@ async function fetchChannelFeed(channel: ActiveFeedChannel): Promise<IngestedSto
       });
     }
 
-    return drafts;
+    return { drafts, failure: null };
   } catch (err) {
-    return [];
+    return { drafts: [], failure: `${channel.url} -> ${err instanceof Error ? err.message : String(err)}` };
   }
 }
 
@@ -181,6 +181,11 @@ async function fetchChannelFeed(channel: ActiveFeedChannel): Promise<IngestedSto
 export async function executeMasterNewsIngestion(concurrency = 12): Promise<{
   totalIngested: number;
   totalErrors: number;
+  /** Feeds/wires that failed this run, with the reason. Empty means every source answered. */
+  feedFailures: string[];
+  feedsTried: number;
+  /** Newest published_at across everything fetched this run (null if nothing fetched). */
+  newestPublishedAt: string | null;
   breakdown: {
     videoCount: number;
     wireCount: number;
@@ -192,6 +197,7 @@ export async function executeMasterNewsIngestion(concurrency = 12): Promise<{
   const db = createAdminServerClient();
   const allDrafts: IngestedStoryDraft[] = [];
   const seenKeys = new Set<string>();
+  const feedFailures: string[] = [];
 
   // 1. Fetch Wire APIs in parallel
   try {
@@ -219,6 +225,7 @@ export async function executeMasterNewsIngestion(concurrency = 12): Promise<{
       }
     }
   } catch (err) {
+    feedFailures.push(`wire APIs -> ${err instanceof Error ? err.message : String(err)}`);
     console.warn("Wire APIs fetch warning:", err);
   }
 
@@ -229,7 +236,8 @@ export async function executeMasterNewsIngestion(concurrency = 12): Promise<{
   const workers = Array.from({ length: concurrency }, async () => {
     while (currentIndex < ACTIVE_NEWS_CHANNELS.length) {
       const channel = ACTIVE_NEWS_CHANNELS[currentIndex++];
-      const drafts = await fetchChannelFeed(channel);
+      const { drafts, failure } = await fetchChannelFeed(channel);
+      if (failure) feedFailures.push(failure);
       channelResults.push(drafts);
     }
   });
@@ -286,9 +294,16 @@ export async function executeMasterNewsIngestion(concurrency = 12): Promise<{
     marketCount: allDrafts.filter((d) => d.channel_type === "market").length,
   };
 
+  if (feedFailures.length) console.warn(`[news-ingest] ${feedFailures.length} source failure(s):`, feedFailures.slice(0, 20));
+
+  const newest = allDrafts.reduce<string | null>((m, d) => (d.published_at && (!m || d.published_at > m) ? d.published_at : m), null);
+
   return {
     totalIngested,
     totalErrors,
+    feedFailures,
+    feedsTried: ACTIVE_NEWS_CHANNELS.length,
+    newestPublishedAt: newest,
     breakdown,
   };
 }

@@ -14,7 +14,8 @@ import {
   Layers,
   BarChart3,
 } from "lucide-react";
-import type { AffectedComicKey, CatalystAnalysis } from "@/lib/news/catalyst";
+import type { CatalystAnalysis } from "@/lib/news/catalyst";
+import { EvidenceStrip, useBookEvidence } from "@/components/news/use-book-evidence";
 
 interface MarketReactionCardProps {
   catalyst: CatalystAnalysis;
@@ -23,6 +24,7 @@ interface MarketReactionCardProps {
 
 export function MarketReactionCard({ catalyst, storyTitle }: MarketReactionCardProps) {
   const [savedTickers, setSavedTickers] = React.useState<Record<string, boolean>>({});
+  const evidence = useBookEvidence((catalyst?.affectedComics ?? []).map((c) => c.title));
 
   if (!catalyst || !catalyst.affectedComics || catalyst.affectedComics.length === 0) {
     return null;
@@ -35,9 +37,7 @@ export function MarketReactionCard({ catalyst, storyTitle }: MarketReactionCardP
     }));
   };
 
-  const isBullish = catalyst.marketImpact === "BULLISH";
   const isVolatility = catalyst.marketImpact === "VOLATILITY";
-  const isBearish = catalyst.marketImpact === "BEARISH";
 
   return (
     <div className="my-6 overflow-hidden rounded-xl border border-cyan-500/30 bg-[#070A12] shadow-2xl">
@@ -59,23 +59,11 @@ export function MarketReactionCard({ catalyst, storyTitle }: MarketReactionCardP
         <div className="flex items-center gap-2">
           <span
             className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider ${
-              isBullish
-                ? "border-emerald-500/40 bg-emerald-950/50 text-emerald-300"
-                : isVolatility
-                ? "border-cyan-500/40 bg-cyan-950/50 text-cyan-300"
-                : isBearish
-                ? "border-rose-500/40 bg-rose-950/50 text-rose-300"
-                : "border-slate-700 bg-slate-900 text-slate-300"
+              isVolatility ? "border-cyan-500/40 bg-cyan-950/50 text-cyan-300" : "border-slate-700 bg-slate-900 text-slate-300"
             }`}
           >
-            {isBullish ? (
-              <TrendingUp className="h-3 w-3 text-emerald-400" />
-            ) : isBearish ? (
-              <TrendingDown className="h-3 w-3 text-rose-400" />
-            ) : (
-              <Activity className="h-3 w-3 text-cyan-400" />
-            )}
-            {catalyst.marketImpact} ({Math.round(catalyst.impactScore * 100)}% PROBABILITY)
+            <Activity className="h-3 w-3 text-cyan-400" />
+            {isVolatility ? "Volatility catalyst" : "No market link"}
           </span>
         </div>
       </div>
@@ -107,9 +95,6 @@ export function MarketReactionCard({ catalyst, storyTitle }: MarketReactionCardP
                   <span className="font-mono text-xs font-black tracking-wider text-cyan-300">
                     {comic.ticker}
                   </span>
-                  <span className="font-mono text-[8px] uppercase tracking-wider text-slate-400">
-                    CGC 9.8
-                  </span>
                 </div>
 
                 <div className="min-w-0">
@@ -117,11 +102,6 @@ export function MarketReactionCard({ catalyst, storyTitle }: MarketReactionCardP
                     <span className="text-sm font-semibold text-slate-100 group-hover:text-cyan-200 transition-colors">
                       {comic.title}
                     </span>
-                    {comic.volumeSurge && (
-                      <span className="inline-flex items-center gap-1 rounded bg-amber-950/40 border border-amber-500/30 px-1.5 py-0.5 text-[9px] font-mono font-bold text-amber-300 uppercase">
-                        <Zap className="h-2.5 w-2.5 text-amber-400" /> High Volatility Run
-                      </span>
-                    )}
                   </div>
                   <p className="mt-0.5 text-xs text-slate-400 line-clamp-1">
                     {comic.keySignificance}
@@ -132,20 +112,7 @@ export function MarketReactionCard({ catalyst, storyTitle }: MarketReactionCardP
               {/* Right Column: Pricing & Quick Actions */}
               <div className="flex items-center justify-between gap-4 border-t border-slate-800/40 pt-2 sm:border-t-0 sm:pt-0">
                 <div className="text-left sm:text-right">
-                  <div className="flex items-center gap-1.5 sm:justify-end">
-                    <span className="font-mono text-[10px] uppercase text-slate-500">FMV:</span>
-                    <span className="font-mono text-sm font-bold text-emerald-400">
-                      {comic.priceFormatted}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400">
-                    {comic.delta7d && (
-                      <span className="text-emerald-400 font-semibold">{comic.delta7d} (7D)</span>
-                    )}
-                    {comic.delta30d && (
-                      <span className="text-slate-500">· {comic.delta30d} (30D)</span>
-                    )}
-                  </div>
+                  <EvidenceStrip evidence={evidence[comic.title]} />
                 </div>
 
                 <div className="flex items-center gap-1.5">

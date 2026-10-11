@@ -76,7 +76,6 @@ export async function GET(req: NextRequest) {
           type: catalyst.catalystType,
           label: catalyst.catalystLabel,
           impact: catalyst.marketImpact,
-          score: catalyst.impactScore,
           affectedComics: catalyst.affectedComics,
         },
         matchedEntities: entities.slice(0, 5).map((e) => ({

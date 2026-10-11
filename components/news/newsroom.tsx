@@ -475,16 +475,12 @@ export function Newsroom({ stories: initialStories }: NewsroomProps) {
 
                         <span
                           className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider ${
-                            catalyst.marketImpact === "BULLISH"
-                              ? "bg-emerald-950/60 border border-emerald-500/40 text-emerald-300"
-                              : catalyst.marketImpact === "VOLATILITY"
+                            catalyst.marketImpact === "VOLATILITY"
                               ? "bg-cyan-950/60 border border-cyan-500/40 text-cyan-300"
-                              : catalyst.marketImpact === "BEARISH"
-                              ? "bg-rose-950/60 border border-rose-500/40 text-rose-300"
                               : "bg-slate-800 text-slate-300"
                           }`}
                         >
-                          {catalyst.marketImpact}
+                          {catalyst.marketImpact === "VOLATILITY" ? "VOLATILITY" : "NO LINK"}
                         </span>
                       </div>
                     </button>

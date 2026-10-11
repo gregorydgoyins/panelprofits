@@ -4,23 +4,18 @@ import * as React from "react";
 import Link from "next/link";
 import { ArrowUpRight, ShieldAlert, Sparkles, TrendingUp, BookOpen, Layers, Award } from "lucide-react";
 import type { CatalystAnalysis } from "@/lib/news/catalyst";
+import { EvidenceStrip, useBookEvidence } from "@/components/news/use-book-evidence";
 
 interface CatalystKeyRailProps {
   analysis: CatalystAnalysis;
 }
 
 export function CatalystKeyRail({ analysis }: CatalystKeyRailProps) {
-  const isBullish = analysis.marketImpact === "BULLISH";
-  const isVolatility = analysis.marketImpact === "VOLATILITY";
-  const isBearish = analysis.marketImpact === "BEARISH";
-
-  const impactBadgeClass = isBullish
-    ? "bg-emerald-950/60 border-emerald-500/50 text-emerald-300"
-    : isVolatility
-    ? "bg-cyan-950/60 border-cyan-500/50 text-cyan-300"
-    : isBearish
-    ? "bg-rose-950/60 border-rose-500/50 text-rose-300"
-    : "bg-slate-900 border-slate-700 text-slate-300";
+  const evidence = useBookEvidence(analysis.affectedComics.map((c) => c.title));
+  const impactBadgeClass =
+    analysis.marketImpact === "VOLATILITY"
+      ? "bg-cyan-950/60 border-cyan-500/50 text-cyan-300"
+      : "bg-slate-900 border-slate-700 text-slate-300";
 
   return (
     <div className="mt-6 border border-slate-800 bg-[#070A10] p-4 sm:p-5 rounded-lg shadow-inner">
@@ -35,7 +30,7 @@ export function CatalystKeyRail({ analysis }: CatalystKeyRailProps) {
 
         <div className="flex items-center gap-2">
           <span className={`px-2 py-0.5 rounded border text-[10px] font-mono font-semibold uppercase tracking-wider ${impactBadgeClass}`}>
-            {analysis.marketImpact} IMPACT ({Math.round(analysis.impactScore * 100)}%)
+            {analysis.marketImpact === "VOLATILITY" ? "Volatility catalyst" : "No market link"}
           </span>
           <span className="rounded bg-slate-800/80 px-2 py-0.5 text-[10px] font-mono text-slate-300 uppercase tracking-wider">
             {analysis.catalystLabel}
@@ -76,9 +71,8 @@ export function CatalystKeyRail({ analysis }: CatalystKeyRailProps) {
                     {comic.keySignificance}
                   </p>
 
-                  <div className="mt-2 flex items-center gap-2 text-[10px] font-mono text-slate-500">
-                    <span>CGC 9.8 FMV:</span>
-                    <span className="text-emerald-400 font-bold">{comic.priceFormatted}</span>
+                  <div className="mt-2">
+                    <EvidenceStrip evidence={evidence[comic.title]} />
                   </div>
                 </div>
 

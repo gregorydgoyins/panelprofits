@@ -13,7 +13,6 @@ import { analyzeStoryCatalyst } from "@/lib/news/catalyst";
 import { CatalystKeyRail } from "@/components/news/CatalystKeyRail";
 import { MarketReactionCard } from "@/components/news/MarketReactionCard";
 import { AudioBriefingPlayer } from "@/components/news/AudioBriefingPlayer";
-import { AnalystDeskMemo } from "@/components/news/AnalystDeskMemo";
 import { parseAndSynthesizeArticle } from "@/lib/news/article-parser";
 
 export const revalidate = 300;
@@ -147,17 +146,6 @@ export default async function NewsStoryPage({ params }: { params: Promise<{ id: 
           <div className="mt-8">
             <RelatedDossiersRail data={relatedDossiers} />
           </div>
-
-          <div className="mt-8 max-w-3xl">
-            <AnalystDeskMemo
-              storyId={story.id}
-              source={story.source}
-              headline={story.headline}
-              summary={story.summary}
-              catalyst={catalyst}
-            />
-          </div>
-
 
           <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-slate-800 pt-5 text-xs text-slate-500">
             <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">

@@ -22,7 +22,7 @@ export function BreakingTickerRibbon({ stories, onSelectStory }: BreakingTickerR
         story: s,
         catalyst: analyzeStoryCatalyst(s.headline, s.summary),
       }))
-      .filter((item) => item.catalyst.impactScore >= 0.7)
+      .filter((item) => item.catalyst.marketImpact === "VOLATILITY" && item.catalyst.affectedComics.length > 0)
       .slice(0, 10);
   }, [stories]);
 
@@ -55,7 +55,7 @@ export function BreakingTickerRibbon({ stories, onSelectStory }: BreakingTickerR
           <div className="flex items-center gap-2 truncate">
             {primaryComic && (
               <span className="font-mono text-[10px] font-black text-cyan-400 bg-cyan-950/80 px-1.5 py-0.5 rounded border border-cyan-500/30 shrink-0">
-                {primaryComic.ticker} ({primaryComic.priceFormatted})
+                {primaryComic.ticker}
               </span>
             )}
 

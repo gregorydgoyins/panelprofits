@@ -6,7 +6,6 @@ import {
   resolveFuzzyEntitiesForStory,
 } from "@/lib/news/fuzzy-engine";
 import { findNewsEntities, extractEntitiesFromContext } from "@/lib/news/entities";
-import { parseAndSynthesizeArticle } from "@/lib/news/article-parser";
 import { LORE_OBSCURE_COLLISION_BLOCKLIST } from "@/lib/wiki/lore-search";
 
 describe("Fuzzy Logic Engine: Fuzzification, Inference, Defuzzification & Deference", () => {
@@ -156,36 +155,4 @@ describe("Fuzzy Logic Engine: Fuzzification, Inference, Defuzzification & Defere
     });
   });
 
-  describe("Article Parser Integration with Fuzzy Paraphrasing", () => {
-    it("synthesizes an article with a placeholder headline and infers Doctor Who correctly", () => {
-      const story = {
-        headline: "doctir __________ ? BBC Confirms Regeneration Special",
-        summary: "The BBC has confirmed a landmark 60-minute episode featuring the TARDIS, Daleks, and Time Lord lore.",
-        source: "BBC News",
-      };
-
-      const article = parseAndSynthesizeArticle(story);
-
-      // 1. Headline is paraphrased cleanly
-      expect(article.headline).toContain("Doctor Who");
-      expect(article.headline).not.toContain("doctir __________");
-
-      // 2. Entities include Doctor Who with sovereign ticker $DWHO
-      const entityTerms = article.entities.map((e) => e.term.toLowerCase());
-      expect(entityTerms.some((t) => t.includes("doctor who") || t.includes("the doctor"))).toBe(true);
-
-      const dwhoEntity = article.entities.find((e) => e.ticker === "$DWHO");
-      expect(dwhoEntity).toBeDefined();
-      expect(dwhoEntity?.wikiPath).toBe("/wiki/entry/the-doctor-earth-5556");
-
-      // 3. Superhero ramifications and butterfly ripples include $DWHO
-      const dwhoRamification = article.superheroRamifications.find((r) => r.ticker === "$DWHO");
-      expect(dwhoRamification).toBeDefined();
-      expect(dwhoRamification?.cgc98Fmv).toBe("$18,500");
-
-      const dwhoRipple = article.butterflyRipples.find((r) => r.ticker === "$DWHO");
-      expect(dwhoRipple).toBeDefined();
-      expect(dwhoRipple?.direction).toBe("surge");
-    });
-  });
 });
