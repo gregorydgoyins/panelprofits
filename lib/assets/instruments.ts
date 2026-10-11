@@ -33,6 +33,8 @@ import {
 } from "./canon-formulas";
 import { BENEFACTORS, LORE_COMMODITIES, PRIVATE_ILLIQUIDITY_DISCOUNT } from "./lore-tables";
 import { buildChain } from "./option-chain";
+import { issueInstitutional } from "./institutions";
+import { conditionsFor, type ShockMap } from "./shock-propagation";
 import type { Underlying } from "./underlyings";
 
 const artFor = (key: SurfaceKey) => `/surface-art/${key.toLowerCase()}.png`;
@@ -79,7 +81,7 @@ function item(
 
 const T_OPTION = OPTION.windowDays / 252;
 
-export function issueInstruments(unders: Underlying[]): AssetItem[] {
+export function issueInstruments(unders: Underlying[], shocks: ShockMap = new Map()): AssetItem[] {
   const out: AssetItem[] = [];
   const eligible = unders.filter(derivativeEligible);
   const tkr = (u: Underlying) => `${u.series.replace(/[^A-Za-z]/g, "").slice(0, 3).toUpperCase()}${u.issueNumber.replace(/[^0-9A-Za-z]/g, "")}${u.year ? `-${String(u.year).slice(2)}` : ""}`;
@@ -159,7 +161,7 @@ export function issueInstruments(unders: Underlying[]): AssetItem[] {
       if (outstanding + FACE > cap) break; // Σ principal ≤ 0.40 · WAV
       outstanding += FACE;
       const sLiq = bondLiquiditySpreadFor(u.state, b.years);
-      const yReq = requiredYield(b.years, b.spread, sLiq);
+      const yReq = requiredYield(b.years, b.spread + u.creditAdd, sLiq);
       const coupon = treasuryYield(b.years) + b.spread; // par at zero liquidity spread
       const px = bondPrice(FACE, coupon, yReq, b.years);
       out.push(item("BOND", i++, `${tkr(u)}${b.sub === "INST_ISSUE" ? "B5" : "B10"}`, `${u.label} ${b.sub === "INST_ISSUE" ? "Institutional" : "Publisher"} ${b.years}Y Note`, `${(coupon * 100).toFixed(2)}% annual coupon, $${FACE} face`, px, { formula: "Price=Σ cP/(1+y)^k + P/(1+y)^T", detailUrl: u.detailUrl, inputs: { underlying: u.label, subclass: b.sub, face: FACE, coupon, yReq, sCredit: b.spread, sLiq, years: b.years, issuanceCap: cap } }));
@@ -232,8 +234,9 @@ export function issueInstruments(unders: Underlying[]): AssetItem[] {
     const holdings = unders
       .filter((u) => b.collects.some((c) => u.series.toLowerCase().includes(c)))
       .map((u) => ({ q: 1, price: u.price }));
-    const v = privateCapitalUnitValue({ netWorth: b.netWorth, operatingFraction: b.operatingFraction, illiquidityDiscount: PRIVATE_ILLIQUIDITY_DISCOUNT, holdings, units: b.units });
-    out.push(item("PRIVATE", i++, `$${b.id.toUpperCase().slice(0, 4)}`, b.vehicle, `${b.name}'s private vehicle, ${holdings.length} collected books marked to market`, v, { formula: "NAV_unit=[W(1−k)+Σq·S](1−d)/U", inputs: { netWorth: b.netWorth, operatingFraction: b.operatingFraction, illiquidityDiscount: PRIVATE_ILLIQUIDITY_DISCOUNT, collectionBooks: holdings.length, units: b.units } }));
+    const flow = conditionsFor(b.node ? shocks.get(b.node) : undefined).flow; // capital flows reaching the benefactor
+    const v = privateCapitalUnitValue({ netWorth: b.netWorth * (1 + flow), operatingFraction: b.operatingFraction, illiquidityDiscount: PRIVATE_ILLIQUIDITY_DISCOUNT, holdings, units: b.units });
+    out.push(item("PRIVATE", i++, `$${b.id.toUpperCase().slice(0, 4)}`, b.vehicle, `${b.name}'s private vehicle, ${holdings.length} collected books marked to market`, v, { formula: "NAV_unit=[W(1−k)+Σq·S](1−d)/U", inputs: { netWorth: b.netWorth, capitalFlow: flow, operatingFraction: b.operatingFraction, illiquidityDiscount: PRIVATE_ILLIQUIDITY_DISCOUNT, collectionBooks: holdings.length, units: b.units, trails: b.node ? (shocks.get(b.node)?.trails ?? []) : [] } }));
   }
 
   // ── COMMODITIES from comic lore ─────────────────────────────────────────
@@ -241,6 +244,8 @@ export function issueInstruments(unders: Underlying[]): AssetItem[] {
   for (const c of LORE_COMMODITIES) {
     out.push(item("COMMODITY", i++, `$${c.id.replace(/[^a-z]/g, "").toUpperCase().slice(0, 4)}`, `${c.name} (per ${c.unit})`, `${c.universe} lore commodity`, commodityPrice(c.p0, c.demand, c.supply, c.elasticity), { formula: "P=P0·(D/S)^ε", inputs: { p0: c.p0, demand: c.demand, supply: c.supply, elasticity: c.elasticity } }));
   }
+
+  out.push(...issueInstitutional(shocks));
 
   return out;
 }

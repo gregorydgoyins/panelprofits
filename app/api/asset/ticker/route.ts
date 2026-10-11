@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { SURFACE_ORDER, type SurfaceKey } from "@/lib/assets/surfaceConfig";
 import type { AssetItem, AssetResponse, SurfaceData } from "@/lib/assets/types";
-import { getUnderlyings } from "@/lib/assets/underlyings";
+import { applyShocks, getUnderlyings } from "@/lib/assets/underlyings";
+import { getShocks } from "@/lib/assets/shocks";
 import { issueInstruments } from "@/lib/assets/instruments";
 
 /**
@@ -12,8 +13,9 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const randomStart = searchParams.get("randomStart") === "1" || searchParams.get("reload") === "1";
 
-  const unders = await getUnderlyings().catch(() => []);
-  const issued = issueInstruments(unders);
+  const [baseUnders, shocks] = await Promise.all([getUnderlyings().catch(() => []), getShocks().catch(() => new Map())]);
+  const unders = applyShocks(baseUnders, shocks);
+  const issued = issueInstruments(unders, shocks);
 
   const surfaces: Partial<Record<SurfaceKey, SurfaceData>> = {};
   let total = 0;

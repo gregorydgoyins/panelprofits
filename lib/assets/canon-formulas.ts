@@ -258,3 +258,27 @@ export function privateCapitalUnitValue(args: {
 export function commodityPrice(p0: number, demand: number, supply: number, elasticity: number): number {
   return p0 * (demand / supply) ** elasticity;
 }
+
+// ─── credit default swaps (I.1.11): PV_prem = PV_prot, solve the spread ─────
+
+/**
+ * Par CDS spread under a constant hazard λ, recovery R, annual payments, discount factors DF(k)=1/(1+r)^k:
+ *   PV_prot = (1−R) Σ [Q(k−1) − Q(k)] DF(k),  PV_prem = s Σ Q(k) DF(k),  Q(k)=e^{−λk}  ⇒  s = PV_prot / Σ Q(k) DF(k).
+ */
+export function cdsSpread(hazard: number, recovery: number, years: number, r: number): number {
+  let prot = 0;
+  let annuity = 0;
+  for (let k = 1; k <= years; k++) {
+    const df = 1 / (1 + r) ** k;
+    const q0 = Math.exp(-hazard * (k - 1));
+    const q1 = Math.exp(-hazard * k);
+    prot += (1 - recovery) * (q0 - q1) * df;
+    annuity += q1 * df;
+  }
+  return prot / annuity;
+}
+
+/** REIT unit value: V = NOI / cap rate, less debt, per unit. */
+export function reitUnitValue(noi: number, capRate: number, debt: number, units: number): number {
+  return (noi / capRate - debt) / units;
+}

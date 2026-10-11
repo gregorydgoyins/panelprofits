@@ -7,6 +7,8 @@ import { createAdminServerClient } from "@/lib/supabase/admin";
 import { createCachedQuery } from "@/lib/cache/wrapper";
 import { GAME_DESIGN, type EraKey, type LiquidityState, type PublisherCapTier } from "./canon-params";
 import { KEY_ISSUES } from "./key-issues";
+import { entitiesForSeries } from "./entity-graph";
+import { conditionsForNodes, degradeState, type ShockMap } from "./shock-propagation";
 import { combineSourceVolatilities, newsShockMultiplier, realizedVolatility, realizedVolatilityDated } from "./canon-formulas";
 
 export interface Underlying {
@@ -39,6 +41,12 @@ export interface Underlying {
   wavConfidence: number;
   /** Stored ids */
   ppId: string | null;
+  /** Graph nodes whose news moves this book */
+  entityIds: string[];
+  /** Credit spread added by graph shocks (decimal) */
+  creditAdd: number;
+  /** Causal trails from the graph, for newsroom wikilinks */
+  trails: { eventId: string; headline: string; url?: string; path: string[]; effect: number }[];
   censusConfidence: number;
   stale: boolean;
   detailUrl: string;
@@ -183,6 +191,9 @@ export function buildUnderlyings(inp: UnderlyingInputs): Underlying[] {
       censusPop: pop,
       wavConfidence: Math.min(0.95, wav),
       ppId: rb.pp_id != null ? String(rb.pp_id) : null,
+      entityIds: entitiesForSeries(String(rb.series)),
+      creditAdd: 0,
+      trails: [],
       censusConfidence: pop != null && pop > 0 ? 0.9 : 0.5,
       stale: false,
       detailUrl: id.startsWith("gcs:") && rb.pp_id ? `/comics/${rb.pp_id}` : `/comics/${id}`,
@@ -190,6 +201,17 @@ export function buildUnderlyings(inp: UnderlyingInputs): Underlying[] {
     });
   }
   return out.sort((a, b) => b.price - a.price);
+}
+
+/** Applies butterfly-propagated conditions: volatility up, liquidity degraded, credit widened. Never touches price. */
+export function applyShocks(unders: Underlying[], shocks: ShockMap): Underlying[] {
+  if (shocks.size === 0) return unders;
+  return unders.map((u) => {
+    if (u.entityIds.length === 0) return u;
+    const c = conditionsForNodes(u.entityIds, shocks);
+    if (c.volMult === 1 && c.stateSteps === 0 && c.creditAdd === 0) return u;
+    return { ...u, sigma: u.sigma * c.volMult, state: degradeState(u.state, c.stateSteps), creditAdd: c.creditAdd, trails: c.trails };
+  });
 }
 
 const RAIL_COLS = "comics_id,series,issue_number,year,publisher,cover_url,pp_id,pp_ladder,cb_price,cb_values,cgc_total,scarcity_tier";
