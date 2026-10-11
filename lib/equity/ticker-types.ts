@@ -21,6 +21,11 @@ export interface EquityItem {
   ppLadder?: LadderSpot[];
   /** ComicBase published values for this book: current price plus the four yearly values. */
   comicbaseSpots?: LadderSpot[];
+  /**
+   * Change between two published ComicBase values for this book (current price vs the latest yearly value,
+   * or the latest yearly value vs the one before). Null when the book has fewer than two published CB values.
+   */
+  change?: { pct: number; fromLabel: string; toLabel: string; fromUsd: number; toUsd: number } | null;
   pricing: {
     fmv_usd: number;
     grade: string | null;

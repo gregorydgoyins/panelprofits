@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Pin, PinOff } from "lucide-react";
 import { getEraColors, getScarcityColors, getPublisherColor, withAlpha, type ScarcityTier } from "@/lib/design-system/colors";
 import { SCARCITY_NEON, ASSET_CLASS_CONFIG } from "@/lib/equity/ticker-constants";
-import { resolveProductionAge, formatEraLabel, getDelta, parseSeriesIssue } from "@/lib/equity/ticker-utils";
+import { resolveProductionAge, formatEraLabel, parseSeriesIssue } from "@/lib/equity/ticker-utils";
 import { AnimatedPrice } from "@/components/shared/animated-price";
 import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
 import { resolveAuthoritativePublisher } from "@/lib/comics/publisher-authority";
@@ -46,28 +46,6 @@ function compactUsd(n: number): string {
   if (n >= 10_000) return `$${Math.round(n / 1000)}K`;
   if (n >= 1_000) return `$${(n / 1000).toFixed(1)}K`;
   return `$${Math.round(n)}`;
-}
-
-function SpotRow({ tag, spots }: { tag: string; spots: { label: string; usd: number }[] }) {
-  // Card is 215px: show up to 5 spots; ladders with more grades keep the lowest, middle and top published grades.
-  let shown = spots;
-  if (spots.length > 5) {
-    const mid = Math.floor((spots.length - 1) / 2);
-    shown = [spots[0], spots[Math.floor(mid / 2)], spots[mid], spots[Math.floor((mid + spots.length - 1) / 2)], spots[spots.length - 1]];
-  }
-  return (
-    <div
-      title={spots.map((x) => `${x.label} ${compactUsd(x.usd)}`).join("  ")}
-      style={{ display: "flex", alignItems: "baseline", gap: "6px", overflow: "hidden", whiteSpace: "nowrap", lineHeight: "12px" }}
-    >
-      <span style={{ fontFamily: "monospace", fontSize: "7.5px", letterSpacing: "0.08em", color: "rgba(255,255,255,0.45)", flexShrink: 0 }}>{tag}</span>
-      {shown.map((x) => (
-        <span key={x.label} style={{ fontFamily: "var(--font-sans, system-ui)", fontSize: "9.5px", color: "rgba(255,255,255,0.8)" }}>
-          <span style={{ color: "rgba(255,255,255,0.45)" }}>{x.label}</span> {compactUsd(x.usd)}
-        </span>
-      ))}
-    </div>
-  );
 }
 
 export const EquityCard = React.memo(function EquityCard({
@@ -138,7 +116,6 @@ export const EquityCard = React.memo(function EquityCard({
       ? `${formatEraLabel(originEra)} \u25B8 ${formatEraLabel(volumeEra)}`
       : formatEraLabel(volumeEra);
 
-  const delta = getDelta(pricing.delta_24 ?? pricing.delta_30 ?? pricing.delta_90);
   const { series: rawSeries, issueNum } = parseSeriesIssue(identity.productName || "");
 
   const variantTag = typeof identity.variant === "string" && identity.variant !== "standard" ? identity.variant : null;
@@ -376,19 +353,6 @@ export const EquityCard = React.memo(function EquityCard({
               >
                 {publisher || "\u00A0"}
               </span>
-              <span
-                style={{
-                  fontFamily: "monospace",
-                  fontSize: "7.5px",
-                  letterSpacing: "0.08em",
-                  color: "rgba(255,255,255,0.85)",
-                  textTransform: "uppercase",
-                  flexShrink: 0,
-                }}
-                title={originEra ? `Era (origin issue${identity.originYear ? ` ${identity.originYear}` : ""}) \u25B8 Age (this issue${identity.year ? ` ${identity.year}` : ""})` : undefined}
-              >
-                {eraLabel}
-              </span>
             </div>
           );
         })()}
@@ -497,33 +461,45 @@ export const EquityCard = React.memo(function EquityCard({
                 lineHeight: 1.2,
               }}
             />
-            {delta.text !== "—" && (
-              <span
-                title="Recorded secondary market sales delta"
-                style={{
-                  fontSize: "10px",
-                  color: delta.color,
-                  fontFamily: "var(--font-sans, system-ui)",
-                  fontWeight: 500,
-                  flexShrink: 0,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "2px",
-                }}
-              >
-                <span>{delta.arrow}</span>
-                <span>{delta.text}</span>
-              </span>
-            )}
+            {item.change && (() => {
+              const c = item.change;
+              const flat = Math.abs(c.pct) < 0.05;
+              const color = flat ? "#facc15" : c.pct > 0 ? "#4ade80" : "#f87171";
+              const arrow = flat ? "\u25AC" : c.pct > 0 ? "\u25B2" : "\u25BC";
+              const text = flat ? "0.0%" : `${c.pct > 0 ? "+" : ""}${c.pct.toFixed(1)}%`;
+              return (
+                <span
+                  title={`ComicBase: ${c.fromLabel} ${compactUsd(c.fromUsd)} \u2192 ${c.toLabel} ${compactUsd(c.toUsd)}`}
+                  style={{ fontSize: "10px", color, fontFamily: "var(--font-sans, system-ui)", fontWeight: 600, flexShrink: 0, display: "inline-flex", alignItems: "center", gap: "2px" }}
+                >
+                  <span>{arrow}</span>
+                  <span>{text}</span>
+                  <span style={{ fontFamily: "monospace", fontSize: "7.5px", color: "rgba(255,255,255,0.45)", marginLeft: "2px" }}>CB {c.fromLabel}</span>
+                </span>
+              );
+            })()}
           </div>
 
-          {/* Published price spots — pp grade ladder and ComicBase NOW + yearly values, each exactly as the source posted them */}
-          {item.ppLadder && item.ppLadder.length > 0 && (
-            <SpotRow tag="PP" spots={item.ppLadder} />
-          )}
-          {item.comicbaseSpots && item.comicbaseSpots.length > 0 && (
-            <SpotRow tag="CB" spots={item.comicbaseSpots} />
-          )}
+          {/* Age of publication */}
+          <div style={{ display: "flex", alignItems: "center", gap: "5px", lineHeight: "14px" }}>
+            <span
+              title={originEra ? `Era (origin issue${identity.originYear ? ` ${identity.originYear}` : ""}) \u25B8 Age (this issue${identity.year ? ` ${identity.year}` : ""})` : undefined}
+              style={{
+                fontFamily: "monospace",
+                fontSize: "8.5px",
+                fontWeight: 700,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                color: eraColors.border,
+                border: `1px solid ${withAlpha(eraColors.border, 0.55)}`,
+                backgroundColor: withAlpha(eraColors.border, 0.12),
+                borderRadius: "2px",
+                padding: "0 5px",
+              }}
+            >
+              {eraLabel}
+            </span>
+          </div>
 
           {/* Bottom Card Strip: Dedicated Bold Exchange Ticker Badge + Certification / Scarcity Badges */}
           <div

@@ -68,6 +68,26 @@ export function mapCoveredBook(row: RailBookRow): EquityItem | null {
     if (n !== null && n > 0) comicbaseSpots.push({ label: `’${y.slice(2)}`, usd: n });
   }
 
+  // Change = two real published ComicBase values: NOW vs the latest yearly value, else latest yearly vs the one before.
+  let change: EquityItem["change"] = null;
+  {
+    const yearly = ["2021", "2022", "2023", "2024"]
+      .map((y) => ({ y, v: num((row.cb_values || {})[y]) }))
+      .filter((p): p is { y: string; v: number } => p.v !== null && p.v > 0);
+    const last = yearly[yearly.length - 1];
+    const prev = yearly[yearly.length - 2];
+    let from: { label: string; usd: number } | null = null;
+    let to: { label: string; usd: number } | null = null;
+    if (cbPrice !== null && cbPrice > 0 && last) {
+      from = { label: `\u2019${last.y.slice(2)}`, usd: last.v };
+      to = { label: "NOW", usd: cbPrice };
+    } else if (last && prev) {
+      from = { label: `\u2019${prev.y.slice(2)}`, usd: prev.v };
+      to = { label: `\u2019${last.y.slice(2)}`, usd: last.v };
+    }
+    if (from && to) change = { pct: (to.usd / from.usd - 1) * 100, fromLabel: from.label, toLabel: to.label, fromUsd: from.usd, toUsd: to.usd };
+  }
+
   let headlineUsd: number | null = null;
   let headlineGrade: string | null = null;
   for (const g of PP_HEADLINE_ORDER) {
@@ -98,6 +118,7 @@ export function mapCoveredBook(row: RailBookRow): EquityItem | null {
     coverImageUrl: optimizedCoverUrl(row.cover_url),
     ppLadder: ppLadder.length ? ppLadder : undefined,
     comicbaseSpots: comicbaseSpots.length ? comicbaseSpots : undefined,
+    change,
     pricing: {
       fmv_usd: headlineUsd,
       grade: headlineGrade,
