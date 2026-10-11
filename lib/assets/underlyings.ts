@@ -4,6 +4,7 @@
  * is derived from these rows — the assets rail never holds a price of its own.
  */
 import { createAdminServerClient } from "@/lib/supabase/admin";
+import { fetchRosterRaw } from "./roster";
 import { createCachedQuery } from "@/lib/cache/wrapper";
 import { GAME_DESIGN, type EraKey, type LiquidityState, type PublisherCapTier } from "./canon-params";
 import { KEY_ISSUES } from "./key-issues";
@@ -242,8 +243,13 @@ async function fetchUnderlyingsRaw(): Promise<Underlying[]> {
   const ids = (eq ?? []).map((r: any) => String(r.id));
   const { data: topRows } = ids.length ? await supabase.from("rail_books").select(RAIL_COLS).in("comics_id", ids) : { data: [] as any[] };
 
+  // 3. first-appearance books of the roster's characters
+  const roster = await fetchRosterRaw().catch(() => []);
+  const rosterIds = [...new Set(roster.map((r) => r.comicsId))];
+  const { data: rosterRows } = rosterIds.length ? await supabase.from("rail_books").select(RAIL_COLS).in("comics_id", rosterIds) : { data: [] as any[] };
+
   const seen = new Set<string>();
-  const rail = [...landmarks, ...((topRows ?? []) as any[])].filter((r) => (seen.has(r.comics_id) ? false : (seen.add(r.comics_id), true)));
+  const rail = [...landmarks, ...((topRows ?? []) as any[]), ...((rosterRows ?? []) as any[])].filter((r) => (seen.has(r.comics_id) ? false : (seen.add(r.comics_id), true)));
   if (rail.length === 0) return [];
 
   const ppIds = [...new Set(rail.map((r: any) => r.pp_id).filter((x: any) => x != null))];

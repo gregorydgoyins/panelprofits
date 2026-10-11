@@ -4,6 +4,7 @@ import type { AssetItem, AssetResponse, SurfaceData } from "@/lib/assets/types";
 import { applyShocks, getUnderlyings } from "@/lib/assets/underlyings";
 import { getShocks } from "@/lib/assets/shocks";
 import { getUniverseCensus } from "@/lib/assets/universe";
+import { getRoster } from "@/lib/assets/roster";
 import { issueInstruments } from "@/lib/assets/instruments";
 
 /**
@@ -16,8 +17,9 @@ export async function GET(request: Request) {
 
   const now = Date.now();
   const [baseUnders, state, census] = await Promise.all([getUnderlyings().catch(() => []), getShocks().catch(() => ({ shocks: new Map(), outcomes: [] })), getUniverseCensus().catch(() => [])]);
+  const roster = await getRoster().catch(() => []);
   const unders = applyShocks(baseUnders, state.shocks, now);
-  const issued = issueInstruments(unders, state.shocks, now, state.outcomes, census);
+  const issued = issueInstruments(unders, state.shocks, now, state.outcomes, census, roster);
 
   const surfaces: Partial<Record<SurfaceKey, SurfaceData>> = {};
   let total = 0;
