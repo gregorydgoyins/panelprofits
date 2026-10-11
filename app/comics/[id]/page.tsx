@@ -8,6 +8,7 @@ import { getComicCoverEvidence } from "@/lib/comics/covers";
 import { getComicCensusDossier } from "@/lib/comics/census";
 import { resolveIssueDebuts } from "@/lib/wiki/debut-resolver";
 import { getAuthoritativeCover } from "@/lib/comics/cover-authority";
+import { coverSourceContradictsPublisher } from "@/lib/comics/cover-trust";
 import { resolveAuthoritativePublisher } from "@/lib/comics/publisher-authority";
 import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
 import { searchVerifiedEquities } from "@/lib/equity/verified-equities-service";
@@ -16,7 +17,6 @@ import { AtomicVariantsAndInternationalMatrix } from "@/components/comics/atomic
 import { BlendedHoldingDossier } from "@/components/comics/blended-holding-dossier";
 import { findComicBaseVideoForComic } from "@/lib/video/comicbase-archive";
 import { ComicBaseVideoPlayer } from "@/components/comics/comicbase-video-player";
-import { InstitutionalMetricsBanner } from "@/components/comics/institutional-metrics-banner";
 import { ComparativePriceMatrix } from "@/components/comics/comparative-price-matrix";
 import { InvestopediaDueDiligence } from "@/components/comics/investopedia-due-diligence";
 import { VideoIntelligenceCard } from "@/components/comics/video-intelligence-card";
@@ -33,7 +33,8 @@ import { getEraColors, getScarcityColors, type ScarcityTier } from "@/lib/design
 import { panelProfitsGrades } from "@/lib/pricing/source-ladder";
 import { buildComicPriceHistory } from "@/lib/pricing/historical-chronology";
 import { resolvePriceTier, isDirectEdition, PREMIUM_MIN_PRICE } from "@/lib/pricing/market-tiers";
-import StoryNotesCard from "@/components/detail/equity/StoryNotesCard";
+import StorySummaryCard from "@/components/detail/equity/StorySummaryCard";
+import { Suspense } from "react";
 import { resolveGcdStoryDossier } from "@/lib/comics/gcd-story-service";
 import { createAdminServerClient } from "@/lib/supabase/admin";
 
@@ -238,6 +239,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
   const scarcityLabel = (comic.panel_profits_data as any)?.scarcityTier || "RARE";
   const consensusFmv = Number(comic.pp_grade_9_8_price || comic.baseline_grade_9_8_value || 0);
 
+  let railRows: Array<{ comics_id: string; cover_url: string | null; cover_source: string | null; cover_suspect: boolean | null; cgc_total: number | null; printing: string | null; variant_label: string | null; volume: string | null }> = [];
   let dbObservations: any[] = [];
   let salesObservations: any[] = [];
   try {
@@ -268,6 +270,17 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     if (obsRes.data && obsRes.data.length > 0) {
       dbObservations = obsRes.data;
     }
+    try {
+      let rq = supabase
+        .from("rail_books")
+        .select("comics_id,cover_url,cover_source,cover_suspect,cgc_total,printing,variant_label,volume")
+        .eq("series", comic.series)
+        .eq("issue_number", String(comic.issue_number))
+        .limit(8);
+      if (comic.publication_year) rq = rq.eq("year", comic.publication_year);
+      const railRes = await rq;
+      if (railRes.data) railRows = railRes.data as typeof railRows;
+    } catch (_) {}
     if (salesRes.data && salesRes.data.length > 0) {
       salesObservations = salesRes.data;
     }
@@ -293,15 +306,23 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     observedAt: null,
   }));
 
+  const railVolumeRaw = Number(railRows.find((r) => r.volume != null)?.volume);
+  const railVolume = Number.isFinite(railVolumeRaw) && railVolumeRaw > 0 ? railVolumeRaw : null;
   const hasCensus = Boolean(censusDossier?.grades && censusDossier.grades.length > 0);
   const highGradeCount =
     censusDossier?.grades?.find(
       (g) => g.grade_numeric === 9.8 || g.native_grade_text === "9.8"
     )?.count_at_grade || 0;
 
+  // CGC total from the catalog rail row when the census dossier has no snapshot for this book.
+  const railCgcTotal = Number(
+    (railRows.find((r) => r.comics_id === comic.id && Number(r.cgc_total) > 0) ??
+      railRows.find((r) => !r.variant_label && Number(r.cgc_total) > 0))?.cgc_total || 0
+  );
   const totalGradedCount = Number(
     censusDossier?.snapshot?.total_graded ||
-    (hasCensus && censusDossier?.grades ? censusDossier.grades.reduce((acc, g) => acc + (g.count_at_grade || 0), 0) : 0)
+    (hasCensus && censusDossier?.grades ? censusDossier.grades.reduce((acc, g) => acc + (g.count_at_grade || 0), 0) : 0) ||
+    railCgcTotal
   );
 
   const censusSummary = {
@@ -350,12 +371,17 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
 
   const scarcityColors = getScarcityColors(scarcityLabel as ScarcityTier);
 
+  // A cover found by a wiki name search for a different publisher is a false match: never show it.
+  const dbCoverContradicts = coverSourceContradictsPublisher(comic.cover_source, comic.publisher);
+  const railOwnCover = railRows.find((r) => r.cover_source === "google_bucket" && r.cover_url)?.cover_url ?? null;
   const authoritativeCoverImage =
     getAuthoritativeCover(comic.series, comic.issue_number, authoritativePublisher, comic.publication_year) ||
-    comic.cover_retrieval_url ||
-    comic.cover_url ||
-    coverEvidence?.image_url ||
+    railOwnCover ||
+    (dbCoverContradicts ? null : comic.cover_retrieval_url || comic.cover_url || coverEvidence?.image_url) ||
     null;
+  const coverIsTrusted = Boolean(
+    authoritativeCoverImage && (authoritativeCoverImage === railOwnCover || (!dbCoverContradicts && comic.cover_verified_at))
+  );
 
   // Canonical Asset Class & Market Price Tiers:
   // - OTC: price < 17.99
@@ -400,11 +426,11 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     coverSource: "Authoritative Catalog Archive",
     coverMeta: {
       source: "Exchange Benchmark / Certified Grader Consensus",
-      verified: Boolean(comic.cover_verified_at),
+      verified: coverIsTrusted,
       eraVerified: true,
-      adminVerified: Boolean(comic.cover_verified_at),
+      adminVerified: Boolean(comic.cover_verified_at) && !dbCoverContradicts,
     },
-    coverVerified: Boolean(comic.cover_verified_at),
+    coverVerified: coverIsTrusted,
     coverResolvedAt: comic.cover_verified_at || new Date().toISOString(),
     totalGradesPriced: Object.keys(rawLattice).length,
     issueStatus: "ACTIVE",
@@ -624,17 +650,6 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
               Live Buy/Sell Execution Triggers, CGC Census Strip, Narrative Story Card
             ════════════════════════════════════════════════════════════════════════ */}
         <section id="section-cockpit" className="space-y-4">
-          {/* Top Institutional Header: FMV Anchor, Census Intel, Acquisition All-In, Double-Up & 50% Win Target Boxes */}
-          <InstitutionalMetricsBanner
-            anchorFmv={consensusFmv}
-            censusTotal={censusSummary.totalGraded}
-            censusCount98={highGradeCount}
-            censusHigher={0}
-            censusScarcityTier={scarcityLabel}
-            resolvedGrade={9.8}
-            ticker={tickerSymbol}
-          />
-
           <HeroSection
             variantId={comic.id}
             variant={fullVariant}
@@ -644,7 +659,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
             instrumentIntelligence={instrumentIntelligence}
             censusSummary={fullCensusSummary}
             gradeLattice={gradeLattice}
-            wikiSummary={comic.title ? `"${comic.title}" — ${seriesLabel} #${comic.issue_number}` : null}
+            wikiSummary={null}
             latestSaleImageUrl={fullVariant.coverImageUrl}
             eraColors={eraColors}
             scarcityColors={scarcityColors}
@@ -733,19 +748,21 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
               return { found: false, data: null };
             })()}
             relationalData={gcdRelational}
+            historyPoints={priceHistory
+              .filter((h) => h.grade === "9.8" && h.source !== "PANEL_PROFITS_BASELINE" && h.source !== "PANEL_PROFITS_HISTORICAL_ANNUAL")
+              .map((h) => ({ observedAt: h.observedAt, priceUsd: h.priceUsd, source: h.source }))}
           />
 
-          <StoryNotesCard
-            gcdData={enrichedGcdData as any}
-            comicbaseData={comic.comicbase_data as any}
-            storyDossier={gcdStoryDossier}
-            series={seriesLabel}
-            issueNumber={issueLabel}
-            publicationYear={comic.publication_year}
-            publisher={authoritativePublisher}
-            eraColors={eraColors}
-            debutCreators={debut?.creators ?? []}
-          />
+          <Suspense fallback={null}>
+            <StorySummaryCard
+              series={comic.series}
+              issueNumber={String(comic.issue_number)}
+              year={comic.publication_year ?? null}
+              publisher={authoritativePublisher}
+              volume={railVolume}
+              accent={eraColors.border}
+            />
+          </Suspense>
         </section>
 
         {/* ════════════════════════════════════════════════════════════════════════

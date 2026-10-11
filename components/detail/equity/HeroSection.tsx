@@ -37,6 +37,8 @@ interface HeroSectionProps {
   truthLayerData?: { found: boolean; data: EquityTruthLayer | null };
   spreadData?: { found: boolean; data: SpreadStateData | null };
   relationalData?: GcdRelationalData | null;
+  /** Real dated 9.8 prices on file (source-tagged); drives the hero price-history strip. */
+  historyPoints?: Array<{ observedAt: string; priceUsd: number; source?: string }>;
 }
 
 export function HeroSection({
@@ -56,6 +58,7 @@ export function HeroSection({
   truthLayerData,
   spreadData,
   relationalData,
+  historyPoints,
 }: HeroSectionProps) {
   const { pinnedId, setPinnedId, clearPinnedId, syncError } = usePinnedEquity();
   const isPinned = pinnedId === variantId;
@@ -150,6 +153,7 @@ export function HeroSection({
           truthLayerData={truthLayerData}
           spreadData={spreadData}
           relationalData={relationalData}
+          historyPoints={historyPoints}
           onOpenExecModal={(action) => setExecModal({ open: true, action })}
         />
       </div>

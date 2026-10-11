@@ -35,6 +35,8 @@ interface RailBookRow {
   cb_values: Record<string, number | string> | null;
   cover_url: string;
   scarcity_tier: string | null;
+  /** True when the cover came from a wiki name search for a different publisher (wrong-cover risk). */
+  cover_suspect?: boolean | null;
 }
 
 /** Cover through the Next image optimizer so 215px cards load ~20–40KB WebP/AVIF, not the full original. */
@@ -52,6 +54,8 @@ export function mapCoveredBook(row: RailBookRow): EquityItem | null {
   const series = (row.series || "").trim();
   const issue = (row.issue_number || "").trim();
   if (!series || !issue) return null;
+  // A wrong cover is worse than no card: skip books whose cover came from a mismatched-publisher wiki search.
+  if (row.cover_suspect) return null;
 
   const ladder: Record<string, number> = {};
   for (const [grade, v] of Object.entries(row.pp_ladder || {})) {
@@ -157,7 +161,7 @@ export async function getCoveredBooksSlice(offset: number, limit: number): Promi
   const total = COVERED_BOOKS_TOTAL;
   const start = ((Math.max(0, offset) % total) + total) % total;
   const supabase = createAdminServerClient();
-  const cols = "rail_seq,comics_id,age,origin_era,origin_year,edition_form,printing,variant_label,publisher,series,issue_number,year,pp_id,pp_ladder,cb_price,cb_values,cover_url,scarcity_tier";
+  const cols = "rail_seq,comics_id,age,origin_era,origin_year,edition_form,printing,variant_label,publisher,series,issue_number,year,pp_id,pp_ladder,cb_price,cb_values,cover_url,scarcity_tier,cover_suspect";
 
   const fetchRange = async (from: number, to: number): Promise<RailBookRow[]> => {
     const { data, error } = await supabase

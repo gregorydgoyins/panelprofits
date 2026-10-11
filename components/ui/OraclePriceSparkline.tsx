@@ -17,9 +17,11 @@ interface Props {
   color?: string;
   height?: number;
   limit?: number;
+  /** Real dated prices from the page's own history, used when the oracle table has none. */
+  fallbackPoints?: Array<{ observedAt: string; priceUsd: number; source?: string }>;
 }
 
-export function OraclePriceSparkline({ assetId, color = '#94a3b8', height = 80, limit = 30 }: Props) {
+export function OraclePriceSparkline({ assetId, color = '#94a3b8', height = 80, limit = 30, fallbackPoints }: Props) {
   const [records, setRecords] = useState<OraclePriceRecord[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -53,17 +55,29 @@ export function OraclePriceSparkline({ assetId, color = '#94a3b8', height = 80, 
     );
   }
 
-  if (records.length < 2) {
+  // Prefer the oracle series; otherwise use the page's own dated prices (one point per day).
+  const own = (fallbackPoints ?? [])
+    .filter((p) => p.priceUsd > 0 && p.observedAt)
+    .sort((a, b) => a.observedAt.localeCompare(b.observedAt))
+    .filter((p, i, arr) => i === 0 || p.observedAt.slice(0, 10) !== arr[i - 1].observedAt.slice(0, 10));
+  const series: Array<{ price: number; at: string }> =
+    records.length >= 2
+      ? records.map((r) => ({ price: Number(r.price) || 0, at: r.snapshot_date }))
+      : own.map((p) => ({ price: p.priceUsd, at: p.observedAt }));
+
+  if (series.length < 2) {
+    const only = series[0] ?? null;
+    const label = only
+      ? `One dated price on file: $${only.price.toFixed(2)} (${new Date(only.at).toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' })}). A trend needs a second dated sale.`
+      : 'No dated sales on file yet.';
     return (
-      <div style={{ height: Math.min(height, 40), display: 'flex', alignItems: 'center' }}>
-        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.28)', fontFamily: 'Hind, sans-serif' }}>
-          Continuous price trend active
-        </span>
+      <div style={{ minHeight: Math.min(height, 40), display: 'flex', alignItems: 'center' }}>
+        <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.55)', fontFamily: 'Hind, sans-serif' }}>{label}</span>
       </div>
     );
   }
 
-  const prices = records.map((r) => Number(r.price) || 0);
+  const prices = series.map((r) => r.price);
   const min = Math.min(...prices);
   const max = Math.max(...prices);
   const range = max - min || 1;

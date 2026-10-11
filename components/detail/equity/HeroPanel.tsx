@@ -54,6 +54,7 @@ interface HeroPanelProps {
   truthLayerData: { found: boolean; data: EquityTruthLayer | null } | undefined;
   spreadData: { found: boolean; data: SpreadStateData | null } | undefined;
   relationalData?: GcdRelationalData | null;
+  historyPoints?: Array<{ observedAt: string; priceUsd: number; source?: string }>;
   onOpenExecModal: (action: 'buy' | 'sell') => void;
   onBrokenImageReport?: (params: { url: string | null; variantId: string; stage: number }) => void;
 }
@@ -61,7 +62,7 @@ interface HeroPanelProps {
 export default function HeroPanel({
   variantId, variant, completeness, keyPrices, instrumentStates, instrumentIntelligence,
   censusSummary, gradeLattice = [], wikiSummary, latestSaleImageUrl, eraColors, scarcityColors,
-  heroCreatorsData, truthLayerData, spreadData, relationalData, onOpenExecModal, onBrokenImageReport,
+  heroCreatorsData, truthLayerData, spreadData, relationalData, historyPoints, onOpenExecModal, onBrokenImageReport,
 }: HeroPanelProps) {
   const [isPending, startTransition] = useTransition();
   const [showCoverLightbox, setShowCoverLightbox] = useState(false);
@@ -515,7 +516,7 @@ export default function HeroPanel({
                   <div className="mb-2">
                     <span className="text-[9px] uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.55)', letterSpacing: '0.14em' }}>Price History</span>
                   </div>
-                  <OraclePriceSparkline assetId={variantId} color={acConf.color} height={80} limit={30} />
+                  <OraclePriceSparkline assetId={variantId} color={acConf.color} height={80} limit={30} fallbackPoints={historyPoints} />
                 </div>
               );
             })()}
