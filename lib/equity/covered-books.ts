@@ -39,7 +39,7 @@ interface RailBookRow {
 
 /** Cover through the Next image optimizer so 215px cards load ~20–40KB WebP/AVIF, not the full original. */
 export function optimizedCoverUrl(coverUrl: string): string {
-  return `/_next/image?url=${encodeURIComponent(coverUrl)}&w=${COVER_WIDTH}&q=70`;
+  return `/_next/image?url=${encodeURIComponent(coverUrl)}&w=${COVER_WIDTH}&q=75`;
 }
 
 function num(v: unknown): number | null {
