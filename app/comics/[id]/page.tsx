@@ -356,7 +356,9 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     observedAt: new Date().toISOString(),
   };
 
-  const priceHistory = buildComicPriceHistory(comic, { dbObservations, salesObservations });
+  // ppcf_price_observations stamps every price with the book's RELEASE date (not when the price was seen),
+  // so plotting it as history would put today's price at the publication date. Only dated sales feed the chart.
+  const priceHistory = buildComicPriceHistory(comic, { dbObservations: [], salesObservations });
 
   const formattedSales = priceHistory
     .filter((s) => s.grade === "9.8" || s.grade === "8.0" || s.grade === "RAW" || s.grade === "9.6")
