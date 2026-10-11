@@ -80,27 +80,36 @@ describe("credit, REIT, adjudication", () => {
     expect(px(hot, "GOTHCDS")).toBeGreaterThan(px(calm, "GOTHCDS"));
     expect(px(hot, "METRGO")).toBeCloseTo(px(calm, "METRGO"), 6);
   });
-  it("moves scale with severity: threats barely move prices, destruction moves them, nothing explodes", () => {
+  it("moves scale with severity across many independent stories, never wildly", () => {
     const calm = issueInstitutional(new Map());
-    const run = (headline: string) => issueInstitutional(propagate(eventsFromArticles([{ id: "x", headline, summary: "", url: "u", published_at: "2026-10-11T06:00:00Z" }]), NOW));
+    const run = (headline: string, id: string) => issueInstitutional(propagate(eventsFromArticles([{ id, headline, summary: "", url: "u", published_at: "2026-10-11T06:00:00Z" }]), NOW));
     const ratio = (hot: any[], sym: string) => Number(hot.find((i) => i.symbol === sym)!.pricing.fmv_usd) / Number(calm.find((i) => i.symbol === sym)!.pricing.fmv_usd);
-    const threat = run("Joker threatens Gotham, city on edge");
-    const attack = run("Joker gas attack hits Gotham, hostages taken");
-    const ruin = run("Joker devastates Gotham in citywide collapse");
-    // a threat is a few percent at most (50 → 53 territory)
-    expect(ratio(threat, "GOTHGO")).toBeGreaterThan(0.94);
-    expect(ratio(threat, "GOTHRE")).toBeGreaterThan(0.94);
-    expect(ratio(threat, "GOTHCDS")).toBeLessThan(1.4);
-    // real damage is a clear but bounded move
-    expect(ratio(attack, "GOTHGO")).toBeGreaterThan(0.9);
-    expect(ratio(attack, "GOTHRE")).toBeGreaterThan(0.88);
-    expect(ratio(attack, "GOTHCDS")).toBeLessThan(2);
-    // wholesale destruction is the ceiling and still bounded
-    expect(ratio(ruin, "GOTHGO")).toBeGreaterThan(0.8);
-    expect(ratio(ruin, "GOTHRE")).toBeGreaterThan(0.75);
-    expect(ratio(ruin, "GOTHCDS")).toBeLessThan(3);
-    // ordering
-    expect(ratio(attack, "GOTHGO")).toBeLessThan(ratio(threat, "GOTHGO"));
-    expect(ratio(ruin, "GOTHGO")).toBeLessThan(ratio(attack, "GOTHGO"));
+    const sweep = (headline: string, sym: string) => Array.from({ length: 300 }, (_, k) => ratio(run(headline, `s${k}`), sym));
+    const threatGo = sweep("Joker threatens Gotham, city on edge", "GOTHGO");
+    const threatRe = sweep("Joker threatens Gotham, city on edge", "GOTHRE");
+    const attackGo = sweep("Joker gas attack hits Gotham, hostages taken", "GOTHGO");
+    const attackRe = sweep("Joker gas attack hits Gotham, hostages taken", "GOTHRE");
+    const ruinGo = sweep("Joker devastates Gotham in citywide collapse", "GOTHGO");
+    const ruinRe = sweep("Joker devastates Gotham in citywide collapse", "GOTHRE");
+    const ruinCds = sweep("Joker devastates Gotham in citywide collapse", "GOTHCDS");
+    const mean = (a: number[]) => a.reduce((x, y) => x + y, 0) / a.length;
+    // bounded for every draw
+    expect(Math.min(...threatGo)).toBeGreaterThan(0.93);
+    expect(Math.min(...threatRe)).toBeGreaterThan(0.88);
+    expect(Math.min(...attackGo)).toBeGreaterThan(0.85);
+    expect(Math.min(...attackRe)).toBeGreaterThan(0.78);
+    expect(Math.min(...ruinGo)).toBeGreaterThan(0.72);
+    expect(Math.min(...ruinRe)).toBeGreaterThan(0.65);
+    expect(Math.max(...ruinCds)).toBeLessThan(6);
+    // severity ordering holds on average, not story by story
+    expect(mean(attackGo)).toBeLessThan(mean(threatGo));
+    expect(mean(ruinGo)).toBeLessThan(mean(attackGo));
+    // not a lookup table: outcomes spread, some stories do nothing, some land in full
+    const ignored = attackRe.filter((x) => x > 0.985).length / attackRe.length;
+    const landed = attackRe.filter((x) => x < 0.93).length / attackRe.length;
+    expect(ignored).toBeGreaterThan(0.1);
+    expect(ignored).toBeLessThan(0.55);
+    expect(landed).toBeGreaterThan(0.15);
+    expect(new Set(attackRe.map((x) => x.toFixed(3))).size).toBeGreaterThan(40);
   });
 });

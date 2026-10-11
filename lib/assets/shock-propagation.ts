@@ -8,6 +8,7 @@
  */
 import { EDGES, NODES, matchEntities, nodeById, type GraphEdge } from "./entity-graph";
 import type { LiquidityState } from "./canon-params";
+import { regimeMultiplier, timeKernel, transmissionDraw } from "./market-dynamics";
 
 export type EventKind = "DAMAGE" | "SCARE" | "HYPE" | "MARKET" | "CAPITAL";
 export interface MarketEvent {
@@ -91,11 +92,16 @@ export function propagate(events: MarketEvent[], now: number): ShockMap {
     if (!s) shocks.set(id, (s = { stress: 0, hype: 0, benefit: 0, trails: [] }));
     return s;
   };
+  const regime = regimeMultiplier(events.reduce((a, e) => a + e.intensity * timeKernel(e.kind, Math.max(0, (now - e.at) / 86_400_000)), 0));
+  // fatigue: how many similar events hit the same entities in the 14 days before this one
+  const priorCount = (ev: MarketEvent) =>
+    events.filter((o) => o !== ev && o.kind === ev.kind && o.at < ev.at && ev.at - o.at <= 14 * 86_400_000 && o.origins.some((x) => ev.origins.includes(x))).length;
   for (const ev of events) {
+    const prior = priorCount(ev);
     const ageDays = Math.max(0, (now - ev.at) / 86_400_000);
-    const decay = Math.pow(0.5, ageDays / HALF_LIFE_DAYS[ev.kind]);
-    const start = ev.intensity * decay;
-    if (start < 0.01) continue;
+    const kernel = timeKernel(ev.kind, ageDays);
+    const start = ev.intensity * kernel * regime;
+    if (Math.abs(start) < 0.01) continue;
     // strongest path to each node (by absolute effect)
     const best = new Map<string, { eff: number; path: string[] }>();
     let frontier: { id: string; eff: number; path: string[] }[] = ev.origins.map((o) => ({ id: o, eff: start, path: [o] }));
@@ -117,9 +123,10 @@ export function propagate(events: MarketEvent[], now: number): ShockMap {
       }
       frontier = next;
     }
-    for (const [id, { eff, path }] of best) {
+    for (const [id, { eff: eff0, path }] of best) {
       const node = nodeById(id);
       if (!node || node.fixed) continue;
+      const eff = eff0 * transmissionDraw(ev.id, id, ev.kind, prior);
       const s = get(id);
       const hype = ev.kind === "HYPE" || ev.kind === "MARKET" || ev.kind === "CAPITAL";
       if (eff < 0) s.benefit = 1 - (1 - s.benefit) * (1 - -eff);

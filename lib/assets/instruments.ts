@@ -33,6 +33,7 @@ import {
 } from "./canon-formulas";
 import { BENEFACTORS, LORE_COMMODITIES, PRIVATE_ILLIQUIDITY_DISCOUNT } from "./lore-tables";
 import { buildChain } from "./option-chain";
+import { marketFactor } from "./market-dynamics";
 import { issueInstitutional } from "./institutions";
 import { conditionsFor, type ShockMap } from "./shock-propagation";
 import type { Underlying } from "./underlyings";
@@ -81,7 +82,7 @@ function item(
 
 const T_OPTION = OPTION.windowDays / 252;
 
-export function issueInstruments(unders: Underlying[], shocks: ShockMap = new Map()): AssetItem[] {
+export function issueInstruments(unders: Underlying[], shocks: ShockMap = new Map(), now: number = Date.now()): AssetItem[] {
   const out: AssetItem[] = [];
   const eligible = unders.filter(derivativeEligible);
   const tkr = (u: Underlying) => `${u.series.replace(/[^A-Za-z]/g, "").slice(0, 3).toUpperCase()}${u.issueNumber.replace(/[^0-9A-Za-z]/g, "")}${u.year ? `-${String(u.year).slice(2)}` : ""}`;
@@ -236,16 +237,16 @@ export function issueInstruments(unders: Underlying[], shocks: ShockMap = new Ma
       .map((u) => ({ q: 1, price: u.price }));
     const flow = conditionsFor(b.node ? shocks.get(b.node) : undefined).flow; // capital flows reaching the benefactor
     const v = privateCapitalUnitValue({ netWorth: b.netWorth * (1 + flow), operatingFraction: b.operatingFraction, illiquidityDiscount: PRIVATE_ILLIQUIDITY_DISCOUNT, holdings, units: b.units });
-    out.push(item("PRIVATE", i++, `$${b.id.toUpperCase().slice(0, 4)}`, b.vehicle, `${b.name}'s private vehicle, ${holdings.length} collected books marked to market`, v, { formula: "NAV_unit=[W(1−k)+Σq·S](1−d)/U", inputs: { netWorth: b.netWorth, capitalFlow: flow, operatingFraction: b.operatingFraction, illiquidityDiscount: PRIVATE_ILLIQUIDITY_DISCOUNT, collectionBooks: holdings.length, units: b.units, trails: b.node ? (shocks.get(b.node)?.trails ?? []) : [] } }));
+    out.push(item("PRIVATE", i++, `$${b.id.toUpperCase().slice(0, 4)}`, b.vehicle, `${b.name}'s private vehicle, ${holdings.length} collected books marked to market`, v * marketFactor(`pc:${b.id}`, now, 0.04), { formula: "NAV_unit=[W(1−k)+Σq·S](1−d)/U", inputs: { netWorth: b.netWorth, capitalFlow: flow, operatingFraction: b.operatingFraction, illiquidityDiscount: PRIVATE_ILLIQUIDITY_DISCOUNT, collectionBooks: holdings.length, units: b.units, trails: b.node ? (shocks.get(b.node)?.trails ?? []) : [] } }));
   }
 
   // ── COMMODITIES from comic lore ─────────────────────────────────────────
   i = 0;
   for (const c of LORE_COMMODITIES) {
-    out.push(item("COMMODITY", i++, `$${c.id.replace(/[^a-z]/g, "").toUpperCase().slice(0, 4)}`, `${c.name} (per ${c.unit})`, `${c.universe} lore commodity`, commodityPrice(c.p0, c.demand, c.supply, c.elasticity), { formula: "P=P0·(D/S)^ε", inputs: { p0: c.p0, demand: c.demand, supply: c.supply, elasticity: c.elasticity } }));
+    out.push(item("COMMODITY", i++, `$${c.id.replace(/[^a-z]/g, "").toUpperCase().slice(0, 4)}`, `${c.name} (per ${c.unit})`, `${c.universe} lore commodity`, commodityPrice(c.p0, c.demand, c.supply, c.elasticity) * marketFactor(`cm:${c.id}`, now, 0.25), { formula: "P=P0·(D/S)^ε", inputs: { p0: c.p0, demand: c.demand, supply: c.supply, elasticity: c.elasticity } }));
   }
 
-  out.push(...issueInstitutional(shocks));
+  out.push(...issueInstitutional(shocks, now));
 
   return out;
 }

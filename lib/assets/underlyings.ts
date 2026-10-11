@@ -9,6 +9,7 @@ import { GAME_DESIGN, type EraKey, type LiquidityState, type PublisherCapTier } 
 import { KEY_ISSUES } from "./key-issues";
 import { entitiesForSeries } from "./entity-graph";
 import { conditionsForNodes, degradeState, type ShockMap } from "./shock-propagation";
+import { marketFactor } from "./market-dynamics";
 import { combineSourceVolatilities, newsShockMultiplier, realizedVolatility, realizedVolatilityDated } from "./canon-formulas";
 
 export interface Underlying {
@@ -18,8 +19,10 @@ export interface Underlying {
   issueNumber: string;
   year: number | null;
   publisher: string | null;
-  /** S — best stored price, USD. */
+  /** S — market price, USD (value × market texture once applyShocks has run). */
   price: number;
+  /** Fundamental value from the stored sources, USD. */
+  value: number;
   /** Which stored source set S ("pricecharting" 9.8 or "comicbase"). */
   priceSource: "pricecharting" | "comicbase";
   coverUrl: string;
@@ -177,6 +180,7 @@ export function buildUnderlyings(inp: UnderlyingInputs): Underlying[] {
       year,
       publisher: rb.publisher ?? null,
       price: px.price,
+      value: px.price,
       priceSource: px.source,
       coverUrl: String(rb.cover_url),
       era: eraFromYear(year),
@@ -204,13 +208,14 @@ export function buildUnderlyings(inp: UnderlyingInputs): Underlying[] {
 }
 
 /** Applies butterfly-propagated conditions: volatility up, liquidity degraded, credit widened. Never touches price. */
-export function applyShocks(unders: Underlying[], shocks: ShockMap): Underlying[] {
-  if (shocks.size === 0) return unders;
+export function applyShocks(unders: Underlying[], shocks: ShockMap, now: number = Date.now()): Underlying[] {
   return unders.map((u) => {
-    if (u.entityIds.length === 0) return u;
-    const c = conditionsForNodes(u.entityIds, shocks);
-    if (c.volMult === 1 && c.stateSteps === 0 && c.creditAdd === 0) return u;
-    return { ...u, sigma: u.sigma * c.volMult, state: degradeState(u.state, c.stateSteps), creditAdd: c.creditAdd, trails: c.trails };
+    const c = u.entityIds.length ? conditionsForNodes(u.entityIds, shocks) : null;
+    const sigma = c ? u.sigma * c.volMult : u.sigma;
+    // market price wanders around value; news never changes value
+    const price = u.value * marketFactor(`book:${u.id}`, now, Math.min(sigma, 0.6));
+    if (!c || (c.volMult === 1 && c.stateSteps === 0 && c.creditAdd === 0)) return { ...u, price, sigma };
+    return { ...u, price, sigma, state: degradeState(u.state, c.stateSteps), creditAdd: c.creditAdd, trails: c.trails };
   });
 }
 

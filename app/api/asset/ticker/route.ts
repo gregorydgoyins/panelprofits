@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   const randomStart = searchParams.get("randomStart") === "1" || searchParams.get("reload") === "1";
 
   const [baseUnders, shocks] = await Promise.all([getUnderlyings().catch(() => []), getShocks().catch(() => new Map())]);
-  const unders = applyShocks(baseUnders, shocks);
+  const unders = applyShocks(baseUnders, shocks, Date.now());
   const issued = issueInstruments(unders, shocks);
 
   const surfaces: Partial<Record<SurfaceKey, SurfaceData>> = {};
