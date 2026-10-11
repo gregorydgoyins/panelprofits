@@ -78,4 +78,13 @@ describe("credit, REIT, adjudication", () => {
     expect(px(hot, "GOTHCDS")).toBeGreaterThan(px(calm, "GOTHCDS"));
     expect(px(hot, "METRGO")).toBeCloseTo(px(calm, "METRGO"), 6);
   });
+  it("a headline-grade crisis moves prices realistically, not wildly", () => {
+    const calm = issueInstitutional(new Map());
+    const hot = issueInstitutional(propagate(eventsFromArticles([scare]), NOW));
+    const ratio = (sym: string) => Number(hot.find((i) => i.symbol === sym)!.pricing.fmv_usd) / Number(calm.find((i) => i.symbol === sym)!.pricing.fmv_usd);
+    expect(ratio("GOTHGO")).toBeGreaterThan(0.82); // bond down less than 18%
+    expect(ratio("GOTHRE")).toBeGreaterThan(0.75); // trust down less than 25%
+    expect(ratio("GOTHCDS")).toBeLessThan(3); // CDS under 3x
+    expect(ratio("GOTHCDS")).toBeGreaterThan(1.5);
+  });
 });

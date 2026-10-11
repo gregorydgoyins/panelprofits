@@ -8,7 +8,7 @@ import { treasuryYield } from "./canon-params";
 import { bondLiquiditySpreadFor, bondPrice, cdsSpread, requiredYield, reitUnitValue } from "./canon-formulas";
 import { adjudicateIssuance } from "./issuer-rating";
 import { BENEFACTORS, ISSUANCE_PROPOSALS, LORE_CITIES } from "./lore-tables";
-import { conditionsFor, degradeState, type ShockMap } from "./shock-propagation";
+import { SENSITIVITY, conditionsFor, degradeState, type ShockMap } from "./shock-propagation";
 
 const RECOVERY_MUNI = { MUNICIPAL_MAJ_CITY: 0.7, MUNICIPAL_REGION: 0.65 } as const;
 const r2 = (x: number) => Math.round(x * 100) / 100;
@@ -39,7 +39,7 @@ export function issueInstitutional(shocks: ShockMap): AssetItem[] {
     const cond = conditionsFor(sh);
     const stress = sh?.stress ?? 0;
     const R = RECOVERY_MUNI[city.muniClass];
-    const hazard = city.hazard0 * (1 + 8 * stress);
+    const hazard = city.hazard0 * (1 + SENSITIVITY.hazardStress * stress);
     const trails = sh?.trails ?? [];
     const tag = city.id.toUpperCase().slice(0, 4);
 
@@ -57,8 +57,8 @@ export function issueInstitutional(shocks: ShockMap): AssetItem[] {
     out.push(mk("CREDIT", c++, `${tag}CDS`, `${city.name} 5Y CDS`, `${(s5 * 10000).toFixed(0)} bps · premium per $1M notional`, s5 * 1_000_000, "PV_prem=PV_prot ⇒ s", { city: city.name, hazard, recovery: R, spreadBps: s5 * 10000, years: 5, stress }, trails));
 
     // REIT: V = NOI/cap − debt; stress lowers occupancy (NOI) and lifts the cap rate
-    const noi = city.noi * (1 - 0.25 * stress);
-    const cap = city.capRate0 + 0.5 * cond.creditAdd + 0.02 * stress;
+    const noi = city.noi * (1 - SENSITIVITY.reitOccupancyLoss * stress);
+    const cap = city.capRate0 + SENSITIVITY.reitCreditPassThrough * cond.creditAdd + SENSITIVITY.reitCapWidening * stress;
     const unit = reitUnitValue(noi, cap, city.debt, city.units);
     if (unit > 0) out.push(mk("REIT", r++, `${tag}RE`, `${city.name} Real Estate Trust`, `NOI $${(noi / 1e9).toFixed(2)}B · cap ${(cap * 100).toFixed(2)}%`, unit, "V=(NOI/cap−debt)/units", { city: city.name, noi, cap, debt: city.debt, units: city.units, stress }, trails));
   }

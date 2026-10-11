@@ -129,6 +129,22 @@ export function propagate(events: MarketEvent[], now: number): ShockMap {
 
 // ─── how a shock lands as market conditions ─────────────────────────────────
 
+/**
+ * How hard a unit of shock hits. Tuned so a headline-grade crisis moves things the way a real stressed market does:
+ * volatility up by roughly half, municipal spreads out by tens of basis points, a city trust down by low double digits.
+ */
+export const SENSITIVITY = {
+  volStress: 0.6,
+  volHype: 0.5,
+  creditStress: 0.01,
+  /** hazard multiplier: λ = λ0 · (1 + hazardStress · stress) */
+  hazardStress: 1.5,
+  /** REIT: occupancy loss and cap-rate widening per unit of stress */
+  reitOccupancyLoss: 0.05,
+  reitCapWidening: 0.004,
+  reitCreditPassThrough: 0.1,
+};
+
 export interface Conditions {
   volMult: number;
   stateSteps: number; // how many liquidity states worse (0..2)
@@ -140,9 +156,9 @@ export interface Conditions {
 export function conditionsFor(s: NodeShock | undefined): Conditions {
   if (!s) return { volMult: 1, stateSteps: 0, creditAdd: 0, flow: 0 };
   return {
-    volMult: Math.min(3, 1 + 1.5 * s.stress + 1.0 * s.hype),
-    stateSteps: s.stress >= 0.75 ? 2 : s.stress >= 0.4 ? 1 : 0,
-    creditAdd: Math.max(0, 0.03 * s.stress - 0.005 * s.benefit),
+    volMult: Math.min(2, 1 + SENSITIVITY.volStress * s.stress + SENSITIVITY.volHype * s.hype),
+    stateSteps: s.stress >= 0.9 ? 2 : s.stress >= 0.6 ? 1 : 0,
+    creditAdd: Math.max(0, SENSITIVITY.creditStress * s.stress - 0.002 * s.benefit),
     flow: 0.04 * s.benefit,
   };
 }
