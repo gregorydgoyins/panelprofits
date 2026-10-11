@@ -241,6 +241,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
 
   let railRows: Array<{ comics_id: string; cover_url: string | null; cover_source: string | null; cover_suspect: boolean | null; cgc_total: number | null; printing: string | null; variant_label: string | null; volume: string | null }> = [];
   let dbObservations: any[] = [];
+  const snapshotObservations: any[] = [];
   let salesObservations: any[] = [];
   try {
     const supabase = createAdminServerClient();
@@ -269,6 +270,29 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
 
     if (obsRes.data && obsRes.data.length > 0) {
       dbObservations = obsRes.data;
+    }
+    // Real dated Panel Profits prices: one row per PriceCharting snapshot (undated legacy loads are skipped).
+    if (cleanSourceId) {
+      try {
+        const histRes = await supabase
+          .from("pp_price_history")
+          .select("snapshot_date,pp_price_raw,pp_price_2_0,pp_price_3_0,pp_price_4_0,pp_price_5_0,pp_price_6_0,pp_price_7_0,pp_price_8_0,pp_price_9_0,pp_price_9_2,pp_price_9_4,pp_price_9_6,pp_price_9_8,pp_price_10_0")
+          .eq("pp_id", cleanSourceId)
+          .not("snapshot_date", "is", null)
+          .order("snapshot_date", { ascending: true })
+          .limit(400);
+        const gradeCols: Array<[string, string]> = [
+          ["pp_price_raw", "RAW"], ["pp_price_2_0", "2.0"], ["pp_price_3_0", "3.0"], ["pp_price_4_0", "4.0"], ["pp_price_5_0", "5.0"],
+          ["pp_price_6_0", "6.0"], ["pp_price_7_0", "7.0"], ["pp_price_8_0", "8.0"], ["pp_price_9_0", "9.0"], ["pp_price_9_2", "9.2"],
+          ["pp_price_9_4", "9.4"], ["pp_price_9_6", "9.6"], ["pp_price_9_8", "9.8"], ["pp_price_10_0", "10.0"],
+        ];
+        for (const row of (histRes.data ?? []) as Array<Record<string, any>>) {
+          for (const [col, grade] of gradeCols) {
+            const amount = Number(row[col]);
+            if (amount > 0) snapshotObservations.push({ amount, observed_at: row.snapshot_date, grade_label: grade, source_system: "PANEL_PROFITS_SNAPSHOT" });
+          }
+        }
+      } catch (_) {}
     }
     try {
       let rq = supabase
@@ -357,8 +381,8 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
   };
 
   // ppcf_price_observations stamps every price with the book's RELEASE date (not when the price was seen),
-  // so plotting it as history would put today's price at the publication date. Only dated sales feed the chart.
-  const priceHistory = buildComicPriceHistory(comic, { dbObservations: [], salesObservations });
+  // so it is not history. Dated history = PriceCharting snapshots (pp_price_history) + dated sales.
+  const priceHistory = buildComicPriceHistory(comic, { dbObservations: snapshotObservations, salesObservations });
 
   const formattedSales = priceHistory
     .filter((s) => s.grade === "9.8" || s.grade === "8.0" || s.grade === "RAW" || s.grade === "9.6")
