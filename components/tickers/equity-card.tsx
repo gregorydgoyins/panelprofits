@@ -464,7 +464,7 @@ export const EquityCard = React.memo(function EquityCard({
             {item.change && (() => {
               const c = item.change;
               const flat = Math.abs(c.pct) < 0.05;
-              const color = flat ? "#facc15" : c.pct > 0 ? "#4ade80" : "#f87171";
+              const color = flat ? "#fb923c" : c.pct > 0 ? "#4ade80" : "#f87171";
               const arrow = flat ? "\u25AC" : c.pct > 0 ? "\u25B2" : "\u25BC";
               const text = flat ? "0.0%" : `${c.pct > 0 ? "+" : ""}${c.pct.toFixed(1)}%`;
               return (
@@ -474,7 +474,6 @@ export const EquityCard = React.memo(function EquityCard({
                 >
                   <span>{arrow}</span>
                   <span>{text}</span>
-                  <span style={{ fontFamily: "monospace", fontSize: "7.5px", color: "rgba(255,255,255,0.45)", marginLeft: "2px" }}>CB {c.fromLabel}</span>
                 </span>
               );
             })()}
