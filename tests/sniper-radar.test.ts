@@ -291,4 +291,58 @@ describe("Sniper Radar Engine & Anti-Bullshit Filter", () => {
     expect(evalResult.gateFailed).toBe(1);
     expect(evalResult.rejectionReason).toContain("UNVERIFIED CERT");
   });
+
+  it("COMPUTES Multi-Source Price Matrix with Grade Parity and Investopedia Due Diligence Lens", () => {
+    const profile: SniperFilterProfile = {
+      ...defaultProfile,
+      maxAllInBudget: 1000.00,
+    };
+
+    const listing: RawAuctionListing = {
+      id: "listing-batman423",
+      source: "ebay",
+      title: "Batman #423 CGC 9.8 McFarlane Classic Cover 1st Print 1988",
+      currentBid: 120.00,
+      shippingCost: 15.00,
+      bidCount: 14,
+      secondsRemaining: 180,
+      url: "https://ebay.com/itm/batman423",
+      imageUrl: "https://example.com/batman423.jpg",
+      certNumber: "4019283001",
+    };
+
+    const evalResult = evaluateAuctionListing(listing, profile);
+    expect(evalResult.passed).toBe(true);
+
+    // Verify top institutional metrics
+    expect(evalResult.anchorFmv).toBe(275.00);
+    expect(evalResult.allInCost).toBe(144.60);
+    expect(evalResult.targetWinPrice100Pct).toBeGreaterThan(evalResult.allInCost);
+    expect(evalResult.targetWinPrice50Pct).toBeGreaterThan(evalResult.allInCost);
+
+    // Verify census intelligence
+    expect(evalResult.censusTotal).toBeDefined();
+    expect(evalResult.censusCount98).toBeDefined();
+    expect(evalResult.censusScarcityTier).toBeDefined();
+
+    // Verify multi-source comparative price matrix
+    expect(evalResult.priceMatrix).toBeDefined();
+    expect(evalResult.priceMatrix!.length).toBeGreaterThan(0);
+    const inspectedRow = evalResult.priceMatrix!.find((r) => r.isInspectedGrade);
+    expect(inspectedRow).toBeDefined();
+    expect(inspectedRow!.grade).toBe(9.8);
+    expect(inspectedRow!.gradeLabel).toContain("9.8");
+    expect(inspectedRow!.ebayPrice).toBeGreaterThan(0);
+    expect(inspectedRow!.ppFmv).toBeGreaterThan(0);
+    expect(inspectedRow!.cbPrice).toBeGreaterThan(0);
+
+    // Verify Investopedia Purchaser Due Diligence Lens
+    expect(evalResult.investopediaLens).toBeDefined();
+    expect(evalResult.investopediaLens!.term).toBeDefined();
+    expect(evalResult.investopediaLens!.definition).toBeDefined();
+    expect(evalResult.investopediaLens!.application).toBeDefined();
+    expect(evalResult.investopediaLens!.wholesaleBidUsd).toBeGreaterThan(0);
+    expect(evalResult.investopediaLens!.retailAskUsd).toBeGreaterThan(0);
+    expect(evalResult.investopediaLens!.bidAskSpreadPercent).toBeGreaterThan(0);
+  });
 });

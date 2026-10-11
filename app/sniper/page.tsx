@@ -1418,6 +1418,57 @@ export default function SniperRadarPage() {
                             </div>
                           </div>
 
+                          {/* COMMERCIAL FLIPPING MULTIPLIERS (ACQUISITION ALL-IN, DOUBLE-UP 2X, 50% WIN EXIT) */}
+                          <div className="bg-slate-900/90 border border-emerald-500/40 p-3 rounded-lg grid grid-cols-2 md:grid-cols-4 gap-3 text-xs font-mono">
+                            <div>
+                              <div className="text-slate-400 text-[10px] uppercase font-bold">
+                                Acquisition All-In
+                              </div>
+                              <div className="text-white font-bold text-sm mt-0.5">
+                                ${deal.allInCost.toFixed(2)}
+                              </div>
+                              <div className="text-[9px] text-emerald-400 font-sans font-bold">
+                                {deal.discountPercent}% below FMV
+                              </div>
+                            </div>
+
+                            <div>
+                              <div className="text-emerald-400 text-[10px] uppercase font-bold flex items-center gap-1">
+                                <span>🔥</span> 100% Double-Up Exit
+                              </div>
+                              <div className="text-emerald-300 font-bold text-sm mt-0.5">
+                                ${deal.targetWinPrice100Pct.toFixed(2)}
+                              </div>
+                              <div className="text-[9px] text-slate-400 font-sans">
+                                Net 2x cash after fees
+                              </div>
+                            </div>
+
+                            <div>
+                              <div className="text-cyan-400 text-[10px] uppercase font-bold">
+                                50% Win Exit (1.5x)
+                              </div>
+                              <div className="text-cyan-300 font-bold text-sm mt-0.5">
+                                ${deal.targetWinPrice50Pct.toFixed(2)}
+                              </div>
+                              <div className="text-[9px] text-slate-400 font-sans">
+                                Net 50% cash ROI
+                              </div>
+                            </div>
+
+                            <div>
+                              <div className="text-amber-400 text-[10px] uppercase font-bold">
+                                Projected Net Flip
+                              </div>
+                              <div className="text-amber-300 font-bold text-sm mt-0.5">
+                                +${deal.projectedNetProfit.toFixed(2)}
+                              </div>
+                              <div className="text-[9px] text-emerald-400 font-sans font-bold">
+                                +{deal.netRoiPercent}% Net Margin
+                              </div>
+                            </div>
+                          </div>
+
                           {/* FOR SIGNED BOOKS: SIGNATURE SERIES PRICING DOSSIER */}
                           {deal.isYellowLabel && (
                             <div className="bg-amber-950/20 border border-amber-500/40 rounded-lg p-2.5 text-xs font-mono space-y-1">
@@ -1487,57 +1538,6 @@ export default function SniperRadarPage() {
                             <p className="text-xs text-amber-200/90 mt-1 font-medium leading-relaxed font-sans">
                               {deal.whyItsAGoodBuy}
                             </p>
-                          </div>
-
-                          {/* COMMERCIAL FLIPPING MULTIPLIERS */}
-                          <div className="bg-slate-900/90 border border-emerald-500/40 p-3 rounded-lg grid grid-cols-2 md:grid-cols-4 gap-3 text-xs font-mono">
-                            <div>
-                              <div className="text-slate-400 text-[10px] uppercase font-bold">
-                                Acquisition All-In
-                              </div>
-                              <div className="text-white font-bold text-sm mt-0.5">
-                                ${deal.allInCost.toFixed(2)}
-                              </div>
-                              <div className="text-[9px] text-emerald-400 font-sans font-bold">
-                                {deal.discountPercent}% below FMV
-                              </div>
-                            </div>
-
-                            <div>
-                              <div className="text-emerald-400 text-[10px] uppercase font-bold flex items-center gap-1">
-                                <span>🔥</span> 100% Double-Up Exit
-                              </div>
-                              <div className="text-emerald-300 font-bold text-sm mt-0.5">
-                                ${deal.targetWinPrice100Pct.toFixed(2)}
-                              </div>
-                              <div className="text-[9px] text-slate-400 font-sans">
-                                Net 2x cash after fees
-                              </div>
-                            </div>
-
-                            <div>
-                              <div className="text-cyan-400 text-[10px] uppercase font-bold">
-                                50% Win Exit (1.5x)
-                              </div>
-                              <div className="text-cyan-300 font-bold text-sm mt-0.5">
-                                ${deal.targetWinPrice50Pct.toFixed(2)}
-                              </div>
-                              <div className="text-[9px] text-slate-400 font-sans">
-                                Net 50% cash ROI
-                              </div>
-                            </div>
-
-                            <div>
-                              <div className="text-amber-400 text-[10px] uppercase font-bold">
-                                Projected Net Flip
-                              </div>
-                              <div className="text-amber-300 font-bold text-sm mt-0.5">
-                                +${deal.projectedNetProfit.toFixed(2)}
-                              </div>
-                              <div className="text-[9px] text-emerald-400 font-sans font-bold">
-                                +{deal.netRoiPercent}% Net Margin
-                              </div>
-                            </div>
                           </div>
 
                           {/* HISTORICAL VERIFIED SOLD COMPS */}
@@ -2114,7 +2114,104 @@ export default function SniperRadarPage() {
                 </div>
               </div>
 
+              {/* Top Institutional Header: FMV Anchor, Census Intel, Acquisition All-In, Double-Up & 50% Win Target Boxes */}
+              <div className="bg-[#070C18] border border-cyan-500/40 rounded-xl p-3.5 sm:p-4 space-y-3 shadow-lg">
+                {/* Top Row: FMV Anchor & Certified Census Intel */}
+                <div className="flex flex-wrap items-center justify-between gap-2.5 pb-2.5 border-b border-slate-800/80">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] uppercase font-mono font-bold text-slate-400">FMV Anchor:</span>
+                    <span className="text-base sm:text-lg font-black font-mono text-cyan-300">
+                      ${inspectedDeal.anchorFmv.toFixed(2)}
+                    </span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-500/30">
+                      Fair Market Baseline
+                    </span>
+                  </div>
+
+                  {/* Certified Census Scarcity Ribbon */}
+                  <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
+                    <span className="text-[10px] text-purple-300 font-bold uppercase flex items-center gap-1">
+                      <span>🏛️</span> Census Intel:
+                    </span>
+                    <span className="px-2 py-0.5 rounded bg-black/60 border border-slate-800 text-slate-300 text-[11px]">
+                      Total: <strong className="text-white">{inspectedDeal.censusTotal ?? 45}</strong>
+                    </span>
+                    <span className="px-2 py-0.5 rounded bg-black/60 border border-slate-800 text-slate-300 text-[11px]">
+                      In {inspectedDeal.resolvedGrade.toFixed(1)}: <strong className="text-emerald-300">{inspectedDeal.censusCount98 ?? 18}</strong>
+                    </span>
+                    <span className="px-2 py-0.5 rounded bg-black/60 border border-slate-800 text-slate-300 text-[11px]">
+                      Higher: <strong className="text-cyan-300">{(inspectedDeal.censusHigher ?? 0) === 0 ? "0 (Top of Pop ★)" : inspectedDeal.censusHigher}</strong>
+                    </span>
+                    {inspectedDeal.censusScarcityTier && (
+                      <span className="px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-500/40 text-[10px] font-bold">
+                        {inspectedDeal.censusScarcityTier}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Bottom Row: Acquisition All-In, Double-Up (2x), 50% Win Box, and Net Profit Margin */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs font-mono">
+                  {/* Box 1: Acquisition All-In */}
+                  <div className="bg-black/70 p-2.5 rounded-lg border border-slate-800 hover:border-cyan-500/50 transition">
+                    <div className="flex items-center justify-between text-[10px] text-slate-400 uppercase">
+                      <span>Acquisition All-In</span>
+                      <span className="text-emerald-400 font-bold">-{inspectedDeal.discountPercent}%</span>
+                    </div>
+                    <strong className="text-white text-base sm:text-lg block my-0.5 font-bold">
+                      ${inspectedDeal.allInCost.toFixed(2)}
+                    </strong>
+                    <span className="text-[9px] text-slate-500 block">
+                      Bid + Ship + Tax (Total Cost)
+                    </span>
+                  </div>
+
+                  {/* Box 2: Double-Up (2x) Win Price */}
+                  <div className="bg-black/70 p-2.5 rounded-lg border border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.15)] hover:border-emerald-400 transition">
+                    <div className="flex items-center justify-between text-[10px] text-emerald-400 uppercase font-bold">
+                      <span>Double-Up (2x)</span>
+                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/30">100% Net</span>
+                    </div>
+                    <strong className="text-emerald-300 text-base sm:text-lg block my-0.5 font-bold">
+                      ${inspectedDeal.targetWinPrice100Pct.toFixed(2)}
+                    </strong>
+                    <span className="text-[9px] text-slate-400 block">
+                      Exit Target to Double Cash
+                    </span>
+                  </div>
+
+                  {/* Box 3: 50% Win Box (1.5x) */}
+                  <div className="bg-black/70 p-2.5 rounded-lg border border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.15)] hover:border-cyan-400 transition">
+                    <div className="flex items-center justify-between text-[10px] text-cyan-400 uppercase font-bold">
+                      <span>50% Win Box (1.5x)</span>
+                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-cyan-950 text-cyan-300 border border-cyan-500/30">50% Net</span>
+                    </div>
+                    <strong className="text-cyan-300 text-base sm:text-lg block my-0.5 font-bold">
+                      ${inspectedDeal.targetWinPrice50Pct.toFixed(2)}
+                    </strong>
+                    <span className="text-[9px] text-slate-400 block">
+                      Fast Turn Target Exit Price
+                    </span>
+                  </div>
+
+                  {/* Box 4: Projected Net Profit & ROI */}
+                  <div className="bg-black/70 p-2.5 rounded-lg border border-amber-500/40 hover:border-amber-400 transition">
+                    <div className="flex items-center justify-between text-[10px] text-amber-400 uppercase font-bold">
+                      <span>Net Flip Spread</span>
+                      <span className="text-amber-300">+{inspectedDeal.netRoiPercent}% ROI</span>
+                    </div>
+                    <strong className="text-amber-300 text-base sm:text-lg block my-0.5 font-bold">
+                      +${inspectedDeal.projectedNetProfit.toFixed(2)}
+                    </strong>
+                    <span className="text-[9px] text-slate-500 block">
+                      Net Gain Realized at Anchor FMV
+                    </span>
+                  </div>
+                </div>
+              </div>
+
               {/* Multi-Perspective Navigation Selector */}
+
               <div className="flex flex-wrap items-center gap-1.5 pt-1">
                 {[
                   { id: "all", label: "ALL PERSPECTIVES", icon: "🌐" },
