@@ -26,7 +26,9 @@ export const ROSTER_PER_UNIVERSE = 60;
 export function rosterFromRows(rows: any[] | null | undefined, perUniverse = ROSTER_PER_UNIVERSE): RosterCharacter[] {
   const out: RosterCharacter[] = [];
   const seen = new Set<string>();
-  const sorted = (rows ?? []).slice().sort((a, b) => Number(b.stories) - Number(a.stories));
+  // Many people share a codename and share its appearance count; the original bearer is the earliest debut.
+  const yr = (x: any) => (x.book_year != null ? Number(x.book_year) : 9999);
+  const sorted = (rows ?? []).slice().sort((a, b) => Number(b.stories) - Number(a.stories) || yr(a) - yr(b));
   const counts = new Map<string, number>();
   for (const r of sorted) {
     const u = String(r.universe);

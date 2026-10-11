@@ -14,6 +14,14 @@ const rows = [
 const book = { comics_id: "act1", series: "Action Comics", issue_number: "1", year: 1938, publisher: "DC", cover_url: "c", pp_id: null, pp_ladder: null, cb_price: 5454500, cb_values: { 2021: 3000000, 2022: 3300000, 2023: 4100000, 2024: 5454500 }, cgc_total: 86, scarcity_tier: "mythic" };
 
 describe("roster", () => {
+  it("picks the original bearer of a shared codename (earliest debut), not a later namesake", () => {
+    const ro = rosterFromRows([
+      r({ codename: "Batman", slug: "sergeant-mack-new-earth", stories: 75996, share: 0.96, book_year: 1998, first_series: "Batman: Legends of the Dark Knight", first_issue: "101", comics_id: "x" }),
+      r({ codename: "Batman", slug: "batman-bruce-wayne", stories: 75996, share: 0.47, book_year: 1939, first_series: "Detective Comics", first_issue: "27", comics_id: "det27" }),
+    ]);
+    expect(ro.length).toBe(1);
+    expect(ro[0].slug).toBe("batman-bruce-wayne");
+  });
   it("keeps one equity per codename, drops zero-share, orders by prominence", () => {
     const ro = rosterFromRows(rows);
     expect(ro.map((x) => x.name)).toEqual(["Superman", "Lois Lane-Kent", "Scoop Scanlon"]);
