@@ -40,6 +40,32 @@ with open(FD + '/FANDOM_MATCH.csv', newline='') as f:
             match[k] = pid
 print('matched pages', len(match), flush=True)
 
+cover = {}
+with open(os.path.dirname(os.path.abspath(__file__)) + '/cover.tsv') as f:
+    for line in f:
+        a, i, y, v = line.rstrip('\n').split('\t')
+        cover[(a, i, int(y))] = float(v)
+print('cover prices', len(cover), flush=True)
+norm = lambda s: re.sub(r'[^a-z0-9]+', '', re.sub(r'^the\s+', '', (s or '').lower().strip()))
+def wiki_cover(s):
+    # the wiki's own printed cover price, US dollars only: "$0.12", "12¢ US", "12c", "$0.12 US $0.15 CAN"
+    if not s: return None
+    m = re.search(r'\$\s*([0-9]+(?:\.[0-9]+)?)', s)
+    if m: return float(m.group(1)) or None
+    m = re.search(r'(?<![0-9£])\b([0-9]*\.?[0-9]+)\s*(?:¢|c\b)', s)
+    if m: return float(m.group(1)) / 100 or None
+    return None
+
+def cover_price(r, y):
+    w = wiki_cover(r.get('price'))
+    if w: return w
+    if y is None or not r.get('series'): return None
+    iss = (r.get('issue') or '').strip().lower()
+    for dy in (0, -1, 1):
+        v = cover.get((norm(r['series']), iss, y + dy))
+        if v: return v
+    return None
+
 REALITY = re.compile(r'\s*\(([^()]*(Earth|Universe|Reality|Multiverse|Prime|Crisis|Flashpoint|DCAU|Ultimate|MC2|Zombie|Timeline|Dimension|Elseworlds|Pre-|Post-|New 52|Rebirth)[^()]*)\)\s*$', re.I)
 def base(target, name):
     s = target or name or ''
@@ -77,7 +103,7 @@ class C:
         s.ebooks = [0, 0, 0, 0]; s.enav = [0.0] * 4; s.top = []; s.first = None; s.firstflag = None
 
 chars = {}
-issues_total = issues_priced = 0
+issues_total = issues_priced = issues_floor = 0
 t0 = time.time()
 for wiki, fn in (('dc', 'dc_issues.jsonl'), ('marvel', 'marvel_issues.jsonl')):
     if wiki != ONLY: continue
@@ -88,6 +114,10 @@ for wiki, fn in (('dc', 'dc_issues.jsonl'), ('marvel', 'marvel_issues.jsonl')):
             y = yr(r.get('cover_year')) or yr(r.get('pub_year'))
             pid = match.get((wiki, r['page_title']))
             price = px.get(pid) if pid else None
+            floor = False
+            if price is None:
+                price = cover_price(r, y)
+                floor = price is not None
             w = {}      # key -> [weight, display, first_flag]
             for st in r['stories']:
                 for a in st['appearances']:
@@ -117,14 +147,15 @@ for wiki, fn in (('dc', 'dc_issues.jsonl'), ('marvel', 'marvel_issues.jsonl')):
                 v = share * price
                 e = era(y)
                 c.books += 1; c.nav += v; c.ebooks[e] += 1; c.enav[e] += v
-                c.top.append((v, pid, share, y))
+                if pid: c.top.append((v, pid, share, y))
                 if len(c.top) > 4 * TOPK:
                     c.top.sort(reverse=True); del c.top[TOPK:]
             issues_priced += 1 if price is not None else 0
+            if floor: issues_floor += 1
             if issues_total % 20000 == 0:
                 print(issues_total, issues_priced, len(chars), round(time.time() - t0), flush=True)
 
-print('done parse', issues_total, issues_priced, len(chars), flush=True)
+print('done parse', issues_total, issues_priced, 'of which cover-price floor', issues_floor, len(chars), flush=True)
 os.makedirs(OUT, exist_ok=True)
 with open(OUT + '/characters_' + ONLY + '.tsv', 'w') as o, open(OUT + '/character_books_' + ONLY + '.tsv', 'w') as b:
     o.write('fkey\tdisplay\tuniverse\tissues\tbooks\tnav\tg_books\tg_nav\ts_books\ts_nav\tb_books\tb_nav\tm_books\tm_nav\tfirst_year\tdebut_year\tdebut_pp_id\tdebut_page\n')

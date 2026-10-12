@@ -5,8 +5,9 @@ ComicBase is joined to PriceCharting books by series + issue + year (direct, fir
 import csv, os, re, sys, collections
 csv.field_size_limit(10**9)
 H = os.path.expanduser('~/mnt')
-norm = lambda s: re.sub(r'[^a-z0-9]+', '', (s or '').lower())
+norm = lambda s: re.sub(r'[^a-z0-9]+', '', re.sub(r'^the\s+', '', (s or '').lower().strip()))
 cb = {}
+cover = {}
 n = 0
 with open(H + '/Desktop/COMICBASE_NORMALIZED_1258799_ROWS_58_FIELDS.csv', newline='') as f:
     for r in csv.DictReader(f):
@@ -15,11 +16,22 @@ with open(H + '/Desktop/COMICBASE_NORMALIZED_1258799_ROWS_58_FIELDS.csv', newlin
         if not m: continue
         try: v = float(r['Value Year 4 (2024)'] or 0)
         except ValueError: continue
-        if v <= 0: continue
+        cp = r['Cover Price']
+        if (r['Cover Price Currency'] or 'USD') == 'USD':
+            try:
+                cpv = float(cp or 0)
+            except ValueError:
+                cpv = 0
+        else:
+            cpv = 0
+        if v <= 0 and cpv <= 0: continue
         k = (norm(r['Series']), r['Issue Number'].strip().lower(), int(m.group(1)))
         if v > cb.get(k, 0): cb[k] = v
+        if cpv > 0 and (k not in cover or cpv < cover[k]): cover[k] = cpv
         n += 1
-print('comicbase keys', len(cb), n, flush=True)
+print('comicbase keys', len(cb), len(cover), n, flush=True)
+with open('cover.tsv', 'w') as o:
+    for (a, b, c), v in cover.items(): o.write(f'{a}\t{b}\t{c}\t{v}\n')
 px = {}
 src = collections.Counter()
 def num(x):
