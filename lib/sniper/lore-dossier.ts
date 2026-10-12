@@ -209,7 +209,19 @@ export function resolveComicLoreDossier(title: string, issueNumber?: string): Co
   const lookupKey = `${series} #${issue}`;
 
   for (const [key, dossier] of Object.entries(CANONICAL_LORE_DATABASE)) {
-    if (lookupKey.includes(key) || key.includes(lookupKey)) {
+    const [targetSeries, targetIssue] = key.split(" #");
+    if (targetSeries && targetIssue) {
+      const cleanTargetSeries = targetSeries.trim().toLowerCase();
+      const cleanSeries = series.trim().toLowerCase();
+      // Exact series match or prefixed (e.g. "marvel comics spider-man" vs "spider-man")
+      // AND strictly exact issue match so #196 never matches #1
+      if (
+        (cleanSeries === cleanTargetSeries || cleanSeries.endsWith(" " + cleanTargetSeries)) &&
+        issue === targetIssue.trim()
+      ) {
+        return dossier;
+      }
+    } else if (lookupKey === key) {
       return dossier;
     }
   }
