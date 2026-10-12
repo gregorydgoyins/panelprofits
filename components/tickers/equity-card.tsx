@@ -318,7 +318,7 @@ export const EquityCard = React.memo(function EquityCard({
         {/* Publisher / era header */}
         {(() => {
           const rawPub = identity.publisher || "";
-          const publisher = resolveAuthoritativePublisher(series, rawPub);
+          const publisher = resolveAuthoritativePublisher(series, rawPub, identity.year);
           const pubColor = getPublisherColor(publisher);
           const pubColorIsHex = pubColor.startsWith("#");
           const pubBg = pubColorIsHex ? withAlpha(pubColor, 0.85) : pubColor;

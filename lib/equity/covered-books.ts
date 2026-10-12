@@ -2,6 +2,7 @@ import { createAdminServerClient } from "@/lib/supabase/admin";
 import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
 import { resolveHistoricalKeyBadge, resolveHistoricalMarketClass } from "@/lib/equity/significance-classifier";
 import { getAuthoritativeCoverStrict } from "@/lib/comics/cover-authority";
+import { resolveAuthoritativePublisher } from "@/lib/comics/publisher-authority";
 import type { EquityItem, LadderSpot } from "@/lib/equity/ticker-types";
 
 /**
@@ -121,10 +122,11 @@ export function mapCoveredBook(row: RailBookRow): EquityItem | null {
   const ticker = formatComicEquityTicker(series, issue);
   const hasComicsRow = !row.comics_id.startsWith("gcs:");
 
+  const authPub = resolveAuthoritativePublisher(series, row.publisher, row.year);
   const rawCover = (row.cover_url || "").trim();
   const validCover = (rawCover && !rawCover.includes("526.jpg") && !rawCover.includes("files1.comics.org"))
     ? rawCover
-    : (getAuthoritativeCoverStrict(series, issue) || "");
+    : (getAuthoritativeCoverStrict(series, issue, authPub, row.year) || "");
 
   return {
     entryId: `cb-${row.rail_seq}`,
@@ -144,7 +146,7 @@ export function mapCoveredBook(row: RailBookRow): EquityItem | null {
       assetId: ticker,
       productName: variant ? `${series} #${issue} [${variant}]` : `${series} #${issue}`,
       year: row.year ?? null,
-      publisher: row.publisher || null,
+      publisher: authPub || null,
       variant,
       productionAge: era,
       originEra: row.origin_era,

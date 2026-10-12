@@ -32,7 +32,7 @@ export async function GET(request: Request) {
 
   // Pre-Queue verification gate: cover must be valid image URL
   const validBaseItems = baseItems.filter((item) => {
-    const authoritativePublisher = resolveAuthoritativePublisher(item.series, item.publisher);
+    const authoritativePublisher = resolveAuthoritativePublisher(item.series, item.publisher, item.year);
     const cover = item.coverUrl || getAuthoritativeCoverStrict(item.series, item.issueNumber, authoritativePublisher, item.year || 1990);
     if (!cover) return false;
     if (cover.includes("svg") || cover.startsWith("data:image/svg")) return false;
@@ -78,7 +78,7 @@ export async function GET(request: Request) {
     });
     const effectiveAssetClass = isTrulySovereign ? "SOV" : marketClass;
 
-    const authoritativePublisher = resolveAuthoritativePublisher(item.series, item.publisher);
+    const authoritativePublisher = resolveAuthoritativePublisher(item.series, item.publisher, item.year);
     const resolvedCover = item.coverUrl || getAuthoritativeCoverStrict(item.series, item.issueNumber, authoritativePublisher, item.year || 1990);
     const canonicalTicker = formatComicEquityTicker(item.series, item.issueNumber);
 

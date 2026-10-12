@@ -143,7 +143,7 @@ function mapDbRow(r: any, idx: number, offset: number, blockIndex: number): Sove
     coverUrl: cover,
     canonicalIssueId: r.id,
     year: rawYear || undefined,
-    publisher: resolveAuthoritativePublisher(r.series, r.publisher),
+    publisher: resolveAuthoritativePublisher(r.series, r.publisher, rawYear),
     variant: r.variant || null,
     keyBadge,
   };

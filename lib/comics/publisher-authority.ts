@@ -286,8 +286,65 @@ export function resolveAuthoritativePublisher(
   const normSeries = String(series || "").trim();
   const rawEnglish = translateToEnglishPublisher(rawPublisher);
   const rawPubClean = String(rawEnglish || "").trim().toLowerCase();
+  const yearNum = releaseYear != null ? Number(releaseYear) : null;
 
-  // 1. If raw publisher is already specific and recognized (not "Independent" or "Marvel / DC")
+  // 1. Authoritative title & year canonical rules (preempt any stale or erroneous rawPublisher defaults)
+  // Daredevil: Lev Gleason (1941–1956) vs Marvel (April 1964+)
+  if (/\bdaredevil\b/i.test(normSeries)) {
+    if (/\bdaredevil comics\b/i.test(normSeries) || (yearNum !== null && !isNaN(yearNum) && yearNum < 1964)) {
+      return "Lev Gleason";
+    }
+    if (yearNum !== null && !isNaN(yearNum) && yearNum >= 1964) {
+      return "Marvel";
+    }
+    if (normSeries.toLowerCase() === "daredevil comics") {
+      return "Lev Gleason";
+    }
+  }
+
+  // Silver Streak / Crime Does Not Pay / Boy Comics: Lev Gleason
+  if (
+    /\bcrime does not pay\b/i.test(normSeries) ||
+    /\bboy comics\b/i.test(normSeries) ||
+    /\bsilver streak\b/i.test(normSeries)
+  ) {
+    return "Lev Gleason";
+  }
+
+  // Captain Marvel Adventures / Whiz Comics: Fawcett Publications (Golden Age)
+  if (
+    (/\bcaptain marvel adventures\b/i.test(normSeries) || /\bwhiz comics\b/i.test(normSeries)) &&
+    (yearNum === null || yearNum < 1967)
+  ) {
+    return "Fawcett";
+  }
+
+  // Quality Comics Golden Age classics
+  if (
+    /\bmilitary comics\b/i.test(normSeries) ||
+    /\bpolice comics\b/i.test(normSeries) ||
+    /\bfeature comics\b/i.test(normSeries) ||
+    /\bcrack comics\b/i.test(normSeries) ||
+    /\bsmash comics\b/i.test(normSeries) ||
+    /\bhit comics\b/i.test(normSeries) ||
+    /\bdoll man\b/i.test(normSeries)
+  ) {
+    return "Quality Comics";
+  }
+
+  // Blackhawk: Quality Comics (1944-1956) vs DC (1957+)
+  if (/\bblackhawk\b/i.test(normSeries)) {
+    if (yearNum !== null && !isNaN(yearNum) && yearNum < 1957) return "Quality Comics";
+    if (yearNum !== null && !isNaN(yearNum) && yearNum >= 1957) return "DC";
+  }
+
+  // Plastic Man: Quality Comics (1943-1956) vs DC (1966+)
+  if (/\bplastic man\b/i.test(normSeries)) {
+    if (yearNum !== null && !isNaN(yearNum) && yearNum < 1966) return "Quality Comics";
+    if (yearNum !== null && !isNaN(yearNum) && yearNum >= 1966) return "DC";
+  }
+
+  // 2. If raw publisher is already specific and recognized (not "Independent" or "Marvel / DC")
   if (
     rawPubClean &&
     rawPubClean !== "independent" &&
@@ -304,22 +361,6 @@ export function resolveAuthoritativePublisher(
     }
     // Return formatted clean title
     return rawPublisher!.trim().replace(/\s+Comics$/i, "");
-  }
-
-  // 2. Year-aware disambiguation for Golden Age vs Modern titles with shared names
-  const yearNum = releaseYear != null ? Number(releaseYear) : null;
-  if (/\bdaredevil\b/i.test(normSeries)) {
-    // Lev Gleason published Daredevil Comics (1941-1956)
-    if (/\bdaredevil comics\b/i.test(normSeries) || (yearNum !== null && !isNaN(yearNum) && yearNum < 1964)) {
-      return "Lev Gleason";
-    }
-    // Marvel launched Daredevil in April 1964
-    if (yearNum !== null && !isNaN(yearNum) && yearNum >= 1964) {
-      return "Marvel";
-    }
-    if (!/\bdaredevil comics\b/i.test(normSeries)) {
-      return "Marvel";
-    }
   }
 
   // 2. Authoritative series pattern matching
