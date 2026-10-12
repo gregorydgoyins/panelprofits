@@ -549,7 +549,7 @@ export function evaluateAuctionListing(
 
   // GATE 3: Profile Targeting Alignment
   // Era Check
-  if (profile.eras.length > 0 && !profile.eras.includes(parsed.extractedEra)) {
+  if (profile.eras && profile.eras.length > 0 && !profile.eras.includes(parsed.extractedEra)) {
     return createRejection(`REJECTED: Era '${parsed.extractedEra.toUpperCase()}' outside target eras (${profile.eras.join(", ")}).`, 3);
   }
 

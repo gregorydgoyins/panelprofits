@@ -356,9 +356,13 @@ export async function searchEbayLiveAuctions(
  */
 export async function searchEbayMultiStream(): Promise<RawAuctionListing[]> {
   const queryConfigs: SearchEbayAuctionsParams[] = [
-    { query: "CGC 9.8 comic", marketplace: "EBAY_US", limit: 12 },
-    { query: "CBCS 9.8 comic", marketplace: "EBAY_US", limit: 8 },
-    { query: "PSA 10 comic", marketplace: "EBAY_US", limit: 6 },
+    { query: "Spider-Man CGC", marketplace: "EBAY_US", limit: 8 },
+    { query: "Batman CGC", marketplace: "EBAY_US", limit: 8 },
+    { query: "X-Men CGC", marketplace: "EBAY_US", limit: 8 },
+    { query: "Spawn CGC", marketplace: "EBAY_US", limit: 6 },
+    { query: "Hulk CGC", marketplace: "EBAY_US", limit: 6 },
+    { query: "CGC 9.8 comic", marketplace: "EBAY_US", limit: 8 },
+    { query: "CBCS 9.8 comic", marketplace: "EBAY_US", limit: 6 },
     { query: "CGC comic", marketplace: "EBAY_GB", limit: 5 },
     { query: "CGC comic", marketplace: "EBAY_CA", limit: 5 },
   ];

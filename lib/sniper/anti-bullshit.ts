@@ -323,24 +323,57 @@ export function parseAndFilterListing(
     extractedYear = parseInt(yearMatch[1], 10);
   }
 
-  // Issue number match (e.g. #128, #7, No. 128, # 128)
-  const hashMatch = title.match(/#\s*(\d+[a-zA-Z]?(?:\.\d+)?)/);
+  // Clean title from emojis, leading punctuation, and grading badges
+  const cleanTitle = title
+    .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, " ")
+    .replace(/^[^a-zA-Z0-9]+/, "")
+    .replace(/^(cgc|cbcs|psa|pgx)\s+(graded\s+)?(?:\d+\.?\d*\s+)?/i, "")
+    .replace(/^(marvel\s+comics|dc\s+comics|image\s+comics)\s*[-:]?\s*/i, "")
+    .trim();
+
+  // Pattern A: Has '#' e.g. '#266', ' - #266', '# 266'
+  const hashMatch = cleanTitle.match(/([a-zA-Z0-9\s:'.\-]+?)\s*[-–—]?\s*#\s*([0-9]+[a-zA-Z]?(?:\.[0-9]+)?)/i);
   if (hashMatch) {
-    extractedIssue = hashMatch[1];
-    const beforeHash = title.substring(0, title.indexOf("#"));
-    const cleanedBefore = beforeHash
-      .replace(/\b(cgc|cbcs|pgx)\b/gi, "")
+    const rawSeries = hashMatch[1]
+      .replace(/\b(cgc|cbcs|pgx|psa)\b/gi, "")
       .replace(/\b(19\d{2}|20\d{2})\b/g, "")
       .replace(/\bvol(?:\.|ume)?\s*\d+/gi, "")
       .replace(/[\[\]\(\)\{\}]/g, "")
+      .replace(/[-–—:]+$/, "")
       .trim();
-    if (cleanedBefore.length > 0) {
-      extractedSeries = cleanedBefore;
+    if (rawSeries.length > 0) {
+      extractedSeries = rawSeries;
     }
+    extractedIssue = hashMatch[2];
   } else {
-    const noMatch = title.match(/\bno\.\s*(\d+)/i);
+    // Pattern B: 'No. 128'
+    const noMatch = cleanTitle.match(/([a-zA-Z0-9\s:'.\-]+?)\s*[-–—]?\s*no\.\s*([0-9]+[a-zA-Z]?(?:\.[0-9]+)?)/i);
     if (noMatch) {
-      extractedIssue = noMatch[1];
+      const rawSeries = noMatch[1]
+        .replace(/\b(cgc|cbcs|pgx|psa)\b/gi, "")
+        .replace(/\b(19\d{2}|20\d{2})\b/g, "")
+        .replace(/[\[\]\(\)\{\}]/g, "")
+        .replace(/[-–—:]+$/, "")
+        .trim();
+      if (rawSeries.length > 0) {
+        extractedSeries = rawSeries;
+      }
+      extractedIssue = noMatch[2];
+    } else {
+      // Pattern C: Number preceded by series and followed by grade or descriptor (e.g. 'Batman 611 CGC 9.8' or 'Thor 373 CGC')
+      const numMatch = cleanTitle.match(/^([a-zA-Z\s:'.\-]+?)\s+(\d{1,4}[a-zA-Z]?)\b(?:\s+(?:cgc|cbcs|psa|pgx|\(?\d{4}\)?|nm|vf|white|newsstand|annual|variant))/i);
+      if (numMatch) {
+        const rawSeries = numMatch[1]
+          .replace(/\b(cgc|cbcs|pgx|psa)\b/gi, "")
+          .replace(/\b(19\d{2}|20\d{2})\b/g, "")
+          .replace(/[\[\]\(\)\{\}]/g, "")
+          .replace(/[-–—:]+$/, "")
+          .trim();
+        if (rawSeries.length > 0) {
+          extractedSeries = rawSeries;
+        }
+        extractedIssue = numMatch[2];
+      }
     }
   }
 

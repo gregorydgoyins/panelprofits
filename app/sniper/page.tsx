@@ -319,7 +319,7 @@ export default function SniperRadarPage() {
     "ebay_de",
     "ebay_au",
   ]);
-  const [minGrade, setMinGrade] = useState<number>(9.4);
+  const [minGrade, setMinGrade] = useState<number>(9.0);
   const [maxGrade, setMaxGrade] = useState<number>(10.0);
   const [minAllInCost, setMinAllInCost] = useState<number>(0.0); // $0.00 Floor for misspellings & cracked cases
   const [maxBudget, setMaxBudget] = useState<number>(1500); // Sub-$1500 Focus Range
@@ -1291,6 +1291,8 @@ export default function SniperRadarPage() {
                             gradingCompany={deal.gradingCompany}
                             grade={deal.resolvedGrade}
                             title={deal.normalizedTitle || deal.listing.title}
+                            issueNumber={deal.resolvedIssue}
+                            publisher={deal.gcdMetadata?.publisher}
                             year={deal.resolvedYear}
                             era={deal.resolvedEra}
                             certNumber={deal.certNumber}
@@ -1773,6 +1775,8 @@ export default function SniperRadarPage() {
                           gradingCompany={deal.gradingCompany}
                           grade={deal.resolvedGrade}
                           title={deal.normalizedTitle || deal.listing.title}
+                          issueNumber={deal.resolvedIssue}
+                          publisher={deal.gcdMetadata?.publisher}
                           year={deal.resolvedYear}
                           era={deal.resolvedEra}
                           certNumber={deal.certNumber}
