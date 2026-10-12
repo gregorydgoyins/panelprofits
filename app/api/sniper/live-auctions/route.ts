@@ -4,6 +4,7 @@ import path from "path";
 import { createRequire } from "module";
 import { normalizeAuctionTitle, parseAndFilterListing } from "@/lib/sniper/anti-bullshit";
 import { resolveAuthoritativePublisher } from "@/lib/comics/publisher-authority";
+import { lookupSqliteCover } from "@/lib/comics/sqlite-covers";
 import {
   searchEbayMultiStream,
   searchEbayLiveAuctions,
@@ -265,9 +266,19 @@ export async function GET(request: Request) {
 
         const resolvedPub = dbMeta.publisher || item.gcdMetadata?.publisher || undefined;
 
+        // Images: the seller's own eBay photos come first (they are the actual slab). The 1.2M-cover catalog is the fallback,
+        // so a listing is never blank: catalog cover when eBay sent no usable photo, and always appended as the last gallery image.
+        const parsedForCover = parseAndFilterListing(rawTitle);
+        const catalogCover = lookupSqliteCover(parsedForCover.extractedSeries, parsedForCover.extractedIssue);
+        const ebayPhotos = [item.imageUrl, ...(Array.isArray(item.galleryImages) ? item.galleryImages : [])].filter((u): u is string => typeof u === "string" && u.trim().length > 0);
+        const galleryImages = Array.from(new Set([...ebayPhotos, ...(catalogCover ? [catalogCover] : [])]));
+        const imageUrl = galleryImages[0] ?? "";
+
         return {
           ...item,
           normalizedTitle: cleanTitle,
+          imageUrl,
+          galleryImages,
           secondsRemaining: secs,
           timeLeftStr: formatTimeStr(secs),
           anchorFmv: resolvedFmv,
@@ -279,7 +290,7 @@ export async function GET(request: Request) {
         };
       });
 
-      const liveAuctions = updatedAuctions.filter((a) => a.secondsRemaining > 0);
+      const liveAuctions = updatedAuctions.filter((a) => a.secondsRemaining > 0 && a.imageUrl); // never list a lot without a picture
       return NextResponse.json({
         success: true,
         count: liveAuctions.length,

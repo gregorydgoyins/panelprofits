@@ -44,6 +44,14 @@ export function SlabEncasement({
   onClick,
 }: SlabEncasementProps) {
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
+  const [imgError, setImgError] = useState<boolean>(false);
+  const [proxyFallbackUrl, setProxyFallbackUrl] = useState<string | null>(null);
+
+  // Reset error state on image change
+  useEffect(() => {
+    setImgError(false);
+    setProxyFallbackUrl(null);
+  }, [imageUrl, activeImageIndex]);
 
   // eBay-Style Interactive Loupe & Magnifier Zoom State (Direct DOM + rAF: 0 React re-renders on mousemove)
   const isLoupeEnabled = size === "lg" || size === "xl" || !onClick;
@@ -65,20 +73,38 @@ export function SlabEncasement({
     };
   }, []);
 
-  // Combine main image and any gallery photos with high-resolution uprez
+  // Safe URL Normalization: prevents multi-encoding bugs (%20 -> %2520)
+  const normalizeUrl = (u?: string | null): string => {
+    if (!u || typeof u !== "string") return "";
+    let curr = u.trim();
+    if (!curr) return "";
+    while (curr.includes("%25")) {
+      try { curr = decodeURI(curr); } catch { break; }
+    }
+    try { return encodeURI(decodeURI(curr)); } catch { return curr; }
+  };
+
+  // Combine main image and any gallery photos with high-resolution uprez and safe encoding
   const allImages = useMemo(() => {
     const list: string[] = [];
-    if (imageUrl) list.push(uprezEbayImage(imageUrl));
+    if (imageUrl) {
+      const norm = normalizeUrl(imageUrl);
+      const up = uprezEbayImage(norm);
+      if (up) list.push(up);
+    }
     if (galleryImages && galleryImages.length > 0) {
       for (const img of galleryImages) {
-        const up = uprezEbayImage(img);
-        if (!list.includes(up)) list.push(up);
+        if (!img) continue;
+        const norm = normalizeUrl(img);
+        const up = uprezEbayImage(norm);
+        if (up && !list.includes(up)) list.push(up);
       }
     }
     return list;
   }, [imageUrl, galleryImages]);
 
-  const currentDisplayImage = allImages[activeImageIndex] || imageUrl;
+  const rawDisplayImage = proxyFallbackUrl || allImages[activeImageIndex] || imageUrl;
+  const currentDisplayImage = rawDisplayImage ? normalizeUrl(rawDisplayImage) : "";
 
   // Enhanced Size styling presets with larger frames for proper label formatting
   const sizeClasses = {
@@ -509,13 +535,23 @@ export function SlabEncasement({
           style={{ mixBlendMode: "overlay" }}
         />
 
-        {currentDisplayImage && currentDisplayImage.trim().length > 0 ? (
+        {currentDisplayImage && currentDisplayImage.trim().length > 0 && !imgError ? (
           /* HIGH VISIBILITY SELLER COVER IMAGE WITH DYNAMIC eBAY ZOOM LENS (Optimized: Direct DOM, pointer-events-none on image) */
           <div className="relative w-full h-full overflow-hidden flex items-center justify-center">
             <img
               ref={imageRef}
               src={uprezEbayImage(currentDisplayImage)}
               alt={title}
+              onError={() => {
+                if (!proxyFallbackUrl && currentDisplayImage.startsWith("http")) {
+                  setProxyFallbackUrl(`/api/cover-proxy?url=${encodeURIComponent(currentDisplayImage)}`);
+                } else if (activeImageIndex < allImages.length - 1) {
+                  // This photo is dead: move on to the next one (the catalog cover is last) before showing a blank.
+                  setActiveImageIndex(activeImageIndex + 1);
+                } else {
+                  setImgError(true);
+                }
+              }}
               className="w-full h-full object-contain rounded-[1px] select-none p-2 pointer-events-none"
               style={{
                 transformOrigin: "50% 50%",

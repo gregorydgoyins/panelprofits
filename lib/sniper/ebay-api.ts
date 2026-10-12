@@ -277,9 +277,10 @@ export async function searchEbayLiveAuctions(
         if (diff > 0) secondsRemaining = diff;
       }
 
+      // the listing's main photo first; thumbnails are only a fallback
       const rawImg =
-        item.thumbnailImages?.[0]?.imageUrl ||
         item.image?.imageUrl ||
+        item.thumbnailImages?.[0]?.imageUrl ||
         "";
       const imageUrl = rawImg ? uprezEbayImage(rawImg) : "";
 
