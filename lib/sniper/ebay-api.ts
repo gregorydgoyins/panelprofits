@@ -135,12 +135,14 @@ export async function fetchEbayItemDetails(itemId: string): Promise<{
   aspects: EbayItemAspects;
   images: string[];
   seller?: { username?: string; feedbackScore?: number; feedbackPercentage?: string };
+  /** what eBay quotes for shipping to the buyer's default location; undefined when eBay does not say */
+  shippingUsd?: number;
 } | null> {
   const token = await getEbayOAuthToken();
   if (!token) return null;
 
   const cleanId = itemId.replace(/^ebay-/, "");
-  const url = `https://api.ebay.com/buy/browse/v1/item/${encodeURIComponent(cleanId)}`;
+  const url = `https://api.ebay.com/buy/browse/v1/item/get_item_by_legacy_id?legacy_item_id=${encodeURIComponent(cleanId)}`;
 
   try {
     const res = await fetch(url, {
@@ -191,6 +193,11 @@ export async function fetchEbayItemDetails(itemId: string): Promise<{
       description: item.shortDescription || item.description,
       aspects,
       images,
+      shippingUsd: (() => {
+        const o = item.shippingOptions?.[0]?.shippingCost;
+        const v = o && (o.currency === "USD" || !o.currency) ? parseFloat(o.value) : NaN;
+        return Number.isFinite(v) ? v : undefined;
+      })(),
       seller: item.seller
         ? {
             username: item.seller.username,

@@ -293,20 +293,26 @@ export default function SniperRadarPage() {
       const data = await res.json();
 
       if (!data.success || !data.details) {
-        setScannerMessage(`Listing #${itemId} not found or details unavailable on eBay API.`);
+        setScannerMessage(data.error && /rate-limit/.test(data.error) ? data.error : `Listing #${itemId} not found or details unavailable on eBay API.`);
         setTimeout(() => setScannerMessage(null), 5000);
         return;
       }
 
       const d = data.details;
+      const live = data.live;
+      if (live?.currentBid == null || live?.secondsRemaining == null) {
+        setScannerMessage(`eBay didn't report a price and end time for #${itemId}, so it can't be added.`);
+        setTimeout(() => setScannerMessage(null), 5000);
+        return;
+      }
       const newListing: RawAuctionListing = {
         id: `ebay-${itemId}`,
         source: "ebay",
         title: d.title,
-        currentBid: 0,
-        shippingCost: 0,
-        bidCount: 0,
-        secondsRemaining: 900,
+        currentBid: live.currentBid,
+        shippingCost: d.shippingUsd ?? 0,
+        bidCount: live.bidCount ?? 0,
+        secondsRemaining: live.secondsRemaining,
         url: `https://www.ebay.com/itm/${itemId}`,
         imageUrl: d.images?.[0] || "",
         galleryImages: d.images || [],
