@@ -90,12 +90,29 @@ export async function listReplays(owner: string, limit = 24): Promise<{ lots: Re
 
 export interface ReplayResult {
   order: any;
-  closedAt: string;
-  finalPrice: number;
-  finalBids: number;
+  closedAt: string | null;
+  finalPrice: number | null;
+  finalBids: number | null;
   /** the real price steps from the start of the round to the close, so the close can be played back */
   steps: Array<{ secsBeforeEnd: number; price: number; bids: number }>;
   startPrice: number;
+  locked?: boolean;
+  revealAt?: string;
+}
+
+function maskReplayOrder(order: any, revealAt: string) {
+  return {
+    ...order,
+    status: "pending",
+    final_price_usd: null,
+    final_bid_count: null,
+    fill_price_usd: null,
+    paper_profit_usd: null,
+    detail: null,
+    basis: null,
+    settled_at: null,
+    result: { replay: true, revealAt },
+  };
 }
 
 export async function playReplay(args: { owner: string; itemId: string; maxBid: number; fmv?: number | null; secsLeft?: number; pass?: boolean }): Promise<{ ok: boolean; error?: string; result?: ReplayResult }> {
@@ -124,6 +141,8 @@ export async function playReplay(args: { owner: string; itemId: string; maxBid: 
   const fmv = num(args.fmv);
   const gap = Number(l.final_seen_secs_before_end);
   const now = new Date().toISOString();
+  const waitSecs = Math.max(0, Math.min(START_MAX_SECS, Math.round(args.secsLeft ?? 0)));
+  const revealAt = new Date(Date.now() + waitSecs * 1000).toISOString();
 
   const steps = all
     .filter((t) => new Date(t.seen_at).getTime() > new Date(start.seen_at).getTime())
@@ -131,14 +150,76 @@ export async function playReplay(args: { owner: string; itemId: string; maxBid: 
 
   const row = {
     owner, item_id: itemId, kind: "auction", title: l.title, series: l.series, issue: l.issue, grade: l.grade, source: l.venue,
-    max_bid_usd: maxBid, shipping_usd: shipping, fmv_usd: fmv, fire_secs_before_end: Math.max(0, Math.min(START_MAX_SECS, Math.round(args.secsLeft ?? 0))),
+    max_bid_usd: maxBid, shipping_usd: shipping, fmv_usd: fmv, fire_secs_before_end: waitSecs,
     end_time: l.end_time, status: s.outcome, final_price_usd: finalPrice, final_bid_count: finalBids, fill_price_usd: s.fill,
     paper_profit_usd: s.fill != null ? paperProfit(fmv, s.fill + shipping) : null,
     basis: `practice round on a real eBay auction that closed ${new Date(l.end_time).toUTCString().slice(0, 22)} UTC${gap > 0 ? `; closing price read ${gap}s before the end` : "; closing price read at the end"}`,
     detail: s.reason, settled_at: now,
-    result: { replay: true, revealAt: new Date(Date.now() + Math.max(0, Math.min(START_MAX_SECS, Math.round(args.secsLeft ?? 0))) * 1000).toISOString(), startPrice: Number(start.price_usd), imageUrl: l.image_url ?? null, url: l.url ?? null, cert: l.cert_number ?? null, grader: l.grader ?? null },
+    result: { replay: true, revealAt, startPrice: Number(start.price_usd), imageUrl: l.image_url ?? null, url: l.url ?? null, cert: l.cert_number ?? null, grader: l.grader ?? null },
   };
   const { data, error } = await db().from("sniper_paper_orders").insert(row).select("*").single();
   if (error) return { ok: false, error: error.message };
-  return { ok: true, result: { order: data, closedAt: l.end_time, finalPrice, finalBids, steps, startPrice: Number(start.price_usd) } };
+
+  if (waitSecs > 0) {
+    return {
+      ok: true,
+      result: {
+        order: maskReplayOrder(data, revealAt),
+        closedAt: null,
+        finalPrice: null,
+        finalBids: null,
+        steps: [],
+        startPrice: Number(start.price_usd),
+        locked: true,
+        revealAt,
+      },
+    };
+  }
+
+  return { ok: true, result: { order: data, closedAt: l.end_time, finalPrice, finalBids, steps, startPrice: Number(start.price_usd), locked: false } };
 }
+
+export async function revealReplay(args: { owner: string; itemId: string }): Promise<{ ok: boolean; error?: string; result?: ReplayResult }> {
+  const { owner, itemId } = args;
+  if (!okOwner(owner)) return { ok: false, error: "bad owner" };
+
+  const { data: orders } = await db().from("sniper_paper_orders").select("*").eq("owner", owner).eq("item_id", itemId).eq("kind", "auction").order("created_at", { ascending: false }).limit(10);
+  const order = (orders ?? []).find((o: any) => o.result?.replay);
+  if (!order) return { ok: false, error: "round not found" };
+
+  const revealAtMs = order.result?.revealAt ? new Date(order.result.revealAt).getTime() : 0;
+  if (revealAtMs > Date.now()) {
+    return { ok: false, error: "clock still running" };
+  }
+
+  const { data: l } = await db().from("sniper_listings").select("*").eq("item_id", itemId).maybeSingle();
+  if (!l) return { ok: false, error: "that round isn't available" };
+
+  const endMs = new Date(l.end_time).getTime();
+  const { data: ticks } = await db().from("sniper_ticks").select("seen_at,price_usd,bid_count").eq("item_id", itemId).order("seen_at", { ascending: true }).limit(500);
+  const all = (ticks ?? []) as any[];
+  const start = startReading(all, endMs);
+  const startMs = start ? new Date(start.seen_at).getTime() : 0;
+
+  const steps = all
+    .filter((t) => new Date(t.seen_at).getTime() > startMs)
+    .map((t) => ({ secsBeforeEnd: Math.max(0, Math.round((endMs - new Date(t.seen_at).getTime()) / 1000)), price: Number(t.price_usd), bids: Number(t.bid_count) || 0 }));
+
+  const finalPrice = Number(order.final_price_usd ?? l.final_price_usd ?? l.price_usd);
+  const finalBids = Number(order.final_bid_count ?? l.final_bid_count) || 0;
+  const startPrice = Number(order.result?.startPrice ?? start?.price_usd ?? finalPrice);
+
+  return {
+    ok: true,
+    result: {
+      order,
+      closedAt: l.end_time,
+      finalPrice,
+      finalBids,
+      steps,
+      startPrice,
+      locked: false,
+    },
+  };
+}
+

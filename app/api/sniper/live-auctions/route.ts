@@ -1,111 +1,13 @@
 import { NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
-import { createRequire } from "module";
 import { normalizeAuctionTitle, parseAndFilterListing } from "@/lib/sniper/anti-bullshit";
 import { resolveAuthoritativePublisher } from "@/lib/comics/publisher-authority";
 import { lookupSqliteCover, lookupSqliteGallery } from "@/lib/comics/sqlite-covers";
 import { lookupRealCensus } from "@/lib/comics/census-authority";
 import { readLiveListings } from "@/lib/sniper/market-store";
 import { RawAuctionListing } from "@/lib/sniper/types";
-
-const requireModule = createRequire(import.meta.url);
-
-let ppDbInstance: any = null;
-let ppDbChecked = false;
-function getPpDb(): any | null {
-  if (ppDbChecked) return ppDbInstance;
-  ppDbChecked = true;
-  const p = path.resolve(process.cwd(), "data", "pp115k.sqlite");
-  if (fs.existsSync(p)) {
-    try {
-      const { DatabaseSync } = requireModule("node:sqlite");
-      ppDbInstance = new DatabaseSync(p, { readOnly: true });
-    } catch {}
-  }
-  return ppDbInstance;
-}
-
-let cbDbInstance: any = null;
-let cbDbChecked = false;
-function getCbDb(): any | null {
-  if (cbDbChecked) return cbDbInstance;
-  cbDbChecked = true;
-  const p = path.resolve(process.cwd(), "data", "comicbase.sqlite");
-  if (fs.existsSync(p)) {
-    try {
-      const { DatabaseSync } = requireModule("node:sqlite");
-      cbDbInstance = new DatabaseSync(p, { readOnly: true });
-    } catch {}
-  }
-  return cbDbInstance;
-}
-
-function resolveAuctionDbMetadata(title: string, rawGrade?: number): { fmv: number | null; publisher: string | null } {
-  const parsed = parseAndFilterListing(title);
-  const series = parsed.extractedSeries?.trim() || "";
-  const issue = parsed.extractedIssue?.trim() || "1";
-  const cleanSeries = series.toLowerCase();
-  const grade = rawGrade ?? parsed.grade ?? 9.8;
-
-  let fmv: number | null = null;
-  let publisher: string | null = null;
-
-  const ppDb = getPpDb();
-  if (ppDb && series && series !== "Unknown Series") {
-    try {
-      const candidates = [series, "The " + series, series + ", The"];
-      const stmt = ppDb.prepare("SELECT fmv_usd, publisher, publication_year FROM verified_equities WHERE series = ? AND issue_number = ? LIMIT 1");
-      for (const cand of candidates) {
-        const ve = stmt.get(cand, issue) as any;
-        if (ve) {
-          if (ve.fmv_usd > 0) fmv = Number(ve.fmv_usd);
-          if (ve.publisher) publisher = resolveAuthoritativePublisher(series, ve.publisher, ve.publication_year);
-          break;
-        }
-      }
-    } catch {}
-  }
-
-  const cbDb = getCbDb();
-  if (cbDb && series && series !== "Unknown Series") {
-    try {
-      const candidates = [cleanSeries, cleanSeries + ", the", "the " + cleanSeries];
-      const stmt = cbDb.prepare("SELECT val_2024, price, publisher, year FROM comicbase_items WHERE clean_series = ? AND issue_number = ? ORDER BY val_2024 DESC LIMIT 1");
-      for (const cand of candidates) {
-        const cb = stmt.get(cand, issue) as any;
-        if (cb) {
-          if (!publisher && cb.publisher) {
-            publisher = resolveAuthoritativePublisher(series, cb.publisher, cb.year);
-          }
-          if (!fmv) {
-            const base = cb.val_2024 > 0 ? Number(cb.val_2024) : Number(cb.price);
-            if (base > 0) {
-              if (grade >= 9.8) {
-                fmv = Math.max(35, Math.round(base * 2.2));
-              } else if (grade >= 9.4) {
-                fmv = Math.max(25, Math.round(base * 1.5));
-              } else if (grade >= 9.0) {
-                fmv = Math.max(20, Math.round(base * 1.0));
-              } else if (grade >= 8.5) {
-                fmv = Math.max(15, Math.round(base * 0.75));
-              } else {
-                fmv = Math.max(10, Math.round(base * 0.5));
-              }
-            }
-          }
-          break;
-        }
-      }
-    } catch {}
-  }
-
-  if (!publisher && series && series !== "Unknown Series") {
-    publisher = resolveAuthoritativePublisher(series, null, parsed.extractedYear);
-  }
-
-  return { fmv, publisher };
-}
+import { createAdminServerClient } from "@/lib/supabase/admin";
+import { dedupeSales, saleStats, seriesKey, type SaleObs } from "@/lib/sniper/candles";
+import { gradeNum, benchmarkSalesForBook, resolveAuctionDbMetadata } from "@/lib/sniper/auction-metadata";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -206,6 +108,43 @@ export async function GET(request: Request) {
     }
 
     if (filteredAuctions.length > 0) {
+      const salesBySeriesKey = new Map<string, SaleObs[]>();
+      try {
+        const keys = Array.from(
+          new Set(
+            filteredAuctions
+              .map((it) => {
+                const p = parseAndFilterListing(String(it.title || ""));
+                return p.extractedSeries && p.extractedSeries !== "Unknown Series"
+                  ? seriesKey(p.extractedSeries, p.extractedIssue || "1")
+                  : null;
+              })
+              .filter((k): k is string => Boolean(k))
+          )
+        );
+        if (keys.length > 0) {
+          const db: any = createAdminServerClient();
+          const { data: sRows } = await db
+            .from("sniper_sales")
+            .select("series_key,sold_at,price_usd,grade,venue,source,confirmed,url")
+            .in("series_key", keys.slice(0, 300))
+            .limit(5000);
+          for (const s of sRows ?? []) {
+            const list = salesBySeriesKey.get(s.series_key) ?? [];
+            list.push({
+              date: s.sold_at,
+              price: Number(s.price_usd),
+              grade: s.grade != null ? Number(s.grade) : null,
+              venue: s.venue,
+              source: s.source,
+              confirmed: !!s.confirmed,
+              url: s.url ?? undefined,
+            });
+            salesBySeriesKey.set(s.series_key, list);
+          }
+        }
+      } catch {}
+
       const updatedAuctions = filteredAuctions.map((item) => {
         const isBin = Boolean(item.isBuyItNow || item.listingType === "BuyItNow" || (item.buyItNowPrice && item.buyItNowPrice > 0));
 
@@ -225,7 +164,11 @@ export async function GET(request: Request) {
           return `${h}h ${m % 60}m left`;
         };
 
-        const dbMeta = resolveAuctionDbMetadata(rawTitle, item.resolvedGrade);
+        const parsed = parseAndFilterListing(rawTitle);
+        const sKey = parsed.extractedSeries && parsed.extractedSeries !== "Unknown Series"
+          ? seriesKey(parsed.extractedSeries, parsed.extractedIssue || "1")
+          : "";
+        const dbMeta = resolveAuctionDbMetadata(rawTitle, item.resolvedGrade, sKey ? salesBySeriesKey.get(sKey) : undefined);
         const resolvedFmv = (item.anchorFmv && item.anchorFmv > 0)
           ? item.anchorFmv
           : (item.fairMarketValue && item.fairMarketValue > 0)
@@ -239,7 +182,6 @@ export async function GET(request: Request) {
         const realTimeBidCount = Number(item.bidCount ?? 0);
 
         // Authoritative Cover & Multi-Image Gallery Resolution from local 115k highres SQLite database
-        const parsed = parseAndFilterListing(rawTitle);
         // The listing's own eBay photo is the picture of the actual book; the catalog cover only backs it up.
         const catalogCover = lookupSqliteCover(parsed.extractedSeries, parsed.extractedIssue) || "";
         const resolvedCover = item.imageUrl || catalogCover;

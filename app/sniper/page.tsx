@@ -127,52 +127,56 @@ function formatVenueActionText(source: string, isBuyItNow?: boolean): string {
 }
 
 export default function SniperRadarPage() {
-  // Owner Password Authentication Gate State
+  // Owner Password Authentication Gate State (verified server-side via /api/sniper/auth)
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [passwordInput, setPasswordInput] = useState<string>("");
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [rememberDevice, setRememberDevice] = useState<boolean>(true);
   const [authChecked, setAuthChecked] = useState<boolean>(false);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const savedAuth = localStorage.getItem("pp_sniper_auth");
-      if (savedAuth === "true") {
-        setIsAuthenticated(true);
-      }
-      setAuthChecked(true);
-    }
+    let cancelled = false;
+    fetch("/api/sniper/auth", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((j) => {
+        if (!cancelled) {
+          setIsAuthenticated(Boolean(j?.authenticated));
+          setAuthChecked(true);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setAuthChecked(true);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const handleUnlock = (e?: React.FormEvent) => {
+  const handleUnlock = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    const clean = passwordInput.trim().toLowerCase();
-    const validPasscodes = [
-      "panelprofits",
-      "panelprofits2026",
-      "cgc98",
-      "owner",
-      "sniper",
-      (process.env.NEXT_PUBLIC_SNIPER_PASSWORD || "").toLowerCase(),
-    ].filter(Boolean);
-
-    if (validPasscodes.includes(clean)) {
-      setIsAuthenticated(true);
-      setPasswordError(null);
-      if (rememberDevice && typeof window !== "undefined") {
-        localStorage.setItem("pp_sniper_auth", "true");
+    try {
+      const res = await fetch("/api/sniper/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ passcode: passwordInput }),
+      });
+      const data = await res.json();
+      if (res.ok && data?.authenticated) {
+        setIsAuthenticated(true);
+        setPasswordError(null);
+      } else {
+        setPasswordError(data?.error || "Incorrect owner passcode. Access denied.");
       }
-    } else {
-      setPasswordError("Incorrect owner passcode. Access denied.");
+    } catch {
+      setPasswordError("Unable to verify passcode right now.");
     }
   };
 
-  const handleLock = () => {
+  const handleLock = async () => {
+    try {
+      await fetch("/api/sniper/auth", { method: "DELETE" });
+    } catch {}
     setIsAuthenticated(false);
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("pp_sniper_auth");
-    }
     setPasswordInput("");
   };
 
@@ -225,14 +229,15 @@ export default function SniperRadarPage() {
     }
   }, []);
 
-  // 24/7 Continuous Multi-Exchange Auto-Replenishment (Background sync every 20s)
+  // 24/7 Continuous Multi-Exchange Auto-Replenishment (Background sync every 20s once authenticated)
   useEffect(() => {
+    if (!isAuthenticated) return;
     fetchLiveAuctions();
     const pollInterval = setInterval(() => {
       fetchLiveAuctions();
     }, 20000);
     return () => clearInterval(pollInterval);
-  }, [fetchLiveAuctions]);
+  }, [fetchLiveAuctions, isAuthenticated]);
 
   // Initialize and run real-time 1-second countdown ticker
   useEffect(() => {
@@ -554,49 +559,6 @@ export default function SniperRadarPage() {
     });
   }, [rawApprovedDeals, liveAuctionTimers]);
 
-  // Manual Vaulting / Marking an Auction as Acquired
-  const handleManualAcquire = (deal: CandidateEvaluation) => {
-    const existing = acquiredBooks.some((b) => b.listingId === deal.listing.id);
-    if (existing) {
-      setSnipeSuccessToast(`Listing is already in your Acquired Vault!`);
-      setTimeout(() => setSnipeSuccessToast(null), 3000);
-      return;
-    }
-
-    const newAcquired: AcquiredBook = {
-      id: `acq-${Date.now()}`,
-      orderId: `VAULT-${Date.now().toString().slice(-6)}`,
-      listingId: deal.listing.id,
-      comicTitle: deal.listing.title,
-      normalizedTitle: deal.normalizedTitle,
-      resolvedSeries: deal.resolvedSeries,
-      resolvedIssue: deal.resolvedIssue,
-      grade: deal.resolvedGrade,
-      gradingCompany: deal.gradingCompany,
-      certNumber: deal.certNumber,
-      imageUrl: deal.listing.imageUrl,
-      url: deal.listing.url,
-      source: deal.listing.source,
-      allInCost: deal.allInCost,
-      anchorFmv: deal.anchorFmv,
-      targetWinPrice100Pct: deal.targetWinPrice100Pct,
-      projectedProfit: deal.projectedNetProfit,
-      netRoiPercent: deal.netRoiPercent,
-      acquiredAt: new Date().toLocaleTimeString(),
-      whyBought: deal.whyItsAGoodBuy,
-      isYellowLabel: deal.isYellowLabel,
-      signerName: deal.signerName,
-      censusCount98: deal.censusCount98,
-      censusTotal: deal.censusTotal,
-    };
-
-    saveAcquiredBooks([newAcquired, ...acquiredBooks]);
-    setSnipeSuccessToast(
-      `🏆 Vaulted ${deal.normalizedTitle} at $${deal.allInCost.toFixed(2)}! Added to 'What You've Acquired'.`
-    );
-    setTimeout(() => setSnipeSuccessToast(null), 4000);
-  };
-
   const handleRemoveAcquired = (id: string) => {
     const updated = acquiredBooks.filter((b) => b.id !== id);
     saveAcquiredBooks(updated);
@@ -626,7 +588,7 @@ export default function SniperRadarPage() {
       b.gradingCompany,
       b.certNumber || "",
       b.allInCost.toFixed(2),
-      b.anchorFmv.toFixed(2),
+      b.anchorFmv > 0 ? b.anchorFmv.toFixed(2) : "Unavailable",
       b.targetWinPrice100Pct.toFixed(2),
       b.projectedProfit.toFixed(2),
       `"${b.acquiredAt}"`,
@@ -770,19 +732,6 @@ export default function SniperRadarPage() {
               )}
             </div>
 
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="remember"
-                checked={rememberDevice}
-                onChange={(e) => setRememberDevice(e.target.checked)}
-                className="rounded accent-amber-500 bg-slate-800"
-              />
-              <label htmlFor="remember" className="text-xs text-slate-400 cursor-pointer select-none">
-                Remember this device for 30 days
-              </label>
-            </div>
-
             <button
               type="submit"
               className="w-full py-2.5 px-4 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-sm uppercase tracking-wider transition shadow-lg shadow-amber-500/20 cursor-pointer"
@@ -790,12 +739,6 @@ export default function SniperRadarPage() {
               Unlock Real-Time Sniper
             </button>
           </form>
-
-          <div className="mt-6 pt-5 border-t border-slate-800/80 text-center">
-            <p className="text-[11px] text-slate-500 font-mono">
-              Authorized credentials: <code className="text-amber-400 font-bold">cgc98</code>
-            </p>
-          </div>
         </div>
       </div>
     );
@@ -1554,13 +1497,15 @@ export default function SniperRadarPage() {
                               <div className="text-[10px] text-cyan-400 font-bold uppercase flex items-center justify-between">
                                 <span>📊 Verified Fair Market Value (FMV)</span>
                                 <span className="text-white font-black text-sm">
-                                  ${deal.anchorFmv.toFixed(2)}
+                                  {deal.anchorFmv > 0 ? `$${deal.anchorFmv.toFixed(2)}` : "Unavailable"}
                                 </span>
                               </div>
                               <div className="text-[10px] text-slate-400 leading-snug">
                                 <strong className="text-slate-300">Where Pricing Info Comes From: </strong>
-                                {deal.pricingSourceProvenance ||
-                                  "GPA Analysis 90-Day Comp Index & Heritage Realized Auction Sales"}
+                                {deal.anchorFmv > 0
+                                  ? deal.pricingSourceProvenance ||
+                                    "GPA Analysis 90-Day Comp Index & Heritage Realized Auction Sales"
+                                  : "No recorded sales at this grade yet"}
                               </div>
                             </div>
 
@@ -1610,7 +1555,7 @@ export default function SniperRadarPage() {
                                 ${deal.allInCost.toFixed(2)}
                               </div>
                               <div className="text-[9px] text-emerald-400 font-sans font-bold">
-                                {deal.discountPercent}% below FMV
+                                {deal.anchorFmv > 0 ? `${deal.discountPercent}% below FMV` : "FMV unavailable"}
                               </div>
                             </div>
 
@@ -1643,10 +1588,10 @@ export default function SniperRadarPage() {
                                 Projected Net Flip
                               </div>
                               <div className="text-amber-300 font-bold text-sm mt-0.5">
-                                +${deal.projectedNetProfit.toFixed(2)}
+                                {deal.anchorFmv > 0 ? `+$${deal.projectedNetProfit.toFixed(2)}` : "Unavailable"}
                               </div>
                               <div className="text-[9px] text-emerald-400 font-sans font-bold">
-                                +{deal.netRoiPercent}% Net Margin
+                                {deal.anchorFmv > 0 ? `+${deal.netRoiPercent}% Net Margin` : "FMV unavailable"}
                               </div>
                             </div>
                           </div>
@@ -1759,7 +1704,8 @@ export default function SniperRadarPage() {
                                 ))
                               ) : (
                                 <span className="text-slate-400 text-xs">
-                                  Anchor FMV Comp: <strong>${deal.anchorFmv.toFixed(2)}</strong>
+                                  Anchor FMV Comp:{" "}
+                                  <strong>{deal.anchorFmv > 0 ? `$${deal.anchorFmv.toFixed(2)}` : "Unavailable"}</strong>
                                 </span>
                               )}
                               <span className="text-slate-500 font-sans text-xs">
@@ -1820,11 +1766,15 @@ export default function SniperRadarPage() {
                                     </div>
                                     <div className="flex justify-between text-[11px]">
                                       <span>Target FMV Flip Gross:</span>
-                                      <span className="text-white">${deal.anchorFmv.toFixed(2)}</span>
+                                      <span className="text-white">
+                                        {deal.anchorFmv > 0 ? `$${deal.anchorFmv.toFixed(2)}` : "Unavailable"}
+                                      </span>
                                     </div>
                                     <div className="flex justify-between text-[11px]">
                                       <span>Platform Cut (~13.25%):</span>
-                                      <span className="text-rose-400">-${estPlatformCut.toFixed(2)}</span>
+                                      <span className="text-rose-400">
+                                        {deal.anchorFmv > 0 ? `-$${estPlatformCut.toFixed(2)}` : "—"}
+                                      </span>
                                     </div>
                                     <div className="flex justify-between text-[11px]">
                                       <span>Packaging &amp; Mailer:</span>
@@ -1832,7 +1782,9 @@ export default function SniperRadarPage() {
                                     </div>
                                     <div className="flex justify-between text-[11px] font-bold border-t border-slate-800 pt-1 text-emerald-300">
                                       <span>Net Cash Realized at Exit:</span>
-                                      <span>${estNetAtExit.toFixed(2)}</span>
+                                      <span>
+                                        {deal.anchorFmv > 0 ? `$${estNetAtExit.toFixed(2)}` : "Unavailable"}
+                                      </span>
                                     </div>
                                   </div>
                                 </div>
@@ -1855,7 +1807,7 @@ export default function SniperRadarPage() {
                                 <span>
                                   Max Safe Snipe:{" "}
                                   <strong className="text-cyan-400">
-                                    ${deal.recommendedMaxBid.toFixed(2)}
+                                    {deal.recommendedMaxBid > 0 ? `$${deal.recommendedMaxBid.toFixed(2)}` : "Unavailable"}
                                   </strong>
                                 </span>
                               )}
@@ -1963,7 +1915,7 @@ export default function SniperRadarPage() {
                             <span className="text-slate-400">[{deal.listing.source.toUpperCase()}]</span>
                           </div>
                           <span className="text-rose-400 font-bold">
-                            Missed Alpha: +${deal.projectedNetProfit.toFixed(2)} (+{deal.netRoiPercent}%)
+                            Missed Alpha: {deal.anchorFmv > 0 ? `+$${deal.projectedNetProfit.toFixed(2)} (+${deal.netRoiPercent}%)` : "Unavailable"}
                           </span>
                         </div>
 
@@ -1981,11 +1933,15 @@ export default function SniperRadarPage() {
                           </div>
                           <div>
                             <span className="text-[10px] text-slate-500 uppercase block">Fair Market FMV</span>
-                            <strong className="text-cyan-300">${deal.anchorFmv.toFixed(2)}</strong>
+                            <strong className="text-cyan-300">
+                              {deal.anchorFmv > 0 ? `$${deal.anchorFmv.toFixed(2)}` : "Unavailable"}
+                            </strong>
                           </div>
                           <div>
                             <span className="text-[10px] text-slate-500 uppercase block">Discount Dislocation</span>
-                            <strong className="text-emerald-400">{deal.discountPercent}% below FMV</strong>
+                            <strong className="text-emerald-400">
+                              {deal.anchorFmv > 0 ? `${deal.discountPercent}% below FMV` : "Unavailable"}
+                            </strong>
                           </div>
                           <div>
                             <span className="text-[10px] text-slate-500 uppercase block">100% Exit Potential</span>
@@ -2083,7 +2039,7 @@ export default function SniperRadarPage() {
                       <div className="bg-[#0E131F] border border-slate-800 rounded-xl p-8 text-center text-slate-400 font-mono text-xs space-y-2">
                         <p>No acquired books in your vault yet.</p>
                         <p className="text-slate-500">
-                          Click &quot;Mark Acquired&quot; or execute winning paper snipes in the Live Radar to build your acquired ledger.
+                          Execute winning paper snipes in the Live Radar to build your acquired ledger after auction settlement.
                         </p>
                       </div>
                     ) : (
@@ -2147,7 +2103,9 @@ export default function SniperRadarPage() {
                                 </div>
                                 <div>
                                   <span className="text-[10px] text-cyan-400 uppercase block">Current FMV</span>
-                                  <strong className="text-cyan-300 text-sm">${book.anchorFmv.toFixed(2)}</strong>
+                                  <strong className="text-cyan-300 text-sm">
+                                    {book.anchorFmv > 0 ? `$${book.anchorFmv.toFixed(2)}` : "Unavailable"}
+                                  </strong>
                                 </div>
                                 <div>
                                   <span className="text-[10px] text-emerald-400 uppercase block">Target 100% Exit</span>
@@ -2155,7 +2113,9 @@ export default function SniperRadarPage() {
                                 </div>
                                 <div>
                                   <span className="text-[10px] text-amber-400 uppercase block">Unrealized Gain</span>
-                                  <strong className="text-amber-300 text-sm">+${book.projectedProfit.toFixed(2)}</strong>
+                                  <strong className="text-amber-300 text-sm">
+                                    {book.anchorFmv > 0 ? `+$${book.projectedProfit.toFixed(2)}` : "Unavailable"}
+                                  </strong>
                                 </div>
                               </div>
 
@@ -2297,10 +2257,10 @@ export default function SniperRadarPage() {
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] uppercase font-mono font-bold text-slate-400">FMV Anchor:</span>
                     <span className="text-base sm:text-lg font-black font-mono text-cyan-300">
-                      ${inspectedDeal.anchorFmv.toFixed(2)}
+                      {inspectedDeal.anchorFmv > 0 ? `$${inspectedDeal.anchorFmv.toFixed(2)}` : "Unavailable"}
                     </span>
                     <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-500/30">
-                      Fair Market Baseline
+                      {inspectedDeal.anchorFmv > 0 ? "Fair Market Baseline" : "No Recorded Sales"}
                     </span>
                   </div>
 
@@ -2332,7 +2292,9 @@ export default function SniperRadarPage() {
                   <div className="bg-black/70 p-2.5 rounded-lg border border-slate-800 hover:border-cyan-500/50 transition">
                     <div className="flex items-center justify-between text-[10px] text-slate-400 uppercase">
                       <span>Acquisition All-In</span>
-                      <span className="text-emerald-400 font-bold">-{inspectedDeal.discountPercent}%</span>
+                      <span className="text-emerald-400 font-bold">
+                        {inspectedDeal.anchorFmv > 0 ? `-${inspectedDeal.discountPercent}%` : "—"}
+                      </span>
                     </div>
                     <strong className="text-white text-base sm:text-lg block my-0.5 font-bold">
                       ${inspectedDeal.allInCost.toFixed(2)}
@@ -2374,10 +2336,12 @@ export default function SniperRadarPage() {
                   <div className="bg-black/70 p-2.5 rounded-lg border border-amber-500/40 hover:border-amber-400 transition">
                     <div className="flex items-center justify-between text-[10px] text-amber-400 uppercase font-bold">
                       <span>Net Flip Spread</span>
-                      <span className="text-amber-300">+{inspectedDeal.netRoiPercent}% ROI</span>
+                      <span className="text-amber-300">
+                        {inspectedDeal.anchorFmv > 0 ? `+${inspectedDeal.netRoiPercent}% ROI` : "—"}
+                      </span>
                     </div>
                     <strong className="text-amber-300 text-base sm:text-lg block my-0.5 font-bold">
-                      +${inspectedDeal.projectedNetProfit.toFixed(2)}
+                      {inspectedDeal.anchorFmv > 0 ? `+$${inspectedDeal.projectedNetProfit.toFixed(2)}` : "Unavailable"}
                     </strong>
                     <span className="text-[9px] text-slate-500 block">
                       Net Gain Realized at Anchor FMV

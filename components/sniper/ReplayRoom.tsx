@@ -50,7 +50,7 @@ export function ReplayRoom({ owner, onPlayed }: { owner: string; onPlayed?: () =
     setLeft(r.startSecs); setPhase("running");
   };
 
-  // Firing locks the bid in. Nothing about how it did is shown until the clock reaches zero.
+  // Firing locks the bid in. The server keeps the outcome sealed until the clock reaches zero.
   const settle = React.useCallback(async (r: Round, body: Record<string, unknown>, lock: boolean) => {
     if (firedRef.current) return;
     firedRef.current = true;
@@ -59,9 +59,25 @@ export function ReplayRoom({ owner, onPlayed }: { owner: string; onPlayed?: () =
       const resp = await fetch("/api/sniper/replay", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ owner, itemId: r.itemId, ...body }) });
       const j = await resp.json();
       if (!j.success) { setErr(j.error || "That round isn't available"); setPhase("idle"); load(); return; }
-      setReveal(j as Reveal);
+      if (!lock) setReveal(j as Reveal);
     } catch { setErr("Couldn't reach the server"); setPhase("idle"); }
   }, [owner, load]);
+
+  const unseal = React.useCallback(async (r: Round) => {
+    try {
+      const resp = await fetch("/api/sniper/replay", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ owner, itemId: r.itemId, reveal: true }) });
+      const j = await resp.json();
+      if (!j.success) {
+        if (j.error === "clock still running") {
+          setTimeout(() => unseal(r), 400);
+          return;
+        }
+        setErr(j.error || "Couldn't reveal round"); setPhase("idle"); return;
+      }
+      setReveal(j as Reveal);
+      setPhase("playing");
+    } catch { setErr("Couldn't reach the server"); setPhase("idle"); }
+  }, [owner]);
 
   // the clock
   React.useEffect(() => {
@@ -71,8 +87,8 @@ export function ReplayRoom({ owner, onPlayed }: { owner: string; onPlayed?: () =
   }, [phase]);
   React.useEffect(() => {
     if (phase === "running" && left <= 0 && pick) settle(pick, { pass: true }, false);
-    if (phase === "locked" && left <= 0 && reveal) setPhase("playing");
-  }, [left, phase, pick, settle, reveal]);
+    if (phase === "locked" && left <= 0 && pick && !reveal) unseal(pick);
+  }, [left, phase, pick, settle, reveal, unseal]);
 
   // play the real closing back, step by step
   React.useEffect(() => {
@@ -82,7 +98,7 @@ export function ReplayRoom({ owner, onPlayed }: { owner: string; onPlayed?: () =
     return () => clearTimeout(t);
   }, [phase, reveal, shown, onPlayed]);
 
-  const fire = () => pick && settle(pick, { maxBid: Number(max), fmv: Number(exit) > 0 ? Number(exit) : null, secsLeft: Math.max(0, left) }, true);
+  const fire = () => pick && settle(pick, { maxBid: Number(max), fmv: Number(exit) > 0 ? Number(exit) : null, secsLeft: Math.max(0, left) }, left > 0);
 
   if (pick && phase !== "idle") {
     const lastStep = reveal && shown > 0 ? reveal.steps[Math.min(shown, reveal.steps.length) - 1] : null;

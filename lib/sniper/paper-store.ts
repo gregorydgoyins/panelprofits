@@ -57,12 +57,43 @@ const hideSeller = (o: PaperOrderRow): PaperOrderRow => (o.status === "negotiati
 export async function listOrders(owner: string): Promise<PaperOrderRow[]> {
   if (!okOwner(owner)) return [];
   const { data } = await db().from("sniper_paper_orders").select("*").eq("owner", owner).order("created_at", { ascending: false }).limit(100);
-  // A practice round stays sealed until its clock has run out: nobody sees win or loss early.
-  return ((data ?? []) as PaperOrderRow[]).map(hideSeller).map((o) =>
-    o.result?.replay && o.result?.revealAt && new Date(o.result.revealAt).getTime() > Date.now()
-      ? { ...o, status: "pending", final_price_usd: null, final_bid_count: null, fill_price_usd: null, paper_profit_usd: null, detail: null, basis: null, result: { replay: true } }
-      : o,
-  );
+  const nowMs = Date.now();
+  // Neither a practice round nor a live armed auction may reveal win/loss while its clock is still running.
+  return ((data ?? []) as PaperOrderRow[]).map(hideSeller).map((o) => {
+    if (o.result?.replay && o.result?.revealAt && new Date(o.result.revealAt).getTime() > nowMs) {
+      return {
+        ...o,
+        status: "pending",
+        final_price_usd: null,
+        final_bid_count: null,
+        fill_price_usd: null,
+        paper_profit_usd: null,
+        detail: null,
+        basis: null,
+        settled_at: null,
+        result: { replay: true },
+      };
+    }
+    if (
+      o.kind === "auction" &&
+      !o.result?.replay &&
+      o.status !== "cancelled" &&
+      (o.status === "armed" || (o.end_time != null && new Date(o.end_time).getTime() > nowMs))
+    ) {
+      return {
+        ...o,
+        status: "armed",
+        final_price_usd: null,
+        final_bid_count: null,
+        fill_price_usd: null,
+        paper_profit_usd: null,
+        detail: null,
+        basis: null,
+        settled_at: null,
+      };
+    }
+    return o;
+  });
 }
 
 export async function cancelOrder(owner: string, id: number): Promise<boolean> {
@@ -167,7 +198,7 @@ const CLOSE_WATCH_MIN_PRICE = 25;
 const CLOSE_WATCH_MAX_LOTS = 6;
 const CLOSE_WATCH_AHEAD_MS = 62_000;
 
-async function closingWatch(started: number): Promise<number> {
+export async function closingWatch(started: number): Promise<number> {
   const { data } = await db().from("sniper_listings").select("item_id,end_time,price_usd")
     .eq("status", "live").eq("venue", "ebay").eq("buying_option", "AUCTION").gt("bid_count", 0).gte("price_usd", CLOSE_WATCH_MIN_PRICE)
     .gt("end_time", new Date(started + 1000).toISOString()).lt("end_time", new Date(started + CLOSE_WATCH_AHEAD_MS).toISOString())
@@ -183,7 +214,7 @@ async function closingWatch(started: number): Promise<number> {
   await Promise.all(lots.map(async (l) => {
     const endMs = new Date(l.end_time).getTime();
     await read(l.item_id); // a reading now
-    const wait = (target: number) => sleep(Math.max(0, target - Date.now()));
+    const wait = (target: number) => (blocked ? Promise.resolve() : sleep(Math.max(0, target - Date.now())));
     if (endMs - Date.now() > 8000) { await wait(endMs - 5000); await read(l.item_id); } // the last seconds
     if (endMs + 7000 - started < 52_000) { await wait(endMs + 7000); await read(l.item_id); } // just after the close
   }));

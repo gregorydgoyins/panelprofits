@@ -681,53 +681,57 @@ export function evaluateAuctionListing(
     anchorFmv = comp.fmv;
   }
 
-  // Cross-reference authentic PriceCharting / CGC benchmark registry
+  // Cross-reference authentic PriceCharting / CGC benchmark registry at exact grade
   if (anchorFmv <= 0) {
     try {
       const benchmark = resolveMarketPricing(parsed.extractedSeries, parsed.extractedIssue, 0);
       if (benchmark) {
-        if (effectiveGrade >= 9.8 && benchmark.pricecharting.grade98) {
-          anchorFmv = benchmark.pricecharting.grade98;
-        } else if (effectiveGrade >= 9.6 && benchmark.pricecharting.grade96) {
+        if (effectiveGrade >= 9.8 && (benchmark.pricecharting.grade98 || benchmark.primaryFmv98 > 0)) {
+          anchorFmv = benchmark.pricecharting.grade98 || benchmark.primaryFmv98;
+        } else if (effectiveGrade >= 9.6 && effectiveGrade < 9.8 && benchmark.pricecharting.grade96) {
           anchorFmv = benchmark.pricecharting.grade96;
-        } else if (effectiveGrade >= 9.4 && benchmark.pricecharting.grade94) {
+        } else if (effectiveGrade >= 9.4 && effectiveGrade < 9.6 && benchmark.pricecharting.grade94) {
           anchorFmv = benchmark.pricecharting.grade94;
-        } else if (effectiveGrade >= 9.2 && benchmark.pricecharting.grade92) {
+        } else if (effectiveGrade >= 9.2 && effectiveGrade < 9.4 && benchmark.pricecharting.grade92) {
           anchorFmv = benchmark.pricecharting.grade92;
-        } else if (benchmark.primaryFmv98 > 0) {
-          anchorFmv = benchmark.primaryFmv98;
         }
       }
     } catch {}
   }
 
-  if (anchorFmv <= 0) {
+  if (anchorFmv <= 0 && profile.requireProvenSales) {
     return createRejection("REJECTED: No verified secondary market FMV anchor available for this title/issue.", 4);
   }
 
+  const hasVerifiedFmv = anchorFmv > 0;
+
   // GATE 5: Arbitrage Math (Spread & Discount)
-  const dollarSpread = Math.round((anchorFmv - allInCost) * 100) / 100;
-  const discountPercent = Math.round(((anchorFmv - allInCost) / anchorFmv) * 100);
+  const dollarSpread = hasVerifiedFmv ? Math.round((anchorFmv - allInCost) * 100) / 100 : 0;
+  const discountPercent = hasVerifiedFmv ? Math.round(((anchorFmv - allInCost) / anchorFmv) * 100) : 0;
 
   // Commercial Flipping Calculations (Assuming 13% selling fees on eBay/Heritage)
-  const netEstimatedProceeds = Math.round((anchorFmv * 0.87 - 5.00) * 100) / 100;
-  const projectedNetProfit = Math.round((netEstimatedProceeds - allInCost) * 100) / 100;
-  const netRoiPercent = allInCost > 0 ? Math.round((projectedNetProfit / allInCost) * 100) : 0;
+  const netEstimatedProceeds = hasVerifiedFmv ? Math.round((anchorFmv * 0.87 - 5.00) * 100) / 100 : 0;
+  const projectedNetProfit = hasVerifiedFmv ? Math.round((netEstimatedProceeds - allInCost) * 100) / 100 : 0;
+  const netRoiPercent = hasVerifiedFmv && allInCost > 0 ? Math.round((projectedNetProfit / allInCost) * 100) : 0;
 
-  // Buy It Now Sensibility & Upside Gate
-  if (isBuyItNowListing) {
-    if (dollarSpread <= 0) {
-      return createRejection(`REJECTED (BUY IT NOW OVERPRICED): Buy It Now price $${allInCost.toFixed(2)} exceeds verified FMV $${anchorFmv.toFixed(2)} (Zero upside).`, 5);
+  // Buy It Now Sensibility & Upside Gate (when FMV is available or minimum discount is enforced)
+  if (hasVerifiedFmv) {
+    if (isBuyItNowListing) {
+      if (dollarSpread <= 0) {
+        return createRejection(`REJECTED (BUY IT NOW OVERPRICED): Buy It Now price $${allInCost.toFixed(2)} exceeds verified FMV $${anchorFmv.toFixed(2)} (Zero upside).`, 5);
+      }
+      if (projectedNetProfit <= 0) {
+        return createRejection(`REJECTED (BUY IT NOW FEE DEFICIT): All-in purchase cost $${allInCost.toFixed(2)} yields negative net proceeds ($${projectedNetProfit.toFixed(2)}) after standard platform fees against FMV $${anchorFmv.toFixed(2)}.`, 5);
+      }
+    } else if (discountPercent < profile.minDiscountPercent) {
+      return createRejection(`REJECTED: Discount ${discountPercent}% below required threshold of ${profile.minDiscountPercent}%.`, 5);
     }
-    if (projectedNetProfit <= 0) {
-      return createRejection(`REJECTED (BUY IT NOW FEE DEFICIT): All-in purchase cost $${allInCost.toFixed(2)} yields negative net proceeds ($${projectedNetProfit.toFixed(2)}) after standard platform fees against FMV $${anchorFmv.toFixed(2)}.`, 5);
-    }
-  } else if (discountPercent < profile.minDiscountPercent) {
-    return createRejection(`REJECTED: Discount ${discountPercent}% below required threshold of ${profile.minDiscountPercent}%.`, 5);
+  } else if (profile.minDiscountPercent > 0) {
+    return createRejection(`REJECTED: Discount unavailable without recorded sales (minimum required: ${profile.minDiscountPercent}%).`, 5);
   }
 
   // Strict 100%+ Net ROI Double-Up Guard
-  if (profile.requireDoubleUpOnly && netRoiPercent < 100) {
+  if (profile.requireDoubleUpOnly && (!hasVerifiedFmv || netRoiPercent < 100)) {
     return createRejection(`REJECTED (BELOW 100% MARGIN): Projected net flip ROI ${netRoiPercent}% is below the 100%+ Double-Up threshold.`, 5);
   }
 
@@ -770,14 +774,16 @@ export function evaluateAuctionListing(
   }
 
   // Double-Up Angle Detection
-  if (!specialPlay && discountPercent >= 50 && isViableFlip) {
+  if (!specialPlay && hasVerifiedFmv && discountPercent >= 50 && isViableFlip) {
     specialPlay = "DOUBLE_UP_KEY";
     strategySummary = `The Double-Up Play: 2x cash potential. Acquiring at ${discountPercent}% discount to FMV ($${anchorFmv.toFixed(2)}). Exit at $${targetWinPrice100Pct.toFixed(2)} to double your investment after fees.`;
   }
 
   // Formulate Explicit Reason Why This Is A Good Buy (Alpha Thesis)
   let whyItsAGoodBuy = "";
-  if (specialPlay === "CRACKED_CASE") {
+  if (!hasVerifiedFmv) {
+    whyItsAGoodBuy = "FMV unavailable — no recorded sales at this grade yet.";
+  } else if (specialPlay === "CRACKED_CASE") {
     whyItsAGoodBuy = `Cracked Case Reholder Play: Plastic slab is cracked/scuffed, but the underlying book inside is an unblemished ${parsed.grade || 9.8}. Submit for a routine $25 CGC reholder to instantly unlock full $${anchorFmv.toFixed(2)} book value (+$${dollarSpread.toFixed(2)} spread, +${netRoiPercent}% net flip ROI).`;
   } else if (specialPlay === "MISSPELLED_KEY") {
     whyItsAGoodBuy = `Typo Stealth Arbitrage: Listing title has typographical error (${parsed.misspellingSnippet || "misspelled title"}). Standard buyers and automated search alerts completely miss it. Acquired with zero competition at $${allInCost.toFixed(2)} against verified $${anchorFmv.toFixed(2)} FMV!`;
@@ -799,7 +805,7 @@ export function evaluateAuctionListing(
   }
 
   // Calculate Safe Snipe Ceiling (Leaves at least 25% margin intact)
-  const recommendedMaxBid = Math.round(anchorFmv * 0.70 - listing.shippingCost - estTax);
+  const recommendedMaxBid = hasVerifiedFmv ? Math.round(anchorFmv * 0.70 - listing.shippingCost - estTax) : 0;
 
   const confidenceScore = Math.min(
     100,
