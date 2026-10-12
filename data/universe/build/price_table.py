@@ -30,6 +30,8 @@ with open(H + '/Desktop/COMICBASE_NORMALIZED_1258799_ROWS_58_FIELDS.csv', newlin
         if cpv > 0 and (k not in cover or cpv < cover[k]): cover[k] = cpv
         n += 1
 print('comicbase keys', len(cb), len(cover), n, flush=True)
+with open('cb.tsv', 'w') as o:
+    for (a, b, c), v in cb.items(): o.write(f'{a}\t{b}\t{c}\t{v}\n')
 with open('cover.tsv', 'w') as o:
     for (a, b, c), v in cover.items(): o.write(f'{a}\t{b}\t{c}\t{v}\n')
 px = {}

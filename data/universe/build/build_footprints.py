@@ -47,6 +47,14 @@ with open(os.path.dirname(os.path.abspath(__file__)) + '/cover.tsv') as f:
         cover[(a, i, int(y))] = float(v)
 print('cover prices', len(cover), flush=True)
 norm = lambda s: re.sub(r'[^a-z0-9]+', '', re.sub(r'^the\s+', '', (s or '').lower().strip()))
+cbval = {}
+with open(os.path.dirname(os.path.abspath(__file__)) + '/cb.tsv') as f:
+    for line in f:
+        a, i, y, v = line.rstrip('\n').split('\t')
+        cbval[(a, i, int(y))] = float(v)
+print('comicbase values', len(cbval), flush=True)
+src_count = collections.Counter()
+
 def wiki_cover(s):
     # the wiki's own printed cover price, US dollars only: "$0.12", "12¢ US", "12c", "$0.12 US $0.15 CAN"
     if not s: return None
@@ -54,6 +62,14 @@ def wiki_cover(s):
     if m: return float(m.group(1)) or None
     m = re.search(r'(?<![0-9£])\b([0-9]*\.?[0-9]+)\s*(?:¢|c\b)', s)
     if m: return float(m.group(1)) / 100 or None
+    return None
+
+def comicbase_value(r, y):
+    if y is None or not r.get('series'): return None
+    iss = (r.get('issue') or '').strip().lower()
+    for dy in (0, -1, 1):
+        v = cbval.get((norm(r['series']), iss, y + dy))
+        if v: return v
     return None
 
 def cover_price(r, y):
@@ -115,9 +131,15 @@ for wiki, fn in (('dc', 'dc_issues.jsonl'), ('marvel', 'marvel_issues.jsonl')):
             pid = match.get((wiki, r['page_title']))
             price = px.get(pid) if pid else None
             floor = False
-            if price is None:
-                price = cover_price(r, y)
-                floor = price is not None
+            if price is not None:
+                src_count['catalog price'] += 1
+            else:
+                price = comicbase_value(r, y)
+                if price is not None: src_count['comicbase value'] += 1
+                else:
+                    price = cover_price(r, y)
+                    floor = price is not None
+                    if floor: src_count['cover price'] += 1
             w = {}      # key -> [weight, display, first_flag]
             for st in r['stories']:
                 for a in st['appearances']:
@@ -155,7 +177,7 @@ for wiki, fn in (('dc', 'dc_issues.jsonl'), ('marvel', 'marvel_issues.jsonl')):
             if issues_total % 20000 == 0:
                 print(issues_total, issues_priced, len(chars), round(time.time() - t0), flush=True)
 
-print('done parse', issues_total, issues_priced, 'of which cover-price floor', issues_floor, len(chars), flush=True)
+print(dict(src_count)); print('done parse', issues_total, issues_priced, 'of which cover-price floor', issues_floor, len(chars), flush=True)
 os.makedirs(OUT, exist_ok=True)
 with open(OUT + '/characters_' + ONLY + '.tsv', 'w') as o, open(OUT + '/character_books_' + ONLY + '.tsv', 'w') as b:
     o.write('fkey\tdisplay\tuniverse\tissues\tbooks\tnav\tg_books\tg_nav\ts_books\ts_nav\tb_books\tb_nav\tm_books\tm_nav\tfirst_year\tdebut_year\tdebut_pp_id\tdebut_page\n')
