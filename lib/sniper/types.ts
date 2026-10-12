@@ -76,6 +76,9 @@ export interface SniperFilterProfile {
   
   // Optional Character / Series Focus (e.g., "green lantern", "iron man")
   seriesWhitelist?: string[];
+
+  // Buy It Now (BIN) vs Live Auction Filter
+  listingTypeFilter?: "all" | "auctions_only" | "bin_only";
 }
 
 export interface RawAuctionListing {
@@ -86,6 +89,7 @@ export interface RawAuctionListing {
   shippingCost: number;
   bidCount: number;
   secondsRemaining: number;
+  timeLeftStr?: string;
   url: string;
   imageUrl: string;
   certNumber?: string;
@@ -104,6 +108,12 @@ export interface RawAuctionListing {
   isYellowLabel?: boolean;
   signerName?: string;
   signaturePremiumMultiplier?: number | null;
+  // Buy It Now & Real-Time Bid Metrics
+  listingType?: "Auction" | "BuyItNow";
+  isBuyItNow?: boolean;
+  buyItNowPrice?: number;
+  isRealTimeLiveBid?: boolean;
+  lastBidTimestamp?: number;
   // International & Foreign Currency Translation
   currency?: string;
   originalBid?: number;
@@ -158,6 +168,17 @@ export interface CandidateEvaluation {
   dollarSpread: number;
   discountPercent: number;
   historicalComps: Array<{ date: string; grade: number; price: number; venue: string; title?: string; url?: string }>;
+
+  // Buy It Now Sensibility & Real-Time Bid Metrics
+  listingType?: "Auction" | "BuyItNow";
+  isBuyItNow?: boolean;
+  buyItNowPrice?: number;
+  buyItNowUpsideDollars?: number;
+  buyItNowUpsidePercent?: number;
+  buyItNowNetProfit?: number;
+  buyItNowSensibilityWhy?: string;
+  isRealTimeLiveBid?: boolean;
+  lastBidTimestamp?: number;
   
   // Explicit Reason Why This Is A Good Buy (Alpha Thesis)
   whyItsAGoodBuy: string;

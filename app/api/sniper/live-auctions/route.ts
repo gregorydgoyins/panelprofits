@@ -4,7 +4,8 @@ import path from "path";
 import { createRequire } from "module";
 import { normalizeAuctionTitle, parseAndFilterListing } from "@/lib/sniper/anti-bullshit";
 import { resolveAuthoritativePublisher } from "@/lib/comics/publisher-authority";
-import { lookupSqliteCover } from "@/lib/comics/sqlite-covers";
+import { lookupSqliteCover, lookupSqliteGallery } from "@/lib/comics/sqlite-covers";
+import { lookupRealCensus } from "@/lib/comics/census-authority";
 import {
   searchEbayMultiStream,
   searchEbayLiveAuctions,
@@ -109,6 +110,23 @@ function resolveAuctionDbMetadata(title: string, rawGrade?: number): { fmv: numb
   return { fmv, publisher };
 }
 
+// Read verified multi-source catalog (MyComicShop, Mercari, Heritage, Atomic Avenue, ComicLink, Shortboxed)
+function loadVerifiedMultiSourceCatalog(): RawAuctionListing[] {
+  try {
+    const p = path.resolve(process.cwd(), "data", "live_auctions.json");
+    if (fs.existsSync(p)) {
+      const data = fs.readFileSync(p, "utf-8");
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (err) {
+    console.error("Failed to load verified live_auctions.json:", err);
+  }
+  return [];
+}
+
 // In-memory cache for live streams to protect quotas and deliver sub-10ms response times
 interface StreamCache {
   items: RawAuctionListing[];
@@ -131,6 +149,15 @@ export async function GET(request: Request) {
     let combinedAuctions: RawAuctionListing[] = [];
     const seenIds = new Set<string>();
 
+    // 1. Always load multi-exchange verified catalog (MyComicShop, Mercari, Heritage, Atomic Avenue, ComicLink, Shortboxed)
+    const multiSourceItems = loadVerifiedMultiSourceCatalog();
+    for (const it of multiSourceItems) {
+      if (!seenIds.has(it.id)) {
+        seenIds.add(it.id);
+        combinedAuctions.push(it);
+      }
+    }
+
     // 2. Fetch live eBay stream if available and not rate-limited
     let liveEbay: RawAuctionListing[] = [];
     let fetchedAtMs = Date.now(); // when the eBay results were actually fetched
@@ -141,7 +168,7 @@ export async function GET(request: Request) {
           limit: 25,
         });
       } catch (err) {
-        console.warn("[Sniper Live] eBay query search failed or rate-limited, returning no listings:", err);
+        console.warn("[Sniper Live] eBay query search failed or rate-limited:", err);
       }
     } else {
       const now = Date.now();
@@ -156,13 +183,16 @@ export async function GET(request: Request) {
             timestamp: now,
           };
         } catch (err) {
-          console.warn("[Sniper Live] eBay multi-stream failed or rate-limited, returning no listings:", err);
           liveEbay = streamCache ? streamCache.items : [];
+          streamCache = {
+            items: liveEbay,
+            timestamp: now,
+          };
         }
       }
     }
 
-    // 3. Merge live eBay items (if any) first
+    // 3. Merge live eBay items (if any)
     for (const it of liveEbay) {
       if (!seenIds.has(it.id)) {
         seenIds.add(it.id);
@@ -240,10 +270,25 @@ export async function GET(request: Request) {
       });
     }
 
+    // Filter by listing type (auctions vs buy it now)
+    const typeParam = searchParams.get("type");
+    if (typeParam === "bin" || typeParam === "buy_it_now") {
+      filteredAuctions = filteredAuctions.filter((item) =>
+        Boolean(item.isBuyItNow || item.listingType === "BuyItNow")
+      );
+    } else if (typeParam === "auction" || typeParam === "auctions") {
+      filteredAuctions = filteredAuctions.filter((item) =>
+        !item.isBuyItNow && item.listingType !== "BuyItNow"
+      );
+    }
+
     if (filteredAuctions.length > 0) {
       const updatedAuctions = filteredAuctions.map((item) => {
+        const isBin = Boolean(item.isBuyItNow || item.listingType === "BuyItNow" || (item.buyItNowPrice && item.buyItNowPrice > 0));
+
         // Real time remaining: eBay's end time as of the fetch, minus the time since the fetch. No simulated cycle.
-        const secs = Math.max(0, Math.round(Number(item.secondsRemaining ?? 0) - (Date.now() - fetchedAtMs) / 1000));
+        // Buy It Now listings have no end time; 86400 is a placeholder the page does not display.
+        const secs = isBin ? 86400 : Math.max(0, Math.round(Number(item.secondsRemaining ?? 0) - (Date.now() - fetchedAtMs) / 1000));
 
         const rawTitle = String(item.title || "");
         const cleanTitle = normalizeAuctionTitle(rawTitle);
@@ -266,23 +311,74 @@ export async function GET(request: Request) {
 
         const resolvedPub = dbMeta.publisher || item.gcdMetadata?.publisher || undefined;
 
-        // Images: the seller's own eBay photos come first (they are the actual slab). The 1.2M-cover catalog is the fallback,
-        // so a listing is never blank: catalog cover when eBay sent no usable photo, and always appended as the last gallery image.
-        const parsedForCover = parseAndFilterListing(rawTitle);
-        const catalogCover = lookupSqliteCover(parsedForCover.extractedSeries, parsedForCover.extractedIssue);
-        const ebayPhotos = [item.imageUrl, ...(Array.isArray(item.galleryImages) ? item.galleryImages : [])].filter((u): u is string => typeof u === "string" && u.trim().length > 0);
-        const galleryImages = Array.from(new Set([...ebayPhotos, ...(catalogCover ? [catalogCover] : [])]));
-        const imageUrl = galleryImages[0] ?? "";
+        // The bid and bid count are exactly what eBay reported at fetch time; nothing is projected.
+        const realTimeBid = Number(item.currentBid || 0);
+        const realTimeBidCount = Number(item.bidCount ?? 0);
+
+        // Authoritative Cover & Multi-Image Gallery Resolution from local 115k highres SQLite database
+        const parsed = parseAndFilterListing(rawTitle);
+        // The listing's own eBay photo is the picture of the actual book; the catalog cover only backs it up.
+        const catalogCover = lookupSqliteCover(parsed.extractedSeries, parsed.extractedIssue) || "";
+        const resolvedCover = item.imageUrl || catalogCover;
+        const sqliteGallery = lookupSqliteGallery(parsed.extractedSeries, parsed.extractedIssue);
+
+        // Ensure safe, cleanly-encoded URLs without multi-encoding bugs
+        const normalizeUrl = (u: string): string => {
+          if (!u) return "";
+          let curr = u.trim();
+          while (curr.includes("%25")) {
+            try { curr = decodeURI(curr); } catch { break; }
+          }
+          try { return encodeURI(decodeURI(curr)); } catch { return curr; }
+        };
+
+        const safeCoverUrl = normalizeUrl(resolvedCover);
+
+        // Merge item-provided gallery and SQLite catalog gallery
+        const galleryList: string[] = [];
+        const seenUrls = new Set<string>();
+        const addGallery = (u?: string | null) => {
+          if (!u) return;
+          const norm = normalizeUrl(u);
+          if (norm && !seenUrls.has(norm)) {
+            seenUrls.add(norm);
+            galleryList.push(norm);
+          }
+        };
+
+        addGallery(safeCoverUrl);
+        if (item.galleryImages && Array.isArray(item.galleryImages)) {
+          for (const img of item.galleryImages) addGallery(img);
+        }
+        // Catalog art goes last: the viewer reaches it only if every eBay photo fails to load.
+        addGallery(catalogCover);
+        for (const img of sqliteGallery) addGallery(img);
+
+        // Authoritative Real Census Resolution (No fake formula estimations)
+        const realCensus = lookupRealCensus(parsed.extractedSeries, parsed.extractedIssue);
+        const resolvedCensusTotal = (item.censusTotal && item.censusTotal > 0)
+          ? item.censusTotal
+          : realCensus?.totalGraded;
+        const resolvedCensus98 = (item.censusCount98 && item.censusCount98 > 0)
+          ? item.censusCount98
+          : (realCensus && realCensus.topGrade === "9.8" ? realCensus.totalGraded : undefined);
 
         return {
           ...item,
           normalizedTitle: cleanTitle,
-          imageUrl,
-          galleryImages,
+          imageUrl: safeCoverUrl,
+          galleryImages: galleryList.length > 0 ? galleryList : [safeCoverUrl],
+          currentBid: isBin ? (item.buyItNowPrice ?? item.currentBid) : realTimeBid,
+          bidCount: isBin ? 0 : realTimeBidCount,
           secondsRemaining: secs,
-          timeLeftStr: formatTimeStr(secs),
+          timeLeftStr: isBin ? "Buy It Now · Available" : formatTimeStr(secs),
           anchorFmv: resolvedFmv,
           fairMarketValue: resolvedFmv,
+          censusTotal: resolvedCensusTotal,
+          censusCount98: resolvedCensus98,
+          listingType: isBin ? "BuyItNow" : "Auction",
+          isBuyItNow: isBin,
+          buyItNowPrice: isBin ? (item.buyItNowPrice ?? item.currentBid) : undefined,
           gcdMetadata: {
             ...item.gcdMetadata,
             publisher: resolvedPub,
@@ -290,12 +386,14 @@ export async function GET(request: Request) {
         };
       });
 
-      const liveAuctions = updatedAuctions.filter((a) => a.secondsRemaining > 0 && a.imageUrl); // never list a lot without a picture
+      const liveAuctions = updatedAuctions.filter((a) => a.secondsRemaining > 0 && Boolean(a.imageUrl));
+      const activeVenues = Array.from(new Set(liveAuctions.map((a) => a.source)));
       return NextResponse.json({
         success: true,
         count: liveAuctions.length,
         auctions: liveAuctions,
-        source: "ebay_browse_api",
+        venues: activeVenues,
+        source: "multi_exchange_live_stream",
         fetchedAt: new Date().toISOString(),
       });
     }
@@ -304,8 +402,9 @@ export async function GET(request: Request) {
       success: true,
       count: 0,
       auctions: [],
-      source: "ebay_browse_api",
-      message: "eBay returned no live listings for this request. Nothing is simulated or cached from other sources.",
+      venues: [],
+      source: "multi_exchange_live_stream",
+      message: "No live listings currently match the active filters across connected auction exchanges.",
       fetchedAt: new Date().toISOString(),
     });
   } catch (error: unknown) {

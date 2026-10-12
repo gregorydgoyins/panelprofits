@@ -8,6 +8,7 @@ interface EbayTokenCache {
 }
 
 let cachedToken: EbayTokenCache | null = null;
+let ebayRateLimitedUntil = 0;
 
 /**
  * Obtain an OAuth 2.0 application access token using official eBay client credentials
@@ -54,6 +55,7 @@ export async function getEbayOAuthToken(): Promise<string | null> {
       },
       body: "grant_type=client_credentials&scope=https%3A%2F%2Fapi.ebay.com%2Foauth%2Fapi_scope",
       cache: "no-store",
+      signal: AbortSignal.timeout(2500),
     });
 
     if (!res.ok) {
@@ -195,6 +197,9 @@ export async function fetchEbayItemDetails(itemId: string): Promise<{
 export async function searchEbayLiveAuctions(
   params: SearchEbayAuctionsParams = {}
 ): Promise<RawAuctionListing[]> {
+  if (Date.now() < ebayRateLimitedUntil) {
+    return [];
+  }
   const token = await getEbayOAuthToken();
   if (!token) return [];
 
@@ -205,10 +210,11 @@ export async function searchEbayLiveAuctions(
   let filter = "";
   if (params.buyingOptions === "FIXED_PRICE") {
     filter = "buyingOptions:{FIXED_PRICE}";
-  } else if (params.buyingOptions === "ALL") {
-    filter = "buyingOptions:{AUCTION|FIXED_PRICE}";
-  } else {
+  } else if (params.buyingOptions === "AUCTION") {
     filter = "buyingOptions:{AUCTION}";
+  } else {
+    // Default: Retrieve BOTH live auctions and Buy It Now (Fixed Price) listings for comprehensive sniper coverage
+    filter = "buyingOptions:{AUCTION|FIXED_PRICE}";
   }
 
   if (params.minPrice !== undefined || params.maxPrice !== undefined) {
@@ -226,9 +232,13 @@ export async function searchEbayLiveAuctions(
         "X-EBAY-C-MARKETPLACE-ID": marketplace,
       },
       cache: "no-store",
+      signal: AbortSignal.timeout(2000),
     });
 
     if (!res.ok) {
+      if (res.status === 429) {
+        ebayRateLimitedUntil = Date.now() + 120000; // 2-minute backoff
+      }
       console.warn(`[eBay API] Search error (${marketplace}):`, res.status, await res.text());
       return [];
     }
@@ -277,10 +287,11 @@ export async function searchEbayLiveAuctions(
         if (diff > 0) secondsRemaining = diff;
       }
 
-      // the listing's main photo first; thumbnails are only a fallback
+      // Main listing photo first; thumbnails are only a fallback.
       const rawImg =
         item.image?.imageUrl ||
         item.thumbnailImages?.[0]?.imageUrl ||
+        item.additionalImages?.[0]?.imageUrl ||
         "";
       const imageUrl = rawImg ? uprezEbayImage(rawImg) : "";
 
@@ -297,6 +308,11 @@ export async function searchEbayLiveAuctions(
       // Match cert number if present in title or seller item details
       const certMatch = item.title?.match(/\b(\d{7,10})\b/);
 
+      // Determine Buy It Now vs Auction
+      const buyingOpts: string[] = Array.isArray(item.buyingOptions) ? item.buyingOptions : [];
+      const isFixedPrice = buyingOpts.includes("FIXED_PRICE") && !buyingOpts.includes("AUCTION");
+      const isBuyItNow = buyingOpts.includes("FIXED_PRICE");
+
       // Resolve lore dossier and GCD metadata
       const dossier = resolveComicLoreDossier(item.title);
 
@@ -306,11 +322,15 @@ export async function searchEbayLiveAuctions(
         title: item.title,
         currentBid: usdPrice,
         shippingCost: usdShip || 14.0,
-        bidCount: item.bidCount ?? 1,
+        bidCount: item.bidCount ?? (isFixedPrice ? 0 : 1),
         secondsRemaining,
         url: item.itemWebUrl || `https://www.ebay.com/itm/${item.itemId}`,
         imageUrl,
         galleryImages,
+        listingType: isFixedPrice ? "BuyItNow" : "Auction",
+        isBuyItNow,
+        buyItNowPrice: isBuyItNow ? usdPrice : undefined,
+        isRealTimeLiveBid: !isFixedPrice,
         sellerRating: item.seller?.feedbackPercentage
           ? parseFloat(item.seller.feedbackPercentage)
           : 99.8,
@@ -356,6 +376,9 @@ export async function searchEbayLiveAuctions(
  * Multi-stream concurrent live auction harvester across US, UK, Canada, and certified grading tiers
  */
 export async function searchEbayMultiStream(): Promise<RawAuctionListing[]> {
+  if (Date.now() < ebayRateLimitedUntil) {
+    return [];
+  }
   const queryConfigs: SearchEbayAuctionsParams[] = [
     { query: "Spider-Man CGC", marketplace: "EBAY_US", limit: 8 },
     { query: "Batman CGC", marketplace: "EBAY_US", limit: 8 },

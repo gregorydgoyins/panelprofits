@@ -13,6 +13,8 @@ import { findComicBaseVideoForComic } from "@/lib/video/comicbase-archive";
 
 
 import { resolveMarketPricing } from "../pricing/market-pricing-resolver";
+import { lookupRealCensus } from "../comics/census-authority";
+import { lookupMultiPointPriceHistory } from "../comics/price-history-service";
 
 // Verified market comp registry (anchored to actual certified sales and benchmarks)
 interface VerifiedMarketComp {
@@ -532,7 +534,7 @@ export function evaluateAuctionListing(
   }
 
   // Strict Checked Cert Number Gate
-  if (profile.requireCheckedCert && (!certNum || certNum.trim().length < 7)) {
+  if (profile.requireCheckedCert && (!certNum || certNum.trim().length < 5)) {
     return createRejection("REJECTED (UNVERIFIED CERT): Missing verified certification number on registry.", 1);
   }
 
@@ -593,8 +595,18 @@ export function evaluateAuctionListing(
     return createRejection(`REJECTED: Auction source '${listing.source.toUpperCase()}' outside selected venues (${profile.sources.join(", ").toUpperCase()}).`, 3);
   }
 
+  // Buy It Now (BIN) vs Live Auction Filter
+  const isBuyItNowListing = Boolean(listing.isBuyItNow || listing.listingType === "BuyItNow" || (listing.buyItNowPrice && listing.buyItNowPrice > 0));
+  if (profile.listingTypeFilter === "auctions_only" && isBuyItNowListing) {
+    return createRejection("REJECTED: Filter set to live auctions only; excluding Buy It Now listings.", 3);
+  }
+  if (profile.listingTypeFilter === "bin_only" && !isBuyItNowListing) {
+    return createRejection("REJECTED: Filter set to Buy It Now only; excluding ticking auction lots.", 3);
+  }
+
   // Sniper Urgency Window Filter (e.g. <15m, <30m, <1h, <2h)
-  if (profile.maxSecondsRemaining && listing.secondsRemaining > profile.maxSecondsRemaining) {
+  // BUY IT NOW EXEMPTION: Fixed-price / Buy It Now listings do not require an ending countdown timer
+  if (!isBuyItNowListing && profile.maxSecondsRemaining && listing.secondsRemaining > profile.maxSecondsRemaining) {
     const minsLeft = Math.round(listing.secondsRemaining / 60);
     const maxMins = Math.round(profile.maxSecondsRemaining / 60);
     return createRejection(`REJECTED: Auction ending in ${minsLeft}m exceeds selected urgency window (<${maxMins}m).`, 3);
@@ -697,14 +709,22 @@ export function evaluateAuctionListing(
   const dollarSpread = Math.round((anchorFmv - allInCost) * 100) / 100;
   const discountPercent = Math.round(((anchorFmv - allInCost) / anchorFmv) * 100);
 
-  if (discountPercent < profile.minDiscountPercent) {
-    return createRejection(`REJECTED: Discount ${discountPercent}% below required threshold of ${profile.minDiscountPercent}%.`, 5);
-  }
-
   // Commercial Flipping Calculations (Assuming 13% selling fees on eBay/Heritage)
   const netEstimatedProceeds = Math.round((anchorFmv * 0.87 - 5.00) * 100) / 100;
   const projectedNetProfit = Math.round((netEstimatedProceeds - allInCost) * 100) / 100;
   const netRoiPercent = allInCost > 0 ? Math.round((projectedNetProfit / allInCost) * 100) : 0;
+
+  // Buy It Now Sensibility & Upside Gate
+  if (isBuyItNowListing) {
+    if (dollarSpread <= 0) {
+      return createRejection(`REJECTED (BUY IT NOW OVERPRICED): Buy It Now price $${allInCost.toFixed(2)} exceeds verified FMV $${anchorFmv.toFixed(2)} (Zero upside).`, 5);
+    }
+    if (projectedNetProfit <= 0) {
+      return createRejection(`REJECTED (BUY IT NOW FEE DEFICIT): All-in purchase cost $${allInCost.toFixed(2)} yields negative net proceeds ($${projectedNetProfit.toFixed(2)}) after standard platform fees against FMV $${anchorFmv.toFixed(2)}.`, 5);
+    }
+  } else if (discountPercent < profile.minDiscountPercent) {
+    return createRejection(`REJECTED: Discount ${discountPercent}% below required threshold of ${profile.minDiscountPercent}%.`, 5);
+  }
 
   // Strict 100%+ Net ROI Double-Up Guard
   if (profile.requireDoubleUpOnly && netRoiPercent < 100) {
@@ -786,18 +806,25 @@ export function evaluateAuctionListing(
     50 + (comp ? comp.salesCount * 2 : 0) + (specialPlay ? 15 : 0) + (discountPercent >= 40 ? 15 : 5)
   );
 
-  // Comprehensive Census Breakdown & Scarcity Calculations
-  const resolvedCensus98 = comp ? Math.max(4, Math.round(comp.salesCount * 1.8)) : (effectiveGrade >= 9.8 ? 28 : 14);
-  const resolvedCensusTotal = comp ? Math.max(resolvedCensus98 * 2, Math.round(comp.salesCount * 5.4)) : (resolvedCensus98 * 3);
-  const resolvedCensusHigher = (parsed.extractedYear && parsed.extractedYear < 1980) ? 0 : (comp && comp.salesCount > 30 ? 2 : 0);
+  // Comprehensive Real Census Breakdown (Authoritative Multi-Verifiable Registry Lookup)
+  const realCensus = lookupRealCensus(parsed.extractedSeries, parsed.extractedIssue);
+  const resolvedCensusTotal = (listing.censusTotal && listing.censusTotal > 0)
+    ? listing.censusTotal
+    : realCensus?.totalGraded;
+  const resolvedCensus98 = (listing.censusCount98 && listing.censusCount98 > 0)
+    ? listing.censusCount98
+    : (realCensus && realCensus.topGrade === "9.8" ? realCensus.totalGraded : undefined);
+  const resolvedCensusHigher = listing.censusHigher ?? (realCensus && (realCensus.topGrade === "9.9" || realCensus.topGrade === "10.0") ? 1 : 0);
 
-  let censusScarcityTier = "Liquid Market Float";
-  if (resolvedCensusTotal <= 25) {
-    censusScarcityTier = "🔥 Ultra-Low Float (<25 Total Census Copies)";
-  } else if (resolvedCensusTotal <= 150) {
-    censusScarcityTier = "🛡️ Investment Grade Scarcity (Top Population Control)";
-  } else {
-    censusScarcityTier = "⚡ Liquid High-Volume Category";
+  let censusScarcityTier = "Census Registry Audit Pending";
+  if (resolvedCensusTotal !== undefined) {
+    if (resolvedCensusTotal <= 25) {
+      censusScarcityTier = "🔥 Ultra-Low Float (<25 Total Audited Census Copies)";
+    } else if (resolvedCensusTotal <= 150) {
+      censusScarcityTier = "🛡️ Investment Grade Scarcity (Top Population Control)";
+    } else {
+      censusScarcityTier = `⚡ Liquid Census Float (${resolvedCensusTotal.toLocaleString()} Graded Copies)`;
+    }
   }
 
   const isSignedBook = parsed.isSigned || parsed.isLegendarySigned;
@@ -893,7 +920,7 @@ export function evaluateAuctionListing(
     investopediaDef =
       "Purchasing an intrinsically high-value asset trading at an artificial discount due to temporary holder impairment, restored via low-cost capital expenditure.";
     investopediaApp = `The book inside is pristine grade ${parsed.grade}. A $25 reholder restores full $${anchorFmv.toFixed(2)} institutional equity with zero grade risk.`;
-  } else if (resolvedCensusTotal <= 25) {
+  } else if (resolvedCensusTotal && resolvedCensusTotal <= 25) {
     investopediaTerm = "Float Scarcity Premium";
     investopediaCat = "Liquidity & Float";
     investopediaDef =
@@ -978,30 +1005,39 @@ export function evaluateAuctionListing(
     allInCost,
     dollarSpread,
     discountPercent,
-    historicalComps: (comp && comp.recentSales.length > 0)
-      ? comp.recentSales
-      : (anchorFmv > 0
-          ? [
-              {
-                date: "2026-09-24",
-                grade: parsed.grade ?? 9.8,
-                price: Math.round(anchorFmv * 1.02),
-                venue: listing.source === "heritage" ? "Heritage" : listing.source === "comicconnect" ? "ComicConnect" : "eBay",
-              },
-              {
-                date: "2026-07-16",
-                grade: parsed.grade ?? 9.8,
-                price: Math.round(anchorFmv * 0.98),
-                venue: listing.source === "mycomicshop" ? "MyComicShop" : listing.source === "comiclink" ? "ComicLink" : "Heritage",
-              },
-              {
-                date: "2026-04-09",
-                grade: parsed.grade ?? 9.8,
-                price: Math.round(anchorFmv * 1.00),
-                venue: listing.source === "atomicavenue" ? "Atomic Avenue" : "eBay",
-              },
-            ]
-          : []),
+    historicalComps: (() => {
+      const realPoints = lookupMultiPointPriceHistory(
+        parsed.extractedSeries,
+        parsed.extractedIssue,
+        parsed.grade ?? 9.8,
+        anchorFmv
+      );
+      if (realPoints.length > 0) return realPoints;
+      if (comp && comp.recentSales.length > 0) return comp.recentSales;
+      return [];
+    })(),
+    listingType: isBuyItNowListing ? "BuyItNow" : "Auction",
+    isBuyItNow: isBuyItNowListing,
+    buyItNowPrice: isBuyItNowListing ? (listing.buyItNowPrice ?? listing.currentBid) : undefined,
+    buyItNowUpsideDollars: isBuyItNowListing ? dollarSpread : undefined,
+    buyItNowUpsidePercent: isBuyItNowListing ? discountPercent : undefined,
+    buyItNowNetProfit: isBuyItNowListing ? projectedNetProfit : undefined,
+    buyItNowSensibilityWhy: (() => {
+      if (!isBuyItNowListing) return undefined;
+      const upsideDollarStr = dollarSpread > 0 ? `+$${dollarSpread.toFixed(2)}` : `$${dollarSpread.toFixed(2)}`;
+      const profitStr = projectedNetProfit > 0 ? `+$${projectedNetProfit.toFixed(2)}` : `$${projectedNetProfit.toFixed(2)}`;
+      let why = `Sensible Buy It Now Opportunity: Instant acquisition at $${allInCost.toFixed(2)} locks in ${upsideDollarStr} (${discountPercent}%) gross discount below verified CGC ${effectiveGrade} FMV ($${anchorFmv.toFixed(2)}). Yields ${profitStr} net profit (${netRoiPercent}% net ROI) after standard platform fees with zero auction gavel or sniping risk.`;
+      if (specialPlay === "CRACKED_CASE") {
+        why += ` Cracked case discount absorbs $25 CGC reholder fee while preserving ${profitStr} net margin.`;
+      } else if (specialPlay === "BELOW_GRADING_COST") {
+        why += ` Priced below seller slabbing cost floor ($${cgcGradingCostFloor.toFixed(2)}).`;
+      } else if (specialPlay === "MISSPELLED_KEY") {
+        why += ` Title typo shielded this Buy It Now price from discovery.`;
+      }
+      return why;
+    })(),
+    isRealTimeLiveBid: !isBuyItNowListing,
+    lastBidTimestamp: listing.lastBidTimestamp,
     verdict: discountPercent >= 45 ? "STRONG_BUY_SNIPE" : "CONSIDER",
     recommendedMaxBid,
     confidenceScore,
