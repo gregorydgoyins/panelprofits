@@ -5,6 +5,8 @@ import ce70Dossiers from "@/lib/equity/ce70-dossiers-data.json";
 import { getAuthoritativeCoverStrict } from "@/lib/comics/cover-authority";
 import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
 import { getVerifiedEquityByIdOrTicker } from "@/lib/equity/verified-equities-service";
+import { resolveComicBaseRecord } from "@/lib/comics/comicbase-service";
+import { resolveAuthoritativePublisher } from "@/lib/comics/publisher-authority";
 
 export const DEFAULT_PAGE_SIZE = 24;
 
@@ -58,7 +60,7 @@ export async function getComics(params: ComicSearchParams): Promise<ComicQueryRe
 
   const items: ComicRecord[] = (data as ComicRecord[]) || [];
   const hasMore = items.length > limit;
-  const comics = hasMore ? items.slice(0, limit) : items;
+  const comics = (hasMore ? items.slice(0, limit) : items).map(finalizeComic);
   const nextCursor = hasMore && comics.length > 0 ? comics[comics.length - 1].id : null;
 
   return {
@@ -291,7 +293,8 @@ export function parseComicSlug(slug: string): ParsedComicSlug {
  * Marks a real `comics` row for display. Nothing is added from outside the row except:
  *  - the ticker (a symbol derived from series + issue),
  *  - the CE70 seat number when this exact book is a seat in the CE70 index,
- *  - a cover from the verified-cover registry when one exists for this exact book.
+ *  - a cover from the verified-cover registry when one exists for this exact book,
+ *  - authentic ComicBase valuations from data/comicbase.sqlite when unhydrated.
  * Prices, dates, publisher, census and every other field are exactly what is stored.
  */
 function finalizeComic(comic: ComicRecord): ComicRecord {
@@ -303,10 +306,37 @@ function finalizeComic(comic: ComicRecord): ComicRecord {
       (!d.year || !comic.publication_year || Number(d.year) === Number(comic.publication_year));
   });
 
-  const authCover = getAuthoritativeCoverStrict(comic.series, comic.issue_number, comic.publisher, comic.publication_year);
+  let comicbaseData = comic.comicbase_data;
+  let comicbasePrice = comic.comicbase_price;
+  let comicbaseSourceId = comic.comicbase_source_id;
+  let publisher = comic.publisher;
+
+  const isCbEmpty = !comicbaseData || (typeof comicbaseData === "object" && Object.keys(comicbaseData).length === 0);
+  if (isCbEmpty && comic.series && comic.issue_number) {
+    const cbMatch = resolveComicBaseRecord(comic.series, comic.issue_number, comic.publication_year, comic.upc);
+    if (cbMatch) {
+      comicbaseData = cbMatch.comicbaseData;
+      if (comicbasePrice == null && cbMatch.price != null) {
+        comicbasePrice = cbMatch.price;
+      }
+      if (!comicbaseSourceId && cbMatch.cbId) {
+        comicbaseSourceId = cbMatch.cbId;
+      }
+      if (!publisher && cbMatch.publisher) {
+        publisher = cbMatch.publisher;
+      }
+    }
+  }
+
+  const authoritativePublisher = resolveAuthoritativePublisher(comic.series, publisher, comic.publication_year);
+  const authCover = getAuthoritativeCoverStrict(comic.series, comic.issue_number, authoritativePublisher, comic.publication_year);
 
   return {
     ...comic,
+    publisher: authoritativePublisher,
+    comicbase_data: comicbaseData,
+    comicbase_price: comicbasePrice,
+    comicbase_source_id: comicbaseSourceId,
     ...(authCover ? {
       cover_url: authCover,
       cover_original_url: authCover,
@@ -319,6 +349,76 @@ function finalizeComic(comic: ComicRecord): ComicRecord {
       ...(seat ? { seat_number: Number(seat.seatNumber) } : {}),
     } as any,
   };
+}
+
+/**
+ * Overlays authentic PriceCharting prices from pp_series_rows_full onto comic.panel_profits_data.
+ * Ensures zero stale or synthesized September 17 prices leak to display.
+ */
+async function overlayAuthenticPpPrices(comic: ComicRecord): Promise<ComicRecord> {
+  if (!comic.pp_source_id) return comic;
+  try {
+    const supabase = createAdminServerClient();
+    const cleanId = String(comic.pp_source_id).replace(/^pp-/i, "").trim();
+    const { data: ppRow } = await supabase
+      .from("pp_series_rows_full")
+      .select("*")
+      .eq("pp_id", cleanId)
+      .maybeSingle();
+
+    if (!ppRow) return comic;
+
+    const ppData: Record<string, any> = { ...(comic.panel_profits_data || {}) };
+
+    if (ppRow.pp_price_raw != null) {
+      ppData["PP - Ungraded Market Price"] = String(ppRow.pp_price_raw);
+      ppData["PP - Grade RAW Market Price"] = String(ppRow.pp_price_raw);
+      ppData["raw_market_price"] = Number(ppRow.pp_price_raw);
+    }
+    if (ppRow.pp_retail_raw_buy != null) {
+      ppData["PP - Ungraded Buy Price"] = String(ppRow.pp_retail_raw_buy);
+    }
+    if (ppRow.pp_retail_raw_sell != null) {
+      ppData["PP - Ungraded Sell Price"] = String(ppRow.pp_retail_raw_sell);
+    }
+
+    const spreads: Record<string, any> = { ...(ppData.spreads || {}) };
+    if (ppRow.pp_retail_raw_buy != null && ppRow.pp_retail_raw_sell != null) {
+      spreads.RAW = { buy: Number(ppRow.pp_retail_raw_buy), sell: Number(ppRow.pp_retail_raw_sell) };
+    }
+    if (ppRow.pp_retail_4_0_buy != null && ppRow.pp_retail_4_0_sell != null) {
+      spreads["4.0"] = { buy: Number(ppRow.pp_retail_4_0_buy), sell: Number(ppRow.pp_retail_4_0_sell) };
+    }
+    if (ppRow.pp_retail_6_0_buy != null && ppRow.pp_retail_6_0_sell != null) {
+      spreads["6.0"] = { buy: Number(ppRow.pp_retail_6_0_buy), sell: Number(ppRow.pp_retail_6_0_sell) };
+    }
+    ppData.spreads = spreads;
+
+    const gradeCols: Array<[string, string]> = [
+      ["pp_price_2_0", "2.0"], ["pp_price_3_0", "3.0"], ["pp_price_4_0", "4.0"],
+      ["pp_price_5_0", "5.0"], ["pp_price_6_0", "6.0"], ["pp_price_7_0", "7.0"],
+      ["pp_price_8_0", "8.0"], ["pp_price_9_0", "9.0"], ["pp_price_9_2", "9.2"],
+      ["pp_price_9_4", "9.4"], ["pp_price_9_6", "9.6"], ["pp_price_9_8", "9.8"],
+      ["pp_price_10_0", "10.0"],
+    ];
+
+    for (const [col, grade] of gradeCols) {
+      const val = ppRow[col];
+      if (val != null && Number(val) > 0) {
+        ppData[`PP - Grade ${grade} Market Price`] = String(val);
+        ppData[`grade_${grade.replace(".", "_")}`] = Number(val);
+      }
+    }
+
+    return {
+      ...comic,
+      pp_grade_9_8_price: ppRow.pp_price_9_8 != null ? Number(ppRow.pp_price_9_8) : comic.pp_grade_9_8_price,
+      panel_profits_data: ppData,
+    };
+  } catch (err) {
+    console.warn("Notice overlaying authentic PriceCharting daily prices:", err);
+    return comic;
+  }
 }
 
 /** Best-priced stored `comics` row for a series + issue (+ year when given). null when the book is not stored. */
@@ -334,7 +434,9 @@ async function findStoredComic(series: string, issue: string, year?: number | nu
       ({ data } = await supabase.from("comics").select("*").eq("series", series).eq("issue_number", issue)
         .order("pp_grade_9_8_price", { ascending: false, nullsFirst: false }).limit(1).maybeSingle());
     }
-    return data ? finalizeComic(data as ComicRecord) : null;
+    if (!data) return null;
+    const fin = finalizeComic(data as ComicRecord);
+    return await overlayAuthenticPpPrices(fin);
   } catch (err) {
     console.warn("Notice looking up stored comic by series and issue:", err);
     return null;
@@ -370,7 +472,9 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
     // 1. record id
     if (isHexOrUuid) {
       const { data } = await supabase.from("comics").select("*").eq("id", cleanId).maybeSingle();
-      return data ? finalizeComic(data as ComicRecord) : null;
+      if (!data) return null;
+      const fin = finalizeComic(data as ComicRecord);
+      return await overlayAuthenticPpPrices(fin);
     }
 
     // 2. PriceCharting number
@@ -382,7 +486,9 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
         .order("pp_grade_9_8_price", { ascending: false, nullsFirst: false })
         .limit(1)
         .maybeSingle();
-      return data ? finalizeComic(data as ComicRecord) : null;
+      if (!data) return null;
+      const fin = finalizeComic(data as ComicRecord);
+      return await overlayAuthenticPpPrices(fin);
     }
 
     // 3. CE70 seat reference
@@ -411,7 +517,10 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
           .order("pp_grade_9_8_price", { ascending: false, nullsFirst: false })
           .limit(1)
           .maybeSingle();
-        if (data) return finalizeComic(data as ComicRecord);
+        if (data) {
+          const fin = finalizeComic(data as ComicRecord);
+          return await overlayAuthenticPpPrices(fin);
+        }
       }
       return await findStoredComic(ve.series, ve.issue_number, ve.publication_year);
     }

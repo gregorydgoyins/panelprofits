@@ -36,8 +36,12 @@ export function EquitiesRail({ items: initialItems = [], seedItems, indices = []
 
   // Convert initial SovereignEquityItem[] to EquityItem[] for instant first-paint
   const initialEquityItems = React.useMemo<EquityItem[]>(() => {
-    if (seedItems && seedItems.length > 0) return seedItems;
-    return initialItems.map((item, idx) => {
+    if (seedItems && seedItems.length > 0) {
+      return seedItems.filter((i) => (i?.pricing?.fmv_usd ?? 0) >= 17.00);
+    }
+    return initialItems
+      .filter((item) => (item.referenceFmvUsd || 0) >= 17.00)
+      .map((item, idx) => {
       const eraKey = (item.productionAge || item.originEra || "modern").toLowerCase().replace(/_age$/, "").replace(/\s+age$/, "");
       const fmv = item.referenceFmvUsd || 0;
       const itemGrade = item.referenceGrade ? String(item.referenceGrade).trim() : null;
@@ -157,7 +161,7 @@ export function EquitiesRail({ items: initialItems = [], seedItems, indices = []
     [items]
   );
   const tradeableItems = React.useMemo(
-    () => items,
+    () => items.filter((i) => i && (i.pricing?.fmv_usd ?? 0) >= 17.00),
     [items]
   );
   const noSignalCount = React.useMemo(
