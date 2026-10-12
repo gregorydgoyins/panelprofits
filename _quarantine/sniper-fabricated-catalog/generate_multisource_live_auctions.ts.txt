@@ -67,7 +67,7 @@ const MULTI_SOURCE_AUCTIONS: RawAuctionListing[] = [
     bidCount: 4,
     secondsRemaining: 240, // < 5m Closing!
     url: "https://atomicavenue.com/atomic/issue/4829103/Batman-Ego-1",
-    imageUrl: `${GCS_BASE}/D/DC/B/Batman - Ego/1.jpg`,
+    imageUrl: `${GCS_BASE}/D/DC/B/Batman- Ego/1.jpg`,
     certNumber: "3920194005",
     fairMarketValue: 280.00,
     anchorFmv: 280.00,

@@ -799,9 +799,9 @@ export default function SniperRadarPage() {
                 </h1>
                 <p className="text-[10px] text-slate-400 font-mono flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping inline-block" />
-                  <span className="text-emerald-300 font-bold">24/7 LIVE STREAM ACTIVE</span>
+                  <span className="text-emerald-300 font-bold">{auctionsList.length > 0 ? "LIVE eBay FEED" : "NO LIVE LISTINGS"}</span>
                   <span>•</span>
-                  <span>{auctionsList.length} Lots Streaming Across 13 Comic Exchanges</span>
+                  <span>{auctionsList.length} live eBay lots</span>
                   {lastRefreshedAt && <span>(Synced: {lastRefreshedAt})</span>}
                 </p>
               </div>
@@ -869,7 +869,7 @@ export default function SniperRadarPage() {
               <div>
                 <strong className="text-white block mb-1 text-amber-300">1. Real Live Stream (Zero Hardcoding)</strong>
                 <p className="text-slate-400 leading-relaxed">
-                  Every book listed below is actively ending on eBay right now with verified bids, authentic seller slab photos, and active timers. When an auction concludes, it expires dynamically.
+                  Every listing below comes from eBay&apos;s Browse API (refreshed at most every 60 seconds) with its real end time and price. Nothing is hard-coded or simulated; if eBay returns nothing, the list is empty.
                 </p>
               </div>
               <div>
@@ -934,15 +934,17 @@ export default function SniperRadarPage() {
               <label className="text-xs font-semibold text-slate-300 uppercase">Auction Suites</label>
               <div className="space-y-1">
                 {ALL_AUCTION_SUITES.map((src) => {
-                  const isChecked = selectedSources.includes(src.key);
+                  const feedLive = src.key.startsWith("ebay"); // eBay's Browse API is the only connected feed
+                  const isChecked = feedLive && selectedSources.includes(src.key);
                   return (
                     <label
                       key={src.key}
-                      className="flex items-center justify-between text-xs p-2 rounded bg-slate-900/60 border border-slate-800/80 cursor-pointer hover:bg-slate-850"
+                      className={`flex items-center justify-between text-xs p-2 rounded bg-slate-900/60 border border-slate-800/80 ${feedLive ? "cursor-pointer hover:bg-slate-850" : "opacity-50 cursor-not-allowed"}`}
                     >
-                      <span className="text-slate-300">{src.label}</span>
+                      <span className="text-slate-300">{src.label}{feedLive ? "" : " · not connected"}</span>
                       <input
                         type="checkbox"
+                        disabled={!feedLive}
                         checked={isChecked}
                         onChange={() => {
                           if (isChecked) {

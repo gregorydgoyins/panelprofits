@@ -8,7 +8,7 @@
     "bidCount": 8,
     "secondsRemaining": 48,
     "url": "https://atomicavenue.com/atomic/issue/4829101/Batman-423",
-    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/DC/B/Batman/423.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/a0/a0bb828eb63ca6d81296f4f8aebebc5fe65ed4a3814266ea8fcae960d101773a.webp",
     "certNumber": "3849201004",
     "fairMarketValue": 1250,
     "anchorFmv": 1250,
@@ -22,7 +22,10 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "Atomic Avenue Verified Slab Desk: CGC 9.8 top left corner cracked shell from transit. Inner archival well completely uncompromised. Perfect $25 reholder candidate against $1,250 FMV."
+    "itemDescription": "Atomic Avenue Verified Slab Desk: CGC 9.8 top left corner cracked shell from transit. Inner archival well completely uncompromised. Perfect $25 reholder candidate against $1,250 FMV.",
+    "listingType": "BuyItNow",
+    "isBuyItNow": true,
+    "buyItNowPrice": 520
   },
   {
     "id": "atomic-4829102",
@@ -33,7 +36,7 @@
     "bidCount": 16,
     "secondsRemaining": 105,
     "url": "https://atomicavenue.com/atomic/issue/4829102/Swamp-Thing-37",
-    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/DC/S/Swamp Thing (2nd Series)/37.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/31/31433356bead5e848846b685cca2e67898b2efb8c4f5c848c8c7ffe7ed3f3e64.jpg",
     "certNumber": "4019283002",
     "fairMarketValue": 2400,
     "anchorFmv": 2400,
@@ -47,7 +50,10 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "Atomic Avenue Verified Exchange: CGC 9.8 White Pages. Prime 1st John Constantine. Live bidding concluding now."
+    "itemDescription": "Atomic Avenue Verified Exchange: CGC 9.8 White Pages. Prime 1st John Constantine. Live bidding concluding now.",
+    "listingType": "BuyItNow",
+    "isBuyItNow": true,
+    "buyItNowPrice": 980
   },
   {
     "id": "atomic-4829103",
@@ -58,7 +64,7 @@
     "bidCount": 4,
     "secondsRemaining": 240,
     "url": "https://atomicavenue.com/atomic/issue/4829103/Batman-Ego-1",
-    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/DC/B/Batman - Ego/1.jpg",
+    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/DC/B/Batman-%20Ego/1.jpg",
     "certNumber": "3920194005",
     "fairMarketValue": 280,
     "anchorFmv": 280,
@@ -72,7 +78,10 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "Atomic Avenue Dealer Stock: CGC 9.8 White Pages. Darwyn Cooke masterpiece."
+    "itemDescription": "Atomic Avenue Dealer Stock: CGC 9.8 White Pages. Darwyn Cooke masterpiece.",
+    "listingType": "BuyItNow",
+    "isBuyItNow": true,
+    "buyItNowPrice": 95
   },
   {
     "id": "atomic-4829104",
@@ -83,7 +92,7 @@
     "bidCount": 2,
     "secondsRemaining": 420,
     "url": "https://atomicavenue.com/atomic/issue/4829104/Batman-0",
-    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/DC/B/Batman/0.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/5f/5fe026cd6d32fd71d5273ea001f144bee51b787ca30b979515ead8b0d2cfaf7d.webp",
     "certNumber": "4192019001",
     "fairMarketValue": 85,
     "anchorFmv": 85,
@@ -97,7 +106,10 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "Atomic Avenue Floor Liquidation: CGC 9.8 White Pages. Total cost below $45 grading fee."
+    "itemDescription": "Atomic Avenue Floor Liquidation: CGC 9.8 White Pages. Total cost below $45 grading fee.",
+    "listingType": "BuyItNow",
+    "isBuyItNow": true,
+    "buyItNowPrice": 32
   },
   {
     "id": "atomic-4829105",
@@ -108,7 +120,7 @@
     "bidCount": 3,
     "secondsRemaining": 720,
     "url": "https://atomicavenue.com/atomic/issue/4829105/Batamn-423",
-    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/DC/B/Batman/423.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/a0/a0bb828eb63ca6d81296f4f8aebebc5fe65ed4a3814266ea8fcae960d101773a.webp",
     "certNumber": "3849102008",
     "fairMarketValue": 1250,
     "anchorFmv": 1250,
@@ -122,7 +134,10 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "Atomic Avenue Community Seller: Title misspelled as 'Batamn #423'. Undiscovered by search crawlers."
+    "itemDescription": "Atomic Avenue Community Seller: Title misspelled as 'Batamn #423'. Undiscovered by search crawlers.",
+    "listingType": "BuyItNow",
+    "isBuyItNow": true,
+    "buyItNowPrice": 410
   },
   {
     "id": "heritage-829101",
@@ -133,7 +148,7 @@
     "bidCount": 11,
     "secondsRemaining": 55,
     "url": "https://comics.ha.com/itm/bronze-age/green-lantern-76-cbcs-96/829101.s",
-    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/DC/G/Green Lantern (2nd Series)/76.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/54/5450b8953b65aa7bf87c5da3d4df361d145631d0f1fabbc9225870b9ee2a8c58.webp",
     "certNumber": "21-049281-002",
     "fairMarketValue": 1450,
     "anchorFmv": 1450,
@@ -147,7 +162,9 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "Heritage Sunday Comic Auction: CBCS 9.6 with hairline crack on bottom bumper. Archival comic slab undisturbed. Immediate crossover or reholder candidate."
+    "itemDescription": "Heritage Sunday Comic Auction: CBCS 9.6 with hairline crack on bottom bumper. Archival comic slab undisturbed. Immediate crossover or reholder candidate.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "heritage-829102",
@@ -158,7 +175,7 @@
     "bidCount": 22,
     "secondsRemaining": 88,
     "url": "https://comics.ha.com/itm/silver-age/batman-181-cgc-94/829102.s",
-    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/DC/B/Batman/181.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/2c/2c9daa521acd7f2d0bf3ac5b033fabf4e5d07a453f640329eb25f02f2d645df4.webp",
     "certNumber": "3720194001",
     "fairMarketValue": 3400,
     "anchorFmv": 3400,
@@ -172,7 +189,9 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "Heritage Weekly Comics Session: CGC 9.4 Off-White to White Pages. Complete with centerfold pin-up intact."
+    "itemDescription": "Heritage Weekly Comics Session: CGC 9.4 Off-White to White Pages. Complete with centerfold pin-up intact.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "heritage-829103",
@@ -183,7 +202,7 @@
     "bidCount": 29,
     "secondsRemaining": 180,
     "url": "https://comics.ha.com/itm/bronze-age/house-of-secrets-92-cgc-94/829103.s",
-    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/DC/H/House of Secrets/92.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/18/1800acdfce32aa020f8a208abd5e6983fbc0ede6207573caddc9daab3572cc64.webp",
     "certNumber": "3649201009",
     "fairMarketValue": 4500,
     "anchorFmv": 4500,
@@ -197,7 +216,9 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "Heritage Weekly Session: CGC 9.4 White Pages. Bernie Wrightson classic cover art."
+    "itemDescription": "Heritage Weekly Session: CGC 9.4 White Pages. Bernie Wrightson classic cover art.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "heritage-829104",
@@ -208,7 +229,7 @@
     "bidCount": 12,
     "secondsRemaining": 540,
     "url": "https://comics.ha.com/itm/bronze-age/all-star-comics-58-cgc-98/829104.s",
-    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/DC/A/All-Star Comics/58.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/65/6593928adf0ec15050092c46b35e408bdca8c8f24b4e679df0e09141b6c2ebba.jpg",
     "certNumber": "3892019003",
     "fairMarketValue": 980,
     "anchorFmv": 980,
@@ -222,7 +243,9 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "Heritage Comics Lot: CGC 9.8 White Pages. 1st Appearance Power Girl (Kara Zor-L)."
+    "itemDescription": "Heritage Comics Lot: CGC 9.8 White Pages. 1st Appearance Power Girl (Kara Zor-L).",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "mcs-7819201",
@@ -233,7 +256,7 @@
     "bidCount": 19,
     "secondsRemaining": 42,
     "url": "https://www.mycomicshop.com/auctions/item?id=7819201",
-    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/DC/D/DC Comics Presents/26.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/ec/ec1c97d4d644da7aae549d7862829c7f7c3bac02ce184c22dad00650a65f6e01.webp",
     "certNumber": "3948201004",
     "fairMarketValue": 1250,
     "anchorFmv": 1250,
@@ -243,11 +266,14 @@
     "censusTotal": 2950,
     "censusCount98": 310,
     "censusHigher": 0,
-    "censusScarcityTier": "Copper/Bronze Key (George Pérez Art)",
+    "censusScarcityTier": "Copper/Bronze Key (George P\u00e9rez Art)",
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "MyComicShop Weekly Prime Auction: CGC 9.8 White Pages. 1st New Teen Titans preview insert."
+    "itemDescription": "MyComicShop Weekly Prime Auction: CGC 9.8 White Pages. 1st New Teen Titans preview insert.",
+    "listingType": "BuyItNow",
+    "isBuyItNow": true,
+    "buyItNowPrice": 560
   },
   {
     "id": "mcs-7819202",
@@ -258,7 +284,7 @@
     "bidCount": 7,
     "secondsRemaining": 110,
     "url": "https://www.mycomicshop.com/auctions/item?id=7819202",
-    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/DC/B/Batman/357.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/e2/e2e71e7fc61033cd54fbe9ffed4b1d5a2be4ec2ed54235a7ffdd383dd5423915.webp",
     "certNumber": "3829104006",
     "fairMarketValue": 450,
     "anchorFmv": 450,
@@ -272,7 +298,10 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "MyComicShop Consignment: CGC 9.8 case cracked on lower rear rail. Book flawless. High-spread $25 reholder arbitrage play."
+    "itemDescription": "MyComicShop Consignment: CGC 9.8 case cracked on lower rear rail. Book flawless. High-spread $25 reholder arbitrage play.",
+    "listingType": "BuyItNow",
+    "isBuyItNow": true,
+    "buyItNowPrice": 190
   },
   {
     "id": "mcs-7819203",
@@ -283,7 +312,7 @@
     "bidCount": 15,
     "secondsRemaining": 280,
     "url": "https://www.mycomicshop.com/auctions/item?id=7819203",
-    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/DC/B/Batman/232.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/fe/fe7b99d583051be83682a40af9d35fb7df4df13f0b633ca3649aa8ed85f3377e.webp",
     "certNumber": "3749201007",
     "fairMarketValue": 1400,
     "anchorFmv": 1400,
@@ -297,7 +326,10 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "MyComicShop Auction: CGC 9.6 White Pages. 1st Appearance Ra's al Ghul."
+    "itemDescription": "MyComicShop Auction: CGC 9.6 White Pages. 1st Appearance Ra's al Ghul.",
+    "listingType": "BuyItNow",
+    "isBuyItNow": true,
+    "buyItNowPrice": 680
   },
   {
     "id": "mcs-7819204",
@@ -308,7 +340,7 @@
     "bidCount": 5,
     "secondsRemaining": 660,
     "url": "https://www.mycomicshop.com/auctions/item?id=7819204",
-    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/DC/S/Swamp Thing (2nd Series)/37.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/31/31433356bead5e848846b685cca2e67898b2efb8c4f5c848c8c7ffe7ed3f3e64.jpg",
     "certNumber": "4019283088",
     "fairMarketValue": 2400,
     "anchorFmv": 2400,
@@ -322,7 +354,10 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "MyComicShop Consignment Lot: Title cataloged as 'Swamp Thng #37' with missing 'i'."
+    "itemDescription": "MyComicShop Consignment Lot: Title cataloged as 'Swamp Thng #37' with missing 'i'.",
+    "listingType": "BuyItNow",
+    "isBuyItNow": true,
+    "buyItNowPrice": 610
   },
   {
     "id": "cl-5920101",
@@ -333,7 +368,7 @@
     "bidCount": 6,
     "secondsRemaining": 35,
     "url": "https://www.comiclink.com/auctions/item.asp?id=5920101",
-    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/DC/B/Batman/404.jpg",
+    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/DC/B/Batman%20(Canadian%20Edition)/404.jpg",
     "certNumber": "3891024005",
     "fairMarketValue": 340,
     "anchorFmv": 340,
@@ -347,18 +382,20 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "ComicLink Focused Auction: CGC 9.8 White Pages. Frank Miller Batman Year One landmark."
+    "itemDescription": "ComicLink Focused Auction: CGC 9.8 White Pages. Frank Miller Batman Year One landmark.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "cl-5920102",
     "source": "comiclink",
-    "title": "Crisis on Infinite Earths #7 CGC 9.8 Death of Supergirl George Pérez",
+    "title": "Crisis on Infinite Earths #7 CGC 9.8 Death of Supergirl George P\u00e9rez",
     "currentBid": 110,
     "shippingCost": 18,
     "bidCount": 5,
     "secondsRemaining": 75,
     "url": "https://www.comiclink.com/auctions/item.asp?id=5920102",
-    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/DC/C/Crisis on Infinite Earths/7.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/41/41c2830bf243ff710865a1da593eac46607443514bb2a47831b39fbdb9af1a30.webp",
     "certNumber": "3748291002",
     "fairMarketValue": 260,
     "anchorFmv": 260,
@@ -372,7 +409,9 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "ComicLink Auction: CGC 9.8 White Pages. Iconic George Pérez cover art."
+    "itemDescription": "ComicLink Auction: CGC 9.8 White Pages. Iconic George P\u00e9rez cover art.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "cl-5920103",
@@ -397,7 +436,9 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "ComicLink Exchange: CGC 9.8 cracked corner slab shell. High-spread reholder arbitrage target."
+    "itemDescription": "ComicLink Exchange: CGC 9.8 cracked corner slab shell. High-spread reholder arbitrage target.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "sb-391024",
@@ -408,7 +449,7 @@
     "bidCount": 4,
     "secondsRemaining": 50,
     "url": "https://shortboxed.com/book/391024",
-    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/DC/B/Batman - Damned/1.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/f5/f56b1dd40b270c31f553969bf78ebb0514fd3a6a7a822107a19920f94451f1a2.webp",
     "certNumber": "3920194881",
     "fairMarketValue": 195,
     "anchorFmv": 195,
@@ -422,7 +463,10 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "Shortboxed Verified Desk: CGC 9.8 White Pages. Uncensored 1st printing."
+    "itemDescription": "Shortboxed Verified Desk: CGC 9.8 White Pages. Uncensored 1st printing.",
+    "listingType": "BuyItNow",
+    "isBuyItNow": true,
+    "buyItNowPrice": 85
   },
   {
     "id": "sb-391025",
@@ -433,7 +477,7 @@
     "bidCount": 9,
     "secondsRemaining": 95,
     "url": "https://shortboxed.com/book/391025",
-    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/DC/D/Detective Comics/880.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/67/6741ba4214113882106983f1607fae45292526ab39b1f4b5a0e6cb71f688938a.webp",
     "certNumber": "3748291001",
     "fairMarketValue": 650,
     "anchorFmv": 650,
@@ -447,7 +491,10 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "Shortboxed Direct: CGC 9.8 White Pages. Iconic Jock Joker bat-swarm face cover."
+    "itemDescription": "Shortboxed Direct: CGC 9.8 White Pages. Iconic Jock Joker bat-swarm face cover.",
+    "listingType": "BuyItNow",
+    "isBuyItNow": true,
+    "buyItNowPrice": 320
   },
   {
     "id": "sb-391026",
@@ -458,7 +505,7 @@
     "bidCount": 6,
     "secondsRemaining": 360,
     "url": "https://shortboxed.com/book/391026",
-    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/DC/B/Batman/635.jpg",
+    "imageUrl": "https://static.wikia.nocookie.net/marvel_dc/images/c/c0/Facsimile_Edition_Batman_Vol_1_635.jpg/revision/latest/scale-to-width-down/260?cb=20250903033338",
     "certNumber": "3892019011",
     "fairMarketValue": 380,
     "anchorFmv": 380,
@@ -472,7 +519,10 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "Shortboxed Verified Desk: CGC 9.8 scuffed case and cracked top tab. Flawless reholder play."
+    "itemDescription": "Shortboxed Verified Desk: CGC 9.8 scuffed case and cracked top tab. Flawless reholder play.",
+    "listingType": "BuyItNow",
+    "isBuyItNow": true,
+    "buyItNowPrice": 160
   },
   {
     "id": "wn-1092841",
@@ -483,7 +533,7 @@
     "bidCount": 8,
     "secondsRemaining": 45,
     "url": "https://whatnot.com/live/comic-drop/1092841",
-    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/DC/B/Batman/497.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/33/33363d61acce5f0f5abbf4678731efc18b993f2148331850bf5096e1cca1fbe2.webp",
     "certNumber": "3819204002",
     "fairMarketValue": 165,
     "anchorFmv": 165,
@@ -497,7 +547,9 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "Whatnot Live Stream Sudden-Death Auction: CGC 9.8 White Pages. Instant snipe window closing."
+    "itemDescription": "Whatnot Live Stream Sudden-Death Auction: CGC 9.8 White Pages. Instant snipe window closing.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "wn-1092842",
@@ -508,7 +560,7 @@
     "bidCount": 3,
     "secondsRemaining": 115,
     "url": "https://whatnot.com/live/comic-drop/1092842",
-    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/DC/D/Detective Comics/1000-A.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/28/28dc724b9ded59e20e3356edf93ee626dd2bd478a61ce42fb7283ef6565ef61a.webp",
     "certNumber": "3920194099",
     "fairMarketValue": 120,
     "anchorFmv": 120,
@@ -522,7 +574,9 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "Whatnot Flash Drop: CGC 9.8 Artgerm Catwoman foil variant. Total price below cost of grading."
+    "itemDescription": "Whatnot Flash Drop: CGC 9.8 Artgerm Catwoman foil variant. Total price below cost of grading.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "pa-682019",
@@ -533,7 +587,7 @@
     "bidCount": 14,
     "secondsRemaining": 58,
     "url": "https://www.pristineauction.com/auction/index/item/682019",
-    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/DC/B/Batman/423.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/a0/a0bb828eb63ca6d81296f4f8aebebc5fe65ed4a3814266ea8fcae960d101773a.webp",
     "certNumber": "21-394810-001",
     "fairMarketValue": 1650,
     "anchorFmv": 1650,
@@ -547,7 +601,9 @@
     "isYellowLabel": true,
     "signerName": "Todd McFarlane",
     "signaturePremiumMultiplier": 1.5,
-    "itemDescription": "Pristine Daily Auction: CBCS 9.8 Witnessed Todd McFarlane signature in bold silver ink."
+    "itemDescription": "Pristine Daily Auction: CBCS 9.8 Witnessed Todd McFarlane signature in bold silver ink.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "pa-682020",
@@ -572,7 +628,9 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "Pristine Auction: CGC 9.6 broken shell corner. Internal well intact. Prime $25 reholder target."
+    "itemDescription": "Pristine Auction: CGC 9.6 broken shell corner. Internal well intact. Prime $25 reholder target.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "goldin-91024",
@@ -583,7 +641,7 @@
     "bidCount": 38,
     "secondsRemaining": 70,
     "url": "https://goldin.co/item/brave-and-the-bold-28-cbcs-94-91024",
-    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/DC/B/Brave and the Bold, The/28.jpg",
+    "imageUrl": "https://static.wikia.nocookie.net/marvel_dc/images/9/9c/The_Brave_and_the_Bold_28.jpg/revision/latest/scale-to-width-down/271?cb=20221130222540",
     "certNumber": "19-482019-001",
     "fairMarketValue": 28000,
     "anchorFmv": 28000,
@@ -597,7 +655,9 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "Goldin Elite Session: CBCS 9.4 White Pages. 1st Appearance Justice League of America."
+    "itemDescription": "Goldin Elite Session: CBCS 9.4 White Pages. 1st Appearance Justice League of America.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "metro-104928",
@@ -608,7 +668,7 @@
     "bidCount": 18,
     "secondsRemaining": 160,
     "url": "https://www.metropoliscomics.com/inventory/item/104928",
-    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/DC/A/Action Comics/242.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/7f/7f590a250ca19d4af9b68516200ba5944bf5f0bc8d32ccee0659a019c2b86f13.webp",
     "certNumber": "3649201044",
     "fairMarketValue": 6800,
     "anchorFmv": 6800,
@@ -622,7 +682,9 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "Metropolis Direct Auction: CGC 9.4 Off-White to White Pages. 1st Appearance Brainiac."
+    "itemDescription": "Metropolis Direct Auction: CGC 9.4 Off-White to White Pages. 1st Appearance Brainiac.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "hip-581920",
@@ -633,7 +695,7 @@
     "bidCount": 11,
     "secondsRemaining": 49,
     "url": "https://www.hipcomic.com/listing/batman-adventures-12-cbcs-94/581920",
-    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/DC/B/Batman Adventures, The/12.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/ee/eec84f2fcf9a926ecc04bc44eb16ee48f56261d1b3317a7284504dbe91ec55d2.webp",
     "certNumber": "20-384910-002",
     "fairMarketValue": 1850,
     "anchorFmv": 1850,
@@ -647,7 +709,9 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "HipComic Live Auction: CBCS 9.4 White Pages. 1st Harley Quinn in continuity."
+    "itemDescription": "HipComic Live Auction: CBCS 9.4 White Pages. 1st Harley Quinn in continuity.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "hip-581921",
@@ -658,7 +722,7 @@
     "bidCount": 4,
     "secondsRemaining": 480,
     "url": "https://www.hipcomic.com/listing/batamn-357-cgc-96/581921",
-    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/DC/B/Batman/357.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/e2/e2e71e7fc61033cd54fbe9ffed4b1d5a2be4ec2ed54235a7ffdd383dd5423915.webp",
     "certNumber": "3892019441",
     "fairMarketValue": 320,
     "anchorFmv": 320,
@@ -672,7 +736,9 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "HipComic Store Listing: Misspelled title 'Batamn #357'. Zero competing search traffic."
+    "itemDescription": "HipComic Store Listing: Misspelled title 'Batamn #357'. Zero competing search traffic.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "mer-829104",
@@ -683,7 +749,7 @@
     "bidCount": 2,
     "secondsRemaining": 52,
     "url": "https://www.mercari.com/us/item/m829104/",
-    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/DC/B/Batman - Shadow of the Bat/1.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/ba/ba2b24b02b9d83262fec8bdb6afb7a682046e95d5e982364a743d9c297e39e7a.jpg",
     "certNumber": "4019284001",
     "fairMarketValue": 80,
     "anchorFmv": 80,
@@ -697,7 +763,9 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "Mercari Seller Liquidation: CGC 9.8 White Pages with collector hologram. Seller taking loss below grading fee."
+    "itemDescription": "Mercari Seller Liquidation: CGC 9.8 White Pages with collector hologram. Seller taking loss below grading fee.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "ebay-4050632030",
@@ -708,7 +776,7 @@
     "bidCount": 12,
     "secondsRemaining": 40,
     "url": "https://www.ebay.com/itm/4050632030",
-    "imageUrl": "https://i.ebayimg.com/images/g/e7UAAOSwD5pnPZvZ/s-l1600.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/be/be1d50d4a83c95b1eceee12306675687d4be29dc8229fb1a2acd2c91262bb477.jpg",
     "certNumber": "4050632030",
     "fairMarketValue": 1241.99,
     "anchorFmv": 1241.99,
@@ -722,7 +790,9 @@
     "isYellowLabel": true,
     "signerName": "Clay Mann",
     "signaturePremiumMultiplier": 1.65,
-    "itemDescription": "eBay Live Ending Auction: CGC Signature Series 9.8 Blue Sketch Edition signed by Clay Mann with custom sketch."
+    "itemDescription": "eBay Live Ending Auction: CGC Signature Series 9.8 Blue Sketch Edition signed by Clay Mann with custom sketch.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "ebay-4050629701",
@@ -733,7 +803,7 @@
     "bidCount": 1,
     "secondsRemaining": 65,
     "url": "https://www.ebay.com/itm/4050629701",
-    "imageUrl": "https://i.ebayimg.com/images/g/W4sAAeSwmR5p4jv2/s-l1600.jpg",
+    "imageUrl": "https://storage.googleapis.com/images.pricecharting.com/fcc973ba1057b5763c8a878aefcb5cfc36e36211cd9a66d362c18eca3bfd9415/240.jpg",
     "certNumber": "4050629701",
     "fairMarketValue": 95,
     "anchorFmv": 95,
@@ -747,7 +817,9 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "eBay Auction: CGC 9.8 White Pages. Ending immediately with only 1 bid."
+    "itemDescription": "eBay Auction: CGC 9.8 White Pages. Ending immediately with only 1 bid.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "ebay-4050629702",
@@ -758,7 +830,7 @@
     "bidCount": 9,
     "secondsRemaining": 85,
     "url": "https://www.ebay.com/itm/4050629702",
-    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/DC/B/Batman/423.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/a0/a0bb828eb63ca6d81296f4f8aebebc5fe65ed4a3814266ea8fcae960d101773a.webp",
     "certNumber": "3892019401",
     "fairMarketValue": 1250,
     "anchorFmv": 1250,
@@ -772,7 +844,9 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "eBay Auction: CGC 9.8 with crack on bottom right bumper. Book untouched in sealed inner well. Huge $25 reholder spread."
+    "itemDescription": "eBay Auction: CGC 9.8 with crack on bottom right bumper. Book untouched in sealed inner well. Huge $25 reholder spread.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "ebay-4050629703",
@@ -783,7 +857,7 @@
     "bidCount": 6,
     "secondsRemaining": 210,
     "url": "https://www.ebay.com/itm/4050629703",
-    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/DC/A/All-Star Comics/58.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/25/25940a3e70df7a3a0bbfdc3e9b16958bc905e02dbd98f2e479fa8d36c782f814.jpg",
     "certNumber": "3748291040",
     "fairMarketValue": 3200,
     "anchorFmv": 3200,
@@ -797,7 +871,9 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "eBay Sleeper: Seller misspelled title as 'Avangers'. Zero automated saved search alerts firing."
+    "itemDescription": "eBay Sleeper: Seller misspelled title as 'Avangers'. Zero automated saved search alerts firing.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "ebay-4050629704",
@@ -808,7 +884,7 @@
     "bidCount": 8,
     "secondsRemaining": 340,
     "url": "https://www.ebay.com/itm/4050629704",
-    "imageUrl": "https://i.ebayimg.com/images/g/Bq8AAOSwr8hnPZwP/s-l1600.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/52/5201d6e2029be8b4217d029ae020d5409276b144378ee95ca3a61f48806562de.jpg",
     "certNumber": "4050632044",
     "fairMarketValue": 310,
     "anchorFmv": 310,
@@ -822,7 +898,9 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "eBay Auction: CGC 9.8 White Pages. Peach Momoko virgin cover."
+    "itemDescription": "eBay Auction: CGC 9.8 White Pages. Peach Momoko virgin cover.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "ebay-4050629705",
@@ -833,7 +911,7 @@
     "bidCount": 5,
     "secondsRemaining": 490,
     "url": "https://www.ebay.com/itm/4050629705",
-    "imageUrl": "https://i.ebayimg.com/images/g/s5MAAOSwYyFnPZw7/s-l1600.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/2b/2b30aab4e8a988a52a21e51a8427e68ccf46d0bb521ecad7b22fcfa91d3b0aeb.webp",
     "certNumber": "4050632050",
     "fairMarketValue": 240,
     "anchorFmv": 240,
@@ -847,7 +925,9 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "eBay Auction: CGC 9.8 White Pages. 1st Titan (Deadliest Hulk incarnation)."
+    "itemDescription": "eBay Auction: CGC 9.8 White Pages. 1st Titan (Deadliest Hulk incarnation).",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "ebay-ca-9102401",
@@ -864,7 +944,7 @@
     "bidCount": 7,
     "secondsRemaining": 44,
     "url": "https://www.ebay.ca/itm/9102401",
-    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/DC/A/All-Star Comics/58.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/f6/f6b14a2149f4b0f77fd55e03a0ce723678b24d485f94a828a3d82e082fd30cb0.jpg",
     "certNumber": "3849102011",
     "fairMarketValue": 280,
     "anchorFmv": 280,
@@ -878,7 +958,9 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "eBay Canada Live Ending: CGC 9.8 White Pages. 1st Solo Series Alpha Flight (Guardian, Sasquatch, Shaman, Snowbird, Puck, Northstar). Bid in C$140 CAD converted to $102.20 USD."
+    "itemDescription": "eBay Canada Live Ending: CGC 9.8 White Pages. 1st Solo Series Alpha Flight (Guardian, Sasquatch, Shaman, Snowbird, Puck, Northstar). Bid in C$140 CAD converted to $102.20 USD.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "ebay-ca-9102402",
@@ -895,7 +977,7 @@
     "bidCount": 5,
     "secondsRemaining": 95,
     "url": "https://www.ebay.ca/itm/9102402",
-    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/DC/B/Batman/423.jpg",
+    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/C/Chapterhouse/Captain%20Canuck-%20Enter%20The%20Crime%20Stopper/1.jpg",
     "certNumber": "3748291088",
     "fairMarketValue": 420,
     "anchorFmv": 420,
@@ -909,12 +991,14 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "eBay Canada Auction: CGC 9.6 White Pages. Historic 1st Appearance Captain Canuck (1975). Bid in C$185 CAD = $135.05 USD."
+    "itemDescription": "eBay Canada Auction: CGC 9.6 White Pages. Historic 1st Appearance Captain Canuck (1975). Bid in C$185 CAD = $135.05 USD.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "ebay-ca-9102403",
     "source": "ebay_ca",
-    "title": "Batman #423 75¢ CPV Canadian Price Variant CGC 9.8 Damaged Holder",
+    "title": "Batman #423 75\u00a2 CPV Canadian Price Variant CGC 9.8 Damaged Holder",
     "currentBid": 547.5,
     "originalBid": 750,
     "currency": "CAD",
@@ -926,7 +1010,7 @@
     "bidCount": 11,
     "secondsRemaining": 180,
     "url": "https://www.ebay.ca/itm/9102403",
-    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/DC/B/Batman/423.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/a0/a0bb828eb63ca6d81296f4f8aebebc5fe65ed4a3814266ea8fcae960d101773a.webp",
     "certNumber": "3892019477",
     "fairMarketValue": 1850,
     "anchorFmv": 1850,
@@ -940,7 +1024,10 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "eBay Canada: Rare 75¢ Canadian Price Variant newsstand edition. CGC 9.8 with scuffed casing and damaged holder. Flawless comic inside. Incredible $25 reholder arbitrage against $1,850 CPV FMV!"
+    "itemDescription": "eBay Canada: Rare 75\u00a2 Canadian Price Variant newsstand edition. CGC 9.8 with scuffed casing and damaged holder. Flawless comic inside. Incredible $25 reholder arbitrage against $1,850 CPV FMV!",
+    "listingType": "BuyItNow",
+    "isBuyItNow": true,
+    "buyItNowPrice": 547.5
   },
   {
     "id": "ebay-uk-8291041",
@@ -949,7 +1036,7 @@
     "currentBid": 845,
     "originalBid": 650,
     "currency": "GBP",
-    "originalCurrencySymbol": "£",
+    "originalCurrencySymbol": "\u00a3",
     "exchangeRateToUsd": 1.3,
     "internationalRegion": "UK",
     "isForeignLanguageEdition": false,
@@ -957,7 +1044,7 @@
     "bidCount": 22,
     "secondsRemaining": 56,
     "url": "https://www.ebay.co.uk/itm/8291041",
-    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/DC/B/Batman/181.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/83/83434357e123e97ea9f1f66818be571fac1fad1a17135a35ddaeff7e6dfc4e89.jpg",
     "certNumber": "3649201088",
     "fairMarketValue": 2400,
     "anchorFmv": 2400,
@@ -971,7 +1058,9 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "eBay UK Live Auction: CGC 9.4 Off-White to White Pages. Complete Prog 2 with 1st Judge Dredd. Ending immediately in £650 GBP = $845.00 USD."
+    "itemDescription": "eBay UK Live Auction: CGC 9.4 Off-White to White Pages. Complete Prog 2 with 1st Judge Dredd. Ending immediately in \u00a3650 GBP = $845.00 USD.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "ebay-uk-8291042",
@@ -980,7 +1069,7 @@
     "currentBid": 494,
     "originalBid": 380,
     "currency": "GBP",
-    "originalCurrencySymbol": "£",
+    "originalCurrencySymbol": "\u00a3",
     "exchangeRateToUsd": 1.3,
     "internationalRegion": "UK",
     "isForeignLanguageEdition": false,
@@ -988,7 +1077,7 @@
     "bidCount": 12,
     "secondsRemaining": 150,
     "url": "https://www.ebay.co.uk/itm/8291042",
-    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/DC/B/Batman/232.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/e0/e055a60eb0e3f2b8283654191397db38a40de56d13340da63aa3bc1c352f5549.jpg",
     "certNumber": "3748291099",
     "fairMarketValue": 1200,
     "anchorFmv": 1200,
@@ -1002,7 +1091,10 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "eBay UK Auction: CGC 9.6 with cracked plastic edge on casing / damaged case. Complete with free boomerang mask. £380 GBP converted to $494.00 USD."
+    "itemDescription": "eBay UK Auction: CGC 9.6 with cracked plastic edge on casing / damaged case. Complete with free boomerang mask. \u00a3380 GBP converted to $494.00 USD.",
+    "listingType": "BuyItNow",
+    "isBuyItNow": true,
+    "buyItNowPrice": 494
   },
   {
     "id": "ebay-fr-7102941",
@@ -1012,7 +1104,7 @@
     "currentBid": 926.5,
     "originalBid": 850,
     "currency": "EUR",
-    "originalCurrencySymbol": "€",
+    "originalCurrencySymbol": "\u20ac",
     "exchangeRateToUsd": 1.09,
     "internationalRegion": "FR",
     "isForeignLanguageEdition": true,
@@ -1020,7 +1112,7 @@
     "bidCount": 16,
     "secondsRemaining": 48,
     "url": "https://www.ebay.fr/itm/7102941",
-    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/DC/S/Swamp Thing (2nd Series)/37.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/ea/ea30328b9971d0490c5539b9ae4c220fb52f7f1c72f853cc3cc4acda7d1f5e35.jpg",
     "certNumber": "3649201999",
     "fairMarketValue": 2800,
     "anchorFmv": 2800,
@@ -1034,7 +1126,9 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "eBay France Vente aux enchères: CGC 9.2. Éditions Lug 1970 N°1 avec L'Araignée (Spider-Man), Les Vengeurs (Avengers), et Le Surfer d'Argent. Enchère en cours €850 EUR = $926.50 USD."
+    "itemDescription": "eBay France Vente aux ench\u00e8res: CGC 9.2. \u00c9ditions Lug 1970 N\u00b01 avec L'Araign\u00e9e (Spider-Man), Les Vengeurs (Avengers), et Le Surfer d'Argent. Ench\u00e8re en cours \u20ac850 EUR = $926.50 USD.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "ebay-fr-7102942",
@@ -1044,7 +1138,7 @@
     "currentBid": 119.9,
     "originalBid": 110,
     "currency": "EUR",
-    "originalCurrencySymbol": "€",
+    "originalCurrencySymbol": "\u20ac",
     "exchangeRateToUsd": 1.09,
     "internationalRegion": "FR",
     "isForeignLanguageEdition": true,
@@ -1052,7 +1146,7 @@
     "bidCount": 6,
     "secondsRemaining": 230,
     "url": "https://www.ebay.fr/itm/7102942",
-    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/DC/B/Batman/386.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/dd/dd106f9c06661717b608bd748a8dd892b18312dee13187620203833593a950f8.jpg",
     "certNumber": "3892019888",
     "fairMarketValue": 350,
     "anchorFmv": 350,
@@ -1066,7 +1160,9 @@
     "isYellowLabel": false,
     "signerName": "",
     "signaturePremiumMultiplier": null,
-    "itemDescription": "eBay France: CGC 9.8 Serval (Wolverine) N°1 avec boîtier fissuré / damaged holder. Superbe opportunité de reholder à $25 pour dégager 100%+ de profit net. €110 EUR = $119.90 USD."
+    "itemDescription": "eBay France: CGC 9.8 Serval (Wolverine) N\u00b01 avec bo\u00eetier fissur\u00e9 / damaged holder. Superbe opportunit\u00e9 de reholder \u00e0 $25 pour d\u00e9gager 100%+ de profit net. \u20ac110 EUR = $119.90 USD.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "ha-akira-1",
@@ -1077,7 +1173,7 @@
     "bidCount": 9,
     "secondsRemaining": 95,
     "url": "https://comics.ha.com/itm/manga/akira-1-cgc-96/829105.s",
-    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/af/afff4b0cabcb43a612f97df02b4a5a01d2c85f26f481f48bb22fd3bbb7896554.webp",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/86/86657108761289af03b14e9655c2a2620221251857a916ac077a675b068d901b.jpg",
     "certNumber": "3948201011",
     "fairMarketValue": 450,
     "anchorFmv": 450,
@@ -1089,7 +1185,9 @@
     "censusHigher": 0,
     "censusScarcityTier": "Pivotal Manga Historical Key",
     "isYellowLabel": false,
-    "itemDescription": "Heritage Signature Session: CGC 9.6 White Pages. Katsuhiro Otomo masterpiece #1."
+    "itemDescription": "Heritage Signature Session: CGC 9.6 White Pages. Katsuhiro Otomo masterpiece #1.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "cl-akira-35",
@@ -1100,7 +1198,7 @@
     "bidCount": 6,
     "secondsRemaining": 180,
     "url": "https://www.comiclink.com/auctions/item.asp?id=5920104",
-    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/af/afff4b0cabcb43a612f97df02b4a5a01d2c85f26f481f48bb22fd3bbb7896554.webp",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/e7/e7644b4742ae425cd4622c680c2a604560dd102d4b17d6a7f8427a11081b521d.webp",
     "certNumber": "3819204002",
     "fairMarketValue": 320,
     "anchorFmv": 320,
@@ -1112,7 +1210,9 @@
     "censusHigher": 0,
     "censusScarcityTier": "Late-Run Epic Manga Scarcity",
     "isYellowLabel": false,
-    "itemDescription": "ComicLink Exchange: CGC 9.8 White Pages. Extremely scarce late-run issue."
+    "itemDescription": "ComicLink Exchange: CGC 9.8 White Pages. Extremely scarce late-run issue.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "mcs-dragonball-1",
@@ -1123,7 +1223,7 @@
     "bidCount": 11,
     "secondsRemaining": 120,
     "url": "https://www.mycomicshop.com/auctions/item?id=7819205",
-    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/62/62373509d64257a871a45c16068fdfaa182dddc0e98a4cb5aa93076e165d1728.webp",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/30/30cda10a2b29612194bfe948c26943a397477c768099670617f9bd8487dc26e7.jpg",
     "certNumber": "4019283099",
     "fairMarketValue": 280,
     "anchorFmv": 280,
@@ -1135,7 +1235,10 @@
     "censusHigher": 0,
     "censusScarcityTier": "Iconic Shonen Milestone Key",
     "isYellowLabel": false,
-    "itemDescription": "MyComicShop Weekly Auction: CGC 9.4 White Pages. 1st US Viz comic issue."
+    "itemDescription": "MyComicShop Weekly Auction: CGC 9.4 White Pages. 1st US Viz comic issue.",
+    "listingType": "BuyItNow",
+    "isBuyItNow": true,
+    "buyItNowPrice": 95
   },
   {
     "id": "cc-gits-1",
@@ -1146,7 +1249,7 @@
     "bidCount": 8,
     "secondsRemaining": 240,
     "url": "https://www.comicconnect.com/item/gits-1",
-    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/23/2369d6ab004e5dd2f536abb77beb4bbb078c02f9a1f77aa79f75674b4189a640.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/92/929c9cb85683f67956c8c34cb40c5391d34c5d6cc838d6e539fad36f916e9fb3.jpg",
     "certNumber": "3720194883",
     "fairMarketValue": 320,
     "anchorFmv": 320,
@@ -1158,12 +1261,14 @@
     "censusHigher": 0,
     "censusScarcityTier": "Cyberpunk Magna Landmark",
     "isYellowLabel": false,
-    "itemDescription": "ComicConnect Event: CGC 9.6 White Pages. Dark Horse landmark series premiere."
+    "itemDescription": "ComicConnect Event: CGC 9.6 White Pages. Dark Horse landmark series premiere.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "met-nausicaa-1",
     "source": "metropolis",
-    "title": "Nausicaä of the Valley of the Wind #1 Viz CGC 9.4 Hayao Miyazaki Masterpiece",
+    "title": "Nausica\u00e4 of the Valley of the Wind #1 Viz CGC 9.4 Hayao Miyazaki Masterpiece",
     "currentBid": 85,
     "shippingCost": 15,
     "bidCount": 7,
@@ -1181,7 +1286,9 @@
     "censusHigher": 0,
     "censusScarcityTier": "Studio Ghibli Foundation Key",
     "isYellowLabel": false,
-    "itemDescription": "Metropolis Collectibles: CGC 9.4 White Pages. Hayao Miyazaki masterpiece premiere."
+    "itemDescription": "Metropolis Collectibles: CGC 9.4 White Pages. Hayao Miyazaki masterpiece premiere.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "hakes-onepiece-1",
@@ -1192,7 +1299,7 @@
     "bidCount": 14,
     "secondsRemaining": 150,
     "url": "https://www.hakes.com/Auction/ItemDetail/onepiece-1",
-    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/62/62373509d64257a871a45c16068fdfaa182dddc0e98a4cb5aa93076e165d1728.webp",
+    "imageUrl": "https://storage.googleapis.com/panel-profits-covers-all/Pictures/D/Darkwood/One%20Piece%20(Darkwood)/1.jpg",
     "certNumber": "83920194",
     "fairMarketValue": 480,
     "anchorFmv": 480,
@@ -1204,7 +1311,9 @@
     "censusHigher": 0,
     "censusScarcityTier": "PSA Graded Manga Grail",
     "isYellowLabel": false,
-    "itemDescription": "Hakes Auctions: PSA Mint 9. 1st English edition of Eiichiro Oda global phenomenon."
+    "itemDescription": "Hakes Auctions: PSA Mint 9. 1st English edition of Eiichiro Oda global phenomenon.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "aa-spawn-1",
@@ -1215,7 +1324,7 @@
     "bidCount": 16,
     "secondsRemaining": 65,
     "url": "https://atomicavenue.com/atomic/issue/spawn-1",
-    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/a3/a3a60b2828e5cc51162fcfb93ec6e83a8f49afefa1bf05f8e7d8178339c7c1da.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/15/15230eb0cbc578b0cf51f8c6d5ea7731f91bbd228e5a69c057c891392ea8017d.jpg",
     "certNumber": "3948201099",
     "fairMarketValue": 240,
     "anchorFmv": 240,
@@ -1227,7 +1336,10 @@
     "censusHigher": 12,
     "censusScarcityTier": "Modern Image Landmark",
     "isYellowLabel": false,
-    "itemDescription": "Atomic Avenue Dealer Desk: CGC 9.8 White Pages. Todd McFarlane landmark launch."
+    "itemDescription": "Atomic Avenue Dealer Desk: CGC 9.8 White Pages. Todd McFarlane landmark launch.",
+    "listingType": "BuyItNow",
+    "isBuyItNow": true,
+    "buyItNowPrice": 110
   },
   {
     "id": "sb-saga-1",
@@ -1250,7 +1362,10 @@
     "censusHigher": 0,
     "censusScarcityTier": "Modern Indy Blue Chip",
     "isYellowLabel": false,
-    "itemDescription": "Shortboxed Verified Desk: CGC 9.8 White Pages. Brian K. Vaughan sci-fi fantasy #1."
+    "itemDescription": "Shortboxed Verified Desk: CGC 9.8 White Pages. Brian K. Vaughan sci-fi fantasy #1.",
+    "listingType": "BuyItNow",
+    "isBuyItNow": true,
+    "buyItNowPrice": 180
   },
   {
     "id": "ha-twd-19",
@@ -1261,7 +1376,7 @@
     "bidCount": 15,
     "secondsRemaining": 110,
     "url": "https://comics.ha.com/itm/image/twd-19/829106.s",
-    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/0e/0ea23ecb9ce83ce6e2e6ef9b543ecc906a30903774a6b673b2c3e9bac6846ae1.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/61/618fdc16ef3cba2b4de8c010008d19a46761d9df8e6eb43d392d18915ce9835b.webp",
     "certNumber": "3729104002",
     "fairMarketValue": 650,
     "anchorFmv": 650,
@@ -1273,7 +1388,9 @@
     "censusHigher": 0,
     "censusScarcityTier": "Modern High-Heat Key",
     "isYellowLabel": false,
-    "itemDescription": "Heritage Signature Session: CGC 9.8 White Pages. 1st Appearance Michonne."
+    "itemDescription": "Heritage Signature Session: CGC 9.8 White Pages. 1st Appearance Michonne.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "mcs-hellboy-1",
@@ -1284,7 +1401,7 @@
     "bidCount": 12,
     "secondsRemaining": 140,
     "url": "https://www.mycomicshop.com/auctions/item?id=7819206",
-    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/23/2369d6ab004e5dd2f536abb77beb4bbb078c02f9a1f77aa79f75674b4189a640.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/a5/a56d812c5c9c960c8609d41cd591dd17d09e6ee4e9d802e4ffec87e37fe4b69f.webp",
     "certNumber": "3819204099",
     "fairMarketValue": 550,
     "anchorFmv": 550,
@@ -1296,7 +1413,10 @@
     "censusHigher": 0,
     "censusScarcityTier": "Dark Horse Landmark Key",
     "isYellowLabel": false,
-    "itemDescription": "MyComicShop Prime Session: CGC 9.8 White Pages. 1st solo Hellboy title."
+    "itemDescription": "MyComicShop Prime Session: CGC 9.8 White Pages. 1st solo Hellboy title.",
+    "listingType": "BuyItNow",
+    "isBuyItNow": true,
+    "buyItNowPrice": 190
   },
   {
     "id": "cc-tmnt-1",
@@ -1319,7 +1439,9 @@
     "censusHigher": 0,
     "censusScarcityTier": "IDW Landmark Key",
     "isYellowLabel": false,
-    "itemDescription": "ComicConnect Auction: CGC 9.8 White Pages. Kevin Eastman IDW premiere."
+    "itemDescription": "ComicConnect Auction: CGC 9.8 White Pages. Kevin Eastman IDW premiere.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "sb-siktc-1",
@@ -1342,7 +1464,10 @@
     "censusHigher": 0,
     "censusScarcityTier": "Boom! Studios Blue Chip Grail",
     "isYellowLabel": false,
-    "itemDescription": "Shortboxed Verified Desk: CGC 9.8 White Pages. 1st Appearance Erica Slaughter."
+    "itemDescription": "Shortboxed Verified Desk: CGC 9.8 White Pages. 1st Appearance Erica Slaughter.",
+    "listingType": "BuyItNow",
+    "isBuyItNow": true,
+    "buyItNowPrice": 260
   },
   {
     "id": "ha-dredd-1",
@@ -1353,7 +1478,7 @@
     "bidCount": 7,
     "secondsRemaining": 260,
     "url": "https://comics.ha.com/itm/2000ad/judge-dredd-1/829107.s",
-    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/23/2369d6ab004e5dd2f536abb77beb4bbb078c02f9a1f77aa79f75674b4189a640.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/83/83434357e123e97ea9f1f66818be571fac1fad1a17135a35ddaeff7e6dfc4e89.jpg",
     "certNumber": "3819204055",
     "fairMarketValue": 280,
     "anchorFmv": 280,
@@ -1365,7 +1490,9 @@
     "censusHigher": 0,
     "censusScarcityTier": "2000 AD British Crossover Key",
     "isYellowLabel": false,
-    "itemDescription": "Heritage Comics Session: CGC 9.6 White Pages. Brian Bolland iconic cover art."
+    "itemDescription": "Heritage Comics Session: CGC 9.6 White Pages. Brian Bolland iconic cover art.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "mcs-hellboy-cracked",
@@ -1388,7 +1515,10 @@
     "censusHigher": 0,
     "censusScarcityTier": "Reholder Play ( Fix ->  FMV)",
     "isYellowLabel": false,
-    "itemDescription": "MyComicShop Consignment: CGC 9.8 slab shell cracked along top right post. Archival well intact. Standard  reholder candidate."
+    "itemDescription": "MyComicShop Consignment: CGC 9.8 slab shell cracked along top right post. Archival well intact. Standard  reholder candidate.",
+    "listingType": "BuyItNow",
+    "isBuyItNow": true,
+    "buyItNowPrice": 185
   },
   {
     "id": "aa-spawn-psa-cracked",
@@ -1399,7 +1529,7 @@
     "bidCount": 5,
     "secondsRemaining": 115,
     "url": "https://atomicavenue.com/atomic/issue/spawn-psa-cracked",
-    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/a3/a3a60b2828e5cc51162fcfb93ec6e83a8f49afefa1bf05f8e7d8178339c7c1da.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/15/15230eb0cbc578b0cf51f8c6d5ea7731f91bbd228e5a69c057c891392ea8017d.jpg",
     "certNumber": "74920199",
     "fairMarketValue": 160,
     "anchorFmv": 160,
@@ -1411,7 +1541,10 @@
     "censusHigher": 0,
     "censusScarcityTier": "PSA Reholder Target",
     "isYellowLabel": false,
-    "itemDescription": "Atomic Avenue: PSA 9 casing cracked on bottom edge. Inner well undamaged. Reholder or cross to CGC."
+    "itemDescription": "Atomic Avenue: PSA 9 casing cracked on bottom edge. Inner well undamaged. Reholder or cross to CGC.",
+    "listingType": "BuyItNow",
+    "isBuyItNow": true,
+    "buyItNowPrice": 55
   },
   {
     "id": "cl-akira-scratched",
@@ -1422,7 +1555,7 @@
     "bidCount": 7,
     "secondsRemaining": 145,
     "url": "https://www.comiclink.com/auctions/item.asp?id=5920105",
-    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/af/afff4b0cabcb43a612f97df02b4a5a01d2c85f26f481f48bb22fd3bbb7896554.webp",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/86/86657108761289af03b14e9655c2a2620221251857a916ac077a675b068d901b.jpg",
     "certNumber": "21-049281-088",
     "fairMarketValue": 340,
     "anchorFmv": 340,
@@ -1434,7 +1567,9 @@
     "censusHigher": 0,
     "censusScarcityTier": "CBCS Reholder / Cross Candidate",
     "isYellowLabel": false,
-    "itemDescription": "ComicLink: CBCS 9.6 heavily scuffed and scratched case surface. Clear  reholder opportunity."
+    "itemDescription": "ComicLink: CBCS 9.6 heavily scuffed and scratched case surface. Clear  reholder opportunity.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "sb-saga-cracked",
@@ -1457,7 +1592,10 @@
     "censusHigher": 0,
     "censusScarcityTier": "Reholder Play ( Fee ->  FMV)",
     "isYellowLabel": false,
-    "itemDescription": "Shortboxed Desk: CGC 9.8 top left corner chunk missing from case. Inner slab sealed. Immediate  reholder play."
+    "itemDescription": "Shortboxed Desk: CGC 9.8 top left corner chunk missing from case. Inner slab sealed. Immediate  reholder play.",
+    "listingType": "BuyItNow",
+    "isBuyItNow": true,
+    "buyItNowPrice": 195
   },
   {
     "id": "ha-asm-300-85",
@@ -1468,7 +1606,7 @@
     "bidCount": 22,
     "secondsRemaining": 45,
     "url": "https://comics.ha.com/itm/copper-age/asm-300-cgc-85/829108.s",
-    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/62/62373509d64257a871a45c16068fdfaa182dddc0e98a4cb5aa93076e165d1728.webp",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/78/7830afa2684f718d694dcdca1d5c87d938de6a0544ff7af4f422c39e0fd1ece1.webp",
     "certNumber": "3620194008",
     "fairMarketValue": 1400,
     "anchorFmv": 1400,
@@ -1480,7 +1618,9 @@
     "censusHigher": 0,
     "censusScarcityTier": "Completionist 8.5 Grail Slot",
     "isYellowLabel": false,
-    "itemDescription": "Heritage Weekly: CGC 8.5 White Pages. 1st Full Appearance Venom. Ideal completionist slot holder while waiting on a 9.8."
+    "itemDescription": "Heritage Weekly: CGC 8.5 White Pages. 1st Full Appearance Venom. Ideal completionist slot holder while waiting on a 9.8.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "mcs-nm-98-85",
@@ -1491,7 +1631,7 @@
     "bidCount": 14,
     "secondsRemaining": 105,
     "url": "https://www.mycomicshop.com/auctions/item?id=7819208",
-    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/40/40a9f3f36bb36a347ebe647346ee4380f29446f88887569e712120657037f639.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/55/55e8614235522578d6afcd08ee72a472777201cf05fc7be7e1cca59052e5d695.jpg",
     "certNumber": "3749201999",
     "fairMarketValue": 580,
     "anchorFmv": 580,
@@ -1503,7 +1643,10 @@
     "censusHigher": 0,
     "censusScarcityTier": "Completionist 8.5 Entry Key",
     "isYellowLabel": false,
-    "itemDescription": "MyComicShop Auction: CGC 8.5 White Pages. 1st Appearance Deadpool. High liquidity entry level."
+    "itemDescription": "MyComicShop Auction: CGC 8.5 White Pages. 1st Appearance Deadpool. High liquidity entry level.",
+    "listingType": "BuyItNow",
+    "isBuyItNow": true,
+    "buyItNowPrice": 210
   },
   {
     "id": "cl-batman-423-85",
@@ -1514,7 +1657,7 @@
     "bidCount": 8,
     "secondsRemaining": 130,
     "url": "https://www.comiclink.com/auctions/item.asp?id=5920106",
-    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/dd/ddd3e67dfef43ca4a223b101017a1e55403443a3dce33ca13e7bf800780e79d8.jpg",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/a0/a0bb828eb63ca6d81296f4f8aebebc5fe65ed4a3814266ea8fcae960d101773a.webp",
     "certNumber": "21-049281-077",
     "fairMarketValue": 420,
     "anchorFmv": 420,
@@ -1526,7 +1669,9 @@
     "censusHigher": 0,
     "censusScarcityTier": "Completionist 8.5 Placeholder",
     "isYellowLabel": false,
-    "itemDescription": "ComicLink: CBCS 8.5 White Pages. Todd McFarlane classic cover art. High-volume completionist run key."
+    "itemDescription": "ComicLink: CBCS 8.5 White Pages. Todd McFarlane classic cover art. High-volume completionist run key.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "aa-xmen-266-85",
@@ -1549,7 +1694,10 @@
     "censusHigher": 0,
     "censusScarcityTier": "Completionist 8.5 Slot Key",
     "isYellowLabel": false,
-    "itemDescription": "Atomic Avenue: CGC 8.5 White Pages. 1st Appearance Gambit. High velocity completionist turnover."
+    "itemDescription": "Atomic Avenue: CGC 8.5 White Pages. 1st Appearance Gambit. High velocity completionist turnover.",
+    "listingType": "BuyItNow",
+    "isBuyItNow": true,
+    "buyItNowPrice": 95
   },
   {
     "id": "hip-spidre-300",
@@ -1560,7 +1708,7 @@
     "bidCount": 4,
     "secondsRemaining": 40,
     "url": "https://www.hipcomic.com/listing/spidre-man-300",
-    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/62/62373509d64257a871a45c16068fdfaa182dddc0e98a4cb5aa93076e165d1728.webp",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/78/7830afa2684f718d694dcdca1d5c87d938de6a0544ff7af4f422c39e0fd1ece1.webp",
     "certNumber": "3620194099",
     "fairMarketValue": 1400,
     "anchorFmv": 1400,
@@ -1572,7 +1720,9 @@
     "censusHigher": 0,
     "censusScarcityTier": "Terrapeak Typo Listing (Zero Visibility)",
     "isYellowLabel": false,
-    "itemDescription": "HipComic Marketplace: Listed as \"Spidre-Man #300\". Hidden from standard keyword searches. Enormous spread."
+    "itemDescription": "HipComic Marketplace: Listed as \"Spidre-Man #300\". Hidden from standard keyword searches. Enormous spread.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "aa-wolverne-1",
@@ -1583,7 +1733,7 @@
     "bidCount": 3,
     "secondsRemaining": 85,
     "url": "https://atomicavenue.com/atomic/issue/wolverne-1",
-    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/62/62373509d64257a871a45c16068fdfaa182dddc0e98a4cb5aa93076e165d1728.webp",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/dd/dd106f9c06661717b608bd748a8dd892b18312dee13187620203833593a950f8.jpg",
     "certNumber": "3948201044",
     "fairMarketValue": 550,
     "anchorFmv": 550,
@@ -1595,19 +1745,22 @@
     "censusHigher": 0,
     "censusScarcityTier": "Typo Sleeper Listing",
     "isYellowLabel": false,
-    "itemDescription": "Atomic Avenue: Seller typo \"Wolverne #1\". Undiscovered by search engines."
+    "itemDescription": "Atomic Avenue: Seller typo \"Wolverne #1\". Undiscovered by search engines.",
+    "listingType": "BuyItNow",
+    "isBuyItNow": true,
+    "buyItNowPrice": 180
   },
   {
     "id": "ebay-fr-strange-1",
     "source": "ebay_fr",
-    "title": "Strange #1 EGS 8.5 Éditions Lug 1970 1st French Marvel Silver Age",
+    "title": "Strange #1 EGS 8.5 \u00c9ditions Lug 1970 1st French Marvel Silver Age",
     "translatedTitle": "Strange #1 (1st French Silver Age Marvel Edition)",
     "currentBid": 350,
     "shippingCost": 25,
     "bidCount": 12,
     "secondsRemaining": 160,
     "url": "https://www.ebay.fr/itm/strange-1-egs-85",
-    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/62/62373509d64257a871a45c16068fdfaa182dddc0e98a4cb5aa93076e165d1728.webp",
+    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/ea/ea30328b9971d0490c5539b9ae4c220fb52f7f1c72f853cc3cc4acda7d1f5e35.jpg",
     "certNumber": "EGS-2023-9481",
     "fairMarketValue": 1100,
     "anchorFmv": 1100,
@@ -1622,10 +1775,12 @@
     "isForeignLanguageEdition": true,
     "currency": "EUR",
     "originalBid": 320,
-    "originalCurrencySymbol": "€",
+    "originalCurrencySymbol": "\u20ac",
     "exchangeRateToUsd": 1.09,
     "internationalRegion": "FR",
-    "itemDescription": "eBay France: EGS 8.5 (European Grading Service). Éditions Lug N°1 original 1970 French Marvel Silver Age key."
+    "itemDescription": "eBay France: EGS 8.5 (European Grading Service). \u00c9ditions Lug N\u00b01 original 1970 French Marvel Silver Age key.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "ebay-de-topolino-500",
@@ -1652,10 +1807,12 @@
     "isForeignLanguageEdition": true,
     "currency": "EUR",
     "originalBid": 78,
-    "originalCurrencySymbol": "€",
+    "originalCurrencySymbol": "\u20ac",
     "exchangeRateToUsd": 1.09,
     "internationalRegion": "DE",
-    "itemDescription": "eBay Germany / Italy: EGS 8.5. Historic 500th milestone issue of Topolino."
+    "itemDescription": "eBay Germany / Italy: EGS 8.5. Historic 500th milestone issue of Topolino.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   },
   {
     "id": "ebay-uk-mwom-1",
@@ -1667,7 +1824,7 @@
     "bidCount": 9,
     "secondsRemaining": 190,
     "url": "https://www.ebay.co.uk/itm/mwom-1",
-    "imageUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/62/62373509d64257a871a45c16068fdfaa182dddc0e98a4cb5aa93076e165d1728.webp",
+    "imageUrl": "https://storage.googleapis.com/images.pricecharting.com/4kg2liog7ug2malb/240.jpg",
     "certNumber": "3819204091",
     "fairMarketValue": 380,
     "anchorFmv": 380,
@@ -1681,9 +1838,11 @@
     "isYellowLabel": false,
     "currency": "GBP",
     "originalBid": 92,
-    "originalCurrencySymbol": "£",
+    "originalCurrencySymbol": "\u00a3",
     "exchangeRateToUsd": 1.3,
     "internationalRegion": "UK",
-    "itemDescription": "eBay UK: CGC 8.5 Off-White to White Pages. Complete with free gift Marvel transfers."
+    "itemDescription": "eBay UK: CGC 8.5 Off-White to White Pages. Complete with free gift Marvel transfers.",
+    "listingType": "Auction",
+    "isBuyItNow": false
   }
 ]

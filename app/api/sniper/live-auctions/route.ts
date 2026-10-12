@@ -108,23 +108,6 @@ function resolveAuctionDbMetadata(title: string, rawGrade?: number): { fmv: numb
   return { fmv, publisher };
 }
 
-// Read verified multi-source catalog (Heritage, MyComicShop, ComicConnect, Metropolis, Hake's, Atomic Avenue, Shortboxed, ComicLink, HipComic, Goldin, eBay)
-function loadBaselineMultiSourceCatalog(): RawAuctionListing[] {
-  try {
-    const p = path.resolve(process.cwd(), "data", "live_auctions.json");
-    if (fs.existsSync(p)) {
-      const data = fs.readFileSync(p, "utf-8");
-      const parsed = JSON.parse(data);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
-      }
-    }
-  } catch (err) {
-    console.error("Failed to load baseline live_auctions.json:", err);
-  }
-  return [];
-}
-
 // In-memory cache for live streams to protect quotas and deliver sub-10ms response times
 interface StreamCache {
   items: RawAuctionListing[];
@@ -144,14 +127,12 @@ export async function GET(request: Request) {
   const minGrade = minGradeParam ? parseFloat(minGradeParam) : 8.5;
 
   try {
-    // 1. Always load verified multi-source baseline catalog
-    const baselineItems = loadBaselineMultiSourceCatalog();
-
     let combinedAuctions: RawAuctionListing[] = [];
     const seenIds = new Set<string>();
 
     // 2. Fetch live eBay stream if available and not rate-limited
     let liveEbay: RawAuctionListing[] = [];
+    let fetchedAtMs = Date.now(); // when the eBay results were actually fetched
     if (searchQuery && searchQuery.trim().length > 0) {
       try {
         liveEbay = await searchEbayLiveAuctions({
@@ -159,12 +140,13 @@ export async function GET(request: Request) {
           limit: 25,
         });
       } catch (err) {
-        console.warn("[Sniper Live] eBay query search failed or rate-limited, using multi-source baseline:", err);
+        console.warn("[Sniper Live] eBay query search failed or rate-limited, returning no listings:", err);
       }
     } else {
       const now = Date.now();
       if (!shouldRefresh && streamCache && now - streamCache.timestamp < CACHE_TTL_MS) {
         liveEbay = streamCache.items;
+        fetchedAtMs = streamCache.timestamp;
       } else {
         try {
           liveEbay = await searchEbayMultiStream();
@@ -173,7 +155,7 @@ export async function GET(request: Request) {
             timestamp: now,
           };
         } catch (err) {
-          console.warn("[Sniper Live] eBay multi-stream failed or rate-limited, using multi-source baseline:", err);
+          console.warn("[Sniper Live] eBay multi-stream failed or rate-limited, returning no listings:", err);
           liveEbay = streamCache ? streamCache.items : [];
         }
       }
@@ -187,15 +169,7 @@ export async function GET(request: Request) {
       }
     }
 
-    // 4. Merge multi-source baseline items (Heritage, MyComicShop, ComicConnect, Metropolis, Hake's, Atomic Avenue, ComicLink, etc.)
-    for (const it of baselineItems) {
-      if (!seenIds.has(it.id)) {
-        seenIds.add(it.id);
-        combinedAuctions.push(it);
-      }
-    }
-
-    // 5. Apply dynamic filters if query parameters provided
+    // 4. Apply dynamic filters if query parameters provided
     let filteredAuctions = combinedAuctions;
 
     // Filter by search query (title or series match)
@@ -266,18 +240,9 @@ export async function GET(request: Request) {
     }
 
     if (filteredAuctions.length > 0) {
-      const nowSec = Math.floor(Date.now() / 1000);
-      const updatedAuctions = filteredAuctions.map((item, idx) => {
-        // Continuous 24/7 rolling microwave stream:
-        // Stagger lots evenly across the 30-minute microwave cycle (1800s)
-        const cyclePeriod = 1800;
-        const baseOffset = Number(item.secondsRemaining ?? 300);
-        const staggeredAnchor = (baseOffset + idx * 53) % cyclePeriod;
-        const currentElapsed = nowSec % cyclePeriod;
-        let secs = (staggeredAnchor - currentElapsed + cyclePeriod) % cyclePeriod;
-        if (secs < 20) {
-          secs += cyclePeriod; // Keep at least 20s active in live killzone
-        }
+      const updatedAuctions = filteredAuctions.map((item) => {
+        // Real time remaining: eBay's end time as of the fetch, minus the time since the fetch. No simulated cycle.
+        const secs = Math.max(0, Math.round(Number(item.secondsRemaining ?? 0) - (Date.now() - fetchedAtMs) / 1000));
 
         const rawTitle = String(item.title || "");
         const cleanTitle = normalizeAuctionTitle(rawTitle);
@@ -314,11 +279,12 @@ export async function GET(request: Request) {
         };
       });
 
+      const liveAuctions = updatedAuctions.filter((a) => a.secondsRemaining > 0);
       return NextResponse.json({
         success: true,
-        count: updatedAuctions.length,
-        auctions: updatedAuctions,
-        source: liveEbay.length > 0 ? "multi_source_and_live_ebay" : "verified_multi_source_catalog",
+        count: liveAuctions.length,
+        auctions: liveAuctions,
+        source: "ebay_browse_api",
         fetchedAt: new Date().toISOString(),
       });
     }
@@ -327,7 +293,8 @@ export async function GET(request: Request) {
       success: true,
       count: 0,
       auctions: [],
-      source: "empty",
+      source: "ebay_browse_api",
+      message: "eBay returned no live listings for this request. Nothing is simulated or cached from other sources.",
       fetchedAt: new Date().toISOString(),
     });
   } catch (error: unknown) {
