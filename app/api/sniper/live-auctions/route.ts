@@ -143,7 +143,7 @@ export async function GET(request: Request) {
   const publisherFilter = searchParams.get("publisher");
   const angleFilter = searchParams.get("angle");
   const minGradeParam = searchParams.get("minGrade");
-  const minGrade = minGradeParam ? parseFloat(minGradeParam) : 8.5;
+  const minGrade = minGradeParam ? parseFloat(minGradeParam) : 0.5;
 
   try {
     let combinedAuctions: RawAuctionListing[] = [];
@@ -259,8 +259,8 @@ export async function GET(request: Request) {
       }
     }
 
-    // Filter by minimum grade (defaults to 8.5)
-    if (!isNaN(minGrade) && minGrade > 0) {
+    // Filter by minimum grade (only if explicitly specified)
+    if (minGradeParam && !isNaN(minGrade) && minGrade > 0.5) {
       filteredAuctions = filteredAuctions.filter((item) => {
         if (item.resolvedGrade !== undefined) {
           return item.resolvedGrade >= minGrade;
