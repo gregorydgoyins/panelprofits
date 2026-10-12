@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, startTransition } from "react";
 import Link from "next/link";
 import {
   RawAuctionListing,
@@ -1310,7 +1310,7 @@ export default function SniperRadarPage() {
                             imageUrl={deal.listing.imageUrl}
                             galleryImages={deal.galleryImages}
                             size="md"
-                            onClick={() => setInspectedDeal(deal)}
+                            onClick={() => startTransition(() => setInspectedDeal(deal))}
                           />
                         </div>
 
@@ -1794,7 +1794,7 @@ export default function SniperRadarPage() {
                           imageUrl={deal.listing.imageUrl}
                           galleryImages={deal.galleryImages}
                           size="sm"
-                          onClick={() => setInspectedDeal(deal)}
+                          onClick={() => startTransition(() => setInspectedDeal(deal))}
                         />
                       </div>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useMemo } from "react";
+import React, { useState, useRef, useMemo, useEffect } from "react";
 import { ComicEra, GradingCompany } from "@/lib/sniper/types";
 import { getEraDisplayName, uprezEbayImage } from "@/lib/sniper/anti-bullshit";
 
@@ -45,12 +45,25 @@ export function SlabEncasement({
 }: SlabEncasementProps) {
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
 
-  // eBay-Style Interactive Loupe & Magnifier Zoom State
+  // eBay-Style Interactive Loupe & Magnifier Zoom State (Direct DOM + rAF: 0 React re-renders on mousemove)
+  const isLoupeEnabled = size === "lg" || size === "xl" || !onClick;
   const [isZooming, setIsZooming] = useState<boolean>(false);
   const [zoomScale, setZoomScale] = useState<number>(2.5); // 1x, 2.5x, 4x
-  const [zoomPos, setZoomPos] = useState<{ x: number; y: number }>({ x: 50, y: 50 });
   const [isLoupeLocked, setIsLoupeLocked] = useState<boolean>(false);
   const wellRef = useRef<HTMLDivElement>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
+  const reticleRef = useRef<HTMLDivElement>(null);
+  const coordRef = useRef<HTMLSpanElement>(null);
+  const rafIdRef = useRef<number | null>(null);
+  const rectRef = useRef<DOMRect | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current);
+      }
+    };
+  }, []);
 
   // Combine main image and any gallery photos with high-resolution uprez
   const allImages = useMemo(() => {
@@ -86,21 +99,55 @@ export function SlabEncasement({
     return `EX-MT ${g.toFixed(1)}`;
   };
 
-  // Cursor tracking for eBay-style magnifying loupe
+  // Cursor tracking for eBay-style magnifying loupe (Throttled by rAF with zero React re-renders)
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!wellRef.current) return;
-    const rect = wellRef.current.getBoundingClientRect();
-    const x = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
-    const y = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
-    setZoomPos({ x, y });
+    if (!isLoupeEnabled) return;
+    if (rafIdRef.current) return;
+
+    const clientX = e.clientX;
+    const clientY = e.clientY;
+
+    rafIdRef.current = requestAnimationFrame(() => {
+      rafIdRef.current = null;
+      const rect = rectRef.current || wellRef.current?.getBoundingClientRect();
+      if (!rect || rect.width === 0 || rect.height === 0) return;
+
+      const x = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
+      const y = Math.max(0, Math.min(100, ((clientY - rect.top) / rect.height) * 100));
+
+      if (imageRef.current) {
+        imageRef.current.style.transformOrigin = `${x}% ${y}%`;
+      }
+      if (reticleRef.current) {
+        reticleRef.current.style.left = `calc(${x}% - 48px)`;
+        reticleRef.current.style.top = `calc(${y}% - 48px)`;
+      }
+      if (coordRef.current) {
+        coordRef.current.textContent = `Inspector @ ${Math.round(x)}% : ${Math.round(y)}%`;
+      }
+    });
   };
 
   const handleMouseEnter = () => {
+    if (!isLoupeEnabled) return;
+    if (wellRef.current) {
+      rectRef.current = wellRef.current.getBoundingClientRect();
+    }
     if (!isLoupeLocked) setIsZooming(true);
   };
 
   const handleMouseLeave = () => {
-    if (!isLoupeLocked) setIsZooming(false);
+    if (rafIdRef.current) {
+      cancelAnimationFrame(rafIdRef.current);
+      rafIdRef.current = null;
+    }
+    rectRef.current = null;
+    if (!isLoupeLocked) {
+      setIsZooming(false);
+      if (imageRef.current) {
+        imageRef.current.style.transformOrigin = "50% 50%";
+      }
+    }
   };
 
   const toggleLoupeLock = (e: React.MouseEvent) => {
@@ -463,18 +510,19 @@ export function SlabEncasement({
         />
 
         {currentDisplayImage && currentDisplayImage.trim().length > 0 ? (
-          /* HIGH VISIBILITY SELLER COVER IMAGE WITH DYNAMIC eBAY ZOOM LENS */
+          /* HIGH VISIBILITY SELLER COVER IMAGE WITH DYNAMIC eBAY ZOOM LENS (Optimized: Direct DOM, pointer-events-none on image) */
           <div className="relative w-full h-full overflow-hidden flex items-center justify-center">
             <img
+              ref={imageRef}
               src={uprezEbayImage(currentDisplayImage)}
               alt={title}
-              className="w-full h-full object-contain rounded-[1px] select-none p-2"
+              className="w-full h-full object-contain rounded-[1px] select-none p-2 pointer-events-none"
               style={{
-                transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+                transformOrigin: "50% 50%",
                 transform: isZooming ? `scale(${zoomScale})` : "scale(1)",
                 transition: isZooming ? "none" : "transform 0.25s ease-out",
                 imageRendering: "-webkit-optimize-contrast",
-                filter: "contrast(1.03) saturate(1.02)",
+                willChange: isZooming ? "transform" : "auto",
               }}
               loading="lazy"
             />
@@ -482,10 +530,12 @@ export function SlabEncasement({
             {/* eBay-Style Crosshair / Loupe Reticle Overlay */}
             {isZooming && (
               <div
+                ref={reticleRef}
                 className="absolute w-24 h-24 rounded-full border-2 border-cyan-400 bg-cyan-400/10 pointer-events-none shadow-[0_0_20px_rgba(34,211,238,0.6)] z-20 flex items-center justify-center"
                 style={{
-                  left: `calc(${zoomPos.x}% - 48px)`,
-                  top: `calc(${zoomPos.y}% - 48px)`,
+                  left: "calc(50% - 48px)",
+                  top: "calc(50% - 48px)",
+                  willChange: "left, top",
                 }}
               >
                 <div className="w-1.5 h-1.5 rounded-full bg-cyan-300" />
@@ -515,34 +565,36 @@ export function SlabEncasement({
           </div>
         )}
 
-        {/* Floating eBay Zoom Controls Pill Bar */}
-        <div
-          className="absolute top-2 right-2 flex items-center gap-1 z-30"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <button
-            type="button"
-            onClick={toggleLoupeLock}
-            className={`px-2 py-0.5 rounded text-[8.5px] font-mono font-bold border transition shadow ${
-              isLoupeLocked
-                ? "bg-cyan-500 text-slate-950 border-cyan-400 ring-1 ring-cyan-300"
-                : "bg-black/75 text-cyan-300 border-cyan-500/50 hover:bg-black/90"
-            }`}
-            title="Lock zoom loupe in place to inspect defect"
+        {/* Floating eBay Zoom Controls Pill Bar (Shown when Loupe Enabled) */}
+        {isLoupeEnabled && (
+          <div
+            className="absolute top-2 right-2 flex items-center gap-1 z-30"
+            onClick={(e) => e.stopPropagation()}
           >
-            {isLoupeLocked ? "🔒 PINNED" : "🔍 LOUPE"}
-          </button>
-          {isZooming && (
             <button
               type="button"
-              onClick={cycleZoomScale}
-              className="px-1.5 py-0.5 rounded text-[8.5px] font-mono font-bold bg-black/80 text-amber-300 border border-amber-500/50 hover:bg-black/95 shadow"
-              title="Cycle magnification factor"
+              onClick={toggleLoupeLock}
+              className={`px-2 py-0.5 rounded text-[8.5px] font-mono font-bold border transition shadow ${
+                isLoupeLocked
+                  ? "bg-cyan-500 text-slate-950 border-cyan-400 ring-1 ring-cyan-300"
+                  : "bg-black/75 text-cyan-300 border-cyan-500/50 hover:bg-black/90"
+              }`}
+              title="Lock zoom loupe in place to inspect defect"
             >
-              {zoomScale}x
+              {isLoupeLocked ? "🔒 PINNED" : "🔍 LOUPE"}
             </button>
-          )}
-        </div>
+            {isZooming && (
+              <button
+                type="button"
+                onClick={cycleZoomScale}
+                className="px-1.5 py-0.5 rounded text-[8.5px] font-mono font-bold bg-black/80 text-amber-300 border border-amber-500/50 hover:bg-black/95 shadow"
+                title="Cycle magnification factor"
+              >
+                {zoomScale}x
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Live Loupe Coordinate / Inspection Banner */}
         {isZooming && (
@@ -551,8 +603,8 @@ export function SlabEncasement({
               <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping inline-block" />
               eBay Loupe {zoomScale}x
             </span>
-            <span className="text-slate-400">
-              Spine/Corners @ {Math.round(zoomPos.x)}% : {Math.round(zoomPos.y)}%
+            <span ref={coordRef} className="text-slate-400">
+              Inspector Active
             </span>
           </div>
         )}
