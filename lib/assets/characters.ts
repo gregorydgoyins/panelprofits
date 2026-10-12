@@ -11,6 +11,10 @@ import { conditionsFor, type ShockMap } from "./shock-propagation";
 import type { Underlying } from "./underlyings";
 import { censusKey, censusLine, type UniverseCensus } from "./universe";
 import { ERAS, ERA_LABEL, FOOTPRINT_KEYS, FOOTPRINT_UNITS, bookKey, rosterKey, valueFootprint, type Anchor, type Era, type Footprint } from "./footprint";
+import { UNIVERSE_KEYS, leadingCharacters, type UniverseCharacter } from "./universe-footprints";
+
+/** Characters listed on the rail per publisher from the whole-universe measurement. */
+export const UNIVERSE_LISTED = 400;
 
 const r2 = (x: number) => Math.round(x * 100) / 100;
 
@@ -23,10 +27,13 @@ export function characterSurface(id: string): "VILLAIN" | "DC_CHARACTER" | "CHAR
   return null;
 }
 
-export function issueCharacters(unders: Underlying[], shocks: ShockMap, now: number, census: UniverseCensus[] = [], roster: RosterCharacter[] = [], footprints: Map<string, Footprint> = new Map()): AssetItem[] {
+export function issueCharacters(unders: Underlying[], shocks: ShockMap, now: number, census: UniverseCensus[] = [], roster: RosterCharacter[] = [], footprints: Map<string, Footprint> = new Map(), universe: UniverseCharacter[] = []): AssetItem[] {
   const out: AssetItem[] = [];
   const idx = new Map(unders.map((u) => [`${u.series.toLowerCase()}|${u.issueNumber}|${u.year ?? ""}`, u]));
-  const live = { get: (k: string) => idx.get(k)?.price };
+  const byPp = new Map(unders.filter((u) => u.ppId).map((u) => [u.ppId as string, u]));
+  const live = { get: (k: string) => (k.startsWith("pp:") ? byPp.get(k.slice(3))?.price : idx.get(k)?.price) };
+  const uByKey = new Map(universe.map((c) => [`${c.universe}|${c.key}`, c]));
+  const uKey = (universeName: string, key: string) => `${universeName.toUpperCase() === "DC" ? "DC" : "MARVEL"}|${key}`;
   let i = 0;
   const ERA_CODE: Record<Era, string> = { GOLDEN: "G", SILVER: "S", BRONZE: "B", MODERN: "M" };
   for (const [nodeId, books] of Object.entries(CHARACTER_BOOKS)) {
@@ -35,9 +42,11 @@ export function issueCharacters(unders: Underlying[], shocks: ShockMap, now: num
     if (!type || !node) continue;
     const basket = books.map((b) => idx.get(`${b.series.toLowerCase()}|${b.issue}|${b.year}`)).filter((u): u is Underlying => !!u);
     if (basket.length === 0) continue;
-    const fp = footprints.get(FOOTPRINT_KEYS[nodeId] ?? "");
+    const wiki = UNIVERSE_KEYS[nodeId] ? uByKey.get(uKey(node.universe, UNIVERSE_KEYS[nodeId])) : undefined;
+    const fp = wiki?.footprint ?? footprints.get(FOOTPRINT_KEYS[nodeId] ?? "");
     if (fp) {
-      const anchors: Anchor[] = books.map((b) => ({ series: b.series, issue: b.issue, year: b.year }));
+      // measured from the wiki's own appearance lists, so no curated anchors are needed; the story-credit footprint still gets them
+      const anchors: Anchor[] = wiki ? [] : books.map((b) => ({ series: b.series, issue: b.issue, year: b.year }));
       const val = valueFootprint(fp, live, anchors);
       if (val.nav > 0) {
         const cond2 = conditionsFor(shocks.get(nodeId));
@@ -55,7 +64,7 @@ export function issueCharacters(unders: Underlying[], shocks: ShockMap, now: num
           diversityBucket: "standard",
           symbol: sym2,
           displayName: node.name,
-          description: `Footprint of ${totalBooks.toLocaleString("en-US")} priced books across ${ERAS.filter((e) => val.byEra[e].books > 0).length} ages · ${node.universe}${census.length ? ` · one of ${censusLine(census.find((c) => c.universe === censusKey(node.universe)))}` : ""}`,
+          description: `Footprint of ${totalBooks.toLocaleString("en-US")} priced books${wiki ? ` of ${wiki.issues.toLocaleString("en-US")} issues` : ""} across ${ERAS.filter((e) => val.byEra[e].books > 0).length} ages · ${node.universe}${census.length ? ` · one of ${censusLine(census.find((c) => c.universe === censusKey(node.universe)))}` : ""}`,
           universe: node.universe,
           pricing: { fmv_usd: r2(price2), fmv: r2(price2), price: r2(price2), formula: "NAV = Σ (share of issue × market price) over every priced book the character appears in; price = NAV ÷ units × news pressure × market texture" },
           parameters: { nav: val.nav, units: FOOTPRINT_UNITS, drift: val.drift, eras: Object.fromEntries(ERAS.map((e) => [e, { label: ERA_LABEL[e], books: val.byEra[e].books, nav: val.byEra[e].nav }])), topBooks: val.topBooks, sigma: sig2, universe: census.find((c) => c.universe === censusKey(node.universe)) ?? null, trails: shocks.get(nodeId)?.trails ?? [] },
@@ -119,6 +128,46 @@ export function issueCharacters(unders: Underlying[], shocks: ShockMap, now: num
 
   // Roster characters: a share of the first-appearance book, priced at its market price.
   const graphTaken = new Set(Object.keys(CHARACTER_BOOKS));
+  if (universe.length > 0) {
+    const handled = new Set(Object.keys(CHARACTER_BOOKS).filter((id) => UNIVERSE_KEYS[id]).map((id) => uKey(nodeById(id)?.universe ?? "DC", UNIVERSE_KEYS[id])));
+    for (const uc of leadingCharacters(universe, UNIVERSE_LISTED, handled)) {
+      const liveBooks = uc.footprint.top.map((b) => (b.ppId ? byPp.get(b.ppId) : undefined)).filter((u): u is Underlying => !!u);
+      if (liveBooks.length === 0) continue; // no priced book on the rail to quote or link
+      const node = matchEntities(uc.name).map((id) => nodeById(id)).find((n) => n && (n.kind === "HERO" || n.kind === "VILLAIN" || n.kind === "ALTER_EGO"));
+      if (node && graphTaken.has(node.id)) continue;
+      const type: "DC_CHARACTER" | "CHARACTER" | "VILLAIN" = node?.kind === "VILLAIN" ? "VILLAIN" : uc.universe === "DC" ? "DC_CHARACTER" : "CHARACTER";
+      const val = valueFootprint(uc.footprint, live);
+      if (!(val.nav > 0)) continue;
+      const cond = conditionsFor(node ? shocks.get(node.id) : undefined);
+      const sigma = (liveBooks.reduce((s2, u) => s2 + u.sigma, 0) / liveBooks.length) * cond.volMult;
+      const slug = uc.key.replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      const price = (val.nav / FOOTPRINT_UNITS) * Math.exp(cond.pressure) * marketFactor(`univ:${slug}`, now, Math.min(sigma, 0.6));
+      if (!(price > 0)) continue;
+      const lead = liveBooks.slice().sort((a, b) => b.price - a.price)[0];
+      const cen = census.find((c) => c.universe === censusKey(uc.universe));
+      const sym = uc.name.replace(/^the\s+/i, "").replace(/[^A-Za-z0-9]/g, "").toUpperCase().slice(0, 5);
+      const totalBooks = ERAS.reduce((n, e) => n + val.byEra[e].books, 0);
+      out.push({
+        entryId: `asset-${type.toLowerCase()}-u-${slug}`,
+        assetId: `${type}-u-${slug}`,
+        assetType: type,
+        displayRank: ++i,
+        diversityBucket: "standard",
+        symbol: `$${sym}`,
+        displayName: uc.name,
+        description: `Footprint of ${totalBooks.toLocaleString("en-US")} priced books of ${uc.issues.toLocaleString("en-US")} issues${uc.firstYear ? ` · since ${uc.firstYear}` : ""} · ${uc.universe === "DC" ? "DC" : "Marvel"}${cen ? ` · one of ${censusLine(cen)}` : ""}`,
+        universe: uc.universe === "DC" ? "DC" : "Marvel",
+        pricing: { fmv_usd: r2(price), fmv: r2(price), price: r2(price), formula: "NAV = Σ (share of issue × market price) over every priced book the wiki lists the character in; ÷ units × news pressure × market texture" },
+        parameters: { footprint: { nav: val.nav, drift: val.drift, eras: Object.fromEntries(ERAS.map((e) => [e, { label: ERA_LABEL[e], books: val.byEra[e].books, nav: val.byEra[e].nav }])), topBooks: val.topBooks }, issues: uc.issues, debut: uc.debut, sigma, trails: node ? shocks.get(node.id)?.trails ?? [] : [] },
+        valueUnit: "USD",
+        detailUrl: lead.detailUrl,
+        coverImageUrl: lead.coverUrl,
+        coverVerified: true,
+        quarantined: false,
+      });
+    }
+    return out;
+  }
   for (const rc of roster) {
     const book = idx.get(`${rc.series.toLowerCase()}|${rc.issue}|${rc.year ?? ""}`);
     if (!book) continue;

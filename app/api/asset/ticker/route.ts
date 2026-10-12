@@ -5,6 +5,7 @@ import { applyShocks, getUnderlyings } from "@/lib/assets/underlyings";
 import { getShocks } from "@/lib/assets/shocks";
 import { getUniverseCensus } from "@/lib/assets/universe";
 import { getRoster } from "@/lib/assets/roster";
+import { getUniverseCharacters } from "@/lib/assets/universe-footprints";
 import { getFootprintEntries, type Footprint } from "@/lib/assets/footprint";
 import { issueInstruments } from "@/lib/assets/instruments";
 
@@ -20,7 +21,7 @@ export async function GET(request: Request) {
   const [baseUnders, state, census] = await Promise.all([getUnderlyings().catch(() => []), getShocks().catch(() => ({ shocks: new Map(), outcomes: [] })), getUniverseCensus().catch(() => [])]);
   const [roster, fpEntries] = await Promise.all([getRoster().catch(() => []), getFootprintEntries().catch(() => [] as [string, Footprint][])]);
   const unders = applyShocks(baseUnders, state.shocks, now);
-  const issued = issueInstruments(unders, state.shocks, now, state.outcomes, census, roster, new Map(fpEntries));
+  const issued = issueInstruments(unders, state.shocks, now, state.outcomes, census, roster, new Map(fpEntries), getUniverseCharacters());
 
   const surfaces: Partial<Record<SurfaceKey, SurfaceData>> = {};
   let total = 0;

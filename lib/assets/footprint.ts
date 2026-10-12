@@ -37,6 +37,7 @@ export interface FootprintBook {
   year: number | null;
   share: number;
   px: number; // stored market price when the footprint was built
+  ppId?: string; // catalog id; when present the live price is looked up as `pp:<id>`
 }
 export interface Footprint {
   nameKey: string;
@@ -45,6 +46,7 @@ export interface Footprint {
 }
 
 export const bookKey = (series: string, issue: string, year: number | null | undefined) => `${series.toLowerCase()}|${issue}|${year ?? ""}`;
+export const fpBookKey = (b: FootprintBook) => (b.ppId ? `pp:${b.ppId}` : bookKey(b.series, b.issue, b.year));
 
 export interface Anchor { series: string; issue: string; year: number; share?: number }
 export interface LivePrices { get(key: string): number | undefined }
@@ -63,7 +65,7 @@ export interface FootprintValue {
  */
 export function valueFootprint(fp: Footprint, live: LivePrices, anchors: Anchor[] = []): FootprintValue {
   const books = new Map<string, FootprintBook>();
-  for (const b of fp.top) books.set(bookKey(b.series, b.issue, b.year), { ...b }); // copy: never mutate the cached footprint
+  for (const b of fp.top) books.set(fpBookKey(b), { ...b }); // copy: never mutate the cached footprint
   const topStored: Record<Era, number> = { GOLDEN: 0, SILVER: 0, BRONZE: 0, MODERN: 0 };
   for (const b of fp.top) topStored[eraOf(b.year)] += b.share * b.px;
 
@@ -83,7 +85,7 @@ export function valueFootprint(fp: Footprint, live: LivePrices, anchors: Anchor[
   let wStored = 0;
   let liveBooks = 0;
   for (const b of books.values()) {
-    const p = live.get(bookKey(b.series, b.issue, b.year));
+    const p = live.get(fpBookKey(b));
     if (p != null) { wLive += b.share * p; wStored += b.share * b.px; liveBooks++; }
   }
   const drift = wStored > 0 ? wLive / wStored : 1;
@@ -97,7 +99,7 @@ export function valueFootprint(fp: Footprint, live: LivePrices, anchors: Anchor[
   for (const e of ERAS) byEra[e].nav += Math.max(0, fp.eras[e].nav - topStored[e]) * drift; // the tail follows the leaders
   const topBooks: FootprintValue["topBooks"] = [];
   for (const b of books.values()) {
-    const p = live.get(bookKey(b.series, b.issue, b.year)) ?? b.px * drift;
+    const p = live.get(fpBookKey(b)) ?? b.px * drift;
     byEra[eraOf(b.year)].nav += b.share * p;
     topBooks.push({ label: `${b.series} #${b.issue}${b.year ? ` (${b.year})` : ""}`, share: b.share, price: p });
   }

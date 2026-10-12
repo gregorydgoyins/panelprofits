@@ -20,8 +20,8 @@ const nextConfig: NextConfig = {
     "/market": ["./data/pp115k.sqlite", "./data/gcd_variant_map.json"],
     "/watchlist": ["./data/pp115k.sqlite", "./data/gcd_variant_map.json"],
     "/sniper": ["./data/pp115k.sqlite", "./data/gcd_variant_map.json"],
-    "/assets/**/*": ["./data/pp115k.sqlite", "./data/gcd_variant_map.json"],
-    "/api/**/*": ["./data/pp115k.sqlite", "./data/gcd_variant_map.json"],
+    "/assets/**/*": ["./data/pp115k.sqlite", "./data/gcd_variant_map.json", "./data/universe/character-footprints.json"],
+    "/api/**/*": ["./data/pp115k.sqlite", "./data/gcd_variant_map.json", "./data/universe/character-footprints.json"],
   },
   images: {
     formats: ["image/avif", "image/webp"],
