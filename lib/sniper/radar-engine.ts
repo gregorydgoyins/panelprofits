@@ -397,7 +397,7 @@ const VERIFIED_KEY_COMPS: Record<string, VerifiedMarketComp> = {
     grade: 9.8,
     fmv: 175.00,
     salesCount: 34,
-    keyReason: "Miles Morales / Skottie Young Baby Variant Cover",
+    keyReason: "Todd McFarlane 'Torment' Landmark Premiere (1990)",
     recentSales: [
       { date: "2026-09-13", grade: 9.8, price: 180, venue: "eBay" },
       { date: "2026-08-01", grade: 9.8, price: 170, venue: "eBay" },
@@ -728,7 +728,16 @@ export function evaluateAuctionListing(
   }
 
   const isViableFlip = liquidityVelocity !== "ILLIQUID_TRAP" && anchorFmv >= 35.00;
-  const keySignificanceNote = comp?.keyReason || resolveHistoricalKeyBadge(parsed.extractedSeries, parsed.extractedIssue) || "Recognized Sovereign Issue";
+  let keySignificanceNote = comp?.keyReason || resolveHistoricalKeyBadge(parsed.extractedSeries, parsed.extractedIssue) || "Recognized Sovereign Issue";
+  if (/spider-man/i.test(parsed.extractedSeries) && parsed.extractedIssue === "1") {
+    if (/1990|mcfarlane|torment|silver|gold|platinum|green/i.test(listing.title)) {
+      keySignificanceNote = "Todd McFarlane 'Torment' Landmark Premiere (1990)";
+    } else if (/skottie\s*young|baby\s*variant/i.test(listing.title)) {
+      keySignificanceNote = "Skottie Young Baby Variant Cover";
+    } else if (/miles\s*morales/i.test(listing.title)) {
+      keySignificanceNote = "Miles Morales Premiere Issue";
+    }
+  }
 
   // Double-Up Angle Detection
   if (!specialPlay && discountPercent >= 50 && isViableFlip) {

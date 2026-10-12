@@ -19,6 +19,22 @@ export interface ComicLoreDossier {
  * Curated encyclopedic database of landmark collector lore and historical significance
  */
 const CANONICAL_LORE_DATABASE: Record<string, ComicLoreDossier> = {
+  "spider-man #1": {
+    tier: "COVER_ICON",
+    tierBadge: "🕷️ TODD McFARLANE 1990 PREMIERE",
+    historicalSignificance:
+      "Todd McFarlane's record-shattering 1990 relaunch of adjectiveless Spider-Man #1 ('Torment: Part 1') sold over 2.65 million copies, ushering in the modern comic boom. Written and drawn by McFarlane with his legendary stylized webbing cover art, it stands as an indelible touchstone of Copper Age comic history.",
+    collectorHoldingThesis:
+      "One of the most famous and widely recognized covers ever illustrated. In high-grade 9.8, especially Signature Series signed by Todd McFarlane or Direct/Newsstand editions, it commands evergreen market liquidity and constant global buyer interest.",
+    gcdMetadata: {
+      writers: ["Todd McFarlane"],
+      pencilers: ["Todd McFarlane"],
+      coverArtists: ["Todd McFarlane"],
+      publisher: "Marvel Comics",
+      publicationYear: 1990,
+      storyline: "Torment, Part 1",
+    },
+  },
   "batman #423": {
     tier: "COVER_ICON",
     tierBadge: "🎨 LANDMARK COVER ICON",
