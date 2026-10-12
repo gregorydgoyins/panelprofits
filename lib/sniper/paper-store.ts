@@ -51,11 +51,14 @@ async function loadListing(itemId: string) {
   return data as any | null;
 }
 
+/** The seller's type stays hidden while the haggle is on; it is shown in the debrief once the deal is done or off. */
+const hideSeller = (o: PaperOrderRow): PaperOrderRow => (o.status === "negotiating" ? { ...o, personality: null } : o);
+
 export async function listOrders(owner: string): Promise<PaperOrderRow[]> {
   if (!okOwner(owner)) return [];
   const { data } = await db().from("sniper_paper_orders").select("*").eq("owner", owner).order("created_at", { ascending: false }).limit(100);
   // A practice round stays sealed until its clock has run out: nobody sees win or loss early.
-  return ((data ?? []) as PaperOrderRow[]).map((o) =>
+  return ((data ?? []) as PaperOrderRow[]).map(hideSeller).map((o) =>
     o.result?.replay && o.result?.revealAt && new Date(o.result.revealAt).getTime() > Date.now()
       ? { ...o, status: "pending", final_price_usd: null, final_bid_count: null, fill_price_usd: null, paper_profit_usd: null, detail: null, basis: null, result: { replay: true } }
       : o,
@@ -148,7 +151,7 @@ export async function binAction(args: { owner: string; itemId: string; action: "
   }
   const { data: saved, error: upErr } = await db().from("sniper_paper_orders").update(patch).eq("id", order.id).select("*").single();
   if (upErr) return { ok: false, error: upErr.message };
-  return { ok: true, order: saved as PaperOrderRow };
+  return { ok: true, order: hideSeller(saved as PaperOrderRow) };
 }
 
 // ───────────────────────────── scheduled work ─────────────────────────────
