@@ -94,6 +94,9 @@ export interface RawAuctionListing {
   imageUrl: string;
   certNumber?: string;
   sellerRating?: number;
+  sellerUsername?: string;
+  /** eBay's own flag: the seller accepts Best Offer on this listing */
+  bestOfferEnabled?: boolean;
   graderNotes?: string;
   itemDescription?: string;
   anchorFmv?: number;

@@ -71,7 +71,7 @@ async function fetchOnce(id: string, legacy: string): Promise<LiveLot> {
   }
 }
 
-export async function watchLot(rawId: string): Promise<LiveLot> {
+export async function watchLot(rawId: string, opts?: { observe?: boolean }): Promise<LiveLot> {
   const legacy = legacyId(rawId);
   const id = `ebay-${legacy}`;
   if (!legacy) return { id: rawId, ok: false, status: 0, ended: false, currentBid: null, minNextBid: null, bidCount: null, uniqueBidders: null, endsAt: null, secondsRemaining: null, reserveMet: null, fetchedAt: new Date().toISOString(), error: "bad item id" };
@@ -88,7 +88,7 @@ export async function watchLot(rawId: string): Promise<LiveLot> {
   const p = (async () => {
     const value = await fetchOnce(id, legacy);
     cache.set(id, { at: Date.now(), value });
-    if (value.ok && value.currentBid != null) await recordTick(value);
+    if (value.ok && value.currentBid != null) await recordTick(value, !!opts?.observe);
     return value;
   })().finally(() => inflight.delete(id));
   inflight.set(id, p);
@@ -96,7 +96,8 @@ export async function watchLot(rawId: string): Promise<LiveLot> {
 }
 
 /** Keep the lot's stored price and bid history current whenever a watch sees it move. */
-async function recordTick(v: LiveLot) {
+/** observe: also write a reading when nothing moved, so the history shows what the price was at that moment. */
+async function recordTick(v: LiveLot, observe = false) {
   try {
     const db: any = createAdminServerClient();
     const { data: row } = await db.from("sniper_listings").select("price_usd,bid_count").eq("item_id", v.id).maybeSingle();
@@ -106,6 +107,6 @@ async function recordTick(v: LiveLot) {
     if (v.endsAt) patch.end_time = v.endsAt;
     if (moved) { patch.price_usd = v.currentBid; patch.bid_count = v.bidCount ?? 0; }
     await db.from("sniper_listings").update(patch).eq("item_id", v.id);
-    if (moved) await db.from("sniper_ticks").insert({ item_id: v.id, seen_at: v.fetchedAt, price_usd: v.currentBid, bid_count: v.bidCount ?? 0 });
+    if (moved || observe) await db.from("sniper_ticks").insert({ item_id: v.id, seen_at: v.fetchedAt, price_usd: v.currentBid, bid_count: v.bidCount ?? 0 });
   } catch {}
 }

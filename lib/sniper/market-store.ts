@@ -37,7 +37,7 @@ const DISCOVERY_QUERIES = [
   "CGC signature series", "CGC newsstand", "CGC canadian price variant", "CGC manga",
 ];
 
-/** The Browse calls for one slot. About 6–8 calls, well inside eBay's daily allowance at one slot every 5 minutes. */
+/** The Browse calls for one slot: 8 calls, about 2,300 a day at one slot every 5 minutes, inside eBay's default allowance. */
 export function planCalls(slot: number): SearchEbayAuctionsParams[] {
   const calls: SearchEbayAuctionsParams[] = [];
   for (const q of CLOSING_QUERIES) {
@@ -51,9 +51,11 @@ export function planCalls(slot: number): SearchEbayAuctionsParams[] {
     });
   }
   calls.push({ query: DISCOVERY_QUERIES[(slot * 3 + 1) % n], marketplace: "EBAY_US", limit: 200, buyingOptions: "FIXED_PRICE", sort: "newlyListed" });
-  if (slot % 6 === 0) {
-    calls.push({ query: "CGC comic", marketplace: "EBAY_GB", limit: 100, buyingOptions: "AUCTION", sort: "endingSoonest", endsWithinMinutes: 7 * 24 * 60 });
-    calls.push({ query: "CGC comic", marketplace: "EBAY_CA", limit: 100, buyingOptions: "AUCTION", sort: "endingSoonest", endsWithinMinutes: 7 * 24 * 60 });
+  // Around the clock: two other eBay marketplaces per slot, so each region is checked every ~12 minutes and an auction
+  // closing overnight in one country keeps the feed busy while the US sleeps.
+  const abroad: Array<"EBAY_GB" | "EBAY_CA" | "EBAY_AU" | "EBAY_DE" | "EBAY_FR"> = ["EBAY_GB", "EBAY_CA", "EBAY_AU", "EBAY_DE", "EBAY_FR"];
+  for (let k = 0; k < 2; k++) {
+    calls.push({ query: "CGC comic", marketplace: abroad[(slot * 2 + k) % abroad.length], limit: 100, buyingOptions: "AUCTION", sort: "endingSoonest", endsWithinMinutes: 6 * 60 });
   }
   return calls;
 }

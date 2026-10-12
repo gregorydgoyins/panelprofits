@@ -1,6 +1,7 @@
 import { AuctionSource, RawAuctionListing } from "./types";
 import { uprezEbayImage } from "./anti-bullshit";
 import { resolveComicLoreDossier } from "./lore-dossier";
+import { usdPerUnit } from "./fx";
 
 interface EbayTokenCache {
   token: string;
@@ -285,17 +286,20 @@ export async function searchEbayPage(
       EBAY_AU: "ebay_au",
     };
 
-    const currencyMap: Record<EbayMarketplaceHeader, { code: string; sym: string; rate: number }> =
+    const currencyMap: Record<EbayMarketplaceHeader, { code: string; sym: string }> =
       {
-        EBAY_US: { code: "USD", sym: "$", rate: 1.0 },
-        EBAY_GB: { code: "GBP", sym: "£", rate: 1.3 },
-        EBAY_CA: { code: "CAD", sym: "C$", rate: 0.73 },
-        EBAY_FR: { code: "EUR", sym: "€", rate: 1.09 },
-        EBAY_DE: { code: "EUR", sym: "€", rate: 1.09 },
-        EBAY_AU: { code: "AUD", sym: "A$", rate: 0.67 },
+        EBAY_US: { code: "USD", sym: "$" },
+        EBAY_GB: { code: "GBP", sym: "£" },
+        EBAY_CA: { code: "CAD", sym: "C$" },
+        EBAY_FR: { code: "EUR", sym: "€" },
+        EBAY_DE: { code: "EUR", sym: "€" },
+        EBAY_AU: { code: "AUD", sym: "A$" },
       };
 
-    const cur = currencyMap[marketplace];
+    // Real daily exchange rate (ECB). If it can't be had, skip this marketplace rather than guess a rate.
+    const rate = await usdPerUnit(currencyMap[marketplace].code);
+    if (rate == null) return { items: [], status: 503, total: 0 }; // no real rate: skip, don't guess
+    const cur = { ...currencyMap[marketplace], rate };
     const source = sourceMap[marketplace];
 
     const results: RawAuctionListing[] = [];
@@ -359,6 +363,8 @@ export async function searchEbayPage(
         isBuyItNow,
         buyItNowPrice: isBuyItNow ? usdPrice : undefined,
         isRealTimeLiveBid: !isFixedPrice,
+        sellerUsername: item.seller?.username,
+        bestOfferEnabled: buyingOpts.includes("BEST_OFFER"),
         sellerRating: item.seller?.feedbackPercentage
           ? parseFloat(item.seller.feedbackPercentage)
           : undefined,

@@ -16,6 +16,8 @@ import { SniperStoryLore } from "@/components/sniper/SniperStoryLore";
 import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
 import { LiveLotStrip } from "@/components/sniper/LiveLotStrip";
 import { LotMarketChart } from "@/components/sniper/LotMarketChart";
+import { usePaperOrders, PaperTicket, PaperLedger } from "@/components/sniper/PaperDesk";
+import { ReplayRoom } from "@/components/sniper/ReplayRoom";
 
 interface PaperSnipeRecord {
   orderId: string;
@@ -412,8 +414,10 @@ export default function SniperRadarPage() {
 
 
   // Paper Snipe Orders Ledger State
-  const [paperOrders, setPaperOrders] = useState<PaperSnipeRecord[]>([]);
-  const [simulatedAlpha, setSimulatedAlpha] = useState<number>(0);
+  const paper = usePaperOrders();
+  const paperOrders = paper.orders;
+  // signed: a paper loss counts against you
+  const simulatedAlpha = paper.orders.reduce((a, o) => a + (o.paper_profit_usd != null ? Number(o.paper_profit_usd) : 0), 0);
   const [snipeSuccessToast, setSnipeSuccessToast] = useState<string | null>(null);
 
   // Vaulted / Acquired Books State (Persisted in localStorage)
@@ -637,80 +641,59 @@ export default function SniperRadarPage() {
     document.body.removeChild(link);
   };
 
-  // Execute T-2s Paper Snipe
+  // Paper trading: open the lot so the ticket (arm a snipe on an auction, or haggle on a Buy It Now) is in front of the player.
   const executePaperSnipe = (deal: CandidateEvaluation) => {
-    const isAlreadySniped = paperOrders.some(
-      (order) => order.listingId === deal.listing.id
-    );
-    if (isAlreadySniped) return;
-
-    const isAuction = Boolean(deal.listing.secondsRemaining && deal.listing.secondsRemaining > 0);
-    const finalSoldPrice = deal.allInCost;
-    const profitAlpha = isAuction ? 0 : Math.max(0, deal.projectedNetProfit);
-    const orderStatus: "WON" | "OUTBID" | "ARMED" = isAuction ? "ARMED" : "WON";
-
-    const newOrder: PaperSnipeRecord = {
-      orderId: `SNIPE-${Date.now().toString().slice(-6)}`,
-      listingId: deal.listing.id,
-      comicTitle: deal.listing.title,
-      certNumber: deal.certNumber,
-      source: deal.listing.source,
-      bidPrice: isAuction ? deal.recommendedMaxBid : deal.allInCost,
-      finalSoldPrice,
-      status: orderStatus,
-      paperAlpha: profitAlpha,
-      whyBought: deal.whyItsAGoodBuy,
-      targetWinPrice100Pct: deal.targetWinPrice100Pct,
-      executedAt: new Date().toLocaleTimeString(),
-    };
-
-    setPaperOrders([newOrder, ...paperOrders]);
-    if (orderStatus === "WON") {
-      setSimulatedAlpha((prev) => prev + profitAlpha);
-      setSnipeSuccessToast(
-        `🎯 ACQUIRED: ${deal.resolvedSeries} #${deal.resolvedIssue} secured at verified listing floor $${finalSoldPrice.toFixed(2)}. Projected Alpha: +$${profitAlpha.toFixed(2)}`
-      );
-
-      // Auto-vault won book into "What You've Acquired"
-      const newAcquired: AcquiredBook = {
-        id: `acq-${Date.now()}`,
-        orderId: newOrder.orderId,
-        listingId: deal.listing.id,
-        comicTitle: deal.listing.title,
-        normalizedTitle: deal.normalizedTitle,
-        resolvedSeries: deal.resolvedSeries,
-        resolvedIssue: deal.resolvedIssue,
-        grade: deal.resolvedGrade,
-        gradingCompany: deal.gradingCompany,
-        certNumber: deal.certNumber,
-        imageUrl: deal.listing.imageUrl,
-        url: deal.listing.url,
-        source: deal.listing.source,
-        allInCost: finalSoldPrice,
-        anchorFmv: deal.anchorFmv,
-        targetWinPrice100Pct: deal.targetWinPrice100Pct,
-        projectedProfit: Math.max(0, deal.anchorFmv * 0.87 - 5.0 - finalSoldPrice),
-        netRoiPercent: Math.round(
-          ((deal.anchorFmv * 0.87 - 5.0 - finalSoldPrice) / finalSoldPrice) * 100
-        ),
-        acquiredAt: new Date().toLocaleTimeString(),
-        whyBought: deal.whyItsAGoodBuy,
-        isYellowLabel: deal.isYellowLabel,
-        signerName: deal.signerName,
-        censusCount98: deal.censusCount98,
-        censusTotal: deal.censusTotal,
-      };
-      saveAcquiredBooks([newAcquired, ...acquiredBooks]);
-    } else {
-      setSnipeSuccessToast(
-        `🎯 SNIPE ARMED: Order queued at T-2s for ${deal.resolvedSeries} #${deal.resolvedIssue} with max limit bid $${deal.recommendedMaxBid.toFixed(2)}.`
-      );
-    }
-
-    setTimeout(() => {
-      setSnipeSuccessToast(null);
-    }, 6000);
+    startTransition(() => setInspectedDeal(deal));
   };
+
+  // A paper purchase that was won lands in the vault, once.
+  const vaultedOrdersRef = React.useRef<Set<number> | null>(null);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!vaultedOrdersRef.current) {
+      try { vaultedOrdersRef.current = new Set(JSON.parse(localStorage.getItem("pp_sniper_vaulted_orders") || "[]")); } catch { vaultedOrdersRef.current = new Set(); }
+    }
+    const seen = vaultedOrdersRef.current!;
+    const fresh = paper.orders.filter((o) => o.status === "won" && !o.result?.replay && o.fill_price_usd != null && !seen.has(o.id));
+    if (!fresh.length) return;
+    const added: AcquiredBook[] = fresh.map((o) => {
+      const deal = rawApprovedDeals.find((d) => d.listing.id === o.item_id);
+      const allIn = Number(o.fill_price_usd) + Number(o.shipping_usd || 0);
+      const profit = o.paper_profit_usd != null ? Number(o.paper_profit_usd) : 0;
+      return {
+        id: `acq-${o.id}`,
+        orderId: `PAPER-${o.id}`,
+        listingId: o.item_id,
+        comicTitle: o.title ?? o.item_id,
+        normalizedTitle: deal?.normalizedTitle ?? o.title ?? o.item_id,
+        resolvedSeries: deal?.resolvedSeries ?? "",
+        resolvedIssue: deal?.resolvedIssue ?? "",
+        grade: deal?.resolvedGrade ?? 0,
+        gradingCompany: deal?.gradingCompany ?? o.result?.grader ?? "",
+        certNumber: deal?.certNumber ?? o.result?.cert ?? undefined,
+        imageUrl: deal?.listing.imageUrl ?? o.result?.imageUrl ?? "",
+        url: deal?.listing.url ?? o.result?.url ?? "",
+        source: deal?.listing.source ?? "ebay",
+        allInCost: allIn,
+        anchorFmv: o.fmv_usd ?? deal?.anchorFmv ?? 0,
+        targetWinPrice100Pct: deal?.targetWinPrice100Pct ?? o.fmv_usd ?? 0,
+        projectedProfit: profit,
+        netRoiPercent: allIn > 0 ? Math.round((profit / allIn) * 100) : 0,
+        acquiredAt: new Date(o.settled_at ?? o.created_at).toLocaleTimeString(),
+        whyBought: o.basis ?? deal?.whyItsAGoodBuy ?? "Won in a paper trade",
+        isYellowLabel: deal?.isYellowLabel,
+        signerName: deal?.signerName,
+        censusCount98: deal?.censusCount98,
+        censusTotal: deal?.censusTotal,
+      } as AcquiredBook;
+    });
+    fresh.forEach((o) => seen.add(o.id));
+    try { localStorage.setItem("pp_sniper_vaulted_orders", JSON.stringify(Array.from(seen))); } catch {}
+    saveAcquiredBooks([...added, ...acquiredBooks]);
+    setSnipeSuccessToast(`🏆 Paper win vaulted: ${added[0].normalizedTitle}`);
+    setTimeout(() => setSnipeSuccessToast(null), 4000);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paper.orders]);
 
   const formatTime = (secs: number) => {
     if (secs <= 0) return "EXPIRED";
@@ -859,8 +842,8 @@ export default function SniperRadarPage() {
 
             <div className="bg-slate-900/90 border border-emerald-500/40 px-3 py-1 rounded-lg text-right font-mono">
               <div className="text-[10px] text-slate-400 uppercase">Simulated Alpha</div>
-              <div className="text-xs font-bold text-emerald-400">
-                +${simulatedAlpha.toFixed(2)}
+              <div className={`text-xs font-bold ${simulatedAlpha >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                {simulatedAlpha >= 0 ? "+" : "−"}${Math.abs(simulatedAlpha).toFixed(2)}
               </div>
             </div>
 
@@ -1309,7 +1292,7 @@ export default function SniperRadarPage() {
                 <div className="space-y-5">
                   {liveDeals.map((deal) => {
                     const liveSecs = liveAuctionTimers[deal.listing.id] ?? deal.listing.secondsRemaining;
-                    const isSnipedInPaper = paperOrders.some((p) => p.listingId === deal.listing.id);
+                    const isSnipedInPaper = paper.forItem(deal.listing.id) != null;
                     const isVaulted = acquiredBooks.some((b) => b.listingId === deal.listing.id);
                     const isBreakdownOpen = expandedBreakdownId === deal.listing.id;
 
@@ -1884,32 +1867,18 @@ export default function SniperRadarPage() {
                               </a>
 
                               <button
-                                onClick={() => handleManualAcquire(deal)}
-                                disabled={isVaulted}
-                                className={`px-3 py-1.5 rounded text-xs font-mono font-bold border transition cursor-pointer flex items-center gap-1 ${
-                                  isVaulted
-                                    ? "bg-emerald-950/80 border-emerald-600/50 text-emerald-300 cursor-not-allowed"
-                                    : "bg-emerald-700 hover:bg-emerald-600 text-white border-emerald-500 shadow"
-                                }`}
-                              >
-                                <span>🏆</span>
-                                {isVaulted ? "Vaulted" : deal.isBuyItNow ? "Acquire BIN" : "Mark Acquired"}
-                              </button>
-
-                              <button
                                 onClick={() => executePaperSnipe(deal)}
-                                disabled={isSnipedInPaper}
                                 className={`px-3.5 py-1.5 rounded text-xs font-mono font-bold border transition cursor-pointer ${
                                   isSnipedInPaper
-                                    ? "bg-emerald-950 border-emerald-600/50 text-emerald-400 cursor-not-allowed"
+                                    ? "bg-emerald-950 border-emerald-600/50 text-emerald-400"
                                     : "bg-cyan-600 hover:bg-cyan-500 text-white border-cyan-400 shadow-md"
                                 }`}
                               >
                                 {isSnipedInPaper
-                                  ? "✓ In Vault"
+                                  ? "📖 Paper order"
                                   : deal.isBuyItNow
                                   ? "🎯 Paper Buy (BIN)"
-                                  : "🎯 Simulate Snipe"}
+                                  : "🎯 Paper Snipe"}
                               </button>
                             </div>
                           </div>
@@ -2212,73 +2181,9 @@ export default function SniperRadarPage() {
             </div>
           )}
 
-          {/* PAPER SNIPES LEDGER & ORDER BOOK */}
-          <div className="bg-[#0E131F] border border-slate-800 rounded-xl p-5 space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-2">
-                <span>📖</span> Paper Snipe Execution Ledger ({paperOrders.length})
-              </h3>
-              <span className="text-xs font-mono text-slate-400">
-                Risk-Free Verification Mode
-              </span>
-            </div>
-
-            {paperOrders.length === 0 ? (
-              <p className="text-xs text-slate-500 font-mono italic">
-                No orders executed yet. Click &quot;Simulate T-2s Paper Snipe&quot; on any viable flip above to test your exit targets.
-              </p>
-            ) : (
-              <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-                {paperOrders.map((order) => (
-                  <div
-                    key={order.orderId}
-                    className="bg-slate-900/60 border border-slate-800 rounded-lg p-3 text-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-3"
-                  >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-[10px] text-slate-500">[{order.executedAt}]</span>
-                        <strong className="text-white">{order.comicTitle}</strong>
-                        {order.certNumber && (
-                          <span className="text-[10px] font-mono text-cyan-400">
-                            Cert #{order.certNumber}
-                          </span>
-                        )}
-                        <span
-                          className={`px-1.5 py-0.2 rounded text-[10px] font-bold ${
-                            order.status === "WON"
-                              ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
-                              : order.status === "ARMED"
-                              ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40"
-                              : "bg-rose-500/20 text-rose-400 border border-rose-500/40"
-                          }`}
-                        >
-                          {order.status}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-slate-400 mt-0.5">{order.whyBought}</p>
-                    </div>
-
-                    <div className="flex items-center gap-4 text-right font-mono flex-shrink-0">
-                      <div>
-                        <span className="text-[10px] text-slate-500 uppercase block">Snipe Bid</span>
-                        <span className="font-bold text-white">${order.bidPrice.toFixed(2)}</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-slate-500 uppercase block">Sold Price</span>
-                        <span className="font-bold text-amber-300">${order.finalSoldPrice.toFixed(2)}</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-slate-500 uppercase block">Unrealized Alpha</span>
-                        <span className={`font-bold ${order.paperAlpha > 0 ? "text-emerald-400" : "text-slate-500"}`}>
-                          {order.paperAlpha > 0 ? `+$${order.paperAlpha.toFixed(2)}` : "$0.00"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          {/* PRACTICE ROUNDS + PAPER LEDGER */}
+          <ReplayRoom owner={paper.owner} onPlayed={paper.refresh} />
+          <PaperLedger orders={paper.orders} />
 
           {/* BLOCKED LISTINGS SECTION */}
           <div className="bg-[#0E131F] border border-slate-800/80 rounded-xl p-5 space-y-3">
@@ -2612,16 +2517,17 @@ export default function SniperRadarPage() {
                     <span>↗</span>
                   </a>
 
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={() => {
-                        executePaperSnipe(inspectedDeal);
-                        setInspectedDeal(null);
-                      }}
-                      className="py-2.5 px-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs uppercase font-mono transition text-center shadow-md cursor-pointer"
-                    >
-                      {inspectedDeal.isBuyItNow ? "🎯 Paper Buy (BIN)" : "🎯 Snipe in Vault"}
-                    </button>
+                  <PaperTicket
+                    itemId={inspectedDeal.listing.id}
+                    isBuyItNow={Boolean(inspectedDeal.isBuyItNow)}
+                    ask={inspectedDeal.listing.currentBid}
+                    recommendedMax={inspectedDeal.recommendedMaxBid}
+                    fmv={inspectedDeal.anchorFmv || null}
+                    secondsRemaining={liveAuctionTimers[inspectedDeal.listing.id] ?? inspectedDeal.listing.secondsRemaining}
+                    paper={paper}
+                  />
+
+                  <div className="grid grid-cols-1 gap-2">
                     <Link
                       href={`/comics?q=${encodeURIComponent(inspectedDeal.resolvedSeries + " #" + inspectedDeal.resolvedIssue)}`}
                       className="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 font-bold text-xs uppercase font-mono transition text-center border border-cyan-500/30 flex items-center justify-center gap-1"
