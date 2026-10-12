@@ -14,7 +14,8 @@ import { getEraDisplayName } from "@/lib/sniper/anti-bullshit";
 import { SlabEncasement } from "@/components/sniper/SlabEncasement";
 import { SniperStoryLore } from "@/components/sniper/SniperStoryLore";
 import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
-import { EquityCandlestickChart, type ChartDataPoint } from "@/components/equity/equity-candlestick-chart";
+import { LiveLotStrip } from "@/components/sniper/LiveLotStrip";
+import { LotMarketChart } from "@/components/sniper/LotMarketChart";
 
 interface PaperSnipeRecord {
   orderId: string;
@@ -189,6 +190,7 @@ export default function SniperRadarPage() {
   const [isLoadingLive, setIsLoadingLive] = useState<boolean>(false);
   const [lastRefreshedAt, setLastRefreshedAt] = useState<string>("");
   const [liveStreamSource, setLiveStreamSource] = useState<string>("live_ebay_stream");
+  const [dataAsOf, setDataAsOf] = useState<string | null>(null);
 
   // Active 1-Second Countdown Timers State
   const [liveAuctionTimers, setLiveAuctionTimers] = useState<Record<string, number>>({});
@@ -205,6 +207,7 @@ export default function SniperRadarPage() {
         setAuctionsList(data.auctions);
         setLastRefreshedAt(new Date().toLocaleTimeString());
         if (data.source) setLiveStreamSource(data.source);
+        setDataAsOf(data.dataAsOf ?? null);
 
         // Reset countdown timer map with fresh active ticking seconds
         const newTimers: Record<string, number> = {};
@@ -833,10 +836,12 @@ export default function SniperRadarPage() {
                 </h1>
                 <p className="text-[10px] text-slate-400 font-mono flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping inline-block" />
-                  <span className="text-emerald-300 font-bold">24/7 MULTI-EXCHANGE STREAM ACTIVE</span>
+                  <span className={auctionsList.length ? "text-emerald-300 font-bold" : "text-amber-300 font-bold"}>
+                    {auctionsList.length ? "LIVE eBay FEED" : "NO LIVE LISTINGS"}
+                  </span>
                   <span>•</span>
-                  <span>{auctionsList.length} Lots Streaming Across Multi-Venue Network</span>
-                  {lastRefreshedAt && <span>(Synced: {lastRefreshedAt})</span>}
+                  <span>{auctionsList.length} live eBay lots</span>
+                  {dataAsOf && <span>(eBay data {Math.max(0, Math.round((Date.now() - new Date(dataAsOf).getTime()) / 60000))}m old)</span>}
                 </p>
               </div>
             </div>
@@ -2564,6 +2569,15 @@ export default function SniperRadarPage() {
                     </div>
                   </div>
 
+                  {!inspectedDeal.isBuyItNow && (
+                    <LiveLotStrip
+                      itemId={inspectedDeal.listing.id}
+                      maxBid={inspectedDeal.recommendedMaxBid}
+                      url={inspectedDeal.listing.url}
+                      startBid={inspectedDeal.listing.currentBid}
+                    />
+                  )}
+
                   {/* Spread / Upside Under Modal Bid */}
                   {inspectedDeal.anchorFmv > 0 && (
                     <div className="mt-2.5 pt-2.5 border-t border-slate-800 flex items-center justify-between text-xs font-mono">
@@ -3034,62 +3048,15 @@ export default function SniperRadarPage() {
                       </span>
                     </div>
 
-                    <div className="rounded-lg overflow-hidden border border-slate-800 bg-slate-950 p-1">
-                      {(() => {
-                        const pointsMap = new Map<string, { date: string; value: number; volume: number }>();
-
-                        // 1. Ingest inspectedDeal.historicalComps (15-30 verified observations from ComicBase 2021-2025, PriceCharting, and CGC)
-                        if (inspectedDeal.historicalComps && inspectedDeal.historicalComps.length > 0) {
-                          for (const c of inspectedDeal.historicalComps) {
-                            if (c.date && /^\d{4}-\d{2}-\d{2}$/.test(c.date) && c.price > 0) {
-                              pointsMap.set(c.date, { date: c.date, value: c.price, volume: 1 });
-                            }
-                          }
-                        }
-
-                        // 2. Ingest any dated sales from liveComps (excluding "Live Floor")
-                        if (liveComps && liveComps.length > 0) {
-                          for (const c of liveComps) {
-                            if (c.date && /^\d{4}-\d{2}-\d{2}$/.test(c.date) && c.price > 0) {
-                              pointsMap.set(c.date, { date: c.date, value: c.price, volume: 1 });
-                            }
-                          }
-                        }
-
-                        // 3. Anchor current verified FMV if needed
-                        if (inspectedDeal.anchorFmv > 0) {
-                          const today = new Date().toISOString().slice(0, 10);
-                          if (!pointsMap.has(today)) {
-                            pointsMap.set(today, { date: today, value: inspectedDeal.anchorFmv, volume: 1 });
-                          }
-                        }
-
-                        let chartDataPoints: ChartDataPoint[] = Array.from(pointsMap.values()).sort(
-                          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-                        );
-
-                        if (chartDataPoints.length < 2 && inspectedDeal.anchorFmv > 0) {
-                          const today = new Date();
-                          const past = new Date(today);
-                          past.setDate(today.getDate() - 30);
-                          chartDataPoints = [
-                            { date: past.toISOString().slice(0, 10), value: inspectedDeal.anchorFmv, volume: 1 },
-                            { date: today.toISOString().slice(0, 10), value: inspectedDeal.anchorFmv, volume: 1 },
-                          ];
-                        }
-
-                        return (
-                          <EquityCandlestickChart
-                            ticker={formatComicEquityTicker(inspectedDeal.resolvedSeries, inspectedDeal.resolvedIssue)}
-                            series={inspectedDeal.resolvedSeries}
-                            issueNumber={inspectedDeal.resolvedIssue}
-                            currentPrice={inspectedDeal.anchorFmv}
-                            deltaPercent={inspectedDeal.discountPercent}
-                            dataPoints={chartDataPoints}
-                            height={320}
-                          />
-                        );
-                      })()}
+                    <div className="rounded-lg overflow-hidden border border-slate-800 bg-slate-950 p-2">
+                      <LotMarketChart
+                        series={inspectedDeal.resolvedSeries}
+                        issue={inspectedDeal.resolvedIssue}
+                        grade={inspectedDeal.resolvedGrade}
+                        itemId={inspectedDeal.listing.id}
+                        ticker={formatComicEquityTicker(inspectedDeal.resolvedSeries, inspectedDeal.resolvedIssue)}
+                        currentBid={inspectedDeal.listing.currentBid}
+                      />
                     </div>
 
                     {/* LAST 10 REALIZED MARKET SALES OVER TIME */}

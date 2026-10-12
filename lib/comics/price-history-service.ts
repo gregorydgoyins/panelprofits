@@ -29,13 +29,8 @@ export interface HistoricalPriceObservation {
 }
 
 /**
- * Builds an authentic, multi-year, multi-observation time series.
- * Ingests real data from:
- * 1. ComicBase sovereign market index (audited 2021, 2022, 2023, 2024 valuations)
- * 2. PriceCharting secondary market observations
- * 3. CGC certified realized sales
- * 
- * Never fabricates mock points or synthetic placeholders.
+ * Recorded certified sales for one book (stored CGC / GPA records). Nothing is derived: no guide values scaled to a grade,
+ * no point for "today", no flat line. Returns an empty list when there are no recorded sales.
  */
 export function lookupMultiPointPriceHistory(
   series: string,
@@ -54,45 +49,6 @@ export function lookupMultiPointPriceHistory(
   const points: HistoricalPriceObservation[] = [];
   const seenDates = new Set<string>();
 
-  // 1. Ingest ComicBase audited multi-year valuations (2021 - 2024)
-  const cbDb = getCbDb();
-  if (cbDb) {
-    try {
-      const row = cbDb
-        .prepare(
-          `SELECT val_2021, val_2022, val_2023, val_2024, price FROM comicbase_items 
-           WHERE clean_series LIKE ? AND issue_number = ? LIMIT 1`
-        )
-        .get(`%${cleanSeries}%`, cleanIssue) as any;
-
-      if (row) {
-        // Grade multiplier: if comic is 9.8, scale baseline guide price to 9.8 market standard
-        const mult = targetGrade >= 9.8 ? 2.2 : targetGrade >= 9.4 ? 1.5 : targetGrade >= 9.0 ? 1.0 : 0.75;
-        const addAnnual = (yr: string, val: number | null, label: string) => {
-          if (val && Number(val) > 0) {
-            const scaled = Math.round(Number(val) * mult * 100) / 100;
-            const dt = `${yr}-06-15`;
-            seenDates.add(dt);
-            points.push({
-              date: dt,
-              grade: targetGrade,
-              price: scaled,
-              venue: label,
-            });
-          }
-        };
-
-        addAnnual("2021", row.val_2021, "ComicBase 2021 Archive");
-        addAnnual("2022", row.val_2022, "ComicBase 2022 Archive");
-        addAnnual("2023", row.val_2023, "ComicBase 2023 Guide");
-        addAnnual("2024", row.val_2024, "ComicBase 2024 Index");
-        if (row.price && Number(row.price) > 0) {
-          addAnnual("2025", row.price, "ComicBase 2025 Market Anchor");
-        }
-      }
-    } catch {}
-  }
-
   // 2. Ingest PriceCharting & CGC authentic observations
   try {
     const market = resolveMarketPricing(series, cleanIssue, currentFmv || 0);
@@ -110,31 +66,7 @@ export function lookupMultiPointPriceHistory(
       }
     }
 
-    if (market.tradingViewArea && market.tradingViewArea.length > 0) {
-      for (const pt of market.tradingViewArea) {
-        if (pt.value > 0 && !seenDates.has(pt.time)) {
-          seenDates.add(pt.time);
-          points.push({
-            date: pt.time,
-            grade: targetGrade,
-            price: pt.value,
-            venue: "PriceCharting CGC Verified",
-          });
-        }
-      }
-    }
   } catch {}
-
-  // 3. Anchor current verified FMV if available
-  if (currentFmv && currentFmv > 0) {
-    const today = new Date().toISOString().slice(0, 10);
-    points.push({
-      date: today,
-      grade: targetGrade,
-      price: currentFmv,
-      venue: "Current Verified FMV",
-    });
-  }
 
   // Deduplicate by date and ensure strictly valid YYYY-MM-DD timestamps
   const byDate = new Map<string, HistoricalPriceObservation>();

@@ -94,6 +94,19 @@ export interface SearchEbayAuctionsParams {
   minPrice?: number;
   maxPrice?: number;
   buyingOptions?: "AUCTION" | "FIXED_PRICE" | "ALL";
+  /** eBay sort order, e.g. endingSoonest (auctions closing first) or newlyListed. */
+  sort?: "endingSoonest" | "newlyListed" | "price";
+  offset?: number;
+  /** Only listings whose end time falls inside [now, now + minutes]. */
+  endsWithinMinutes?: number;
+}
+
+export interface EbayPageResult {
+  items: RawAuctionListing[];
+  /** HTTP status of the Browse call, or 0 when no call was made (no token / backoff) or the call threw. */
+  status: number;
+  /** Total matches eBay reports for the query. */
+  total: number;
 }
 
 export interface EbayItemAspects {
@@ -197,11 +210,18 @@ export async function fetchEbayItemDetails(itemId: string): Promise<{
 export async function searchEbayLiveAuctions(
   params: SearchEbayAuctionsParams = {}
 ): Promise<RawAuctionListing[]> {
+  return (await searchEbayPage(params)).items;
+}
+
+/** One Browse API search call, with the HTTP status and eBay's total so callers can budget and diagnose. */
+export async function searchEbayPage(
+  params: SearchEbayAuctionsParams = {}
+): Promise<EbayPageResult> {
   if (Date.now() < ebayRateLimitedUntil) {
-    return [];
+    return { items: [], status: 429, total: 0 };
   }
   const token = await getEbayOAuthToken();
-  if (!token) return [];
+  if (!token) return { items: [], status: 0, total: 0 };
 
   const marketplace = params.marketplace || "EBAY_US";
   const limit = params.limit || 20;
@@ -223,7 +243,15 @@ export async function searchEbayLiveAuctions(
     filter += `,price:[${min}..${max}],priceCurrency:USD`;
   }
 
-  const url = `https://api.ebay.com/buy/browse/v1/item_summary/search?q=${q}&filter=${filter}&limit=${limit}`;
+  if (params.endsWithinMinutes && params.endsWithinMinutes > 0) {
+    const from = new Date().toISOString();
+    const to = new Date(Date.now() + params.endsWithinMinutes * 60000).toISOString();
+    filter += `,itemEndDate:[${from}..${to}]`;
+  }
+
+  const sortPart = params.sort ? `&sort=${params.sort}` : "";
+  const offsetPart = params.offset ? `&offset=${params.offset}` : "";
+  const url = `https://api.ebay.com/buy/browse/v1/item_summary/search?q=${q}&filter=${filter}&limit=${Math.min(limit, 200)}${sortPart}${offsetPart}`;
 
   try {
     const res = await fetch(url, {
@@ -232,7 +260,7 @@ export async function searchEbayLiveAuctions(
         "X-EBAY-C-MARKETPLACE-ID": marketplace,
       },
       cache: "no-store",
-      signal: AbortSignal.timeout(2000),
+      signal: AbortSignal.timeout(12000),
     });
 
     if (!res.ok) {
@@ -240,12 +268,12 @@ export async function searchEbayLiveAuctions(
         ebayRateLimitedUntil = Date.now() + 120000; // 2-minute backoff
       }
       console.warn(`[eBay API] Search error (${marketplace}):`, res.status, await res.text());
-      return [];
+      return { items: [], status: res.status, total: 0 };
     }
 
     const data = await res.json();
     if (!data.itemSummaries || !Array.isArray(data.itemSummaries)) {
-      return [];
+      return { items: [], status: res.status, total: Number(data.total) || 0 };
     }
 
     const sourceMap: Record<EbayMarketplaceHeader, AuctionSource> = {
@@ -321,8 +349,8 @@ export async function searchEbayLiveAuctions(
         source,
         title: item.title,
         currentBid: usdPrice,
-        shippingCost: usdShip || 14.0,
-        bidCount: item.bidCount ?? (isFixedPrice ? 0 : 1),
+        shippingCost: usdShip, // what eBay quoted; 0 when the listing has no quoted shipping
+        bidCount: item.bidCount ?? 0,
         secondsRemaining,
         url: item.itemWebUrl || `https://www.ebay.com/itm/${item.itemId}`,
         imageUrl,
@@ -333,7 +361,7 @@ export async function searchEbayLiveAuctions(
         isRealTimeLiveBid: !isFixedPrice,
         sellerRating: item.seller?.feedbackPercentage
           ? parseFloat(item.seller.feedbackPercentage)
-          : 99.8,
+          : undefined,
         certNumber: certMatch ? certMatch[1] : undefined,
         currency: cur.code,
         originalBid: origVal,
@@ -365,10 +393,10 @@ export async function searchEbayLiveAuctions(
       });
     }
 
-    return results;
+    return { items: results, status: res.status, total: Number(data.total) || results.length };
   } catch (err) {
     console.error("[eBay API] Live search exception:", err);
-    return [];
+    return { items: [], status: 0, total: 0 };
   }
 }
 

@@ -6,10 +6,7 @@ import { normalizeAuctionTitle, parseAndFilterListing } from "@/lib/sniper/anti-
 import { resolveAuthoritativePublisher } from "@/lib/comics/publisher-authority";
 import { lookupSqliteCover, lookupSqliteGallery } from "@/lib/comics/sqlite-covers";
 import { lookupRealCensus } from "@/lib/comics/census-authority";
-import {
-  searchEbayMultiStream,
-  searchEbayLiveAuctions,
-} from "@/lib/sniper/ebay-api";
+import { readLiveListings } from "@/lib/sniper/market-store";
 import { RawAuctionListing } from "@/lib/sniper/types";
 
 const requireModule = createRequire(import.meta.url);
@@ -110,35 +107,9 @@ function resolveAuctionDbMetadata(title: string, rawGrade?: number): { fmv: numb
   return { fmv, publisher };
 }
 
-// Read verified multi-source catalog (MyComicShop, Mercari, Heritage, Atomic Avenue, ComicLink, Shortboxed)
-function loadVerifiedMultiSourceCatalog(): RawAuctionListing[] {
-  try {
-    const p = path.resolve(process.cwd(), "data", "live_auctions.json");
-    if (fs.existsSync(p)) {
-      const data = fs.readFileSync(p, "utf-8");
-      const parsed = JSON.parse(data);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
-      }
-    }
-  } catch (err) {
-    console.error("Failed to load verified live_auctions.json:", err);
-  }
-  return [];
-}
-
-// In-memory cache for live streams to protect quotas and deliver sub-10ms response times
-interface StreamCache {
-  items: RawAuctionListing[];
-  timestamp: number;
-}
-let streamCache: StreamCache | null = null;
-const CACHE_TTL_MS = 60000; // 60 seconds
-
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const shouldRefresh = searchParams.get("refresh") === "true";
-  const searchQuery = searchParams.get("q");
+    const searchQuery = searchParams.get("q");
   const sourceFilter = searchParams.get("source");
   const publisherFilter = searchParams.get("publisher");
   const angleFilter = searchParams.get("angle");
@@ -146,59 +117,11 @@ export async function GET(request: Request) {
   const minGrade = minGradeParam ? parseFloat(minGradeParam) : 0.5;
 
   try {
-    let combinedAuctions: RawAuctionListing[] = [];
-    const seenIds = new Set<string>();
-
-    // 1. Always load multi-exchange verified catalog (MyComicShop, Mercari, Heritage, Atomic Avenue, ComicLink, Shortboxed)
-    const multiSourceItems = loadVerifiedMultiSourceCatalog();
-    for (const it of multiSourceItems) {
-      if (!seenIds.has(it.id)) {
-        seenIds.add(it.id);
-        combinedAuctions.push(it);
-      }
-    }
-
-    // 2. Fetch live eBay stream if available and not rate-limited
-    let liveEbay: RawAuctionListing[] = [];
-    let fetchedAtMs = Date.now(); // when the eBay results were actually fetched
-    if (searchQuery && searchQuery.trim().length > 0) {
-      try {
-        liveEbay = await searchEbayLiveAuctions({
-          query: searchQuery.trim(),
-          limit: 25,
-        });
-      } catch (err) {
-        console.warn("[Sniper Live] eBay query search failed or rate-limited:", err);
-      }
-    } else {
-      const now = Date.now();
-      if (!shouldRefresh && streamCache && now - streamCache.timestamp < CACHE_TTL_MS) {
-        liveEbay = streamCache.items;
-        fetchedAtMs = streamCache.timestamp;
-      } else {
-        try {
-          liveEbay = await searchEbayMultiStream();
-          streamCache = {
-            items: liveEbay,
-            timestamp: now,
-          };
-        } catch (err) {
-          liveEbay = streamCache ? streamCache.items : [];
-          streamCache = {
-            items: liveEbay,
-            timestamp: now,
-          };
-        }
-      }
-    }
-
-    // 3. Merge live eBay items (if any)
-    for (const it of liveEbay) {
-      if (!seenIds.has(it.id)) {
-        seenIds.add(it.id);
-        combinedAuctions.push(it);
-      }
-    }
+    // Live auctions come from the Sniper store, which the scheduled snapshot fills from eBay's Browse API.
+    // Visitors never call eBay from here, so page traffic cannot use up the eBay allowance.
+    const { items: stored, asOf } = await readLiveListings();
+    const combinedAuctions: RawAuctionListing[] = stored;
+    const fetchedAtMs = Date.now(); // seconds remaining were computed from each lot's end time just now
 
     // 4. Apply dynamic filters if query parameters provided
     let filteredAuctions = combinedAuctions;
@@ -393,7 +316,8 @@ export async function GET(request: Request) {
         count: liveAuctions.length,
         auctions: liveAuctions,
         venues: activeVenues,
-        source: "multi_exchange_live_stream",
+        source: "ebay_browse_api",
+        dataAsOf: asOf,
         fetchedAt: new Date().toISOString(),
       });
     }
@@ -403,8 +327,11 @@ export async function GET(request: Request) {
       count: 0,
       auctions: [],
       venues: [],
-      source: "multi_exchange_live_stream",
-      message: "No live listings currently match the active filters across connected auction exchanges.",
+      source: "ebay_browse_api",
+      dataAsOf: asOf,
+      message: asOf
+        ? "No live eBay listings match the active filters."
+        : "No eBay listings are stored yet. The snapshot job has not completed a run; check /api/sniper/status.",
       fetchedAt: new Date().toISOString(),
     });
   } catch (error: unknown) {

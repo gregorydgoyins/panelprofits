@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { searchEbayLiveAuctions } from "@/lib/sniper/ebay-api";
 import { createAdminServerClient } from "@/lib/supabase/admin";
 import benchmarksData from "@/lib/pricing/pricecharting-cgc-benchmarks.json";
 
@@ -94,34 +93,31 @@ export async function GET(request: Request) {
     console.warn("[Comps API] Supabase fetch error:", err);
   }
 
-  // 3. Query eBay Developer REST API for active & completed market listings
+  // 3. Current asking prices for the same book from the live feed (stored by the snapshot job; no eBay call here)
   try {
-    const ebayResults = await searchEbayLiveAuctions({
-      query: `${series} ${issue} CGC`,
-      limit: 12,
-      buyingOptions: "ALL",
-    });
-
-    if (ebayResults && ebayResults.length > 0) {
-      for (const it of ebayResults) {
-        if (it.currentBid > 0) {
-          const p = it.currentBid;
-          const gradeMatch = it.title.match(/(?:CGC|CBCS|PSA)\s*([0-9]\.[0-9]|10(?:\.0)?)/i);
-          const g = gradeMatch ? parseFloat(gradeMatch[1]) : 9.8;
-
-          comps.push({
-            venue: "eBay Live Marketplace",
-            date: "Live Floor",
-            grade: g,
-            price: p,
-            title: it.title,
-            url: it.url,
-          });
-        }
-      }
+    const db = createAdminServerClient();
+    const clean = series.replace(/[%_]/g, " ").replace(/^the\s+/i, "").trim();
+    const { data: asks } = await db
+      .from("sniper_listings")
+      .select("title,price_usd,grade,url,buying_option")
+      .eq("status", "live")
+      .ilike("series", `%${clean}%`)
+      .eq("issue", String(issue).replace(/^#/, ""))
+      .gt("price_usd", 0)
+      .gte("last_seen", new Date(Date.now() - 45 * 60000).toISOString())
+      .limit(12);
+    for (const a of asks ?? []) {
+      comps.push({
+        venue: a.buying_option === "AUCTION" ? "eBay live auction (current bid)" : "eBay live ask",
+        date: "Live Floor",
+        grade: a.grade != null ? Number(a.grade) : 0,
+        price: Number(a.price_usd),
+        title: a.title,
+        url: a.url,
+      });
     }
   } catch (err) {
-    console.warn("[Comps API] eBay live search error:", err);
+    console.warn("[Comps API] live feed read error:", err);
   }
 
   // Sort comps: Live floor listings first, then recent sales by date descending

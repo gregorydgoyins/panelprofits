@@ -995,12 +995,8 @@ export function evaluateAuctionListing(
     censusScarcityTier,
     pricingSourceProvenance,
     signaturePremiumMultiplier,
-    lastSalePrice: (comp && comp.recentSales.length > 0)
-      ? comp.recentSales[0].price
-      : (anchorFmv > 0 ? Math.round(anchorFmv * 1.02) : undefined),
-    lastSaleDate: (comp && comp.recentSales.length > 0)
-      ? comp.recentSales[0].date
-      : (anchorFmv > 0 ? "2026-09-24" : undefined),
+    lastSalePrice: (comp && comp.recentSales.length > 0) ? comp.recentSales[0].price : undefined,
+    lastSaleDate: (comp && comp.recentSales.length > 0) ? comp.recentSales[0].date : undefined,
     anchorFmv,
     allInCost,
     dollarSpread,
