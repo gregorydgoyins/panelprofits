@@ -15,8 +15,10 @@ import {
   Skull,
   HeartHandshake,
   Layers,
+  PenTool,
 } from "lucide-react";
 import { getLoreEntityBySlug, type LoreEntitySummary } from "@/lib/wiki/lore-search";
+import { getCreatorBio } from "@/lib/creators/creator-bio-service";
 import { createPublicServerClient } from "@/lib/supabase/server";
 import { extractEntitiesFromContext } from "@/lib/news/entities";
 import { LinkedBriefing } from "@/components/news/linked-briefing";
@@ -36,6 +38,36 @@ function cleanLoreTitle(title: string): string {
 export default async function LoreEntityPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   let entity: LoreEntitySummary | null = getLoreEntityBySlug(slug);
+
+  // Check creator bio authority
+  const cleanCreatorSlug = slug.replace(/^creator-/, "");
+  const creatorBio = await getCreatorBio(cleanCreatorSlug);
+  if (creatorBio && (!entity || slug.startsWith("creator-") || !entity.first_appearance)) {
+    entity = {
+      slug,
+      title: creatorBio.name,
+      universe: "CANONICAL",
+      type: "creator",
+      reality: creatorBio.birthCity ? `Origin: ${creatorBio.birthCity}` : "Comic Creative Architect",
+      creators: creatorBio.description || "Comic Book Creative Architect",
+      first_appearance: creatorBio.deathDate
+        ? `1939–${creatorBio.deathDate.slice(0, 4)}`
+        : creatorBio.birthDate
+        ? `Active (b. ${creatorBio.birthDate.slice(0, 4)})`
+        : "Historic Master Architect",
+      summary: creatorBio.bio,
+      imageUrl: creatorBio.imageUrl,
+      landmark_debuts: [
+        {
+          title: `All Certified Issues by ${creatorBio.name}`,
+          significance: `Search all authenticated comic issues written, illustrated, or edited by ${creatorBio.name}`,
+          catalogUrl: `/comics?q=${encodeURIComponent(creatorBio.name)}`,
+          era: "AUTHENTIC",
+          assetTier: "CREATOR_LINEAGE",
+        },
+      ],
+    };
+  }
 
   if (!entity) {
     try {
@@ -88,6 +120,8 @@ export default async function LoreEntityPage({ params }: { params: Promise<{ slu
 
   const renderIcon = () => {
     switch (entity.type) {
+      case "creator":
+        return <PenTool className="h-6 w-6 text-purple-400" />;
       case "equity":
         return <Layers className="h-6 w-6 text-amber-400" />;
       case "item":
@@ -137,7 +171,9 @@ export default async function LoreEntityPage({ params }: { params: Promise<{ slu
           <div className="flex items-center gap-2.5">
             {renderIcon()}
             <span className="text-[10px] font-mono uppercase tracking-[0.24em] text-slate-400">
-              {entity.type === "equity"
+              {entity.type === "creator"
+                ? "Canonical Creative Architect & Legend Dossier"
+                : entity.type === "equity"
                 ? "Canonical Media Adaptation & Storyline Equity Dossier"
                 : "Canonical Multi-Universe Character Dossier"}
             </span>
@@ -153,29 +189,43 @@ export default async function LoreEntityPage({ params }: { params: Promise<{ slu
             >
               {entity.universe}
             </span>
-            <span className="px-2.5 py-1 rounded text-[10px] font-mono uppercase tracking-wider border border-slate-700 bg-slate-800/60 text-slate-300">
+            <span className="px-2.5 py-1 rounded text-[10px] font-mono uppercase tracking-wider border border-purple-800/60 bg-purple-950/40 text-purple-200">
               {entity.type.toUpperCase()}
             </span>
           </div>
         </div>
 
         <div className="mt-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
-          <div>
-            <h1 className="text-3xl sm:text-5xl font-bold text-slate-100 tracking-tight">
-              {displayTitle}
-            </h1>
-            {entity.alter_ego && (
-              <p className="mt-1.5 text-base sm:text-lg text-cyan-300 font-medium">
-                Civilian Identity / Alter Ego: <strong className="text-slate-100">{entity.alter_ego}</strong>
-              </p>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+            {entity.imageUrl && (
+              <div className="shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={entity.imageUrl}
+                  alt={entity.title}
+                  className="w-24 h-24 sm:w-28 sm:h-28 object-cover object-top rounded-full border-2 border-purple-500/50 shadow-xl bg-purple-950/40 ring-4 ring-purple-500/10"
+                />
+              </div>
             )}
-            <p className="mt-1 text-xs font-mono text-slate-400 uppercase tracking-widest">
-              {entity.type === "equity" ? (
-                <>Asset Class: <span className="text-amber-400 font-semibold">Cinematic & Comic Equity</span> · Reality: {entity.reality || "Canonical Universe"}</>
-              ) : (
-                <>Multiverse Reality: {entity.reality || (entity.universe === "MARVEL" ? "Earth-616" : entity.universe === "DC" ? "Prime Earth" : "Canonical Continuity")} · Alignment: <span className="text-emerald-400 font-semibold">{entity.alignment || "Good"}</span></>
+            <div>
+              <h1 className="text-3xl sm:text-5xl font-bold text-slate-100 tracking-tight">
+                {displayTitle}
+              </h1>
+              {entity.alter_ego && (
+                <p className="mt-1.5 text-base sm:text-lg text-cyan-300 font-medium">
+                  Civilian Identity / Alter Ego: <strong className="text-slate-100">{entity.alter_ego}</strong>
+                </p>
               )}
-            </p>
+              <p className="mt-1 text-xs font-mono text-slate-400 uppercase tracking-widest">
+                {entity.type === "creator" ? (
+                  <>Role: <span className="text-purple-400 font-semibold">{entity.creators}</span> · Lineage: <span className="text-cyan-400 font-semibold">{entity.first_appearance}</span></>
+                ) : entity.type === "equity" ? (
+                  <>Asset Class: <span className="text-amber-400 font-semibold">Cinematic & Comic Equity</span> · Reality: {entity.reality || "Canonical Universe"}</>
+                ) : (
+                  <>Multiverse Reality: {entity.reality || (entity.universe === "MARVEL" ? "Earth-616" : entity.universe === "DC" ? "Prime Earth" : "Canonical Continuity")} · Alignment: <span className="text-emerald-400 font-semibold">{entity.alignment || "Good"}</span></>
+                )}
+              </p>
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
@@ -194,17 +244,17 @@ export default async function LoreEntityPage({ params }: { params: Promise<{ slu
         <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
           <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-cyan-300">
             <BookOpen className="h-4 w-4 text-cyan-400" />
-            Landmark Publication Provenance & Core Debut
+            {entity.type === "creator" ? "Creator Biography & Career Provenance" : "Landmark Publication Provenance & Core Debut"}
           </div>
           <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">
-            Canonical 1st Appearance
+            {entity.type === "creator" ? "Canonical Bio Record" : "Canonical 1st Appearance"}
           </span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
           <div className="rounded border border-cyan-500/30 bg-[#070C16] p-4">
             <span className="text-[10px] uppercase font-mono tracking-wider text-slate-500">
-              1st Canonical Appearance
+              {entity.type === "creator" ? "Active Eras & Dates" : "1st Canonical Appearance"}
             </span>
             <p className="mt-1 text-base font-bold text-cyan-200">
               {entity.first_appearance && entity.first_appearance.trim().length > 0
@@ -216,13 +266,15 @@ export default async function LoreEntityPage({ params }: { params: Promise<{ slu
                 : "Historical Benchmark Debut Issue"}
             </p>
             <p className="mt-1 text-xs text-slate-400">
-              Historical milestone debut officially recorded in canonical publishing ledger.
+              {entity.type === "creator"
+                ? "Historical career timeline recorded in canonical publishing ledger."
+                : "Historical milestone debut officially recorded in canonical publishing ledger."}
             </p>
           </div>
 
           <div className="rounded border border-slate-800 bg-[#070C16] p-4">
             <span className="text-[10px] uppercase font-mono tracking-wider text-slate-500">
-              Creator Lineage
+              {entity.type === "creator" ? "Craft & Discipline" : "Creator Lineage"}
             </span>
             <p className="mt-1 text-base font-bold text-slate-200">
               {entity.creators && entity.creators.trim().length > 0
@@ -234,13 +286,15 @@ export default async function LoreEntityPage({ params }: { params: Promise<{ slu
                 : "Foundational Creative Architects"}
             </p>
             <p className="mt-1 text-xs text-slate-400">
-              Foundational architects and iconic writers/pencillers.
+              {entity.type === "creator"
+                ? "Discipline, creative role, and industry acclaim."
+                : "Foundational architects and iconic writers/pencillers."}
             </p>
           </div>
 
           <div className="rounded border border-slate-800 bg-[#070C16] p-4">
             <span className="text-[10px] uppercase font-mono tracking-wider text-slate-500">
-              Continuity Coordinates
+              {entity.type === "creator" ? "Origin & Roots" : "Continuity Coordinates"}
             </span>
             <p className="mt-1 text-base font-mono font-bold text-indigo-300">
               {entity.reality && entity.reality.trim().length > 0

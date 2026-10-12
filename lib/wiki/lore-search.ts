@@ -6,12 +6,14 @@ export interface LoreEntitySummary {
   slug: string;
   title: string;
   universe: "MARVEL" | "DC" | "STAR_WARS" | "IMAGE" | "DARK_HORSE" | "SPAWN" | "TRANSFORMERS" | string;
-  type: "character" | "item" | "location" | "team" | "equity";
+  type: "character" | "item" | "location" | "team" | "equity" | "creator";
   reality?: string;
   alignment?: string;
   creators?: string;
   first_appearance?: string;
   summary: string;
+  imageUrl?: string | null;
+  role?: string;
   alter_ego?: string;
   ticker?: string;
   gadgets_and_weapons?: string[];

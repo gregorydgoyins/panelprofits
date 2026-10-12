@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getStorySummary, type StoryEntityLink } from "@/lib/comics/story-summary";
-import { BookOpen, Sparkles, Users, MapPin, Wrench, Quote } from "lucide-react";
+import { slugifyCreatorName } from "@/lib/creators/creator-bio-service";
+import { BookOpen, Sparkles, Users, MapPin, Wrench, Quote, PenTool, Palette } from "lucide-react";
 
 interface StorySummaryCardProps {
   series: string;
@@ -26,27 +27,69 @@ function resolveInternalLoreUrl(url: string, fallbackLabel: string): string {
   return `/comics?q=${encodeURIComponent(fallbackLabel)}`;
 }
 
+function cleanDialogueQuote(raw: string): string {
+  if (!raw) return "";
+  let clean = raw.trim();
+  // Strip outer quotes and curled quotes
+  clean = clean.replace(/^[“"«'‘]+/, "").replace(/[”"»'’]+$/, "").trim();
+  return clean;
+}
+
 /**
- * Safely parse markdown-style links `[Label](url)` and render as internal clickable React elements.
+ * Robust markdown formatter that renders internal links alongside bold **word** and italic *word*.
  */
-function renderMarkdownWithLinks(text: string) {
+function renderRichDialogueText(text: string): React.ReactNode {
   if (!text) return null;
-  const parts: React.ReactNode[] = [];
+
+  const tokens: React.ReactNode[] = [];
   const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
+  function parseFormatting(segment: string, keyPrefix: string): React.ReactNode[] {
+    if (!segment) return [];
+    const parts: React.ReactNode[] = [];
+    const formatRegex = /(\*\*([^*]+)\*\*|\*([^*]+)\*)/g;
+    let sLastIndex = 0;
+    let fMatch: RegExpExecArray | null;
+
+    while ((fMatch = formatRegex.exec(segment)) !== null) {
+      if (fMatch.index > sLastIndex) {
+        parts.push(segment.slice(sLastIndex, fMatch.index));
+      }
+      if (fMatch[2]) {
+        parts.push(
+          <strong key={`${keyPrefix}-b-${fMatch.index}`} className="font-semibold text-cyan-200">
+            {fMatch[2]}
+          </strong>
+        );
+      } else if (fMatch[3]) {
+        parts.push(
+          <em key={`${keyPrefix}-i-${fMatch.index}`} className="italic text-cyan-100">
+            {fMatch[3]}
+          </em>
+        );
+      }
+      sLastIndex = formatRegex.lastIndex;
+    }
+    if (sLastIndex < segment.length) {
+      parts.push(segment.slice(sLastIndex));
+    }
+    return parts;
+  }
+
+  let chunkIdx = 0;
   while ((match = linkRegex.exec(text)) !== null) {
     if (match.index > lastIndex) {
-      parts.push(text.slice(lastIndex, match.index));
+      tokens.push(...parseFormatting(text.slice(lastIndex, match.index), `txt-${chunkIdx++}`));
     }
     const label = match[1];
     const rawUrl = match[2];
     const internalUrl = resolveInternalLoreUrl(rawUrl, label);
 
-    parts.push(
+    tokens.push(
       <Link
-        key={`${internalUrl}-${match.index}`}
+        key={`link-${internalUrl}-${match.index}`}
         href={internalUrl}
         className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2 font-medium transition-colors"
       >
@@ -57,10 +100,47 @@ function renderMarkdownWithLinks(text: string) {
   }
 
   if (lastIndex < text.length) {
-    parts.push(text.slice(lastIndex));
+    tokens.push(...parseFormatting(text.slice(lastIndex), `txt-tail`));
   }
 
-  return parts;
+  return tokens;
+}
+
+/**
+ * Safely parse markdown-style links `[Label](url)` and render as internal clickable React elements.
+ */
+function renderMarkdownWithLinks(text: string) {
+  return renderRichDialogueText(text);
+}
+
+function CreatorCreditPill({ role, names, roleColor }: { role: string; names: string[]; roleColor: string }) {
+  if (!names || names.length === 0) return null;
+
+  return (
+    <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-[#0d131f] border border-slate-800 text-xs font-mono shadow-sm hover:border-slate-700 transition-colors">
+      <span className={`font-semibold uppercase tracking-wider text-[11px] ${roleColor}`}>{role}:</span>
+      <div className="flex flex-wrap items-center gap-1.5">
+        {names.map((name, idx) => {
+          const cleanName = name.trim();
+          const slug = slugifyCreatorName(cleanName);
+          const creatorUrl = `/wiki/entry/${slug}`;
+
+          return (
+            <span key={`${role}-${cleanName}-${idx}`} className="inline-flex items-center gap-1">
+              <Link
+                href={creatorUrl}
+                className="text-slate-200 hover:text-cyan-300 underline underline-offset-2 hover:decoration-cyan-400 font-medium transition-colors"
+                title={`View ${cleanName} creator biography, portrait, and credits`}
+              >
+                {cleanName}
+              </Link>
+              {idx < names.length - 1 && <span className="text-slate-600">,</span>}
+            </span>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 function EntityBadge({ entity, badgeColor }: { entity: StoryEntityLink; badgeColor: string }) {
@@ -151,46 +231,44 @@ export default async function StorySummaryCard({
       </div>
 
       {/* Key Epigraph / Quotation Banner */}
-      {quote && (
-        <div className="mt-4 p-4 rounded-lg bg-[#111722]/80 border border-cyan-500/30 relative z-10">
-          <div className="flex items-start gap-3">
-            <Quote className="h-5 w-5 text-cyan-400 shrink-0 mt-0.5 opacity-80" />
-            <div className="space-y-1.5">
-              <p className="text-sm sm:text-base italic leading-relaxed text-cyan-100">
-                “{renderMarkdownWithLinks(quote.text)}”
+      {quote && quote.text && (
+        <div className="mt-4 p-4 rounded-lg bg-[#0e1420]/90 border border-cyan-500/30 relative z-10 shadow-lg">
+          <div className="flex items-center justify-between gap-2 mb-2.5 pb-2 border-b border-cyan-500/20 text-[10px] font-mono tracking-widest uppercase">
+            <span className="flex items-center gap-1.5 text-cyan-400 font-semibold">
+              <Quote className="h-3.5 w-3.5" /> Iconic Climax Dialogue
+            </span>
+            <span className="text-slate-400">MediaWiki Canon</span>
+          </div>
+          <div className="space-y-2">
+            <blockquote className="text-sm sm:text-base italic leading-relaxed text-cyan-100 font-serif">
+              “{renderRichDialogueText(cleanDialogueQuote(quote.text))}”
+            </blockquote>
+            {quote.speaker && (
+              <p className="text-xs font-mono uppercase tracking-wider text-cyan-400 text-right">
+                — {renderRichDialogueText(cleanDialogueQuote(quote.speaker))}
               </p>
-              {quote.speaker && (
-                <p className="text-xs font-mono uppercase tracking-wider text-cyan-400 text-right">
-                  — {renderMarkdownWithLinks(quote.speaker)}
-                </p>
-              )}
-            </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* Creative Credits Lineage */}
+      {/* Creative Credits Lineage (Interactive Creator Dossier Links) */}
       {credits && Object.keys(credits).length > 0 && (
         <div className="mt-4 flex flex-wrap gap-2 text-xs font-mono relative z-10">
           {credits.writers && credits.writers.length > 0 && (
-            <span className="px-2.5 py-1 rounded bg-slate-900 border border-slate-700 text-slate-300">
-              <strong className="text-cyan-400">Writer:</strong> {credits.writers.join(", ")}
-            </span>
+            <CreatorCreditPill role="Writer" names={credits.writers} roleColor="text-cyan-400" />
           )}
           {credits.pencilers && credits.pencilers.length > 0 && (
-            <span className="px-2.5 py-1 rounded bg-slate-900 border border-slate-700 text-slate-300">
-              <strong className="text-cyan-400">Art:</strong> {credits.pencilers.join(", ")}
-            </span>
+            <CreatorCreditPill role="Art" names={credits.pencilers} roleColor="text-purple-400" />
           )}
           {credits.colorists && credits.colorists.length > 0 && (
-            <span className="px-2.5 py-1 rounded bg-slate-900 border border-slate-700 text-slate-300">
-              <strong className="text-cyan-400">Color:</strong> {credits.colorists.join(", ")}
-            </span>
+            <CreatorCreditPill role="Color" names={credits.colorists} roleColor="text-amber-400" />
+          )}
+          {credits.letterers && credits.letterers.length > 0 && (
+            <CreatorCreditPill role="Letters" names={credits.letterers} roleColor="text-emerald-400" />
           )}
           {credits.editors && credits.editors.length > 0 && (
-            <span className="px-2.5 py-1 rounded bg-slate-900 border border-slate-700 text-slate-300">
-              <strong className="text-cyan-400">Editor:</strong> {credits.editors.join(", ")}
-            </span>
+            <CreatorCreditPill role="Editor" names={credits.editors} roleColor="text-rose-400" />
           )}
         </div>
       )}

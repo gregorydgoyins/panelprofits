@@ -1,0 +1,722 @@
+{
+  "jim-starlin": {
+    "name": "Jim Starlin",
+    "slug": "jim-starlin",
+    "description": "American comics artist and writer (born 1949)",
+    "bio": "James P. Starlin is an American comics artist and writer. Beginning his career in the early 1970s, he is best known for space opera stories, for revamping the Marvel Comics characters Captain Marvel and Adam Warlock, and for creating or co-creating the Marvel characters Thanos, Drax the Destroyer, Gamora, and Shang-Chi. Starlin wrote the miniseries The Infinity Gauntlet and its many sequels including The Infinity War and The Infinity Crusade, all detailing Thanos's pursuit of the Infinity Gems and his conflict with the heroes of the Marvel Universe.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/46/Jim_Starlin_at_Galaxy_Con_Richmond_%28cropped%29.jpg/330px-Jim_Starlin_at_Galaxy_Con_Richmond_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "Detroit",
+    "deathCity": ""
+  },
+  "dave-cockrum": {
+    "name": "Dave Cockrum",
+    "slug": "dave-cockrum",
+    "description": "American comics artist (1943\u20132006)",
+    "bio": "David Emmett Cockrum was an American comics artist known for his co-creation of the new X-Men characters Nightcrawler, Storm, Colossus, and Mystique, as well as the antiheroine Black Cat. Cockrum was a prolific and inventive costume designer who updated the uniforms of the Legion of Super-Heroes and the X-Men in the 1970s and early 1980s.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b4/Dave_Cockrum.jpg/330px-Dave_Cockrum.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "Pendleton",
+    "deathCity": "Belton"
+  },
+  "adrienne-roy": {
+    "name": "Adrienne Roy",
+    "slug": "adrienne-roy",
+    "description": "American comics colorist (1953\u20132010)",
+    "bio": "Adrienne Roy was a comic book color artist who worked mostly for DC Comics. She was largely responsible for coloring the Batman line throughout the 1980s and early 1990s.",
+    "imageUrl": "https://upload.wikimedia.org/wikipedia/en/2/26/Adrienne_roy.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
+    "birthCity": "Verona",
+    "deathCity": "Austin"
+  },
+  "dennis-o-neil": {
+    "name": "Dennis O'Neil",
+    "slug": "dennis-o-neil",
+    "description": "American comics writer (1939\u20132020)",
+    "bio": "Dennis Joseph O'Neil was an American comic book writer and editor, principally for Marvel Comics and DC Comics from the 1960s through the 1990s, and Group Editor for the Batman family of titles until his retirement.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/92/Dennis_O%27Neil_%287885471094%29.jpg/330px-Dennis_O%27Neil_%287885471094%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "",
+    "deathCity": ""
+  },
+  "denny-o-neil": {
+    "name": "Denny O'Neil",
+    "slug": "denny-o-neil",
+    "description": "American comics writer (1939\u20132020)",
+    "bio": "Dennis Joseph O'Neil was an American comic book writer and editor, principally for Marvel Comics and DC Comics from the 1960s through the 1990s, and Group Editor for the Batman family of titles until his retirement.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/92/Dennis_O%27Neil_%287885471094%29.jpg/330px-Dennis_O%27Neil_%287885471094%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "Clayton",
+    "deathCity": "New York City"
+  },
+  "todd-mcfarlane": {
+    "name": "Todd McFarlane",
+    "slug": "todd-mcfarlane",
+    "description": "Canadian comic book creator and entrepreneur (born 1961)",
+    "bio": "Todd McFarlane is a Canadian comic-book creator, best known for his work as an artist on The Amazing Spider-Man and as the creator, writer, and artist on the superhero horror-fantasy series Spawn, as well as being the current President and a co-founder of Image Comics.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f1/Todd_McFarlane_%28cropped%29.jpg/330px-Todd_McFarlane_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "Calgary",
+    "deathCity": ""
+  },
+  "alan-moore": {
+    "name": "Alan Moore",
+    "slug": "alan-moore",
+    "description": "British writer (born 1953)",
+    "bio": "Alan Moore is an English author known primarily for his work in comics including Watchmen, V for Vendetta, The Ballad of Halo Jones, Swamp Thing, Batman: The Killing Joke, Superman: Whatever Happened to the Man of Tomorrow? and From Hell. He is widely recognised among his peers and critics as one of the best comic book writers in the English language. Moore has occasionally used such pseudonyms as Curt Vile, Jill de Ray, Brilburn Logue and Translucia Baboon; also, reprints of some of his work have been credited to The Original Writer when Moore requested that his name be removed.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2d/Alan_Moore_%282%29.jpg/330px-Alan_Moore_%282%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "Northampton",
+    "deathCity": ""
+  },
+  "dave-gibbons": {
+    "name": "Dave Gibbons",
+    "slug": "dave-gibbons",
+    "description": "English comics artist and writer",
+    "bio": "David Chester Gibbons is an English comics artist, writer and sometimes letterer. He is best known for his collaborations with writer Alan Moore, which include the miniseries Watchmen and the Superman story \"For the Man Who Has Everything\". He was an artist for 2000 AD, for which he contributed a large body of work from its first issue in 1977.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e0/Dave_gibbons_comicfestival_muenchen_2025.jpg/330px-Dave_gibbons_comicfestival_muenchen_2025.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "London",
+    "deathCity": ""
+  },
+  "frank-miller": {
+    "name": "Frank Miller",
+    "slug": "frank-miller",
+    "description": "American writer, artist, and film director (born 1957)",
+    "bio": "Frank Miller is an American comic book creator, screenwriter, and director known for his comic book stories and graphic novels. He wrote Daredevil from 1979 to 1983, and again in 1986, with the Daredevil: Born Again arc. For Daredevil, he created the femme fatale Elektra and the ninja villains the Hand. Subsequently, he wrote influential Batman stories: The Dark Knight Returns (1986) and Batman: Year One (1987). He also wrote creator-owned series outside the major superhero franchises: Ronin (1983-1984), Sin City (1991-1992), and 300 (1998).",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cb/7.14.26FrankMillerByLuigiNovi1a.jpg/330px-7.14.26FrankMillerByLuigiNovi1a.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "Kansas City",
+    "deathCity": "Des Moines"
+  },
+  "stan-lee": {
+    "name": "Stan Lee",
+    "slug": "stan-lee",
+    "description": "American comic book writer (1922\u20132018)",
+    "bio": "Stan Lee was an American comic book writer, editor, publisher, and producer. He rose through the ranks of a family-run business called Timely Comics, which later became Marvel Comics. He was Marvel's primary creative leader for two decades, expanding it from a small publishing house division to a multimedia corporation that dominated the comics and film industries.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6b/Stan_Lee_2007_%28cropped%29.jpg/330px-Stan_Lee_2007_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "Manhattan, New York City",
+    "deathCity": "Los Angeles"
+  },
+  "jack-kirby": {
+    "name": "Jack Kirby",
+    "slug": "jack-kirby",
+    "description": "American comic book artist (1917\u20131994)",
+    "bio": "Jack Kirby was an American comic book artist, widely regarded as one of the medium's major innovators and one of its most prolific and influential creators. He grew up in New York City and learned to draw cartoon figures by tracing characters from comic strips and editorial cartoons. He entered the nascent comics industry in the 1930s, drawing various comics features under different pen names, including Jack Curtiss, before settling on Jack Kirby. In 1940, he and writer-editor Joe Simon created the highly successful superhero character Captain America for Timely Comics, predecessor of Marvel Comics. During the 1940s, Kirby regularly teamed with Simon, creating numerous characters for that company and for National Comics Publications, later to become DC Comics.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a0/Jack-Kirby_art-of-jack-kirby_wyman-skaar.jpg/330px-Jack-Kirby_art-of-jack-kirby_wyman-skaar.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "Lower East Side, Manhattan, New York City",
+    "deathCity": "Thousand Oaks"
+  },
+  "steve-ditko": {
+    "name": "Steve Ditko",
+    "slug": "steve-ditko",
+    "description": "American comics artist (1927\u20132018)",
+    "bio": "Stephen John Ditko was an American comic book artist best known for being the co-creator of Marvel superheroes Spider-Man and Doctor Strange. He also made notable contributions to the character of Iron Man, introducing the character's signature red and yellow design.",
+    "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/7/71/Steve_Ditko_1959_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
+    "birthCity": "Johnstown",
+    "deathCity": "Manhattan, New York City"
+  },
+  "john-byrne": {
+    "name": "John Byrne",
+    "slug": "john-byrne",
+    "description": "Topics referred to by the same term",
+    "bio": "John or Johnny Byrne may refer to:",
+    "imageUrl": null,
+    "birthCity": "Walsall",
+    "deathCity": ""
+  },
+  "chris-claremont": {
+    "name": "Chris Claremont",
+    "slug": "chris-claremont",
+    "description": "American comic book writer (born 1950)",
+    "bio": "Christopher Simon Claremont is an English-born American comic book writer and novelist. Claremont wrote for 16 years on Uncanny X-Men from 1975 to 1991, longer than that of any other writer, during which he is credited with developing strong female characters as well as introducing complex literary themes into superhero narratives, turning the once underachieving comic into one of Marvel's most popular series. During his tenure, X-Men was the best-selling comic book in the world.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a1/Chris_Claremont_at_Galaxy_Con_Richmond_-_55175609845.jpg/330px-Chris_Claremont_at_Galaxy_Con_Richmond_-_55175609845.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "London",
+    "deathCity": ""
+  },
+  "george-p-rez": {
+    "name": "George P\u00e9rez",
+    "slug": "george-p-rez",
+    "description": "American comic book artist and writer (1954\u20132022)",
+    "bio": "George P\u00e9rez was an American comic book artist and writer, who worked primarily as a penciller. He came to prominence in the 1970s penciling Fantastic Four and The Avengers for Marvel Comics. In the 1980s, he penciled The New Teen Titans, which became one of DC Comics' top-selling series. He penciled DC's landmark limited series Crisis on Infinite Earths, followed by relaunching Wonder Woman as both writer and penciller. In the meantime, he worked on other comics published by Marvel, DC, and other companies into the 2010s. He was known for his detailed and realistic rendering, and his facility with complex crowd scenes.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7a/10.13.12GeorgeP%C3%A9rezByLuigiNovi1.jpg/330px-10.13.12GeorgeP%C3%A9rezByLuigiNovi1.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "South Bronx, New York City",
+    "deathCity": "Sanford"
+  },
+  "marv-wolfman": {
+    "name": "Marv Wolfman",
+    "slug": "marv-wolfman",
+    "description": "American comic book writer (born 1946)",
+    "bio": "Marvin Arthur Wolfman is an American comic book and novelization writer. He worked on Marvel Comics's The Tomb of Dracula (1972\u20131979), for which he and artist Gene Colan created the vampire-slayer Blade, and DC Comics's The New Teen Titans and the Crisis on Infinite Earths limited series with George P\u00e9rez.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1f/Marv_Wolfman_GalaxyCon_San_Jose_August-28-2026_1039.jpg/330px-Marv_Wolfman_GalaxyCon_San_Jose_August-28-2026_1039.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "Brooklyn, New York City",
+    "deathCity": ""
+  },
+  "neal-adams": {
+    "name": "Neal Adams",
+    "slug": "neal-adams",
+    "description": "American comic book artist (1941\u20132022)",
+    "bio": "Neal Adams was an American comic book artist. He was the co-founder of the graphic design studio Continuity Associates, and was a creators-rights advocate who helped secure a pension and recognition for Superman creators Jerry Siegel and Joe Shuster. During his career, Adams co-created the characters John Stewart, Man-Bat, and Ra's al Ghul for DC Comics.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/94/Neal_Adams_by_Gage_Skidmore.jpg/330px-Neal_Adams_by_Gage_Skidmore.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "New York",
+    "deathCity": "New York City"
+  },
+  "bernie-wrightson": {
+    "name": "Bernie Wrightson",
+    "slug": "bernie-wrightson",
+    "description": "American comic artist (1948\u20132017)",
+    "bio": "Bernard Albert Wrightson was an American artist, known for co-creating the Swamp Thing, his adaptation of the novel Frankenstein illustration work, and for his other horror comics and illustrations, which feature his trademark intricate pen and brushwork.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/44/Bernie_Wrightson.JPG/330px-Bernie_Wrightson.JPG?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "Dundalk",
+    "deathCity": "Austin"
+  },
+  "grant-morrison": {
+    "name": "Grant Morrison",
+    "slug": "grant-morrison",
+    "description": "Scottish comic book writer and playwright (born 1960)",
+    "bio": "Grant Morrison is a Scottish comic book writer, screenwriter, and producer. Their work is known for its nonlinear narratives, humanist philosophy and countercultural leanings. Morrison has written extensively for the American comic book publisher DC Comics, penning lengthy runs on Animal Man, Doom Patrol, JLA, Action Comics, and Green Lantern as well as the graphic novels Arkham Asylum, JLA: Earth 2, and Wonder Woman: Earth One, the meta-series Seven Soldiers and The Multiversity, the mini-series DC One Million and Final Crisis, both of which served as centrepieces for the eponymous company-wide crossover storylines, and the maxi-series All-Star Superman. Morrison's best known DC work is the seven-year Batman storyline which started in the Batman ongoing series and continued through Final Crisis, Batman and Robin, Batman: The Return of Bruce Wayne and two volumes of Batman Incorporated. They also co-created the DC character Damian Wayne.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a4/Grant_morrison2.jpg/330px-Grant_morrison2.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "Glasgow",
+    "deathCity": ""
+  },
+  "neil-gaiman": {
+    "name": "Neil Gaiman",
+    "slug": "neil-gaiman",
+    "description": "English writer (born 1960)",
+    "bio": "Neil Richard MacKinnon Gaiman is an English author of short fiction, novels, comic books, audio theatre, and screenplays. His works include the comic series The Sandman (1989\u20131996) and the novels Good Omens (1990), Stardust (1999), American Gods (2001), Coraline (2002), Anansi Boys (2005), The Graveyard Book (2008) and The Ocean at the End of the Lane (2013). Several of his works have made the transition to the screen, including Coraline (2009) and American Gods (2017), while he co-created the TV adaptations of Good Omens (2019) and The Sandman (2022).",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bc/Kyle-cassidy-neil-gaiman-April-2013.jpg/330px-Kyle-cassidy-neil-gaiman-April-2013.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "Portchester",
+    "deathCity": ""
+  },
+  "garth-ennis": {
+    "name": "Garth Ennis",
+    "slug": "garth-ennis",
+    "description": "Northern Irish comics writer",
+    "bio": "Garth Ennis is a Northern Irish comics writer. He is best known for his acclaimed run on the Vertigo series Hellblazer, his own Vertigo creation Preacher with artist Steve Dillon, his nine-year run on Marvel Comics' Punisher franchise, and The Boys with artist Darick Robertson. He has collaborated with artists such as Dillon and Glenn Fabry on Preacher, John McCrea on Hitman, Marc Silvestri on The Darkness, and Carlos Ezquerra on both Preacher and Hitman. His work has won him recognition in the comics industry, including nominations for the Comics Buyer's Guide Award for Favorite Writer in 1997, 1998, 1999, and 2000. He has received numerous awards and recognition from specialised British and American publications and organisations, such as the UK Comic Art Award and the Comics Buyer's Guide Fan Awards.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6d/6.1.19GarthEnnisByLuigiNovi1.jpg/330px-6.1.19GarthEnnisByLuigiNovi1.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "Holywood",
+    "deathCity": ""
+  },
+  "jim-lee": {
+    "name": "Jim Lee",
+    "slug": "jim-lee",
+    "description": "Korean American artist (born 1964)",
+    "bio": " Jim Lee is a Korean-born American comic book artist, writer, editor, and publisher. As of 2023, he is the president, publisher, and chief creative officer of DC Comics. In recognition of his work, Lee has received a Harvey Award, Inkpot Award and three Wizard Fan Awards.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/86/Jim_Lee_at_San_Diego_Comic_Con_2026-1.jpg/330px-Jim_Lee_at_San_Diego_Comic_Con_2026-1.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "",
+    "deathCity": ""
+  },
+  "rob-liefeld": {
+    "name": "Rob Liefeld",
+    "slug": "rob-liefeld",
+    "description": "American comic book creator (born 1967)",
+    "bio": "Robert Liefeld is an American comic book creator. He co-created the character Cable with writer Louise Simonson and the character Deadpool with writer Fabian Nicieza. In the early 1990s, Liefeld gained popularity due to his work on Marvel Comics' The New Mutants and later X-Force. In 1992, he and several other popular Marvel illustrators left the company to found Image Comics, which started a wave of comic books owned by their creators rather than by publishers. The first book published by Image Comics was Liefeld's Youngblood #1.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/eb/Rob_Liefeld_at_MultiCon_2026.jpg/330px-Rob_Liefeld_at_MultiCon_2026.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "Fullerton",
+    "deathCity": ""
+  },
+  "mike-mignola": {
+    "name": "Mike Mignola",
+    "slug": "mike-mignola",
+    "description": "American comic artist and writer (born 1960)",
+    "bio": "Michael Mignola is an American comic book writer and artist best known for creating Hellboy for Dark Horse Comics, part of a shared universe of titles including B.P.R.D., Abe Sapien, Lobster Johnson, and various spin-offs. He has also created other supernatural and paranormal themed titles for Dark Horse including Baltimore, Joe Golem, and The Amazing Screw-On Head.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0f/MikeMignolaJune2011.jpg/330px-MikeMignolaJune2011.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "Berkeley",
+    "deathCity": ""
+  },
+  "sal-buscema": {
+    "name": "Sal Buscema",
+    "slug": "sal-buscema",
+    "description": "American comic book artist (1936\u20132026)",
+    "bio": "Silvio Buscema was an American comics artist, primarily for Marvel Comics, where he had a ten-year run as artist of The Incredible Hulk and an eight-year run as artist of The Spectacular Spider-Man. He was the younger brother of comics artist John Buscema.",
+    "imageUrl": "https://upload.wikimedia.org/wikipedia/en/4/42/Sal_buscema_1971.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
+    "birthCity": "Brooklyn, New York City",
+    "deathCity": ""
+  },
+  "john-buscema": {
+    "name": "John Buscema",
+    "slug": "john-buscema",
+    "description": "American comic book artist (1927\u20132002)",
+    "bio": "John Buscema was an American comic book artist and one of the mainstays of Marvel Comics during its 1960s and 1970s ascendancy into an industry leader and its subsequent expansion to a major pop-culture conglomerate. His younger brother Sal Buscema was also a comic book artist.",
+    "imageUrl": "https://upload.wikimedia.org/wikipedia/en/7/7a/John_Buscema_1975.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
+    "birthCity": "New York City",
+    "deathCity": "Port Jefferson"
+  },
+  "john-romita-sr": {
+    "name": "John Romita Sr.",
+    "slug": "john-romita-sr",
+    "description": "American comic book artist (1930\u20132023)",
+    "bio": "John Victor Romita was an American comic book artist best known for his work on Marvel Comics' The Amazing Spider-Man and for co-creating characters including Mary Jane Watson, the Punisher, Kingpin, Wolverine, and Luke Cage. Romita was the father of John Romita Jr., also a comic book artist, and the husband of Virginia Romita, who was for many years Marvel's traffic manager.",
+    "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/2/28/John_Romita_Sr%2C_2006.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
+    "birthCity": "",
+    "deathCity": ""
+  },
+  "john-romita-jr": {
+    "name": "John Romita Jr.",
+    "slug": "john-romita-jr",
+    "description": "American comic book artist (born 1956)",
+    "bio": "John Salvatore Romita is an American comics artist best known for his extensive work for Marvel Comics from the 1970s to the 2020s. He is the son of artist John Romita Sr.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3d/John_Romita_Jr._Comic_Con_Cape_Town_2026_01.jpg/330px-John_Romita_Jr._Comic_Con_Cape_Town_2026_01.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "New York City",
+    "deathCity": ""
+  },
+  "alex-ross": {
+    "name": "Alex Ross",
+    "slug": "alex-ross",
+    "description": "American comic book artist (born 1970)",
+    "bio": "Nelson Alexander Ross is an American comic book writer and artist known primarily for his painted interiors, covers, and design work. He first became known with the 1994 miniseries Marvels, on which he collaborated with writer Kurt Busiek for Marvel Comics. He has since done a variety of projects for both Marvel and DC Comics, such as the 1996 miniseries Kingdom Come, which he also cowrote. Since then he has done covers and character designs for Busiek's series Astro City, and various projects for Dynamite Entertainment. His feature film work includes concept and narrative art for Spider-Man (2002) and Spider-Man 2 (2004), and DVD packaging art for the M. Night Shyamalan film Unbreakable (2000). He has done covers for TV Guide, promotional artwork for the Academy Awards, posters and packaging design for video games, and his renditions of superheroes have been merchandised as action figures.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ed/Alexross_comicstore_2003.jpg/330px-Alexross_comicstore_2003.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "Portland",
+    "deathCity": ""
+  },
+  "bill-sienkiewicz": {
+    "name": "Bill Sienkiewicz",
+    "slug": "bill-sienkiewicz",
+    "description": "American comic book artist (born 1958)",
+    "bio": "Boleslav William Felix Robert Sienkiewicz is an American artist known for his work in comic books\u2014particularly for Marvel Comics' The New Mutants, Moon Knight, and Elektra: Assassin. He is the co-creator of the character David Haller / Legion, the basis for the FX television series Legion.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/42/Bill_Sienkiewicz_by_Gage_Skidmore.jpg/330px-Bill_Sienkiewicz_by_Gage_Skidmore.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "Blakely",
+    "deathCity": ""
+  },
+  "gerry-conway": {
+    "name": "Gerry Conway",
+    "slug": "gerry-conway",
+    "description": "American comic book writer (1952\u20132026)",
+    "bio": "Gerard Francis Conway was an American comic book writer and editor, science fiction writer, screenwriter, and television writer and producer. He co-created the Marvel Comics vigilante antihero the Punisher, as well as Peter Parker's clone Ben Reilly, the super villain Jackal, and the first Ms. Marvel. He also wrote the death of the character Gwen Stacy during his long run on The Amazing Spider-Man in the story arc \"The Night Gwen Stacy Died\".",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8c/Gerry_Conway_by_Gage_Skidmore.jpg/330px-Gerry_Conway_by_Gage_Skidmore.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "Brooklyn, New York City",
+    "deathCity": "Thousand Oaks"
+  },
+  "don-newton": {
+    "name": "Don Newton",
+    "slug": "don-newton",
+    "description": "American comics artist (1934\u20131984)",
+    "bio": "Donald Lee Newton was an American comics artist. During his career, he worked for a number of comic book publishers including Charlton Comics, DC Comics, and Marvel Comics. He is best known for his work on The Phantom, Aquaman, and Batman. Newton also drew several Captain Marvel/Marvel Family stories and was a fan of the character having studied under Captain Marvel co-creator C. C. Beck.",
+    "imageUrl": "https://upload.wikimedia.org/wikipedia/en/7/7f/Donnewton_self.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
+    "birthCity": "St. Charles",
+    "deathCity": "Phoenix"
+  },
+  "ed-hannigan": {
+    "name": "Ed Hannigan",
+    "slug": "ed-hannigan",
+    "description": "Comic creator",
+    "bio": "Edward Hannigan is an American comics artist, writer, and editor for both Marvel Comics and DC Comics.",
+    "imageUrl": null,
+    "birthCity": "Ashland",
+    "deathCity": ""
+  },
+  "dick-giordano": {
+    "name": "Dick Giordano",
+    "slug": "dick-giordano",
+    "description": "American comic book artist and editor (1932-2010)",
+    "bio": "Richard Joseph Giordano was an American comics artist and editor whose career included introducing Charlton Comics' \"Action Heroes\" stable of superheroes and serving as executive editor of DC Comics.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7d/Dick_Giordano_Portrait.jpg/330px-Dick_Giordano_Portrait.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "Manhattan, New York City",
+    "deathCity": "Ormond Beach"
+  },
+  "len-wein": {
+    "name": "Len Wein",
+    "slug": "len-wein",
+    "description": "American comic book writer and editor",
+    "bio": "Leonard Norman Wein was an American comic book writer and editor best known for co-creating DC Comics' Swamp Thing and Marvel Comics' Wolverine, and for helping revive the Marvel superhero team the X-Men. Additionally, he was the editor for writer Alan Moore and illustrator Dave Gibbons' influential DC miniseries Watchmen.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ec/Len_Wein_%281118250470%29_%28cropped%29.jpg/330px-Len_Wein_%281118250470%29_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "New York City",
+    "deathCity": "Los Angeles"
+  },
+  "jim-aparo": {
+    "name": "Jim Aparo",
+    "slug": "jim-aparo",
+    "description": "American comic book artist (1932\u20132005)",
+    "bio": "James N. Aparo was an American comic book artist, best known for his DC Comics work from the late 1960s through the 1990s, including on the characters Batman, Aquaman, and the Spectre, along with famous stories such as \"A Death in the Family\" and \"KnightFall\".",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3c/Jim_Aparo.jpg/330px-Jim_Aparo.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "",
+    "deathCity": "Southington"
+  },
+  "gene-colan": {
+    "name": "Gene Colan",
+    "slug": "gene-colan",
+    "description": "American comic artist (1926\u20132011)",
+    "bio": "Eugene Jules Colan was an American comic book artist best known for his work for Marvel Comics, where his signature titles include the superhero series Daredevil, the cult-hit satiric series Howard the Duck, and The Tomb of Dracula, considered one of comics' classic horror series. He co-created the Falcon, the first African-American superhero in mainstream comics; Carol Danvers, who would become Ms. Marvel and Captain Marvel; and the non-costumed, supernatural vampire hunter Blade.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/dd/GeneColan6.13.09ByLuigiNovi.jpg/330px-GeneColan6.13.09ByLuigiNovi.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "New York City",
+    "deathCity": "New York City"
+  },
+  "barry-windsor-smith": {
+    "name": "Barry Windsor-Smith",
+    "slug": "barry-windsor-smith",
+    "description": "British graphic novelist (born 1949)",
+    "bio": "Barry Windsor-Smith is a British comic book illustrator and painter whose best-known work has been produced in the United States. He attained note working on Marvel Comics' Conan the Barbarian from 1970 to 1973, and for his 1991 serial \"Weapon X\". His other noted Marvel work included a 1984 \"Thing\" story in Marvel Fanfare, the \"Lifedeath\" and \"Lifedeath II\" stories with writer Chris Claremont that focused on the de-powered Storm in The Uncanny X-Men, as well as the 1984 Machine Man limited series with Herb Trimpe and Tom DeFalco.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/Barry_Windsor-Smith.jpg/330px-Barry_Windsor-Smith.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "Forest Gate",
+    "deathCity": ""
+  },
+  "walt-simonson": {
+    "name": "Walt Simonson",
+    "slug": "walt-simonson",
+    "description": "American comic book writer and artist (born 1946)",
+    "bio": "Walter Simonson is an American comic book writer and artist, best known for a run on Marvel Comics' Thor from 1983 to 1987, during which he created the character Beta Ray Bill. He is also known for the creator-owned work Star Slammers, which he inaugurated in 1972 as a Rhode Island School of Design thesis. He has also worked on other Marvel titles such as X-Factor and Fantastic Four, on DC Comics books including Detective Comics, Manhunter, Metal Men and Orion, and on licensed properties such as Star Wars, Alien, Battlestar Galactica and Robocop vs. Terminator.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5b/WalterSimonson6.13.09ByLuigiNovi1.jpg/330px-WalterSimonson6.13.09ByLuigiNovi1.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "",
+    "deathCity": ""
+  },
+  "louise-simonson": {
+    "name": "Louise Simonson",
+    "slug": "louise-simonson",
+    "description": "American comic book writer and editor (born 1946)",
+    "bio": "Louise Simonson is an American comic book writer and editor. She is best known for her work on comic book titles such as Conan the Barbarian, Power Pack, X-Factor, The New Mutants, Superman: The Man of Steel, and Steel. She is often referred to by the nickname \"Weezie\". Among the comic characters she co-created are Cable, Steel, Power Pack, Rictor, Doomsday and the X-Men villain Apocalypse.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/18/10.13.12LouiseSimonsonByLuigiNovi1.jpg/330px-10.13.12LouiseSimonsonByLuigiNovi1.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "Atlanta",
+    "deathCity": ""
+  },
+  "mark-millar": {
+    "name": "Mark Millar",
+    "slug": "mark-millar",
+    "description": "Scottish comic book writer (born 1969)",
+    "bio": "Mark Millar is a Scottish comic book writer who first came to prominence with a run on the superhero series The Authority, published by DC Comics' Wildstorm imprint. Millar has written extensively for Marvel Comics, including runs on The Ultimates, X-Men, Fantastic Four and Avengers for Marvel's Ultimate imprint, as well as Marvel Knights Spider-Man and Wolverine. In 2006, Millar wrote the Civil War mini-series that served as the centrepiece for the eponymous company-wide crossover storyline and later inspired the Marvel Studios film Captain America: Civil War. The \"Old Man Logan\" storyline, published as part of Millar's run on Wolverine, served as the inspiration for the 2017 film Logan.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0a/10.2.10MarkMillarByLuigiNovi.jpg/330px-10.2.10MarkMillarByLuigiNovi.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "Coatbridge",
+    "deathCity": ""
+  },
+  "brian-michael-bendis": {
+    "name": "Brian Michael Bendis",
+    "slug": "brian-michael-bendis",
+    "description": "American comic book writer and artist (born 1967)",
+    "bio": "Brian Michael Bendis is an American comic book writer and artist.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1e/Brian_Michael_Bendis_at_Rose_City_Comic_Con_2026_01.jpg/330px-Brian_Michael_Bendis_at_Rose_City_Comic_Con_2026_01.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "Cleveland",
+    "deathCity": ""
+  },
+  "geoff-johns": {
+    "name": "Geoff Johns",
+    "slug": "geoff-johns",
+    "description": "American comic book writer (born 1973)",
+    "bio": "Geoffrey Johns is an American comic book writer, screenwriter, and film and television producer. Johns's work on the DC Comics characters Green Lantern, Aquaman, The Flash, and Superman has drawn critical acclaim. His critically acclaimed work includes Sinestro Corps War, Blackest Night, Infinite Crisis, Throne of Atlantis, Flashpoint, Doomsday Clock, Superman: Last Son, and Superman: Brainiac. He co-created the DC character Courtney Whitmore based on his deceased sister. He also expanded the Green Lantern mythology, adding in new concepts and co-creating numerous characters. Among the DC characters and concepts he co-created are the Sinestro Corps, the Indigo Tribe, the Red Lantern Corps, the Black Lantern Corps, Larfleeze, Atrocitus, Bleez, Jessica Cruz, Simon Baz, Hunter Zolomon, Tar Pit, Miss Martian, and Christopher Kent.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0a/8.31.11GeoffJohnsNew52ByLuigiNovi1.jpg/330px-8.31.11GeoffJohnsNew52ByLuigiNovi1.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "Detroit",
+    "deathCity": ""
+  },
+  "ed-brubaker": {
+    "name": "Ed Brubaker",
+    "slug": "ed-brubaker",
+    "description": "American comic book writer",
+    "bio": "Ed Brubaker is an American comic book writer, cartoonist and screenwriter who works primarily in the crime fiction genre. He began his career with the semi-autobiographical series Lowlife and a number of serials in the Dark Horse Presents anthology, before achieving industry-wide acclaim with the Vertigo series Scene of the Crime and moving to the superhero comics such as Batman, Catwoman, The Authority, Captain America, Daredevil and Uncanny X-Men. Brubaker is best known for his long-standing collaboration with British artist Sean Phillips, starting with their Elseworlds one-shot Batman: Gotham Noir in 2001 and continuing with a number of creator-owned series such as Criminal, Incognito, Fatale, The Fade Out, and Kill or Be Killed.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/67/6.21.10EdBrubakerByLuigiNovi1.jpg/330px-6.21.10EdBrubakerByLuigiNovi1.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "Bethesda",
+    "deathCity": ""
+  },
+  "greg-rucka": {
+    "name": "Greg Rucka",
+    "slug": "greg-rucka",
+    "description": "American writer",
+    "bio": "Gregory Rucka is an American writer known for the series of novels starring his character Atticus Kodiak, the creator-owned comic book series Whiteout, Queen & Country, Stumptown and Lazarus, as well as lengthy runs on such titles as Detective Comics, Wonder Woman and Gotham Central for DC Comics, and Elektra, Wolverine and The Punisher for Marvel. He has written a substantial amount of supplemental material for a number of DC Comics' line-wide and inter-title crossovers, including \"No Man's Land\", \"Infinite Crisis\" and \"New Krypton\".",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/aa/Greg_Rucka_2025.jpg/330px-Greg_Rucka_2025.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "San Francisco",
+    "deathCity": ""
+  },
+  "warren-ellis": {
+    "name": "Warren Ellis",
+    "slug": "warren-ellis",
+    "description": "English comic book writer, novelist, and screenwriter (born 1968)",
+    "bio": "Warren Girard Ellis is an English comic book writer, novelist, and screenwriter. He is best known as the co-creator of several original comics series, including Transmetropolitan (1997\u20132002), Global Frequency (2002\u20132004) and Red (2003\u20132004), which was adapted into the feature films Red (2010) and Red 2 (2013). Ellis is the author of the novels Crooked Little Vein (2007) and Gun Machine (2013) and the novella Normal (2016).",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/14/Warren_Ellis_by_Gage_Skidmore.jpg/330px-Warren_Ellis_by_Gage_Skidmore.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "",
+    "deathCity": ""
+  },
+  "j-michael-straczynski": {
+    "name": "J. Michael Straczynski",
+    "slug": "j-michael-straczynski",
+    "description": "American writer and filmmaker (born 1954)",
+    "bio": "Joseph Michael Straczynski is an American entertainment creator, filmmaker, and motion picture producer. He is also a writer of numerous comic books. He was the founder of Synthetic Worlds Ltd. and Studio JMS. Straczynski was the creator of the science fiction television series Babylon 5 (1993\u20131998) and its spinoff Crusade (1999), as well as the series Jeremiah (2002\u20132004) and Sense8 (2015\u20132018). Straczynski is also the executor of the estate of Harlan Ellison.",
+    "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f7/J._Michael_Straczynski.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
+    "birthCity": "Paterson",
+    "deathCity": ""
+  },
+  "scott-snyder": {
+    "name": "Scott Snyder",
+    "slug": "scott-snyder",
+    "description": "American writer",
+    "bio": "Scott Snyder is a highly acclaimed American comic book writer. He is known for his 2006 short story collection Voodoo Heart, and his work for DC Comics, including series such as American Vampire, Detective Comics, a highly acclaimed run on Batman, Swamp Thing, Justice League, and Absolute Batman as well as the company-wide crossover storylines \"Dark Nights: Metal\" and \"Dark Nights: Death Metal.\" He has also written creator-owned comics published through Image Comics, including Wytches, Undiscovered Country, and Nocterra.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e0/5.22.24ScottSnyderByLuigiNovi1.jpg/330px-5.22.24ScottSnyderByLuigiNovi1.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "New York City",
+    "deathCity": ""
+  },
+  "greg-capullo": {
+    "name": "Greg Capullo",
+    "slug": "greg-capullo",
+    "description": "American comic book artist and penciller",
+    "bio": "Gregory Capullo is an American comic book artist and penciller, best known for his work on Quasar (1991\u20131992), X-Force (1992\u20131993), Angela (1994), Spawn, Batman (2011\u20132016), and Reborn (2016\u20132017). He also drew the DC Comics company-wide crossover storylines Dark Nights: Metal and Dark Nights: Death Metal. As part of his DC work, he co-created the characters, The Batman Who Laughs, Mr. Bloom, and the Court of Owls.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d9/Greg_Capullo_by_Gage_Skidmore_2.jpg/330px-Greg_Capullo_by_Gage_Skidmore_2.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "Schenectady",
+    "deathCity": ""
+  },
+  "tom-king": {
+    "name": "Tom King",
+    "slug": "tom-king",
+    "description": "Topics referred to by the same term",
+    "bio": "Thomas King or Tom King may refer to:",
+    "imageUrl": null,
+    "birthCity": "Bexar County",
+    "deathCity": ""
+  },
+  "david-mazzucchelli": {
+    "name": "David Mazzucchelli",
+    "slug": "david-mazzucchelli",
+    "description": "American comics artist and writer (born 1960)",
+    "bio": "David John Mazzucchelli is an American comics artist and writer, known for his work on seminal superhero comic book storylines Daredevil: Born Again and Batman: Year One, as well as for graphic novels in other genres, such as Asterios Polyp and City of Glass: The Graphic Novel. He is also an instructor who teaches comic book storytelling at the School of Visual Arts in Manhattan.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ad/6.28.12DavidMazzuchelliByLuigiNovi1.jpg/330px-6.28.12DavidMazzuchelliByLuigiNovi1.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "",
+    "deathCity": ""
+  },
+  "klaus-janson": {
+    "name": "Klaus Janson",
+    "slug": "klaus-janson",
+    "description": "American comics artist",
+    "bio": "Klaus Janson is an American comics artist, working regularly for Marvel Comics and DC Comics and sporadically for independent companies. While he is best known as an inker, Janson has frequently worked as a penciller and colorist.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d5/10.12.13KlausJansonByLuigiNovi1.jpg/330px-10.12.13KlausJansonByLuigiNovi1.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "Coburg",
+    "deathCity": ""
+  },
+  "erik-larsen": {
+    "name": "Erik Larsen",
+    "slug": "erik-larsen",
+    "description": "American comic creator (born 1962)",
+    "bio": "Erik J. Larsen is an American comic book artist, writer, and publisher. He currently acts as the chief financial officer of Image Comics. He gained attention in the early 1990s with his art on Spider-Man series for Marvel Comics. In 1992 he was one of several artists who stopped working for Marvel to found Image Comics, where he launched his superhero series Savage Dragon \u2013 one of the longest running creator-owned superhero comics series \u2013 and served for several years as the company's publisher.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/87/10.14.11ErikLarsenByLuigiNovi.jpg/330px-10.14.11ErikLarsenByLuigiNovi.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "",
+    "deathCity": ""
+  },
+  "marc-silvestri": {
+    "name": "Marc Silvestri",
+    "slug": "marc-silvestri",
+    "description": "American comic book creator",
+    "bio": "Marc Silvestri is an American comic book artist, creator and publisher. He is CEO of Top Cow Productions and Image Comics.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9d/Marc_Silvestri%2C_Amazing_Arizona_Comic_Con%2C_2014-2_%28cropped%29.jpg/330px-Marc_Silvestri%2C_Amazing_Arizona_Comic_Con%2C_2014-2_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "Palm Beach",
+    "deathCity": ""
+  },
+  "jim-valentino": {
+    "name": "Jim Valentino",
+    "slug": "jim-valentino",
+    "description": "American comic creator (born 1952)",
+    "bio": "Jim Valentino is an American writer, penciler, editor and publisher of comic books, best known for his 1990\u20131992 work on Guardians of the Galaxy for Marvel Comics, and for co-founding Image Comics, a company publishing creator-owned comics.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/ca/10.9.10JimValentinoByLuigiNovi1.jpg/330px-10.9.10JimValentinoByLuigiNovi1.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "Bronx, New York City",
+    "deathCity": ""
+  },
+  "whilce-portacio": {
+    "name": "Whilce Portacio",
+    "slug": "whilce-portacio",
+    "description": "Comic artist",
+    "bio": "William \"Whilce\" Portacio is a Filipino American comic book writer and artist noted for his work on such titles as The Punisher, X-Factor, Uncanny X-Men, Iron Man, Wetworks and Spawn. Portacio was also one of the seven co-founders of Image Comics, though he did not become a full-partner in the company, and is therefore not a member of its board of directors.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d0/4.11.15WhilcePortacioByLuigiNovi1.jpg/330px-4.11.15WhilcePortacioByLuigiNovi1.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "Cavite City [Ciudad de Cavite]",
+    "deathCity": ""
+  },
+  "bob-kane": {
+    "name": "Bob Kane",
+    "slug": "bob-kane",
+    "description": "American comic book artist (1915\u20131998)",
+    "bio": "Robert Kane was an American comic book writer, animator, and artist who was traditionally credited as the creator of Batman but is now credited as his co-creator. Kane likewise worked on many other early related characters for DC Comics. He was inducted into the comic book industry's Jack Kirby Hall of Fame in 1993 and into the Will Eisner Comic Book Hall of Fame in 1996.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/43/Bob_Kane_1966_photo.jpg/330px-Bob_Kane_1966_photo.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "New York",
+    "deathCity": "Los Angeles"
+  },
+  "bill-finger": {
+    "name": "Bill Finger",
+    "slug": "bill-finger",
+    "description": "American comics writer (1914\u20131974)",
+    "bio": "Milton \"Bill\" Finger was an American comic book writer who is credited with co-creating the DC Comics character Batman with Bob Kane. Despite making major contributions as an innovative writer, visionary mythos/world builder and illustration architect, Finger was often given \"ghostwriter\" status on comics he created or co-created, including those featuring Batman and the original Green Lantern. In recent years, Finger has received recognition for his contributions.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2f/Bill_Finger_yearbook_photo_1933.png/330px-Bill_Finger_yearbook_photo_1933.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "Denver",
+    "deathCity": "Manhattan, New York City"
+  },
+  "jerry-siegel": {
+    "name": "Jerry Siegel",
+    "slug": "jerry-siegel",
+    "description": "American comic book writer (1914\u20131996)",
+    "bio": "Jerome \"Jerry\" Siegel was an American comic book writer. He was the co-creator of Superman, in collaboration with his friend Joe Shuster, published by DC Comics. They also created Doctor Occult, who was later featured in The Books of Magic. Siegel and Shuster were inducted into the comic book industry's Will Eisner Comic Book Hall of Fame in 1992 and the Jack Kirby Hall of Fame in 1993. With Bernard Baily, Siegel also co-created the long-running DC character The Spectre. Siegel created ten of the earliest members of the Legion of Super-Heroes, one of DC's most popular team books, which is set in the 30th Century. Siegel also used pseudonyms including Joe Carter and Jerry Ess.",
+    "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/6/62/Jerry_Siegel_in_Uniform_ca1943_cropped.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
+    "birthCity": "Cleveland",
+    "deathCity": "Los Angeles"
+  },
+  "joe-shuster": {
+    "name": "Joe Shuster",
+    "slug": "joe-shuster",
+    "description": "Comic book artist (1914\u20131992)",
+    "bio": "Joseph Shuster was a Canadian-American comic book artist best known for co-creating the DC Comics character Superman, with Jerry Siegel, in Action Comics #1.",
+    "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b4/Joe_Shuster.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
+    "birthCity": "Toronto",
+    "deathCity": "Los Angeles"
+  },
+  "will-eisner": {
+    "name": "Will Eisner",
+    "slug": "will-eisner",
+    "description": "American cartoonist, writer and entrepreneur (1917\u20132005)",
+    "bio": "William Erwin Eisner was an American cartoonist, writer, and entrepreneur. He was one of the earliest cartoonists to work in the American comic book industry, and his series The Spirit (1940\u20131952) was noted for its experiments in content and form. In 1978, he popularized the term \"graphic novel\" with the publication of his book A Contract with God. He was an early contributor to formal comics studies with his book Comics and Sequential Art (1985). The Eisner Award was named in his honor and is given to recognize achievements each year in the comics medium; he was one of the three inaugural inductees to the Will Eisner Comic Book Hall of Fame.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b2/Will_Eisner_%28San_Diego_Comic_Con%2C_2004%29.jpg/330px-Will_Eisner_%28San_Diego_Comic_Con%2C_2004%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "Brooklyn, New York City",
+    "deathCity": "Lauderdale Lakes"
+  },
+  "carl-barks": {
+    "name": "Carl Barks",
+    "slug": "carl-barks",
+    "description": "American cartoonist (1901\u20132000)",
+    "bio": "\n\nCarl Barks was an American cartoonist, author, and painter. He is best known for his work in Disney comic books, as the writer and artist of the first Donald Duck stories and as the creator of Scrooge McDuck. He worked anonymously until late in his career; fans dubbed him \"The Duck Man\" and \"The Good Duck Artist\". In 1987, Barks was one of the three inaugural inductees of the Will Eisner Comic Book Hall of Fame.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e8/Carl_barks.jpg/330px-Carl_barks.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "Merrill",
+    "deathCity": "Grants Pass"
+  },
+  "osamu-tezuka": {
+    "name": "Osamu Tezuka",
+    "slug": "osamu-tezuka",
+    "description": "Japanese cartoonist and animator (1928\u20131989)",
+    "bio": "Osamu Tezuka was a Japanese manga artist, cartoonist and animator. Considered to be among the greatest and most influential cartoonists of all time, his prolific output, pioneering techniques and innovative redefinitions of genres earned him such titles as \"the Father of Manga\" , \"the Godfather of Manga\"  and \"the God of Manga\" . Additionally, he is often considered the Japanese equivalent to Walt Disney, who served as a major inspiration during Tezuka's formative years. Though this phrase praises the quality of his early manga works for children and animations, it also blurs the significant influence of his later, more literary, gekiga works.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1d/Osamu_Tezuka_1951_Scan10008-2.JPG/330px-Osamu_Tezuka_1951_Scan10008-2.JPG?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "",
+    "deathCity": ""
+  },
+  "katsuhiro-otomo": {
+    "name": "Katsuhiro Otomo",
+    "slug": "katsuhiro-otomo",
+    "description": "Japanese manga artist and filmmaker (born 1954)",
+    "bio": "Katsuhiro Otomo  is a Japanese manga artist, screenwriter, animator, and film director. He first rose to prominence as a pioneer founder of the New Wave in the 1970s. He is best known as the creator of Akira, both the original 1982 manga series and the 1988 animated film adaptation. In 2005, Otomo was decorated a Chevalier of the French Ordre des Arts et des Lettres, promoted to Officier of the order in 2014, and became the fourth manga artist ever inducted into the American Eisner Award Hall of Fame in 2012. Celebrated in Japan, he was also awarded the Purple Medal of Honor from the national government in 2013.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ee/Katsuhiro_Otomo.jpg/330px-Katsuhiro_Otomo.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "",
+    "deathCity": ""
+  },
+  "akira-toriyama": {
+    "name": "Akira Toriyama",
+    "slug": "akira-toriyama",
+    "description": "Japanese manga artist (1955\u20132024)",
+    "bio": "Akira Toriyama  was a Japanese manga artist and character designer. He is regarded as one of the greatest and most influential authors in the history of manga and created numerous highly influential and popular series, with his most famous and successful project being the Dragon Ball franchise.",
+    "imageUrl": "https://upload.wikimedia.org/wikipedia/en/1/15/Akira_Toriyama_in_1982.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
+    "birthCity": "",
+    "deathCity": ""
+  },
+  "eiichiro-oda": {
+    "name": "Eiichiro Oda",
+    "slug": "eiichiro-oda",
+    "description": "Japanese manga artist (born 1975)",
+    "bio": "Eiichiro Oda  is a Japanese manga artist and the creator of the series One Piece, the best-selling manga in history and the best-selling comic series printed in volume. With more than 600\u00a0million tank\u014dbon copies of One Piece in circulation worldwide, Oda is one of the best-selling fiction authors. The series' popularity resulted in Oda being named one of the artists who changed the history of manga.",
+    "imageUrl": null,
+    "birthCity": "",
+    "deathCity": ""
+  },
+  "naoko-takeuchi": {
+    "name": "Naoko Takeuchi",
+    "slug": "naoko-takeuchi",
+    "description": "Japanese manga artist (born 1967)",
+    "bio": "Naoko Takeuchi  is a Japanese manga artist. She is best known as the author of Sailor Moon, one of the most popular manga series of all time. She has won several awards, including the 1993 Kodansha Manga Award for Sailor Moon.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d2/Naoko_Takeuchi_San_Diego_Comic-Con_1998-08-14.jpg/330px-Naoko_Takeuchi_San_Diego_Comic-Con_1998-08-14.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "",
+    "deathCity": ""
+  },
+  "kentaro-miura": {
+    "name": "Kentaro Miura",
+    "slug": "kentaro-miura",
+    "description": "Japanese manga artist (1966\u20132021)",
+    "bio": "Kentaro Miura  was a Japanese manga artist. He was best known for his dark fantasy series Berserk, which began serialization in 1989. By 2023, Berserk had over 60 million copies in circulation, making it one of the best-selling manga series of all time. In 2002, Miura received the Award for Excellence at the sixth Tezuka Osamu Cultural Prize.",
+    "imageUrl": "https://upload.wikimedia.org/wikipedia/en/a/a6/Kentaro_Miura_in_2020.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
+    "birthCity": "",
+    "deathCity": ""
+  },
+  "rumiko-takahashi": {
+    "name": "Rumiko Takahashi",
+    "slug": "rumiko-takahashi",
+    "description": "Japanese manga artist (born 1957)",
+    "bio": "Rumiko Takahashi  is a Japanese manga artist. With a career of several commercially successful works, beginning with Urusei Yatsura in 1978, she is one of Japan's best-known and wealthiest manga artists. Her works are known worldwide, where they have been translated into a variety of languages, with over 230\u00a0million copies in circulation; making Takahashi one of the best-selling authors of all time. She has won the Shogakukan Manga Award twice, once in 1980 for Urusei Yatsura and again in 2001 for Inuyasha, and the Seiun Award twice, once in 1987 for Urusei Yatsura and again in 1989 for Mermaid Saga. She also received the Grand Prix de la ville d'Angoul\u00eame in 2019, becoming the second woman and second Japanese to win the prize. In 2020, the Japanese government awarded Takahashi the Medal with Purple Ribbon for her contributions to the arts.",
+    "imageUrl": null,
+    "birthCity": "",
+    "deathCity": ""
+  },
+  "masashi-kishimoto": {
+    "name": "Masashi Kishimoto",
+    "slug": "masashi-kishimoto",
+    "description": "Japanese manga artist (born 1974)",
+    "bio": "Masashi Kishimoto  is a Japanese manga artist. His manga series, Naruto, which was in serialization from 1999 to 2014, has sold over 250 million copies worldwide in 46 countries as of May 2019. The series has been adapted into two anime and multiple films, video games, and related media. Besides the Naruto manga, Kishimoto also personally supervised the three anime films, Road to Ninja: Naruto the Movie, The Last: Naruto the Movie and Boruto: Naruto the Movie, and has written several one-shot stories. In 2019, Kishimoto wrote Samurai 8: The Tale of Hachimaru which ended in March 2020. From May 2016 through October 2020 he supervised the Boruto: Naruto Next Generations manga written by Uky\u014d Kodachi and illustrated by Mikio Ikemoto. In November 2020 it was announced that he had taken over as writer on the series, replacing Kodachi.",
+    "imageUrl": null,
+    "birthCity": "",
+    "deathCity": ""
+  },
+  "tite-kubo": {
+    "name": "Tite Kubo",
+    "slug": "tite-kubo",
+    "description": "Japanese manga artist",
+    "bio": "Noriaki Kubo , known professionally as Tite Kubo , is a Japanese manga artist and character designer. His manga series Bleach (2001\u20132016) had over 130 million copies in circulation as of 2022.",
+    "imageUrl": null,
+    "birthCity": "",
+    "deathCity": ""
+  },
+  "hirohiko-araki": {
+    "name": "Hirohiko Araki",
+    "slug": "hirohiko-araki",
+    "description": "Japanese manga artist (born 1960)",
+    "bio": "Toshiyuki Araki , better known as Hirohiko Araki , is a Japanese manga artist. He is best known for his long-running series JoJo's Bizarre Adventure, which began publication in Weekly Sh\u014dnen Jump in 1987 and has over 120 million copies in circulation as of 2022, making it one of the best-selling manga series in history.",
+    "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/c/c7/Hirohiko_Araki_2013_-_cropped.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
+    "birthCity": "",
+    "deathCity": ""
+  },
+  "john-higgins": {
+    "name": "John Higgins",
+    "slug": "john-higgins",
+    "description": "Scottish snooker player (born 1975)",
+    "bio": "John Higgins is a Scottish professional snooker player from Wishaw, North Lanarkshire. He has won 33 ranking titles, placing him third on the all-time list. He has won four World Championships, three UK Championships, and two Masters for a total of nine Triple Crown titles. He has been ranked world number one on four occasions.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/28/John_Higgins_at_the_World_Snooker_Green_Carpet_Ceremony_2026_%28cropped%29.jpg/330px-John_Higgins_at_the_World_Snooker_Green_Carpet_Ceremony_2026_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "Walton",
+    "deathCity": ""
+  },
+  "pat-mills": {
+    "name": "Pat Mills",
+    "slug": "pat-mills",
+    "description": "English comics writer and editor (born 1949)",
+    "bio": "Patrick Eamon Mills is an English comics writer and editor who, along with John Wagner, revitalised British boys' comics in the 1970s, and has remained a leading light in British comics ever since. He has been called \"the godfather of British comics\".",
+    "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/c/ca/Pat_Mills_at_Raptus_2003.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
+    "birthCity": "Ipswich",
+    "deathCity": ""
+  },
+  "john-wagner": {
+    "name": "John Wagner",
+    "slug": "john-wagner",
+    "description": "American-born British comics writer (born 1949)",
+    "bio": "John Alexander Wagner is an American-born British comics writer. Alongside Pat Mills, he helped revitalise British comics in the 1970s, and continues to be active in the British comics industry, occasionally also working in American comics. He is the co-creator, with artist Carlos Ezquerra, of the character Judge Dredd.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6a/John_Wagner_SFX_Weekender_2012.jpg/330px-John_Wagner_SFX_Weekender_2012.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "",
+    "deathCity": ""
+  },
+  "carlos-ezquerra": {
+    "name": "Carlos Ezquerra",
+    "slug": "carlos-ezquerra",
+    "description": "Spanish comics artist (1947\u20132018)",
+    "bio": "Carlos Sanchez Ezquerra was a Spanish comics artist who worked mainly in British comics. He is best known as the co-creator of Judge Dredd.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4d/Art_robot_Carlos_Ezquerra.jpg/330px-Art_robot_Carlos_Ezquerra.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "Ibdes",
+    "deathCity": ""
+  },
+  "brian-bolland": {
+    "name": "Brian Bolland",
+    "slug": "brian-bolland",
+    "description": "British comics artist (born 1951)",
+    "bio": "Brian John Bolland is a British comics artist. Best known in the United Kingdom as one of the Judge Dredd artists for British comics anthology 2000 AD, he spearheaded the 'British Invasion' of the American comics industry, and in 1982 produced the artwork alongside author Mike W. Barr on Camelot 3000, which was DC Comics's first 12-issue comicbook maxiseries created for the direct market.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b8/10.9.10BrianBollandByLuigiNovi.jpg/330px-10.9.10BrianBollandByLuigiNovi.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "Butterwick",
+    "deathCity": ""
+  },
+  "dave-mckean": {
+    "name": "Dave McKean",
+    "slug": "dave-mckean",
+    "description": "British artist (born 1963)",
+    "bio": "David McKean is an English artist. His work incorporates drawing, painting, photography, collage, found objects, digital art, and sculpture. McKean has illustrated works by authors such as S.F. Said, Neil Gaiman, Grant Morrison, Heston Blumenthal, Ray Bradbury and Stephen King. He has also directed three feature films.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/37/Dave_McKean_-_Lucca_Comics_%26_Games_2018_01.jpg/330px-Dave_McKean_-_Lucca_Comics_%26_Games_2018_01.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "birthCity": "Taplow",
+    "deathCity": ""
+  },
+  "arthur-adams": {
+    "name": "Arthur Adams",
+    "slug": "arthur-adams",
+    "description": "Topics referred to by the same term",
+    "bio": "Arthur Adams may refer to:Arthur Adams (zoologist) (1820\u20131878), English physician, naturalist, and malacologist\nArthur Henry Adams (1872\u20131936), New Zealand writer\nArthur Adams (spy) (1885\u20131969), Soviet spy\nArtie Adams, Australian rules footballer for South Melbourne\nArthur S. Adams (1896\u20131980), American university president\nEdward Adams (footballer), English footballer who played for Tranmere Rovers\nArthur Adams (singer), American blues guitarist and singer\nArthur Adams (comics), American comic book artist\nArthur A. Adams, mayor of Springfield, Massachusetts, 1919\u20131920",
+    "imageUrl": null,
+    "birthCity": "",
+    "deathCity": ""
+  },
+  "moebius": {
+    "name": "Moebius",
+    "slug": "moebius",
+    "description": "Topics referred to by the same term",
+    "bio": "Moebius, M\u00f6bius, M\u0153bius or Mobius may refer to:",
+    "imageUrl": null,
+    "birthCity": "Nogent-sur-Marne",
+    "deathCity": "Paris"
+  }
+}
