@@ -35,6 +35,22 @@ const CANONICAL_LORE_DATABASE: Record<string, ComicLoreDossier> = {
       storyline: "Torment, Part 1",
     },
   },
+  "spectacular spider-man #1": {
+    tier: "MAJOR_KEY",
+    tierBadge: "🕷️ SPECTACULAR SPIDER-MAN PREMIERE",
+    historicalSignificance:
+      "Series premiere of Peter Parker, The Spectacular Spider-Man #1 (December 1976), written by Gerry Conway with classic cover and interior art by Sal Buscema. Launched as Peter Parker's second major ongoing monthly title, spotlighting the Tarantula and Lightmaster.",
+    collectorHoldingThesis:
+      "Bronze Age Marvel landmark premiere. In CGC 9.6 and 9.8, high-grade preservation is scarce due to 1970s newsprint fragility and dark cover ink framing.",
+    gcdMetadata: {
+      writers: ["Gerry Conway"],
+      pencilers: ["Sal Buscema"],
+      coverArtists: ["Sal Buscema"],
+      publisher: "Marvel Comics",
+      publicationYear: 1976,
+      storyline: "Twice Stings the Tarantula!",
+    },
+  },
   "batman #423": {
     tier: "COVER_ICON",
     tierBadge: "🎨 LANDMARK COVER ICON",
@@ -213,12 +229,22 @@ export function resolveComicLoreDossier(title: string, issueNumber?: string): Co
     if (targetSeries && targetIssue) {
       const cleanTargetSeries = targetSeries.trim().toLowerCase();
       const cleanSeries = series.trim().toLowerCase();
-      // Exact series match or prefixed (e.g. "marvel comics spider-man" vs "spider-man")
-      // AND strictly exact issue match so #196 never matches #1
+      // Strip leading publisher prefixes if any: "marvel comics", "marvel", "dc comics", "dc", "image"
+      const normalizedSeries = cleanSeries.replace(/^(marvel\s+comics|marvel|dc\s+comics|dc|image\s+comics|image|dark\s+horse)\s+/, "");
       if (
-        (cleanSeries === cleanTargetSeries || cleanSeries.endsWith(" " + cleanTargetSeries)) &&
+        normalizedSeries === cleanTargetSeries &&
         issue === targetIssue.trim()
       ) {
+        // Verify publication year if available in title or target
+        if (dossier.gcdMetadata.publicationYear) {
+          const yearMatch = title.match(/\b(19\d{2}|20\d{2})\b/);
+          if (yearMatch) {
+            const yr = parseInt(yearMatch[1], 10);
+            if (Math.abs(yr - dossier.gcdMetadata.publicationYear) > 3) {
+              continue; // Different volume (e.g. 2022 vs 1990)
+            }
+          }
+        }
         return dossier;
       }
     } else if (lookupKey === key) {
