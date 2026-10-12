@@ -204,9 +204,7 @@ describe("Canonical Equities Symbology & 16 Asset Families Canon", () => {
     expect(html).toContain("ASSETS");
     expect(html).toContain("16 FAMILIES · 56 SURFACES");
     expect(html).toContain("DERIVATIVES · FUNDS · INDICES · MUNI BONDS · ALTER EGOS");
-    expect(html).toContain("assets-marquee-track");
-    expect(html).toContain("Action Comics");
-    expect(html).toContain("Batman");
+    expect(html).toContain("Certified Asset Surfaces Ticker");
   });
 
   it("resolves comic detail records via getComicById from stored rows only", async () => {

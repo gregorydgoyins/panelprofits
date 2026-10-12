@@ -49,6 +49,8 @@ const KNOWN_PUBLISHERS: Record<string, string> = {
   "mirage studios": "Mirage Studios",
   mirage: "Mirage Studios",
   "merc publishing": "Merc Publishing",
+  "lev gleason": "Lev Gleason",
+  "lev gleason publications": "Lev Gleason",
 };
 
 // Substring/regex rules for definitive series matching
@@ -119,7 +121,6 @@ const MARVEL_PATTERNS = [
   /\bthor\b/i,
   /\bcaptain america\b/i,
   /\biron man\b/i,
-  /\bdaredevil\b/i,
   /\bsilver surfer\b/i,
   /\bghost rider\b/i,
   /\bpunisher\b/i,
@@ -277,7 +278,11 @@ const EC_PATTERNS = [
   /\btwo-fisted tales\b/i,
 ];
 
-export function resolveAuthoritativePublisher(series: string, rawPublisher?: string | null): string {
+export function resolveAuthoritativePublisher(
+  series: string,
+  rawPublisher?: string | null,
+  releaseYear?: number | string | null
+): string {
   const normSeries = String(series || "").trim();
   const rawEnglish = translateToEnglishPublisher(rawPublisher);
   const rawPubClean = String(rawEnglish || "").trim().toLowerCase();
@@ -299,6 +304,22 @@ export function resolveAuthoritativePublisher(series: string, rawPublisher?: str
     }
     // Return formatted clean title
     return rawPublisher!.trim().replace(/\s+Comics$/i, "");
+  }
+
+  // 2. Year-aware disambiguation for Golden Age vs Modern titles with shared names
+  const yearNum = releaseYear != null ? Number(releaseYear) : null;
+  if (/\bdaredevil\b/i.test(normSeries)) {
+    // Lev Gleason published Daredevil Comics (1941-1956)
+    if (/\bdaredevil comics\b/i.test(normSeries) || (yearNum !== null && !isNaN(yearNum) && yearNum < 1964)) {
+      return "Lev Gleason";
+    }
+    // Marvel launched Daredevil in April 1964
+    if (yearNum !== null && !isNaN(yearNum) && yearNum >= 1964) {
+      return "Marvel";
+    }
+    if (!/\bdaredevil comics\b/i.test(normSeries)) {
+      return "Marvel";
+    }
   }
 
   // 2. Authoritative series pattern matching

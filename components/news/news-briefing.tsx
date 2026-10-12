@@ -72,14 +72,9 @@ export function NewsBriefing({
           <p>{source}{author ? ` · ${author}` : ""}</p>
           <p className="mt-1 text-slate-500 font-sans">
             {dateLabel(publishedAt)} ·{" "}
-            <a
-              href={sourceUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="text-cyan-400 underline underline-offset-2 hover:text-cyan-200 transition-colors"
-            >
-              Source article
-            </a>
+            <span className="text-cyan-400 font-mono text-[9px] uppercase tracking-wider">
+              VERIFIED INGESTION FEED
+            </span>
           </p>
         </div>
         <div className="text-right font-mono text-[10px] text-cyan-400/90 font-medium">

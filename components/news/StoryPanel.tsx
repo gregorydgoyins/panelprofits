@@ -167,14 +167,12 @@ export function StoryPanel({ story }: { story: NewsStory }) {
 
       {/* Footer Navigation & Outbound Link */}
       <div className="mt-8 pt-4 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-4">
-        <a
-          href={story.url}
-          target="_blank"
-          rel="noopener noreferrer"
+        <Link
+          href={`/news/${story.id}`}
           className="inline-flex items-center gap-1.5 text-xs text-cyan-400 hover:text-cyan-300 uppercase tracking-wider font-medium transition-colors"
         >
-          Read full report at {story.source} <ExternalLink className="h-3.5 w-3.5" />
-        </a>
+          Read Full Briefing ({story.source}) <ArrowUpRight className="h-3.5 w-3.5" />
+        </Link>
         <Link
           href={`/news/${story.id}`}
           className="text-xs text-slate-400 hover:text-slate-200 uppercase tracking-wider font-medium flex items-center gap-1"

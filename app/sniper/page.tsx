@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import Link from "next/link";
 import {
   RawAuctionListing,
   CandidateEvaluation,
@@ -2337,15 +2338,13 @@ export default function SniperRadarPage() {
                     >
                       🎯 Snipe in Vault
                     </button>
-                    <a
-                      href={`/search?q=${encodeURIComponent(inspectedDeal.resolvedSeries + " " + inspectedDeal.resolvedIssue)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <Link
+                      href={`/comics?q=${encodeURIComponent(inspectedDeal.resolvedSeries + " #" + inspectedDeal.resolvedIssue)}`}
                       className="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 font-bold text-xs uppercase font-mono transition text-center border border-cyan-500/30 flex items-center justify-center gap-1"
                     >
                       <span>Sovereign Rail</span>
                       <span>↗</span>
-                    </a>
+                    </Link>
                   </div>
 
                   <div className="text-[10px] text-center font-mono text-slate-400 pt-1">
@@ -2476,25 +2475,21 @@ export default function SniperRadarPage() {
                           </span>
                         </div>
                         <div className="flex items-center gap-2 text-[10px] font-mono">
-                          <a
-                            href={`https://www.investopedia.com/search?q=${encodeURIComponent(inspectedDeal.investopediaLens.term)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <Link
+                            href={`/lexicon?q=${encodeURIComponent(inspectedDeal.investopediaLens.term)}`}
                             className="text-emerald-400 hover:text-emerald-200 underline inline-flex items-center gap-0.5"
                           >
-                            <span>Investopedia™</span>
+                            <span>CBR Lexicon Term</span>
                             <span className="text-[9px]">↗</span>
-                          </a>
+                          </Link>
                           <span className="text-slate-600">•</span>
-                          <a
-                            href={`/lexicon?q=${encodeURIComponent(inspectedDeal.investopediaLens.term)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <Link
+                            href="/lexicon"
                             className="text-cyan-400 hover:text-cyan-200 underline inline-flex items-center gap-0.5"
                           >
-                            <span>CBR Market Lexicon</span>
+                            <span>Market Lexicon</span>
                             <span className="text-[9px]">↗</span>
-                          </a>
+                          </Link>
                         </div>
                       </div>
                       <p className="text-xs text-slate-300 leading-relaxed font-sans">
@@ -2603,24 +2598,20 @@ export default function SniperRadarPage() {
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 font-mono text-xs">
-                          <a
-                            href={`https://www.youtube.com/results?search_query=${encodeURIComponent(inspectedDeal.resolvedSeries + " #" + inspectedDeal.resolvedIssue + " comic CGC market value review")}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <Link
+                            href={`/video-archive?q=${encodeURIComponent(inspectedDeal.resolvedSeries + " #" + inspectedDeal.resolvedIssue)}`}
                             className="p-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-cyan-300 flex items-center justify-between transition"
                           >
-                            <span>▶ CGC Market Analysis Video</span>
+                            <span>▶ CGC Market Analysis Archive</span>
                             <span className="text-[10px]">↗</span>
-                          </a>
-                          <a
-                            href={`https://www.youtube.com/results?search_query=${encodeURIComponent(inspectedDeal.resolvedSeries + " #" + inspectedDeal.resolvedIssue + " key issue first appearance")}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          </Link>
+                          <Link
+                            href={`/video-archive?q=${encodeURIComponent(inspectedDeal.resolvedSeries + " #" + inspectedDeal.resolvedIssue)}`}
                             className="p-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-rose-300 flex items-center justify-between transition"
                           >
-                            <span>▶ Key Issue Spotlight Video</span>
+                            <span>▶ Key Issue Spotlight Archive</span>
                             <span className="text-[10px]">↗</span>
-                          </a>
+                          </Link>
                         </div>
                       </div>
                     )}
@@ -2930,15 +2921,13 @@ export default function SniperRadarPage() {
                           <span className="text-slate-500">Writer(s):</span>
                           <div className="flex flex-wrap gap-1.5 justify-end">
                             {inspectedDeal.gcdMetadata.writers.map((writer, idx) => (
-                              <a
+                              <Link
                                 key={idx}
-                                href={`/search?q=${encodeURIComponent(writer)}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                                href={`/comics?q=${encodeURIComponent(writer)}`}
                                 className="text-cyan-400 hover:text-cyan-200 underline underline-offset-2 transition-colors font-medium"
                               >
                                 {writer}
-                              </a>
+                              </Link>
                             ))}
                           </div>
                         </div>
@@ -2948,15 +2937,13 @@ export default function SniperRadarPage() {
                           <span className="text-slate-500">Penciler(s):</span>
                           <div className="flex flex-wrap gap-1.5 justify-end">
                             {inspectedDeal.gcdMetadata.pencilers.map((penciler, idx) => (
-                              <a
+                              <Link
                                 key={idx}
-                                href={`/search?q=${encodeURIComponent(penciler)}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                                href={`/comics?q=${encodeURIComponent(penciler)}`}
                                 className="text-cyan-400 hover:text-cyan-200 underline underline-offset-2 transition-colors font-medium"
                               >
                                 {penciler}
-                              </a>
+                              </Link>
                             ))}
                           </div>
                         </div>
@@ -2966,15 +2953,13 @@ export default function SniperRadarPage() {
                           <span className="text-slate-500">Cover Artist(s):</span>
                           <div className="flex flex-wrap gap-1.5 justify-end">
                             {inspectedDeal.gcdMetadata.coverArtists.map((artist, idx) => (
-                              <a
+                              <Link
                                 key={idx}
-                                href={`/search?q=${encodeURIComponent(artist)}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                                href={`/comics?q=${encodeURIComponent(artist)}`}
                                 className="text-cyan-400 hover:text-cyan-200 underline underline-offset-2 transition-colors font-medium"
                               >
                                 {artist}
-                              </a>
+                              </Link>
                             ))}
                           </div>
                         </div>
@@ -2998,24 +2983,20 @@ export default function SniperRadarPage() {
                     </div>
 
                     <div className="pt-1 flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
-                      <a
-                        href={`https://www.comics.org/search/advanced/process/?series=${encodeURIComponent(inspectedDeal.resolvedSeries)}&issue=${encodeURIComponent(inspectedDeal.resolvedIssue)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <Link
+                        href={`/comics?q=${encodeURIComponent(inspectedDeal.resolvedSeries)}`}
                         className="text-slate-400 hover:text-slate-200 underline inline-flex items-center gap-1"
                       >
-                        <span>Grand Comics Database™ Index</span>
+                        <span>Sovereign Series Catalog</span>
                         <span className="text-[10px]">↗</span>
-                      </a>
-                      <a
-                        href={`/search?q=${encodeURIComponent(inspectedDeal.resolvedSeries + " " + inspectedDeal.resolvedIssue)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      </Link>
+                      <Link
+                        href={`/comics?q=${encodeURIComponent(inspectedDeal.resolvedSeries + " #" + inspectedDeal.resolvedIssue)}`}
                         className="inline-flex items-center gap-1 text-cyan-400 hover:text-cyan-300 hover:underline font-bold"
                       >
-                        <span>Explore Full Comic Dossier on CBX</span>
+                        <span>Explore Full Comic Dossier</span>
                         <span>↗</span>
-                      </a>
+                      </Link>
                     </div>
                   </div>
                 )}

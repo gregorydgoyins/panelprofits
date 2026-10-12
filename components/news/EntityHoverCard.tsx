@@ -266,14 +266,12 @@ export function EntityHoverCard({ entity, children, className }: EntityHoverCard
               {isLexicon ? "Inspect in Lexicon" : "Open Dossier"} <ArrowUpRight className="h-3 w-3" />
             </Link>
 
-            <a
-              href={lexicon.investopediaUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              href={isLexicon ? "/lexicon" : entity.wikiPath}
               className="text-pink-400 hover:text-pink-200 flex items-center gap-1 transition-colors font-medium"
             >
-              Investopedia <ExternalLink className="h-3 w-3" />
-            </a>
+              {isLexicon ? "Lexicon Index" : "CBR Lexicon"} <ArrowUpRight className="h-3 w-3" />
+            </Link>
 
             {landmarkIssue && (
               <Link

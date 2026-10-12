@@ -230,8 +230,11 @@ export function parseFandomWikitext(wikitext: string, host: string): Omit<StoryS
         if (linkMatch) {
           const target = linkMatch[1].trim();
           const label = (linkMatch[2] || target).trim();
-          const cleanTarget = target.replace(/ /g, "_");
-          const itemUrl = `https://${host}/wiki/${encodeURIComponent(cleanTarget)}`;
+          const cleanSlug = target
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-|-$/g, "");
+          const itemUrl = `/wiki/entry/${encodeURIComponent(cleanSlug)}`;
           const isFirstApp = /first appearance/i.test(trimmed);
           const isFlashback = /flashback/i.test(trimmed);
           const isMentioned = /mentioned/i.test(trimmed);

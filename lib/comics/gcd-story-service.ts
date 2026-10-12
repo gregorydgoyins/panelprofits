@@ -142,6 +142,10 @@ export async function resolveGcdStoryDossier(
     .replace(/\s*\(\d{4}\)/g, "")
     .replace(/\s*#\d+/g, "")
     .trim();
+  const cleanSeriesNoThe = cleanSeries.toLowerCase().startsWith("the ")
+    ? cleanSeries.slice(4).trim()
+    : cleanSeries;
+  const cleanSeriesNoComics = cleanSeriesNoThe.replace(/\s+comics$/i, "").trim();
   const cleanIssue = String(issueNumber || "")
     .trim()
     .replace(/^#/, "");
@@ -161,8 +165,8 @@ export async function resolveGcdStoryDossier(
   if (!issueId && bundledDb && cleanSeries && cleanIssue) {
     try {
       const row = bundledDb
-        .prepare("SELECT gcd_id FROM comics WHERE (series = ? OR series LIKE ?) AND issue_number = ? LIMIT 1")
-        .get(cleanSeries, `${cleanSeries}%`, cleanIssue) as any;
+        .prepare("SELECT gcd_id FROM comics WHERE (series = ? OR series = ? OR series LIKE ?) AND issue_number = ? LIMIT 1")
+        .get(cleanSeries, cleanSeriesNoComics, `${cleanSeriesNoComics}%`, cleanIssue) as any;
       if (row && row.gcd_id) {
         const parsed = parseInt(String(row.gcd_id), 10);
         if (!isNaN(parsed)) issueId = parsed;
@@ -177,12 +181,24 @@ export async function resolveGcdStoryDossier(
         .prepare(
           `SELECT i.id FROM gcd_issue i 
            JOIN gcd_series s ON i.series_id = s.id 
-           WHERE (s.name = ? COLLATE NOCASE OR s.name = ? COLLATE NOCASE OR s.name LIKE ? COLLATE NOCASE)
+           WHERE (s.name = ? COLLATE NOCASE OR s.name = ? COLLATE NOCASE OR s.name = ? COLLATE NOCASE OR s.name LIKE ? COLLATE NOCASE)
            AND i.number = ?
-           ORDER BY CASE WHEN s.country_id = 225 THEN 0 ELSE 1 END, i.id ASC
+           ORDER BY 
+             CASE WHEN s.country_id = 225 THEN 0 ELSE 1 END,
+             CASE WHEN ? IS NOT NULL AND s.year_began <= ? AND (s.year_ended IS NULL OR s.year_ended >= ?) THEN 0 ELSE 1 END,
+             CASE WHEN ? IS NOT NULL AND ABS(s.year_began - ?) <= 5 THEN 0 ELSE 1 END,
+             i.id ASC
            LIMIT 1`
         )
-        .get(cleanSeries, `The ${cleanSeries}`, `${cleanSeries}%`, cleanIssue) as any;
+        .get(
+          cleanSeries,
+          cleanSeriesNoThe,
+          cleanSeriesNoComics,
+          `${cleanSeriesNoComics}%`,
+          cleanIssue,
+          publicationYear, publicationYear, publicationYear,
+          publicationYear, publicationYear
+        ) as any;
       if (row && row.id) {
         issueId = row.id;
       }

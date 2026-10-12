@@ -211,15 +211,13 @@ export function XMenMasterclassSerialization() {
               <span>Current Timecode: {activeChapter.timecodeStart} - {activeChapter.timecodeEnd}</span>
               <span className="text-slate-500">({activeChapter.durationMinutes} min chapter)</span>
             </div>
-            <a
-              href={`https://www.youtube.com/watch?v=${activeChapter.videoId}&t=${activeChapter.startSeconds}`}
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              href={`/video-archive?v=${activeChapter.videoId}`}
               className="inline-flex items-center gap-1 text-[11px] text-cyan-400 hover:text-cyan-300 transition-colors"
             >
-              <span>Watch on YouTube</span>
-              <ExternalLink className="h-3 w-3" />
-            </a>
+              <span>Watch in Sovereign Player</span>
+              <Play className="h-3 w-3" />
+            </Link>
           </div>
 
           {/* Chapter Analytical Headline & Ingestion Memo */}

@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { BookOpen } from 'lucide-react';
 import { getEraColors } from '@/lib/design-system/colors';
 import type { CulturalIntelligence } from './types';
@@ -164,7 +165,7 @@ export default function CulturalArchivePanel({ data, eraColors }: {
                   );
                 }
                 return (
-                  <a key={key} href={slot.youtubeUrl} target="_blank" rel="noopener noreferrer" className="ca-slot"
+                  <Link key={key} href={`/video-archive?v=${encodeURIComponent(slot.videoId)}`} className="ca-slot"
                     style={{ display: 'block', textDecoration: 'none', border: `1px solid ${isFocal ? focalColor + '30' : 'rgba(255,255,255,0.07)'}`, borderRadius: '4px', overflow: 'hidden', backgroundColor: '#111' }}>
                     <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden' }}>
                       <img src={`https://img.youtube.com/vi/${slot.videoId}/mqdefault.jpg`} alt="" className="ca-thumb"
@@ -189,7 +190,7 @@ export default function CulturalArchivePanel({ data, eraColors }: {
                         </div>
                       </div>
                     </div>
-                  </a>
+                  </Link>
                 );
               })}
             </div>

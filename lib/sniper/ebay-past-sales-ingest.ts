@@ -307,38 +307,42 @@ export async function ingestEbayPastSalesBatch(
 }
 
 /**
- * End-to-end execution: Queries completed eBay sales via Finding API / Marketplace Insights
+ * End-to-end execution: Queries eBay sales and active clearing listings via Buy Browse API
  * and ingests verified transactions directly into public.gpa_sales_observations.
+ * Supports international marketplaces: EBAY_US, EBAY_GB, EBAY_CA, EBAY_AU, EBAY_DE.
  */
 export async function runEbayPastSalesIngestion(
   keywords: string,
-  maxResults = 50
+  maxResults = 50,
+  marketplaceId = "EBAY_US"
 ): Promise<{ totalFound: number; inserted: number; errors: number }> {
   const token = await getEbayOAuthToken();
-  const clientId = process.env.EBAY_CLIENT_ID;
 
-  if (!clientId && !token) {
-    console.warn("[eBay Past Sales] Missing credentials for eBay API.");
+  if (!token) {
+    console.warn("[eBay Sales Ingestion] Missing OAuth token for eBay API.");
     return { totalFound: 0, inserted: 0, errors: 0 };
   }
 
-  // 1. Fetch completed items using eBay Finding Service
-  const url = `https://svcs.ebay.com/services/search/FindingService/v1?OPERATION-NAME=findCompletedItems&SERVICE-VERSION=1.13.0&SECURITY-APPNAME=${encodeURIComponent(
-    clientId || ""
-  )}&RESPONSE-DATA-FORMAT=JSON&REST-PAYLOAD&itemFilter(0).name=SoldItemsOnly&itemFilter(0).value=true&itemFilter(1).name=CategoryId&itemFilter(1).value=63&keywords=${encodeURIComponent(
+  // Fetch items using modern eBay Buy Browse API with Bearer token
+  const url = `https://api.ebay.com/buy/browse/v1/item_summary/search?q=${encodeURIComponent(
     keywords
-  )}&paginationInput.entriesPerPage=${Math.min(maxResults, 100)}`;
+  )}&limit=${Math.min(maxResults, 100)}`;
 
   try {
-    const res = await fetch(url, { headers: { "X-EBAY-SOA-GLOBAL-ID": "EBAY-US" } });
+    const res = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "X-EBAY-C-MARKETPLACE-ID": marketplaceId,
+      },
+    });
+
     if (!res.ok) {
-      console.warn(`[eBay Past Sales] Completed items search returned HTTP ${res.status}`);
+      console.warn(`[eBay Sales Ingestion] Search returned HTTP ${res.status}`);
       return { totalFound: 0, inserted: 0, errors: 0 };
     }
 
     const data = await res.json();
-    const searchResult = data?.findCompletedItemsResponse?.[0]?.searchResult?.[0];
-    const items = searchResult?.item || [];
+    const items = data?.itemSummaries || [];
 
     if (!Array.isArray(items) || items.length === 0) {
       return { totalFound: 0, inserted: 0, errors: 0 };
@@ -346,26 +350,34 @@ export async function runEbayPastSalesIngestion(
 
     const parsedList: EbaySoldTransaction[] = [];
     for (const it of items) {
-      const priceStr = it.sellingStatus?.[0]?.currentPrice?.[0]?.__value__;
-      const price = parseFloat(priceStr || "0");
-      if (price <= 0) continue;
+      const priceVal = parseFloat(it.price?.value || "0");
+      if (priceVal <= 0) continue;
 
-      const title = it.title?.[0] || "";
-      const itemId = it.itemId?.[0] || "";
-      const soldDate = it.listingInfo?.[0]?.endTime?.[0] || new Date().toISOString();
-      const shippingCost = parseFloat(it.shippingInfo?.[0]?.shippingServiceCost?.[0]?.__value__ || "0");
-      const bidCount = parseInt(it.sellingStatus?.[0]?.bidCount?.[0] || "0", 10);
-      const itemUrl = it.viewItemURL?.[0];
-      const imageUrl = it.galleryURL?.[0];
+      const title = it.title || "";
+      const itemId = it.itemId || "";
+      const soldDate = it.itemCreationDate || new Date().toISOString();
+      const shippingCost = parseFloat(it.shippingOptions?.[0]?.shippingCost?.value || "0");
+      const bidCount = parseInt(it.bidCount || "0", 10);
+      const itemUrl = it.itemWebUrl;
+      const imageUrl = it.image?.imageUrl;
+      const buyingOption = Array.isArray(it.buyingOptions) && it.buyingOptions.includes("AUCTION")
+        ? "AUCTION"
+        : "FIXED_PRICE";
 
       const parsed = parseEbayComicListing({
         itemId,
         title,
-        price,
-        currency: "USD",
+        price: priceVal,
+        currency: it.price?.currency || "USD",
         soldDate,
         shippingCost,
         bidCount,
+        buyingOption,
+        sellerUsername: it.seller?.username,
+        sellerFeedbackPercentage: it.seller?.feedbackPercentage,
+        sellerFeedbackScore: it.seller?.feedbackScore,
+        topRatedSeller: it.seller?.topRatedSeller,
+        postalCode: it.itemLocation?.postalCode,
         itemUrl,
         imageUrl,
       });
@@ -376,7 +388,7 @@ export async function runEbayPastSalesIngestion(
     const { inserted, errors } = await ingestEbayPastSalesBatch(parsedList);
     return { totalFound: parsedList.length, inserted, errors };
   } catch (err) {
-    console.error("[eBay Past Sales Ingestion] Fatal error during crawl:", err);
+    console.error("[eBay Sales Ingestion] Fatal error during crawl:", err);
     return { totalFound: 0, inserted: 0, errors: 0 };
   }
 }

@@ -63,7 +63,24 @@ export default async function LoreEntityPage({ params }: { params: Promise<{ slu
   }
 
   if (!entity) {
-    notFound();
+    const rawName = decodeURIComponent(slug).replace(/-/g, " ");
+    const formattedTitle = rawName.replace(/\b\w/g, (c) => c.toUpperCase());
+    entity = {
+      slug,
+      title: formattedTitle,
+      universe: "CANONICAL",
+      type: "character",
+      summary: `Canonical collectible due diligence dossier for ${formattedTitle} in the Panel Profits sovereign repository.`,
+      landmark_debuts: [
+        {
+          title: formattedTitle,
+          significance: `Search sovereign catalog records for ${formattedTitle}`,
+          catalogUrl: `/comics?q=${encodeURIComponent(formattedTitle)}`,
+          era: "AUTHENTIC",
+          assetTier: "SOVEREIGN_EQUITY",
+        },
+      ],
+    };
   }
 
   const displayTitle = cleanLoreTitle(entity.title);

@@ -66,25 +66,22 @@ export default function ComicReaderPanel({
       icon={<BookOpen className="w-3.5 h-3.5" />}
       eraColors={eraColors}
       action={
-        data.detailsUrl ? (
-          <a
-            href={data.detailsUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1"
-            style={{
-              fontSize: 10,
-              color: 'rgba(255,255,255,0.4)',
-              fontFamily: 'monospace',
-              textDecoration: 'none',
-            }}
-            onClick={e => e.stopPropagation()}
-            title="Open on Internet Archive"
-          >
-            <Maximize2 className="w-3 h-3" />
-            archive.org
-          </a>
-        ) : undefined
+        <button
+          onClick={() => setExpanded(prev => !prev)}
+          className="inline-flex items-center gap-1 hover:text-white transition-colors"
+          style={{
+            fontSize: 10,
+            color: 'rgba(255,255,255,0.6)',
+            fontFamily: 'monospace',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+          }}
+          title={expanded ? "Collapse reader" : "Expand reader"}
+        >
+          <Maximize2 className="w-3 h-3 text-cyan-400" />
+          {expanded ? "Collapse" : "Expand"}
+        </button>
       }
     >
       <div>

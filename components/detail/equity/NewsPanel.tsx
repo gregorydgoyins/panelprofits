@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { Newspaper } from 'lucide-react';
 import { getEraColors } from '@/lib/design-system/colors';
@@ -54,7 +55,7 @@ export default function NewsPanel({ workName, publisher, assetId, eraColors }: {
           const classification = classifyNewsItem(item.title, item.summary ?? '');
           const sc = getSourceColor(item.source || '', eraColors.border);
           return (
-            <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer" className="block rounded p-2.5 transition-all pp-hover-bg-5"
+            <Link key={item.id} href={`/news/${encodeURIComponent(item.id)}`} className="block rounded p-2.5 transition-all pp-hover-bg-5"
               style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: `1px solid ${eraColors.border}25`, textDecoration: 'none' }}>
               <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
                 <span className="text-[8px] px-1.5 py-0.5 rounded uppercase tracking-wider flex-shrink-0"
@@ -74,7 +75,7 @@ export default function NewsPanel({ workName, publisher, assetId, eraColors }: {
               </div>
               <p className="text-[11px] leading-snug line-clamp-2" style={{ color: 'rgba(255,255,255,0.82)' }}>{item.title}</p>
               {item.summary && <p className="text-[9px] mt-1 line-clamp-1" style={{ color: 'rgba(255,255,255,0.4)' }}>{item.summary}</p>}
-            </a>
+            </Link>
           );
         })}
       </div>

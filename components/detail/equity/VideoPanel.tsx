@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import Panel from './Panel';
 import { getEraColors } from '@/lib/design-system/colors';
 import { Play, ExternalLink, Film, TrendingUp, Award, BookOpen, Loader2, X } from 'lucide-react';
@@ -124,13 +125,13 @@ export default function VideoPanel({
       if (!res.ok) throw new Error(`${res.status}`);
       const data: YTSearchResponse = await res.json();
       setVideos(data.videos || []);
-      setSearchUrl(data.searchUrl || '');
+      setSearchUrl(`/video-archive?q=${encodeURIComponent(workName + (issueNumber ? ' #' + issueNumber : ''))}`);
       setSource(data.source || 'youtube-api');
     } catch {
       setVideos([]);
       setSource('fallback');
       const q = buildSearchQuery(workName, issueNumber);
-      setSearchUrl(`https://www.youtube.com/results?search_query=${encodeURIComponent(q)}`);
+      setSearchUrl(`/video-archive?q=${encodeURIComponent(q)}`);
     } finally {
       setLoading(false);
     }
@@ -279,14 +280,12 @@ export default function VideoPanel({
                       >
                         <Play className="w-2.5 h-2.5 fill-current" /> Watch Inline
                       </button>
-                      <a
-                        href={video.youtubeUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <Link
+                        href={`/video-archive?v=${encodeURIComponent(video.videoId)}`}
                         className="text-[10px] font-mono text-slate-400 hover:text-slate-200 flex items-center gap-1"
                       >
-                        YouTube <ExternalLink className="w-2.5 h-2.5" />
-                      </a>
+                        Archive Reel <Play className="w-2.5 h-2.5" />
+                      </Link>
                     </div>
                   </div>
                 </div>
@@ -294,10 +293,8 @@ export default function VideoPanel({
             ))}
 
             {searchUrl && (
-              <a
-                href={searchUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                href={`/video-archive?q=${encodeURIComponent(workName + (issueNumber ? ' #' + issueNumber : ''))}`}
                 className="block text-center rounded-md py-2 mt-2 transition-colors border"
                 style={{
                   backgroundColor: 'rgba(255,255,255,0.02)',
@@ -308,9 +305,9 @@ export default function VideoPanel({
                 <span
                   className="text-[10px] font-mono flex items-center justify-center gap-1 text-slate-300 hover:text-white"
                 >
-                  Search More Verified Clips on YouTube <ExternalLink className="w-3 h-3 text-cyan-400" />
+                  Explore Sovereign Video Archive <Play className="w-3 h-3 text-cyan-400" />
                 </span>
-              </a>
+              </Link>
             )}
           </div>
         )}
@@ -320,11 +317,9 @@ export default function VideoPanel({
             {fallbackLinks.map((link, idx) => {
               const Icon = link.icon;
               return (
-                <a
+                <Link
                   key={idx}
-                  href={`https://www.youtube.com/results?search_query=${encodeURIComponent(link.query)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href={`/video-archive?q=${encodeURIComponent(link.query)}`}
                   className="group block rounded-md p-2.5 transition-all duration-150 border bg-white/[0.02] hover:bg-white/[0.05]"
                   style={{
                     borderColor: `${eraColors.border}20`,
@@ -338,12 +333,12 @@ export default function VideoPanel({
                     >
                       {link.label}
                     </span>
-                    <ExternalLink className="w-3 h-3 text-slate-500 shrink-0" />
+                    <Play className="w-3 h-3 text-slate-500 shrink-0" />
                   </div>
                   <p className="text-[10px] text-slate-400 mt-0.5">
                     {link.description}
                   </p>
-                </a>
+                </Link>
               );
             })}
           </div>

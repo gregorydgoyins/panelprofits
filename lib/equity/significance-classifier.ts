@@ -93,15 +93,15 @@ export function resolveHistoricalMarketClass(params: {
   }
 
   // Exact Price Thresholds:
-  // - otc is less than 17.99
-  // - standard is 18.00 to 44.99
+  // - otc is 17.00 to 24.99
+  // - standard is 25.00 to 44.99
   // - premium is 45.00 to infinity
   const priceVal = price ?? fmv;
   if (priceVal != null && !isNaN(Number(priceVal)) && Number(priceVal) > 0) {
     const p = Number(priceVal);
-    if (p < 17.99) return "OTC";
-    if (p <= 44.99) return "STD";
-    return "PREMIUM";
+    if (p >= 45.00) return "PREMIUM";
+    if (p >= 25.00) return "STD";
+    return "OTC";
   }
 
   const eraNormalized = (era || "").toLowerCase().trim();

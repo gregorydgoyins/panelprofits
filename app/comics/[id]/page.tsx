@@ -195,7 +195,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
   const gcdData = (comic.gcd_data as Record<string, any>) || {};
   const gcdBadges = (gcdData.key_badges as string[]) || [];
 
-  const authoritativePublisher = resolveAuthoritativePublisher(comic.series, comic.publisher);
+  const authoritativePublisher = resolveAuthoritativePublisher(comic.series, comic.publisher, comic.publication_year);
 
   const sanitizeCreator = (val: any): string => {
     if (!val || typeof val !== "string") return "";
@@ -235,6 +235,15 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
   const realEra: string | null = ppData.era || (comic as any).production_age || null;
   const eraColors = getEraColors(String(realEra || "modern").toLowerCase());
   const consensusFmv = Number(comic.pp_grade_9_8_price || comic.baseline_grade_9_8_value || 0);
+  const candidateRawPrice = Number(
+    (comic as any).pp_price_raw ||
+    ppData["PP - Ungraded Market Price"] ||
+    ppData["PP - Grade RAW Market Price"] ||
+    ppData["raw_market_price"] ||
+    comic.comicbase_price ||
+    0
+  );
+  const effectivePrice = consensusFmv > 0 ? consensusFmv : candidateRawPrice;
 
   let railRows: Array<{ comics_id: string; cover_url: string | null; cover_source: string | null; cover_suspect: boolean | null; cgc_total: number | null; printing: string | null; variant_label: string | null; volume: string | null }> = [];
   const snapshotObservations: SnapshotObservation[] = [];
@@ -397,10 +406,10 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
   );
 
   // Canonical Asset Class & Market Price Tiers:
-  // - OTC: price < 17.99 · STD: 18.00 to 44.99 · PREMIUM: 45.00 and up
+  // - OTC: 17.00 to 24.99 · STD: 25.00 to 44.99 · PREMIUM: 45.00 and up
   // - SOV: reserved for direct universal 9.8 apex benchmark equities (verified CE70 seats)
   const isDirect = isDirectEdition(comic.direct_or_variant) && isDirectEdition(comic.cover_variant);
-  const priceTier = resolvePriceTier(consensusFmv);
+  const priceTier = resolvePriceTier(effectivePrice);
   const isTrulySovereign = Boolean(isCe70Seat && isDirect && consensusFmv >= PREMIUM_MIN_PRICE);
   const effectiveAssetClass = isTrulySovereign ? "SOV" : priceTier;
 
@@ -422,7 +431,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     variantKey: `${comic.series}-${comic.issue_number}`,
     artifactType: "comic_issue",
     assetClass: effectiveAssetClass,
-    marketLane: consensusFmv >= 45 ? "investment_grade" : consensusFmv >= 18 ? "standard_exchange" : "over_the_counter",
+    marketLane: effectivePrice >= 45 ? "investment_grade" : effectivePrice >= 25 ? "standard_exchange" : "over_the_counter",
     isSovereign: isTrulySovereign,
     marketPriceClass: priceTier,
     certificationState: null,

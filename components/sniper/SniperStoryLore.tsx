@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { BookOpen, Sparkles, Users, MapPin, Wrench, Quote, ExternalLink } from "lucide-react";
+import Link from "next/link";
+import { BookOpen, Sparkles, Users, MapPin, Wrench, Quote } from "lucide-react";
 import type { StorySummary, StoryEntityLink } from "@/lib/comics/story-summary";
 
 interface SniperStoryLoreProps {
@@ -14,8 +15,23 @@ interface SniperStoryLoreProps {
   whyItsAGoodBuy?: string;
 }
 
+function resolveInternalLoreUrl(url: string, fallbackLabel: string): string {
+  if (!url) return `/comics?q=${encodeURIComponent(fallbackLabel)}`;
+  if (url.includes("/wiki/")) {
+    const parts = url.split("/wiki/");
+    const raw = parts[parts.length - 1];
+    const clean = decodeURIComponent(raw)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+    return `/wiki/entry/${clean}`;
+  }
+  if (url.startsWith("/")) return url;
+  return `/comics?q=${encodeURIComponent(fallbackLabel)}`;
+}
+
 /**
- * Safely parse markdown-style links `[Label](url)` and render as interactive clickable React elements.
+ * Safely parse markdown-style links `[Label](url)` and render as internal clickable React elements.
  */
 function renderMarkdownWithLinks(text: string) {
   if (!text) return null;
@@ -29,17 +45,17 @@ function renderMarkdownWithLinks(text: string) {
       parts.push(text.slice(lastIndex, match.index));
     }
     const label = match[1];
-    const url = match[2];
+    const rawUrl = match[2];
+    const internalUrl = resolveInternalLoreUrl(rawUrl, label);
+
     parts.push(
-      <a
-        key={`${url}-${match.index}`}
-        href={url}
-        target="_blank"
-        rel="noopener noreferrer"
+      <Link
+        key={`${internalUrl}-${match.index}`}
+        href={internalUrl}
         className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2 font-medium transition-colors"
       >
         {label}
-      </a>
+      </Link>
     );
     lastIndex = linkRegex.lastIndex;
   }
@@ -52,11 +68,11 @@ function renderMarkdownWithLinks(text: string) {
 }
 
 function EntityBadge({ entity, badgeColor }: { entity: StoryEntityLink; badgeColor: string }) {
+  const internalUrl = resolveInternalLoreUrl(entity.url, entity.label || entity.target);
+
   return (
-    <a
-      href={entity.url}
-      target="_blank"
-      rel="noopener noreferrer"
+    <Link
+      href={internalUrl}
       className={`inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-mono transition-all hover:scale-105 ${badgeColor}`}
       title={entity.target}
     >
@@ -64,7 +80,7 @@ function EntityBadge({ entity, badgeColor }: { entity: StoryEntityLink; badgeCol
       <span>{entity.label}</span>
       {entity.isFlashback && <span className="text-[10px] text-slate-400 opacity-75">(flashback)</span>}
       {entity.isMentioned && <span className="text-[10px] text-slate-400 opacity-75">(mentioned)</span>}
-    </a>
+    </Link>
   );
 }
 
@@ -339,17 +355,11 @@ export function SniperStoryLore({
       <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-500 font-mono pt-1 border-t border-slate-800">
         <div>
           Source:{" "}
-          <a
-            href={summary.sourceUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-cyan-400 hover:underline inline-flex items-center gap-0.5"
-          >
-            <span>{summary.source}</span>
-            <ExternalLink className="h-2.5 w-2.5" />
-          </a>
+          <span className="text-slate-300 font-mono">
+            {summary.source}
+          </span>
         </div>
-        <span>FANDOM MEDIAWIKI CANON VERIFIED</span>
+        <span className="text-cyan-400/80">LOCAL CBR KNOWLEDGE REPOSITORY VERIFIED</span>
       </div>
     </div>
   );

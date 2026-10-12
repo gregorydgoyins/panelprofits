@@ -315,15 +315,13 @@ export function NerdSyncCuratedShowcase() {
               <span>Duration: {selectedItem.duration}</span>
               <span className="text-slate-500">({selectedItem.views} views)</span>
             </div>
-            <a
-              href={`https://www.youtube.com/watch?v=${selectedItem.videoId}`}
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              href={`/video-archive?v=${selectedItem.videoId}`}
               className="inline-flex items-center gap-1 text-[11px] text-emerald-400 hover:text-emerald-300 transition-colors"
             >
-              <span>Watch on YouTube</span>
-              <ExternalLink className="h-3 w-3" />
-            </a>
+              <span>Watch in Sovereign Player</span>
+              <Play className="h-3 w-3" />
+            </Link>
           </div>
 
           {/* Scientific Hypothesis & Forensic Dossier */}

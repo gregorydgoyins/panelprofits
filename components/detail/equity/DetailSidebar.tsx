@@ -446,11 +446,9 @@ export default function DetailSidebar({
                 const sc = getSourceColor(item.source, accent);
                 const pubDate = item.publishedAt ? new Date(item.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
                 return (
-                  <a
+                  <Link
                     key={item.id}
-                    href={item.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href={`/news/${encodeURIComponent(item.id)}`}
                     className="block rounded px-2 py-1.5 transition-colors pp-hover-bg-5"
                     style={{
                       textDecoration: 'none',
@@ -471,7 +469,7 @@ export default function DetailSidebar({
                     <p style={{ fontSize: '10px', color: score > 0 ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.42)', lineHeight: 1.35, margin: 0 }} className="line-clamp-2">
                       {item.title}
                     </p>
-                  </a>
+                  </Link>
                 );
               })}
             </div>

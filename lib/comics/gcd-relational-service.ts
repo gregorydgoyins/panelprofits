@@ -435,6 +435,7 @@ export async function getGcdRelationalData(
         ? cleanSeries.slice(4).trim()
         : cleanSeries;
       const cleanSeriesWithThe = `The ${cleanSeriesNoThe}`;
+      const cleanSeriesNoComics = cleanSeriesNoThe.replace(/\s+comics$/i, "").trim();
 
       issue = db
         .prepare(
@@ -442,11 +443,12 @@ export async function getGcdRelationalData(
            FROM gcd_issue i
            JOIN gcd_series s ON i.series_id = s.id
            JOIN stddata_country c ON s.country_id = c.id
-           WHERE (s.name = ? COLLATE NOCASE OR s.name = ? COLLATE NOCASE OR s.name LIKE ? COLLATE NOCASE)
+           WHERE (s.name = ? COLLATE NOCASE OR s.name = ? COLLATE NOCASE OR s.name = ? COLLATE NOCASE OR s.name LIKE ? COLLATE NOCASE)
              AND i.number = ?
            ORDER BY
              CASE WHEN s.country_id = 225 THEN 0 ELSE 1 END,
-             CASE WHEN ? IS NOT NULL AND s.year_began = ? THEN 0 ELSE 1 END,
+             CASE WHEN ? IS NOT NULL AND s.year_began <= ? AND (s.year_ended IS NULL OR s.year_ended >= ?) THEN 0 ELSE 1 END,
+             CASE WHEN ? IS NOT NULL AND ABS(s.year_began - ?) <= 5 THEN 0 ELSE 1 END,
              CASE WHEN s.name = ? COLLATE NOCASE OR s.name = ? COLLATE NOCASE THEN 0 ELSE 1 END,
              i.id ASC
            LIMIT 1`
@@ -454,12 +456,13 @@ export async function getGcdRelationalData(
         .get(
           cleanSeriesNoThe,
           cleanSeriesWithThe,
-          `${cleanSeriesNoThe}%`,
+          cleanSeriesNoComics,
+          `${cleanSeriesNoComics}%`,
           cleanIssue,
-          targetYear,
-          targetYear,
+          targetYear, targetYear, targetYear,
+          targetYear, targetYear,
           cleanSeriesNoThe,
-          cleanSeriesWithThe
+          cleanSeriesNoComics
         );
     }
 

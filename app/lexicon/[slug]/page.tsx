@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, BookOpen, Scale, Sparkles, TrendingUp, ShieldAlert, ArrowUpRight, Calculator, ExternalLink } from "lucide-react";
+import { ArrowLeft, BookOpen, Scale, Sparkles, TrendingUp, ShieldAlert, ArrowUpRight, Calculator } from "lucide-react";
 import { getCbrTermBySlug, searchCbrTerms } from "@/lib/lexicon/cbr-lexicon";
 
 export const dynamic = "force-dynamic";
@@ -23,10 +23,6 @@ export default async function LexiconTermPage({ params }: { params: Promise<{ sl
   const formula = cbrEntry.canonical_formula;
   const comicExample = cbrEntry.comic_example;
   const antiPatterns = cbrEntry.anti_patterns;
-  const rawInvestopediaUrl = cbrEntry.investopedia_url;
-  const investopediaUrl = rawInvestopediaUrl && rawInvestopediaUrl !== "https://www.investopedia.com"
-    ? rawInvestopediaUrl
-    : `https://www.investopedia.com/search?q=${encodeURIComponent(termTitle)}`;
 
   // Related terms from the same category
   const relatedTerms = searchCbrTerms(category, 6)
@@ -80,17 +76,13 @@ export default async function LexiconTermPage({ params }: { params: Promise<{ sl
         {/* Investopedia Benchmark Definition */}
         <div className="mt-4 rounded border border-slate-800/80 bg-[#070A12] p-4 text-xs text-slate-400">
           <span className="text-[9px] font-mono uppercase tracking-wider text-slate-500 block mb-1">
-            Underlying Investopedia Financial Principle:
+            Underlying Financial Principle:
           </span>
           <p className="leading-relaxed text-slate-300">{investopediaDef}</p>
-          <a
-            href={investopediaUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2 inline-flex items-center gap-1 text-[10px] font-mono text-cyan-400 hover:underline"
-          >
-            Verify on Investopedia <ExternalLink className="h-3 w-3" />
-          </a>
+          <div className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-mono text-cyan-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-cyan-400"></span>
+            <span>INTEGRATED SOVEREIGN CBR LEXICON BENCHMARK</span>
+          </div>
         </div>
       </header>
 

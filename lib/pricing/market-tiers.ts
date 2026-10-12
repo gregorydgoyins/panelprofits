@@ -2,35 +2,40 @@
  * Panel Profits Canonical Market Tiers & Sovereign Asset Classification
  *
  * Constitution:
- * 1. OTC is less than 17.99 (price < 17.99)
- * 2. Standard is 18.00 to 44.99 (18.00 <= price <= 44.99)
- * 3. Premium is 45.00 to infinity (price >= 45.00)
+ * 1. OTC is $17.00 to $24.99 (and < $17.00 off-exchange, never makes the rail)
+ * 2. Standard is $25.00 to $44.99 ($25.00 <= price <= $44.99)
+ * 3. Premium is $45.00 to infinity (price >= $45.00)
  * 4. Sovereign is a direct universal bluelabel 9.8 comic (strictly direct, universal blue label, 9.8 grade)
  */
 
 export type MarketPriceClass = "OTC" | "STD" | "PREMIUM";
 export type AssetClass = "SOV" | "PREMIUM" | "STD" | "OTC" | "RAW";
 
-export const OTC_MAX_PRICE = 17.99;
-export const STANDARD_MIN_PRICE = 18.0;
+export const OTC_MIN_PRICE = 17.0;
+export const OTC_MAX_PRICE = 24.99;
+export const STANDARD_MIN_PRICE = 25.0;
 export const STANDARD_MAX_PRICE = 44.99;
 export const PREMIUM_MIN_PRICE = 45.0;
 
 /**
- * Resolves the primary price tier based strictly on the user's market price boundaries:
- * - OTC: < 17.99
- * - STD: 18.00 to 44.99
+ * Resolves the primary price tier based strictly on canonical market price boundaries:
+ * - OTC: 17.00 to 24.99
+ * - STD: 25.00 to 44.99
  * - PREMIUM: 45.00 to infinity
+ * Missing / zero prices return null (unpriced).
  */
 export function resolvePriceTier(priceUsd: number | null | undefined): MarketPriceClass {
   const p = Number(priceUsd || 0);
-  if (p < STANDARD_MIN_PRICE) {
+  if (p <= 0) {
     return "OTC";
   }
-  if (p <= STANDARD_MAX_PRICE) {
+  if (p >= PREMIUM_MIN_PRICE) {
+    return "PREMIUM";
+  }
+  if (p >= STANDARD_MIN_PRICE) {
     return "STD";
   }
-  return "PREMIUM";
+  return "OTC";
 }
 
 /**

@@ -1,5 +1,6 @@
+import Link from "next/link";
 import { getStorySummary, type StoryEntityLink } from "@/lib/comics/story-summary";
-import { BookOpen, Sparkles, Users, MapPin, Wrench, Quote, ExternalLink } from "lucide-react";
+import { BookOpen, Sparkles, Users, MapPin, Wrench, Quote } from "lucide-react";
 
 interface StorySummaryCardProps {
   series: string;
@@ -10,8 +11,23 @@ interface StorySummaryCardProps {
   accent: string;
 }
 
+function resolveInternalLoreUrl(url: string, fallbackLabel: string): string {
+  if (!url) return `/comics?q=${encodeURIComponent(fallbackLabel)}`;
+  if (url.includes("/wiki/")) {
+    const parts = url.split("/wiki/");
+    const raw = parts[parts.length - 1];
+    const clean = decodeURIComponent(raw)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+    return `/wiki/entry/${clean}`;
+  }
+  if (url.startsWith("/")) return url;
+  return `/comics?q=${encodeURIComponent(fallbackLabel)}`;
+}
+
 /**
- * Safely parse markdown-style links `[Label](url)` and render as interactive clickable React elements.
+ * Safely parse markdown-style links `[Label](url)` and render as internal clickable React elements.
  */
 function renderMarkdownWithLinks(text: string) {
   if (!text) return null;
@@ -25,17 +41,17 @@ function renderMarkdownWithLinks(text: string) {
       parts.push(text.slice(lastIndex, match.index));
     }
     const label = match[1];
-    const url = match[2];
+    const rawUrl = match[2];
+    const internalUrl = resolveInternalLoreUrl(rawUrl, label);
+
     parts.push(
-      <a
-        key={`${url}-${match.index}`}
-        href={url}
-        target="_blank"
-        rel="noopener noreferrer"
+      <Link
+        key={`${internalUrl}-${match.index}`}
+        href={internalUrl}
         className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2 font-medium transition-colors"
       >
         {label}
-      </a>
+      </Link>
     );
     lastIndex = linkRegex.lastIndex;
   }
@@ -48,11 +64,11 @@ function renderMarkdownWithLinks(text: string) {
 }
 
 function EntityBadge({ entity, badgeColor }: { entity: StoryEntityLink; badgeColor: string }) {
+  const internalUrl = resolveInternalLoreUrl(entity.url, entity.label || entity.target);
+
   return (
-    <a
-      href={entity.url}
-      target="_blank"
-      rel="noopener noreferrer"
+    <Link
+      href={internalUrl}
       className={`inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-mono transition-all hover:scale-105 ${badgeColor}`}
       title={entity.target}
     >
@@ -60,7 +76,7 @@ function EntityBadge({ entity, badgeColor }: { entity: StoryEntityLink; badgeCol
       <span>{entity.label}</span>
       {entity.isFlashback && <span className="text-[10px] text-slate-400 opacity-75">(flashback)</span>}
       {entity.isMentioned && <span className="text-[10px] text-slate-400 opacity-75">(mentioned)</span>}
-    </a>
+    </Link>
   );
 }
 
@@ -301,19 +317,13 @@ export default async function StorySummaryCard({
       <div className="mt-4 pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-500 relative z-10">
         <div>
           Source:{" "}
-          <a
-            href={summary.sourceUrl}
-            target="_blank"
-            rel="noopener noreferrer nofollow"
-            className="text-slate-400 hover:text-slate-200 underline inline-flex items-center gap-0.5"
-          >
-            <span>{summary.source}</span>
-            <ExternalLink className="h-2.5 w-2.5" />
-          </a>
+          <span className="text-slate-300 font-mono">
+            {summary.source}
+          </span>
           {summary.license ? ` · ${summary.license}` : ""}
         </div>
-        <div className="font-mono text-slate-600">
-          PROVENANCE: MEDIAWIKI ENCYCLOPEDIA CORPUS
+        <div className="font-mono text-cyan-400/80">
+          PROVENANCE: LOCAL CBR KNOWLEDGE REPOSITORY
         </div>
       </div>
     </section>

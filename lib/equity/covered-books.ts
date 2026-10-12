@@ -187,6 +187,10 @@ export async function getCoveredBooksSlice(offset: number, limit: number): Promi
   if (rows.length < limit && start + limit > total) {
     rows = rows.concat(await fetchRange(1, start + limit - total));
   }
-  const items = rows.map(mapCoveredBook).filter((i): i is EquityItem => i !== null);
+  // The continuous equity surveillance rail enforces the $17.00 minimum floor.
+  // Less than $17.00 is still OTC, but it never makes the rail.
+  const items = rows
+    .map(mapCoveredBook)
+    .filter((i): i is EquityItem => i !== null && (i.pricing?.fmv_usd ?? 0) >= 17.00);
   return { items, nextOffset: (start + limit) % total, total };
 }

@@ -11,7 +11,9 @@ function getSqliteDb() {
     const { DatabaseSync } = req("node:sqlite");
 
     const candidates = [
+      path.join(process.cwd(), "data", "highres_covers_all.sqlite"),
       path.join(process.cwd(), "data", "pp115k.sqlite"),
+      path.join(process.cwd(), "panel-profits", "data", "highres_covers_all.sqlite"),
       path.join(process.cwd(), "panel-profits", "data", "pp115k.sqlite"),
     ];
     for (const p of candidates) {

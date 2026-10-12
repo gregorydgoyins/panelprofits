@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { Newspaper, ExternalLink, Activity, AlertCircle, Compass, HelpCircle } from 'lucide-react';
 
 interface NewsEvent {
@@ -94,18 +95,14 @@ export default function NewsIntelligencePanel({ intelligence, eraColors }: NewsI
                   <span className="rounded bg-zinc-800 px-2 py-0.5 text-sky-300" title="Heuristic Model-Inferred Relevance (Not measured provider metric)">
                     Heuristic Relevance: {relevancePct}%
                   </span>
-                  {event.sourceUrl && (
-                    <a
-                      href={event.sourceUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 rounded bg-zinc-800 px-2 py-0.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-700 transition-colors"
-                      title="Open source article"
-                    >
-                      <span>Source</span>
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
-                  )}
+                  <Link
+                    href={event.id ? `/news/${encodeURIComponent(event.id)}` : '/news'}
+                    className="flex items-center gap-1 rounded bg-zinc-800 px-2 py-0.5 text-cyan-400 hover:text-cyan-200 hover:bg-zinc-700 transition-colors"
+                    title="Open synthesized briefing"
+                  >
+                    <span>Briefing</span>
+                    <Newspaper className="h-3 w-3" />
+                  </Link>
                 </div>
               </div>
 
