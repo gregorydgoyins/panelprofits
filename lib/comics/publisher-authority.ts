@@ -51,6 +51,17 @@ const KNOWN_PUBLISHERS: Record<string, string> = {
   "merc publishing": "Merc Publishing",
   "lev gleason": "Lev Gleason",
   "lev gleason publications": "Lev Gleason",
+  kodansha: "Kodansha",
+  "kodansha comics": "Kodansha",
+  viz: "Viz Media",
+  "viz media": "Viz Media",
+  shueisha: "Shueisha",
+  shogakukan: "Shogakukan",
+  "ipc": "IPC / Rebellion",
+  "rebellion": "IPC / Rebellion",
+  "fleetway": "Fleetway",
+  "editions lug": "Éditions Lug",
+  lug: "Éditions Lug",
 };
 
 // Substring/regex rules for definitive series matching
@@ -278,6 +289,30 @@ const EC_PATTERNS = [
   /\btwo-fisted tales\b/i,
 ];
 
+const MANGA_KODANSHA_PATTERNS = [
+  /\bakira\b/i,
+  /\bghost in the shell\b/i,
+  /\battack on titan\b/i,
+];
+
+const MANGA_VIZ_SHUEISHA_PATTERNS = [
+  /\bdragon ball\b/i,
+  /\bdragon ball z\b/i,
+  /\bone piece\b/i,
+  /\bnausica[aä]\b/i,
+  /\bnaruto\b/i,
+  /\bbleach\b/i,
+  /\bdeath note\b/i,
+];
+
+const BRITISH_2000AD_PATTERNS = [
+  /\b2000\s*ad\b/i,
+  /\bjudge dredd\b/i,
+  /\brogues\b/i,
+  /\bsl[aá]ine\b/i,
+  /\bstrontium dog\b/i,
+];
+
 export function resolveAuthoritativePublisher(
   series: string,
   rawPublisher?: string | null,
@@ -402,6 +437,18 @@ export function resolveAuthoritativePublisher(
 
   for (const pat of EC_PATTERNS) {
     if (pat.test(normSeries)) return "EC";
+  }
+
+  for (const pat of MANGA_KODANSHA_PATTERNS) {
+    if (pat.test(normSeries)) return "Kodansha";
+  }
+
+  for (const pat of MANGA_VIZ_SHUEISHA_PATTERNS) {
+    if (pat.test(normSeries)) return "Viz Media / Shueisha";
+  }
+
+  for (const pat of BRITISH_2000AD_PATTERNS) {
+    if (pat.test(normSeries)) return "IPC / Rebellion";
   }
 
   // If nothing matches and raw was valid small press publisher, preserve it

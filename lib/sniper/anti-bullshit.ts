@@ -213,10 +213,12 @@ export function parseAndFilterListing(
     isCertifiedSlab = true;
   }
 
-  // Extract Grade: e.g. 10, 9.9, 9.8, 9.6, 9.4, 9.2, 9.0, 8.5
-  const gradeMatch = title.match(/\b(10(?:\.0)?|9\.[0-9]|8\.[0-9]|7\.[0-9]|6\.[0-9]|5\.[0-9]|4\.[0-9]|3\.[0-9]|2\.[0-9]|1\.[0-9]|0\.5)\b/);
-  if (gradeMatch) {
-    grade = parseFloat(gradeMatch[1]);
+  // Extract Grade: e.g. 10, 9.9, 9.8, 9.6, 9.4, 9.2, 9.0, 8.5, or PSA 9 / CGC 9
+  const slabGradeMatch = title.match(/\b(?:cgc|cbcs|psa|pgx|egs|ega)\s*([0-9](?:\.[0-9])?|10(?:\.0)?)\b/i);
+  const generalGradeMatch = title.match(/\b(10(?:\.0)?|[1-9]\.[0-9]|0\.5)\b/);
+  const rawGradeStr = slabGradeMatch ? slabGradeMatch[1] : (generalGradeMatch ? generalGradeMatch[1] : null);
+  if (rawGradeStr) {
+    grade = parseFloat(rawGradeStr);
   }
 
   // 2b. Extract Certification Number (CGC / CBCS / PSA / PGX / EGS cert #)

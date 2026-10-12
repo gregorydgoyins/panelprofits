@@ -319,7 +319,7 @@ export default function SniperRadarPage() {
     "ebay_de",
     "ebay_au",
   ]);
-  const [minGrade, setMinGrade] = useState<number>(9.0);
+  const [minGrade, setMinGrade] = useState<number>(8.5);
   const [maxGrade, setMaxGrade] = useState<number>(10.0);
   const [minAllInCost, setMinAllInCost] = useState<number>(0.0); // $0.00 Floor for misspellings & cracked cases
   const [maxBudget, setMaxBudget] = useState<number>(1500); // Sub-$1500 Focus Range
@@ -478,8 +478,11 @@ export default function SniperRadarPage() {
       if (strategyTab === "DOUBLE_UP") return deal.netRoiPercent >= 100;
       if (strategyTab === "CRACKED_CASE") return Boolean(deal.isCrackedCase || deal.specialPlay === "CRACKED_CASE" || deal.specialPlay === "REHOLDER_ARBITRAGE" || deal.specialPlay === "DAMAGED_HOLDER" || /crack|scuff|reholder|damaged|shell/i.test(deal.listing.title) || /crack|scuff|reholder|damaged|shell/i.test(deal.listing.itemDescription || ""));
       if (strategyTab === "MISSPELLED") return Boolean(deal.isMisspelled || deal.specialPlay === "MISSPELLED_KEY" || /spidre|avenegr|batamn|wovlerine|thng/i.test(deal.listing.title));
+      if (strategyTab === "MANGA") return Boolean(/akira|dragon ball|one piece|ghost in the shell|nausica[aä]|naruto|bleach|manga/i.test(deal.listing.title) || /manga/i.test(deal.resolvedSeries) || /kodansha|viz|shueisha/i.test(deal.gcdMetadata?.publisher || ""));
+      if (strategyTab === "OTHER_PUBS") return Boolean(/dc|image|dark horse|boom|idw|2000 ad|valiant|dynamite|top cow|lev gleason/i.test(deal.gcdMetadata?.publisher || "") || /spawn|hellboy|walking dead|tmnt|saga|sandman|watchmen|judge dredd|daredevil comics/i.test(deal.listing.title));
+      if (strategyTab === "PLACEHOLDER_85") return Boolean(deal.resolvedGrade !== null && deal.resolvedGrade <= 9.2 && deal.resolvedGrade >= 8.5);
       if (strategyTab === "CPV") return Boolean(deal.listing.isCanadianPriceVariant || deal.specialPlay === "CANADIAN_PRICE_VARIANT" || /canadian|cpv|75¢|95¢|\$1\.00|alpha flight|canuck/i.test(deal.listing.title));
-      if (strategyTab === "FOREIGN") return Boolean(deal.listing.isForeignLanguageEdition || deal.specialPlay === "FOREIGN_LANGUAGE_KEY" || (deal.listing.currency && deal.listing.currency !== "USD") || /french|german|uk|lug|semic|strange|2000 ad|captain britain/i.test(deal.listing.title) || deal.listing.source.includes("ebay_"));
+      if (strategyTab === "FOREIGN") return Boolean(deal.listing.isForeignLanguageEdition || deal.specialPlay === "FOREIGN_LANGUAGE_KEY" || (deal.listing.currency && deal.listing.currency !== "USD") || /french|german|uk|lug|semic|strange|2000 ad|captain britain|topolino/i.test(deal.listing.title) || deal.listing.source.includes("ebay_"));
       if (strategyTab === "STUMBLED") return deal.specialPlay === "STUMBLED_INTO_GREATNESS";
       if (strategyTab === "CRACK_PRESS") return deal.specialPlay === "CRACK_AND_PRESS";
       if (strategyTab === "BELOW_COST") return deal.specialPlay === "BELOW_GRADING_COST" || deal.allInCost <= 45;
@@ -1010,14 +1013,15 @@ export default function SniperRadarPage() {
               </div>
               <input
                 type="range"
-                min="9.0"
+                min="8.5"
                 max="10.0"
-                step="0.2"
+                step="0.1"
                 value={minGrade}
                 onChange={(e) => setMinGrade(Number(e.target.value))}
                 className="w-full accent-emerald-500 bg-slate-800"
               />
               <div className="flex justify-between text-[10px] font-mono text-slate-500">
+                <span>8.5 (Placeholder)</span>
                 <span>9.0</span>
                 <span>9.4 (Key)</span>
                 <span>9.6</span>
@@ -1209,6 +1213,9 @@ export default function SniperRadarPage() {
                   { id: "DOUBLE_UP", label: "🔥 100%+ Double-Ups" },
                   { id: "CRACKED_CASE", label: "🔨 Cracked Cases ($25 Reholder)" },
                   { id: "MISSPELLED", label: "🕵️ Misspelled Sleepers" },
+                  { id: "MANGA", label: "🗾 Manga Single Issues" },
+                  { id: "OTHER_PUBS", label: "📚 DC / Image / Dark Horse / Boom!" },
+                  { id: "PLACEHOLDER_85", label: "🎯 8.5+ Set Placeholders" },
                   { id: "CPV", label: "🇨🇦 CPVs & Canadian Keys" },
                   { id: "FOREIGN", label: "🌍 Foreign Keys (UK / FR / DE)" },
                   { id: "STUMBLED", label: "🚀 Stumbled Into Greatness" },
