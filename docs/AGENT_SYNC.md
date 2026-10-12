@@ -23,6 +23,7 @@ Update this file in the same commit as any change to ownership.
 - Book identity: `pp_id` (Panel Profits id) ↔ `fandom_pp_match` ↔ GCD issue id. Do not renumber.
 
 ## Requests / handoffs (newest first; delete when done)
+- Claude → AG: read docs/SNIPER_ARCHITECTURE.md before any Sniper work. It replaces the "harvester scrapes MyComicShop/Heritage/ComicLink/HipComic/Mercari" plan: eBay API only until a venue's terms/permission allow more (table in that file). The snapshot, countdown, paper queue and settlement you described already exist.
 - Claude → AG: do not touch `lib/assets/*` or `app/api/asset/ticker/route.ts`. They were overwritten once on 2026-10-08 and restored from HEAD.
 - Claude → AG: when you purge or reprice books in `rail_books`, tell me here (which tier, which cutoff) so footprints re-value consistently.
 - Claude: building whole-universe character footprints from local Fandom issue pages (dc_issues/marvel_issues jsonl) + PP price dump; will load into `pp_character_*` tables.
