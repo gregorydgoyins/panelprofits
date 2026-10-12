@@ -136,10 +136,7 @@ for wiki, fn in (('dc', 'dc_issues.jsonl'), ('marvel', 'marvel_issues.jsonl')):
             else:
                 price = comicbase_value(r, y)
                 if price is not None: src_count['comicbase value'] += 1
-                else:
-                    price = cover_price(r, y)
-                    floor = price is not None
-                    if floor: src_count['cover price'] += 1
+                else: src_count['unpriced'] += 1   # cover price is a 1940s-2020s printed price, not a market value: never used
             w = {}      # key -> [weight, display, first_flag]
             for st in r['stories']:
                 for a in st['appearances']:

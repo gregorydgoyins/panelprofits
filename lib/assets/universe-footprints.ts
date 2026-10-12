@@ -9,6 +9,7 @@
  * data/universe/character-footprints.json holds the leading characters of each publisher with their leading books;
  * data/universe/character-index.json.gz holds every measured character. Both are written by
  * build_footprints.py and export_repo_data.py in ingestion/CHARACTER_FOOTPRINT_2026-10-11 from the local Fandom and price files.
+ * Cover price is never used as a value: it is a printed price from 1940-2020, not a market price. Issues with neither a catalog nor a ComicBase price are unpriced.
  * Ages are derived from the issue's year at read time; nothing stores an era tag.
  */
 import { readFileSync } from "node:fs";
