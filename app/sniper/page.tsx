@@ -382,7 +382,7 @@ export default function SniperRadarPage() {
   const [requireProvenSales, setRequireProvenSales] = useState<boolean>(false);
   const [requireImage, setRequireImage] = useState<boolean>(true);
   const [requireCheckedCert, setRequireCheckedCert] = useState<boolean>(false);
-  const [minDiscount, setMinDiscount] = useState<number>(10);
+  const [minDiscount, setMinDiscount] = useState<number>(0);
   const [seriesFilter, setSeriesFilter] = useState<string>("");
 
   // High-Resolution Front View Lightbox Inspection State
@@ -905,7 +905,13 @@ export default function SniperRadarPage() {
               <label className="text-xs font-semibold text-slate-300 uppercase">Auction Suites</label>
               <div className="space-y-1">
                 {ALL_AUCTION_SUITES.map((src) => {
-                  const feedLive = src.key.startsWith("ebay"); // eBay's Browse API is the only connected feed
+                  const feedLive =
+                    src.key.startsWith("ebay") ||
+                    src.key === "hipcomic" ||
+                    src.key === "comicconnect" ||
+                    src.key === "mycomicshop" ||
+                    src.key === "mercari" ||
+                    auctionsList.some((a) => a.source === src.key);
                   const isChecked = feedLive && selectedSources.includes(src.key);
                   return (
                     <label

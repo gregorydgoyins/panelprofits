@@ -19,44 +19,65 @@ import benchmarksData from "@/lib/pricing/pricecharting-cgc-benchmarks.json";
 export const SNAPSHOT_MIN_INTERVAL_MS = 4 * 60_000;
 const BACKOFF_AFTER_429_MS = 20 * 60_000;
 /** A lot not re-seen for this long is no longer shown as live. */
-export const LISTING_STALE_MS = 45 * 60_000;
+export const LISTING_STALE_MS = 24 * 3600_000;
 /** An auction's last bid counts as its closing price only if we saw it within this many seconds of the end. */
 export const FINAL_BID_SLACK_SECS = 900;
-const BIN_DELIST_AFTER_MS = 3 * 3600_000;
+const BIN_DELIST_AFTER_MS = 24 * 3600_000;
 
 // ───────────────────────────── search plan ─────────────────────────────
 
+// eBay Browse API hard-caps `limit` at 200 items per HTTP call, so 5 paginated calls (offset 0..800) = 1,000 graded comics.
 const CLOSING_QUERIES = ["CGC comic", "CBCS comic", "PGX comic"];
+const COMIC_CATEGORY_ID = "259104"; // Comic Books & Memorabilia > Comic Books > Single Issues
+const GRADED_COMIC_QUERY = "(CGC,CBCS,PGX) comic";
 
-const DISCOVERY_QUERIES = [
-  "Amazing Spider-Man CGC", "Batman CGC", "X-Men CGC", "Action Comics CGC", "Detective Comics CGC", "Fantastic Four CGC",
-  "Incredible Hulk CGC", "Spawn CGC", "Superman CGC", "Avengers CGC", "Iron Man CGC", "Thor CGC", "Daredevil CGC",
-  "Wolverine CGC", "Teenage Mutant Ninja Turtles CGC", "Walking Dead CGC", "Star Wars CGC", "Justice League CGC",
-  "New Mutants CGC", "Green Lantern CGC", "Flash CGC", "Captain America CGC", "Punisher CGC", "Venom CGC",
-  "CGC 9.8 key issue", "CGC first appearance", "CGC golden age", "CGC silver age", "CGC bronze age", "CBCS 9.8",
-  "CGC signature series", "CGC newsstand", "CGC canadian price variant", "CGC manga",
-];
-
-/** The Browse calls for one slot: 8 calls, about 2,300 a day at one slot every 5 minutes, inside eBay's default allowance. */
+/**
+ * High-yield Browse calls per slot: each call requests 200 graded comic books in category 259104.
+ * Rotating offsets (0, 200, 400, 600, 800) sweep 1,000 live auctions + Buy-It-Now slabs with minimal API calls.
+ */
 export function planCalls(slot: number): SearchEbayAuctionsParams[] {
-  const calls: SearchEbayAuctionsParams[] = [];
-  for (const q of CLOSING_QUERIES) {
-    calls.push({ query: q, marketplace: "EBAY_US", limit: 200, buyingOptions: "AUCTION", sort: "endingSoonest", endsWithinMinutes: 30 });
-  }
-  const n = DISCOVERY_QUERIES.length;
-  for (let k = 0; k < 2; k++) {
-    calls.push({
-      query: DISCOVERY_QUERIES[(slot * 2 + k) % n], marketplace: "EBAY_US", limit: 200,
-      buyingOptions: "AUCTION", sort: "endingSoonest", endsWithinMinutes: 7 * 24 * 60,
-    });
-  }
-  calls.push({ query: DISCOVERY_QUERIES[(slot * 3 + 1) % n], marketplace: "EBAY_US", limit: 200, buyingOptions: "FIXED_PRICE", sort: "newlyListed" });
-  // Around the clock: two other eBay marketplaces per slot, so each region is checked every ~12 minutes and an auction
-  // closing overnight in one country keeps the feed busy while the US sleeps.
+  const calls: SearchEbayAuctionsParams[] = [
+    // 1. Immediate closing window: 200 graded comic auctions ending soonest
+    {
+      query: GRADED_COMIC_QUERY,
+      categoryIds: COMIC_CATEGORY_ID,
+      marketplace: "EBAY_US",
+      limit: 200,
+      buyingOptions: "AUCTION",
+      sort: "endingSoonest",
+      endsWithinMinutes: 120,
+    },
+    // 2. Paginated 7-day auction sweep (offsets 0, 200, 400, 600, 800 -> 1,000 auctions across 5 slots)
+    {
+      query: GRADED_COMIC_QUERY,
+      categoryIds: COMIC_CATEGORY_ID,
+      marketplace: "EBAY_US",
+      limit: 200,
+      offset: (slot % 5) * 200,
+      buyingOptions: "AUCTION",
+      sort: "endingSoonest",
+      endsWithinMinutes: 7 * 24 * 60,
+    },
+    // 3. Paginated Buy-It-Now sweep (200 newly listed graded slabs per call)
+    {
+      query: GRADED_COMIC_QUERY,
+      categoryIds: COMIC_CATEGORY_ID,
+      marketplace: "EBAY_US",
+      limit: 200,
+      offset: (slot % 5) * 200,
+      buyingOptions: "FIXED_PRICE",
+      sort: "newlyListed",
+    },
+  ];
   const abroad: Array<"EBAY_GB" | "EBAY_CA" | "EBAY_AU" | "EBAY_DE" | "EBAY_FR"> = ["EBAY_GB", "EBAY_CA", "EBAY_AU", "EBAY_DE", "EBAY_FR"];
-  for (let k = 0; k < 2; k++) {
-    calls.push({ query: "CGC comic", marketplace: abroad[(slot * 2 + k) % abroad.length], limit: 100, buyingOptions: "AUCTION", sort: "endingSoonest", endsWithinMinutes: 6 * 60 });
-  }
+  calls.push({
+    query: "CGC comic",
+    marketplace: abroad[slot % abroad.length],
+    limit: 200,
+    buyingOptions: "AUCTION",
+    sort: "endingSoonest",
+    endsWithinMinutes: 24 * 60,
+  });
   return calls;
 }
 

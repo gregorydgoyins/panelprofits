@@ -257,9 +257,10 @@ export async function searchEbayPage(
     filter += `,itemEndDate:[${from}..${to}]`;
   }
 
+  const catPart = params.categoryIds ? `&category_ids=${encodeURIComponent(params.categoryIds)}` : "";
   const sortPart = params.sort ? `&sort=${params.sort}` : "";
   const offsetPart = params.offset ? `&offset=${params.offset}` : "";
-  const url = `https://api.ebay.com/buy/browse/v1/item_summary/search?q=${q}&filter=${filter}&limit=${Math.min(limit, 200)}${sortPart}${offsetPart}`;
+  const url = `https://api.ebay.com/buy/browse/v1/item_summary/search?q=${q}${catPart}&filter=${filter}&limit=${Math.min(limit, 200)}${sortPart}${offsetPart}`;
 
   try {
     const res = await fetch(url, {

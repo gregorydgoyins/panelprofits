@@ -13,6 +13,18 @@ export const gradeNum = (g: unknown): number | null => {
   return Number.isFinite(n) && n > 0 ? n : null;
 };
 
+let benchmarkIndex: Map<string, any> | null = null;
+function getBenchmarkIndex(): Map<string, any> {
+  if (benchmarkIndex) return benchmarkIndex;
+  benchmarkIndex = new Map<string, any>();
+  for (const [k, v] of Object.entries(benchmarksData as Record<string, any>)) {
+    if (!v) continue;
+    const key = seriesKey(v.series || k.split(" #")[0], v.issueNumber || k.split(" #")[1] || "1");
+    if (key && !benchmarkIndex.has(key)) benchmarkIndex.set(key, v);
+  }
+  return benchmarkIndex;
+}
+
 export function benchmarkSalesForBook(series: string, issue: string): SaleObs[] {
   const out: SaleObs[] = [];
   if (!series || series === "Unknown Series") return out;
@@ -24,13 +36,7 @@ export function benchmarkSalesForBook(series: string, issue: string): SaleObs[] 
     if (entry) break;
   }
   if (!entry) {
-    const targetKey = seriesKey(series, cleanIssue);
-    for (const [k, v] of Object.entries(benchmarksData as Record<string, any>)) {
-      if (v && seriesKey(v.series || k.split(" #")[0], v.issueNumber || cleanIssue) === targetKey) {
-        entry = v;
-        break;
-      }
-    }
+    entry = getBenchmarkIndex().get(seriesKey(series, cleanIssue)) ?? null;
   }
   if (!entry) return out;
   for (const o of entry.allObservations ?? []) {

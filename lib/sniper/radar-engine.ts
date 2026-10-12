@@ -726,8 +726,6 @@ export function evaluateAuctionListing(
     } else if (discountPercent < profile.minDiscountPercent) {
       return createRejection(`REJECTED: Discount ${discountPercent}% below required threshold of ${profile.minDiscountPercent}%.`, 5);
     }
-  } else if (profile.minDiscountPercent > 0) {
-    return createRejection(`REJECTED: Discount unavailable without recorded sales (minimum required: ${profile.minDiscountPercent}%).`, 5);
   }
 
   // Strict 100%+ Net ROI Double-Up Guard
