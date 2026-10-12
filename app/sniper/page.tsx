@@ -14,7 +14,7 @@ import { getEraDisplayName } from "@/lib/sniper/anti-bullshit";
 import { SlabEncasement } from "@/components/sniper/SlabEncasement";
 import { SniperStoryLore } from "@/components/sniper/SniperStoryLore";
 import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
-import { EquityCandlestickChart } from "@/components/equity/equity-candlestick-chart";
+import { EquityCandlestickChart, type ChartDataPoint } from "@/components/equity/equity-candlestick-chart";
 
 interface PaperSnipeRecord {
   orderId: string;
@@ -2735,14 +2735,54 @@ export default function SniperRadarPage() {
                     </div>
 
                     <div className="rounded-lg overflow-hidden border border-slate-800 bg-slate-950 p-1">
-                      <EquityCandlestickChart
-                        ticker={formatComicEquityTicker(inspectedDeal.resolvedSeries, inspectedDeal.resolvedIssue)}
-                        series={inspectedDeal.resolvedSeries}
-                        issueNumber={inspectedDeal.resolvedIssue}
-                        currentPrice={inspectedDeal.anchorFmv}
-                        deltaPercent={inspectedDeal.discountPercent}
-                        height={320}
-                      />
+                      {(() => {
+                        const comps =
+                          liveComps && liveComps.length > 0
+                            ? liveComps
+                            : inspectedDeal.historicalComps && inspectedDeal.historicalComps.length > 0
+                            ? inspectedDeal.historicalComps
+                            : [];
+
+                        let chartDataPoints: ChartDataPoint[] = [];
+                        if (comps.length >= 2) {
+                          const sorted = [...comps].sort(
+                            (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+                          );
+                          chartDataPoints = sorted.map((c) => ({
+                            date: c.date.slice(0, 10),
+                            value: c.price,
+                            volume: 1,
+                          }));
+                        } else if (comps.length === 1) {
+                          const single = comps[0];
+                          const d = new Date(single.date);
+                          d.setDate(d.getDate() - 30);
+                          chartDataPoints = [
+                            { date: d.toISOString().slice(0, 10), value: single.price, volume: 1 },
+                            { date: single.date.slice(0, 10), value: single.price, volume: 1 },
+                          ];
+                        } else if (inspectedDeal.anchorFmv > 0) {
+                          const today = new Date();
+                          const past = new Date(today);
+                          past.setDate(today.getDate() - 30);
+                          chartDataPoints = [
+                            { date: past.toISOString().slice(0, 10), value: inspectedDeal.anchorFmv, volume: 1 },
+                            { date: today.toISOString().slice(0, 10), value: inspectedDeal.anchorFmv, volume: 1 },
+                          ];
+                        }
+
+                        return (
+                          <EquityCandlestickChart
+                            ticker={formatComicEquityTicker(inspectedDeal.resolvedSeries, inspectedDeal.resolvedIssue)}
+                            series={inspectedDeal.resolvedSeries}
+                            issueNumber={inspectedDeal.resolvedIssue}
+                            currentPrice={inspectedDeal.anchorFmv}
+                            deltaPercent={inspectedDeal.discountPercent}
+                            dataPoints={chartDataPoints}
+                            height={320}
+                          />
+                        );
+                      })()}
                     </div>
 
                     {/* LAST 10 REALIZED MARKET SALES OVER TIME */}
