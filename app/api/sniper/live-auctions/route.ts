@@ -4,14 +4,14 @@ import { resolveAuthoritativePublisher } from "@/lib/comics/publisher-authority"
 import { lookupSqliteCover, lookupSqliteGallery } from "@/lib/comics/sqlite-covers";
 import { cachedBatch } from "@/lib/sniper/lookup-cache";
 import { lookupGoCollectBatch, type GoCollectPrice } from "@/lib/sniper/gocollect-prices";
-import { lookupPsaCensusBatch, type PsaCensusQuery, lookupLabelCensusBatch, lookupGradeCensusBatch, type GradeCensus, type CensusQuery, type LabelCensusQuery } from "@/lib/sniper/census-population";
+import { resolveCensus } from "@/lib/sniper/census-resolve";
+import type { GradeCensus } from "@/lib/sniper/census-population";
 import { readLiveListings, runSnapshot } from "@/lib/sniper/market-store";
 import { RawAuctionListing } from "@/lib/sniper/types";
 import { createAdminServerClient } from "@/lib/supabase/admin";
 import { dedupeSales, saleStats, seriesKey, type SaleObs } from "@/lib/sniper/candles";
 import { gradeNum, benchmarkSalesForBook, resolveAuctionDbMetadata } from "@/lib/sniper/auction-metadata";
 
-const VARIANT_LISTING = /\b(variants?|virgin|incentive|ratio|retailer|exclusive|convention|foil|sketch|blank|newsstand|reprint|[2-9](?:nd|rd|th)\s+print(?:ing)?|(?:second|third|fourth|fifth)\s+print(?:ing)?|cover\s+[b-z]\b|\bcvr\s*[b-z]\b|wp\s*-|trade\s+dress|lenticular|holo|chromium|jetpack|midtown|kickstarter|artgerm|dynamic\s+forces|edition)\b/i;
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -197,52 +197,15 @@ export async function GET(request: Request) {
         return cleaned.length > 0 ? cleaned : undefined;
       };
 
-      // Census straight from Supabase cgc_population at each auction's own grade: ONE batched query.
-      const censusQueries: CensusQuery[] = [];
-      const labelQueries: LabelCensusQuery[] = [];
-      const psaQueries: PsaCensusQuery[] = [];
+      // Census is resolved once per listing (when its label is read) and stored on the listing row, so a page load only
+      // reads it. Listings without a stored answer yet are resolved here (parallel + cached) as a fallback.
+      const unresolved = filteredAuctions.map((item, idx) => ({ item, idx })).filter(({ item }) => !item.censusResolved);
+      const fresh = unresolved.length ? await resolveCensus(unresolved.map((u) => u.item)) : new Map<number, GradeCensus>();
+      const censusByKey = new Map<string, GradeCensus>();
       filteredAuctions.forEach((item, idx) => {
-        const lb = item.label;
-        // The slab label is the source of truth: exact title + issue + cover date + edition, straight from the photo.
-        // Only CGC slabs get the CGC census. CBCS/PSA/other census data is not loaded yet, so those are "not found".
-        if (lb?.grader === "PSA" && lb.title && lb.issueNumber) {
-          const yr = lb.issueDate ? parseInt(lb.issueDate.split("/").pop() || "", 10) : NaN;
-          const fullYear = Number.isFinite(yr) ? (yr < 100 ? (yr > 30 ? 1900 + yr : 2000 + yr) : yr) : null;
-          psaQueries.push({ key: String(idx), title: lb.title, issue: lb.issueNumber, year: fullYear, publisher: lb.publisher, edition: lb.edition, grade: lb.grade ?? item.resolvedGrade ?? null });
-          return;
-        }
-        if (lb?.grader && lb.grader !== "CGC") return;
-        if (lb?.title && lb.issueNumber && lb.issueDate) {
-          labelQueries.push({ key: String(idx), title: lb.title, issue: lb.issueNumber, date: lb.issueDate, publisher: lb.publisher, edition: lb.edition, grade: lb.grade ?? item.resolvedGrade ?? null });
-          return;
-        }
-        const p = parseAndFilterListing(String(item.title || ""));
-        if (!p.extractedSeries || p.extractedSeries === "Unknown Series" || !p.extractedIssue) return;
-        if (p.gradingCompany && p.gradingCompany !== "CGC") return;
-        // CGC counts every variant/printing as its own census row. Base-issue census must never be shown for
-        // a variant, virgin, incentive, retailer, newsstand or reprint listing, so those are reported as not found.
-        if (VARIANT_LISTING.test(String(item.title || "")) || /^\d+[A-Za-z]$/.test(String(p.extractedIssue))) return;
-        censusQueries.push({
-          key: String(idx),
-          series: p.extractedSeries,
-          issue: p.extractedIssue,
-          grade: item.resolvedGrade ?? p.grade ?? null,
-          year: p.extractedYear ?? item.year ?? null,
-        });
+        if (item.censusResolved) { if (item.censusValue) censusByKey.set(String(idx), item.censusValue); }
+        else { const pos = unresolved.findIndex((u) => u.idx === idx); const v = fresh.get(pos); if (v) censusByKey.set(String(idx), v); }
       });
-      // All lookups run in parallel and are cached per book, so only listings not yet resolved hit the database.
-      const CENSUS_TTL = 30 * 60_000;
-      const idOf = (q: object) => JSON.stringify({ ...q, key: undefined });
-      let censusByKey = new Map<string, GradeCensus>();
-      const settled = await Promise.allSettled([
-        cachedBatch("census-title", CENSUS_TTL, censusQueries, idOf, lookupGradeCensusBatch),
-        cachedBatch("census-label", CENSUS_TTL, labelQueries, idOf, lookupLabelCensusBatch),
-        cachedBatch("census-psa", CENSUS_TTL, psaQueries, idOf, lookupPsaCensusBatch),
-      ]);
-      for (const r of settled) {
-        if (r.status === "fulfilled") for (const [k, v] of r.value) censusByKey.set(k, v);
-        else console.error("Sniper census lookup failed:", r.reason);
-      }
       const censusByItem = new Map<unknown, GradeCensus | null>(
         filteredAuctions.map((item, idx) => [item, censusByKey.get(String(idx)) ?? null] as const),
       );
@@ -255,6 +218,7 @@ export async function GET(request: Request) {
           if (!lb?.grader || !lb.title || !lb.issueNumber || lb.grade == null) return [];
           return [{ key: String(idx), title: lb.title, issue: lb.issueNumber, date: lb.issueDate, grader: lb.grader, labelType: lb.labelType, grade: lb.grade }];
         });
+        const idOf = (q: object) => JSON.stringify({ ...q, key: undefined });
         gcPrices = await cachedBatch("gocollect", 5 * 60_000, gcQueries, idOf, lookupGoCollectBatch);
       } catch (err) {
         console.error("Sniper GoCollect price lookup failed:", err);

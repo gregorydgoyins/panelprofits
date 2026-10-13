@@ -86,6 +86,9 @@ import type { SlabLabel } from "./label-reader";
 export interface RawAuctionListing {
   /** Exact transcription of the slab label from the photo; null when not read/legible. */
   label?: SlabLabel | null;
+  /** True when the census answer for this listing is already stored (even if the answer is "not found"). */
+  censusResolved?: boolean;
+  censusValue?: import("./census-population").GradeCensus | null;
   /** Realized-sale price for this slab's own grader, label type and grade (GoCollect); absent when no recorded sale. */
   gocollectPrice?: import("./gocollect-prices").GoCollectPrice;
   id: string;

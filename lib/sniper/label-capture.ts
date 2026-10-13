@@ -28,7 +28,7 @@ export async function captureLabels(db: any, limit = 30, concurrency = 6): Promi
         if (ok) legible++;
         await db
           .from("sniper_listings")
-          .update({ label: ok ? label : null, label_at: new Date().toISOString(), ...(ok && label!.certNumber ? { cert_number: label!.certNumber } : {}) })
+          .update({ label: ok ? label : null, label_at: new Date().toISOString(), census_at: null, ...(ok && label!.certNumber ? { cert_number: label!.certNumber } : {}) })
           .eq("item_id", r.item_id);
       } catch (e) {
         failed++; // transient (network/quota): leave label_at null so it is retried next run
