@@ -61,6 +61,13 @@ export const EquityCard = React.memo(function EquityCard({
   const [hovered, setHovered] = React.useState(false);
   const [imgLoaded, setImgLoaded] = React.useState(false);
   const [imgError, setImgError] = React.useState(false);
+  // An image that finished loading before hydration never fires onLoad; check it directly so the card is not left at opacity 0.
+  const coverRef = React.useRef<HTMLImageElement | null>(null);
+  React.useEffect(() => {
+    if (imgLoaded) return;
+    const el = coverRef.current;
+    if (el && el.complete && el.naturalWidth > 0) setImgLoaded(true);
+  });
   const [isPinned, setIsPinned] = React.useState(false);
 
   const identity = item?.identity ?? ({} as any);
@@ -261,6 +268,7 @@ export const EquityCard = React.memo(function EquityCard({
         {/* Cover image */}
         {coverUrl && !imgError && (
           <img
+            ref={coverRef}
             src={coverUrl}
             alt={series}
             loading={index < 8 ? "eager" : "lazy"}
