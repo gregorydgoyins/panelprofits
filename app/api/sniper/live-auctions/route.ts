@@ -13,7 +13,25 @@ import { dedupeSales, saleStats, seriesKey, type SaleObs } from "@/lib/sniper/ca
 import { gradeNum, benchmarkSalesForBook, resolveAuctionDbMetadata } from "@/lib/sniper/auction-metadata";
 
 
+const RESP_TTL_MS = 30_000;
+const respCache = new Map<string, { at: number; p: Promise<{ status: number; body: string }> }>();
+
 export async function GET(request: Request) {
+  const key = new URL(request.url).search;
+  const hit = respCache.get(key);
+  if (hit && Date.now() - hit.at < RESP_TTL_MS) {
+    const r = await hit.p;
+    return new Response(r.body, { status: r.status, headers: { "content-type": "application/json" } });
+  }
+  const p = computeGET(request).then(async (res) => ({ status: res.status, body: await res.text() }));
+  respCache.set(key, { at: Date.now(), p });
+  p.then((r) => { if (r.status !== 200) respCache.delete(key); }).catch(() => respCache.delete(key));
+  if (respCache.size > 50) respCache.delete(respCache.keys().next().value as string);
+  const r = await p;
+  return new Response(r.body, { status: r.status, headers: { "content-type": "application/json" } });
+}
+
+async function computeGET(request: Request) {
   const { searchParams } = new URL(request.url);
   const searchQuery = searchParams.get("q");
   const sourceFilter = searchParams.get("source");
