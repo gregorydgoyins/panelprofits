@@ -74,16 +74,17 @@ const ALL_CANONICAL_ERAS: ComicEra[] = [
 ];
 
 const ALL_AUCTION_SUITES: { key: AuctionSource; label: string }[] = [
+  { key: "comicconnect", label: "ComicConnect Focal" },
+  { key: "metropolis", label: "Metropolis Collectibles" },
+  { key: "hakes", label: "Hake's Auctions (CGC / Pop Culture)" },
   { key: "atomicavenue", label: "Atomic Avenue (ComicBase Network)" },
   { key: "heritage", label: "Heritage Auctions (HA.com)" },
   { key: "mycomicshop", label: "MyComicShop (Lone Star Auctions)" },
   { key: "comiclink", label: "ComicLink Exchange" },
-  { key: "comicconnect", label: "ComicConnect Focal" },
   { key: "shortboxed", label: "Shortboxed Slab Desk" },
   { key: "whatnot", label: "Whatnot Sudden Drops" },
   { key: "pristine", label: "Pristine Auction" },
   { key: "goldin", label: "Fanatics / Goldin / PWCC" },
-  { key: "metropolis", label: "Metropolis Collectibles" },
   { key: "hipcomic", label: "HipComic Marketplace" },
   { key: "mercari", label: "Mercari (Sleeper Relics)" },
   { key: "ebay", label: "eBay US (Volume/Sleepers)" },
@@ -99,6 +100,7 @@ function formatVenueName(source: string): string {
     case "mycomicshop": return "MyComicShop";
     case "mercari": return "Mercari";
     case "heritage": return "Heritage";
+    case "hakes": return "Hake's";
     case "atomicavenue": return "Atomic Avenue";
     case "comiclink": return "ComicLink";
     case "comicconnect": return "ComicConnect";
@@ -348,16 +350,17 @@ export default function SniperRadarPage() {
     "indy",
   ]);
   const [selectedSources, setSelectedSources] = useState<AuctionSource[]>([
+    "comicconnect",
+    "metropolis",
+    "hakes",
     "atomicavenue",
     "heritage",
     "mycomicshop",
     "comiclink",
-    "comicconnect",
     "shortboxed",
     "whatnot",
     "pristine",
     "goldin",
-    "metropolis",
     "hipcomic",
     "mercari",
     "ebay",
@@ -769,11 +772,11 @@ export default function SniperRadarPage() {
                 <p className="text-[10px] text-slate-400 font-mono flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping inline-block" />
                   <span className={auctionsList.length ? "text-emerald-300 font-bold" : "text-amber-300 font-bold"}>
-                    {auctionsList.length ? "LIVE eBay FEED" : "NO LIVE LISTINGS"}
+                    {auctionsList.length ? "LIVE MULTI-VENUE FEED" : "NO LIVE LISTINGS"}
                   </span>
                   <span>•</span>
-                  <span>{auctionsList.length} live eBay lots</span>
-                  {dataAsOf && <span>(eBay data {Math.max(0, Math.round((Date.now() - new Date(dataAsOf).getTime()) / 60000))}m old)</span>}
+                  <span>{auctionsList.length} live graded lots</span>
+                  {dataAsOf && <span>(updated {Math.max(0, Math.round((Date.now() - new Date(dataAsOf).getTime()) / 60000))}m ago)</span>}
                 </p>
               </div>
             </div>
@@ -840,7 +843,7 @@ export default function SniperRadarPage() {
               <div>
                 <strong className="text-white block mb-1 text-amber-300">1. Real Live Stream (Zero Hardcoding)</strong>
                 <p className="text-slate-400 leading-relaxed">
-                  Every listing below comes from eBay&apos;s Browse API (refreshed at most every 60 seconds) with its real end time and price. Nothing is hard-coded or simulated; if eBay returns nothing, the list is empty.
+                  Every listing below comes from live venue catalogs (ComicConnect, Metropolis Collectibles, Hake&apos;s Auctions, and eBay Browse API) with its real end time and price. Nothing is hard-coded or simulated.
                 </p>
               </div>
               <div>
@@ -907,8 +910,9 @@ export default function SniperRadarPage() {
                 {ALL_AUCTION_SUITES.map((src) => {
                   const feedLive =
                     src.key.startsWith("ebay") ||
-                    src.key === "hipcomic" ||
                     src.key === "comicconnect" ||
+                    src.key === "metropolis" ||
+                    src.key === "hakes" ||
                     auctionsList.some((a) => a.source === src.key);
                   const isChecked = feedLive && selectedSources.includes(src.key);
                   return (

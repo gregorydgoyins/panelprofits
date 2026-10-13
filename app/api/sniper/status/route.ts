@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminServerClient } from "@/lib/supabase/admin";
 import { getEbayOAuthToken } from "@/lib/sniper/ebay-api";
+import { LISTING_STALE_MS } from "@/lib/sniper/market-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -10,7 +11,7 @@ export async function GET() {
   const db: any = createAdminServerClient();
   const [runs, live, sales, ticks] = await Promise.all([
     db.from("sniper_runs").select("started_at,finished_at,ebay_calls,statuses,listings_seen,ticks_written,sales_written,note").order("id", { ascending: false }).limit(6),
-    db.from("sniper_listings").select("item_id", { count: "exact", head: true }).eq("status", "live").gte("last_seen", new Date(Date.now() - 45 * 60000).toISOString()),
+    db.from("sniper_listings").select("item_id", { count: "exact", head: true }).eq("status", "live").gte("last_seen", new Date(Date.now() - LISTING_STALE_MS).toISOString()),
     db.from("sniper_sales").select("id", { count: "exact", head: true }),
     db.from("sniper_ticks").select("id", { count: "exact", head: true }),
   ]);

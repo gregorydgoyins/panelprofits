@@ -32,7 +32,7 @@ function signToken(payload: string): string {
   return `${payload}.${sig}`;
 }
 
-export function verifySniperSessionToken(token: string | undefined): boolean {
+function verifySniperSessionToken(token: string | undefined): boolean {
   if (!token) return false;
   const dotIdx = token.lastIndexOf(".");
   if (dotIdx <= 0) return false;
