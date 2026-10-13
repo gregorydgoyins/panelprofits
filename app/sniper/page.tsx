@@ -2312,7 +2312,7 @@ export default function SniperRadarPage() {
                       In {inspectedDeal.resolvedGrade.toFixed(1)}: <strong className="text-emerald-300">{inspectedDeal.censusCount98 ? inspectedDeal.censusCount98.toLocaleString() : "Registry Audit Pending"}</strong>
                     </span>
                     <span className="px-2 py-0.5 rounded bg-black/60 border border-slate-800 text-slate-300 text-[11px]">
-                      Higher: <strong className="text-cyan-300">{inspectedDeal.censusHigher !== undefined ? (inspectedDeal.censusHigher === 0 ? "0 (Top of Pop ★)" : inspectedDeal.censusHigher.toLocaleString()) : "0"}</strong>
+                      Higher: <strong className="text-cyan-300">{inspectedDeal.censusHigher !== undefined ? (inspectedDeal.censusHigher === 0 ? "0 (Top of Pop ★)" : inspectedDeal.censusHigher.toLocaleString()) : "—"}</strong>
                     </span>
                     {inspectedDeal.censusScarcityTier && (
                       <span className="px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-500/40 text-[10px] font-bold">
@@ -3077,7 +3077,7 @@ export default function SniperRadarPage() {
                       </div>
                       <div className="bg-black/60 p-2.5 rounded-lg border border-slate-800">
                         <span className="text-[10px] text-cyan-400 uppercase block">Graded Higher</span>
-                        <strong className="text-cyan-300 text-sm">{inspectedDeal.censusHigher !== undefined ? (inspectedDeal.censusHigher === 0 ? "0 (Top of Pop ★)" : inspectedDeal.censusHigher.toLocaleString()) : "0"}</strong>
+                        <strong className="text-cyan-300 text-sm">{inspectedDeal.censusHigher !== undefined ? (inspectedDeal.censusHigher === 0 ? "0 (Top of Pop ★)" : inspectedDeal.censusHigher.toLocaleString()) : "—"}</strong>
                         <span className="text-[9px] text-slate-500 block">9.9 / 10.0 Gem</span>
                       </div>
                     </div>

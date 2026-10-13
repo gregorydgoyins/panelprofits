@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { normalizeAuctionTitle, parseAndFilterListing } from "@/lib/sniper/anti-bullshit";
 import { resolveAuthoritativePublisher } from "@/lib/comics/publisher-authority";
 import { lookupSqliteCover, lookupSqliteGallery } from "@/lib/comics/sqlite-covers";
-import { lookupRealCensus } from "@/lib/comics/census-authority";
+import { lookupGradeCensus, type GradeCensus } from "@/lib/sniper/census-population";
 import { readLiveListings, runSnapshot } from "@/lib/sniper/market-store";
 import { RawAuctionListing } from "@/lib/sniper/types";
 import { createAdminServerClient } from "@/lib/supabase/admin";
@@ -193,6 +193,23 @@ export async function GET(request: Request) {
         return cleaned.length > 0 ? cleaned : undefined;
       };
 
+      // Census straight from Supabase cgc_population, resolved at each auction's own grade.
+      const censusByItem = new Map<unknown, GradeCensus | null>();
+      await Promise.all(filteredAuctions.map(async (item) => {
+        const p = parseAndFilterListing(String(item.title || ""));
+        const g = item.resolvedGrade ?? p.grade ?? undefined;
+        if (!p.extractedSeries || p.extractedSeries === "Unknown Series" || !p.extractedIssue) {
+          censusByItem.set(item, null);
+          return;
+        }
+        try {
+          censusByItem.set(item, await lookupGradeCensus(p.extractedSeries, p.extractedIssue, g, p.extractedYear ?? item.year));
+        } catch (err) {
+          console.error("Sniper census lookup failed:", err);
+          censusByItem.set(item, null);
+        }
+      }));
+
       const updatedAuctions = filteredAuctions.map((item) => {
         const isBin = Boolean(item.isBuyItNow || item.listingType === "BuyItNow" || (item.buyItNowPrice && item.buyItNowPrice > 0));
 
@@ -263,21 +280,11 @@ export async function GET(request: Request) {
           for (const img of lookupSqliteGallery(parsed.extractedSeries, parsed.extractedIssue)) addGallery(img);
         }
 
-        // Authoritative Real Census Resolution (No fake formula estimations)
-        const realCensus = lookupRealCensus(parsed.extractedSeries, parsed.extractedIssue);
-        const resolvedCensusTotal = dbMeta.censusTotal ?? ((item.censusTotal && item.censusTotal > 0)
-          ? item.censusTotal
-          : realCensus?.totalGraded);
-        const topGradeNum = (dbMeta.censusTopGrade ?? realCensus?.topGrade)
-          ? parseFloat(String(dbMeta.censusTopGrade ?? realCensus?.topGrade))
-          : NaN;
-        const resolvedCensusHigher =
-          Number.isFinite(topGradeNum) && effectiveGrade !== undefined && effectiveGrade >= topGradeNum
-            ? 0
-            : undefined;
-        const resolvedCensus98 = (item.censusCount98 && item.censusCount98 > 0)
-          ? item.censusCount98
-          : (realCensus && realCensus.topGrade === "9.8" ? realCensus.totalGraded : undefined);
+        // Census is exact per-grade data from cgc_population. Not found = undefined (shown as unavailable).
+        const gc = censusByItem.get(item) ?? null;
+        const resolvedCensusTotal = gc?.total;
+        const resolvedCensusHigher = gc?.higher;
+        const resolvedCensus98 = gc?.atGrade;
 
         const cleanedNotes = cleanGraderNotes(item.graderNotes);
         const cleanedDesc = cleanGraderNotes(item.itemDescription);
