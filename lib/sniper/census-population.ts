@@ -144,9 +144,9 @@ export async function lookupLabelCensusBatch(queries: LabelCensusQuery[]): Promi
   const result = new Map<string, GradeCensus>();
   const valid = queries.map((q) => ({ ...q, t: cleanSeries(q.title), i: cleanIssue(q.issue), d: q.date.trim() })).filter((q) => q.t && q.i && q.d);
   if (valid.length === 0) return result;
-  const pairKey = (q: { t: string; i: string; d: string }) => `${q.t.toLowerCase()}|${q.i.toLowerCase()}|${q.d}`;
-  const distinct = new Map<string, { k: string; title: string; issue: string; date: string }>();
-  for (const q of valid) if (!distinct.has(pairKey(q))) distinct.set(pairKey(q), { k: pairKey(q), title: q.t, issue: q.i, date: q.d });
+  const pairKey = (q: { t: string; i: string; d: string; edition?: string | null }) => `${q.t.toLowerCase()}|${q.i.toLowerCase()}|${q.d}|${alnum(q.edition)}`;
+  const distinct = new Map<string, { k: string; title: string; issue: string; date: string; edition: string }>();
+  for (const q of valid) if (!distinct.has(pairKey(q))) distinct.set(pairKey(q), { k: pairKey(q), title: q.t, issue: q.i, date: q.d, edition: q.edition ?? "" });
 
   const db = createAdminServerClient();
   const all = [...distinct.values()];

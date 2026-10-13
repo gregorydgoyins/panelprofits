@@ -231,8 +231,12 @@ export async function GET(request: Request) {
       let censusByKey = new Map<string, GradeCensus>();
       try {
         censusByKey = await lookupGradeCensusBatch(censusQueries);
-        for (const [k, v] of await lookupLabelCensusBatch(labelQueries)) censusByKey.set(k, v);
-        for (const [k, v] of await lookupPsaCensusBatch(psaQueries)) censusByKey.set(k, v);
+        // Independent lookups: one failing never wipes out the others.
+        const [lab, psa] = await Promise.allSettled([lookupLabelCensusBatch(labelQueries), lookupPsaCensusBatch(psaQueries)]);
+        for (const r of [lab, psa]) {
+          if (r.status === "fulfilled") for (const [k, v] of r.value) censusByKey.set(k, v);
+          else console.error("Sniper label/PSA census failed:", r.reason);
+        }
       } catch (err) {
         console.error("Sniper census lookup failed:", err);
       }
