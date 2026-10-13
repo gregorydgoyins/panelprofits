@@ -142,7 +142,15 @@ const alnum = (s: string | null | undefined) => String(s ?? "").toLowerCase().re
  */
 export async function lookupLabelCensusBatch(queries: LabelCensusQuery[]): Promise<Map<string, GradeCensus>> {
   const result = new Map<string, GradeCensus>();
-  const valid = queries.map((q) => ({ ...q, t: cleanSeries(q.title), i: cleanIssue(q.issue), d: q.date.trim() })).filter((q) => q.t && q.i && q.d);
+  // The label title is already CGC's own title: never strip a leading publisher ("Marvel Premiere", "DC vs. Vampires").
+  // CGC stores the volume inside the issue number ("v3 #16"); the label reader splits it into title "Wolverine #v3" + issue "16".
+  const split = (title: string, issue: string) => {
+    const t = title.replace(/\s+/g, " ").trim();
+    const m = t.match(/^(.*?)\s*#?\s*(v\d+)$/i);
+    const i = cleanIssue(issue);
+    return m && m[1] && !/^v\d+\s*#/i.test(i) ? { t: m[1].trim(), i: `${m[2].toLowerCase()} #${i}` } : { t, i };
+  };
+  const valid = queries.map((q) => ({ ...q, ...split(q.title, q.issue), d: q.date.trim() })).filter((q) => q.t && q.i && q.d);
   if (valid.length === 0) return result;
   const pairKey = (q: { t: string; i: string; d: string; edition?: string | null }) => `${q.t.toLowerCase()}|${q.i.toLowerCase()}|${q.d}|${alnum(q.edition)}`;
   const distinct = new Map<string, { k: string; title: string; issue: string; date: string; edition: string }>();
@@ -163,8 +171,6 @@ export async function lookupLabelCensusBatch(queries: LabelCensusQuery[]): Promi
 
   for (const q of valid) {
     let rows = byKey.get(pairKey(q)) ?? [];
-    const ed = alnum(q.edition);
-    rows = ed ? rows.filter((r) => alnum(r.variant) === ed) : rows.filter((r) => r.variant == null);
     if (rows.length > 1 && q.publisher) {
       const pub = alnum(q.publisher);
       const byPub = rows.filter((r) => alnum(r.publisher) === pub);
