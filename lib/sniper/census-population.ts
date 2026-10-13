@@ -174,3 +174,56 @@ export async function lookupLabelCensusBatch(queries: LabelCensusQuery[]): Promi
   }
   return result;
 }
+
+export interface PsaCensusQuery { key: string; title: string; issue: string; year?: number | null; edition?: string | null; grade?: number | null }
+
+/**
+ * PSA census (psa_population). PSA's report has no cover date or edition column, so the key is title + issue + series
+ * volume year. Editions are separate PSA rows whose title carries the edition text; the match is exact. With several
+ * volumes the row whose series year is within 1 of the label/listing year is used; no year + several volumes = not found.
+ */
+export async function lookupPsaCensusBatch(queries: PsaCensusQuery[]): Promise<Map<string, GradeCensus>> {
+  const result = new Map<string, GradeCensus>();
+  const valid = queries.filter((q) => q.title && q.issue).map((q) => ({ ...q, t: cleanSeries(q.title), i: cleanIssue(q.issue) })).filter((q) => q.t && q.i);
+  if (valid.length === 0) return result;
+  const pk = (q: { t: string; i: string }) => `${q.t.toLowerCase()}|${q.i.toLowerCase()}`;
+  const distinct = new Map<string, { k: string; title: string; issue: string }>();
+  for (const q of valid) if (!distinct.has(pk(q))) distinct.set(pk(q), { k: pk(q), title: q.t, issue: q.i });
+  const db = createAdminServerClient();
+  const all = [...distinct.values()];
+  const chunks: typeof all[] = [];
+  for (let i = 0; i < all.length; i += 40) chunks.push(all.slice(i, i + 40));
+  const parts = await Promise.all(chunks.map(async (c) => {
+    const { data, error } = await db.rpc("sniper_census_psa", { p_keys: c });
+    if (error) throw new Error(`sniper_census_psa failed: ${error.message}`);
+    if ((data?.length ?? 0) >= 1000) throw new Error("sniper_census_psa hit the 1000-row cap");
+    return (data ?? []) as Array<{ k: string; title: string; issue_number: string | null; series_year: number | null; total: number; grades: Record<string, number> }>;
+  }));
+  const byKey = new Map<string, typeof parts[number]>();
+  for (const r of parts.flat()) byKey.set(r.k, [...(byKey.get(r.k) ?? []), r]);
+  for (const q of valid) {
+    // PSA puts the edition inside the title, "Amazing Spider-Man (2023 Facsimile Edition)"; the SQL key ignores parentheses,
+    // so require the printed title to equal the label's title (+ edition) exactly. No edition on the label = the plain-title row.
+    const want = alnum(q.edition ? `${q.t} (${q.edition})` : q.t);
+    const rows = (byKey.get(pk(q)) ?? []).filter((r) => alnum(r.title) === want);
+    let row = rows.length === 1 && (!q.year || (rows[0].series_year != null && Math.abs(rows[0].series_year - q.year) <= 1 || (rows[0].series_year != null && q.year >= rows[0].series_year))) ? rows[0] : undefined;
+    if (rows.length > 1 && q.year) {
+      const ok = rows.filter((r) => r.series_year != null && q.year! >= r.series_year);
+      // the volume that was current at the cover date: latest series year not after the cover year
+      if (ok.length) row = ok.reduce((a, b) => ((b.series_year ?? 0) > (a.series_year ?? 0) ? b : a));
+    }
+    if (!row) continue;
+    const byGrade: Record<string, number> = {};
+    for (const [k, v] of Object.entries(row.grades ?? {})) if (!Number.isNaN(parseFloat(k)) && !/^(AU|PG|CVR)$/i.test(k)) byGrade[parseFloat(k).toFixed(1)] = Number(v) || 0;
+    const g = q.grade;
+    const c: GradeCensus = { title: row.title, issue: String(row.issue_number ?? q.i), year: row.series_year, total: row.total, byGrade };
+    if (g != null && Number.isFinite(g)) {
+      c.atGrade = byGrade[g.toFixed(1)] ?? 0;
+      c.higher = Object.entries(byGrade).filter(([k]) => parseFloat(k) > g).reduce((s, [, n]) => s + n, 0);
+      c.lower = Object.entries(byGrade).filter(([k]) => parseFloat(k) < g).reduce((s, [, n]) => s + n, 0);
+      c.atOrAbove = c.atGrade + c.higher;
+    }
+    result.set(q.key, c);
+  }
+  return result;
+}
