@@ -352,7 +352,7 @@ export function evaluateAuctionListing(
         ? 0
         : undefined;
 
-  let censusScarcityTier = "Census Registry Audit Pending";
+  let censusScarcityTier = "Census Census not found";
   if (resolvedCensusTotal !== undefined) {
     if (resolvedCensusTotal <= 25) {
       censusScarcityTier = "🔥 Ultra-Low Float (<25 Total Audited Census Copies)";

@@ -2,8 +2,9 @@ import { createAdminServerClient } from "@/lib/supabase/admin";
 
 /**
  * Sniper census: reads the CGC population report straight from Supabase `cgc_population`
- * (one row per issue/edition, per-grade counts in `pop`). Nothing is estimated: if the issue is not
- * in the table, every field stays undefined.
+ * (one row per issue/edition, per-grade counts in `pop`) through the indexed `sniper_census_batch`
+ * RPC: ONE round trip for a whole page of auctions. Nothing is estimated: the issue AND volume year must
+ * match exactly, otherwise the auction has no census (reported as not found).
  *
  * Note: `is_base` is true on every row in the table, so it is NOT a base-edition flag. The base
  * edition is the row with `variant` null; editions (Dutch, Filipino, ...) are separate rows and are
@@ -27,7 +28,16 @@ export interface GradeCensus {
   byGrade: Record<string, number>;
 }
 
+export interface CensusQuery {
+  key: string;
+  series: string;
+  issue: string;
+  grade?: number | null;
+  year?: number | null;
+}
+
 interface PopRow {
+  k: string;
   title: string;
   issue_number: string | null;
   year: number | null;
@@ -36,56 +46,11 @@ interface PopRow {
 }
 
 const NON_NUMERIC = new Set(["NG", "PG", "CVR"]);
-const cache = new Map<string, { at: number; row: PopRow | null }>();
-const TTL_MS = 10 * 60 * 1000;
-
-const gradeKey = (g: number) => g.toFixed(1).replace(".", "_");
 const gradeLabel = (k: string) => k.replace("_", ".");
+const cleanSeries = (s: string) => s.replace(/\(\s*\d{4}\s*\)/g, "").replace(/\s+/g, " ").trim();
+const cleanIssue = (s: string) => String(s).replace(/^#/, "").trim();
 
-function escapeIlike(s: string): string {
-  return s.replace(/[\\%_]/g, (c) => `\\${c}`);
-}
-
-function cleanSeries(series: string): string {
-  return series.replace(/\(\s*\d{4}\s*\)/g, "").replace(/\s+/g, " ").trim();
-}
-
-async function fetchRow(series: string, issue: string, year?: number | null): Promise<PopRow | null> {
-  const title = cleanSeries(series);
-  const iss = String(issue).replace(/^#/, "").trim();
-  if (!title || !iss) return null;
-  const key = `${title.toLowerCase()}|${iss.toLowerCase()}|${year ?? ""}`;
-  const hit = cache.get(key);
-  if (hit && Date.now() - hit.at < TTL_MS) return hit.row;
-
-  const { data, error } = await createAdminServerClient()
-    .from("cgc_population")
-    .select("title,issue_number,year,total,pop")
-    .ilike("title", escapeIlike(title))
-    .eq("issue_number", iss)
-    .is("variant", null)
-    .order("total", { ascending: false })
-    .limit(10);
-  if (error) throw new Error(`cgc_population lookup failed: ${error.message}`);
-
-  const rows = (data ?? []) as PopRow[];
-  const row =
-    (year ? rows.find((r) => r.year === year) : undefined) ??
-    // No year match: only trust a single unambiguous volume, never guess between volumes.
-    (rows.length === 1 ? rows[0] : null);
-  cache.set(key, { at: Date.now(), row });
-  return row;
-}
-
-export async function lookupGradeCensus(
-  series: string,
-  issue: string,
-  grade?: number | null,
-  year?: number | null,
-): Promise<GradeCensus | null> {
-  const row = await fetchRow(series, issue, year);
-  if (!row) return null;
-
+function build(row: PopRow, issue: string, grade?: number | null): GradeCensus {
   const byGrade: Record<string, number> = {};
   const numeric: Array<[number, number]> = [];
   for (const [k, v] of Object.entries(row.pop ?? {})) {
@@ -95,14 +60,44 @@ export async function lookupGradeCensus(
     byGrade[gradeLabel(k)] = Number(v) || 0;
     numeric.push([g, Number(v) || 0]);
   }
-
   const out: GradeCensus = { title: row.title, issue: String(row.issue_number ?? issue), year: row.year, total: row.total, byGrade };
   if (grade != null && Number.isFinite(grade)) {
-    const key = gradeLabel(gradeKey(grade));
-    out.atGrade = byGrade[key] ?? 0;
+    out.atGrade = byGrade[grade.toFixed(1)] ?? 0;
     out.higher = numeric.filter(([g]) => g > grade).reduce((s, [, n]) => s + n, 0);
     out.lower = numeric.filter(([g]) => g < grade).reduce((s, [, n]) => s + n, 0);
     out.atOrAbove = out.atGrade + out.higher;
   }
   return out;
+}
+
+/** Resolve census for many auctions in one database round trip. Missing/ambiguous = absent from the map. */
+export async function lookupGradeCensusBatch(queries: CensusQuery[]): Promise<Map<string, GradeCensus>> {
+  const result = new Map<string, GradeCensus>();
+  const valid = queries
+    .map((q) => ({ ...q, title: cleanSeries(q.series), iss: cleanIssue(q.issue) }))
+    .filter((q) => q.title && q.iss);
+  if (valid.length === 0) return result;
+
+  // One database lookup per distinct title+issue, however many auctions share it.
+  const pairKey = (q: { title: string; iss: string }) => `${q.title.toLowerCase()}|${q.iss.toLowerCase()}`;
+  const distinct = new Map<string, { k: string; title: string; issue: string }>();
+  for (const q of valid) if (!distinct.has(pairKey(q))) distinct.set(pairKey(q), { k: pairKey(q), title: q.title, issue: q.iss });
+
+  const { data, error } = await createAdminServerClient().rpc("sniper_census_batch", { p_keys: [...distinct.values()] });
+  if (error) throw new Error(`sniper_census_batch failed: ${error.message}`);
+
+  const byKey = new Map<string, PopRow[]>();
+  for (const r of (data ?? []) as PopRow[]) {
+    const list = byKey.get(r.k) ?? [];
+    list.push(r);
+    byKey.set(r.k, list);
+  }
+
+  for (const q of valid) {
+    const rows = byKey.get(pairKey(q)) ?? [];
+    // Exact volume only: the listing's year must equal CGC's year. No year or no match = not found. Never guess.
+    const row = q.year ? rows.find((r) => r.year === q.year) : undefined;
+    if (row) result.set(q.key, build(row, q.iss, q.grade));
+  }
+  return result;
 }

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { normalizeAuctionTitle, parseAndFilterListing } from "@/lib/sniper/anti-bullshit";
 import { resolveAuthoritativePublisher } from "@/lib/comics/publisher-authority";
 import { lookupSqliteCover, lookupSqliteGallery } from "@/lib/comics/sqlite-covers";
-import { lookupGradeCensus, type GradeCensus } from "@/lib/sniper/census-population";
+import { lookupGradeCensusBatch, type GradeCensus, type CensusQuery } from "@/lib/sniper/census-population";
 import { readLiveListings, runSnapshot } from "@/lib/sniper/market-store";
 import { RawAuctionListing } from "@/lib/sniper/types";
 import { createAdminServerClient } from "@/lib/supabase/admin";
@@ -96,7 +96,7 @@ export async function GET(request: Request) {
           return item.resolvedGrade >= minGrade;
         }
         const parsed = parseAndFilterListing(item.title);
-        return (parsed.grade ?? 9.8) >= minGrade;
+        return parsed.grade != null && parsed.grade >= minGrade;
       });
     }
 
@@ -193,22 +193,28 @@ export async function GET(request: Request) {
         return cleaned.length > 0 ? cleaned : undefined;
       };
 
-      // Census straight from Supabase cgc_population, resolved at each auction's own grade.
-      const censusByItem = new Map<unknown, GradeCensus | null>();
-      await Promise.all(filteredAuctions.map(async (item) => {
+      // Census straight from Supabase cgc_population at each auction's own grade: ONE batched query.
+      const censusQueries: CensusQuery[] = [];
+      filteredAuctions.forEach((item, idx) => {
         const p = parseAndFilterListing(String(item.title || ""));
-        const g = item.resolvedGrade ?? p.grade ?? undefined;
-        if (!p.extractedSeries || p.extractedSeries === "Unknown Series" || !p.extractedIssue) {
-          censusByItem.set(item, null);
-          return;
-        }
-        try {
-          censusByItem.set(item, await lookupGradeCensus(p.extractedSeries, p.extractedIssue, g, p.extractedYear ?? item.year));
-        } catch (err) {
-          console.error("Sniper census lookup failed:", err);
-          censusByItem.set(item, null);
-        }
-      }));
+        if (!p.extractedSeries || p.extractedSeries === "Unknown Series" || !p.extractedIssue) return;
+        censusQueries.push({
+          key: String(idx),
+          series: p.extractedSeries,
+          issue: p.extractedIssue,
+          grade: item.resolvedGrade ?? p.grade ?? null,
+          year: p.extractedYear ?? item.year ?? null,
+        });
+      });
+      let censusByKey = new Map<string, GradeCensus>();
+      try {
+        censusByKey = await lookupGradeCensusBatch(censusQueries);
+      } catch (err) {
+        console.error("Sniper census lookup failed:", err);
+      }
+      const censusByItem = new Map<unknown, GradeCensus | null>(
+        filteredAuctions.map((item, idx) => [item, censusByKey.get(String(idx)) ?? null] as const),
+      );
 
       const updatedAuctions = filteredAuctions.map((item) => {
         const isBin = Boolean(item.isBuyItNow || item.listingType === "BuyItNow" || (item.buyItNowPrice && item.buyItNowPrice > 0));
