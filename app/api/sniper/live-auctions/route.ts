@@ -32,6 +32,8 @@ export async function GET(request: Request) {
 }
 
 let lastTiming = "";
+const SALES_TTL_MS = 5 * 60_000;
+const salesCache = new Map<string, { at: number; map: Map<string, SaleObs[]> }>();
 
 async function computeGET(request: Request) {
   const tStart = Date.now();
@@ -157,7 +159,11 @@ async function computeGET(request: Request) {
               .filter((k): k is string => Boolean(k))
           )
         );
-        if (keys.length > 0) {
+        const salesCacheKey = keys.slice().sort().join("|");
+        const cachedSales = salesCache.get(salesCacheKey);
+        if (cachedSales && Date.now() - cachedSales.at < SALES_TTL_MS) {
+          for (const [k, v] of cachedSales.map) salesBySeriesKey.set(k, v);
+        } else if (keys.length > 0) {
           const db: any = createAdminServerClient();
           const keyChunks: string[][] = [];
           for (let i = 0; i < keys.length; i += 100) {
@@ -211,6 +217,8 @@ async function computeGET(request: Request) {
             });
             salesBySeriesKey.set(k, list);
           }
+          salesCache.set(salesCacheKey, { at: Date.now(), map: new Map(salesBySeriesKey) });
+          if (salesCache.size > 20) salesCache.delete(salesCache.keys().next().value as string);
         }
       } catch {}
       mark("salesQueries", tSales);
