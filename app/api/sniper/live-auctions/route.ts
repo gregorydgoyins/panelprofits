@@ -9,6 +9,8 @@ import { createAdminServerClient } from "@/lib/supabase/admin";
 import { dedupeSales, saleStats, seriesKey, type SaleObs } from "@/lib/sniper/candles";
 import { gradeNum, benchmarkSalesForBook, resolveAuctionDbMetadata } from "@/lib/sniper/auction-metadata";
 
+const VARIANT_LISTING = /\b(variants?|virgin|incentive|ratio|retailer|exclusive|convention|foil|sketch|blank|newsstand|reprint|[2-9](?:nd|rd|th)\s+print(?:ing)?|(?:second|third|fourth|fifth)\s+print(?:ing)?|cover\s+[b-z]\b|\bcvr\s*[b-z]\b|wp\s*-|trade\s+dress|lenticular|holo|chromium|jetpack|midtown|kickstarter|artgerm|dynamic\s+forces|edition)\b/i;
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const searchQuery = searchParams.get("q");
@@ -198,6 +200,9 @@ export async function GET(request: Request) {
       filteredAuctions.forEach((item, idx) => {
         const p = parseAndFilterListing(String(item.title || ""));
         if (!p.extractedSeries || p.extractedSeries === "Unknown Series" || !p.extractedIssue) return;
+        // CGC counts every variant/printing as its own census row. Base-issue census must never be shown for
+        // a variant, virgin, incentive, retailer, newsstand or reprint listing, so those are reported as not found.
+        if (VARIANT_LISTING.test(String(item.title || "")) || /^\d+[A-Za-z]$/.test(String(p.extractedIssue))) return;
         censusQueries.push({
           key: String(idx),
           series: p.extractedSeries,
