@@ -39,7 +39,13 @@ export function benchmarkSalesForBook(series: string, issue: string): SaleObs[] 
     entry = getBenchmarkIndex().get(seriesKey(series, cleanIssue)) ?? null;
   }
   if (!entry) return out;
+  const derivedDates = new Set(
+    (entry.allObservations ?? [])
+      .filter((o: any) => o.type === "PRICECHARTING_GUIDE_OBSERVATION" || o.type === "PANEL_PROFITS_DERIVED_FMV")
+      .map((o: any) => o.date)
+  );
   for (const o of entry.allObservations ?? []) {
+    if (o.type === "PRICECHARTING_GUIDE_OBSERVATION" || o.type === "PANEL_PROFITS_DERIVED_FMV") continue;
     const amt = Number(o.amount);
     const dt = o.date || o.observedAt;
     if (amt > 0 && dt) {
@@ -49,13 +55,14 @@ export function benchmarkSalesForBook(series: string, issue: string): SaleObs[] 
         grade: gradeNum(o.grade),
         venue: o.authority || o.type || "benchmark",
         source: `benchmark:${o.type ?? "obs"}`,
-        confirmed: /sale|cgc|heritage|gpa/i.test(`${o.type} ${o.authority}`),
+        confirmed: true,
       });
     }
   }
   for (const o of entry.cgc ?? []) {
-    const amt = Number(o.amount);
     const dt = o.observedAt || o.date;
+    if (dt && derivedDates.has(dt)) continue;
+    const amt = Number(o.amount);
     if (amt > 0 && dt) {
       out.push({
         date: String(dt).slice(0, 10),

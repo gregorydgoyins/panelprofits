@@ -75,7 +75,7 @@ describe("Sniper Radar Engine & Anti-Bullshit Filter", () => {
     expect(evalResult.rejectionReason).toContain("Zero proven auction sales on record");
   });
 
-  it("ACCEPTS Silver Age Green Lantern #7 CGC 9.4 under $150 budget with high arbitrage", () => {
+  it("ACCEPTS Silver Age Green Lantern #7 CGC 9.4 under $150 budget with high arbitrage when recorded FMV is present", () => {
     const profile: SniperFilterProfile = {
       ...defaultProfile,
       eras: ["silver"],
@@ -95,6 +95,7 @@ describe("Sniper Radar Engine & Anti-Bullshit Filter", () => {
       secondsRemaining: 540,
       url: "https://ha.com/itm/gl7",
       imageUrl: "https://example.com/gl7.jpg",
+      anchorFmv: 385.00,
     };
 
     const evalResult = evaluateAuctionListing(listing, profile);
@@ -105,7 +106,8 @@ describe("Sniper Radar Engine & Anti-Bullshit Filter", () => {
     expect(evalResult.anchorFmv).toBe(385.00);
     expect(evalResult.discountPercent).toBeGreaterThanOrEqual(60);
     expect(evalResult.verdict).toBe("STRONG_BUY_SNIPE");
-    expect(evalResult.historicalComps.length).toBeGreaterThanOrEqual(3);
+    // No fabricated comps when none are in recorded sales
+    expect(evalResult.historicalComps).toEqual([]);
   });
 
   it("DETECTS Damaged Slab 9.8 Arbitrage ($25 Reholder Opportunity)", () => {
@@ -120,6 +122,7 @@ describe("Sniper Radar Engine & Anti-Bullshit Filter", () => {
       url: "https://ebay.com/itm/im128",
       imageUrl: "https://example.com/im128.jpg",
       itemDescription: "Book inside is untouched, 1-inch crack in plastic slab on lower rear corner.",
+      anchorFmv: 620.00,
     };
 
     const evalResult = evaluateAuctionListing(listing, defaultProfile);
@@ -146,6 +149,7 @@ describe("Sniper Radar Engine & Anti-Bullshit Filter", () => {
       secondsRemaining: 180,
       url: "https://ebay.com/itm/thor337",
       imageUrl: "https://example.com/thor337.jpg",
+      anchorFmv: 480.00,
     };
 
     const evalResult = evaluateAuctionListing(listing, profile);
@@ -172,6 +176,7 @@ describe("Sniper Radar Engine & Anti-Bullshit Filter", () => {
       secondsRemaining: 180,
       url: "https://ebay.com/itm/dazzler1",
       imageUrl: "https://example.com/dazzler1.jpg",
+      anchorFmv: 95.00,
     };
 
     const evalResult = evaluateAuctionListing(listing, profile);
@@ -228,6 +233,7 @@ describe("Sniper Radar Engine & Anti-Bullshit Filter", () => {
       url: "https://ebay.com/itm/harley1quad",
       imageUrl: "https://example.com/harley1.jpg",
       itemDescription: "CBCS 9.8 yellow gold label verified signatures. 4 signatures total.",
+      anchorFmv: 240.00,
     };
 
     const evalResult = evaluateAuctionListing(listing, profile);
@@ -292,7 +298,7 @@ describe("Sniper Radar Engine & Anti-Bullshit Filter", () => {
     expect(evalResult.rejectionReason).toContain("UNVERIFIED CERT");
   });
 
-  it("COMPUTES Multi-Source Price Matrix with Grade Parity and Investopedia Due Diligence Lens", () => {
+  it("COMPUTES Multi-Source Price Matrix with Grade Parity and Investopedia Due Diligence Lens when recorded FMV is provided", () => {
     const profile: SniperFilterProfile = {
       ...defaultProfile,
       maxAllInBudget: 1000.00,
@@ -309,6 +315,7 @@ describe("Sniper Radar Engine & Anti-Bullshit Filter", () => {
       url: "https://ebay.com/itm/batman423",
       imageUrl: "https://example.com/batman423.jpg",
       certNumber: "4019283001",
+      anchorFmv: 275.00,
     };
 
     const evalResult = evaluateAuctionListing(listing, profile);
@@ -325,24 +332,51 @@ describe("Sniper Radar Engine & Anti-Bullshit Filter", () => {
     expect(evalResult.censusCount98).toBeDefined();
     expect(evalResult.censusScarcityTier).toBeDefined();
 
-    // Verify multi-source comparative price matrix
+    // Verify multi-source comparative price matrix contains only real/inspected grade data (no fabricated grade ratios)
     expect(evalResult.priceMatrix).toBeDefined();
     expect(evalResult.priceMatrix!.length).toBeGreaterThan(0);
     const inspectedRow = evalResult.priceMatrix!.find((r) => r.isInspectedGrade);
     expect(inspectedRow).toBeDefined();
     expect(inspectedRow!.grade).toBe(9.8);
     expect(inspectedRow!.gradeLabel).toContain("9.8");
-    expect(inspectedRow!.ebayPrice).toBeGreaterThan(0);
-    expect(inspectedRow!.ppFmv).toBeGreaterThan(0);
-    expect(inspectedRow!.cbPrice).toBeGreaterThan(0);
+    expect(inspectedRow!.ebayPrice).toBe(120.00);
+    expect(inspectedRow!.ppFmv).toBe(275.00);
+    expect(inspectedRow!.cbPrice).toBe(275.00);
 
     // Verify Investopedia Purchaser Due Diligence Lens
     expect(evalResult.investopediaLens).toBeDefined();
     expect(evalResult.investopediaLens!.term).toBeDefined();
     expect(evalResult.investopediaLens!.definition).toBeDefined();
     expect(evalResult.investopediaLens!.application).toBeDefined();
-    expect(evalResult.investopediaLens!.wholesaleBidUsd).toBeGreaterThan(0);
-    expect(evalResult.investopediaLens!.retailAskUsd).toBeGreaterThan(0);
+    expect(evalResult.investopediaLens!.wholesaleBidUsd).toBe(144.60);
+    expect(evalResult.investopediaLens!.retailAskUsd).toBe(275.00);
     expect(evalResult.investopediaLens!.bidAskSpreadPercent).toBeGreaterThan(0);
+  });
+
+  it("NEVER fabricates FMV, historical comps, or priceMatrix when no recorded sales exist", () => {
+    const profile: SniperFilterProfile = {
+      ...defaultProfile,
+      requireProvenSales: false,
+      minDiscountPercent: 0,
+    };
+
+    const listing: RawAuctionListing = {
+      id: "listing-unpriced",
+      source: "ebay",
+      title: "Batman #423 CGC 9.8 McFarlane Classic Cover 1st Print 1988",
+      currentBid: 120.00,
+      shippingCost: 15.00,
+      bidCount: 2,
+      secondsRemaining: 180,
+      url: "https://ebay.com/itm/batman423",
+      imageUrl: "https://example.com/batman423.jpg",
+    };
+
+    const evalResult = evaluateAuctionListing(listing, profile);
+    expect(evalResult.passed).toBe(true);
+    expect(evalResult.anchorFmv).toBe(0);
+    expect(evalResult.historicalComps).toEqual([]);
+    expect(evalResult.whyItsAGoodBuy).toContain("FMV unavailable");
+    expect(evalResult.investopediaLens).toBeUndefined();
   });
 });

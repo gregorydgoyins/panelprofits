@@ -1,22 +1,23 @@
-import { resolveMarketPricing } from "../pricing/market-pricing-resolver";
+import benchmarksData from "../pricing/pricecharting-cgc-benchmarks.json";
+import { seriesKey } from "../sniper/candles";
 
-let cbDbInstance: any = null;
-let cbDbChecked = false;
-function getCbDb(): any | null {
-  if (typeof window !== "undefined") return null;
-  if (cbDbChecked) return cbDbInstance;
-  cbDbChecked = true;
-  try {
-    const req = eval("require");
-    const fs = req("fs");
-    const path = req("path");
-    const { DatabaseSync } = req("node:sqlite");
-    const p = path.resolve(process.cwd(), "data", "comicbase.sqlite");
-    if (fs.existsSync(p)) {
-      cbDbInstance = new DatabaseSync(p, { readOnly: true });
+let benchmarkIndex: Map<string, any> | null = null;
+function getBenchmarkEntry(series: string, issue: string): any | null {
+  const cleanIssue = String(issue).replace(/^#/, "").trim();
+  const candidates = [series, `The ${series}`, series.replace(/^the\s+/i, "")];
+  for (const cand of candidates) {
+    const hit = (benchmarksData as Record<string, any>)[`${cand} #${cleanIssue}`];
+    if (hit) return hit;
+  }
+  if (!benchmarkIndex) {
+    benchmarkIndex = new Map<string, any>();
+    for (const [k, v] of Object.entries(benchmarksData as Record<string, any>)) {
+      if (!v) continue;
+      const key = seriesKey(v.series || k.split(" #")[0], v.issueNumber || k.split(" #")[1] || "1");
+      if (key && !benchmarkIndex.has(key)) benchmarkIndex.set(key, v);
     }
-  } catch {}
-  return cbDbInstance;
+  }
+  return benchmarkIndex.get(seriesKey(series, cleanIssue)) ?? null;
 }
 
 export interface HistoricalPriceObservation {
@@ -29,43 +30,56 @@ export interface HistoricalPriceObservation {
 }
 
 /**
- * Recorded certified sales for one book (stored CGC / GPA records). Nothing is derived: no guide values scaled to a grade,
- * no point for "today", no flat line. Returns an empty list when there are no recorded sales.
+ * Recorded certified sales for one book at the target grade. Nothing is derived:
+ * no guide values, no derived FMV rows, no point for "today", no flat line.
+ * Returns an empty list when there are no recorded sales at that grade.
  */
 export function lookupMultiPointPriceHistory(
   series: string,
   issueNumber: string | number,
   targetGrade = 9.8,
-  currentFmv?: number
+  _currentFmv?: number
 ): HistoricalPriceObservation[] {
-  const cleanSeries = String(series || "")
-    .toLowerCase()
-    .replace(/^the\s+/, "")
-    .replace(/,\s*the$/, "")
-    .replace(/\s*[\(\[].*?[\)\]]/g, "")
-    .trim();
   const cleanIssue = String(issueNumber || "1").replace(/^#/, "").trim();
-
   const points: HistoricalPriceObservation[] = [];
-  const seenDates = new Set<string>();
 
-  // 2. Ingest PriceCharting & CGC authentic observations
   try {
-    const market = resolveMarketPricing(series, cleanIssue, currentFmv || 0);
-    if (market.cgcSales && market.cgcSales.length > 0) {
-      for (const sale of market.cgcSales) {
-        if (sale && sale.amount > 0 && sale.observedAt) {
-          const dt = sale.observedAt.slice(0, 10);
+    const entry = getBenchmarkEntry(String(series || ""), cleanIssue);
+    if (entry) {
+      const derivedDates = new Set(
+        (entry.allObservations ?? [])
+          .filter((o: any) => o.type === "PRICECHARTING_GUIDE_OBSERVATION" || o.type === "PANEL_PROFITS_DERIVED_FMV")
+          .map((o: any) => o.date)
+      );
+      for (const o of entry.allObservations ?? []) {
+        if (o.type === "PRICECHARTING_GUIDE_OBSERVATION" || o.type === "PANEL_PROFITS_DERIVED_FMV") continue;
+        const amt = Number(o.amount);
+        const dt = o.date || o.observedAt;
+        const g = parseFloat(String(o.grade ?? "").replace(/[^0-9.]/g, ""));
+        if (amt > 0 && dt && Number.isFinite(g) && Math.abs(g - targetGrade) < 0.05) {
           points.push({
-            date: dt,
-            grade: parseFloat(sale.grade) || targetGrade,
-            price: sale.amount,
-            venue: `${sale.authority || "CGC"} Realized Sale`,
+            date: String(dt).slice(0, 10),
+            grade: g,
+            price: amt,
+            venue: `${o.authority || "CGC"} Realized Sale`,
+          });
+        }
+      }
+      for (const sale of entry.cgc ?? []) {
+        const dt = sale.observedAt || sale.date;
+        if (dt && derivedDates.has(dt)) continue;
+        const amt = Number(sale.amount);
+        const g = parseFloat(String(sale.grade ?? "").replace(/[^0-9.]/g, ""));
+        if (amt > 0 && dt && Number.isFinite(g) && Math.abs(g - targetGrade) < 0.05) {
+          points.push({
+            date: String(dt).slice(0, 10),
+            grade: g,
+            price: amt,
+            venue: `${sale.venue || sale.authority || "CGC"} Realized Sale`,
           });
         }
       }
     }
-
   } catch {}
 
   // Deduplicate by date and ensure strictly valid YYYY-MM-DD timestamps
@@ -74,8 +88,7 @@ export function lookupMultiPointPriceHistory(
     if (!pt.date || !/^\d{4}-\d{2}-\d{2}$/.test(pt.date) || pt.price <= 0) continue;
     byDate.set(pt.date, pt);
   }
-  const cleanPoints = Array.from(byDate.values()).sort(
+  return Array.from(byDate.values()).sort(
     (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
   );
-  return cleanPoints;
 }

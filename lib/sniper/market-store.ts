@@ -364,12 +364,20 @@ export async function readSalesForBook(series: string, issue: string): Promise<S
 
   try {
     const entry = (benchmarksData as Record<string, any>)[`${series} #${String(issue).replace(/^#/, "")}`];
+    const derivedDates = new Set(
+      (entry?.allObservations ?? [])
+        .filter((o: any) => o.type === "PRICECHARTING_GUIDE_OBSERVATION" || o.type === "PANEL_PROFITS_DERIVED_FMV")
+        .map((o: any) => o.date)
+    );
     for (const o of entry?.allObservations ?? []) {
+      if (o.type === "PRICECHARTING_GUIDE_OBSERVATION" || o.type === "PANEL_PROFITS_DERIVED_FMV") continue;
       const amt = Number(o.amount), dt = o.date || o.observedAt;
-      if (amt > 0 && dt) out.push({ date: String(dt).slice(0, 10), price: amt, grade: gradeNum(o.grade), venue: o.authority || o.type || "benchmark", source: `benchmark:${o.type ?? "obs"}`, confirmed: /sale|cgc|heritage|gpa/i.test(`${o.type} ${o.authority}`) });
+      if (amt > 0 && dt) out.push({ date: String(dt).slice(0, 10), price: amt, grade: gradeNum(o.grade), venue: o.authority || o.type || "benchmark", source: `benchmark:${o.type ?? "obs"}`, confirmed: true });
     }
     for (const o of entry?.cgc ?? []) {
-      const amt = Number(o.amount), dt = o.observedAt || o.date;
+      const dt = o.observedAt || o.date;
+      if (dt && derivedDates.has(dt)) continue;
+      const amt = Number(o.amount);
       if (amt > 0 && dt) out.push({ date: String(dt).slice(0, 10), price: amt, grade: gradeNum(o.grade), venue: o.venue || o.authority || "CGC", source: "benchmark:cgc", confirmed: true });
     }
   } catch {}

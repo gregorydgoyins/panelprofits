@@ -12,460 +12,8 @@ import { resolveComicLoreDossier } from "./lore-dossier";
 import { findComicBaseVideoForComic } from "@/lib/video/comicbase-archive";
 
 
-import { resolveMarketPricing } from "../pricing/market-pricing-resolver";
 import { lookupRealCensus } from "../comics/census-authority";
 import { lookupMultiPointPriceHistory } from "../comics/price-history-service";
-
-// Verified market comp registry (anchored to actual certified sales and benchmarks)
-interface VerifiedMarketComp {
-  series: string;
-  issue: string;
-  grade: number;
-  fmv: number;
-  salesCount: number;
-  keyReason?: string;
-  recentSales: Array<{ date: string; grade: number; price: number; venue: string }>;
-}
-
-const VERIFIED_KEY_COMPS: Record<string, VerifiedMarketComp> = {
-  "green lantern #7": {
-    series: "Green Lantern",
-    issue: "7",
-    grade: 9.4,
-    fmv: 385.00,
-    salesCount: 14,
-    keyReason: "1st App. Sinestro (Silver Age Landmark)",
-    recentSales: [
-      { date: "2026-08-12", grade: 9.4, price: 395, venue: "Heritage" },
-      { date: "2026-05-04", grade: 9.4, price: 375, venue: "eBay" },
-      { date: "2026-01-20", grade: 9.4, price: 410, venue: "ComicConnect" },
-    ],
-  },
-  "iron man #128": {
-    series: "Iron Man",
-    issue: "128",
-    grade: 9.8,
-    fmv: 620.00,
-    salesCount: 22,
-    keyReason: "Iconic 'Demon in a Bottle' Cover by Bob Layton",
-    recentSales: [
-      { date: "2026-09-02", grade: 9.8, price: 630, venue: "eBay" },
-      { date: "2026-06-18", grade: 9.8, price: 595, venue: "Heritage" },
-      { date: "2026-03-11", grade: 9.8, price: 650, venue: "ComicLink" },
-    ],
-  },
-  "amazing spider-man #300": {
-    series: "The Amazing Spider-Man",
-    issue: "300",
-    grade: 9.8,
-    fmv: 4200.00,
-    salesCount: 65,
-    keyReason: "1st Full App. Venom / Todd McFarlane Art",
-    recentSales: [
-      { date: "2026-09-20", grade: 9.8, price: 4350, venue: "Heritage" },
-      { date: "2026-07-15", grade: 9.8, price: 4100, venue: "eBay" },
-      { date: "2026-04-10", grade: 9.8, price: 4250, venue: "eBay" },
-    ],
-  },
-  "new mutants #98": {
-    series: "The New Mutants",
-    issue: "98",
-    grade: 9.8,
-    fmv: 1250.00,
-    salesCount: 48,
-    keyReason: "1st App. Deadpool & Gideon",
-    recentSales: [
-      { date: "2026-08-30", grade: 9.8, price: 1280, venue: "eBay" },
-      { date: "2026-06-12", grade: 9.8, price: 1200, venue: "Heritage" },
-    ],
-  },
-  "thor #337": {
-    series: "Thor",
-    issue: "337",
-    grade: 9.8,
-    fmv: 480.00,
-    salesCount: 31,
-    keyReason: "1st App. Beta Ray Bill / Walt Simonson Art",
-    recentSales: [
-      { date: "2026-09-14", grade: 9.8, price: 490, venue: "eBay" },
-      { date: "2026-07-01", grade: 9.8, price: 470, venue: "ComicLink" },
-    ],
-  },
-  "dazzler #1": {
-    series: "Dazzler",
-    issue: "1",
-    grade: 9.8,
-    fmv: 95.00,
-    salesCount: 42,
-    keyReason: "1st Solo Series Premiere / Bob Larkin Painted Cover",
-    recentSales: [
-      { date: "2026-09-22", grade: 9.8, price: 92, venue: "eBay" },
-      { date: "2026-08-05", grade: 9.8, price: 98, venue: "Heritage" },
-      { date: "2026-06-19", grade: 9.8, price: 95, venue: "eBay" },
-    ],
-  },
-  "harley quinn #1": {
-    series: "Harley Quinn",
-    issue: "1",
-    grade: 9.8,
-    fmv: 240.00,
-    salesCount: 38,
-    keyReason: "Adam Hughes Cover / Premiere Issue (Quad Signed by Hughes, Conner, Palmiotti, Dini)",
-    recentSales: [
-      { date: "2026-09-18", grade: 9.8, price: 250, venue: "Heritage" },
-      { date: "2026-07-22", grade: 9.8, price: 235, venue: "eBay" },
-      { date: "2026-05-10", grade: 9.8, price: 260, venue: "ComicLink" },
-    ],
-  },
-  "spawn #1": {
-    series: "Spawn",
-    issue: "1",
-    grade: 9.8,
-    fmv: 340.00,
-    salesCount: 52,
-    keyReason: "1st App. Spawn / Todd McFarlane Indy Landmark & Newsstand Key",
-    recentSales: [
-      { date: "2026-09-15", grade: 9.8, price: 350, venue: "eBay" },
-      { date: "2026-08-02", grade: 9.8, price: 330, venue: "Heritage" },
-      { date: "2026-06-25", grade: 9.8, price: 345, venue: "ComicLink" },
-    ],
-  },
-  "the incredible hulk #180": {
-    series: "The Incredible Hulk",
-    issue: "180",
-    grade: 9.4,
-    fmv: 1850.00,
-    salesCount: 29,
-    keyReason: "1st Cameo App. Wolverine (Bronze Age Holy Grail / Stumbled Into Greatness)",
-    recentSales: [
-      { date: "2026-09-08", grade: 9.4, price: 1900, venue: "Heritage" },
-      { date: "2026-07-14", grade: 9.4, price: 1820, venue: "ComicConnect" },
-      { date: "2026-05-30", grade: 9.4, price: 1875, venue: "eBay" },
-    ],
-  },
-  "batman #423": {
-    series: "Batman",
-    issue: "423",
-    grade: 9.8,
-    fmv: 275.00,
-    salesCount: 36,
-    keyReason: "Iconic Todd McFarlane Classic Cover Art (Copper Age Landmark)",
-    recentSales: [
-      { date: "2026-09-12", grade: 9.8, price: 280, venue: "Heritage" },
-      { date: "2026-07-29", grade: 9.8, price: 270, venue: "eBay" },
-      { date: "2026-05-18", grade: 9.8, price: 290, venue: "ComicLink" },
-    ],
-  },
-  "batman #404": {
-    series: "Batman",
-    issue: "404",
-    grade: 9.8,
-    fmv: 220.00,
-    salesCount: 28,
-    keyReason: "Batman: Year One Part 1 (Frank Miller / David Mazzucchelli)",
-    recentSales: [
-      { date: "2026-09-01", grade: 9.8, price: 225, venue: "eBay" },
-      { date: "2026-06-20", grade: 9.8, price: 215, venue: "Heritage" },
-      { date: "2026-04-14", grade: 9.8, price: 230, venue: "ComicConnect" },
-    ],
-  },
-  "detective comics #583": {
-    series: "Detective Comics",
-    issue: "583",
-    grade: 9.8,
-    fmv: 185.00,
-    salesCount: 20,
-    keyReason: "1st Appearance Ventriloquist & Scarface / Norm Breyfogle Art",
-    recentSales: [
-      { date: "2026-08-25", grade: 9.8, price: 190, venue: "eBay" },
-      { date: "2026-06-05", grade: 9.8, price: 180, venue: "Heritage" },
-      { date: "2026-03-22", grade: 9.8, price: 195, venue: "ComicLink" },
-    ],
-  },
-  "justice league #1": {
-    series: "Justice League",
-    issue: "1",
-    grade: 9.8,
-    fmv: 160.00,
-    salesCount: 22,
-    keyReason: "Classic 'Wanna Make Something Of It?' Cover by Kevin Maguire",
-    recentSales: [
-      { date: "2026-08-18", grade: 9.8, price: 165, venue: "eBay" },
-      { date: "2026-05-30", grade: 9.8, price: 155, venue: "Heritage" },
-      { date: "2026-02-12", grade: 9.8, price: 170, venue: "ComicConnect" },
-    ],
-  },
-  "wonder woman #1": {
-    series: "Wonder Woman",
-    issue: "1",
-    grade: 9.8,
-    fmv: 140.00,
-    salesCount: 25,
-    keyReason: "George Pérez Landmark Series Restart & Origin Key",
-    recentSales: [
-      { date: "2026-08-10", grade: 9.8, price: 145, venue: "eBay" },
-      { date: "2026-06-14", grade: 9.8, price: 135, venue: "Heritage" },
-      { date: "2026-04-02", grade: 9.8, price: 150, venue: "eBay" },
-    ],
-  },
-  "batman #357": {
-    series: "Batman",
-    issue: "357",
-    grade: 9.8,
-    fmv: 450.00,
-    salesCount: 32,
-    keyReason: "1st App. Jason Todd & Killer Croc (Bronze Age Holy Grail)",
-    recentSales: [
-      { date: "2026-09-10", grade: 9.8, price: 460, venue: "Heritage" },
-      { date: "2026-07-04", grade: 9.8, price: 440, venue: "eBay" },
-      { date: "2026-04-20", grade: 9.8, price: 475, venue: "ComicLink" },
-    ],
-  },
-  "batman #2": {
-    series: "Batman",
-    issue: "2",
-    grade: 9.8,
-    fmv: 210.00,
-    salesCount: 28,
-    keyReason: "New 52 Scott Snyder Run / 1st Court of Owls Cameo",
-    recentSales: [
-      { date: "2026-09-15", grade: 9.8, price: 215, venue: "eBay" },
-      { date: "2026-08-01", grade: 9.8, price: 205, venue: "Heritage" },
-      { date: "2026-05-18", grade: 9.8, price: 220, venue: "eBay" },
-    ],
-  },
-  "the amazing spider-man #361": {
-    series: "The Amazing Spider-Man",
-    issue: "361",
-    grade: 9.8,
-    fmv: 420.00,
-    salesCount: 60,
-    keyReason: "1st Full App. Carnage (Mark Bagley Art / 90s Grail)",
-    recentSales: [
-      { date: "2026-09-22", grade: 9.8, price: 430, venue: "eBay" },
-      { date: "2026-07-19", grade: 9.8, price: 410, venue: "Heritage" },
-      { date: "2026-05-11", grade: 9.8, price: 425, venue: "ComicLink" },
-    ],
-  },
-  "venom: lethal protector #1": {
-    series: "Venom: Lethal Protector",
-    issue: "1",
-    grade: 9.8,
-    fmv: 195.00,
-    salesCount: 44,
-    keyReason: "1st Solo Venom Series / Iconic Red Foil Cover (Mark Bagley)",
-    recentSales: [
-      { date: "2026-09-19", grade: 9.8, price: 200, venue: "eBay" },
-      { date: "2026-07-28", grade: 9.8, price: 190, venue: "Heritage" },
-      { date: "2026-06-05", grade: 9.8, price: 205, venue: "eBay" },
-    ],
-  },
-  "x-men #135": {
-    series: "X-Men",
-    issue: "135",
-    grade: 9.8,
-    fmv: 1200.00,
-    salesCount: 34,
-    keyReason: "Dark Phoenix Saga Landmark / John Byrne Classic Cover",
-    recentSales: [
-      { date: "2026-09-10", grade: 9.8, price: 1250, venue: "Heritage" },
-      { date: "2026-07-12", grade: 9.8, price: 1180, venue: "eBay" },
-      { date: "2026-04-18", grade: 9.8, price: 1220, venue: "ComicConnect" },
-    ],
-  },
-  "absolute batman #19": {
-    series: "Absolute Batman",
-    issue: "19",
-    grade: 9.8,
-    fmv: 260.00,
-    salesCount: 18,
-    keyReason: "Rafa Sandoval Variant / Modern High-Heat Spec Key",
-    recentSales: [
-      { date: "2026-09-14", grade: 9.8, price: 270, venue: "eBay" },
-      { date: "2026-08-20", grade: 9.8, price: 255, venue: "eBay" },
-    ],
-  },
-  "batman: ego #1": {
-    series: "Batman: Ego",
-    issue: "1",
-    grade: 9.8,
-    fmv: 280.00,
-    salesCount: 24,
-    keyReason: "Darwyn Cooke Landmark / Prime 9.6 -> 9.8 Crack & Press Candidate",
-    recentSales: [
-      { date: "2026-09-18", grade: 9.8, price: 285, venue: "Heritage" },
-      { date: "2026-07-02", grade: 9.8, price: 275, venue: "eBay" },
-    ],
-  },
-  "batman ego #1": {
-    series: "Batman: Ego",
-    issue: "1",
-    grade: 9.8,
-    fmv: 280.00,
-    salesCount: 24,
-    keyReason: "Darwyn Cooke Landmark / Prime 9.6 -> 9.8 Crack & Press Candidate",
-    recentSales: [
-      { date: "2026-09-18", grade: 9.8, price: 285, venue: "Heritage" },
-      { date: "2026-07-02", grade: 9.8, price: 275, venue: "eBay" },
-    ],
-  },
-  "ultimate spider-man #2": {
-    series: "Ultimate Spider-Man",
-    issue: "2",
-    grade: 9.8,
-    fmv: 240.00,
-    salesCount: 26,
-    keyReason: "Jonathan Hickman Marvel Landmark / 9.6 -> 9.8 Pressing Upside",
-    recentSales: [
-      { date: "2026-09-16", grade: 9.8, price: 245, venue: "eBay" },
-      { date: "2026-08-04", grade: 9.8, price: 235, venue: "Heritage" },
-    ],
-  },
-  "spider-man #7": {
-    series: "Spider-Man",
-    issue: "7",
-    grade: 9.8,
-    fmv: 220.00,
-    salesCount: 30,
-    keyReason: "1st Appearance Spider-Boy (Humberto Ramos Variant)",
-    recentSales: [
-      { date: "2026-09-20", grade: 9.8, price: 225, venue: "eBay" },
-      { date: "2026-07-15", grade: 9.8, price: 215, venue: "eBay" },
-    ],
-  },
-  "invincible iron man #7": {
-    series: "Invincible Iron Man",
-    issue: "7",
-    grade: 9.8,
-    fmv: 260.00,
-    salesCount: 28,
-    keyReason: "1st Appearance Riri Williams (Ironheart) & Tomoe / Major MCU Key",
-    recentSales: [
-      { date: "2026-09-12", grade: 9.8, price: 265, venue: "eBay" },
-      { date: "2026-07-28", grade: 9.8, price: 255, venue: "Heritage" },
-    ],
-  },
-  "all-new wolverine #1": {
-    series: "All-New Wolverine",
-    issue: "1",
-    grade: 9.8,
-    fmv: 180.00,
-    salesCount: 22,
-    keyReason: "1st Laura Kinney as Wolverine / High Census Demand",
-    recentSales: [
-      { date: "2026-09-08", grade: 9.8, price: 185, venue: "eBay" },
-      { date: "2026-06-24", grade: 9.8, price: 175, venue: "eBay" },
-    ],
-  },
-  "wolverine #2": {
-    series: "Wolverine",
-    issue: "2",
-    grade: 9.8,
-    fmv: 450.00,
-    salesCount: 32,
-    keyReason: "1982 Frank Miller / Chris Claremont Signature Series Yellow Label",
-    recentSales: [
-      { date: "2026-09-15", grade: 9.8, price: 460, venue: "Heritage" },
-      { date: "2026-07-30", grade: 9.8, price: 440, venue: "ComicLink" },
-    ],
-  },
-  "thanos #14": {
-    series: "Thanos",
-    issue: "14",
-    grade: 9.8,
-    fmv: 190.00,
-    salesCount: 35,
-    keyReason: "Donny Cates / 1st Cosmic Ghost Rider Cover (Rahzzah Phoenix)",
-    recentSales: [
-      { date: "2026-09-17", grade: 9.8, price: 195, venue: "eBay" },
-      { date: "2026-08-03", grade: 9.8, price: 185, venue: "eBay" },
-    ],
-  },
-  "captain marvel #8": {
-    series: "Captain Marvel",
-    issue: "8",
-    grade: 9.8,
-    fmv: 240.00,
-    salesCount: 26,
-    keyReason: "1st Appearance of Star / InHyuk Lee Signature Series",
-    recentSales: [
-      { date: "2026-09-11", grade: 9.8, price: 245, venue: "eBay" },
-      { date: "2026-07-22", grade: 9.8, price: 235, venue: "Heritage" },
-    ],
-  },
-  "spider-man #1": {
-    series: "Spider-Man",
-    issue: "1",
-    grade: 9.8,
-    fmv: 175.00,
-    salesCount: 34,
-    keyReason: "Todd McFarlane 'Torment' Landmark Premiere (1990)",
-    recentSales: [
-      { date: "2026-09-13", grade: 9.8, price: 180, venue: "eBay" },
-      { date: "2026-08-01", grade: 9.8, price: 170, venue: "eBay" },
-    ],
-  },
-  "wonder woman #750": {
-    series: "Wonder Woman",
-    issue: "750",
-    grade: 9.8,
-    fmv: 380.00,
-    salesCount: 20,
-    keyReason: "Signature Series Dual-Signed by Gal Gadot & Jim Lee",
-    recentSales: [
-      { date: "2026-09-05", grade: 9.8, price: 390, venue: "Heritage" },
-      { date: "2026-06-18", grade: 9.8, price: 370, venue: "eBay" },
-    ],
-  },
-  "eternals #16": {
-    series: "Eternals",
-    issue: "16",
-    grade: 9.8,
-    fmv: 480.00,
-    salesCount: 16,
-    keyReason: "Jack Kirby Landmark 1977 / 1st Dromedan / Incredible Hulk Battle",
-    recentSales: [
-      { date: "2026-09-14", grade: 9.8, price: 495, venue: "Heritage" },
-      { date: "2026-07-20", grade: 9.8, price: 465, venue: "eBay" },
-    ],
-  },
-  "venom: space knight #1": {
-    series: "Venom: Space Knight",
-    issue: "1",
-    grade: 9.8,
-    fmv: 175.00,
-    salesCount: 22,
-    keyReason: "Action Figure Variant Cover by John Tyler Christopher",
-    recentSales: [
-      { date: "2026-09-09", grade: 9.8, price: 180, venue: "eBay" },
-      { date: "2026-08-11", grade: 9.8, price: 170, venue: "eBay" },
-    ],
-  },
-  "peter parker: the spectacular spider-man #300": {
-    series: "Peter Parker: The Spectacular Spider-Man",
-    issue: "300",
-    grade: 9.8,
-    fmv: 160.00,
-    salesCount: 24,
-    keyReason: "Gabriele Dell'Otto Landmark Milestone Variant",
-    recentSales: [
-      { date: "2026-09-07", grade: 9.8, price: 165, venue: "eBay" },
-      { date: "2026-07-16", grade: 9.8, price: 155, venue: "Heritage" },
-    ],
-  },
-  "the incredible hulk #271": {
-    series: "The Incredible Hulk",
-    issue: "271",
-    grade: 9.2,
-    fmv: 290.00,
-    salesCount: 25,
-    keyReason: "1st Appearance of Rocket Raccoon in standard comic format",
-    recentSales: [
-      { date: "2026-09-12", grade: 9.2, price: 295, venue: "ComicConnect" },
-      { date: "2026-07-08", grade: 9.2, price: 285, venue: "Heritage" },
-    ],
-  },
-};
 
 export function evaluateAuctionListing(
   listing: RawAuctionListing,
@@ -665,38 +213,24 @@ export function evaluateAuctionListing(
     strategySummary = "High-Grade Newsstand: Severe census scarcity over direct edition.";
   }
 
-  // GATE 4: Market Comp Lookup & "Zero Sales" Anti-Impulse Discipline
-  const normKey = `${parsed.extractedSeries.toLowerCase()} #${parsed.extractedIssue}`;
-  const comp = VERIFIED_KEY_COMPS[normKey];
+  // GATE 4: Recorded Sales Lookup & "Zero Sales" Anti-Impulse Discipline
+  const realSales = lookupMultiPointPriceHistory(
+    parsed.extractedSeries,
+    parsed.extractedIssue,
+    effectiveGrade
+  );
 
-  if (!comp || comp.salesCount === 0) {
-    if (profile.requireProvenSales) {
-      return createRejection("REJECTED (IMPULSE PROTECT): Zero proven auction sales on record. Refusing to speculate on unknown/unproven market book.", 4);
-    }
-  }
-
-  // Determine Anchor FMV strictly from verified secondary benchmarks
   let anchorFmv = Number(listing.anchorFmv || listing.fairMarketValue || 0);
-  if (anchorFmv <= 0 && comp && comp.fmv > 0) {
-    anchorFmv = comp.fmv;
+  if (anchorFmv <= 0 && realSales.length > 0) {
+    const sortedPrices = realSales.map((s) => s.price).sort((a, b) => a - b);
+    const mid = Math.floor(sortedPrices.length / 2);
+    anchorFmv = sortedPrices.length % 2
+      ? sortedPrices[mid]
+      : (sortedPrices[mid - 1] + sortedPrices[mid]) / 2;
   }
 
-  // Cross-reference authentic PriceCharting / CGC benchmark registry at exact grade
-  if (anchorFmv <= 0) {
-    try {
-      const benchmark = resolveMarketPricing(parsed.extractedSeries, parsed.extractedIssue, 0);
-      if (benchmark) {
-        if (effectiveGrade >= 9.8 && (benchmark.pricecharting.grade98 || benchmark.primaryFmv98 > 0)) {
-          anchorFmv = benchmark.pricecharting.grade98 || benchmark.primaryFmv98;
-        } else if (effectiveGrade >= 9.6 && effectiveGrade < 9.8 && benchmark.pricecharting.grade96) {
-          anchorFmv = benchmark.pricecharting.grade96;
-        } else if (effectiveGrade >= 9.4 && effectiveGrade < 9.6 && benchmark.pricecharting.grade94) {
-          anchorFmv = benchmark.pricecharting.grade94;
-        } else if (effectiveGrade >= 9.2 && effectiveGrade < 9.4 && benchmark.pricecharting.grade92) {
-          anchorFmv = benchmark.pricecharting.grade92;
-        }
-      }
-    } catch {}
+  if (anchorFmv <= 0 && realSales.length === 0 && profile.requireProvenSales) {
+    return createRejection("REJECTED (IMPULSE PROTECT): Zero proven auction sales on record. Refusing to speculate on unknown/unproven market book.", 4);
   }
 
   if (anchorFmv <= 0 && profile.requireProvenSales) {
@@ -737,16 +271,10 @@ export function evaluateAuctionListing(
   const targetWinPrice100Pct = Math.round(((allInCost * 2 + 5.00) / 0.87) * 100) / 100;
   const targetWinPrice50Pct = Math.round(((allInCost * 1.5 + 5.00) / 0.87) * 100) / 100;
 
-  // Liquidity Velocity & "Cheap Horseshit" Filter
-  // Dynamically resolve sales depth: from verified comp if present, or from listing bid count, census float, and sovereign key status
-  const salesDepth = comp
-    ? comp.salesCount
-    : Math.max(
-        listing.bidCount ?? 0,
-        listing.censusTotal ? Math.max(6, Math.round(listing.censusTotal / 80)) : 16
-      );
-  let liquidityVelocity: "HIGH_VELOCITY_TURN" | "MODERATE_LIQUIDITY" | "ILLIQUID_TRAP" = "MODERATE_LIQUIDITY";
-  let liquidityTurnDays = 30;
+  // Liquidity Velocity strictly from recorded sales or active bid count
+  const salesDepth = Math.max(realSales.length, listing.bidCount ?? 0);
+  let liquidityVelocity: "HIGH_VELOCITY_TURN" | "MODERATE_LIQUIDITY" | "ILLIQUID_TRAP" = "ILLIQUID_TRAP";
+  let liquidityTurnDays = 90;
 
   if (salesDepth >= 12) {
     liquidityVelocity = "HIGH_VELOCITY_TURN";
@@ -754,13 +282,10 @@ export function evaluateAuctionListing(
   } else if (salesDepth >= 4) {
     liquidityVelocity = "MODERATE_LIQUIDITY";
     liquidityTurnDays = 45;
-  } else {
-    liquidityVelocity = "ILLIQUID_TRAP";
-    liquidityTurnDays = 90;
   }
 
   const isViableFlip = liquidityVelocity !== "ILLIQUID_TRAP" && anchorFmv >= 35.00;
-  let keySignificanceNote = comp?.keyReason || resolveHistoricalKeyBadge(parsed.extractedSeries, parsed.extractedIssue) || "Recognized Sovereign Issue";
+  let keySignificanceNote = resolveHistoricalKeyBadge(parsed.extractedSeries, parsed.extractedIssue) || "Recognized Sovereign Issue";
   if (/spider-man/i.test(parsed.extractedSeries) && parsed.extractedIssue === "1") {
     if (/1990|mcfarlane|torment|silver|gold|platinum|green/i.test(listing.title)) {
       keySignificanceNote = "Todd McFarlane 'Torment' Landmark Premiere (1990)";
@@ -807,7 +332,7 @@ export function evaluateAuctionListing(
 
   const confidenceScore = Math.min(
     100,
-    50 + (comp ? comp.salesCount * 2 : 0) + (specialPlay ? 15 : 0) + (discountPercent >= 40 ? 15 : 5)
+    50 + realSales.length * 2 + (specialPlay ? 15 : 0) + (discountPercent >= 40 ? 15 : 5)
   );
 
   // Comprehensive Real Census Breakdown (Authoritative Multi-Verifiable Registry Lookup)
@@ -832,120 +357,107 @@ export function evaluateAuctionListing(
   }
 
   const isSignedBook = parsed.isSigned || parsed.isLegendarySigned;
-  const signaturePremiumMultiplier = isSignedBook ? (parsed.isLegendarySigned ? 2.25 : 1.65) : 1.0;
+  const signaturePremiumMultiplier = listing.signaturePremiumMultiplier ?? 1.0;
 
-  let pricingSourceProvenance = "";
-  if (isSignedBook) {
-    pricingSourceProvenance = "CGC Signature Series™ GPA Realized Auction Comps + Heritage Verified Signature Archive (Witnessed Yellow Label)";
-  } else if (comp && comp.recentSales.length > 0) {
-    const venues = Array.from(new Set(comp.recentSales.map(s => s.venue))).join(", ");
-    pricingSourceProvenance = `GPA Analysis Certified Sales Archive (${venues}) & ComicBase 2025 Market Comp Index`;
-  } else {
-    pricingSourceProvenance = "GPA Secondary Market 90-Day Moving Anchor & Heritage Auctions Realized Sales";
+  let pricingSourceProvenance = listing.pricingSourceProvenance || "";
+  if (!pricingSourceProvenance) {
+    if (realSales.length > 0) {
+      const venues = Array.from(new Set(realSales.map((s) => s.venue))).join(", ");
+      pricingSourceProvenance = `Recorded Sales (${venues})`;
+    } else if (hasVerifiedFmv) {
+      pricingSourceProvenance = "Recorded Sales Anchor";
+    } else {
+      pricingSourceProvenance = "Unavailable";
+    }
   }
 
   const lore = resolveComicLoreDossier(parsed.normalizedTitle || listing.title, parsed.extractedIssue);
 
-  // 1. Multi-Source Comparative Price Matrix across Grades (Covering 8.5 through 10.0)
-  const currentGrade = parsed.grade ?? 9.8;
-  const gradeRatio = currentGrade >= 10.0
-    ? 1.60
-    : currentGrade >= 9.8
-    ? 1.00
-    : currentGrade >= 9.6
-    ? 0.58
-    : currentGrade >= 9.4
-    ? 0.40
-    : currentGrade >= 9.2
-    ? 0.30
-    : currentGrade >= 9.0
-    ? 0.22
-    : currentGrade >= 8.5
-    ? 0.16
-    : 0.10;
-
-  const base98Fmv = Math.max(30, Math.round(anchorFmv / gradeRatio));
-
-  const gradeSpecs: Array<{ grade: number | "Raw"; label: string; ratio: number }> = [
-    { grade: 10.0, label: "10.0 (Gem Mint)", ratio: 1.60 },
-    { grade: 9.8, label: "9.8 (Near Mint/Mint)", ratio: 1.00 },
-    { grade: 9.6, label: "9.6 (Near Mint+)", ratio: 0.58 },
-    { grade: 9.4, label: "9.4 (Near Mint)", ratio: 0.40 },
-    { grade: 9.2, label: "9.2 (Near Mint-)", ratio: 0.30 },
-    { grade: 9.0, label: "9.0 (Very Fine/NM)", ratio: 0.22 },
-    { grade: 8.5, label: "8.5 (Very Fine+)", ratio: 0.16 },
-    { grade: "Raw", label: "Raw (Mid-Grade 6.0-8.0)", ratio: 0.10 },
+  // 1. Comparative Price Matrix strictly for grades with recorded data (no invented grade ratios or catalog multipliers)
+  const gradeSpecs: Array<{ grade: number; label: string }> = [
+    { grade: 10.0, label: "10.0 (Gem Mint)" },
+    { grade: 9.8, label: "9.8 (Near Mint/Mint)" },
+    { grade: 9.6, label: "9.6 (Near Mint+)" },
+    { grade: 9.4, label: "9.4 (Near Mint)" },
+    { grade: 9.2, label: "9.2 (Near Mint-)" },
+    { grade: 9.0, label: "9.0 (Very Fine/NM)" },
+    { grade: 8.5, label: "8.5 (Very Fine+)" },
   ];
 
-  const priceMatrix: PriceMatrixTier[] = gradeSpecs.map((spec) => {
-    const isThisGrade =
-      (spec.grade === "Raw" && !parsed.grade) ||
-      (typeof spec.grade === "number" && parsed.grade !== null && Math.abs(spec.grade - parsed.grade) < 0.1);
-
-    const tierPpFmv = Math.max(15, Math.round(base98Fmv * spec.ratio));
-    const tierCbPrice = Math.round(tierPpFmv * 1.20);
-    const tierGocollect = Math.round(tierPpFmv * 1.02);
-    const tierEbay = isThisGrade ? listing.currentBid : Math.round(tierPpFmv * 0.72);
-    const spread = tierPpFmv > 0 ? Math.round(((tierPpFmv - tierEbay) / tierPpFmv) * 100) : 0;
-
-    return {
+  const priceMatrix: PriceMatrixTier[] = [];
+  for (const spec of gradeSpecs) {
+    const isThisGrade = parsed.grade !== null && Math.abs(spec.grade - parsed.grade) < 0.1;
+    const gradeSales = isThisGrade
+      ? realSales
+      : lookupMultiPointPriceHistory(parsed.extractedSeries, parsed.extractedIssue, spec.grade);
+    let tierFmv = isThisGrade && hasVerifiedFmv ? anchorFmv : 0;
+    if (tierFmv <= 0 && gradeSales.length > 0) {
+      const sorted = gradeSales.map((s) => s.price).sort((a, b) => a - b);
+      const m = Math.floor(sorted.length / 2);
+      tierFmv = sorted.length % 2 ? sorted[m] : (sorted[m - 1] + sorted[m]) / 2;
+    }
+    if (!isThisGrade && tierFmv <= 0) continue;
+    const lastGradeSale = gradeSales.length > 0 ? gradeSales[gradeSales.length - 1].price : 0;
+    const tierEbay = isThisGrade ? listing.currentBid : lastGradeSale;
+    const spread = tierFmv > 0 && tierEbay > 0 ? Math.round(((tierFmv - tierEbay) / tierFmv) * 100) : 0;
+    priceMatrix.push({
       grade: spec.grade,
       gradeLabel: spec.label,
       ebayPrice: tierEbay,
-      ppFmv: tierPpFmv,
-      cbPrice: tierCbPrice,
-      gocollectPrice: tierGocollect,
+      ppFmv: tierFmv,
+      cbPrice: tierFmv,
+      gocollectPrice: lastGradeSale > 0 ? lastGradeSale : undefined,
       spreadPercent: spread,
       isInspectedGrade: isThisGrade,
-    };
-  });
-
-  // 2. Purchaser Due Diligence & Investopedia Valuation Lens
-  const wholesaleDealerBid = Math.round(anchorFmv * 0.55);
-  const retailAsk = Math.round(anchorFmv * 1.05);
-  const spreadPct = retailAsk > 0 ? Math.round(((retailAsk - wholesaleDealerBid) / retailAsk) * 100) : 48;
-  const marginHaircut = Math.max(15, Math.round((1 - allInCost / anchorFmv) * 100));
-
-  let investopediaTerm = "Arbitrage Dislocation";
-  let investopediaCat: DueDiligenceInvestopediaLens["category"] = "Arbitrage & Valuation";
-  let investopediaDef =
-    "The simultaneous purchase and sale of an asset in different markets to exploit pricing dislocations and lock in profit.";
-  let investopediaApp = `Acquiring ${parsed.extractedSeries} #${parsed.extractedIssue} at $${allInCost.toFixed(2)} all-in against verified $${anchorFmv.toFixed(2)} secondary market FMV captures a ${discountPercent}% price dislocation before auction closing.`;
-
-  if (specialPlay === "BELOW_GRADING_COST") {
-    investopediaTerm = "Sunk Cost Arbitrage";
-    investopediaCat = "Arbitrage & Valuation";
-    investopediaDef =
-      "Exploiting prior capital expenditures made by another party that cannot be recovered by them, allowing the buyer to capture that value at a steep discount.";
-    investopediaApp = `The seller incurred a $${cgcGradingCostFloor.toFixed(2)} grading and shipping fee to encapsulate this book. At your $${allInCost.toFixed(2)} cost basis, the grading fee is 100% subsidized by the seller.`;
-  } else if (specialPlay === "CRACKED_CASE" || specialPlay === "REHOLDER_ARBITRAGE") {
-    investopediaTerm = "Liquidity Discount Recovery";
-    investopediaCat = "Arbitrage & Valuation";
-    investopediaDef =
-      "Purchasing an intrinsically high-value asset trading at an artificial discount due to temporary holder impairment, restored via low-cost capital expenditure.";
-    investopediaApp = `The book inside is pristine grade ${parsed.grade}. A $25 reholder restores full $${anchorFmv.toFixed(2)} institutional equity with zero grade risk.`;
-  } else if (resolvedCensusTotal && resolvedCensusTotal <= 25) {
-    investopediaTerm = "Float Scarcity Premium";
-    investopediaCat = "Liquidity & Float";
-    investopediaDef =
-      "A valuation premium driven by an extremely limited circulating supply (float), where secondary market demand outstrips available units.";
-    investopediaApp = `With fewer than ${resolvedCensusTotal} copies recorded on the certified census, supply inelasticity supports institutional price resilience.`;
+    });
   }
 
-  const investopediaLens: DueDiligenceInvestopediaLens = {
-    term: investopediaTerm,
-    category: investopediaCat,
-    definition: investopediaDef,
-    application: investopediaApp,
-    bidAskSpreadPercent: spreadPct,
-    wholesaleBidUsd: wholesaleDealerBid,
-    retailAskUsd: retailAsk,
-    marginHaircutPercent: marginHaircut,
-    capitalAssetPricingNote: `Cost basis of $${allInCost.toFixed(2)} preserves a ${marginHaircut}% margin of safety below retail clearing.`,
-  };
+  // 2. Purchaser Due Diligence & Investopedia Valuation Lens (only populated with real spread when FMV is recorded)
+  const investopediaLens: DueDiligenceInvestopediaLens | undefined = hasVerifiedFmv
+    ? (() => {
+        const marginHaircut = Math.max(0, Math.round((1 - allInCost / anchorFmv) * 100));
+        let investopediaTerm = "Arbitrage Dislocation";
+        let investopediaCat: DueDiligenceInvestopediaLens["category"] = "Arbitrage & Valuation";
+        let investopediaDef =
+          "The simultaneous purchase and sale of an asset in different markets to exploit pricing dislocations and lock in profit.";
+        let investopediaApp = `Acquiring ${parsed.extractedSeries} #${parsed.extractedIssue} at $${allInCost.toFixed(2)} all-in against verified $${anchorFmv.toFixed(2)} secondary market FMV captures a ${discountPercent}% price dislocation before auction closing.`;
+
+        if (specialPlay === "BELOW_GRADING_COST") {
+          investopediaTerm = "Sunk Cost Arbitrage";
+          investopediaCat = "Arbitrage & Valuation";
+          investopediaDef =
+            "Exploiting prior capital expenditures made by another party that cannot be recovered by them, allowing the buyer to capture that value at a steep discount.";
+          investopediaApp = `The seller incurred a $${cgcGradingCostFloor.toFixed(2)} grading and shipping fee to encapsulate this book. At your $${allInCost.toFixed(2)} cost basis, the grading fee is 100% subsidized by the seller.`;
+        } else if (specialPlay === "CRACKED_CASE" || specialPlay === "REHOLDER_ARBITRAGE") {
+          investopediaTerm = "Liquidity Discount Recovery";
+          investopediaCat = "Arbitrage & Valuation";
+          investopediaDef =
+            "Purchasing an intrinsically high-value asset trading at an artificial discount due to temporary holder impairment, restored via low-cost capital expenditure.";
+          investopediaApp = `The book inside is pristine grade ${parsed.grade}. A $25 reholder restores full $${anchorFmv.toFixed(2)} institutional equity with zero grade risk.`;
+        } else if (resolvedCensusTotal && resolvedCensusTotal <= 25) {
+          investopediaTerm = "Float Scarcity Premium";
+          investopediaCat = "Liquidity & Float";
+          investopediaDef =
+            "A valuation premium driven by an extremely limited circulating supply (float), where secondary market demand outstrips available units.";
+          investopediaApp = `With fewer than ${resolvedCensusTotal} copies recorded on the certified census, supply inelasticity supports institutional price resilience.`;
+        }
+
+        return {
+          term: investopediaTerm,
+          category: investopediaCat,
+          definition: investopediaDef,
+          application: investopediaApp,
+          bidAskSpreadPercent: discountPercent,
+          wholesaleBidUsd: allInCost,
+          retailAskUsd: anchorFmv,
+          marginHaircutPercent: marginHaircut,
+          capitalAssetPricingNote: `Cost basis of $${allInCost.toFixed(2)} preserves a ${marginHaircut}% margin of safety below recorded FMV ($${anchorFmv.toFixed(2)}).`,
+        };
+      })()
+    : undefined;
 
   // 3. Video Intelligence & ComicBase Archival Mentions
-  const cbVideo = findComicBaseVideoForComic(comp?.series || parsed.extractedSeries, parsed.extractedIssue);
+  const cbVideo = findComicBaseVideoForComic(parsed.extractedSeries, parsed.extractedIssue);
   const videoDossier: ComicVideoDossier = {
     hasVideo: Boolean(cbVideo),
     comicBaseVideo: cbVideo
@@ -967,7 +479,7 @@ export function evaluateAuctionListing(
     listing,
     passed: true,
     normalizedTitle: parsed.normalizedTitle || listing.title,
-    resolvedSeries: comp ? comp.series : parsed.extractedSeries,
+    resolvedSeries: parsed.extractedSeries,
     resolvedIssue: parsed.extractedIssue,
     resolvedYear: parsed.extractedYear,
     resolvedEra: parsed.extractedEra,
@@ -999,23 +511,13 @@ export function evaluateAuctionListing(
     censusScarcityTier,
     pricingSourceProvenance,
     signaturePremiumMultiplier,
-    lastSalePrice: (comp && comp.recentSales.length > 0) ? comp.recentSales[0].price : undefined,
-    lastSaleDate: (comp && comp.recentSales.length > 0) ? comp.recentSales[0].date : undefined,
+    lastSalePrice: realSales.length > 0 ? realSales[realSales.length - 1].price : undefined,
+    lastSaleDate: realSales.length > 0 ? realSales[realSales.length - 1].date : undefined,
     anchorFmv,
     allInCost,
     dollarSpread,
     discountPercent,
-    historicalComps: (() => {
-      const realPoints = lookupMultiPointPriceHistory(
-        parsed.extractedSeries,
-        parsed.extractedIssue,
-        parsed.grade ?? 9.8,
-        anchorFmv
-      );
-      if (realPoints.length > 0) return realPoints;
-      if (comp && comp.recentSales.length > 0) return comp.recentSales;
-      return [];
-    })(),
+    historicalComps: realSales,
     listingType: isBuyItNowListing ? "BuyItNow" : "Auction",
     isBuyItNow: isBuyItNowListing,
     buyItNowPrice: isBuyItNowListing ? (listing.buyItNowPrice ?? listing.currentBid) : undefined,
@@ -1023,7 +525,7 @@ export function evaluateAuctionListing(
     buyItNowUpsidePercent: isBuyItNowListing ? discountPercent : undefined,
     buyItNowNetProfit: isBuyItNowListing ? projectedNetProfit : undefined,
     buyItNowSensibilityWhy: (() => {
-      if (!isBuyItNowListing) return undefined;
+      if (!isBuyItNowListing || !hasVerifiedFmv) return undefined;
       const upsideDollarStr = dollarSpread > 0 ? `+$${dollarSpread.toFixed(2)}` : `$${dollarSpread.toFixed(2)}`;
       const profitStr = projectedNetProfit > 0 ? `+$${projectedNetProfit.toFixed(2)}` : `$${projectedNetProfit.toFixed(2)}`;
       let why = `Sensible Buy It Now Opportunity: Instant acquisition at $${allInCost.toFixed(2)} locks in ${upsideDollarStr} (${discountPercent}%) gross discount below verified CGC ${effectiveGrade} FMV ($${anchorFmv.toFixed(2)}). Yields ${profitStr} net profit (${netRoiPercent}% net ROI) after standard platform fees with zero auction gavel or sniping risk.`;
@@ -1048,7 +550,7 @@ export function evaluateAuctionListing(
     gcdMetadata: lore.gcdMetadata,
     galleryImages: listing.galleryImages || (listing.imageUrl ? [listing.imageUrl] : []),
     // Price Matrix, Investopedia Due Diligence Lens & Video Dossier
-    priceMatrix,
+    priceMatrix: priceMatrix.length > 0 ? priceMatrix : undefined,
     investopediaLens,
     videoDossier,
   };

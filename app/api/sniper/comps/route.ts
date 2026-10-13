@@ -27,16 +27,22 @@ export async function GET(request: Request) {
 
   const comps: RealizedSaleComp[] = [];
 
-  // 1. Check verified CGC & PriceCharting observation benchmarks
+  // 1. Check verified CGC & GPA completed sale observations
   const benchmarkKey = `${series} #${issue}`;
   const benchmarkEntry = (benchmarksData as Record<string, any>)[benchmarkKey];
+  const derivedDates = new Set(
+    (benchmarkEntry?.allObservations ?? [])
+      .filter((o: any) => o.type === "PRICECHARTING_GUIDE_OBSERVATION" || o.type === "PANEL_PROFITS_DERIVED_FMV")
+      .map((o: any) => o.date)
+  );
 
   if (benchmarkEntry?.allObservations && Array.isArray(benchmarkEntry.allObservations)) {
     for (const obs of benchmarkEntry.allObservations) {
+      if (obs.type === "PRICECHARTING_GUIDE_OBSERVATION" || obs.type === "PANEL_PROFITS_DERIVED_FMV") continue;
       const amt = Number(obs.amount);
       const dt = obs.date || obs.observedAt;
-      if (amt > 0 && dt) {
-        const gradeNum = parseFloat(String(obs.grade || "9.8").replace(/[^0-9.]/g, "")) || 9.8;
+      const gradeNum = parseFloat(String(obs.grade ?? "").replace(/[^0-9.]/g, ""));
+      if (amt > 0 && dt && Number.isFinite(gradeNum) && gradeNum > 0) {
         comps.push({
           venue: obs.authority || obs.type || "CGC / GPA",
           date: String(dt).slice(0, 10),
@@ -49,12 +55,13 @@ export async function GET(request: Request) {
 
   if (benchmarkEntry?.cgc && Array.isArray(benchmarkEntry.cgc)) {
     for (const sale of benchmarkEntry.cgc) {
-      const amt = Number(sale.amount);
       const dt = sale.observedAt || sale.date;
-      if (amt > 0 && dt) {
-        const gradeNum = parseFloat(String(sale.grade || "9.8").replace(/[^0-9.]/g, "")) || 9.8;
+      if (dt && derivedDates.has(dt)) continue;
+      const amt = Number(sale.amount);
+      const gradeNum = parseFloat(String(sale.grade ?? "").replace(/[^0-9.]/g, ""));
+      if (amt > 0 && dt && Number.isFinite(gradeNum) && gradeNum > 0) {
         comps.push({
-          venue: sale.venue || "Heritage Auctions",
+          venue: sale.venue || "CGC",
           date: String(dt).slice(0, 10),
           grade: gradeNum,
           price: amt,
@@ -68,7 +75,7 @@ export async function GET(request: Request) {
     const db = createAdminServerClient();
     const { data: dbSales } = await db
       .from("graded_sales_observations")
-      .select("sale_price, sale_date, native_grade_text, venue, title_name")
+      .select("sale_price, sale_date, grade_numeric, native_grade_text, venue, title_name")
       .ilike("title_name", `%${series}%`)
       .eq("issue_number_raw", issue)
       .gt("sale_price", 0)
@@ -79,7 +86,10 @@ export async function GET(request: Request) {
       for (const s of dbSales) {
         if (s.sale_price && s.sale_date) {
           const gradeNum =
-            parseFloat(String(s.native_grade_text || "9.8").replace(/[^0-9.]/g, "")) || 9.8;
+            s.grade_numeric != null
+              ? Number(s.grade_numeric)
+              : parseFloat(String(s.native_grade_text ?? "").replace(/[^0-9.]/g, ""));
+          if (!Number.isFinite(gradeNum) || gradeNum <= 0) continue;
           comps.push({
             venue: s.venue || "GPA / Certified",
             date: String(s.sale_date).slice(0, 10),
