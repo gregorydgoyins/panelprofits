@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { normalizeAuctionTitle, parseAndFilterListing } from "@/lib/sniper/anti-bullshit";
 import { resolveAuthoritativePublisher } from "@/lib/comics/publisher-authority";
 import { lookupSqliteCover, lookupSqliteGallery } from "@/lib/comics/sqlite-covers";
-import { lookupGradeCensusBatch, type GradeCensus, type CensusQuery } from "@/lib/sniper/census-population";
+import { lookupLabelCensusBatch, lookupGradeCensusBatch, type GradeCensus, type CensusQuery, type LabelCensusQuery } from "@/lib/sniper/census-population";
 import { readLiveListings, runSnapshot } from "@/lib/sniper/market-store";
 import { RawAuctionListing } from "@/lib/sniper/types";
 import { createAdminServerClient } from "@/lib/supabase/admin";
@@ -197,7 +197,14 @@ export async function GET(request: Request) {
 
       // Census straight from Supabase cgc_population at each auction's own grade: ONE batched query.
       const censusQueries: CensusQuery[] = [];
+      const labelQueries: LabelCensusQuery[] = [];
       filteredAuctions.forEach((item, idx) => {
+        const lb = item.label;
+        // The slab label is the source of truth: exact title + issue + cover date + edition, straight from the photo.
+        if (lb?.title && lb.issueNumber && lb.issueDate) {
+          labelQueries.push({ key: String(idx), title: lb.title, issue: lb.issueNumber, date: lb.issueDate, publisher: lb.publisher, edition: lb.edition, grade: lb.grade ?? item.resolvedGrade ?? null });
+          return;
+        }
         const p = parseAndFilterListing(String(item.title || ""));
         if (!p.extractedSeries || p.extractedSeries === "Unknown Series" || !p.extractedIssue) return;
         // CGC counts every variant/printing as its own census row. Base-issue census must never be shown for
@@ -214,6 +221,7 @@ export async function GET(request: Request) {
       let censusByKey = new Map<string, GradeCensus>();
       try {
         censusByKey = await lookupGradeCensusBatch(censusQueries);
+        for (const [k, v] of await lookupLabelCensusBatch(labelQueries)) censusByKey.set(k, v);
       } catch (err) {
         console.error("Sniper census lookup failed:", err);
       }

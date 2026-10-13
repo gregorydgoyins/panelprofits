@@ -12,6 +12,7 @@
 import { createAdminServerClient } from "@/lib/supabase/admin";
 import { parseAndFilterListing } from "./anti-bullshit";
 import { searchEbayPage, type SearchEbayAuctionsParams } from "./ebay-api";
+import { captureLabels } from "./label-capture";
 import { fetchLiveVenueListings, fetchVenueCompletedSales } from "./venue-adapters";
 import type { RawAuctionListing } from "./types";
 import { seriesKey, type SaleObs } from "./candles";
@@ -205,6 +206,9 @@ export async function runSnapshot(
     }
   }
 
+  // Read slab labels from photos of newly seen listings (Gemini vision; no eBay calls).
+  try { await captureLabels(db, 30); } catch (e) { console.error("[sniper] captureLabels", (e as Error).message); }
+
   // Harvest confirmed realized sales from ComicConnect's sold archive for the books currently on the board.
   const booksToComp = rows
     .filter((r) => r.series && r.issue)
@@ -331,7 +335,7 @@ export async function readLiveListings(limit = 1500): Promise<{ items: RawAuctio
   const db: any = createAdminServerClient();
   const nowMs = Date.now();
   const { data, error } = await db
-    .from("sniper_listings").select("payload,price_usd,bid_count,end_time,last_seen")
+    .from("sniper_listings").select("payload,price_usd,bid_count,end_time,last_seen,label")
     .eq("status", "live")
     .gte("last_seen", new Date(nowMs - LISTING_STALE_MS).toISOString())
     .or(`end_time.is.null,end_time.gt.${new Date(nowMs).toISOString()}`)
@@ -348,6 +352,7 @@ export async function readLiveListings(limit = 1500): Promise<{ items: RawAuctio
     const p = r.payload as RawAuctionListing;
     items.push({
       ...p,
+      label: r.label ?? null,
       currentBid: Number(r.price_usd),
       bidCount: Number(r.bid_count) || 0,
       secondsRemaining: r.end_time ? Math.max(0, Math.round((new Date(r.end_time).getTime() - nowMs) / 1000)) : p.secondsRemaining,

@@ -120,3 +120,57 @@ export async function lookupGradeCensusBatch(queries: CensusQuery[]): Promise<Ma
   }
   return result;
 }
+
+export interface LabelCensusQuery {
+  key: string;
+  title: string;
+  issue: string;
+  /** Cover date exactly as printed on the label, e.g. "5/86". */
+  date: string;
+  publisher?: string | null;
+  /** Edition line printed on the label; null/empty = base edition. */
+  edition?: string | null;
+  grade?: number | null;
+}
+
+const alnum = (s: string | null | undefined) => String(s ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+
+/**
+ * Census keyed on the slab label itself: title + issue + cover date (+ publisher) pick the CGC issue and the label's
+ * edition line picks the edition row (no edition = the base row). No year tolerance and no fallback to the base row
+ * for an edition: if CGC has no row that equals what the label says, the book is "not found".
+ */
+export async function lookupLabelCensusBatch(queries: LabelCensusQuery[]): Promise<Map<string, GradeCensus>> {
+  const result = new Map<string, GradeCensus>();
+  const valid = queries.map((q) => ({ ...q, t: cleanSeries(q.title), i: cleanIssue(q.issue), d: q.date.trim() })).filter((q) => q.t && q.i && q.d);
+  if (valid.length === 0) return result;
+  const pairKey = (q: { t: string; i: string; d: string }) => `${q.t.toLowerCase()}|${q.i.toLowerCase()}|${q.d}`;
+  const distinct = new Map<string, { k: string; title: string; issue: string; date: string }>();
+  for (const q of valid) if (!distinct.has(pairKey(q))) distinct.set(pairKey(q), { k: pairKey(q), title: q.t, issue: q.i, date: q.d });
+
+  const db = createAdminServerClient();
+  const all = [...distinct.values()];
+  const chunks: typeof all[] = [];
+  for (let i = 0; i < all.length; i += 25) chunks.push(all.slice(i, i + 25));
+  const parts = await Promise.all(chunks.map(async (c) => {
+    const { data, error } = await db.rpc("sniper_census_label", { p_keys: c });
+    if (error) throw new Error(`sniper_census_label failed: ${error.message}`);
+    if ((data?.length ?? 0) >= 1000) throw new Error("sniper_census_label hit the 1000-row cap; shrink the chunk");
+    return (data ?? []) as Array<PopRow & { variant: string | null; publisher: string | null }>;
+  }));
+  const byKey = new Map<string, Array<PopRow & { variant: string | null; publisher: string | null }>>();
+  for (const r of parts.flat()) byKey.set(r.k, [...(byKey.get(r.k) ?? []), r]);
+
+  for (const q of valid) {
+    let rows = byKey.get(pairKey(q)) ?? [];
+    const ed = alnum(q.edition);
+    rows = ed ? rows.filter((r) => alnum(r.variant) === ed) : rows.filter((r) => r.variant == null);
+    if (rows.length > 1 && q.publisher) {
+      const pub = alnum(q.publisher);
+      const byPub = rows.filter((r) => alnum(r.publisher) === pub);
+      if (byPub.length) rows = byPub;
+    }
+    if (rows.length === 1) result.set(q.key, build(rows[0], q.i, q.grade));
+  }
+  return result;
+}

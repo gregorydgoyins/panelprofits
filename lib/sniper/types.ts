@@ -81,7 +81,11 @@ export interface SniperFilterProfile {
   listingTypeFilter?: "all" | "auctions_only" | "bin_only";
 }
 
+import type { SlabLabel } from "./label-reader";
+
 export interface RawAuctionListing {
+  /** Exact transcription of the slab label from the photo; null when not read/legible. */
+  label?: SlabLabel | null;
   id: string;
   source: AuctionSource;
   title: string;
