@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { normalizeAuctionTitle, parseAndFilterListing } from "@/lib/sniper/anti-bullshit";
 import { resolveAuthoritativePublisher } from "@/lib/comics/publisher-authority";
 import { lookupSqliteCover, lookupSqliteGallery } from "@/lib/comics/sqlite-covers";
+import { lookupGoCollectBatch, type GoCollectPrice } from "@/lib/sniper/gocollect-prices";
 import { lookupPsaCensusBatch, type PsaCensusQuery, lookupLabelCensusBatch, lookupGradeCensusBatch, type GradeCensus, type CensusQuery, type LabelCensusQuery } from "@/lib/sniper/census-population";
 import { readLiveListings, runSnapshot } from "@/lib/sniper/market-store";
 import { RawAuctionListing } from "@/lib/sniper/types";
@@ -244,6 +245,21 @@ export async function GET(request: Request) {
         filteredAuctions.map((item, idx) => [item, censusByKey.get(String(idx)) ?? null] as const),
       );
 
+      // Realized-sale price from GoCollect for the slab's own grader + label type + grade (read off the slab label).
+      let gcPrices = new Map<string, GoCollectPrice>();
+      try {
+        gcPrices = await lookupGoCollectBatch(
+          filteredAuctions.flatMap((item, idx) => {
+            const lb = item.label;
+            if (!lb?.grader || !lb.title || !lb.issueNumber || lb.grade == null) return [];
+            return [{ key: String(idx), title: lb.title, issue: lb.issueNumber, date: lb.issueDate, grader: lb.grader, labelType: lb.labelType, grade: lb.grade }];
+          }),
+        );
+      } catch (err) {
+        console.error("Sniper GoCollect price lookup failed:", err);
+      }
+      const gcByItem = new Map<unknown, GoCollectPrice | null>(filteredAuctions.map((item, idx) => [item, gcPrices.get(String(idx)) ?? null] as const));
+
       const updatedAuctions = filteredAuctions.map((item) => {
         const isBin = Boolean(item.isBuyItNow || item.listingType === "BuyItNow" || (item.buyItNowPrice && item.buyItNowPrice > 0));
 
@@ -343,6 +359,7 @@ export async function GET(request: Request) {
           censusTotal: resolvedCensusTotal,
           censusHigher: resolvedCensusHigher,
           censusCount98: resolvedCensus98,
+          gocollectPrice: gcByItem.get(item) ?? undefined,
           listingType: isBin ? "BuyItNow" : "Auction",
           isBuyItNow: isBin,
           buyItNowPrice: isBin ? (item.buyItNowPrice ?? item.currentBid) : undefined,

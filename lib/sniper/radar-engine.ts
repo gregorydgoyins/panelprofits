@@ -521,6 +521,8 @@ export function evaluateAuctionListing(
     keySignificanceNote,
     cgcGradingCostFloor,
     censusCount98: resolvedCensus98,
+    label: listing.label ?? null,
+    gocollectPrice: listing.gocollectPrice,
     censusTotal: resolvedCensusTotal,
     censusHigher: resolvedCensusHigher,
     censusScarcityTier,

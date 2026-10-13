@@ -86,6 +86,8 @@ import type { SlabLabel } from "./label-reader";
 export interface RawAuctionListing {
   /** Exact transcription of the slab label from the photo; null when not read/legible. */
   label?: SlabLabel | null;
+  /** Realized-sale price for this slab's own grader, label type and grade (GoCollect); absent when no recorded sale. */
+  gocollectPrice?: import("./gocollect-prices").GoCollectPrice;
   id: string;
   source: AuctionSource;
   title: string;
@@ -222,6 +224,8 @@ export interface CandidateEvaluation {
   censusCount98?: number;       // Census population in 9.8
   censusTotal?: number;         // Total copies on Census across all grades
   censusHigher?: number;        // Copies 9.9/10.0 graded higher than 9.8
+  label?: SlabLabel | null;     // exact transcription of the slab label
+  gocollectPrice?: import("./gocollect-prices").GoCollectPrice; // realized-sale price for this slab's own grader/label/grade
   censusScarcityTier?: string;  // e.g. "Ultra Low Float (<25 Copies)", "Investment Grade"
   pricingSourceProvenance?: string; // Exact venue & methodology source for valuation
   signaturePremiumMultiplier?: number; // Verified signature multiplier over unsigned blue label

@@ -58,6 +58,8 @@ export interface AcquiredBook {
   isYellowLabel?: boolean;
   signerName?: string;
   censusCount98?: number;
+  label?: { grader: string | null; labelType: string | null; grade: number | null } | null;
+  gocollectPrice?: { lastSoldPrice: number | null; lastSoldDate: string | null; fmv: number | null; avg1y: number | null; n1y: number | null; salesCount: number | null };
   censusTotal?: number;
 }
 
@@ -2318,6 +2320,41 @@ export default function SniperRadarPage() {
                       <span className="px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-500/40 text-[10px] font-bold">
                         {inspectedDeal.censusScarcityTier}
                       </span>
+                    )}
+                  </div>
+
+                  {/* Realized-sale price for this slab's own grader, label type and grade (GoCollect) */}
+                  <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
+                    <span className="text-[10px] text-amber-300 font-bold uppercase">
+                      {(inspectedDeal.label?.grader ?? "Graded")} {inspectedDeal.label?.labelType ?? ""} {inspectedDeal.label?.grade != null ? inspectedDeal.label.grade.toFixed(1) : ""} sales:
+                    </span>
+                    {inspectedDeal.gocollectPrice ? (
+                      <>
+                        {inspectedDeal.gocollectPrice.lastSoldPrice != null && (
+                          <span className="px-2 py-0.5 rounded bg-black/60 border border-slate-800 text-slate-300 text-[11px]">
+                            Last sold: <strong className="text-white">${inspectedDeal.gocollectPrice.lastSoldPrice.toLocaleString()}</strong>
+                            {inspectedDeal.gocollectPrice.lastSoldDate ? ` (${inspectedDeal.gocollectPrice.lastSoldDate})` : ""}
+                          </span>
+                        )}
+                        {inspectedDeal.gocollectPrice.fmv != null && (
+                          <span className="px-2 py-0.5 rounded bg-black/60 border border-slate-800 text-slate-300 text-[11px]">
+                            FMV: <strong className="text-white">${inspectedDeal.gocollectPrice.fmv.toLocaleString()}</strong>
+                          </span>
+                        )}
+                        {inspectedDeal.gocollectPrice.avg1y != null && (
+                          <span className="px-2 py-0.5 rounded bg-black/60 border border-slate-800 text-slate-300 text-[11px]">
+                            1-yr avg: <strong className="text-white">${inspectedDeal.gocollectPrice.avg1y.toLocaleString()}</strong>
+                            {inspectedDeal.gocollectPrice.n1y ? ` (${inspectedDeal.gocollectPrice.n1y} sold)` : ""}
+                          </span>
+                        )}
+                        {inspectedDeal.gocollectPrice.salesCount != null && (
+                          <span className="px-2 py-0.5 rounded bg-black/60 border border-slate-800 text-slate-300 text-[11px]">
+                            Recorded sales: <strong className="text-white">{inspectedDeal.gocollectPrice.salesCount.toLocaleString()}</strong>
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <span className="text-slate-500 text-[11px]">No recorded sale found</span>
                     )}
                   </div>
                 </div>
