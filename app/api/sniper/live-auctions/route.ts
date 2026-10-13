@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { normalizeAuctionTitle, parseAndFilterListing } from "@/lib/sniper/anti-bullshit";
 import { resolveAuthoritativePublisher } from "@/lib/comics/publisher-authority";
 import { lookupSqliteCover, lookupSqliteGallery } from "@/lib/comics/sqlite-covers";
+import { cachedBatch } from "@/lib/sniper/lookup-cache";
 import { lookupGoCollectBatch, type GoCollectPrice } from "@/lib/sniper/gocollect-prices";
 import { lookupPsaCensusBatch, type PsaCensusQuery, lookupLabelCensusBatch, lookupGradeCensusBatch, type GradeCensus, type CensusQuery, type LabelCensusQuery } from "@/lib/sniper/census-population";
 import { readLiveListings, runSnapshot } from "@/lib/sniper/market-store";
@@ -229,17 +230,18 @@ export async function GET(request: Request) {
           year: p.extractedYear ?? item.year ?? null,
         });
       });
+      // All lookups run in parallel and are cached per book, so only listings not yet resolved hit the database.
+      const CENSUS_TTL = 30 * 60_000;
+      const idOf = (q: object) => JSON.stringify({ ...q, key: undefined });
       let censusByKey = new Map<string, GradeCensus>();
-      try {
-        censusByKey = await lookupGradeCensusBatch(censusQueries);
-        // Independent lookups: one failing never wipes out the others.
-        const [lab, psa] = await Promise.allSettled([lookupLabelCensusBatch(labelQueries), lookupPsaCensusBatch(psaQueries)]);
-        for (const r of [lab, psa]) {
-          if (r.status === "fulfilled") for (const [k, v] of r.value) censusByKey.set(k, v);
-          else console.error("Sniper label/PSA census failed:", r.reason);
-        }
-      } catch (err) {
-        console.error("Sniper census lookup failed:", err);
+      const settled = await Promise.allSettled([
+        cachedBatch("census-title", CENSUS_TTL, censusQueries, idOf, lookupGradeCensusBatch),
+        cachedBatch("census-label", CENSUS_TTL, labelQueries, idOf, lookupLabelCensusBatch),
+        cachedBatch("census-psa", CENSUS_TTL, psaQueries, idOf, lookupPsaCensusBatch),
+      ]);
+      for (const r of settled) {
+        if (r.status === "fulfilled") for (const [k, v] of r.value) censusByKey.set(k, v);
+        else console.error("Sniper census lookup failed:", r.reason);
       }
       const censusByItem = new Map<unknown, GradeCensus | null>(
         filteredAuctions.map((item, idx) => [item, censusByKey.get(String(idx)) ?? null] as const),
@@ -248,13 +250,12 @@ export async function GET(request: Request) {
       // Realized-sale price from GoCollect for the slab's own grader + label type + grade (read off the slab label).
       let gcPrices = new Map<string, GoCollectPrice>();
       try {
-        gcPrices = await lookupGoCollectBatch(
-          filteredAuctions.flatMap((item, idx) => {
-            const lb = item.label;
-            if (!lb?.grader || !lb.title || !lb.issueNumber || lb.grade == null) return [];
-            return [{ key: String(idx), title: lb.title, issue: lb.issueNumber, date: lb.issueDate, grader: lb.grader, labelType: lb.labelType, grade: lb.grade }];
-          }),
-        );
+        const gcQueries = filteredAuctions.flatMap((item, idx) => {
+          const lb = item.label;
+          if (!lb?.grader || !lb.title || !lb.issueNumber || lb.grade == null) return [];
+          return [{ key: String(idx), title: lb.title, issue: lb.issueNumber, date: lb.issueDate, grader: lb.grader, labelType: lb.labelType, grade: lb.grade }];
+        });
+        gcPrices = await cachedBatch("gocollect", 5 * 60_000, gcQueries, idOf, lookupGoCollectBatch);
       } catch (err) {
         console.error("Sniper GoCollect price lookup failed:", err);
       }
