@@ -47,7 +47,9 @@ interface PopRow {
 
 const NON_NUMERIC = new Set(["NG", "PG", "CVR"]);
 const gradeLabel = (k: string) => k.replace("_", ".");
-const cleanSeries = (s: string) => s.replace(/\(\s*\d{4}\s*\)/g, "").replace(/\s+/g, " ").trim();
+const PUBLISHER_PREFIX = /^(?:marvel(?:\s+comics)?|dc(?:\s+comics)?|image(?:\s+comics)?|dark\s+horse|idw|boom!?(?:\s+studios)?|valiant|archie|dynamite|aftershock|oni(?:\s+press)?)\s+/i;
+// Listings often put the publisher in front of the series name ("Marvel X-Factor"); CGC titles never do.
+const cleanSeries = (s: string) => s.replace(/\(\s*\d{4}\s*\)/g, "").replace(/\s+/g, " ").trim().replace(PUBLISHER_PREFIX, "");
 const cleanIssue = (s: string) => String(s).replace(/^#/, "").trim();
 
 function build(row: PopRow, issue: string, grade?: number | null): GradeCensus {
@@ -83,11 +85,20 @@ export async function lookupGradeCensusBatch(queries: CensusQuery[]): Promise<Ma
   const distinct = new Map<string, { k: string; title: string; issue: string }>();
   for (const q of valid) if (!distinct.has(pairKey(q))) distinct.set(pairKey(q), { k: pairKey(q), title: q.title, issue: q.iss });
 
-  const { data, error } = await createAdminServerClient().rpc("sniper_census_batch", { p_keys: [...distinct.values()] });
-  if (error) throw new Error(`sniper_census_batch failed: ${error.message}`);
+  // Chunked: the API returns at most 1000 rows per call, and silent truncation would read as "not found".
+  const db = createAdminServerClient();
+  const all = [...distinct.values()];
+  const chunks: typeof all[] = [];
+  for (let i = 0; i < all.length; i += 40) chunks.push(all.slice(i, i + 40));
+  const parts = await Promise.all(chunks.map(async (c) => {
+    const { data, error } = await db.rpc("sniper_census_batch", { p_keys: c });
+    if (error) throw new Error(`sniper_census_batch failed: ${error.message}`);
+    if ((data?.length ?? 0) >= 1000) throw new Error("sniper_census_batch hit the 1000-row cap; shrink the chunk");
+    return (data ?? []) as PopRow[];
+  }));
 
   const byKey = new Map<string, PopRow[]>();
-  for (const r of (data ?? []) as PopRow[]) {
+  for (const r of parts.flat()) {
     const list = byKey.get(r.k) ?? [];
     list.push(r);
     byKey.set(r.k, list);
@@ -95,8 +106,16 @@ export async function lookupGradeCensusBatch(queries: CensusQuery[]): Promise<Ma
 
   for (const q of valid) {
     const rows = byKey.get(pairKey(q)) ?? [];
-    // Exact volume only: the listing's year must equal CGC's year. No year or no match = not found. Never guess.
-    const row = q.year ? rows.find((r) => r.year === q.year) : undefined;
+    // Pick the CGC volume without guessing:
+    //  - several volumes: the one whose year is within 1 of the listing year (cover date vs on-sale date); none = not found
+    //  - exactly one volume exists for this title+issue: that is the comic (listing year, if given, must be within 1)
+    //  - several volumes and no listing year: not found
+    let row: PopRow | undefined;
+    if (rows.length === 1) row = !q.year || (rows[0].year != null && Math.abs(rows[0].year - q.year) <= 1) ? rows[0] : undefined;
+    else if (q.year) {
+      const near = rows.filter((r) => r.year != null && Math.abs(r.year - q.year!) <= 1);
+      row = near.find((r) => r.year === q.year) ?? (near.length === 1 ? near[0] : undefined);
+    }
     if (row) result.set(q.key, build(row, q.iss, q.grade));
   }
   return result;
