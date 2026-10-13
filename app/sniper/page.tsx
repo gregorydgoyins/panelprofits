@@ -226,9 +226,11 @@ export default function SniperRadarPage() {
         setDataAsOf(data.dataAsOf ?? null);
 
         // Reset countdown timer map with fresh active ticking seconds
+        // The response may come from the CDN cache: take off the seconds that passed since it was built.
+        const ageSecs = data.fetchedAt ? Math.max(0, (Date.now() - new Date(data.fetchedAt).getTime()) / 1000) : 0;
         const newTimers: Record<string, number> = {};
         for (const item of data.auctions) {
-          newTimers[item.id] = Number(item.secondsRemaining || 0);
+          newTimers[item.id] = Math.max(0, Math.round(Number(item.secondsRemaining || 0) - ageSecs));
         }
         setLiveAuctionTimers(newTimers);
       }

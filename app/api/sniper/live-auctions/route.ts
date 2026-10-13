@@ -21,14 +21,14 @@ export async function GET(request: Request) {
   const hit = respCache.get(key);
   if (hit && Date.now() - hit.at < RESP_TTL_MS) {
     const r = await hit.p;
-    return new Response(r.body, { status: r.status, headers: { "content-type": "application/json" } });
+    return new Response(r.body, { status: r.status, headers: { "content-type": "application/json", "cache-control": r.status === 200 ? "public, s-maxage=30, stale-while-revalidate=120" : "no-store" } });
   }
   const p = computeGET(request).then(async (res) => ({ status: res.status, body: await res.text() }));
   respCache.set(key, { at: Date.now(), p });
   p.then((r) => { if (r.status !== 200) respCache.delete(key); }).catch(() => respCache.delete(key));
   if (respCache.size > 50) respCache.delete(respCache.keys().next().value as string);
   const r = await p;
-  return new Response(r.body, { status: r.status, headers: { "content-type": "application/json" } });
+  return new Response(r.body, { status: r.status, headers: { "content-type": "application/json", "cache-control": r.status === 200 ? "public, s-maxage=30, stale-while-revalidate=120" : "no-store" } });
 }
 
 async function computeGET(request: Request) {
