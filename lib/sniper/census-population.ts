@@ -175,7 +175,7 @@ export async function lookupLabelCensusBatch(queries: LabelCensusQuery[]): Promi
   return result;
 }
 
-export interface PsaCensusQuery { key: string; title: string; issue: string; year?: number | null; edition?: string | null; grade?: number | null }
+export interface PsaCensusQuery { key: string; title: string; issue: string; year?: number | null; publisher?: string | null; edition?: string | null; grade?: number | null }
 
 /**
  * PSA census (psa_population). PSA's report has no cover date or edition column, so the key is title + issue + series
@@ -197,7 +197,7 @@ export async function lookupPsaCensusBatch(queries: PsaCensusQuery[]): Promise<M
     const { data, error } = await db.rpc("sniper_census_psa", { p_keys: c });
     if (error) throw new Error(`sniper_census_psa failed: ${error.message}`);
     if ((data?.length ?? 0) >= 1000) throw new Error("sniper_census_psa hit the 1000-row cap");
-    return (data ?? []) as Array<{ k: string; title: string; issue_number: string | null; series_year: number | null; total: number; grades: Record<string, number> }>;
+    return (data ?? []) as Array<{ k: string; title: string; issue_number: string | null; series_year: number | null; publisher: string | null; total: number; grades: Record<string, number> }>;
   }));
   const byKey = new Map<string, typeof parts[number]>();
   for (const r of parts.flat()) byKey.set(r.k, [...(byKey.get(r.k) ?? []), r]);
@@ -205,7 +205,10 @@ export async function lookupPsaCensusBatch(queries: PsaCensusQuery[]): Promise<M
     // PSA puts the edition inside the title, "Amazing Spider-Man (2023 Facsimile Edition)"; the SQL key ignores parentheses,
     // so require the printed title to equal the label's title (+ edition) exactly. No edition on the label = the plain-title row.
     const want = alnum(q.edition ? `${q.t} (${q.edition})` : q.t);
-    const rows = (byKey.get(pk(q)) ?? []).filter((r) => alnum(r.title) === want);
+    let rows = (byKey.get(pk(q)) ?? []).filter((r) => alnum(r.title) === want);
+    // Publisher is part of PSA's key: when the label names one, only that publisher's rows can match.
+    const pubKey = (p: string | null | undefined) => alnum(String(p ?? "").replace(/\./g, "")).replace(/comics$/, "");
+    if (q.publisher) rows = rows.filter((r) => pubKey(r.publisher) === pubKey(q.publisher));
     let row = rows.length === 1 && (!q.year || (rows[0].series_year != null && Math.abs(rows[0].series_year - q.year) <= 1 || (rows[0].series_year != null && q.year >= rows[0].series_year))) ? rows[0] : undefined;
     if (rows.length > 1 && q.year) {
       const ok = rows.filter((r) => r.series_year != null && q.year! >= r.series_year);

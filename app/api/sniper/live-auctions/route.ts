@@ -206,7 +206,7 @@ export async function GET(request: Request) {
         if (lb?.grader === "PSA" && lb.title && lb.issueNumber) {
           const yr = lb.issueDate ? parseInt(lb.issueDate.split("/").pop() || "", 10) : NaN;
           const fullYear = Number.isFinite(yr) ? (yr < 100 ? (yr > 30 ? 1900 + yr : 2000 + yr) : yr) : null;
-          psaQueries.push({ key: String(idx), title: lb.title, issue: lb.issueNumber, year: fullYear, edition: lb.edition, grade: lb.grade ?? item.resolvedGrade ?? null });
+          psaQueries.push({ key: String(idx), title: lb.title, issue: lb.issueNumber, year: fullYear, publisher: lb.publisher, edition: lb.edition, grade: lb.grade ?? item.resolvedGrade ?? null });
           return;
         }
         if (lb?.grader && lb.grader !== "CGC") return;
