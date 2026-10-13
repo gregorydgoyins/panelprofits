@@ -22,7 +22,7 @@ import { getEraColors } from "@/lib/design-system/colors";
 import { INITIAL_SURFACE_ASSETS } from "@/lib/assets/initial-assets";
 
 const CARD_W = 227; // 215px card + 12px gap
-const SCROLL_SPEED = 95; // px/s (swift, responsive asset market pace)
+const SCROLL_SPEED = 32; // px/s (calm, steady, readable pace for asset classes)
 const FETCH_MS = 5 * 60 * 1000;
 
 interface AssetsRailProps {
@@ -45,14 +45,13 @@ export function AssetsRail({ items }: AssetsRailProps = {}) {
     return baseList.filter((it) => members.includes(it.assetType as SurfaceKey));
   }, [assetItems, selectedFamily]);
 
-  // Adjust duration dynamically on item count
+  // Adjust duration dynamically on item count with a generous minimum so it never flies
   React.useLayoutEffect(() => {
     if (!trackRef.current || filteredItems.length === 0) return;
-    const duration = (filteredItems.length * CARD_W) / SCROLL_SPEED;
+    const duration = Math.max(90, (filteredItems.length * CARD_W) / SCROLL_SPEED);
     const elapsedSeconds = (Date.now() / 1000) % duration;
     trackRef.current.style.animationDuration = `${duration}s`;
     trackRef.current.style.animationDelay = `-${elapsedSeconds}s`;
-    trackRef.current.style.animationPlayState = "running";
   }, [filteredItems.length]);
 
   // Background fetch to enrich surfaces from /api/asset/ticker
@@ -218,7 +217,7 @@ export function AssetsRail({ items }: AssetsRailProps = {}) {
               display: "flex",
               width: "max-content",
               willChange: "transform",
-              animation: `panel-profits-assets-marquee 140s linear infinite`,
+              animation: `panel-profits-assets-marquee 180s linear infinite`,
               backfaceVisibility: "hidden",
             }}
           >

@@ -17,29 +17,31 @@ if (typeof document !== "undefined" && !document.getElementById(EQUITY_CARD_STYL
   s.id = EQUITY_CARD_STYLE_ID;
   s.textContent = `
     .equity-card {
-      box-shadow:
-        0 8px 28px rgba(0,0,0,0.75),
-        0 0  2px  color-mix(in srgb, var(--rim) 93%, transparent),
-        0 0  10px color-mix(in srgb, var(--rim) 60%, transparent),
-        0 0  28px color-mix(in srgb, var(--rim) 40%, transparent),
-        0 0  56px color-mix(in srgb, var(--rim) 20%, transparent),
-        inset 0 0 18px color-mix(in srgb, var(--rim) 17%, transparent);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.08);
+      contain: layout paint;
     }
+    .equity-card:hover,
     .equity-card[data-hovered='true'] {
-      box-shadow:
-        0 32px 72px rgba(0,0,0,0.96),
-        0 0  2px  var(--rim),
-        0 0  10px var(--rim),
-        0 0  28px var(--rim),
-        0 0  56px color-mix(in srgb, var(--rim) 87%, transparent),
-        0 0  100px color-mix(in srgb, var(--rim) 67%, transparent),
-        0 0  160px color-mix(in srgb, var(--rim) 33%, transparent),
-        inset 0 0 40px color-mix(in srgb, var(--rim) 33%, transparent);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.95), 0 0 24px var(--rim, rgba(56,189,248,0.45)), 0 0 0 1px var(--rim, rgba(56,189,248,0.85));
     }
   `;
   document.head.appendChild(s);
 }
 
+// In-memory cache for pinned items to prevent hundreds of synchronous JSON.parse operations
+let cachedPinnedEquities: Set<string> | null = null;
+function getPinnedEquities(): Set<string> {
+  if (typeof window === "undefined") return new Set();
+  if (cachedPinnedEquities === null) {
+    try {
+      const stored = localStorage.getItem("hammer_pinned_equities");
+      cachedPinnedEquities = new Set(stored ? JSON.parse(stored) : []);
+    } catch {
+      cachedPinnedEquities = new Set();
+    }
+  }
+  return cachedPinnedEquities;
+}
 
 function compactUsd(n: number): string {
   if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(n >= 10_000_000 ? 0 : 1)}M`;
@@ -67,16 +69,10 @@ export const EquityCard = React.memo(function EquityCard({
   const assetId = identity.assetId;
 
   React.useEffect(() => {
-    if (!assetId || typeof window === "undefined") return;
-    try {
-      const stored = localStorage.getItem("hammer_pinned_equities");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.includes(assetId)) {
-          setIsPinned(true);
-        }
-      }
-    } catch {}
+    if (!assetId) return;
+    if (getPinnedEquities().has(assetId)) {
+      setIsPinned(true);
+    }
   }, [assetId]);
 
   const togglePin = React.useCallback(
@@ -85,17 +81,15 @@ export const EquityCard = React.memo(function EquityCard({
       e.stopPropagation();
       if (!assetId || typeof window === "undefined") return;
       try {
-        const stored = localStorage.getItem("hammer_pinned_equities");
-        const list: string[] = stored ? JSON.parse(stored) : [];
-        let next: string[];
-        if (list.includes(assetId)) {
-          next = list.filter((id) => id !== assetId);
+        const pinSet = getPinnedEquities();
+        if (pinSet.has(assetId)) {
+          pinSet.delete(assetId);
           setIsPinned(false);
         } else {
-          next = [...list, assetId];
+          pinSet.add(assetId);
           setIsPinned(true);
         }
-        localStorage.setItem("hammer_pinned_equities", JSON.stringify(next));
+        localStorage.setItem("hammer_pinned_equities", JSON.stringify(Array.from(pinSet)));
       } catch {}
     },
     [assetId]
@@ -199,7 +193,7 @@ export const EquityCard = React.memo(function EquityCard({
   return (
     <Link
       href={detailHref}
-      prefetch={false}
+      prefetch={true}
       className="equity-card"
       data-hovered={hovered ? "true" : "false"}
       style={cardStyle}

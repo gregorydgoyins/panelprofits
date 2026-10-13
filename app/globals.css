@@ -9,15 +9,17 @@
 }
 
 .news-marquee-track {
-  animation: panel-profits-news-marquee 180s linear infinite;
+  animation: panel-profits-news-marquee 260s linear infinite;
 }
 
 .news-marquee {
   position: relative;
 }
 
-.news-marquee:focus-within .news-marquee-track {
-  animation-play-state: paused;
+.news-marquee:hover .news-marquee-track,
+.news-marquee:focus-within .news-marquee-track,
+.news-marquee-track:hover {
+  animation-play-state: paused !important;
 }
 
 .news-marquee::after {
@@ -35,7 +37,7 @@
 }
 
 .equities-marquee-track {
-  animation: panel-profits-equities-marquee 120s linear infinite;
+  animation: panel-profits-equities-marquee 240s linear infinite;
   display: flex;
   width: max-content;
   will-change: transform;
@@ -45,8 +47,10 @@
   position: relative;
 }
 
-.equities-marquee:focus-within .equities-marquee-track {
-  animation-play-state: paused;
+.equities-marquee:hover .equities-marquee-track,
+.equities-marquee:focus-within .equities-marquee-track,
+.equities-marquee-track:hover {
+  animation-play-state: paused !important;
 }
 
 .equities-marquee::after {
@@ -65,7 +69,7 @@
 }
 
 .assets-marquee-track {
-  animation: panel-profits-assets-marquee 140s linear infinite;
+  animation: panel-profits-assets-marquee 240s linear infinite;
   display: flex;
   width: max-content;
   will-change: transform;
@@ -75,8 +79,17 @@
   position: relative;
 }
 
-.assets-marquee:focus-within .assets-marquee-track {
-  animation-play-state: paused;
+.assets-marquee:hover .assets-marquee-track,
+.assets-marquee:focus-within .assets-marquee-track,
+.assets-marquee-track:hover {
+  animation-play-state: paused !important;
+}
+
+.equity-card:active,
+.asset-card:active {
+  transform: translateY(-4px) scale(0.98) !important;
+  filter: brightness(1.2);
+  transition: transform 60ms ease-out, filter 60ms ease-out !important;
 }
 
 .assets-marquee::after {

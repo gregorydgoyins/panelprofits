@@ -50,18 +50,18 @@ export function NewsRail({ initialStories }: NewsRailProps) {
             {[...stories, ...stories].map((story, index) => {
               const corpTicker = getSourceTicker(story.source);
               return (
-                <a key={`${story.id}-${index}`} href={`/news/${story.id}`} className="group flex min-w-[260px] max-w-[420px] shrink-0 items-center gap-2 border border-slate-800/70 bg-[#0E111A] px-2.5 py-1 transition-colors hover:border-cyan-400/80 hover:bg-[#141824]">
+                <a key={`${story.id}-${index}`} href={`/news/${story.id}`} className="group flex min-w-[320px] max-w-[720px] shrink-0 items-center gap-2.5 border border-slate-800/80 bg-[#0E111A] px-3 py-1.5 transition-colors hover:border-cyan-400/90 hover:bg-[#141824] rounded-sm">
                   {story.imageUrl ? (
-                      <img src={story.imageUrl} alt="" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/newsroom-default.svg"; }} className="h-7 w-10 shrink-0 object-cover opacity-75" />
+                      <img src={story.imageUrl} alt="" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/newsroom-default.svg"; }} className="h-7 w-10 shrink-0 rounded-sm object-cover opacity-80" />
                   ) : null}
                   {corpTicker ? (
-                    <span className="shrink-0 text-[9px] uppercase tracking-[0.12em] font-mono text-cyan-300 bg-[#0C1626] px-1.5 py-0.5 border border-cyan-500/40 rounded">
+                    <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.12em] font-mono text-cyan-300 bg-[#0C1626] px-1.5 py-0.5 border border-cyan-500/40 rounded">
                       ${corpTicker}
                     </span>
                   ) : null}
-                  <span className="shrink-0 text-[9px] uppercase tracking-[0.12em] text-slate-400">{shortNewsSource(story.source)}</span>
-                  <span className="min-w-0 truncate text-[11px] text-slate-200 group-hover:text-cyan-200">{story.headline}</span>
-                  <ArrowRight className="h-3 w-3 shrink-0 text-slate-600 group-hover:text-cyan-400" />
+                  <span className="shrink-0 text-[10px] font-medium uppercase tracking-[0.08em] text-slate-400">{shortNewsSource(story.source)}</span>
+                  <span className="min-w-0 truncate text-xs font-normal text-slate-100 group-hover:text-cyan-200">{story.headline}</span>
+                  <ArrowRight className="h-3 w-3 shrink-0 text-slate-500 group-hover:text-cyan-400 transition-transform group-hover:translate-x-0.5" />
                 </a>
               );
             })}

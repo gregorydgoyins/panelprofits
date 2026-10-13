@@ -29,25 +29,13 @@ if (typeof document !== "undefined" && !document.getElementById(ASSET_CARD_STYLE
   s.id = ASSET_CARD_STYLE_ID;
   s.textContent = `
     .asset-card {
-      box-shadow:
-        0 8px 28px rgba(0,0,0,0.75),
-        0 0  2px  color-mix(in srgb, var(--rim) 93%, transparent),
-        0 0  10px color-mix(in srgb, var(--rim) 60%, transparent),
-        0 0  28px color-mix(in srgb, var(--rim) 40%, transparent),
-        0 0  56px color-mix(in srgb, var(--rim) 20%, transparent),
-        inset 0 0 18px color-mix(in srgb, var(--rim) 17%, transparent);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.08);
+      contain: layout paint;
     }
+    .asset-card:hover,
     .asset-card[data-hovered='true'],
     .asset-card[data-selected='true'] {
-      box-shadow:
-        0 32px 72px rgba(0,0,0,0.96),
-        0 0  2px  var(--rim),
-        0 0  10px var(--rim),
-        0 0  28px var(--rim),
-        0 0  56px color-mix(in srgb, var(--rim) 87%, transparent),
-        0 0  100px color-mix(in srgb, var(--rim) 67%, transparent),
-        0 0  160px color-mix(in srgb, var(--rim) 33%, transparent),
-        inset 0 0 40px color-mix(in srgb, var(--rim) 33%, transparent);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.95), 0 0 24px var(--rim, rgba(6,182,212,0.45)), 0 0 0 1px var(--rim, rgba(6,182,212,0.85));
     }
   `;
   document.head.appendChild(s);

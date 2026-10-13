@@ -15,7 +15,7 @@ import { TickerHeader } from "@/components/tickers/ticker-header";
 import { EquityCard } from "@/components/tickers/equity-card";
 
 const CARD_W = 227; // 215px card + 12px gap
-const SCROLL_SPEED = 150; // px/s (rapid live trading floor ticker motion)
+const SCROLL_SPEED = 55; // px/s (steady, readable, easily clickable live trading pace)
 const RAIL_TOTAL = 485_291; // rows in rail_books: every comic with a cover and a price, no floor
 const RAIL_STEP = 80;
 
@@ -187,7 +187,6 @@ export function EquitiesRail({ items: initialItems = [], seedItems, indices = []
     const elapsedSeconds = (Date.now() / 1000) % duration;
     trackRef.current.style.animationDuration = `${duration}s`;
     trackRef.current.style.animationDelay = `-${elapsedSeconds}s`;
-    trackRef.current.style.animationPlayState = "running";
   }, [displayItems.length]);
 
   // Sequential batch loader supporting up to 10,000 batches (continuous rotation across 38,957 verified catalog)
