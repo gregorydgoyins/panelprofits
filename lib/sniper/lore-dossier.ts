@@ -213,12 +213,78 @@ const CANONICAL_LORE_DATABASE: Record<string, ComicLoreDossier> = {
   },
 };
 
+import { resolveAuthoritativePublisher } from "@/lib/comics/publisher-authority";
+
+function parseCgcLabelNotes(rawNotes?: string): {
+  cleanedNotes: string;
+  writers: string[];
+  pencilers: string[];
+  coverArtists: string[];
+} {
+  if (!rawNotes) return { cleanedNotes: "", writers: [], pencilers: [], coverArtists: [] };
+  const cleaned = rawNotes
+    .replace(/A\s+15%\s+BUYER'?S\s+PREMIUM\s*\(MINIMUM\s*\$19\.00\)\s*WILL\s+BE\s+ADDED\s+TO\s+THIS\s+ITEM\s+AT\s+CONCLUSION\s+OF\s+THE\s+AUCTION\.?/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const writers: string[] = [];
+  const pencilers: string[] = [];
+  const coverArtists: string[] = [];
+
+  // Strip leading page quality ("white pages", "off-white to white pages", "cream to off-white pages") for creator regexes
+  const noteBody = cleaned.replace(/^(?:off-white\s+to\s+white|cream\s+to\s+off-white|brittle|tan\s+to\s+off-white|slightly\s+brittle|white|off-white|cream|tan)\s+pages\s*;?\s*/i, "").trim();
+
+  const caMatch = noteBody.match(/\b([A-Z][a-zA-Z.']+(?:\s+(?:&\s+)?[A-Z][a-zA-Z.']+){0,3})\s+c\/a\b/);
+  if (caMatch) {
+    coverArtists.push(caMatch[1].trim());
+    pencilers.push(caMatch[1].trim());
+  }
+
+  const coverMatch = noteBody.match(/\b([A-Z][a-zA-Z.']+(?:\s+(?:&\s+)?[A-Z][a-zA-Z.']+){0,3})\s+(?:painted\s+)?cover(?:\s*&\s*art)?\b/);
+  if (coverMatch) {
+    const name = coverMatch[1].replace(/^(?:Classic| Iconic| Wraparound| Gatefold)\s+/i, "").trim();
+    if (name && !/^(?:Photo|Painted|Variant|Newsstand|Direct)$/i.test(name)) {
+      coverArtists.push(name);
+      if (/cover\s*&\s*art/i.test(coverMatch[0])) {
+        pencilers.push(name);
+      }
+    }
+  }
+
+  const artMatch = noteBody.match(/\b([A-Z][a-zA-Z.']+(?:\s+(?:&\s+)?[A-Z][a-zA-Z.']+){0,3})\s+(?:interior\s+)?art\b/);
+  if (artMatch) {
+    const name = artMatch[1].replace(/^(?:Interior|Full)\s+/i, "").trim();
+    if (name && !pencilers.includes(name)) {
+      pencilers.push(name);
+    }
+  }
+
+  const storyMatch = noteBody.match(/\b([A-Z][a-zA-Z.']+(?:\s+(?:&\s+)?[A-Z][a-zA-Z.']+){0,3})\s+(?:story|script)(?:\s*&\s*art)?\b/);
+  if (storyMatch) {
+    const name = storyMatch[1].trim();
+    if (name && !/^(?:Origin|First|Backup|2nd|Classic)$/i.test(name)) {
+      writers.push(name);
+      if (/story\s*&\s*art/i.test(storyMatch[0]) && !pencilers.includes(name)) {
+        pencilers.push(name);
+      }
+    }
+  }
+
+  return { cleanedNotes: cleaned, writers, pencilers, coverArtists };
+}
+
 /**
  * Resolve full lore dossier for any comic title and issue
  */
-export function resolveComicLoreDossier(title: string, issueNumber?: string): ComicLoreDossier {
+export function resolveComicLoreDossier(
+  title: string,
+  issueNumber?: string,
+  graderNotes?: string,
+  resolvedPublisher?: string,
+  publicationYear?: number
+): ComicLoreDossier {
   const clean = title.toLowerCase().replace(/^(the|a)\s+/, "");
-  const match = clean.match(/([a-z\s:.\-]+?)\s*#?(\d+)/i);
+  const match = clean.match(/([a-z0-9\s:.'\-&+/]+?)\s*#?(\d+)/i);
 
   const series = match ? match[1].trim() : clean;
   const issue = issueNumber || (match ? match[2] : "1");
@@ -229,20 +295,15 @@ export function resolveComicLoreDossier(title: string, issueNumber?: string): Co
     if (targetSeries && targetIssue) {
       const cleanTargetSeries = targetSeries.trim().toLowerCase();
       const cleanSeries = series.trim().toLowerCase();
-      // Strip leading publisher prefixes if any: "marvel comics", "marvel", "dc comics", "dc", "image"
-      const normalizedSeries = cleanSeries.replace(/^(marvel\s+comics|marvel|dc\s+comics|dc|image\s+comics|image|dark\s+horse)\s+/, "");
+      const normalizedSeries = cleanSeries.replace(/^(marvel\s+comics|marvel|dc\s+comics|dc|image\s+comics|image|dark\s+horse)(?!\s+presents\b)\s+/, "");
       if (
         normalizedSeries === cleanTargetSeries &&
         issue === targetIssue.trim()
       ) {
-        // Verify publication year if available in title or target
         if (dossier.gcdMetadata.publicationYear) {
-          const yearMatch = title.match(/\b(19\d{2}|20\d{2})\b/);
-          if (yearMatch) {
-            const yr = parseInt(yearMatch[1], 10);
-            if (Math.abs(yr - dossier.gcdMetadata.publicationYear) > 3) {
-              continue; // Different volume (e.g. 2022 vs 1990)
-            }
+          const yr = publicationYear ?? (title.match(/\(\s*(19\d{2}|20\d{2})\s*\)/) ? parseInt(title.match(/\(\s*(19\d{2}|20\d{2})\s*\)/)![1], 10) : undefined);
+          if (yr && Math.abs(yr - dossier.gcdMetadata.publicationYear) > 3) {
+            continue;
           }
         }
         return dossier;
@@ -252,19 +313,29 @@ export function resolveComicLoreDossier(title: string, issueNumber?: string): Co
     }
   }
 
-  // Generic canonical fallback for any verified issue
+  const parsedNotes = parseCgcLabelNotes(graderNotes);
+  const pub = resolvedPublisher || resolveAuthoritativePublisher(series, null, publicationYear) || "";
   const isPremiere = issue === "1";
+  const hasFirstApp = /\b(?:1st|first)\s+(?:full\s+)?(?:app|appearance|cameo)\b/i.test(parsedNotes.cleanedNotes);
+  const hasOrigin = /\borigin\b/i.test(parsedNotes.cleanedNotes);
+
   return {
-    tier: isPremiere ? "MAJOR_KEY" : "HISTORIC_LANDMARK",
-    tierBadge: isPremiere ? "👑 SERIES PREMIERE #1" : "⭐ CANONICAL HISTORIC ISSUE",
-    historicalSignificance: `${title} is a verified sovereign issue preserved in archival certified grading. Representing key narrative milestones in its era's canon with high secondary market collector interest.`,
-    collectorHoldingThesis:
-      "Certified investment-grade slab. The encapsulated preservation guarantees condition permanence and certified provenance against raw copy degradation.",
+    tier: hasFirstApp || isPremiere ? "MAJOR_KEY" : "HISTORIC_LANDMARK",
+    tierBadge: hasFirstApp
+      ? "🔑 CGC VERIFIED KEY ISSUE"
+      : hasOrigin
+        ? "⭐ CGC VERIFIED ORIGIN ISSUE"
+        : isPremiere
+          ? "👑 SERIES PREMIERE #1"
+          : "⭐ CERTIFIED ARCHIVAL SLAB",
+    historicalSignificance: parsedNotes.cleanedNotes || "",
+    collectorHoldingThesis: "",
     gcdMetadata: {
-      writers: ["Original Creative Team"],
-      pencilers: ["Staff Artists"],
-      coverArtists: ["Cover Illustrator"],
-      publisher: "Sovereign Publisher",
+      writers: parsedNotes.writers,
+      pencilers: parsedNotes.pencilers,
+      coverArtists: parsedNotes.coverArtists,
+      publisher: pub,
+      publicationYear,
     },
   };
 }

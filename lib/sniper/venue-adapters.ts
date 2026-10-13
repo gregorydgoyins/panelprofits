@@ -577,8 +577,8 @@ export async function fetchVenueCompletedSales(
   const salesMap = new Map<string, RealizedVenueSaleRow>();
   let calls = 0;
 
-  for (let i = 0; i < urls.length; i += 3) {
-    const batch = urls.slice(i, i + 3);
+  for (let i = 0; i < urls.length; i += 8) {
+    const batch = urls.slice(i, i + 8);
     const results = await Promise.all(batch.map((u) => fetchHtml(u)));
     for (const r of results) {
       calls++;

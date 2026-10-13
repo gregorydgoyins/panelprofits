@@ -46,10 +46,10 @@ export const LEGENDARY_CREATORS = [
 
 // Misspelled Comic Title Patterns (Stealth typos that hide listings from general buyer searches)
 export const MISSPELLED_PATTERNS: Array<{ pattern: RegExp; correct: string }> = [
-  { pattern: /\b(spidre-?man|spiderman|spidermn)\b/i, correct: "Spider-Man" },
+  { pattern: /\b(spidre-?man|spidermn)\b/i, correct: "Spider-Man" },
   { pattern: /\b(wolvarine|wovlerine|wolverine\s*#?\s*1(?=.*wovle))\b/i, correct: "Wolverine" },
-  { pattern: /\b(x-?men(?!\s*#|\s*\d))\b/i, correct: "X-Men" },
-  { pattern: /\b(batmn|bat-man)\b/i, correct: "Batman" },
+  { pattern: /\b(xmne|x-mmen)\b/i, correct: "X-Men" },
+  { pattern: /\b(batmn)\b/i, correct: "Batman" },
   { pattern: /\b(supermna|sperman)\b/i, correct: "Superman" },
   { pattern: /\b(avangers|advengers)\b/i, correct: "Avengers" },
   { pattern: /\b(carnge)\b/i, correct: "Carnage" },
@@ -57,8 +57,8 @@ export const MISSPELLED_PATTERNS: Array<{ pattern: RegExp; correct: string }> = 
   { pattern: /\b(mcfarlen|mcfarland)\b/i, correct: "McFarlane" },
   { pattern: /\b(fantatsic|fatastic)\b/i, correct: "Fantastic" },
   { pattern: /\b(punsiher|punshier)\b/i, correct: "Punisher" },
-  { pattern: /\b(catwman|cat-woman)\b/i, correct: "Catwoman" },
-  { pattern: /\b(daredevl|dare-devil)\b/i, correct: "Daredevil" },
+  { pattern: /\b(catwman)\b/i, correct: "Catwoman" },
+  { pattern: /\b(daredevl)\b/i, correct: "Daredevil" },
   { pattern: /\b(dective\s*comics|detectve)\b/i, correct: "Detective Comics" },
   { pattern: /\b(action\s*comcs)\b/i, correct: "Action Comics" },
   { pattern: /\b(invisable)\b/i, correct: "Invisible" },
@@ -74,11 +74,8 @@ export const FOREIGN_TITLE_TRANSLATIONS: Record<string, string> = {
   "l'incroyable hulk": "The Incredible Hulk",
   "les quatre fantastiques": "Fantastic Four",
   "le chevalier noir": "Batman",
-  "strange": "Strange (Marvel France - Lug)",
   "special strange": "Special Strange (Marvel France - Lug)",
   "spécial strange": "Special Strange (Marvel France - Lug)",
-  "titans": "Titans (Marvel France - Lug)",
-  "nova": "Nova (Marvel France - Lug)",
   "die spinne": "The Amazing Spider-Man",
   "die rächer": "The Avengers",
   "die racher": "The Avengers",
@@ -87,7 +84,39 @@ export const FOREIGN_TITLE_TRANSLATIONS: Record<string, string> = {
 };
 
 export const CPV_REGEX = /\b(cpv|canadian\s*price\s*variant|canadian\s*edition|75[¢c]\s*cpv|95[¢c]\s*cpv|\$1(?:\.00)?\s*cpv)\b/i;
-export const CANADIAN_HEROES_REGEX = /\b(alpha\s*flight|captain\s*canuck|nelvana|guardian|sasquatch|shaman|snowbird|puck|vindicator|northstar|aurora)\b/i;
+export const CANADIAN_HEROES_REGEX = /\b(alpha\s*flight|captain\s*canuck|nelvana)\b/i;
+
+export function formatComicSeriesTitleCase(raw: string): string {
+  if (!raw) return raw;
+  const trimmed = raw.trim();
+  if (trimmed === trimmed.toUpperCase() && trimmed.length > 2) {
+    const lowerWords = new Set(["and", "the", "of", "in", "on", "a", "an", "to", "for", "by", "with", "into"]);
+    const upperTokens = new Set(["II", "III", "IV", "VI", "VII", "VIII", "IX", "DC", "JLA", "JSA", "GI", "G.I.", "TMNT"]);
+    return trimmed
+      .split(/\s+/)
+      .map((word, idx) => {
+        const upper = word.toUpperCase();
+        if (upperTokens.has(upper)) return upper;
+        if (word.includes("-")) {
+          return word
+            .split("-")
+            .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+            .join("-");
+        }
+        if (word.includes("/")) {
+          return word
+            .split("/")
+            .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+            .join("/");
+        }
+        const low = word.toLowerCase();
+        if (idx > 0 && lowerWords.has(low)) return low;
+        return low.charAt(0).toUpperCase() + low.slice(1);
+      })
+      .join(" ");
+  }
+  return trimmed;
+}
 
 export function normalizeAuctionTitle(rawTitle: string): string {
   if (!rawTitle) return "Unknown Comic";
@@ -104,16 +133,19 @@ export function normalizeAuctionTitle(rawTitle: string): string {
     .replace(/[-*•~_]{2,}/g, " ")
     .replace(/[*•~]+/g, " ");
 
-  // 2. Remove prefixes & weird punctuation
+  // 2. Remove prefixes & weird punctuation (preserving "Marvel Comics Presents" and "DC Comics Presents")
   title = title
-    .replace(/^Marvel Comic\s+/i, "")
-    .replace(/^DC\s+/i, "")
+    .replace(/^Marvel Comic(?!s?\s+Presents)\s+/i, "")
+    .replace(/^DC(?!\s+Comics\s+Presents)\s+/i, "")
     .replace(/\s*-\s*Supe$/i, "")
     .replace(/\s*\((?:19|20)\d{2}[^)]*\)/g, "")
     .replace(/\s*,\s*19\d{2}\b/g, "")
     .replace(/\s*,\s*20\d{2}\b/g, "")
     .replace(/\s*-\s*$/i, "")
     .replace(/#\s+/g, "#");
+
+  // 2b. Un-invert ", THE" / ", A" / ", AN" before issue #
+  title = title.replace(/^([a-zA-Z0-9\s:'.\-&+/]+?),\s*(the|a|an)\b(?=\s*(?:#|no\.|\d|$))/i, "$2 $1");
 
   // 3. Fix merged text e.g. "halo:uprising#2" -> "Halo: Uprising #2"
   title = title.replace(/:([a-zA-Z])/g, ": $1");
@@ -126,20 +158,7 @@ export function normalizeAuctionTitle(rawTitle: string): string {
     .trim();
 
   // 5. Title case if all-caps
-  if (title === title.toUpperCase() && title.length > 4) {
-    title = title
-      .toLowerCase()
-      .split(" ")
-      .map((w, idx) => {
-        if (idx > 0 && ["and", "the", "of", "in", "on", "a", "an", "to", "for", "by", "with"].includes(w)) {
-          return w;
-        }
-        return w.charAt(0).toUpperCase() + w.slice(1);
-      })
-      .join(" ");
-  }
-
-  return title.trim();
+  return formatComicSeriesTitleCase(title);
 }
 
 export interface TitleParseResult {
@@ -321,58 +340,55 @@ export function parseAndFilterListing(
   let extractedIssue = "1";
   let extractedYear: number | undefined;
 
-  const yearMatch = title.match(/\b(19\d{2}|20\d{2})\b/);
-  if (yearMatch) {
-    extractedYear = parseInt(yearMatch[1], 10);
-  }
-
   // Clean title from emojis, leading punctuation, and grading badges
-  const cleanTitle = title
+  let cleanTitle = title
     .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, " ")
     .replace(/\((?:19|20)\d{2}[^)]*\)/g, " ")
     .replace(/^[^a-zA-Z0-9]+/, "")
     .replace(/^(cgc|cbcs|psa|pgx)\s+(graded\s+)?(?:\d+\.?\d*\s+)?/i, "")
-    .replace(/^(marvel\s+comics|dc\s+comics|image\s+comics)\s*[-:]?\s*/i, "")
+    .replace(/^(?:marvel\s+comics|dc\s+comics|image\s+comics)(?!\s+presents\b)\s*[-:]?\s*/i, "")
     .trim();
 
-  // Pattern A: Has '#' e.g. '#266', ' - #266', '# 266'
-  const hashMatch = cleanTitle.match(/([a-zA-Z0-9\s:'.\-]+?)\s*[-–—]?\s*#\s*([0-9]+[a-zA-Z]?(?:\.[0-9]+)?)/i);
-  if (hashMatch) {
-    const rawSeries = hashMatch[1]
+  // Un-invert ", THE" / ", A" / ", AN" before issue #
+  cleanTitle = cleanTitle.replace(/^([a-zA-Z0-9\s:'.\-&+/]+?),\s*(the|a|an)\b(?=\s*(?:#|no\.|\d|$))/i, "$2 $1").trim();
+
+  const cleanExtractedSeries = (raw: string): string => {
+    let s = raw
       .replace(/\b(cgc|cbcs|pgx|psa)\b/gi, "")
       .replace(/\b(19\d{2}|20\d{2})\b/g, "")
-      .replace(/\bvol(?:\.|ume)?\s*\d+/gi, "")
+      .replace(/\b(?:vol(?:\.|ume)?|v)\s*\d+\b/gi, "")
       .replace(/[\[\]\(\)\{\}]/g, "")
-      .replace(/[-–—:]+$/, "")
+      .replace(/[-–—:,]+$/, "")
+      .replace(/\s+/g, " ")
       .trim();
+    if (/^x-?men:?\s+giant[- ]size$/i.test(s)) {
+      s = "Giant-Size X-Men";
+    }
+    return formatComicSeriesTitleCase(s);
+  };
+
+  // Pattern A: Has '#' e.g. '#266', ' - #266', '# 266'
+  const hashMatch = cleanTitle.match(/^([a-zA-Z0-9\s:'.\-&+/,]+?)\s*[-–—]?\s*#\s*([0-9]+[a-zA-Z]?(?:\.[0-9]+)?|1\/2|\u00bd)/i);
+  if (hashMatch) {
+    const rawSeries = cleanExtractedSeries(hashMatch[1]);
     if (rawSeries.length > 0) {
       extractedSeries = rawSeries;
     }
     extractedIssue = hashMatch[2];
   } else {
     // Pattern B: 'No. 128'
-    const noMatch = cleanTitle.match(/([a-zA-Z0-9\s:'.\-]+?)\s*[-–—]?\s*no\.\s*([0-9]+[a-zA-Z]?(?:\.[0-9]+)?)/i);
+    const noMatch = cleanTitle.match(/^([a-zA-Z0-9\s:'.\-&+/,]+?)\s*[-–—]?\s*no\.\s*([0-9]+[a-zA-Z]?(?:\.[0-9]+)?)/i);
     if (noMatch) {
-      const rawSeries = noMatch[1]
-        .replace(/\b(cgc|cbcs|pgx|psa)\b/gi, "")
-        .replace(/\b(19\d{2}|20\d{2})\b/g, "")
-        .replace(/[\[\]\(\)\{\}]/g, "")
-        .replace(/[-–—:]+$/, "")
-        .trim();
+      const rawSeries = cleanExtractedSeries(noMatch[1]);
       if (rawSeries.length > 0) {
         extractedSeries = rawSeries;
       }
       extractedIssue = noMatch[2];
     } else {
       // Pattern C: Number preceded by series and followed by grade or descriptor (e.g. 'Batman 611 CGC 9.8' or 'Thor 373 CGC')
-      const numMatch = cleanTitle.match(/^([a-zA-Z\s:'.\-]+?)\s+(\d{1,4}[a-zA-Z]?)\b(?:\s+(?:cgc|cbcs|psa|pgx|\(?\d{4}\)?|nm|vf|white|newsstand|annual|variant))/i);
+      const numMatch = cleanTitle.match(/^([a-zA-Z0-9\s:'.\-&+/,]+?)\s+(\d{1,4}[a-zA-Z]?)\b(?:\s+(?:cgc|cbcs|psa|pgx|\(?\d{4}\)?|nm|vf|white|newsstand|annual|variant))/i);
       if (numMatch) {
-        const rawSeries = numMatch[1]
-          .replace(/\b(cgc|cbcs|pgx|psa)\b/gi, "")
-          .replace(/\b(19\d{2}|20\d{2})\b/g, "")
-          .replace(/[\[\]\(\)\{\}]/g, "")
-          .replace(/[-–—:]+$/, "")
-          .trim();
+        const rawSeries = cleanExtractedSeries(numMatch[1]);
         if (rawSeries.length > 0) {
           extractedSeries = rawSeries;
         }
@@ -381,14 +397,140 @@ export function parseAndFilterListing(
     }
   }
 
-  // Check for independent / alternative publishers
-  const isIndyPublisher = /\b(image|dark\s*horse|valiant|idw|boom|dynamite|vertigo|fantagraphics|mirage|pacific|kitchen\s*sink|malibu|eclipse|crossgen|avatar|oni\s*press)\b/i.test(fullText);
+  const issueNumVal = parseInt(extractedIssue, 10) || 1;
 
-  // Determine Era with full canonical precision
+  // Extract publication year: distinguish exact single year "(1988)" from series run range "(1937-2011)"
+  const exactYearParen = title.match(/\(\s*(19\d{2}|20\d{2})\s*\)/);
+  const exactYearComma = title.match(/,\s*(19\d{2}|20\d{2})\b/);
+  const rangeParen = title.match(/\(\s*(19\d{2}|20\d{2})\s*[-–]\s*(\d{2,4})?/);
+
+  if (exactYearParen) {
+    extractedYear = parseInt(exactYearParen[1], 10);
+  } else if (exactYearComma) {
+    extractedYear = parseInt(exactYearComma[1], 10);
+  } else if (rangeParen) {
+    const startYear = parseInt(rangeParen[1], 10);
+    // Estimate issue year from startYear + (issue - 1) / 10 (will be refined by DB metadata lookup when available)
+    const estOffset = issueNumVal <= 1 ? 0 : Math.floor((issueNumVal - 1) / 10);
+    let endYear = 2026;
+    if (rangeParen[2]) {
+      const rawEnd = rangeParen[2];
+      endYear = rawEnd.length === 2 ? Math.floor(startYear / 100) * 100 + parseInt(rawEnd, 10) : parseInt(rawEnd, 10);
+      if (endYear < startYear) endYear += 100;
+    }
+    extractedYear = Math.min(endYear, startYear + estOffset);
+  } else {
+    // Check standalone 4-digit year not part of a range
+    const standaloneYear = title.match(/\b(19\d{2}|20\d{2})(?!\s*[-–])\b/);
+    if (standaloneYear) {
+      extractedYear = parseInt(standaloneYear[1], 10);
+    }
+  }
+
+  // Fallback series-based start year estimation when no year appears in the title
+  if (!extractedYear) {
+    const CLASSIC_SERIES_START_YEARS: Record<string, { start: number; issuesPerYear: number }> = {
+      "action comics": { start: 1938, issuesPerYear: 12 },
+      "detective comics": { start: 1937, issuesPerYear: 12 },
+      "batman": { start: 1940, issuesPerYear: 8 },
+      "superman": { start: 1939, issuesPerYear: 8 },
+      "wonder woman": { start: 1942, issuesPerYear: 8 },
+      "flash comics": { start: 1940, issuesPerYear: 10 },
+      "all-star comics": { start: 1940, issuesPerYear: 6 },
+      "sensation comics": { start: 1942, issuesPerYear: 10 },
+      "more fun comics": { start: 1936, issuesPerYear: 12 },
+      "adventure comics": { start: 1938, issuesPerYear: 12 },
+      "captain america comics": { start: 1941, issuesPerYear: 10 },
+      "marvel mystery comics": { start: 1939, issuesPerYear: 10 },
+      "whiz comics": { start: 1940, issuesPerYear: 12 },
+      "master comics": { start: 1940, issuesPerYear: 12 },
+      "vault of horror": { start: 1950, issuesPerYear: 6 },
+      "tales from the crypt": { start: 1950, issuesPerYear: 6 },
+      "haunt of fear": { start: 1950, issuesPerYear: 6 },
+      "weird science": { start: 1950, issuesPerYear: 6 },
+      "weird fantasy": { start: 1950, issuesPerYear: 6 },
+      "journey into mystery": { start: 1952, issuesPerYear: 8 },
+      "strange tales": { start: 1951, issuesPerYear: 8 },
+      "tales to astonish": { start: 1959, issuesPerYear: 10 },
+      "tales of suspense": { start: 1959, issuesPerYear: 10 },
+      "showcase": { start: 1956, issuesPerYear: 6 },
+      "brave and the bold": { start: 1955, issuesPerYear: 6 },
+      "the brave and the bold": { start: 1955, issuesPerYear: 6 },
+      "mystery in space": { start: 1951, issuesPerYear: 8 },
+      "strange adventures": { start: 1950, issuesPerYear: 10 },
+      "house of mystery": { start: 1951, issuesPerYear: 10 },
+      "house of secrets": { start: 1956, issuesPerYear: 8 },
+      "sugar and spike": { start: 1956, issuesPerYear: 6 },
+      "sea devils": { start: 1961, issuesPerYear: 6 },
+      "metal men": { start: 1963, issuesPerYear: 6 },
+      "doom patrol": { start: 1964, issuesPerYear: 8 },
+      "the flash": { start: 1959, issuesPerYear: 9 },
+      "flash": { start: 1959, issuesPerYear: 9 },
+      "green lantern": { start: 1960, issuesPerYear: 8 },
+      "justice league of america": { start: 1960, issuesPerYear: 9 },
+      "aquaman": { start: 1962, issuesPerYear: 6 },
+      "the atom": { start: 1962, issuesPerYear: 6 },
+      "atom": { start: 1962, issuesPerYear: 6 },
+      "hawkman": { start: 1964, issuesPerYear: 6 },
+      "teen titans": { start: 1966, issuesPerYear: 6 },
+      "the spectre": { start: 1967, issuesPerYear: 5 },
+      "spectre": { start: 1967, issuesPerYear: 5 },
+      "phantom stranger": { start: 1969, issuesPerYear: 6 },
+      "the phantom stranger": { start: 1969, issuesPerYear: 6 },
+      "fantastic four": { start: 1961, issuesPerYear: 12 },
+      "the amazing spider-man": { start: 1963, issuesPerYear: 12 },
+      "amazing spider-man": { start: 1963, issuesPerYear: 12 },
+      "the avengers": { start: 1963, issuesPerYear: 12 },
+      "avengers": { start: 1963, issuesPerYear: 12 },
+      "x-men": { start: 1963, issuesPerYear: 10 },
+      "uncanny x-men": { start: 1963, issuesPerYear: 10 },
+      "the incredible hulk": { start: 1962, issuesPerYear: 10 },
+      "incredible hulk": { start: 1962, issuesPerYear: 10 },
+      "daredevil": { start: 1964, issuesPerYear: 12 },
+      "iron man": { start: 1968, issuesPerYear: 12 },
+      "captain america": { start: 1968, issuesPerYear: 12 },
+      "silver surfer": { start: 1968, issuesPerYear: 6 },
+      "sub-mariner": { start: 1968, issuesPerYear: 12 },
+      "doctor strange": { start: 1968, issuesPerYear: 8 },
+      "conan the barbarian": { start: 1970, issuesPerYear: 12 },
+      "swamp thing": { start: 1972, issuesPerYear: 6 },
+      "the tomb of dracula": { start: 1972, issuesPerYear: 8 },
+      "tomb of dracula": { start: 1972, issuesPerYear: 8 },
+      "werewolf by night": { start: 1972, issuesPerYear: 8 },
+      "ghost rider": { start: 1973, issuesPerYear: 8 },
+      "giant-size x-men": { start: 1975, issuesPerYear: 2 },
+      "marvel spotlight": { start: 1971, issuesPerYear: 6 },
+      "marvel premiere": { start: 1972, issuesPerYear: 6 },
+      "new mutants": { start: 1983, issuesPerYear: 12 },
+      "alpha flight": { start: 1983, issuesPerYear: 12 },
+      "wolverine": { start: 1988, issuesPerYear: 12 },
+      "spawn": { start: 1992, issuesPerYear: 12 },
+      "the walking dead": { start: 2003, issuesPerYear: 12 },
+      "walking dead": { start: 2003, issuesPerYear: 12 },
+      "invincible": { start: 2003, issuesPerYear: 12 },
+      "saga": { start: 2012, issuesPerYear: 10 },
+    };
+    const keyLower = extractedSeries.toLowerCase();
+    const matchInfo = CLASSIC_SERIES_START_YEARS[keyLower];
+    if (matchInfo) {
+      if (keyLower === "the flash" || keyLower === "flash") {
+        // Flash #105 starts in 1959
+        extractedYear = issueNumVal >= 105
+          ? 1959 + Math.floor((issueNumVal - 105) / matchInfo.issuesPerYear)
+          : 1940 + Math.floor(Math.max(0, issueNumVal - 1) / 10);
+      } else if (keyLower === "captain america" || keyLower === "the incredible hulk" || keyLower === "incredible hulk") {
+        extractedYear = issueNumVal >= 100
+          ? 1968 + Math.floor((issueNumVal - 100) / matchInfo.issuesPerYear)
+          : matchInfo.start + Math.floor(Math.max(0, issueNumVal - 1) / matchInfo.issuesPerYear);
+      } else {
+        extractedYear = matchInfo.start + Math.floor(Math.max(0, issueNumVal - 1) / matchInfo.issuesPerYear);
+      }
+    }
+  }
+
+  // Determine Era with full canonical precision from publication year
   let extractedEra: ComicEra = "modern";
-  if (isIndyPublisher && (extractedYear ? extractedYear >= 1980 : true)) {
-    extractedEra = "indy";
-  } else if (extractedYear) {
+  if (extractedYear) {
     if (extractedYear < 1938) extractedEra = "platinum";
     else if (extractedYear <= 1945) extractedEra = "golden";
     else if (extractedYear <= 1955) extractedEra = "atomic";
@@ -398,8 +540,10 @@ export function parseAndFilterListing(
     else if (extractedYear <= 2009) extractedEra = "modern";
     else extractedEra = "postmodern";
   } else {
-    // Heuristic era fallback from series keywords
-    if (/action comics|detective comics|batman|superman/i.test(title) && grade !== null && grade <= 9.2) {
+    const isIndyPublisher = /\b(image|dark\s*horse|valiant|idw|boom|dynamite|vertigo|fantagraphics|mirage|pacific|kitchen\s*sink|malibu|eclipse|crossgen|avatar|oni\s*press)\b/i.test(fullText);
+    if (isIndyPublisher) {
+      extractedEra = "indy";
+    } else if (/action comics|detective comics|batman|superman/i.test(title) && grade !== null && grade <= 9.2) {
       extractedEra = "silver";
     }
   }

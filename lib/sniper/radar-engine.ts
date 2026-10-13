@@ -214,11 +214,15 @@ export function evaluateAuctionListing(
   }
 
   // GATE 4: Recorded Sales Lookup & "Zero Sales" Anti-Impulse Discipline
-  const realSales = lookupMultiPointPriceHistory(
+  const localSales = lookupMultiPointPriceHistory(
     parsed.extractedSeries,
     parsed.extractedIssue,
     effectiveGrade
   );
+  const realSales =
+    listing.historicalComps && listing.historicalComps.length > 0
+      ? listing.historicalComps
+      : localSales;
 
   let anchorFmv = Number(listing.anchorFmv || listing.fairMarketValue || 0);
   if (anchorFmv <= 0 && realSales.length > 0) {
@@ -248,15 +252,10 @@ export function evaluateAuctionListing(
   const projectedNetProfit = hasVerifiedFmv ? Math.round((netEstimatedProceeds - allInCost) * 100) / 100 : 0;
   const netRoiPercent = hasVerifiedFmv && allInCost > 0 ? Math.round((projectedNetProfit / allInCost) * 100) : 0;
 
-  // Buy It Now Sensibility & Upside Gate (when FMV is available or minimum discount is enforced)
-  if (hasVerifiedFmv) {
-    if (isBuyItNowListing) {
-      if (dollarSpread <= 0) {
-        return createRejection(`REJECTED (BUY IT NOW OVERPRICED): Buy It Now price $${allInCost.toFixed(2)} exceeds verified FMV $${anchorFmv.toFixed(2)} (Zero upside).`, 5);
-      }
-      if (projectedNetProfit <= 0) {
-        return createRejection(`REJECTED (BUY IT NOW FEE DEFICIT): All-in purchase cost $${allInCost.toFixed(2)} yields negative net proceeds ($${projectedNetProfit.toFixed(2)}) after standard platform fees against FMV $${anchorFmv.toFixed(2)}.`, 5);
-      }
+  // Enforce strict discount / positive-spread filter only when requested by the active profile
+  if (hasVerifiedFmv && (profile.requireProvenSales || profile.minDiscountPercent > 0)) {
+    if (isBuyItNowListing && profile.requireProvenSales && dollarSpread <= 0) {
+      return createRejection(`REJECTED (BUY IT NOW OVERPRICED): Buy It Now price $${allInCost.toFixed(2)} exceeds verified FMV $${anchorFmv.toFixed(2)} (Zero upside).`, 5);
     } else if (discountPercent < profile.minDiscountPercent) {
       return createRejection(`REJECTED: Discount ${discountPercent}% below required threshold of ${profile.minDiscountPercent}%.`, 5);
     }
@@ -269,7 +268,7 @@ export function evaluateAuctionListing(
 
   // Double-Up (100% Net Profit / 2x Money) and 50% Win Prices
   const targetWinPrice100Pct = Math.round(((allInCost * 2 + 5.00) / 0.87) * 100) / 100;
-  const targetWinPrice50Pct = Math.round(((allInCost * 1.5 + 5.00) / 0.87) * 100) / 100;
+  const targetWinPrice50Pct = Math.round(((allInCost * 1.5 + 5.00) / 100 * 100 / 0.87) * 100) / 100;
 
   // Liquidity Velocity strictly from recorded sales or active bid count
   const salesDepth = Math.max(realSales.length, listing.bidCount ?? 0);
@@ -323,12 +322,14 @@ export function evaluateAuctionListing(
     whyItsAGoodBuy = `Stumbled Into Greatness: Low census or sleeper key with accelerating collector demand. Acquired far below market ladder. Net profit potential: +$${projectedNetProfit.toFixed(2)} (${netRoiPercent}% ROI).`;
   } else if (specialPlay === "LEGENDARY_SIGNATURE") {
     whyItsAGoodBuy = `Irreplaceable Provenance: Verified yellow label signature by deceased legend ${parsed.signer}. Premium collectible locked into slab below raw replacement cost. Net flip profit: +$${projectedNetProfit.toFixed(2)}.`;
+  } else if (dollarSpread > 0) {
+    whyItsAGoodBuy = `Below-Comp Opportunity: Priced at $${allInCost.toFixed(2)} all-in (${discountPercent}% below verified $${anchorFmv.toFixed(2)} FMV across ${realSales.length} recorded comp${realSales.length === 1 ? "" : "s"}). Safe snipe ceiling is $${Math.max(0, Math.round(anchorFmv * 0.70 - listing.shippingCost - estTax))}.`;
   } else {
-    whyItsAGoodBuy = `Deep Dislocation vs. Comps: Selling at ${discountPercent}% discount to verified auction comps ($${anchorFmv.toFixed(2)} FMV). Safe snipe ceiling is $${Math.round(anchorFmv * 0.70 - listing.shippingCost - estTax)}.`;
+    whyItsAGoodBuy = `Verified Comp Benchmark: All-in ask is $${allInCost.toFixed(2)} vs. $${anchorFmv.toFixed(2)} median realized FMV (${realSales.length} recorded Grade ${effectiveGrade.toFixed(1)} comp${realSales.length === 1 ? "" : "s"}). Target snipe entry for 30% margin is $${Math.max(0, Math.round(anchorFmv * 0.70 - listing.shippingCost - estTax))}.`;
   }
 
   // Calculate Safe Snipe Ceiling (Leaves at least 25% margin intact)
-  const recommendedMaxBid = hasVerifiedFmv ? Math.round(anchorFmv * 0.70 - listing.shippingCost - estTax) : 0;
+  const recommendedMaxBid = hasVerifiedFmv ? Math.max(0, Math.round(anchorFmv * 0.70 - listing.shippingCost - estTax)) : 0;
 
   const confidenceScore = Math.min(
     100,
@@ -343,7 +344,13 @@ export function evaluateAuctionListing(
   const resolvedCensus98 = (listing.censusCount98 && listing.censusCount98 > 0)
     ? listing.censusCount98
     : (realCensus && realCensus.topGrade === "9.8" ? realCensus.totalGraded : undefined);
-  const resolvedCensusHigher = listing.censusHigher ?? (realCensus && (realCensus.topGrade === "9.9" || realCensus.topGrade === "10.0") ? 1 : 0);
+  const topGradeVal = realCensus?.topGrade ? parseFloat(realCensus.topGrade) : NaN;
+  const resolvedCensusHigher =
+    listing.censusHigher !== undefined
+      ? listing.censusHigher
+      : Number.isFinite(topGradeVal) && effectiveGrade >= topGradeVal
+        ? 0
+        : undefined;
 
   let censusScarcityTier = "Census Registry Audit Pending";
   if (resolvedCensusTotal !== undefined) {
@@ -371,7 +378,15 @@ export function evaluateAuctionListing(
     }
   }
 
-  const lore = resolveComicLoreDossier(parsed.normalizedTitle || listing.title, parsed.extractedIssue);
+  const effectiveYear = listing.year ?? parsed.extractedYear;
+  const effectiveEra = listing.era ?? parsed.extractedEra;
+  const lore = resolveComicLoreDossier(
+    parsed.normalizedTitle || listing.title,
+    parsed.extractedIssue,
+    listing.graderNotes,
+    listing.gcdMetadata?.publisher,
+    effectiveYear
+  );
 
   // 1. Comparative Price Matrix strictly for grades with recorded data (no invented grade ratios or catalog multipliers)
   const gradeSpecs: Array<{ grade: number; label: string }> = [
@@ -481,8 +496,8 @@ export function evaluateAuctionListing(
     normalizedTitle: parsed.normalizedTitle || listing.title,
     resolvedSeries: parsed.extractedSeries,
     resolvedIssue: parsed.extractedIssue,
-    resolvedYear: parsed.extractedYear,
-    resolvedEra: parsed.extractedEra,
+    resolvedYear: effectiveYear,
+    resolvedEra: effectiveEra,
     resolvedGrade: effectiveGrade,
     gradingCompany: effectiveCompany,
     certNumber: certNum,
@@ -525,10 +540,10 @@ export function evaluateAuctionListing(
     buyItNowUpsidePercent: isBuyItNowListing ? discountPercent : undefined,
     buyItNowNetProfit: isBuyItNowListing ? projectedNetProfit : undefined,
     buyItNowSensibilityWhy: (() => {
-      if (!isBuyItNowListing || !hasVerifiedFmv) return undefined;
-      const upsideDollarStr = dollarSpread > 0 ? `+$${dollarSpread.toFixed(2)}` : `$${dollarSpread.toFixed(2)}`;
+      if (!isBuyItNowListing || !hasVerifiedFmv || dollarSpread <= 0) return undefined;
+      const upsideDollarStr = `+$${dollarSpread.toFixed(2)}`;
       const profitStr = projectedNetProfit > 0 ? `+$${projectedNetProfit.toFixed(2)}` : `$${projectedNetProfit.toFixed(2)}`;
-      let why = `Sensible Buy It Now Opportunity: Instant acquisition at $${allInCost.toFixed(2)} locks in ${upsideDollarStr} (${discountPercent}%) gross discount below verified CGC ${effectiveGrade} FMV ($${anchorFmv.toFixed(2)}). Yields ${profitStr} net profit (${netRoiPercent}% net ROI) after standard platform fees with zero auction gavel or sniping risk.`;
+      let why = `Sensible Buy It Now Opportunity: Instant acquisition at $${allInCost.toFixed(2)} locks in ${upsideDollarStr} (${discountPercent}%) gross discount below verified CGC ${effectiveGrade} FMV ($${anchorFmv.toFixed(2)}). Yields ${profitStr} net proceeds (${netRoiPercent}% net ROI) after standard platform fees with zero auction gavel or sniping risk.`;
       if (specialPlay === "CRACKED_CASE") {
         why += ` Cracked case discount absorbs $25 CGC reholder fee while preserving ${profitStr} net margin.`;
       } else if (specialPlay === "BELOW_GRADING_COST") {
@@ -547,7 +562,14 @@ export function evaluateAuctionListing(
     historicalSignificanceTier: lore.tier,
     historicalSignificanceLore: lore.historicalSignificance,
     longTermHoldingThesis: lore.collectorHoldingThesis,
-    gcdMetadata: lore.gcdMetadata,
+    gcdMetadata: {
+      ...lore.gcdMetadata,
+      ...listing.gcdMetadata,
+      writers: listing.gcdMetadata?.writers?.length ? listing.gcdMetadata.writers : lore.gcdMetadata.writers,
+      pencilers: listing.gcdMetadata?.pencilers?.length ? listing.gcdMetadata.pencilers : lore.gcdMetadata.pencilers,
+      coverArtists: listing.gcdMetadata?.coverArtists?.length ? listing.gcdMetadata.coverArtists : lore.gcdMetadata.coverArtists,
+      publisher: listing.gcdMetadata?.publisher || lore.gcdMetadata.publisher,
+    },
     galleryImages: listing.galleryImages || (listing.imageUrl ? [listing.imageUrl] : []),
     // Price Matrix, Investopedia Due Diligence Lens & Video Dossier
     priceMatrix: priceMatrix.length > 0 ? priceMatrix : undefined,

@@ -537,7 +537,7 @@ export default function SniperRadarPage() {
       if (strategyTab === "OTHER_PUBS") return Boolean(/dc|image|dark horse|boom|idw|2000 ad|valiant|dynamite|top cow|lev gleason/i.test(deal.gcdMetadata?.publisher || "") || /spawn|hellboy|walking dead|tmnt|saga|sandman|watchmen|judge dredd|daredevil comics/i.test(deal.listing.title));
       if (strategyTab === "PLACEHOLDER_85") return Boolean(deal.resolvedGrade !== null && deal.resolvedGrade <= 9.2 && deal.resolvedGrade >= 8.5);
       if (strategyTab === "CPV") return Boolean(deal.listing.isCanadianPriceVariant || deal.specialPlay === "CANADIAN_PRICE_VARIANT" || /canadian|cpv|75¢|95¢|\$1\.00|alpha flight|canuck/i.test(deal.listing.title));
-      if (strategyTab === "FOREIGN") return Boolean(deal.listing.isForeignLanguageEdition || deal.specialPlay === "FOREIGN_LANGUAGE_KEY" || (deal.listing.currency && deal.listing.currency !== "USD") || /french|german|uk|lug|semic|strange|2000 ad|captain britain|topolino/i.test(deal.listing.title) || deal.listing.source.includes("ebay_"));
+      if (strategyTab === "FOREIGN") return Boolean(deal.listing.isForeignLanguageEdition || deal.specialPlay === "FOREIGN_LANGUAGE_KEY" || (deal.listing.currency && deal.listing.currency !== "USD") || /\b(?:french|german|uk\s*edition|editions?\s*lug|special\s*strange|semic|2000\s*ad|captain\s*britain|topolino)\b/i.test(deal.listing.title) || deal.listing.source.includes("ebay_"));
       if (strategyTab === "STUMBLED") return deal.specialPlay === "STUMBLED_INTO_GREATNESS";
       if (strategyTab === "CRACK_PRESS") return deal.specialPlay === "CRACK_AND_PRESS";
       if (strategyTab === "BELOW_COST") return deal.specialPlay === "BELOW_GRADING_COST" || deal.allInCost <= 45;
@@ -1562,8 +1562,12 @@ export default function SniperRadarPage() {
                               <div className="text-white font-bold text-sm mt-0.5">
                                 ${deal.allInCost.toFixed(2)}
                               </div>
-                              <div className="text-[9px] text-emerald-400 font-sans font-bold">
-                                {deal.anchorFmv > 0 ? `${deal.discountPercent}% below FMV` : "FMV unavailable"}
+                              <div className={`text-[9px] font-sans font-bold ${deal.anchorFmv > 0 && deal.discountPercent < 0 ? "text-amber-400" : "text-emerald-400"}`}>
+                                {deal.anchorFmv > 0
+                                  ? deal.discountPercent >= 0
+                                    ? `${deal.discountPercent}% below FMV`
+                                    : `${Math.abs(deal.discountPercent)}% above FMV`
+                                  : "FMV unavailable"}
                               </div>
                             </div>
 
@@ -1595,11 +1599,15 @@ export default function SniperRadarPage() {
                               <div className="text-amber-400 text-[10px] uppercase font-bold">
                                 Projected Net Flip
                               </div>
-                              <div className="text-amber-300 font-bold text-sm mt-0.5">
-                                {deal.anchorFmv > 0 ? `+$${deal.projectedNetProfit.toFixed(2)}` : "Unavailable"}
+                              <div className={`font-bold text-sm mt-0.5 ${deal.anchorFmv > 0 && deal.projectedNetProfit < 0 ? "text-rose-300" : "text-amber-300"}`}>
+                                {deal.anchorFmv > 0
+                                  ? `${deal.projectedNetProfit >= 0 ? "+" : "−"}$${Math.abs(deal.projectedNetProfit).toFixed(2)}`
+                                  : "Unavailable"}
                               </div>
-                              <div className="text-[9px] text-emerald-400 font-sans font-bold">
-                                {deal.anchorFmv > 0 ? `+${deal.netRoiPercent}% Net Margin` : "FMV unavailable"}
+                              <div className={`text-[9px] font-sans font-bold ${deal.anchorFmv > 0 && deal.netRoiPercent < 0 ? "text-rose-400" : "text-emerald-400"}`}>
+                                {deal.anchorFmv > 0
+                                  ? `${deal.netRoiPercent >= 0 ? "+" : ""}${deal.netRoiPercent}% Net Margin`
+                                  : "FMV unavailable"}
                               </div>
                             </div>
                           </div>
@@ -1627,43 +1635,63 @@ export default function SniperRadarPage() {
                             </div>
                           )}
 
-                          {/* 1. HISTORICAL SIGNIFICANCE & COLLECTOR LORE (WHY THIS IS A GREAT COLLECTIBLE) */}
-                          <div className="bg-purple-950/25 border border-purple-500/40 rounded-lg p-3 space-y-2">
-                            <div className="flex items-center justify-between">
-                              <span className="text-[10px] uppercase font-mono font-bold text-purple-300 flex items-center gap-1.5">
-                                <span>🏛️</span> HISTORICAL SIGNIFICANCE &amp; COLLECTOR LORE
-                              </span>
-                              <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded bg-purple-900/60 text-purple-200 border border-purple-500/40">
-                                {deal.historicalSignificanceTier ? deal.historicalSignificanceTier.replace(/_/g, " ") : "CANONICAL KEY"}
-                              </span>
+                          {/* 1. HISTORICAL SIGNIFICANCE, CGC SLAB NOTES & CREATIVE CREDITS */}
+                          {(deal.historicalSignificanceLore ||
+                            deal.longTermHoldingThesis ||
+                            deal.gcdMetadata?.writers?.length ||
+                            deal.gcdMetadata?.pencilers?.length ||
+                            deal.gcdMetadata?.coverArtists?.length ||
+                            deal.gcdMetadata?.publisher) && (
+                            <div className="bg-purple-950/25 border border-purple-500/40 rounded-lg p-3 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] uppercase font-mono font-bold text-purple-300 flex items-center gap-1.5">
+                                  <span>🏛️</span> CENSUS LABEL NOTES &amp; COLLECTOR LORE
+                                </span>
+                                <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded bg-purple-900/60 text-purple-200 border border-purple-500/40">
+                                  {deal.historicalSignificanceTier ? deal.historicalSignificanceTier.replace(/_/g, " ") : "CERTIFIED SLAB"}
+                                </span>
+                              </div>
+
+                              {deal.historicalSignificanceLore && (
+                                <p className="text-xs text-purple-100/90 leading-relaxed font-sans">
+                                  {deal.historicalSignificanceLore}
+                                </p>
+                              )}
+
+                              {deal.longTermHoldingThesis && (
+                                <div className="pt-1.5 border-t border-purple-500/20 text-[11px] text-purple-200/80">
+                                  <strong className="text-purple-300 font-mono">Long-Term Holding Thesis: </strong>
+                                  {deal.longTermHoldingThesis}
+                                </div>
+                              )}
+
+                              {deal.gcdMetadata &&
+                                Boolean(
+                                  deal.gcdMetadata.writers?.length ||
+                                    deal.gcdMetadata.pencilers?.length ||
+                                    deal.gcdMetadata.coverArtists?.length ||
+                                    deal.gcdMetadata.publisher
+                                ) && (
+                                  <div className="pt-1 border-t border-purple-500/20 flex flex-wrap items-center gap-3 text-[10px] font-mono text-purple-300/80">
+                                    {deal.gcdMetadata.writers && deal.gcdMetadata.writers.length > 0 && (
+                                      <span>✍️ Writer: <strong className="text-white">{deal.gcdMetadata.writers.join(", ")}</strong></span>
+                                    )}
+                                    {deal.gcdMetadata.pencilers && deal.gcdMetadata.pencilers.length > 0 && (
+                                      <span>🎨 Art: <strong className="text-white">{deal.gcdMetadata.pencilers.join(", ")}</strong></span>
+                                    )}
+                                    {deal.gcdMetadata.coverArtists &&
+                                      deal.gcdMetadata.coverArtists.length > 0 &&
+                                      (!deal.gcdMetadata.pencilers ||
+                                        deal.gcdMetadata.coverArtists.join(", ") !== deal.gcdMetadata.pencilers.join(", ")) && (
+                                        <span>🖼️ Cover: <strong className="text-white">{deal.gcdMetadata.coverArtists.join(", ")}</strong></span>
+                                      )}
+                                    {deal.gcdMetadata.publisher && (
+                                      <span>🏛️ Publisher: <strong className="text-white">{deal.gcdMetadata.publisher}</strong></span>
+                                    )}
+                                  </div>
+                                )}
                             </div>
-
-                            <p className="text-xs text-purple-100/90 leading-relaxed font-sans">
-                              {deal.historicalSignificanceLore || deal.keySignificanceNote || "Sovereign issue with proven secondary market demand."}
-                            </p>
-
-                            {deal.longTermHoldingThesis && (
-                              <div className="pt-1.5 border-t border-purple-500/20 text-[11px] text-purple-200/80">
-                                <strong className="text-purple-300 font-mono">Long-Term Holding Thesis: </strong>
-                                {deal.longTermHoldingThesis}
-                              </div>
-                            )}
-
-                            {/* GCD Creative Team Metadata */}
-                            {deal.gcdMetadata && (
-                              <div className="pt-1 border-t border-purple-500/20 flex flex-wrap items-center gap-2 text-[10px] font-mono text-purple-300/80">
-                                {deal.gcdMetadata.writers && deal.gcdMetadata.writers.length > 0 && (
-                                  <span>✍️ Writer: <strong className="text-white">{deal.gcdMetadata.writers.join(", ")}</strong></span>
-                                )}
-                                {deal.gcdMetadata.pencilers && deal.gcdMetadata.pencilers.length > 0 && (
-                                  <span>🎨 Art: <strong className="text-white">{deal.gcdMetadata.pencilers.join(", ")}</strong></span>
-                                )}
-                                {deal.gcdMetadata.publisher && (
-                                  <span>🏛️ Publisher: <strong className="text-white">{deal.gcdMetadata.publisher}</strong></span>
-                                )}
-                              </div>
-                            )}
-                          </div>
+                          )}
 
                           {/* 2. COMMERCIAL ARBITRAGE & VALUE THESIS (THE SPREAD & PLAY) */}
                           <div className="bg-amber-950/20 border border-amber-500/40 rounded-lg p-3">

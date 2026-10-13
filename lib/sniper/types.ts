@@ -102,6 +102,9 @@ export interface RawAuctionListing {
   anchorFmv?: number;
   fairMarketValue?: number;
   pricingSourceProvenance?: string;
+  historicalComps?: Array<{ date: string; price: number; grade: number; venue: string }>;
+  year?: number;
+  era?: ComicEra;
   gradingCompany?: GradingCompany;
   resolvedGrade?: number;
   censusTotal?: number;

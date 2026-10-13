@@ -80,7 +80,7 @@ export async function GET(request: Request) {
       } else if (angle === "foreign") {
         filteredAuctions = filteredAuctions.filter((item) =>
           item.source.includes("ebay_") ||
-          /french|german|uk|lug|semic|strange|2000 ad|captain britain|topolino/i.test(item.title)
+          /\b(?:french|german|uk\s*edition|editions?\s*lug|special\s*strange|semic|2000\s*ad|captain\s*britain|topolino)\b/i.test(item.title)
         );
       } else if (angle === "placeholder_85") {
         filteredAuctions = filteredAuctions.filter((item) =>
@@ -129,31 +129,41 @@ export async function GET(request: Request) {
         );
         if (keys.length > 0) {
           const db: any = createAdminServerClient();
-          const [{ data: sRows }, { data: gRows }] = await Promise.all([
-            db
-              .from("sniper_sales")
-              .select("series_key,sold_at,price_usd,grade,venue,source,confirmed,url")
-              .in("series_key", keys.slice(0, 300))
-              .limit(5000),
+          const keyChunks: string[][] = [];
+          for (let i = 0; i < keys.length; i += 100) {
+            keyChunks.push(keys.slice(i, i + 100));
+          }
+          const [sChunkResults, { data: gRows }] = await Promise.all([
+            Promise.all(
+              keyChunks.map((chunk) =>
+                db
+                  .from("sniper_sales")
+                  .select("series_key,sold_at,price_usd,grade,venue,source,confirmed,url")
+                  .in("series_key", chunk)
+                  .limit(1000)
+              )
+            ),
             db
               .from("graded_sales_observations")
               .select("title_name,issue_number_raw,sale_price,sale_date,grade_numeric,native_grade_text,venue,evidence_path,currency")
               .gt("sale_price", 0)
               .not("sale_date", "is", null)
-              .limit(2000),
+              .limit(1000),
           ]);
-          for (const s of sRows ?? []) {
-            const list = salesBySeriesKey.get(s.series_key) ?? [];
-            list.push({
-              date: s.sold_at,
-              price: Number(s.price_usd),
-              grade: s.grade != null ? Number(s.grade) : null,
-              venue: s.venue,
-              source: s.source,
-              confirmed: !!s.confirmed,
-              url: s.url ?? undefined,
-            });
-            salesBySeriesKey.set(s.series_key, list);
+          for (const res of sChunkResults) {
+            for (const s of res?.data ?? []) {
+              const list = salesBySeriesKey.get(s.series_key) ?? [];
+              list.push({
+                date: s.sold_at,
+                price: Number(s.price_usd),
+                grade: s.grade != null ? Number(s.grade) : null,
+                venue: s.venue,
+                source: s.source,
+                confirmed: !!s.confirmed,
+                url: s.url ?? undefined,
+              });
+              salesBySeriesKey.set(s.series_key, list);
+            }
           }
           for (const g of gRows ?? []) {
             if (g.currency && g.currency !== "USD") continue;
@@ -174,10 +184,19 @@ export async function GET(request: Request) {
         }
       } catch {}
 
+      const cleanGraderNotes = (raw?: string | null): string | undefined => {
+        if (!raw) return undefined;
+        const cleaned = raw
+          .replace(/A\s+15%\s+BUYER'?S\s+PREMIUM\s*\(MINIMUM\s*\$19\.00\)\s*WILL\s+BE\s+ADDED\s+TO\s+THIS\s+ITEM\s+AT\s+CONCLUSION\s+OF\s+THE\s+AUCTION\.?/gi, "")
+          .replace(/\s+/g, " ")
+          .trim();
+        return cleaned.length > 0 ? cleaned : undefined;
+      };
+
       const updatedAuctions = filteredAuctions.map((item) => {
         const isBin = Boolean(item.isBuyItNow || item.listingType === "BuyItNow" || (item.buyItNowPrice && item.buyItNowPrice > 0));
 
-        // Real time remaining: eBay's end time as of the fetch, minus the time since the fetch. No simulated cycle.
+        // Real time remaining: venue's end time as of the fetch, minus the time since the fetch. No simulated cycle.
         // Buy It Now listings have no end time; 86400 is a placeholder the page does not display.
         const secs = isBin ? 86400 : Math.max(0, Math.round(Number(item.secondsRemaining ?? 0) - (Date.now() - fetchedAtMs) / 1000));
 
@@ -194,27 +213,25 @@ export async function GET(request: Request) {
         };
 
         const parsed = parseAndFilterListing(rawTitle);
+        const effectiveGrade = item.resolvedGrade ?? parsed.grade ?? undefined;
         const sKey = parsed.extractedSeries && parsed.extractedSeries !== "Unknown Series"
           ? seriesKey(parsed.extractedSeries, parsed.extractedIssue || "1")
           : "";
-        const dbMeta = resolveAuctionDbMetadata(rawTitle, item.resolvedGrade, sKey ? salesBySeriesKey.get(sKey) : undefined);
-        const resolvedFmv = (item.anchorFmv && item.anchorFmv > 0)
+        const dbMeta = resolveAuctionDbMetadata(rawTitle, effectiveGrade, sKey ? salesBySeriesKey.get(sKey) : undefined);
+        const resolvedFmv = dbMeta.fmv ?? ((item.anchorFmv && item.anchorFmv > 0)
           ? item.anchorFmv
           : (item.fairMarketValue && item.fairMarketValue > 0)
             ? item.fairMarketValue
-            : dbMeta.fmv ?? undefined;
+            : undefined);
 
         const resolvedPub = dbMeta.publisher || item.gcdMetadata?.publisher || undefined;
 
-        // The bid and bid count are exactly what eBay reported at fetch time; nothing is projected.
         const realTimeBid = Number(item.currentBid || 0);
         const realTimeBidCount = Number(item.bidCount ?? 0);
 
-        // The listing's own venue photo is the picture of the actual slab; only fall back to the catalog cover if missing.
         const catalogCover = item.imageUrl ? "" : (lookupSqliteCover(parsed.extractedSeries, parsed.extractedIssue) || "");
         const resolvedCover = item.imageUrl || catalogCover;
 
-        // Ensure safe, cleanly-encoded URLs without multi-encoding bugs
         const normalizeUrl = (u: string): string => {
           if (!u) return "";
           let curr = u.trim();
@@ -226,7 +243,6 @@ export async function GET(request: Request) {
 
         const safeCoverUrl = normalizeUrl(resolvedCover);
 
-        // Merge item-provided gallery photos
         const galleryList: string[] = [];
         const seenUrls = new Set<string>();
         const addGallery = (u?: string | null) => {
@@ -249,16 +265,30 @@ export async function GET(request: Request) {
 
         // Authoritative Real Census Resolution (No fake formula estimations)
         const realCensus = lookupRealCensus(parsed.extractedSeries, parsed.extractedIssue);
-        const resolvedCensusTotal = (item.censusTotal && item.censusTotal > 0)
+        const resolvedCensusTotal = dbMeta.censusTotal ?? ((item.censusTotal && item.censusTotal > 0)
           ? item.censusTotal
-          : realCensus?.totalGraded;
+          : realCensus?.totalGraded);
+        const topGradeNum = (dbMeta.censusTopGrade ?? realCensus?.topGrade)
+          ? parseFloat(String(dbMeta.censusTopGrade ?? realCensus?.topGrade))
+          : NaN;
+        const resolvedCensusHigher =
+          Number.isFinite(topGradeNum) && effectiveGrade !== undefined && effectiveGrade >= topGradeNum
+            ? 0
+            : undefined;
         const resolvedCensus98 = (item.censusCount98 && item.censusCount98 > 0)
           ? item.censusCount98
           : (realCensus && realCensus.topGrade === "9.8" ? realCensus.totalGraded : undefined);
 
+        const cleanedNotes = cleanGraderNotes(item.graderNotes);
+        const cleanedDesc = cleanGraderNotes(item.itemDescription);
+
         return {
           ...item,
           normalizedTitle: cleanTitle,
+          graderNotes: cleanedNotes,
+          itemDescription: cleanedDesc,
+          year: dbMeta.year ?? item.year ?? parsed.extractedYear,
+          era: dbMeta.era ?? item.era ?? parsed.extractedEra,
           imageUrl: safeCoverUrl,
           galleryImages: galleryList.length > 0 ? galleryList : [safeCoverUrl],
           currentBid: isBin ? (item.buyItNowPrice ?? item.currentBid) : realTimeBid,
@@ -267,7 +297,10 @@ export async function GET(request: Request) {
           timeLeftStr: isBin ? "Buy It Now · Available" : formatTimeStr(secs),
           anchorFmv: resolvedFmv,
           fairMarketValue: resolvedFmv,
+          historicalComps: dbMeta.historicalComps.length > 0 ? dbMeta.historicalComps : item.historicalComps,
+          pricingSourceProvenance: dbMeta.pricingSourceProvenance ?? item.pricingSourceProvenance ?? undefined,
           censusTotal: resolvedCensusTotal,
+          censusHigher: resolvedCensusHigher,
           censusCount98: resolvedCensus98,
           listingType: isBin ? "BuyItNow" : "Auction",
           isBuyItNow: isBin,

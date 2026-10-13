@@ -139,13 +139,15 @@ export function saleStats(sales: SaleObs[], asOf: Date = new Date()): SaleStats 
 
 /** Normalised key shared by the sales table and the candle endpoint. */
 export function seriesKey(series: string, issue: string | number): string {
-  const s = String(series || "")
+  let s = String(series || "")
     .toLowerCase()
     .replace(/\s*[(\[].*?[)\]]/g, "")
+    .replace(/\b(?:vol(?:\.|ume)?|v)\s*\d+\b/g, "")
     .replace(/^the\s+/, "")
-    .replace(/,\s*the$/, "")
+    .replace(/,\s*(?:the|a|an)$/, "")
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
+  if (s === "x men giant size") s = "giant size x men";
   const i = String(issue ?? "").replace(/^#/, "").trim().toLowerCase();
   return `${s}|${i}`;
 }

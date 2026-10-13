@@ -29,12 +29,19 @@ export function resolveHistoricalKeyBadge(
   // 2. Comprehensive First Appearance Database
   const deb = resolveIssueDebuts(seriesName, issueNumber);
   if (deb && deb.characters && deb.characters.length > 0) {
-    const cleanChars = deb.characters.filter(
-      (c) => !c.startsWith("|") && !c.startsWith("*") && c.length < 32 && !c.includes("Vol ")
-    );
+    const cleanChars = deb.characters
+      .map((c) => c.replace(/\s*\([^)]*\)/, "").trim())
+      .filter(
+        (c) =>
+          c.length > 1 &&
+          !c.startsWith("|") &&
+          !c.startsWith("*") &&
+          c.length < 32 &&
+          !c.includes("Vol ") &&
+          (cleanIssue === "1" || c.toLowerCase() !== cleanSeries)
+      );
     if (cleanChars.length > 0) {
-      const topChar = cleanChars[0].replace(/\s*\([^)]*\)/, "").trim();
-      return `1st App. ${topChar}`;
+      return `1st App. ${cleanChars[0]}`;
     }
   }
 

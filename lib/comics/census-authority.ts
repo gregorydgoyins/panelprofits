@@ -1,3 +1,22 @@
+let ppDbInstance: any = null;
+let ppDbChecked = false;
+function getPpDb(): any | null {
+  if (typeof window !== "undefined") return null;
+  if (ppDbChecked) return ppDbInstance;
+  ppDbChecked = true;
+  try {
+    const req = eval("require");
+    const fs = req("fs");
+    const path = req("path");
+    const { DatabaseSync } = req("node:sqlite");
+    const p = path.resolve(process.cwd(), "data", "pp115k.sqlite");
+    if (fs.existsSync(p)) {
+      ppDbInstance = new DatabaseSync(p, { readOnly: true });
+    }
+  } catch {}
+  return ppDbInstance;
+}
+
 let cbDbInstance: any = null;
 let cbDbChecked = false;
 function getCbDb(): any | null {
@@ -45,33 +64,102 @@ function getShadowDb(): any | null {
 export interface RealCensusRecord {
   totalGraded: number;
   topGrade?: string;
+  year?: number;
+  publisher?: string;
   source: string;
   verifiedAt: string;
 }
 
+export interface ComicBaseMetadataRecord {
+  year?: number;
+  publisher?: string;
+  totalGraded?: number;
+  topGrade?: string;
+}
+
 const censusMemoryCache = new Map<string, RealCensusRecord | null>();
+const cbMetaMemoryCache = new Map<string, ComicBaseMetadataRecord | null>();
+
+function normalizeLookupSeries(series: string): string {
+  let s = String(series || "")
+    .toLowerCase()
+    .replace(/\s*[\(\[].*?[\)\]]/g, "")
+    .replace(/\b(?:vol(?:\.|ume)?|v)\s*\d+\b/g, "")
+    .replace(/^the\s+/, "")
+    .replace(/,\s*(?:the|a|an)$/, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+  if (s === "x men giant size") s = "giant size x men";
+  return s;
+}
+
+export function lookupComicBaseMetadata(series: string, issueNumber: string | number): ComicBaseMetadataRecord | null {
+  if (typeof window !== "undefined") return null;
+  const cleanSeries = normalizeLookupSeries(series);
+  const cleanIssue = String(issueNumber || "1").replace(/^#/, "").trim().toLowerCase();
+  const cacheKey = `${cleanSeries}:${cleanIssue}`;
+
+  if (cbMetaMemoryCache.has(cacheKey)) {
+    return cbMetaMemoryCache.get(cacheKey)!;
+  }
+
+  const ppDb = getPpDb();
+  if (ppDb) {
+    try {
+      const row = ppDb
+        .prepare(
+          `SELECT year, publisher, number_graded, top_grade FROM comicbase_metadata
+           WHERE clean_series = ? AND issue_number = ? LIMIT 1`
+        )
+        .get(cleanSeries, cleanIssue) as any;
+      if (row) {
+        const rec: ComicBaseMetadataRecord = {
+          year: row.year ? Number(row.year) : undefined,
+          publisher: row.publisher || undefined,
+          totalGraded: row.number_graded && Number(row.number_graded) > 0 ? Number(row.number_graded) : undefined,
+          topGrade: row.top_grade && row.top_grade !== "0" ? String(row.top_grade) : undefined,
+        };
+        cbMetaMemoryCache.set(cacheKey, rec);
+        return rec;
+      }
+    } catch {}
+  }
+
+  cbMetaMemoryCache.set(cacheKey, null);
+  return null;
+}
 
 /**
  * Authoritative, multi-verifiable Census Registry Lookup.
- * Queries ComicBase audited registry counts and shadow_database verified CGC census snapshots.
+ * Queries pp115k.sqlite (comicbase_metadata), ComicBase audited registry counts, and shadow_database verified CGC census snapshots.
  * Zero placeholders, zero synthetic approximations, zero mock numbers.
  */
 export function lookupRealCensus(series: string, issueNumber: string | number): RealCensusRecord | null {
   if (typeof window !== "undefined") return null;
-  const cleanSeries = String(series || "")
-    .toLowerCase()
-    .replace(/^the\s+/, "")
-    .replace(/,\s*the$/, "")
-    .replace(/\s*[\(\[].*?[\)\]]/g, "")
-    .trim();
-  const cleanIssue = String(issueNumber || "1").replace(/^#/, "").trim();
+  const cleanSeries = normalizeLookupSeries(series);
+  const cleanIssue = String(issueNumber || "1").replace(/^#/, "").trim().toLowerCase();
   const cacheKey = `${cleanSeries}:${cleanIssue}`;
 
   if (censusMemoryCache.has(cacheKey)) {
     return censusMemoryCache.get(cacheKey)!;
   }
 
-  // 1. Check shadow_database.sqlite for official CGC Pop Report snapshot records
+  // 1. Check pp115k.sqlite embedded comicbase_metadata (deployed to Vercel serverless)
+  const meta = lookupComicBaseMetadata(series, issueNumber);
+  if (meta && meta.totalGraded && meta.totalGraded > 0) {
+    const record: RealCensusRecord = {
+      totalGraded: meta.totalGraded,
+      topGrade: meta.topGrade,
+      year: meta.year,
+      publisher: meta.publisher,
+      source: "ComicBase Audited Census",
+      verifiedAt: "2026-10-01",
+    };
+    censusMemoryCache.set(cacheKey, record);
+    return record;
+  }
+
+  // 2. Check shadow_database.sqlite for official CGC Pop Report snapshot records
   const shadowDb = getShadowDb();
   if (shadowDb) {
     try {
@@ -95,14 +183,13 @@ export function lookupRealCensus(series: string, issueNumber: string | number): 
     } catch {}
   }
 
-  // 2. Check ComicBase sovereign database using idx_cb_clean index (0.1ms fast-path)
+  // 3. Check ComicBase sovereign database using idx_cb_clean index (0.1ms fast-path)
   const cbDb = getCbDb();
   if (cbDb) {
     try {
-      // Fast path: exact match hits idx_cb_clean (clean_series, issue_number)
       let row = cbDb
         .prepare(
-          `SELECT number_graded, top_grade FROM comicbase_items 
+          `SELECT number_graded, top_grade, year, publisher FROM comicbase_items 
            WHERE clean_series = ? AND issue_number = ? 
            AND number_graded IS NOT NULL AND number_graded > 0
            LIMIT 1`
@@ -111,7 +198,7 @@ export function lookupRealCensus(series: string, issueNumber: string | number): 
 
       if (!row) {
         const altStmt = cbDb.prepare(
-          `SELECT number_graded, top_grade FROM comicbase_items 
+          `SELECT number_graded, top_grade, year, publisher FROM comicbase_items 
            WHERE clean_series = ? AND issue_number = ? 
            AND number_graded IS NOT NULL AND number_graded > 0
            LIMIT 1`
@@ -126,6 +213,8 @@ export function lookupRealCensus(series: string, issueNumber: string | number): 
         const record: RealCensusRecord = {
           totalGraded: Number(row.number_graded),
           topGrade: row.top_grade && row.top_grade !== "0" ? row.top_grade : undefined,
+          year: row.year ? Number(row.year) : undefined,
+          publisher: row.publisher || undefined,
           source: "ComicBase Audited Census",
           verifiedAt: "2026-10-01",
         };
