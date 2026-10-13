@@ -19,6 +19,12 @@ import { LotMarketChart } from "@/components/sniper/LotMarketChart";
 import { usePaperOrders, PaperTicket, PaperLedger } from "@/components/sniper/PaperDesk";
 import { ReplayRoom } from "@/components/sniper/ReplayRoom";
 
+/** CBCS publishes no census, so the number is unknown (N/A). Other graders show "Census not found" when their own data has no match. */
+function censusMissing(grader?: string | null): string {
+  return /cbcs/i.test(grader ?? "") ? "N/A" : "Census not found";
+}
+
+
 interface PaperSnipeRecord {
   orderId: string;
   listingId: string;
@@ -1535,7 +1541,7 @@ export default function SniperRadarPage() {
                                   <strong className="text-white">
                                     {deal.censusTotal
                                       ? deal.censusTotal.toLocaleString()
-                                      : "Census not found"}
+                                      : censusMissing(deal.gradingCompany)}
                                   </strong>
                                 </span>
                                 <span>
@@ -1550,7 +1556,7 @@ export default function SniperRadarPage() {
                                 </span>
                               </div>
                               <div className="text-[9px] text-emerald-400 font-bold truncate">
-                                {deal.censusScarcityTier || (deal.censusTotal ? "Verified Registry Pop" : "Census not found")}
+                                {deal.censusScarcityTier || (deal.censusTotal ? "Verified Registry Pop" : censusMissing(deal.gradingCompany))}
                               </div>
                             </div>
                           </div>
@@ -1993,7 +1999,7 @@ export default function SniperRadarPage() {
 
                         <div className="flex items-center justify-between pt-2 border-t border-slate-800">
                           <span className="text-[10px] text-slate-500">
-                            Census: {deal.censusCount98 ? `${deal.censusCount98.toLocaleString()} in ${deal.resolvedGrade.toFixed(1)}` : `Grade ${deal.resolvedGrade.toFixed(1)}`} ({deal.censusTotal ? `${deal.censusTotal.toLocaleString()} total` : "Census not found"})
+                            Census: {deal.censusCount98 ? `${deal.censusCount98.toLocaleString()} in ${deal.resolvedGrade.toFixed(1)}` : `Grade ${deal.resolvedGrade.toFixed(1)}`} ({deal.censusTotal ? `${deal.censusTotal.toLocaleString()} total` : censusMissing(deal.gradingCompany)})
                           </span>
                           <a
                             href={deal.listing.url}
@@ -2308,10 +2314,10 @@ export default function SniperRadarPage() {
                       <span>🏛️</span> Census Intel:
                     </span>
                     <span className="px-2 py-0.5 rounded bg-black/60 border border-slate-800 text-slate-300 text-[11px]">
-                      Total: <strong className="text-white">{inspectedDeal.censusTotal ? inspectedDeal.censusTotal.toLocaleString() : "Census not found"}</strong>
+                      Total: <strong className="text-white">{inspectedDeal.censusTotal ? inspectedDeal.censusTotal.toLocaleString() : censusMissing(inspectedDeal.gradingCompany)}</strong>
                     </span>
                     <span className="px-2 py-0.5 rounded bg-black/60 border border-slate-800 text-slate-300 text-[11px]">
-                      In {inspectedDeal.resolvedGrade.toFixed(1)}: <strong className="text-emerald-300">{inspectedDeal.censusCount98 ? inspectedDeal.censusCount98.toLocaleString() : "Census not found"}</strong>
+                      In {inspectedDeal.resolvedGrade.toFixed(1)}: <strong className="text-emerald-300">{inspectedDeal.censusCount98 ? inspectedDeal.censusCount98.toLocaleString() : censusMissing(inspectedDeal.gradingCompany)}</strong>
                     </span>
                     <span className="px-2 py-0.5 rounded bg-black/60 border border-slate-800 text-slate-300 text-[11px]">
                       Higher: <strong className="text-cyan-300">{inspectedDeal.censusHigher !== undefined ? (inspectedDeal.censusHigher === 0 ? "0 (Top of Pop ★)" : inspectedDeal.censusHigher.toLocaleString()) : "—"}</strong>
@@ -3104,12 +3110,12 @@ export default function SniperRadarPage() {
                     <div className="grid grid-cols-3 gap-2 text-xs font-mono text-center">
                       <div className="bg-black/60 p-2.5 rounded-lg border border-slate-800">
                         <span className="text-[10px] text-slate-400 uppercase block">Total Graded</span>
-                        <strong className="text-white text-sm">{inspectedDeal.censusTotal ? inspectedDeal.censusTotal.toLocaleString() : "Census not found"}</strong>
+                        <strong className="text-white text-sm">{inspectedDeal.censusTotal ? inspectedDeal.censusTotal.toLocaleString() : censusMissing(inspectedDeal.gradingCompany)}</strong>
                         <span className="text-[9px] text-slate-500 block">All universal slabs</span>
                       </div>
                       <div className="bg-black/60 p-2.5 rounded-lg border border-slate-800">
                         <span className="text-[10px] text-emerald-400 uppercase block">In {inspectedDeal.resolvedGrade.toFixed(1)}</span>
-                        <strong className="text-emerald-300 text-sm">{inspectedDeal.censusCount98 ? inspectedDeal.censusCount98.toLocaleString() : "Census not found"}</strong>
+                        <strong className="text-emerald-300 text-sm">{inspectedDeal.censusCount98 ? inspectedDeal.censusCount98.toLocaleString() : censusMissing(inspectedDeal.gradingCompany)}</strong>
                         <span className="text-[9px] text-slate-500 block">Tier population</span>
                       </div>
                       <div className="bg-black/60 p-2.5 rounded-lg border border-slate-800">
