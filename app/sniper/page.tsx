@@ -2354,7 +2354,7 @@ export default function SniperRadarPage() {
                         )}
                       </>
                     ) : (
-                      <span className="text-slate-500 text-[11px]">No recorded sale found</span>
+                      <span className="text-slate-500 text-[11px]">Price not captured yet</span>
                     )}
                   </div>
                 </div>
