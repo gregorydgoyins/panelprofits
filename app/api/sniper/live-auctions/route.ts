@@ -3,7 +3,7 @@ import { normalizeAuctionTitle, parseAndFilterListing } from "@/lib/sniper/anti-
 import { resolveAuthoritativePublisher } from "@/lib/comics/publisher-authority";
 import { lookupSqliteCover, lookupSqliteGallery } from "@/lib/comics/sqlite-covers";
 import { lookupRealCensus } from "@/lib/comics/census-authority";
-import { readLiveListings } from "@/lib/sniper/market-store";
+import { readLiveListings, runSnapshot } from "@/lib/sniper/market-store";
 import { RawAuctionListing } from "@/lib/sniper/types";
 import { createAdminServerClient } from "@/lib/supabase/admin";
 import { dedupeSales, saleStats, seriesKey, type SaleObs } from "@/lib/sniper/candles";
@@ -11,7 +11,7 @@ import { gradeNum, benchmarkSalesForBook, resolveAuctionDbMetadata } from "@/lib
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-    const searchQuery = searchParams.get("q");
+  const searchQuery = searchParams.get("q");
   const sourceFilter = searchParams.get("source");
   const publisherFilter = searchParams.get("publisher");
   const angleFilter = searchParams.get("angle");
@@ -19,9 +19,14 @@ export async function GET(request: Request) {
   const minGrade = minGradeParam ? parseFloat(minGradeParam) : 0.5;
 
   try {
-    // Live auctions come from the Sniper store, which the scheduled snapshot fills from eBay's Browse API.
-    // Visitors never call eBay from here, so page traffic cannot use up the eBay allowance.
-    const { items: stored, asOf } = await readLiveListings();
+    // Live auctions come from the Sniper store, populated by scheduled snapshots across ComicConnect, Metropolis, Hake's, and eBay.
+    let { items: stored, asOf } = await readLiveListings();
+    if (stored.length === 0) {
+      await runSnapshot({ force: true, skipEbay: true });
+      const refreshed = await readLiveListings();
+      stored = refreshed.items;
+      asOf = refreshed.asOf;
+    }
     const combinedAuctions: RawAuctionListing[] = stored;
     const fetchedAtMs = Date.now(); // seconds remaining were computed from each lot's end time just now
 
@@ -124,11 +129,19 @@ export async function GET(request: Request) {
         );
         if (keys.length > 0) {
           const db: any = createAdminServerClient();
-          const { data: sRows } = await db
-            .from("sniper_sales")
-            .select("series_key,sold_at,price_usd,grade,venue,source,confirmed,url")
-            .in("series_key", keys.slice(0, 300))
-            .limit(5000);
+          const [{ data: sRows }, { data: gRows }] = await Promise.all([
+            db
+              .from("sniper_sales")
+              .select("series_key,sold_at,price_usd,grade,venue,source,confirmed,url")
+              .in("series_key", keys.slice(0, 300))
+              .limit(5000),
+            db
+              .from("graded_sales_observations")
+              .select("title_name,issue_number_raw,sale_price,sale_date,grade_numeric,native_grade_text,venue,evidence_path,currency")
+              .gt("sale_price", 0)
+              .not("sale_date", "is", null)
+              .limit(2000),
+          ]);
           for (const s of sRows ?? []) {
             const list = salesBySeriesKey.get(s.series_key) ?? [];
             list.push({
@@ -141,6 +154,22 @@ export async function GET(request: Request) {
               url: s.url ?? undefined,
             });
             salesBySeriesKey.set(s.series_key, list);
+          }
+          for (const g of gRows ?? []) {
+            if (g.currency && g.currency !== "USD") continue;
+            const k = seriesKey(String(g.title_name || ""), String(g.issue_number_raw || "1"));
+            if (!k) continue;
+            const list = salesBySeriesKey.get(k) ?? [];
+            list.push({
+              date: String(g.sale_date),
+              price: Number(g.sale_price),
+              grade: g.grade_numeric != null ? Number(g.grade_numeric) : gradeNum(g.native_grade_text),
+              venue: g.venue || "graded register",
+              source: "graded_sales_observations",
+              confirmed: true,
+              url: g.evidence_path ?? undefined,
+            });
+            salesBySeriesKey.set(k, list);
           }
         }
       } catch {}
@@ -181,11 +210,9 @@ export async function GET(request: Request) {
         const realTimeBid = Number(item.currentBid || 0);
         const realTimeBidCount = Number(item.bidCount ?? 0);
 
-        // Authoritative Cover & Multi-Image Gallery Resolution from local 115k highres SQLite database
-        // The listing's own eBay photo is the picture of the actual book; the catalog cover only backs it up.
-        const catalogCover = lookupSqliteCover(parsed.extractedSeries, parsed.extractedIssue) || "";
+        // The listing's own venue photo is the picture of the actual slab; only fall back to the catalog cover if missing.
+        const catalogCover = item.imageUrl ? "" : (lookupSqliteCover(parsed.extractedSeries, parsed.extractedIssue) || "");
         const resolvedCover = item.imageUrl || catalogCover;
-        const sqliteGallery = lookupSqliteGallery(parsed.extractedSeries, parsed.extractedIssue);
 
         // Ensure safe, cleanly-encoded URLs without multi-encoding bugs
         const normalizeUrl = (u: string): string => {
@@ -199,7 +226,7 @@ export async function GET(request: Request) {
 
         const safeCoverUrl = normalizeUrl(resolvedCover);
 
-        // Merge item-provided gallery and SQLite catalog gallery
+        // Merge item-provided gallery photos
         const galleryList: string[] = [];
         const seenUrls = new Set<string>();
         const addGallery = (u?: string | null) => {
@@ -215,9 +242,10 @@ export async function GET(request: Request) {
         if (item.galleryImages && Array.isArray(item.galleryImages)) {
           for (const img of item.galleryImages) addGallery(img);
         }
-        // Catalog art goes last: the viewer reaches it only if every eBay photo fails to load.
-        addGallery(catalogCover);
-        for (const img of sqliteGallery) addGallery(img);
+        if (!item.imageUrl && catalogCover) {
+          addGallery(catalogCover);
+          for (const img of lookupSqliteGallery(parsed.extractedSeries, parsed.extractedIssue)) addGallery(img);
+        }
 
         // Authoritative Real Census Resolution (No fake formula estimations)
         const realCensus = lookupRealCensus(parsed.extractedSeries, parsed.extractedIssue);

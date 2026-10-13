@@ -107,6 +107,8 @@ function getCbDb(): any | null {
   return cbDbInstance;
 }
 
+const publisherCache = new Map<string, string | null>();
+
 export function resolveAuctionDbMetadata(
   title: string,
   rawGrade?: number,
@@ -134,23 +136,13 @@ export function resolveAuctionDbMetadata(
     }
   }
 
-  const ppDb = getPpDb();
-  if (ppDb && series && series !== "Unknown Series") {
-    try {
-      const candidates = [series, "The " + series, series + ", The"];
-      const stmt = ppDb.prepare("SELECT publisher, publication_year FROM verified_equities WHERE series = ? AND issue_number = ? LIMIT 1");
-      for (const cand of candidates) {
-        const ve = stmt.get(cand, issue) as any;
-        if (ve) {
-          if (ve.publisher) publisher = resolveAuthoritativePublisher(series, ve.publisher, ve.publication_year);
-          break;
-        }
-      }
-    } catch {}
+  const pubKey = `${cleanSeries}:${issue}`;
+  if (publisherCache.has(pubKey)) {
+    return { fmv, publisher: publisherCache.get(pubKey) ?? null };
   }
 
   const cbDb = getCbDb();
-  if (cbDb && !publisher && series && series !== "Unknown Series") {
+  if (cbDb && series && series !== "Unknown Series") {
     try {
       const candidates = [cleanSeries, cleanSeries + ", the", "the " + cleanSeries];
       const stmt = cbDb.prepare("SELECT publisher, year FROM comicbase_items WHERE clean_series = ? AND issue_number = ? LIMIT 1");
@@ -170,5 +162,6 @@ export function resolveAuctionDbMetadata(
     publisher = resolveAuthoritativePublisher(series, null, parsed.extractedYear);
   }
 
+  publisherCache.set(pubKey, publisher);
   return { fmv, publisher };
 }

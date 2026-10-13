@@ -12,6 +12,7 @@
 import { createAdminServerClient } from "@/lib/supabase/admin";
 import { parseAndFilterListing } from "./anti-bullshit";
 import { searchEbayPage, type SearchEbayAuctionsParams } from "./ebay-api";
+import { fetchLiveVenueListings, fetchVenueCompletedSales } from "./venue-adapters";
 import type { RawAuctionListing } from "./types";
 import { seriesKey, type SaleObs } from "./candles";
 import benchmarksData from "@/lib/pricing/pricecharting-cgc-benchmarks.json";
@@ -136,22 +137,23 @@ export interface SnapshotSummary {
   note: string;
 }
 
-export async function runSnapshot(opts: { force?: boolean } = {}): Promise<SnapshotSummary> {
+export async function runSnapshot(
+  opts: { force?: boolean; fullSweep?: boolean; skipEbay?: boolean } = {}
+): Promise<SnapshotSummary> {
   const db: any = createAdminServerClient();
   const nowMs = Date.now();
   const empty: SnapshotSummary = { ebayCalls: 0, statuses: {}, listingsSeen: 0, ticksWritten: 0, salesWritten: 0, ended: 0, note: "" };
 
-  // Lock + backoff: one run per interval no matter who calls the endpoint, and quiet after eBay says "too many requests".
+  // Lock: one run per interval unless forced.
   const { data: lastRuns } = await db.from("sniper_runs").select("id,started_at,statuses,note").order("id", { ascending: false }).limit(5);
   const last = lastRuns?.[0];
   if (!opts.force && last && nowMs - new Date(last.started_at).getTime() < SNAPSHOT_MIN_INTERVAL_MS) {
     return { ...empty, skipped: "ran less than 4 minutes ago" };
   }
-  const recent429 = (lastRuns ?? []).find((r: any) => r.statuses && Number(r.statuses["429"]) > 0 && nowMs - new Date(r.started_at).getTime() < BACKOFF_AFTER_429_MS);
-  if (!opts.force && recent429) {
-    await db.from("sniper_runs").insert({ ebay_calls: 0, finished_at: new Date().toISOString(), note: "backoff after eBay 429" });
-    return { ...empty, skipped: "backing off after eBay rate limit" };
-  }
+  const recent429 = (lastRuns ?? []).find(
+    (r: any) => r.statuses && Number(r.statuses["429"]) > 0 && nowMs - new Date(r.started_at).getTime() < BACKOFF_AFTER_429_MS
+  );
+  const ebayBackedOff = Boolean(opts.skipEbay || recent429);
 
   const { data: runRow } = await db.from("sniper_runs").insert({}).select("id").single();
   const runId: number | undefined = runRow?.id;
@@ -160,12 +162,26 @@ export async function runSnapshot(opts: { force?: boolean } = {}): Promise<Snaps
   const statuses: Record<string, number> = {};
   const seen = new Map<string, RawAuctionListing>();
   let calls = 0;
-  for (const params of planCalls(slot)) {
-    const page = await searchEbayPage(params);
-    calls++;
-    statuses[String(page.status)] = (statuses[String(page.status)] ?? 0) + 1;
-    for (const it of page.items) if (it.currentBid > 0 && it.imageUrl) seen.set(it.id, it);
-    if (page.status === 429 || page.status === 0) break; // stop spending quota the moment eBay says no
+
+  if (!ebayBackedOff) {
+    for (const params of planCalls(slot)) {
+      const page = await searchEbayPage(params);
+      calls++;
+      statuses[String(page.status)] = (statuses[String(page.status)] ?? 0) + 1;
+      for (const it of page.items) if (it.currentBid > 0 && it.imageUrl) seen.set(it.id, it);
+      if (page.status === 429 || page.status === 0) break; // stop spending quota the moment eBay says no
+    }
+  } else {
+    statuses["ebay_backoff"] = 1;
+  }
+
+  // Always harvest real live auctions and Buy It Now slabs from non-eBay comic venues (ComicConnect, Metropolis, Hake's).
+  const venueResult = await fetchLiveVenueListings(slot, { fullSweep: opts.fullSweep });
+  for (const [k, v] of Object.entries(venueResult.statuses)) {
+    statuses[k] = (statuses[k] ?? 0) + v;
+  }
+  for (const it of venueResult.items) {
+    if (it.currentBid > 0 && it.imageUrl) seen.set(it.id, it);
   }
 
   // Save what we saw, and a tick wherever price or bid count moved.
@@ -189,22 +205,36 @@ export async function runSnapshot(opts: { force?: boolean } = {}): Promise<Snaps
     }
   }
 
+  // Harvest confirmed realized sales from ComicConnect's sold archive for the books currently on the board.
+  const booksToComp = rows
+    .filter((r) => r.series && r.issue)
+    .map((r) => ({ series: String(r.series), issue: String(r.issue) }));
+  const venueSalesRes = await fetchVenueCompletedSales(booksToComp, slot, {
+    maxBookQueries: opts.fullSweep ? 25 : 8,
+  });
+  let venueSalesWritten = 0;
+  for (const part of chunk(venueSalesRes.sales, 100)) {
+    const { error: sErr } = await db.from("sniper_sales").upsert(part, { onConflict: "id" });
+    if (!sErr) venueSalesWritten += part.length;
+  }
+
   const { sales, ended } = await resolveEnded(db, nowMs);
-  const insights = await tryInsights(db, slot, nowMs, statuses);
+  const insights = ebayBackedOff ? { sales: 0, state: "skipped(ebay_backoff)" } : await tryInsights(db, slot, nowMs, statuses);
+  const totalSalesWritten = sales + insights.sales + venueSalesWritten;
 
   if (slot % 288 === 0) {
     const cutoff = new Date(nowMs - 60 * 86400000).toISOString();
     await db.from("sniper_listings").delete().eq("status", "ended").lt("last_seen", cutoff);
   }
 
-  const note = `calls=${calls} seen=${seen.size} ticks=${ticks} ended=${ended} sales=${sales + insights.sales} insights=${insights.state}`;
+  const note = `ebayCalls=${calls} venueCalls=${venueResult.calls + venueSalesRes.calls} seen=${seen.size} ticks=${ticks} ended=${ended} sales=${totalSalesWritten} insights=${insights.state}`;
   if (runId) {
     await db.from("sniper_runs").update({
       finished_at: new Date().toISOString(), ebay_calls: calls, statuses, listings_seen: seen.size,
-      ticks_written: ticks, sales_written: sales + insights.sales, note,
+      ticks_written: ticks, sales_written: totalSalesWritten, note,
     }).eq("id", runId);
   }
-  return { runId, ebayCalls: calls, statuses, listingsSeen: seen.size, ticksWritten: ticks, salesWritten: sales + insights.sales, ended, note };
+  return { runId, ebayCalls: calls, statuses, listingsSeen: seen.size, ticksWritten: ticks, salesWritten: totalSalesWritten, ended, note };
 }
 
 /** Close out lots whose end time has passed. A bid-carrying auction we saw close to its end becomes a recorded sale. */
@@ -218,12 +248,13 @@ async function resolveEnded(db: any, nowMs: number): Promise<{ sales: number; en
     const endMs = new Date(r.end_time).getTime();
     const secsBefore = Math.round((endMs - new Date(r.last_seen).getTime()) / 1000);
     const closedOnUs = r.buying_option === "AUCTION" && Number(r.bid_count) > 0 && secsBefore <= FINAL_BID_SLACK_SECS;
-    if (closedOnUs && r.venue === "ebay" && r.grade != null && r.series && !LOT_LIKE.test(r.title) && Number(r.price_usd) > 0) {
+    if (closedOnUs && r.grade != null && r.series && !LOT_LIKE.test(r.title) && Number(r.price_usd) > 0) {
       const soldAt = new Date(endMs).toISOString();
+      const venueName = String(r.venue || "ebay");
       saleRows.push({
-        id: `ebay|${r.item_id}|${Math.round(Number(r.price_usd) * 100)}|${soldAt.slice(0, 10)}`,
+        id: `${venueName}|${r.item_id}|${Math.round(Number(r.price_usd) * 100)}|${soldAt.slice(0, 10)}`,
         series_key: seriesKey(r.series, r.issue ?? ""), series: r.series, issue: r.issue, grade: r.grade, grader: r.grader,
-        price_usd: r.price_usd, sold_at: soldAt, venue: "ebay", source: "ebay_last_bid", confirmed: false,
+        price_usd: r.price_usd, sold_at: soldAt, venue: venueName, source: `${venueName}_last_bid`, confirmed: false,
         item_id: r.item_id, url: r.url,
       });
     }

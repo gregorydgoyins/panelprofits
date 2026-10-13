@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { evaluateAuctionListing } from "@/lib/sniper/radar-engine";
+import { parseComicConnectOrMetropolisHtml, parseComicConnectSoldHtml, parseHakesCatalogHtml } from "@/lib/sniper/venue-adapters";
 import { RawAuctionListing, SniperFilterProfile } from "@/lib/sniper/types";
 
 describe("Sniper Radar Engine & Anti-Bullshit Filter", () => {
@@ -378,5 +379,68 @@ describe("Sniper Radar Engine & Anti-Bullshit Filter", () => {
     expect(evalResult.historicalComps).toEqual([]);
     expect(evalResult.whyItsAGoodBuy).toContain("FMV unavailable");
     expect(evalResult.investopediaLens).toBeUndefined();
+  });
+
+  it("PARSES ComicConnect live auctions, Metropolis fixed-price slabs, Hake's catalog lots, and ComicConnect realized sales accurately", () => {
+    const ccAuctionHtml = `
+      <div class="itempreview details listingbox" data-type="auction">
+        <div class="preview"><img src="/coverimages/gallery800/asm300.jpg" /></div>
+        <div class="details">
+          <a href="/item/1110571"><div class="titleline ">AMAZING SPIDER-MAN (1963-98; 2003-13) #300</div></a>
+          <div class="grade">Marvel CGC NM/M: 9.8</div>
+          <div class="comments wrap">White pgs; Universal holder; CGC#4449756004<div class="ctip"></div></div>
+        </div>
+        <div class="rightside">
+          <div class="pricing"><span class="lbl">Current Bid</span><span>: </span><span class="val prc">$2,450</span></div>
+          <div class="countdown" data-countdown-ends="1800000"></div>
+        </div>
+      </div>
+    `;
+    const ccParsed = parseComicConnectOrMetropolisHtml(ccAuctionHtml, "comicconnect", "https://www.comicconnect.com");
+    expect(ccParsed).toHaveLength(1);
+    expect(ccParsed[0].id).toBe("comicconnect-1110571");
+    expect(ccParsed[0].currentBid).toBe(2450);
+    expect(ccParsed[0].listingType).toBe("Auction");
+    expect(ccParsed[0].secondsRemaining).toBe(1800);
+    expect(ccParsed[0].certNumber).toBe("4449756004");
+
+    const ccSoldHtml = `
+      <div class="itempreview details listingbox" data-type="fixed">
+        <div class="details">
+          <a href="/item/1049641"><div class="titleline ">AMAZING SPIDER-MAN (1963-98; 2003-13) #300</div></a>
+          <div class="grade">Marvel CGC NM+: 9.6</div>
+        </div>
+        <div class="rightside">
+          <div class="endednotice">Sold on Saturday, 09/14/2024 6:37 PM</div>
+          <div class="pricing"><span class="lbl">Sold For</span><span>: </span><span class="val prc">$840</span></div>
+        </div>
+      </div>
+    `;
+    const soldParsed = parseComicConnectSoldHtml(ccSoldHtml);
+    expect(soldParsed).toHaveLength(1);
+    expect(soldParsed[0].price_usd).toBe(840);
+    expect(soldParsed[0].grade).toBe(9.6);
+    expect(soldParsed[0].confirmed).toBe(true);
+    expect(soldParsed[0].sold_at).toBe("2024-09-14T12:00:00.000Z");
+
+    const hakesHtml = `
+      <div class="col-6 col-md-6 col-lg-4 mb-4 el_24684 gtm-visible_item" id="stl-9802752" data-item_id="9802752">
+        <div class="catalog_img">
+          <img src="https://s1.img.bidsquare.com/item/l/3890/38905972.jpeg" />
+        </div>
+        <div class="lot_title">
+          <a href="https://www.hakes.com/online-auctions/hakes-auctions/tmnt-1-9802752">TEENAGE MUTANT NINJA TURTLES #1 1984 CGC 9.8 NM/MINT</a>
+        </div>
+        <script>$(function(){countDownTimer(1790600400, 1792633200, "timer_9802752_24684");});</script>
+        <span id="tbc_9802752_24684" class="num">8 Bids</span>
+        <span id="tcb_9802752_24684" class="price ">$105,000</span>
+      </div>
+    `;
+    const hakesParsed = parseHakesCatalogHtml(hakesHtml, 1792629600 * 1000);
+    expect(hakesParsed).toHaveLength(1);
+    expect(hakesParsed[0].id).toBe("hakes-9802752");
+    expect(hakesParsed[0].currentBid).toBe(105000);
+    expect(hakesParsed[0].bidCount).toBe(8);
+    expect(hakesParsed[0].secondsRemaining).toBe(3600);
   });
 });

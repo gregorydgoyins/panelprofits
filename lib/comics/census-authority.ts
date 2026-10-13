@@ -110,15 +110,16 @@ export function lookupRealCensus(series: string, issueNumber: string | number): 
         .get(cleanSeries, cleanIssue) as any;
 
       if (!row) {
-        // Fallback: LIKE candidate
-        row = cbDb
-          .prepare(
-            `SELECT number_graded, top_grade FROM comicbase_items 
-             WHERE clean_series LIKE ? AND issue_number = ? 
-             AND number_graded IS NOT NULL AND number_graded > 0
-             LIMIT 1`
-          )
-          .get(`%${cleanSeries}%`, cleanIssue) as any;
+        const altStmt = cbDb.prepare(
+          `SELECT number_graded, top_grade FROM comicbase_items 
+           WHERE clean_series = ? AND issue_number = ? 
+           AND number_graded IS NOT NULL AND number_graded > 0
+           LIMIT 1`
+        );
+        for (const alt of [`${cleanSeries}, the`, `the ${cleanSeries}`]) {
+          row = altStmt.get(alt, cleanIssue) as any;
+          if (row) break;
+        }
       }
 
       if (row && Number(row.number_graded) > 0) {

@@ -99,7 +99,7 @@ export function normalizeAuctionTitle(rawTitle: string): string {
     .replace(/\b(?:1\s*of\s*only\s*\d+\s*on\s*census!?|highest\s*graded|boston\s*pedigree!?|white\s*pages|off-white|pages)\b/gi, "")
     .replace(/\b(?:hot!?|key!?|rare!?|grail!?|l@@k|look!?|wow!?|must\s*see!?|invest!?)\b/gi, "")
     .replace(/\b(?:lot\s*[a-z0-9]|lot\s*#?\d+)\b/gi, "")
-    .replace(/\b(?:nm\/?m?|vf\/?nm?|fn|vg|gd|pr)\b/gi, "")
+    .replace(/\b(?:nm\/?m?|vf\/?nm?|fn\/?vf?|vg\/?fn?|gd\/?vg?|fn|vg|gd|pr)[+\-]*(?!\w)/gi, "")
     .replace(/\b(?:cgc|cbcs|pgx)\s*(?:10(?:\.0)?|9\.[0-9]|8\.[0-9]|7\.[0-9]|6\.[0-9]|5\.[0-9]|4\.[0-9]|3\.[0-9]|2\.[0-9]|1\.[0-9]|0\.5)\b/gi, "")
     .replace(/[-*•~_]{2,}/g, " ")
     .replace(/[*•~]+/g, " ");
@@ -109,6 +109,7 @@ export function normalizeAuctionTitle(rawTitle: string): string {
     .replace(/^Marvel Comic\s+/i, "")
     .replace(/^DC\s+/i, "")
     .replace(/\s*-\s*Supe$/i, "")
+    .replace(/\s*\((?:19|20)\d{2}[^)]*\)/g, "")
     .replace(/\s*,\s*19\d{2}\b/g, "")
     .replace(/\s*,\s*20\d{2}\b/g, "")
     .replace(/\s*-\s*$/i, "")
@@ -328,6 +329,7 @@ export function parseAndFilterListing(
   // Clean title from emojis, leading punctuation, and grading badges
   const cleanTitle = title
     .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, " ")
+    .replace(/\((?:19|20)\d{2}[^)]*\)/g, " ")
     .replace(/^[^a-zA-Z0-9]+/, "")
     .replace(/^(cgc|cbcs|psa|pgx)\s+(graded\s+)?(?:\d+\.?\d*\s+)?/i, "")
     .replace(/^(marvel\s+comics|dc\s+comics|image\s+comics)\s*[-:]?\s*/i, "")
