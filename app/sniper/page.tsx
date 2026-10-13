@@ -909,8 +909,6 @@ export default function SniperRadarPage() {
                     src.key.startsWith("ebay") ||
                     src.key === "hipcomic" ||
                     src.key === "comicconnect" ||
-                    src.key === "mycomicshop" ||
-                    src.key === "mercari" ||
                     auctionsList.some((a) => a.source === src.key);
                   const isChecked = feedLive && selectedSources.includes(src.key);
                   return (
