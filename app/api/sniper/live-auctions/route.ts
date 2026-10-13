@@ -21,17 +21,22 @@ export async function GET(request: Request) {
   const hit = respCache.get(key);
   if (hit && Date.now() - hit.at < RESP_TTL_MS) {
     const r = await hit.p;
-    return new Response(r.body, { status: r.status, headers: { "content-type": "application/json", "cache-control": r.status === 200 ? "public, s-maxage=30, stale-while-revalidate=120" : "no-store" } });
+    return new Response(r.body, { status: r.status, headers: { "content-type": "application/json", "server-timing": lastTiming, "cache-control": r.status === 200 ? "public, s-maxage=30, stale-while-revalidate=120" : "no-store" } });
   }
-  const p = computeGET(request).then(async (res) => ({ status: res.status, body: await res.text() }));
+  const p = computeGET(request).then(async (res) => { lastTiming = res.headers.get("server-timing") ?? ""; return { status: res.status, body: await res.text() }; });
   respCache.set(key, { at: Date.now(), p });
   p.then((r) => { if (r.status !== 200) respCache.delete(key); }).catch(() => respCache.delete(key));
   if (respCache.size > 50) respCache.delete(respCache.keys().next().value as string);
   const r = await p;
-  return new Response(r.body, { status: r.status, headers: { "content-type": "application/json", "cache-control": r.status === 200 ? "public, s-maxage=30, stale-while-revalidate=120" : "no-store" } });
+  return new Response(r.body, { status: r.status, headers: { "content-type": "application/json", "server-timing": lastTiming, "cache-control": r.status === 200 ? "public, s-maxage=30, stale-while-revalidate=120" : "no-store" } });
 }
 
+let lastTiming = "";
+
 async function computeGET(request: Request) {
+  const tStart = Date.now();
+  const marks: string[] = [];
+  const mark = (n: string, since: number) => marks.push(`${n};dur=${Date.now() - since}`);
   const { searchParams } = new URL(request.url);
   const searchQuery = searchParams.get("q");
   const sourceFilter = searchParams.get("source");
@@ -42,7 +47,9 @@ async function computeGET(request: Request) {
 
   try {
     // Live auctions come from the Sniper store, populated by scheduled snapshots across ComicConnect, Metropolis, Hake's, and eBay.
+    const tRead = Date.now();
     let { items: stored, asOf } = await readLiveListings();
+    mark("readListings", tRead);
     if (stored.length === 0) {
       await runSnapshot({ force: true, skipEbay: true });
       const refreshed = await readLiveListings();
@@ -135,6 +142,7 @@ async function computeGET(request: Request) {
     }
 
     if (filteredAuctions.length > 0) {
+      const tSales = Date.now();
       const salesBySeriesKey = new Map<string, SaleObs[]>();
       try {
         const keys = Array.from(
@@ -205,6 +213,7 @@ async function computeGET(request: Request) {
           }
         }
       } catch {}
+      mark("salesQueries", tSales);
 
       const cleanGraderNotes = (raw?: string | null): string | undefined => {
         if (!raw) return undefined;
@@ -363,7 +372,7 @@ async function computeGET(request: Request) {
         source: "ebay_browse_api",
         dataAsOf: asOf,
         fetchedAt: new Date().toISOString(),
-      });
+      }, { headers: { "server-timing": [...marks, `total;dur=${Date.now() - tStart}`].join(", ") } });
     }
 
     return NextResponse.json({
