@@ -150,11 +150,21 @@ export async function lookupLabelCensusBatch(queries: LabelCensusQuery[]): Promi
     const i = cleanIssue(issue);
     return m && m[1] && !/^v\d+\s*#/i.test(i) ? { t: m[1].trim(), i: `${m[2].toLowerCase()} #${i}` } : { t, i };
   };
-  const valid = queries.map((q) => ({ ...q, ...split(q.title, q.issue), d: q.date.trim() })).filter((q) => q.t && q.i && q.d);
+  const valid = queries.map((q) => ({ ...q, ...split(q.title, q.issue), d: /^no\s*date$/i.test(q.date.trim()) ? "No Date" : q.date.trim() })).filter((q) => q.t && q.i && q.d);
   if (valid.length === 0) return result;
   const pairKey = (q: { t: string; i: string; d: string; edition?: string | null }) => `${q.t.toLowerCase()}|${q.i.toLowerCase()}|${q.d}|${alnum(q.edition)}`;
   const distinct = new Map<string, { k: string; title: string; issue: string; date: string; edition: string }>();
-  for (const q of valid) if (!distinct.has(pairKey(q))) distinct.set(pairKey(q), { k: pairKey(q), title: q.t, issue: q.i, date: q.d, edition: q.edition ?? "" });
+  const isNewsstand = (e?: string | null) => /^newsstand(edition)?$/.test(alnum(e));
+  const add = (q: { t: string; i: string; d: string }, edition: string) => {
+    const k = pairKey({ ...q, edition });
+    if (!distinct.has(k)) distinct.set(k, { k, title: q.t, issue: q.i, date: q.d, edition });
+  };
+  for (const q of valid) {
+    add(q, q.edition ?? "");
+    // A label edition CGC has no row for: Newsstand reads the issue's base row; any other named edition reads CGC's
+    // generic "Variant Edition" row for the same title, issue and date (only when exactly one exists).
+    if (alnum(q.edition)) add(q, isNewsstand(q.edition) ? "" : "Variant Edition");
+  }
 
   const db = createAdminServerClient();
   const all = [...distinct.values()];
@@ -171,6 +181,12 @@ export async function lookupLabelCensusBatch(queries: LabelCensusQuery[]): Promi
 
   for (const q of valid) {
     let rows = byKey.get(pairKey(q)) ?? [];
+    if (rows.length === 0 && alnum(q.edition)) rows = byKey.get(pairKey({ ...q, edition: isNewsstand(q.edition) ? "" : "Variant Edition" })) ?? [];
+    // The SQL title key ignores punctuation, so "X (Spider-Man/Venom)" and "X (X-Men/Dark Ages)" both come back: keep the exact title.
+    if (rows.length > 1) {
+      const exactTitle = rows.filter((r) => alnum(r.title) === alnum(q.t));
+      if (exactTitle.length) rows = exactTitle;
+    }
     if (rows.length > 1 && q.publisher) {
       const pub = alnum(q.publisher);
       const byPub = rows.filter((r) => alnum(r.publisher) === pub);
