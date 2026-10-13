@@ -201,12 +201,15 @@ export async function GET(request: Request) {
       filteredAuctions.forEach((item, idx) => {
         const lb = item.label;
         // The slab label is the source of truth: exact title + issue + cover date + edition, straight from the photo.
+        // Only CGC slabs get the CGC census. CBCS/PSA/other census data is not loaded yet, so those are "not found".
+        if (lb?.grader && lb.grader !== "CGC") return;
         if (lb?.title && lb.issueNumber && lb.issueDate) {
           labelQueries.push({ key: String(idx), title: lb.title, issue: lb.issueNumber, date: lb.issueDate, publisher: lb.publisher, edition: lb.edition, grade: lb.grade ?? item.resolvedGrade ?? null });
           return;
         }
         const p = parseAndFilterListing(String(item.title || ""));
         if (!p.extractedSeries || p.extractedSeries === "Unknown Series" || !p.extractedIssue) return;
+        if (p.gradingCompany && p.gradingCompany !== "CGC") return;
         // CGC counts every variant/printing as its own census row. Base-issue census must never be shown for
         // a variant, virgin, incentive, retailer, newsstand or reprint listing, so those are reported as not found.
         if (VARIANT_LISTING.test(String(item.title || "")) || /^\d+[A-Za-z]$/.test(String(p.extractedIssue))) return;
