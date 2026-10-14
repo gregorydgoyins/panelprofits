@@ -29,7 +29,8 @@ export function SniperVideos({ series, issue, creators, archive }: { series: str
     return () => { live = false; };
   }, [series, issue, (creators ?? []).join("|")]);
 
-  if (videos.length === 0 && !archive) return null;
+  if (!series) return null;
+  const archiveQ = encodeURIComponent(`${series}${issue ? " #" + issue : ""}`);
 
   return (
     <div className="w-full space-y-2">
@@ -68,6 +69,14 @@ export function SniperVideos({ series, issue, creators, archive }: { series: str
           </div>
         </div>
       ))}
+      <div className="grid grid-cols-2 gap-2 font-mono text-[11px]">
+        <a href={`/video-archive?q=${archiveQ}`} className="p-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-cyan-300 flex items-center justify-between transition">
+          <span>▶ Market archive</span><span>↗</span>
+        </a>
+        <a href={`/video-archive?q=${archiveQ}`} className="p-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-rose-300 flex items-center justify-between transition">
+          <span>▶ Key issue spotlight</span><span>↗</span>
+        </a>
+      </div>
     </div>
   );
 }
