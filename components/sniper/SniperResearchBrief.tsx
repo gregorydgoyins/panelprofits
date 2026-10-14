@@ -32,6 +32,7 @@ export function SniperResearchBrief({ series, issueNumber, year, publisher, edit
     </> : result && <div className="space-y-2"><p className="text-xs text-amber-200">{result.error}</p>{source && <><h4 className="font-semibold text-cyan-200">Source synopsis</h4><p>{source.text.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").slice(0, 1600)}</p></>}</div>}
     {source?.credits && <p className="text-xs text-slate-400">{source.credits.writers?.length ? `Writer: ${source.credits.writers.join(", ")}. ` : ""}{source.credits.pencilers?.length ? `Interior art: ${source.credits.pencilers.join(", ")}.` : ""}</p>}
     {source && <a href={source.sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-block text-xs text-cyan-300 underline underline-offset-4">Source: {source.source} ↗</a>}
+    {source?.creditsSourceUrl && <a href={source.creditsSourceUrl} target="_blank" rel="noopener noreferrer" className="block text-xs text-cyan-300 underline underline-offset-4">Publisher’s issue &amp; cover credits ↗</a>}
     <details onToggle={event => setExpanded(event.currentTarget.open)} className="border-t border-slate-800 pt-3"><summary className="cursor-pointer text-xs font-semibold text-amber-300">Full synopsis, characters, credits &amp; wiki</summary>{expanded && <div className="mt-4"><SniperStoryLore series={series} issueNumber={issueNumber} year={year} publisher={publisher} editionVerified={editionVerified} /></div>}</details>
   </section>;
 }

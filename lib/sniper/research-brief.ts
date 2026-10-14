@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { generateText, Output } from "ai";
+import { generateText } from "ai";
 import { z } from "zod";
 import { createAdminServerClient } from "@/lib/supabase/admin";
 import { comicKey, type StorySummary, type StorySummaryInput } from "@/lib/comics/story-summary";
@@ -42,14 +42,13 @@ export async function makeResearchBrief(input: StorySummaryInput, summary: Story
   const existing = pending.get(requestKey);
   if (existing) return existing;
   const work = (async () => {
-    const { output } = await generateText({
+    const { text } = await generateText({
       model: process.env.SNIPER_BRIEF_MODEL || "nvidia/nemotron-3.5-lightning-free", // Verified free model with structured-output support.
-      output: Output.object({ schema: briefSchema }),
-      prompt: briefPrompt(input, summary),
-      reasoning: "low", maxOutputTokens: 2200, maxRetries: 0,
+      prompt: briefPrompt(input, summary) + '\nReturn ONLY a JSON object with intro:string, sections:[{heading:string,points:[{label:string,text:string}]}], lessons:[{heading:string,text:string}]. No markdown fences.',
+      reasoning: "none", maxOutputTokens: 3500, maxRetries: 0,
       abortSignal: AbortSignal.timeout(25000),
     });
-    const brief = briefSchema.parse(output);
+    const brief = briefSchema.parse(JSON.parse(text.trim().replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "")));
     if (/[$€£]|\b\d+(?:\.\d+)?\s*%/.test(JSON.stringify(brief))) throw new Error("Brief included unsupported financial figures");
     if (stored) await db.from("issue_story_summaries").update({ summary: JSON.stringify({ ...stored, researchBrief: { version: VERSION, hash, content: brief } }) }).eq("comic_key", key);
     return brief;

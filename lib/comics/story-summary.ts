@@ -50,6 +50,7 @@ export interface StorySummary {
   referenceOnly?: boolean;
   source: string;
   sourceUrl: string;
+  creditsSourceUrl?: string;
   license: string | null;
 }
 
@@ -501,6 +502,7 @@ async function readStorySummary(input: StorySummaryInput): Promise<StorySummary 
               quote: parsed.quote || null,
               entities: parsed.entities || undefined,
               credits: parsed.credits || undefined,
+              creditsSourceUrl: parsed.creditsSourceUrl || undefined,
               source: data.source,
               sourceUrl: data.source_url,
               license: data.license,
