@@ -18,6 +18,7 @@ interface SniperStoryLoreProps {
 function resolveInternalLoreUrl(url: string, fallbackLabel: string): string {
   if (!url) return `/comics?q=${encodeURIComponent(fallbackLabel)}`;
   if (/^https?:\/\//i.test(url)) return url;
+  if (url.startsWith("/")) return url;
   if (url.includes("/wiki/")) {
     const parts = url.split("/wiki/");
     const raw = parts[parts.length - 1];
