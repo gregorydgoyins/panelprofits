@@ -2457,7 +2457,7 @@ export default function SniperRadarPage() {
               </div>
 
               {shortResearch && <div className="rounded-lg border border-amber-500/30 bg-amber-950/20 p-3 flex items-center justify-between gap-3 text-xs">
-              <span className="text-amber-200">Closing within one hour · quick research shows price history and acquisition information first.</span>
+              <span className="text-amber-200">Closing within one hour · quick research prioritizes pricing; story, creators and glossary remain available on the right.</span>
               <button onClick={() => setExpandQuickResearch(v => !v)} className="rounded border border-amber-400/40 px-3 py-1.5 text-amber-200 whitespace-nowrap hover:bg-amber-900/40">{expandQuickResearch ? "Compact view" : "Expand full research"}</button>
             </div>}
             {/* Multi-Perspective Navigation Selector */}
@@ -2623,7 +2623,7 @@ export default function SniperRadarPage() {
                 </div>
 
                 <SniperVideos
-                  series={inspectedDeal.resolvedSeries}
+                  series={inspectedDeal.label?.title || inspectedDeal.resolvedSeries}
                   issue={String(inspectedDeal.resolvedIssue ?? "")}
                   creators={[...(inspectedDeal.gcdMetadata?.writers ?? []), ...(inspectedDeal.gcdMetadata?.pencilers ?? [])].slice(0, 2)}
                   archive={inspectedDeal.videoDossier?.comicBaseVideo ? {
@@ -2905,6 +2905,51 @@ export default function SniperRadarPage() {
                   </div>
                 )}
 
+                {((modalPerspective === "all") || modalPerspective === "investopedia" || modalPerspective === "learn") && (
+                  <SniperLearningPanel series={inspectedDeal.resolvedSeries} issue={inspectedDeal.resolvedIssue} section={modalPerspective === "learn" ? "learn" : modalPerspective === "investopedia" ? "investopedia" : "all"} />
+                )}
+                {/* ════════════════════════════════════════════════════════════════════════
+                    PERSPECTIVE 3: HISTORICAL LORE & COLLECTOR CANON
+                    ════════════════════════════════════════════════════════════════════════ */}
+                {((modalPerspective === "all") || modalPerspective === "lore") && (
+                  <div className="bg-[#070C18] border border-amber-500/40 rounded-xl p-4 space-y-4 shadow-lg">
+                    <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono font-bold text-amber-400 uppercase flex items-center gap-1.5">
+                          <span>📜</span> STORY POINTS, CHARACTERS &amp; WIKI
+                        </span>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-500/30">
+                          Wiki Cross-Walk
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-500/40 uppercase">
+                        {inspectedDeal.historicalSignificanceTier || "HISTORIC_LANDMARK"}
+                      </span>
+                    </div>
+
+                    {/* Integrated Encyclopedic Fandom Lore Dossier */}
+                    <SniperStoryLore
+                      series={inspectedDeal.label?.title || inspectedDeal.resolvedSeries}
+                      issueNumber={inspectedDeal.resolvedIssue}
+                      year={inspectedDeal.resolvedYear}
+                      publisher={inspectedDeal.gcdMetadata?.publisher}
+                      editionVerified={Boolean(inspectedDeal.label?.title)}
+                      fallbackLore={inspectedDeal.historicalSignificanceLore}
+                      whyItsAGoodBuy={inspectedDeal.whyItsAGoodBuy}
+                    />
+
+                    {inspectedDeal.longTermHoldingThesis && (
+                      <div className="text-xs text-purple-200/90 leading-relaxed font-sans bg-purple-950/20 border border-purple-500/20 p-3 rounded-lg">
+                        <strong className="text-purple-400 font-mono text-[11px] block uppercase mb-1">
+                          Long-Term Holding Thesis (Beyond Short Flips):
+                        </strong>
+                        {inspectedDeal.longTermHoldingThesis}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+
                 {/* ════════════════════════════════════════════════════════════════════════
                     PERSPECTIVE 3: POPULATION & CENSUS INTEL
                     ════════════════════════════════════════════════════════════════════════ */}
@@ -2943,49 +2988,6 @@ export default function SniperRadarPage() {
                         {(inspectedDeal.censusHigher ?? 0) === 0 ? "★ Highest Known Census Tier (Top of Pop)" : `${inspectedDeal.censusHigher} copies graded higher`}
                       </span>
                     </div>
-                  </div>
-                )}
-
-                {((modalPerspective === "all" && fullResearch) || modalPerspective === "investopedia" || modalPerspective === "learn") && (
-                  <SniperLearningPanel series={inspectedDeal.resolvedSeries} issue={inspectedDeal.resolvedIssue} section={modalPerspective === "learn" ? "learn" : modalPerspective === "investopedia" ? "investopedia" : "all"} />
-                )}
-                {/* ════════════════════════════════════════════════════════════════════════
-                    PERSPECTIVE 3: HISTORICAL LORE & COLLECTOR CANON
-                    ════════════════════════════════════════════════════════════════════════ */}
-                {((modalPerspective === "all" && fullResearch) || modalPerspective === "lore") && (
-                  <div className="bg-[#070C18] border border-amber-500/40 rounded-xl p-4 space-y-4 shadow-lg">
-                    <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-mono font-bold text-amber-400 uppercase flex items-center gap-1.5">
-                          <span>📜</span> STORY POINTS, CHARACTERS &amp; WIKI
-                        </span>
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-500/30">
-                          Wiki Cross-Walk
-                        </span>
-                      </div>
-                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-500/40 uppercase">
-                        {inspectedDeal.historicalSignificanceTier || "HISTORIC_LANDMARK"}
-                      </span>
-                    </div>
-
-                    {/* Integrated Encyclopedic Fandom Lore Dossier */}
-                    <SniperStoryLore
-                      series={inspectedDeal.label?.title || inspectedDeal.resolvedSeries}
-                      issueNumber={inspectedDeal.resolvedIssue}
-                      year={inspectedDeal.resolvedYear}
-                      publisher={inspectedDeal.gcdMetadata?.publisher}
-                      fallbackLore={inspectedDeal.historicalSignificanceLore}
-                      whyItsAGoodBuy={inspectedDeal.whyItsAGoodBuy}
-                    />
-
-                    {inspectedDeal.longTermHoldingThesis && (
-                      <div className="text-xs text-purple-200/90 leading-relaxed font-sans bg-purple-950/20 border border-purple-500/20 p-3 rounded-lg">
-                        <strong className="text-purple-400 font-mono text-[11px] block uppercase mb-1">
-                          Long-Term Holding Thesis (Beyond Short Flips):
-                        </strong>
-                        {inspectedDeal.longTermHoldingThesis}
-                      </div>
-                    )}
                   </div>
                 )}
 

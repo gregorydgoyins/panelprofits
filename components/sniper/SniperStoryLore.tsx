@@ -11,6 +11,7 @@ interface SniperStoryLoreProps {
   year?: number | null;
   publisher?: string | null;
   accent?: string;
+  editionVerified?: boolean;
   fallbackLore?: string;
   whyItsAGoodBuy?: string;
 }
@@ -96,6 +97,7 @@ export function SniperStoryLore({
   year,
   publisher,
   accent = "cyan",
+  editionVerified = true,
   fallbackLore,
   whyItsAGoodBuy,
 }: SniperStoryLoreProps) {
@@ -105,10 +107,12 @@ export function SniperStoryLore({
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
+    setSummary(null);
 
     const queryParams = new URLSearchParams({
       series,
       issueNumber,
+      ...(!editionVerified ? { allowSeriesReference: "true" } : {}),
       ...(year ? { year: String(year) } : {}),
       ...(publisher ? { publisher } : {}),
     });
@@ -135,7 +139,7 @@ export function SniperStoryLore({
     return () => {
       isMounted = false;
     };
-  }, [series, issueNumber, year, publisher]);
+  }, [series, issueNumber, year, publisher, editionVerified]);
 
   if (loading) {
     return (
@@ -186,6 +190,8 @@ export function SniperStoryLore({
 
   return (
     <div className="space-y-4">
+      {summary.referenceOnly && <p className="text-xs leading-5 text-amber-200 border border-amber-500/30 rounded-lg p-3 bg-amber-950/20">Issue reference: {series} #{issueNumber}{summary.referenceYear ? ` (${summary.referenceYear})` : ""}. This sourced record is research context; it is not a confirmed match to the seller’s edition.</p>}
+      {!editionVerified && !summary.referenceOnly && <p className="text-xs leading-5 text-amber-200 border border-amber-500/30 rounded-lg p-3 bg-amber-950/20">Story and creator research follows the seller’s stated series and issue. The slab identity and edition have not been verified; confirm the label before applying this information to the listing.</p>}
       {/* Lead Story Title & Epigraph Banner */}
       <div className="bg-slate-950/60 border border-slate-800 rounded-lg p-3.5 space-y-2">
         <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
@@ -237,6 +243,7 @@ export function SniperStoryLore({
                 <strong className="text-cyan-400">Color:</strong> {credits.colorists.join(", ")}
               </span>
             )}
+            {credits.letterers?.length ? <span className="px-2 py-0.5 rounded bg-slate-900 border border-slate-700 text-slate-300"><strong className="text-cyan-400">Lettering:</strong> {credits.letterers.join(", ")}</span> : null}
             {credits.editors && credits.editors.length > 0 && (
               <span className="px-2 py-0.5 rounded bg-slate-900 border border-slate-700 text-slate-300">
                 <strong className="text-cyan-400">Editor:</strong> {credits.editors.join(", ")}

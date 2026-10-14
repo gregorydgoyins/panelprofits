@@ -81,6 +81,20 @@ describe("fandom wikitext parsing", () => {
   });
 });
 
+describe("multi-story Fandom records", () => {
+  it("stops at a padded field instead of showing a second synopsis or template metadata", () => {
+    const result = parseFandomWikitext(`{{Comic Template
+| StoryTitle1 = Lead story
+| Synopsis1 = The lead story follows the warrior across the kingdom to confront an invading army.
+ | Synopsis2 = This bonus story must not leak into the lead synopsis.
+ | Notes = Editorial metadata.
+}}`, "dynamiteentertainment.fandom.com");
+    expect(result?.text).toContain("lead story follows");
+    expect(result?.text).not.toContain("bonus story");
+    expect(result?.text).not.toContain("Editorial");
+  });
+});
+
 describe("League of Comic Geeks parsing", () => {
   it("reads publisher, release year and description", () => {
     const html = `<div>CRUSADE COMICS &nbsp; · &nbsp; RELEASED APR 12, 1995</div>

@@ -1,3 +1,4 @@
+import { researchTitle, videoTopic } from "./research-title";
 /**
  * Relevant videos for one Sniper listing, from the YouTube Data API (YOUTUBE_API_KEY, server side only).
  * Order of preference: the book itself, then its creators, then the series, and at worst an explainer
@@ -51,7 +52,7 @@ const EXPLAINER_QUERIES = [
 const EXPLAINER_WORDS = /(snip|flip|resell|reselling|arbitrage|margin|roi|fees|profit|invest)/i;
 
 export function cacheKey(l: VideoLookup): string {
-  return `v1:${norm(l.series)}#${norm(l.issue ?? "")}`;
+  return `v2:${norm(researchTitle(l.series))}#${norm(l.issue ?? "")}:${(l.creators ?? []).map(norm).join("|")}`;
 }
 
 interface YtItem {
@@ -89,16 +90,16 @@ async function ytSearch(q: string, deps: VideoDeps): Promise<{ videoId: string; 
 }
 
 async function explainers(deps: VideoDeps): Promise<SniperVideo[]> {
-  const key = "v1:explainers";
+  const key = "v2:explainer";
   const hit = await deps.cacheGet(key);
-  if (hit && hit.length > 0) return hit;
+  if (hit && hit.length > 0) return hit.slice(0, 1);
   const found: SniperVideo[] = [];
   for (const q of EXPLAINER_QUERIES) {
-    if (found.length >= 3) break;
+    if (found.length >= 1) break;
     let rows: Awaited<ReturnType<typeof ytSearch>> = [];
     try { rows = await ytSearch(q, deps); } catch { continue; }
     for (const r of rows) {
-      if (found.length >= 3) break;
+      if (found.length >= 1) break;
       if (EXPLAINER_WORDS.test(r.title) && !found.some((f) => f.videoId === r.videoId)) found.push({ ...r, kind: "explainer" });
     }
   }
@@ -106,9 +107,10 @@ async function explainers(deps: VideoDeps): Promise<SniperVideo[]> {
   return found;
 }
 
-/** Returns up to 3 videos, most specific first. Never returns a video whose title does not name the book, creator or series. */
+/** Returns up to six related videos and one financial explainer, most specific first. Never returns a video whose title does not name the book, creator or series. */
 export async function findVideos(l: VideoLookup, deps: VideoDeps): Promise<SniperVideo[]> {
-  const series = l.series.trim();
+  const series = researchTitle(l.series);
+  const topic = videoTopic(series);
   if (!series) return explainers(deps);
 
   const key = cacheKey(l);
@@ -118,7 +120,7 @@ export async function findVideos(l: VideoLookup, deps: VideoDeps): Promise<Snipe
   const out: SniperVideo[] = [];
   const add = (rows: Awaited<ReturnType<typeof ytSearch>>, kind: VideoKind, ok: (title: string) => boolean) => {
     for (const r of rows) {
-      if (out.length >= 3) return;
+      if (out.length >= 6) return;
       if (out.some((o) => o.videoId === r.videoId)) continue;
       if (ok(r.title)) out.push({ ...r, kind });
     }
@@ -126,7 +128,7 @@ export async function findVideos(l: VideoLookup, deps: VideoDeps): Promise<Snipe
 
   let searchFailed = false;
   const run = async (q: string, kind: VideoKind, ok: (title: string) => boolean) => {
-    if (out.length >= 3) return;
+    if (out.length >= 6) return;
     try { add(await ytSearch(q, deps), kind, ok); } catch { searchFailed = true; }
   };
 
@@ -134,14 +136,11 @@ export async function findVideos(l: VideoLookup, deps: VideoDeps): Promise<Snipe
   if (issue) await run(`${series} #${issue} comic`, "book", (t) => titleNames(t, series) && new RegExp(`(^|[^0-9])${issue.replace(/[^0-9a-z]/gi, "")}([^0-9]|$)`).test(norm(t)));
   const creators = (l.creators ?? []).map((c) => c.trim()).filter(Boolean).slice(0, 2);
   for (const c of creators) await run(`${c} comic book artist interview`, "creator", (t) => titleNames(t, c));
-  if (out.length < 2) await run(`${series} comic book`, "series", (t) => titleNames(t, series));
+  if (out.length < 6) await run(`${topic} comics history`, "series", (t) => titleNames(t, topic));
+  // Financial education is separate from subject relevance and appears exactly once.
+  const ex = await explainers(deps);
+  for (const v of ex.slice(0, 1)) if (!out.some((r) => r.videoId === v.videoId)) out.push(v);
 
-  if (out.length === 0) {
-    const ex = await explainers(deps);
-    // A failed search is not a verdict about this book, so it is not cached.
-    if (!searchFailed) await deps.cacheSet(key, ex);
-    return ex;
-  }
   if (!searchFailed) await deps.cacheSet(key, out);
   return out;
 }
