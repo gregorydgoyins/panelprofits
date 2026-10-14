@@ -2942,7 +2942,7 @@ export default function SniperRadarPage() {
                         <span>📊</span> FINANCIAL &amp; ARBITRAGE DESK
                       </span>
                       <span className="font-mono text-xs font-black text-cyan-300">
-                        ${inspectedDeal.anchorFmv.toFixed(2)} FMV ANCHOR
+                        {inspectedDeal.anchorFmv > 0 ? `$${inspectedDeal.anchorFmv.toFixed(2)} FMV ANCHOR` : "NO VALUATION YET"}
                       </span>
                     </div>
 
@@ -2951,24 +2951,41 @@ export default function SniperRadarPage() {
                       <div className="bg-black/60 p-2.5 rounded-lg border border-slate-800">
                         <span className="text-slate-400 text-[10px] uppercase block">All-In Cost</span>
                         <strong className="text-white text-sm">${inspectedDeal.allInCost.toFixed(2)}</strong>
-                        <span className="text-[9px] text-emerald-400 block font-bold">
-                          -{inspectedDeal.discountPercent}% under FMV
-                        </span>
+                        {inspectedDeal.anchorFmv > 0 ? (
+                          <span className={`text-[9px] block font-bold ${inspectedDeal.discountPercent >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                            {inspectedDeal.discountPercent >= 0 ? `-${inspectedDeal.discountPercent}% under FMV` : `+${Math.abs(inspectedDeal.discountPercent)}% over FMV`}
+                          </span>
+                        ) : (
+                          <span className="text-[9px] text-slate-500 block">no FMV to compare</span>
+                        )}
                       </div>
                       <div className="bg-black/60 p-2.5 rounded-lg border border-slate-800">
                         <span className="text-emerald-400 text-[10px] uppercase block">Double-Up (2x)</span>
                         <strong className="text-emerald-300 text-sm">${inspectedDeal.targetWinPrice100Pct.toFixed(2)}</strong>
-                        <span className="text-[9px] text-slate-500 block">100% Net Profit</span>
+                        <span className={`text-[9px] block ${inspectedDeal.anchorFmv > 0 && inspectedDeal.targetWinPrice100Pct > inspectedDeal.anchorFmv ? "text-amber-400" : "text-slate-500"}`}>
+                          {inspectedDeal.anchorFmv <= 0 ? "sell price to double your cost" : inspectedDeal.targetWinPrice100Pct > inspectedDeal.anchorFmv ? "above FMV: needs a buyer over market" : "100% Net Profit"}
+                        </span>
                       </div>
                       <div className="bg-black/60 p-2.5 rounded-lg border border-slate-800">
                         <span className="text-cyan-400 text-[10px] uppercase block">Fast Turn (1.5x)</span>
                         <strong className="text-cyan-300 text-sm">${inspectedDeal.targetWinPrice50Pct.toFixed(2)}</strong>
-                        <span className="text-[9px] text-slate-500 block">50% Net Margin</span>
+                        <span className={`text-[9px] block ${inspectedDeal.anchorFmv > 0 && inspectedDeal.targetWinPrice50Pct > inspectedDeal.anchorFmv ? "text-amber-400" : "text-slate-500"}`}>
+                          {inspectedDeal.anchorFmv <= 0 ? "sell price for 1.5x your cost" : inspectedDeal.targetWinPrice50Pct > inspectedDeal.anchorFmv ? "above FMV: needs a buyer over market" : "50% Net Margin"}
+                        </span>
                       </div>
                       <div className="bg-black/60 p-2.5 rounded-lg border border-slate-800">
                         <span className="text-amber-400 text-[10px] uppercase block">Net Margin</span>
-                        <strong className="text-amber-300 text-sm">+{inspectedDeal.netRoiPercent}%</strong>
-                        <span className="text-[9px] text-amber-400/80 block">+${inspectedDeal.projectedNetProfit.toFixed(2)} Net</span>
+                        {inspectedDeal.anchorFmv > 0 ? (
+                          <>
+                            <strong className="text-amber-300 text-sm">{inspectedDeal.netRoiPercent >= 0 ? "+" : ""}{inspectedDeal.netRoiPercent}%</strong>
+                            <span className="text-[9px] text-amber-400/80 block">{inspectedDeal.projectedNetProfit >= 0 ? "+" : "-"}${Math.abs(inspectedDeal.projectedNetProfit).toFixed(2)} Net</span>
+                          </>
+                        ) : (
+                          <>
+                            <strong className="text-slate-500 text-sm">n/a</strong>
+                            <span className="text-[9px] text-slate-500 block">needs a valuation</span>
+                          </>
+                        )}
                       </div>
                     </div>
 
@@ -2990,7 +3007,9 @@ export default function SniperRadarPage() {
                       </div>
                       <div className="flex justify-between font-bold text-emerald-400 border-t border-slate-800 pt-1">
                         <span>Net Captured Instant Equity:</span>
-                        <span>+${Math.max(0, (inspectedDeal.anchorFmv - inspectedDeal.allInCost)).toFixed(2)}</span>
+                        <span className={inspectedDeal.anchorFmv > 0 ? "" : "text-slate-500"}>
+                          {inspectedDeal.anchorFmv > 0 ? `+$${Math.max(0, (inspectedDeal.anchorFmv - inspectedDeal.allInCost)).toFixed(2)}` : "n/a (no FMV)"}
+                        </span>
                       </div>
                     </div>
 
