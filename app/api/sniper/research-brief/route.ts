@@ -15,7 +15,7 @@ export async function GET(request: Request) {
     const brief = await makeResearchBrief(input, summary);
     return Response.json({ summary, brief }, { headers: { "cache-control": "public, s-maxage=3600" } });
   } catch (error) {
-    console.warn("Sniper brief unavailable:", error instanceof Error ? error.name : "generation_error");
+    console.warn("Sniper brief unavailable:", error instanceof Error ? `${error.name}: ${error.message.slice(0, 700)}` : "generation_error");
     return Response.json({ summary, brief: null, error: "The original research summary could not be generated. The source synopsis remains available." }, { headers: { "cache-control": "no-store" } });
   }
 }

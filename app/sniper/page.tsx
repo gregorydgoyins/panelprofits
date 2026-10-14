@@ -2651,7 +2651,7 @@ export default function SniperRadarPage() {
                         </span>
                       </div>
                       <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-500/40 uppercase">
-                        {inspectedDeal.historicalSignificanceTier || "HISTORIC_LANDMARK"}
+                        Issue research
                       </span>
                     </div>
 
@@ -2664,7 +2664,7 @@ export default function SniperRadarPage() {
                       editionVerified={Boolean(inspectedDeal.label?.title)}
                     />
 
-                    {inspectedDeal.longTermHoldingThesis && (
+                    {modalPerspective === "lore" && inspectedDeal.longTermHoldingThesis && (
                       <div className="text-xs text-purple-200/90 leading-relaxed font-sans bg-purple-950/20 border border-purple-500/20 p-3 rounded-lg">
                         <strong className="text-purple-400 font-mono text-[11px] block uppercase mb-1">
                           Long-Term Holding Thesis (Beyond Short Flips):
@@ -2677,7 +2677,7 @@ export default function SniperRadarPage() {
 
 
                 {/* BUY IT NOW SENSIBILITY & UPSIDE THESIS */}
-                {inspectedDeal.isBuyItNow && inspectedDeal.buyItNowSensibilityWhy && (
+                {modalPerspective === "financial" && inspectedDeal.isBuyItNow && inspectedDeal.buyItNowSensibilityWhy && (
                   <div className="bg-emerald-950/40 border-2 border-emerald-500/60 rounded-xl p-4 space-y-2 shadow-xl">
                     <div className="flex items-center justify-between border-b border-emerald-500/30 pb-2">
                       <span className="text-xs font-mono font-bold text-emerald-400 uppercase flex items-center gap-1.5">
