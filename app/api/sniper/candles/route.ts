@@ -1,6 +1,6 @@
 import { readCompletedEbaySales } from "@/lib/sniper/ebay-history";
-import { parseAndFilterListing } from "@/lib/sniper/anti-bullshit";
-import { seriesKey, type SaleObs } from "@/lib/sniper/candles";
+import { matchCompletedComicSale } from "@/lib/sniper/completed-sale-match";
+import { type SaleObs } from "@/lib/sniper/candles";
 import { NextResponse } from "next/server";
 import { readSalesForBook } from "@/lib/sniper/market-store";
 import { buildCandles, dedupeSales, gradesTraded, pickBucket, saleStats, type Bucket } from "@/lib/sniper/candles";
@@ -30,9 +30,9 @@ export async function GET(request: Request) {
   for (const item of ebay.items) {
     const price = Number(item.lastSoldPrice?.value);
     const date = item.lastSoldDate;
-    const parsed = parseAndFilterListing(String(item.title || ""));
+    const parsed = matchCompletedComicSale(String(item.title || ""), series, issue);
     if (!(price > 0) || item.lastSoldPrice?.currency !== "USD" || !date || !Number.isFinite(Date.parse(date))) continue;
-    if (seriesKey(parsed.extractedSeries, parsed.extractedIssue) !== seriesKey(series, issue)) continue;
+    if (!parsed) continue;
     direct.push({ date, price, grade: parsed.grade, venue: "ebay", source: ebay.provider === "ebay_marketplace_insights" ? "ebay_insights" : "ebay_history", confirmed: true, url: item.itemWebUrl });
   }
   // Closing bids are observations, not completed-sale prices. Keep them out of the sold-sales chart.
