@@ -43,7 +43,7 @@ export async function makeResearchBrief(input: StorySummaryInput, summary: Story
   if (existing) return existing;
   const work = (async () => {
     const { output } = await generateText({
-      model: "openai/gpt-5.4-mini", // Verified in the live AI Gateway model catalog.
+      model: process.env.SNIPER_BRIEF_MODEL || "nvidia/nemotron-3.5-lightning-free", // Verified free model with structured-output support.
       output: Output.object({ schema: briefSchema }),
       prompt: briefPrompt(input, summary),
       reasoning: "low", maxOutputTokens: 2200, maxRetries: 0,
