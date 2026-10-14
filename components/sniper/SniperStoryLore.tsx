@@ -312,6 +312,7 @@ export function SniperStoryLore({
             </div>
           )}
 
+          {!!entities.otherCharacters?.length && <div className="space-y-1"><h4 className="text-[11px] font-mono text-slate-300 uppercase">Supporting &amp; other characters</h4><div className="flex flex-wrap gap-1">{entities.otherCharacters.map((entity, i) => <EntityBadge key={`other-${entity.target}-${i}`} entity={entity} badgeColor="bg-slate-900 border border-slate-700 text-slate-200 hover:border-cyan-400" />)}</div></div>}
           {/* Landmark Tech, Weapons & Vehicles */}
           {hasItems && (
             <div className="space-y-1">
@@ -355,7 +356,7 @@ export function SniperStoryLore({
       {/* Full Interactive Hyperlinked Synopsis */}
       <div className="space-y-2 bg-[#070C18] border border-slate-800/90 rounded-lg p-3.5">
         <h4 className="text-[11px] font-mono uppercase tracking-widest text-slate-400 font-bold">
-          Verified Fandom Narrative Synopsis
+          Source narrative synopsis
         </h4>
         <div className="space-y-2.5 max-h-[360px] overflow-y-auto pr-2 custom-scrollbar text-xs text-slate-300 leading-relaxed font-sans">
           {paragraphs.map((p, i) => (

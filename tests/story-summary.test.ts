@@ -8,6 +8,7 @@ import {
   publishersAgree,
   clipAtSentence,
   comicKey,
+  sourceStoryLinks,
 } from "@/lib/comics/story-summary";
 import { coverSourceContradictsPublisher } from "@/lib/comics/cover-trust";
 
@@ -143,5 +144,15 @@ describe("cover trust", () => {
   });
   it("rejects DC wiki covers on Image books", () => {
     expect(coverSourceContradictsPublisher("dc_fandom_vol1", "Image")).toBe(true);
+  });
+});
+
+describe("real character wiki destinations", () => {
+  it("preserves known internal pages and sends absent entries to the source wiki", () => {
+    const result = sourceStoryLinks({ text: "Source story", storyTitle: null, source: "Fandom", sourceUrl: "https://dynamiteentertainment.fandom.com/wiki/Queen_Sonja_Vol_1_1", license: null,
+      entities: { featuredCharacters: [{ label: "Red Sonja", target: "Red Sonja (Earth-818793)", url: "/wiki/entry/red-sonja-earth-818793" }, { label: "Known", target: "Known", url: "/wiki/entry/known" }] },
+    }, new Set(["known"]));
+    expect(result.entities?.featuredCharacters?.[0].url).toBe("https://dynamiteentertainment.fandom.com/wiki/Red_Sonja_(Earth-818793)");
+    expect(result.entities?.featuredCharacters?.[1].url).toBe("/wiki/entry/known");
   });
 });

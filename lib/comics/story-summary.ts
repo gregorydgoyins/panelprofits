@@ -463,7 +463,7 @@ async function fromLocg(input: StorySummaryInput): Promise<ProviderOutcome> {
 
 /* ------------------------------------------------------------------ public */
 
-export async function getStorySummary(input: StorySummaryInput): Promise<StorySummary | null> {
+async function readStorySummary(input: StorySummaryInput): Promise<StorySummary | null> {
   if (!input.series?.trim() || !String(input.issueNumber ?? "").trim()) return null;
   input = { ...input, series: researchTitle(input.series), publisher: publisherFromTitle(input.series) || input.publisher };
   const key = comicKey(input.series, String(input.issueNumber), input.year);
@@ -554,4 +554,31 @@ export async function getStorySummary(input: StorySummaryInput): Promise<StorySu
     }
   }
   return hit;
+}
+
+/** Keep confirmed internal wiki pages; link other characters to their actual source wiki. */
+export function sourceStoryLinks(summary: StorySummary, existing: Set<string>): StorySummary {
+  if (!summary.entities || !summary.sourceUrl) return summary;
+  let host: string;
+  try { host = new URL(summary.sourceUrl).hostname; } catch { return summary; }
+  if (!host.endsWith(".fandom.com")) return summary;
+  const entities = Object.fromEntries(Object.entries(summary.entities).map(([role, entries]) => [role,
+    entries?.map(entity => {
+      if (!entity.url.startsWith("/wiki/entry/")) return entity;
+      const slug = decodeURIComponent(entity.url.slice("/wiki/entry/".length));
+      return existing.has(slug) ? entity : { ...entity, url: `https://${host}/wiki/${encodeURIComponent(entity.target.replace(/ /g, "_"))}` };
+    }),
+  ]));
+  return { ...summary, entities };
+}
+
+export async function getStorySummary(input: StorySummaryInput): Promise<StorySummary | null> {
+  const summary = await readStorySummary(input);
+  if (!summary?.entities) return summary;
+  const slugs = [...new Set(Object.values(summary.entities).flatMap(entries => (entries ?? [])
+    .filter(entity => entity.url.startsWith("/wiki/entry/"))
+    .map(entity => decodeURIComponent(entity.url.slice("/wiki/entry/".length)))))];
+  if (!slugs.length) return summary;
+  const { data } = await createAdminServerClient().from("ppcf_wiki_pages").select("slug").in("slug", slugs);
+  return sourceStoryLinks(summary, new Set((data ?? []).map(row => row.slug)));
 }
