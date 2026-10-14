@@ -439,6 +439,10 @@ export default function SniperRadarPage() {
   const [showPlansModal, setShowPlansModal] = useState<boolean>(false);
   const [liveComps, setLiveComps] = useState<Array<{ venue: string; date: string; grade: number; price: number; title?: string; url?: string }> | null>(null);
   const [loadingComps, setLoadingComps] = useState<boolean>(false);
+  // The price chart and sales ledger only appear when there are 2+ real recorded sales (the live bid is not a sale).
+  const hasChartSales =
+    !loadingComps &&
+    ((liveComps && liveComps.length > 0 ? liveComps : inspectedDeal?.historicalComps ?? []).filter((c) => c.date !== "Live Floor").length >= 2);
 
   // Fetch verified real-time eBay and certified sales comps whenever an item is inspected
   useEffect(() => {
@@ -2476,9 +2480,8 @@ export default function SniperRadarPage() {
                 {[
                   { id: "all", label: "ALL PERSPECTIVES", icon: "🌐" },
                   { id: "matrix", label: "PRICE MATRIX (EBAY • CB • PP)", icon: "⚖️" },
-                  { id: "investopedia", label: "INVESTOPEDIA DUE DILIGENCE", icon: "💼" },
                   { id: "financial", label: "FINANCIAL & ARBITRAGE", icon: "📊" },
-                  { id: "chart", label: "TRADINGVIEW & HISTORICALS", icon: "📈" },
+                  ...(hasChartSales ? [{ id: "chart", label: "TRADINGVIEW & HISTORICALS", icon: "📈" }] : []),
                   { id: "census", label: "POPULATION CENSUS", icon: "🏛️" },
                   { id: "lore", label: "LORE & CANON", icon: "📜" },
                   { id: "gcd", label: "GCD BIBLIOGRAPHIC", icon: "📚" },
@@ -2769,104 +2772,6 @@ export default function SniperRadarPage() {
                 )}
 
                 {/* ════════════════════════════════════════════════════════════════════════
-                    PERSPECTIVE B: INVESTOPEDIA PURCHASER DUE DILIGENCE & VALUATION LENS
-                    ════════════════════════════════════════════════════════════════════════ */}
-                {(modalPerspective === "all" || modalPerspective === "investopedia") && inspectedDeal.investopediaLens && (
-                  <div className="bg-[#070C18] border border-emerald-500/40 rounded-xl p-4 space-y-3.5 shadow-xl">
-                    <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-mono font-bold text-emerald-400 uppercase flex items-center gap-1.5">
-                          <span>💼</span> INVESTOPEDIA™ PURCHASER DUE DILIGENCE &amp; VALUATION LENS
-                        </span>
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/30">
-                          {inspectedDeal.investopediaLens.category}
-                        </span>
-                      </div>
-                      <span className="text-[10px] font-mono text-slate-400">
-                        Institutional Asset Framework
-                      </span>
-                    </div>
-
-                    {/* Financial Concept Hero */}
-                    <div className="bg-emerald-950/20 border border-emerald-500/30 rounded-lg p-3 space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-mono font-bold text-emerald-300 uppercase">
-                            {inspectedDeal.investopediaLens.term}
-                          </span>
-                          <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-950 border border-emerald-500/40 text-emerald-400">
-                            CBR Lexicon Anchor
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-[10px] font-mono">
-                          <Link
-                            href={`/lexicon?q=${encodeURIComponent(inspectedDeal.investopediaLens.term)}`}
-                            className="text-emerald-400 hover:text-emerald-200 underline inline-flex items-center gap-0.5"
-                          >
-                            <span>CBR Lexicon Term</span>
-                            <span className="text-[9px]">↗</span>
-                          </Link>
-                          <span className="text-slate-600">•</span>
-                          <Link
-                            href="/lexicon"
-                            className="text-cyan-400 hover:text-cyan-200 underline inline-flex items-center gap-0.5"
-                          >
-                            <span>Market Lexicon</span>
-                            <span className="text-[9px]">↗</span>
-                          </Link>
-                        </div>
-                      </div>
-                      <p className="text-xs text-slate-300 leading-relaxed font-sans">
-                        {inspectedDeal.investopediaLens.definition}
-                      </p>
-                      <div className="border-t border-emerald-500/20 pt-1.5 text-xs text-emerald-200/90 font-sans leading-relaxed">
-                        <strong className="text-emerald-400 font-mono text-[11px] block uppercase mb-0.5">
-                          Direct Asset Application:
-                        </strong>
-                        {inspectedDeal.investopediaLens.application}
-                      </div>
-                    </div>
-
-                    {/* Quantitative Due Diligence Triad */}
-                    <div className="grid grid-cols-3 gap-2.5 text-xs font-mono text-center">
-                      <div className="bg-black/60 p-2.5 rounded-lg border border-slate-800">
-                        <span className="text-[10px] text-slate-400 uppercase block">Modeled Dealer Bid</span>
-                        <strong className="text-white text-sm">
-                          ${inspectedDeal.investopediaLens.wholesaleBidUsd.toFixed(2)}
-                        </strong>
-                        <span className="text-[9px] text-slate-500 block">Wholesale Buy-List Floor</span>
-                      </div>
-                      <div className="bg-black/60 p-2.5 rounded-lg border border-slate-800">
-                        <span className="text-[10px] text-emerald-400 uppercase block">Retail Ask Price</span>
-                        <strong className="text-emerald-300 text-sm">
-                          ${inspectedDeal.investopediaLens.retailAskUsd.toFixed(2)}
-                        </strong>
-                        <span className="text-[9px] text-slate-500 block">Clearing Retail Target</span>
-                      </div>
-                      <div className="bg-black/60 p-2.5 rounded-lg border border-slate-800">
-                        <span className="text-[10px] text-cyan-400 uppercase block">Bid-Ask Spread</span>
-                        <strong className="text-cyan-300 text-sm">
-                          {inspectedDeal.investopediaLens.bidAskSpreadPercent}%
-                        </strong>
-                        <span className="text-[9px] text-slate-500 block">Dealer Liquidity Spread</span>
-                      </div>
-                    </div>
-
-                    <div className="bg-black/40 border border-slate-800 rounded-lg p-2.5 text-xs font-mono space-y-1 text-slate-300">
-                      <div className="flex justify-between">
-                        <span className="text-slate-400">Margin Haircut &amp; Downside Cushion:</span>
-                        <span className="text-emerald-300 font-bold">
-                          {inspectedDeal.investopediaLens.marginHaircutPercent}% Protection
-                        </span>
-                      </div>
-                      <div className="text-[10px] text-slate-400 leading-snug">
-                        {inspectedDeal.investopediaLens.capitalAssetPricingNote}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* ════════════════════════════════════════════════════════════════════════
                     PERSPECTIVE 1: FINANCIAL & ARBITRAGE MATH
                     ════════════════════════════════════════════════════════════════════════ */}
                 {(modalPerspective === "all" || modalPerspective === "financial") && (
@@ -2981,7 +2886,7 @@ export default function SniperRadarPage() {
                 {/* ════════════════════════════════════════════════════════════════════════
                     PERSPECTIVE 2: TRADINGVIEW TECHNICALS & HISTORICAL SALES LEDGER
                     ════════════════════════════════════════════════════════════════════════ */}
-                {(modalPerspective === "all" || modalPerspective === "chart") && (
+                {hasChartSales && (modalPerspective === "all" || modalPerspective === "chart") && (
                   <div className="bg-[#070C18] border border-cyan-500/40 rounded-xl p-4 space-y-3.5 shadow-lg">
                     <div className="flex items-center justify-between border-b border-slate-800 pb-2">
                       <div className="flex items-center gap-2">
