@@ -29,6 +29,7 @@
     "@tanstack/react-table": "^8.21.3",
     "@tanstack/react-virtual": "^3.14.13",
     "@types/pg": "^8.23.1",
+    "ai": "^7.0.140",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lightweight-charts": "^5.2.1",
@@ -38,7 +39,8 @@
     "pg-copy-streams": "^7.0.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
-    "tailwind-merge": "^3.0.2"
+    "tailwind-merge": "^3.0.2",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/node": "^22.13.4",

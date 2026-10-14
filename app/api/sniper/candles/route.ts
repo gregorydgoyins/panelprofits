@@ -22,7 +22,7 @@ export async function GET(request: Request) {
 
   const [recorded, view] = await Promise.all([
     sp.get("source") === "ebay" ? Promise.resolve([]) : readSalesForBook(series, issue),
-    readEbaySalesForBook(series, issue, sp.get("grader")),
+    readEbaySalesForBook(series, issue, sp.get("grader"), (sp.get("editionTerms") || "").split("|").filter(term => /^[a-z0-9]{2,40}$/i.test(term)).slice(0, 4)),
   ]);
   const { history: ebay, sales: direct } = view;
   // Closing bids are observations, not completed-sale prices. Keep them out of the sold-sales chart.

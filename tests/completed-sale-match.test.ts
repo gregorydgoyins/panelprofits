@@ -8,6 +8,10 @@ describe("completed-sale comic matching", () => {
     expect(result?.grade).toBe(9.8);
     expect(result?.extractedIssue).toBe("300");
   });
+  it("keeps a Nauck title and excludes the misclassified Ramos-cover comp", () => {
+    expect(matchCompletedComicSale("Strange Academy #14 CGC 9.8 Todd Nauck Variant", "Strange Academy", "14", ["nauck"])?.grade).toBe(9.8);
+    expect(matchCompletedComicSale("Strange Academy #14 CGC 9.8 Cover A Ramos 1st Print Gaslamp Skottie Young Marvel 2021", "Strange Academy", "14", ["nauck"])).toBeNull();
+  });
   it("excludes facsimile reprints, homage issues, cards and dust jackets", () => {
     for (const title of [
       "Amazing Spider-Man #300 CGC 9.8 Facsimile Marvel Comic First Appearance VENOM",

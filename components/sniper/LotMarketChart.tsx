@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { marketBrief } from "@/lib/sniper/market-brief";
 import { TradingViewChart } from "@/components/charts/tradingview-chart";
 
 interface Candle { time: string; open: number; high: number; low: number; close: number; volume: number; dollars: number }
@@ -56,8 +57,8 @@ function BidHistory({ ticks }: { ticks: Array<{ time: string; price: number; bid
  * Candles and volume for a book at a grade, built only from recorded sales; plus this lot's bid history.
  * Shows what exists and says plainly when nothing does.
  */
-export function LotMarketChart({ series, issue, grade, itemId, ticker, currentBid, grader }: {
-  series: string; issue: string; grade?: number | null; itemId?: string; ticker: string; currentBid: number; grader?: string;
+export function LotMarketChart({ series, issue, grade, itemId, ticker, currentBid, grader, allInCost, variant, editionTerms }: {
+  series: string; issue: string; grade?: number | null; itemId?: string; ticker: string; currentBid: number; grader?: string; allInCost?: number; variant?: string; editionTerms?: string;
 }) {
   const [pick, setPick] = React.useState<number | null>(grade ?? null);
   const [referenceNote, setReferenceNote] = React.useState<string | null>(null);
@@ -72,6 +73,7 @@ export function LotMarketChart({ series, issue, grade, itemId, ticker, currentBi
     let live = true;
     setLoading(true);
     const q = new URLSearchParams({ series, issue, bucket, source: "ebay" });
+    if (editionTerms) q.set("editionTerms", editionTerms);
     if (grader) q.set("grader", grader);
     if (pick != null) q.set("grade", String(pick));
     if (itemId) q.set("item", itemId);
@@ -87,7 +89,7 @@ export function LotMarketChart({ series, issue, grade, itemId, ticker, currentBi
       } })
       .catch(() => { if (live) { setData(null); setLoading(false); } });
     return () => { live = false; };
-  }, [series, issue, pick, itemId, bucket, grader, grade]);
+  }, [series, issue, pick, itemId, bucket, grader, grade, editionTerms]);
 
   const candles = data?.candles ?? [];
   const first = candles[0]?.close, last = candles[candles.length - 1]?.close;
@@ -95,6 +97,7 @@ export function LotMarketChart({ series, issue, grade, itemId, ticker, currentBi
 
   return (
     <div className="space-y-2.5">
+      {!loading && data && <section className="space-y-3 text-sm leading-6 text-slate-300 pb-4 border-b border-slate-800"><h3 className="text-base font-semibold text-emerald-300">Sales, value &amp; bid assessment</h3>{marketBrief({ listingGrade: grade, chartGrade: data.grade, grader, count: data.stats.n, median: data.stats.median, low: data.stats.low, high: data.stats.high, latest: data.stats.last, allInCost, variant, editionTerms, hasMore: data.ebay?.hasMore }).map(point => <div key={point.heading}><h4 className="font-semibold text-white">{point.heading}</h4><p>{point.text}</p></div>)}</section>}
       <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400"><span>Sales grouped by</span>{["day", "week", "month"].map(b => <button key={b} onClick={() => setBucket(b)} className={`px-2 py-1 rounded border ${bucket === b ? "border-cyan-400 text-cyan-300 bg-cyan-950/40" : "border-slate-700"}`}>{b}</button>)}</div>
       {data && data.grades.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-mono">
@@ -111,6 +114,7 @@ export function LotMarketChart({ series, issue, grade, itemId, ticker, currentBi
         </div>
       )}
 
+      {/strange academy/i.test(series) && issue === "14" && editionTerms?.toLowerCase().includes("nauck") && <p className="text-xs leading-5 text-amber-200 rounded-lg border border-amber-500/30 p-3">Guide cross-check, October 14, 2026: PriceCharting displays $99.99 for 9.8 on its Nauck page, but the single graded record is a December 15, 2022 “Cover A Ramos” sale. That mismatch does not establish Nauck-variant FMV. <a href="https://www.pricecharting.com/game/comic-books-strange-academy/strange-academy-nauck-14-2021" target="_blank" rel="noopener noreferrer" className="text-cyan-300 underline">Inspect the guide and source record ↗</a></p>}
       {referenceNote && <p className="text-xs leading-5 text-amber-200 border border-amber-500/25 rounded-lg bg-amber-950/20 p-2">{referenceNote}</p>}
       {data?.grade != null && <p className="text-[10px] font-mono text-slate-400">Chart: {grader || "graded"} {data.grade.toFixed(1)} completed sales · listing grade: {grade?.toFixed(1) ?? "unknown"}</p>}
       {loading ? (

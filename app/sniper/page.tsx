@@ -12,7 +12,7 @@ import {
 import { evaluateAuctionListing } from "@/lib/sniper/radar-engine";
 import { getEraDisplayName } from "@/lib/sniper/anti-bullshit";
 import { SlabEncasement } from "@/components/sniper/SlabEncasement";
-import { SniperStoryLore } from "@/components/sniper/SniperStoryLore";
+import { SniperResearchBrief } from "@/components/sniper/SniperResearchBrief";
 import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
 import { LiveLotStrip } from "@/components/sniper/LiveLotStrip";
 import { SniperLearningPanel } from "@/components/sniper/SniperLearningPanel";
@@ -2636,6 +2636,46 @@ export default function SniperRadarPage() {
 
               {/* Right Column: Multi-Perspective Rail Intelligence Dossier */}
               <div className="lg:col-span-7 space-y-4">
+                {/* ════════════════════════════════════════════════════════════════════════
+                    PERSPECTIVE 3: HISTORICAL LORE & COLLECTOR CANON
+                    ════════════════════════════════════════════════════════════════════════ */}
+                {((modalPerspective === "all") || modalPerspective === "lore") && (
+                  <div className="bg-[#070C18] border border-amber-500/40 rounded-xl p-4 space-y-4 shadow-lg">
+                    <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono font-bold text-amber-400 uppercase flex items-center gap-1.5">
+                          <span>📜</span> QUICK RESEARCH SUMMARY
+                        </span>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-500/30">
+                          Story · lessons · sources
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-500/40 uppercase">
+                        {inspectedDeal.historicalSignificanceTier || "HISTORIC_LANDMARK"}
+                      </span>
+                    </div>
+
+                    {/* Integrated Encyclopedic Fandom Lore Dossier */}
+                    <SniperResearchBrief
+                      series={inspectedDeal.label?.title || inspectedDeal.resolvedSeries}
+                      issueNumber={inspectedDeal.resolvedIssue}
+                      year={inspectedDeal.resolvedYear}
+                      publisher={inspectedDeal.gcdMetadata?.publisher}
+                      editionVerified={Boolean(inspectedDeal.label?.title)}
+                    />
+
+                    {inspectedDeal.longTermHoldingThesis && (
+                      <div className="text-xs text-purple-200/90 leading-relaxed font-sans bg-purple-950/20 border border-purple-500/20 p-3 rounded-lg">
+                        <strong className="text-purple-400 font-mono text-[11px] block uppercase mb-1">
+                          Long-Term Holding Thesis (Beyond Short Flips):
+                        </strong>
+                        {inspectedDeal.longTermHoldingThesis}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+
                 {/* BUY IT NOW SENSIBILITY & UPSIDE THESIS */}
                 {inspectedDeal.isBuyItNow && inspectedDeal.buyItNowSensibilityWhy && (
                   <div className="bg-emerald-950/40 border-2 border-emerald-500/60 rounded-xl p-4 space-y-2 shadow-xl">
@@ -2673,7 +2713,7 @@ export default function SniperRadarPage() {
                 {/* ════════════════════════════════════════════════════════════════════════
                     PERSPECTIVE A: MULTI-SOURCE COMPARATIVE PRICE MATRIX (EBAY • CB • PP)
                     ════════════════════════════════════════════════════════════════════════ */}
-                {((modalPerspective === "all" && fullResearch) || modalPerspective === "matrix") && inspectedDeal.priceMatrix && (
+                {(modalPerspective === "matrix") && inspectedDeal.priceMatrix && (
                   <div className="bg-[#070C18] border border-cyan-500/50 rounded-xl p-4 space-y-3.5 shadow-xl">
                     <div className="flex items-center justify-between border-b border-slate-800 pb-2">
                       <div className="flex items-center gap-2">
@@ -2762,7 +2802,7 @@ export default function SniperRadarPage() {
                 {/* ════════════════════════════════════════════════════════════════════════
                     PERSPECTIVE 1: FINANCIAL & ARBITRAGE MATH
                     ════════════════════════════════════════════════════════════════════════ */}
-                {(modalPerspective === "all" || modalPerspective === "financial") && (
+                {(modalPerspective === "financial") && (
                   <div className="bg-[#070C18] border border-cyan-500/40 rounded-xl p-4 space-y-3.5 shadow-lg">
 
                     <div className="flex items-center justify-between border-b border-slate-800 pb-2">
@@ -2899,6 +2939,9 @@ export default function SniperRadarPage() {
                         itemId={inspectedDeal.listing.id}
                         ticker={formatComicEquityTicker(inspectedDeal.resolvedSeries, inspectedDeal.resolvedIssue)}
                         currentBid={inspectedDeal.listing.currentBid}
+                        allInCost={inspectedDeal.allInCost}
+                        editionTerms={/\bNauck\b/i.test(inspectedDeal.listing.title) ? "nauck" : undefined}
+                        variant={/\bNauck\b/i.test(inspectedDeal.listing.title) ? "Todd Nauck" : inspectedDeal.variantType || (/variant/i.test(inspectedDeal.listing.title) ? "listed variant" : undefined)}
                       />
                     </div>
 
@@ -2906,50 +2949,8 @@ export default function SniperRadarPage() {
                 )}
 
                 {((modalPerspective === "all") || modalPerspective === "investopedia" || modalPerspective === "learn") && (
-                  <SniperLearningPanel series={inspectedDeal.resolvedSeries} issue={inspectedDeal.resolvedIssue} section={modalPerspective === "learn" ? "learn" : modalPerspective === "investopedia" ? "investopedia" : "all"} />
+                  <SniperLearningPanel series={inspectedDeal.resolvedSeries} issue={inspectedDeal.resolvedIssue} section={modalPerspective === "learn" ? "learn" : "investopedia"} />
                 )}
-                {/* ════════════════════════════════════════════════════════════════════════
-                    PERSPECTIVE 3: HISTORICAL LORE & COLLECTOR CANON
-                    ════════════════════════════════════════════════════════════════════════ */}
-                {((modalPerspective === "all") || modalPerspective === "lore") && (
-                  <div className="bg-[#070C18] border border-amber-500/40 rounded-xl p-4 space-y-4 shadow-lg">
-                    <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-mono font-bold text-amber-400 uppercase flex items-center gap-1.5">
-                          <span>📜</span> STORY POINTS, CHARACTERS &amp; WIKI
-                        </span>
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-500/30">
-                          Wiki Cross-Walk
-                        </span>
-                      </div>
-                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-500/40 uppercase">
-                        {inspectedDeal.historicalSignificanceTier || "HISTORIC_LANDMARK"}
-                      </span>
-                    </div>
-
-                    {/* Integrated Encyclopedic Fandom Lore Dossier */}
-                    <SniperStoryLore
-                      series={inspectedDeal.label?.title || inspectedDeal.resolvedSeries}
-                      issueNumber={inspectedDeal.resolvedIssue}
-                      year={inspectedDeal.resolvedYear}
-                      publisher={inspectedDeal.gcdMetadata?.publisher}
-                      editionVerified={Boolean(inspectedDeal.label?.title)}
-                      fallbackLore={inspectedDeal.historicalSignificanceLore}
-                      whyItsAGoodBuy={inspectedDeal.whyItsAGoodBuy}
-                    />
-
-                    {inspectedDeal.longTermHoldingThesis && (
-                      <div className="text-xs text-purple-200/90 leading-relaxed font-sans bg-purple-950/20 border border-purple-500/20 p-3 rounded-lg">
-                        <strong className="text-purple-400 font-mono text-[11px] block uppercase mb-1">
-                          Long-Term Holding Thesis (Beyond Short Flips):
-                        </strong>
-                        {inspectedDeal.longTermHoldingThesis}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-
                 {/* ════════════════════════════════════════════════════════════════════════
                     PERSPECTIVE 3: POPULATION & CENSUS INTEL
                     ════════════════════════════════════════════════════════════════════════ */}
