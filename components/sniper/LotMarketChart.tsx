@@ -15,13 +15,14 @@ interface CandlesResponse {
   sales: Array<{ date: string; price: number; grade: number | null; venue: string; source: string; confirmed: boolean; url?: string }>;
   lot?: { ticks: Array<{ time: string; price: number; bids: number }> };
   note?: string;
+  ebay?: { available: boolean; message: string; code: string | null };
 }
 
 const usd = (n: number | null | undefined) => (n == null ? "—" : `$${n >= 100 ? Math.round(n).toLocaleString() : n.toFixed(2)}`);
 
 function sourceLabel(src: string, confirmed: boolean): string {
   if (src === "ebay_last_bid") return "eBay last bid seen";
-  if (src === "ebay_insights") return "eBay sold";
+  if (src === "ebay_insights" || src === "ebay_history") return "eBay sold";
   if (src === "graded_sales_observations") return "graded register";
   if (src.startsWith("benchmark")) return confirmed ? "CGC / GPA record" : "market observation";
   return src;
@@ -138,6 +139,9 @@ export function LotMarketChart({ series, issue, grade, itemId, ticker, currentBi
         </div>
       )}
 
+      {data?.ebay && !data.ebay.available && candles.length > 0 && (
+        <div className="text-[10px] font-mono text-amber-300/80">eBay sold history unavailable: {data.ebay.message} Displaying confirmed sales from the listed sources.</div>
+      )}
       {data?.lot?.ticks && <BidHistory ticks={data.lot.ticks} />}
 
       {data && data.sales.length > 0 && (

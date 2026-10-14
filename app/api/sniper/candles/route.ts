@@ -1,8 +1,12 @@
+import { readCompletedEbaySales } from "@/lib/sniper/ebay-history";
+import { parseAndFilterListing } from "@/lib/sniper/anti-bullshit";
+import { seriesKey, type SaleObs } from "@/lib/sniper/candles";
 import { NextResponse } from "next/server";
 import { readSalesForBook } from "@/lib/sniper/market-store";
 import { buildCandles, dedupeSales, gradesTraded, pickBucket, saleStats, type Bucket } from "@/lib/sniper/candles";
 
 export const runtime = "nodejs";
+export const maxDuration = 30;
 export const dynamic = "force-dynamic";
 
 const BUCKETS: Bucket[] = ["day", "week", "month", "quarter", "year"];
@@ -18,7 +22,22 @@ export async function GET(request: Request) {
   const issue = sp.get("issue") || "";
   if (!series || !issue) return NextResponse.json({ success: false, error: "series and issue required" }, { status: 400 });
 
-  const all = dedupeSales(await readSalesForBook(series, issue));
+  const [recorded, ebay] = await Promise.all([
+    readSalesForBook(series, issue),
+    readCompletedEbaySales(`${series} ${String(issue).replace(/^#/, "")}`),
+  ]);
+  const direct: SaleObs[] = [];
+  for (const item of ebay.items) {
+    const price = Number(item.lastSoldPrice?.value);
+    const date = item.lastSoldDate;
+    const parsed = parseAndFilterListing(String(item.title || ""));
+    if (!(price > 0) || item.lastSoldPrice?.currency !== "USD" || !date || !Number.isFinite(Date.parse(date))) continue;
+    if (seriesKey(parsed.extractedSeries, parsed.extractedIssue) !== seriesKey(series, issue)) continue;
+    direct.push({ date, price, grade: parsed.grade, venue: "ebay", source: ebay.provider === "ebay_marketplace_insights" ? "ebay_insights" : "ebay_history", confirmed: true, url: item.itemWebUrl });
+  }
+  // Closing bids are observations, not completed-sale prices. Keep them out of the sold-sales chart.
+  const excludedBidObservations = recorded.filter((s) => !s.confirmed).length;
+  const all = dedupeSales([...recorded.filter((s) => s.confirmed), ...direct]);
   const grades = gradesTraded(all);
   const wanted = sp.get("grade") ? parseFloat(sp.get("grade")!) : NaN;
   const grade = Number.isFinite(wanted) ? wanted : grades[0]?.grade ?? null;
@@ -40,8 +59,10 @@ export async function GET(request: Request) {
     sources,
     sales: atGrade.slice(-25).reverse(),
     totalSalesAllGrades: all.length,
+    excludedBidObservations,
+    ebay: { available: ebay.available, stage: ebay.stage, status: ebay.status, code: ebay.code, message: ebay.message, checkedAt: ebay.checkedAt, provider: ebay.provider, hasMore: ebay.hasMore },
     note: atGrade.length === 0
-      ? "No sales recorded for this book at this grade yet. The tracker records every auction it watches close; history builds from here."
+      ? `No confirmed sales for this book at this grade. ${ebay.available ? "eBay returned no matching sales." : `eBay sold-history access: ${ebay.message}`}`
       : undefined,
   });
 }
