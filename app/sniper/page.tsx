@@ -2970,7 +2970,7 @@ export default function SniperRadarPage() {
 
                     {/* Integrated Encyclopedic Fandom Lore Dossier */}
                     <SniperStoryLore
-                      series={inspectedDeal.resolvedSeries}
+                      series={inspectedDeal.label?.title || inspectedDeal.resolvedSeries}
                       issueNumber={inspectedDeal.resolvedIssue}
                       year={inspectedDeal.resolvedYear}
                       publisher={inspectedDeal.gcdMetadata?.publisher}
@@ -2996,7 +2996,7 @@ export default function SniperRadarPage() {
                   <div className="bg-[#070C18] border border-blue-500/40 rounded-xl p-4 space-y-3 shadow-lg">
                     <div className="flex items-center justify-between border-b border-slate-800 pb-2">
                       <span className="text-xs font-mono font-bold text-blue-400 uppercase flex items-center gap-1.5">
-                        <span>📚</span> GRAND COMICS DATABASE™ (GCD) CREATIVE CANON
+                        <span>📚</span> GRAND COMICS DATABASE™ (GCD) BIBLIOGRAPHIC RECORD
                       </span>
                       <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-500/40 uppercase">
                         Bibliographic Authority

@@ -15,7 +15,7 @@ interface CandlesResponse {
   sales: Array<{ date: string; price: number; grade: number | null; venue: string; source: string; confirmed: boolean; url?: string }>;
   lot?: { ticks: Array<{ time: string; price: number; bids: number }> };
   note?: string;
-  ebay?: { available: boolean; message: string; code: string | null };
+  ebay?: { available: boolean; message: string; code: string | null; hasMore?: boolean; checkedAt?: string };
 }
 
 const usd = (n: number | null | undefined) => (n == null ? "—" : `$${n >= 100 ? Math.round(n).toLocaleString() : n.toFixed(2)}`);
@@ -60,12 +60,13 @@ export function LotMarketChart({ series, issue, grade, itemId, ticker, currentBi
   series: string; issue: string; grade?: number | null; itemId?: string; ticker: string; currentBid: number; grader?: string;
 }) {
   const [pick, setPick] = React.useState<number | null>(grade ?? null);
+  const [referenceNote, setReferenceNote] = React.useState<string | null>(null);
   const [showAllSales, setShowAllSales] = React.useState(false);
   const [bucket, setBucket] = React.useState("day");
   const [data, setData] = React.useState<CandlesResponse | null>(null);
   const [loading, setLoading] = React.useState(true);
 
-  React.useEffect(() => { setPick(grade ?? null); }, [series, issue, grade]);
+  React.useEffect(() => { setPick(grade ?? null); setReferenceNote(null); }, [series, issue, grade]);
 
   React.useEffect(() => {
     let live = true;
@@ -76,10 +77,17 @@ export function LotMarketChart({ series, issue, grade, itemId, ticker, currentBi
     if (itemId) q.set("item", itemId);
     fetch(`/api/sniper/candles?${q}`)
       .then((r) => (r.ok ? r.json() : null))
-      .then((j) => { if (live) { setData(j?.success ? j : null); setLoading(false); } })
+      .then((j) => { if (live) {
+        if (j?.success && pick === grade && j.stats?.n === 0 && j.grades?.length > 0 && grade != null) {
+          const nearest = [...j.grades].sort((a, b) => Math.abs(a.grade - grade) - Math.abs(b.grade - grade))[0].grade;
+          setReferenceNote(`No ${grade.toFixed(1)} sales in this saved sample. The chart shows another grade for reference, not a valuation of this listing.`);
+          setPick(nearest);
+        }
+        setData(j?.success ? j : null); setLoading(false);
+      } })
       .catch(() => { if (live) { setData(null); setLoading(false); } });
     return () => { live = false; };
-  }, [series, issue, pick, itemId, bucket, grader]);
+  }, [series, issue, pick, itemId, bucket, grader, grade]);
 
   const candles = data?.candles ?? [];
   const first = candles[0]?.close, last = candles[candles.length - 1]?.close;
@@ -103,6 +111,8 @@ export function LotMarketChart({ series, issue, grade, itemId, ticker, currentBi
         </div>
       )}
 
+      {referenceNote && <p className="text-xs leading-5 text-amber-200 border border-amber-500/25 rounded-lg bg-amber-950/20 p-2">{referenceNote}</p>}
+      {data?.grade != null && <p className="text-[10px] font-mono text-slate-400">Chart: {grader || "graded"} {data.grade.toFixed(1)} completed sales · listing grade: {grade?.toFixed(1) ?? "unknown"}</p>}
       {loading ? (
         <div className="p-6 text-center text-xs font-mono text-slate-500 animate-pulse">Loading recorded sales…</div>
       ) : candles.length > 0 ? (
@@ -144,6 +154,7 @@ export function LotMarketChart({ series, issue, grade, itemId, ticker, currentBi
         </div>
       )}
 
+      {data?.ebay?.available && <p className="text-[10px] leading-4 text-slate-500">History saved {data.ebay.checkedAt?.slice(0, 10)}. {data.ebay.hasMore ? "This is the first page of up to 50 search matches; more history exists. Comic, grader and grade checks determine the sales shown." : "All matching sales in the returned page are available below."}</p>}
       {data?.ebay && !data.ebay.available && candles.length > 0 && (
         <div className="text-[10px] font-mono text-amber-300/80">eBay sold history unavailable: {data.ebay.message} Displaying confirmed sales from the listed sources.</div>
       )}
