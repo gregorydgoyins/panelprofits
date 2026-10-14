@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { createAdminServerClient } from "@/lib/supabase/admin";
-import { readSalesForBook } from "@/lib/sniper/market-store";
+import { readEbaySalesForBook } from "@/lib/sniper/ebay-sales-view";
 import { dedupeSales } from "@/lib/sniper/candles";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 30;
 
 export interface RealizedSaleComp {
   venue: string;
@@ -52,11 +53,11 @@ async function computeGET(request: Request) {
   // Every recorded sale for this book, from the same place the chart reads: ComicConnect sold archive, the graded-sales
   // register, stored benchmark observations, and eBay auctions we watched close (final bid, not confirmed by eBay).
   // Live asks and current bids are not sales and are not listed.
-  const sales = dedupeSales(await readSalesForBook(series, String(issue).replace(/^#/, "")));
+  const { sales } = await readEbaySalesForBook(series, String(issue).replace(/^#/, ""), searchParams.get("grader"));
   const comps: RealizedSaleComp[] = sales
     .filter((s) => s.grade != null && s.grade > 0)
     .map((s) => ({
-      venue: s.confirmed ? s.venue : `${s.venue} (final bid watched)`,
+      venue: "eBay completed sale",
       date: s.date.slice(0, 10),
       grade: Number(s.grade),
       price: s.price,

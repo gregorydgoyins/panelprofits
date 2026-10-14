@@ -1,3 +1,4 @@
+import { slabIssueYear, issueEra } from "./slab-identity";
 import {
   CandidateEvaluation,
   RawAuctionListing,
@@ -21,6 +22,11 @@ export function evaluateAuctionListing(
 ): CandidateEvaluation {
   // Parse Listing Title and Attributes
   const parsed = parseAndFilterListing(listing.title, listing.itemDescription, listing.graderNotes);
+  const issueYearFromLabel = slabIssueYear(listing.label);
+  if (issueYearFromLabel) {
+    parsed.extractedYear = issueYearFromLabel;
+    parsed.extractedEra = issueEra(issueYearFromLabel);
+  }
 
   const estTax = Math.round(listing.currentBid * 0.08 * 100) / 100;
   const allInCost = Math.round((listing.currentBid + listing.shippingCost + estTax) * 100) / 100;
@@ -387,13 +393,14 @@ export function evaluateAuctionListing(
     }
   }
 
-  const effectiveYear = listing.year ?? parsed.extractedYear;
-  const effectiveEra = listing.era ?? parsed.extractedEra;
+  const labelYear = slabIssueYear(listing.label);
+  const effectiveYear = labelYear ?? listing.year ?? parsed.extractedYear;
+  const effectiveEra = labelYear ? issueEra(labelYear) : listing.era ?? parsed.extractedEra;
   const lore = resolveComicLoreDossier(
     parsed.normalizedTitle || listing.title,
     parsed.extractedIssue,
     listing.graderNotes,
-    listing.gcdMetadata?.publisher,
+    listing.label?.publisher || listing.gcdMetadata?.publisher,
     effectiveYear
   );
 
@@ -579,7 +586,7 @@ export function evaluateAuctionListing(
       writers: listing.gcdMetadata?.writers?.length ? listing.gcdMetadata.writers : lore.gcdMetadata.writers,
       pencilers: listing.gcdMetadata?.pencilers?.length ? listing.gcdMetadata.pencilers : lore.gcdMetadata.pencilers,
       coverArtists: listing.gcdMetadata?.coverArtists?.length ? listing.gcdMetadata.coverArtists : lore.gcdMetadata.coverArtists,
-      publisher: listing.gcdMetadata?.publisher || lore.gcdMetadata.publisher,
+      publisher: listing.label?.publisher || listing.gcdMetadata?.publisher || lore.gcdMetadata.publisher,
     },
     galleryImages: listing.galleryImages || (listing.imageUrl ? [listing.imageUrl] : []),
     // Price Matrix, Investopedia Due Diligence Lens & Video Dossier

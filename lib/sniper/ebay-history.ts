@@ -1,20 +1,51 @@
+import { createAdminServerClient } from "@/lib/supabase/admin";
 import { searchEbaySold, type EbaySoldResult } from "./ebay-sold";
 
 export interface EbayHistoryResult extends EbaySoldResult { provider: string; rawRecords?: Record<string, any>[]; hasMore?: boolean }
-const cache = new Map<string, { expires: number; result: Promise<EbayHistoryResult> }>();
+const cache = new Map<string, Promise<EbayHistoryResult>>();
+export function historyQueryKey(query: string) {
+  return query.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
 
-/** Read-only completed-sales history. A provider key never substitutes for the eBay developer key. */
+/** One historical lookup, saved permanently in the existing production database. */
 export async function readCompletedEbaySales(query: string): Promise<EbayHistoryResult> {
-  const key = process.env.COMPSNIPER_API_KEY;
-  if (!key) return { ...await searchEbaySold(query), provider: "ebay_marketplace_insights" };
-  const hit = cache.get(query);
-  if (hit && hit.expires > Date.now()) return hit.result;
-  const result = readHistory(query, key);
-  cache.set(query, { expires: Date.now() + 24 * 3600_000, result });
+  const queryKey = historyQueryKey(query);
+  const hit = cache.get(queryKey);
+  if (hit) return hit;
+  const result = readSavedOrFetch(query, queryKey);
+  cache.set(queryKey, result);
   if (cache.size > 100) cache.delete(cache.keys().next().value!);
   const value = await result;
-  if (!value.available) cache.delete(query);
+  if (!value.available) cache.delete(queryKey);
   return value;
+}
+
+function unavailable(code: string, message: string): EbayHistoryResult {
+  return { provider: "compsniper_ebay_product_research", available: false, checkedAt: new Date().toISOString(), stage: "configuration", status: 0, code, message, items: [], total: 0, next: null };
+}
+
+async function readSavedOrFetch(query: string, queryKey: string): Promise<EbayHistoryResult> {
+  const db = createAdminServerClient();
+  const { data: saved, error } = await db.from("sniper_ebay_history").select("state,response").eq("query_key", queryKey).maybeSingle();
+  if (error) return unavailable("history_store_unavailable", "Saved sales history is temporarily unavailable; no new pricing request was made.");
+  if (saved?.response) return saved.response as EbayHistoryResult;
+  if (saved) return unavailable("history_pending", "The first sales lookup is in progress. Reopen this view shortly.");
+  const key = process.env.COMPSNIPER_API_KEY;
+  if (!key) return { ...await searchEbaySold(query), provider: "ebay_marketplace_insights" };
+  // Unique insert claims this comic before the billed request, including across server instances.
+  const { data: claim, error: claimError } = await db.from("sniper_ebay_history")
+    .upsert({ query_key: queryKey, query_text: query }, { onConflict: "query_key", ignoreDuplicates: true }).select("query_key");
+  if (claimError) return unavailable("history_store_unavailable", "Sales history could not be saved; no new pricing request was made.");
+  if (!claim?.length) {
+    const { data } = await db.from("sniper_ebay_history").select("response").eq("query_key", queryKey).maybeSingle();
+    return data?.response as EbayHistoryResult || unavailable("history_pending", "The first sales lookup is in progress. Reopen this view shortly.");
+  }
+  const response = await readHistory(query, key);
+  const { error: saveError } = await db.from("sniper_ebay_history").update({
+    state: response.available ? "ready" : "failed", response, completed_at: new Date().toISOString(),
+  }).eq("query_key", queryKey);
+  if (saveError) console.error("[sniper] Could not save completed-sale response:", saveError.message);
+  return response;
 }
 
 async function readHistory(query: string, key: string): Promise<EbayHistoryResult> {

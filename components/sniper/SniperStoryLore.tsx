@@ -17,6 +17,7 @@ interface SniperStoryLoreProps {
 
 function resolveInternalLoreUrl(url: string, fallbackLabel: string): string {
   if (!url) return `/comics?q=${encodeURIComponent(fallbackLabel)}`;
+  if (/^https?:\/\//i.test(url)) return url;
   if (url.includes("/wiki/")) {
     const parts = url.split("/wiki/");
     const raw = parts[parts.length - 1];
@@ -52,6 +53,8 @@ function renderMarkdownWithLinks(text: string) {
       <Link
         key={`${internalUrl}-${match.index}`}
         href={internalUrl}
+        target={internalUrl.startsWith("http") ? "_blank" : undefined}
+        rel={internalUrl.startsWith("http") ? "noopener noreferrer" : undefined}
         className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2 font-medium transition-colors"
       >
         {label}
@@ -73,6 +76,8 @@ function EntityBadge({ entity, badgeColor }: { entity: StoryEntityLink; badgeCol
   return (
     <Link
       href={internalUrl}
+      target={internalUrl.startsWith("http") ? "_blank" : undefined}
+      rel={internalUrl.startsWith("http") ? "noopener noreferrer" : undefined}
       className={`inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-mono transition-all hover:scale-105 ${badgeColor}`}
       title={entity.target}
     >
@@ -190,7 +195,7 @@ export function SniperStoryLore({
             </span>
           </div>
           <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-500/30">
-            Fandom MediaWiki Canon
+            Story & Character Archive
           </span>
         </div>
 
@@ -355,11 +360,11 @@ export function SniperStoryLore({
       <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-500 font-mono pt-1 border-t border-slate-800">
         <div>
           Source:{" "}
-          <span className="text-slate-300 font-mono">
-            {summary.source}
-          </span>
+          <a href={summary.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-cyan-300 font-mono underline underline-offset-4">
+            {summary.source} ↗
+          </a>
         </div>
-        <span className="text-cyan-400/80">LOCAL CBR KNOWLEDGE REPOSITORY VERIFIED</span>
+        <span className="text-cyan-400/80">SOURCE-LINKED ISSUE RESEARCH</span>
       </div>
     </div>
   );

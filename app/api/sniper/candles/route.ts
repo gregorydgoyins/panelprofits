@@ -1,6 +1,4 @@
-import { readCompletedEbaySales } from "@/lib/sniper/ebay-history";
-import { matchCompletedComicSale } from "@/lib/sniper/completed-sale-match";
-import { type SaleObs } from "@/lib/sniper/candles";
+import { readEbaySalesForBook } from "@/lib/sniper/ebay-sales-view";
 import { NextResponse } from "next/server";
 import { readSalesForBook } from "@/lib/sniper/market-store";
 import { buildCandles, dedupeSales, gradesTraded, pickBucket, saleStats, type Bucket } from "@/lib/sniper/candles";
@@ -22,19 +20,11 @@ export async function GET(request: Request) {
   const issue = sp.get("issue") || "";
   if (!series || !issue) return NextResponse.json({ success: false, error: "series and issue required" }, { status: 400 });
 
-  const [recorded, ebay] = await Promise.all([
-    readSalesForBook(series, issue),
-    readCompletedEbaySales(`${series} ${String(issue).replace(/^#/, "")}`),
+  const [recorded, view] = await Promise.all([
+    sp.get("source") === "ebay" ? Promise.resolve([]) : readSalesForBook(series, issue),
+    readEbaySalesForBook(series, issue, sp.get("grader")),
   ]);
-  const direct: SaleObs[] = [];
-  for (const item of ebay.items) {
-    const price = Number(item.lastSoldPrice?.value);
-    const date = item.lastSoldDate;
-    const parsed = matchCompletedComicSale(String(item.title || ""), series, issue);
-    if (!(price > 0) || item.lastSoldPrice?.currency !== "USD" || !date || !Number.isFinite(Date.parse(date))) continue;
-    if (!parsed) continue;
-    direct.push({ date, price, grade: parsed.grade, venue: "ebay", source: ebay.provider === "ebay_marketplace_insights" ? "ebay_insights" : "ebay_history", confirmed: true, url: item.itemWebUrl });
-  }
+  const { history: ebay, sales: direct } = view;
   // Closing bids are observations, not completed-sale prices. Keep them out of the sold-sales chart.
   const excludedBidObservations = recorded.filter((s) => !s.confirmed).length;
   const all = dedupeSales([...recorded.filter((s) => s.confirmed), ...direct]);
@@ -57,7 +47,7 @@ export async function GET(request: Request) {
     volume: candles.map((c) => ({ time: c.time, value: c.volume, dollars: c.dollars })),
     stats: saleStats(atGrade),
     sources,
-    sales: atGrade.slice(-25).reverse(),
+    sales: [...atGrade].reverse(),
     totalSalesAllGrades: all.length,
     excludedBidObservations,
     ebay: { available: ebay.available, stage: ebay.stage, status: ebay.status, code: ebay.code, message: ebay.message, checkedAt: ebay.checkedAt, provider: ebay.provider, hasMore: ebay.hasMore },

@@ -4,6 +4,7 @@
  */
 
 export interface SaleObs {
+  itemId?: string;
   /** YYYY-MM-DD or a full ISO timestamp */
   date: string;
   price: number;
@@ -35,7 +36,8 @@ export function dedupeSales(sales: SaleObs[]): SaleObs[] {
   const seen = new Map<string, SaleObs>();
   for (const s of sales) {
     if (!(s.price > 0) || !/^\d{4}-\d{2}-\d{2}/.test(s.date)) continue;
-    const key = `${day(s.date)}|${Math.round(s.price * 100)}|${s.grade ?? "x"}`;
+    const identity = s.itemId || s.url?.match(/\/itm\/(?:[^/]+\/)?(\d{9,14})/)?.[1];
+    const key = identity ? `item:${identity}|${day(s.date)}` : `${day(s.date)}|${Math.round(s.price * 100)}|${s.grade ?? "x"}`;
     const prev = seen.get(key);
     if (!prev || (!prev.confirmed && s.confirmed)) seen.set(key, s);
   }
@@ -88,6 +90,7 @@ export function buildCandles(sales: SaleObs[], bucket: Bucket): Candle[] {
 /** The finest period that still puts about 1.5 sales in a candle on average, capped at 150 candles. */
 export function pickBucket(sales: SaleObs[]): Bucket {
   const clean = dedupeSales(sales);
+  if (clean.length <= 2) return "day";
   const order: Bucket[] = ["day", "week", "month", "quarter", "year"];
   for (const b of order) {
     const candles = buildCandles(clean, b).length;

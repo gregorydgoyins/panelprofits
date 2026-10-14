@@ -56,10 +56,12 @@ function BidHistory({ ticks }: { ticks: Array<{ time: string; price: number; bid
  * Candles and volume for a book at a grade, built only from recorded sales; plus this lot's bid history.
  * Shows what exists and says plainly when nothing does.
  */
-export function LotMarketChart({ series, issue, grade, itemId, ticker, currentBid }: {
-  series: string; issue: string; grade?: number | null; itemId?: string; ticker: string; currentBid: number;
+export function LotMarketChart({ series, issue, grade, itemId, ticker, currentBid, grader }: {
+  series: string; issue: string; grade?: number | null; itemId?: string; ticker: string; currentBid: number; grader?: string;
 }) {
   const [pick, setPick] = React.useState<number | null>(grade ?? null);
+  const [showAllSales, setShowAllSales] = React.useState(false);
+  const [bucket, setBucket] = React.useState("day");
   const [data, setData] = React.useState<CandlesResponse | null>(null);
   const [loading, setLoading] = React.useState(true);
 
@@ -68,7 +70,8 @@ export function LotMarketChart({ series, issue, grade, itemId, ticker, currentBi
   React.useEffect(() => {
     let live = true;
     setLoading(true);
-    const q = new URLSearchParams({ series, issue });
+    const q = new URLSearchParams({ series, issue, bucket, source: "ebay" });
+    if (grader) q.set("grader", grader);
     if (pick != null) q.set("grade", String(pick));
     if (itemId) q.set("item", itemId);
     fetch(`/api/sniper/candles?${q}`)
@@ -76,7 +79,7 @@ export function LotMarketChart({ series, issue, grade, itemId, ticker, currentBi
       .then((j) => { if (live) { setData(j?.success ? j : null); setLoading(false); } })
       .catch(() => { if (live) { setData(null); setLoading(false); } });
     return () => { live = false; };
-  }, [series, issue, pick, itemId]);
+  }, [series, issue, pick, itemId, bucket, grader]);
 
   const candles = data?.candles ?? [];
   const first = candles[0]?.close, last = candles[candles.length - 1]?.close;
@@ -84,10 +87,11 @@ export function LotMarketChart({ series, issue, grade, itemId, ticker, currentBi
 
   return (
     <div className="space-y-2.5">
+      <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400"><span>Sales grouped by</span>{["day", "week", "month"].map(b => <button key={b} onClick={() => setBucket(b)} className={`px-2 py-1 rounded border ${bucket === b ? "border-cyan-400 text-cyan-300 bg-cyan-950/40" : "border-slate-700"}`}>{b}</button>)}</div>
       {data && data.grades.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-mono">
           <span className="text-slate-500 uppercase">Grade</span>
-          {data.grades.slice(0, 10).map((g) => (
+          {data.grades.map((g) => (
             <button
               key={g.grade}
               onClick={() => setPick(g.grade)}
@@ -104,6 +108,7 @@ export function LotMarketChart({ series, issue, grade, itemId, ticker, currentBi
       ) : candles.length > 0 ? (
         <>
           <TradingViewChart
+            completedSalesOnly
             ticker={ticker}
             series={series}
             issueNumber={issue}
@@ -154,7 +159,7 @@ export function LotMarketChart({ series, issue, grade, itemId, ticker, currentBi
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
-              {data.sales.slice(0, 10).map((s, i) => (
+              {data.sales.slice(0, showAllSales ? undefined : 10).map((s, i) => (
                 <tr key={i} className="text-slate-300">
                   <td className="py-1">{s.date.slice(0, 10)}</td>
                   <td>{s.grade != null ? s.grade.toFixed(1) : "—"}</td>
@@ -166,6 +171,7 @@ export function LotMarketChart({ series, issue, grade, itemId, ticker, currentBi
               ))}
             </tbody>
           </table>
+          {data.sales.length > 10 && <button onClick={() => setShowAllSales(v => !v)} className="mt-2 text-xs text-cyan-300 underline underline-offset-4">{showAllSales ? "Show latest 10" : `Show all ${data.sales.length} completed sales in this sample`}</button>}
         </div>
       )}
     </div>
