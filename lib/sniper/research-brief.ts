@@ -48,7 +48,11 @@ export async function makeResearchBrief(input: StorySummaryInput, summary: Story
       reasoning: "none", maxOutputTokens: 3500, maxRetries: 0,
       abortSignal: AbortSignal.timeout(25000),
     });
-    const brief = briefSchema.parse(JSON.parse(text.trim().replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "")));
+    const raw = JSON.parse(text.trim().replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, ""));
+    // Enforce the compact display limits without discarding valid extra learning points.
+    if (Array.isArray(raw.lessons)) raw.lessons = raw.lessons.slice(0, 3);
+    if (Array.isArray(raw.sections)) raw.sections = raw.sections.slice(0, 3).map((section: any) => ({ ...section, points: Array.isArray(section.points) ? section.points.slice(0, 3) : section.points }));
+    const brief = briefSchema.parse(raw);
     if (/[$€£]|\b\d+(?:\.\d+)?\s*%/.test(JSON.stringify(brief))) throw new Error("Brief included unsupported financial figures");
     if (stored) await db.from("issue_story_summaries").update({ summary: JSON.stringify({ ...stored, researchBrief: { version: VERSION, hash, content: brief } }) }).eq("comic_key", key);
     return brief;
