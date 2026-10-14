@@ -252,6 +252,15 @@ export function evaluateAuctionListing(
   const projectedNetProfit = hasVerifiedFmv ? Math.round((netEstimatedProceeds - allInCost) * 100) / 100 : 0;
   const netRoiPercent = hasVerifiedFmv && allInCost > 0 ? Math.round((projectedNetProfit / allInCost) * 100) : 0;
 
+  // WORTHLESS-AT-ZERO-BID GATE: if even a $0 bid loses money (the book's net sale proceeds do not cover
+  // the shipping alone), no price can make it profitable. Not a Sniper book, so it is not taken in.
+  if (hasVerifiedFmv && netEstimatedProceeds - listing.shippingCost <= 0) {
+    return createRejection(
+      `REJECTED (CANNOT PROFIT): Verified FMV $${anchorFmv.toFixed(2)} nets $${netEstimatedProceeds.toFixed(2)} after fees, which does not cover $${listing.shippingCost.toFixed(2)} shipping. Loses money even at a $0 bid.`,
+      5
+    );
+  }
+
   // Enforce strict discount / positive-spread filter only when requested by the active profile
   if (hasVerifiedFmv && (profile.requireProvenSales || profile.minDiscountPercent > 0)) {
     if (isBuyItNowListing && profile.requireProvenSales && dollarSpread <= 0) {

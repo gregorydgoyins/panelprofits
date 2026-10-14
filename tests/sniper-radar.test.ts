@@ -443,4 +443,21 @@ describe("Sniper Radar Engine & Anti-Bullshit Filter", () => {
     expect(hakesParsed[0].bidCount).toBe(8);
     expect(hakesParsed[0].secondsRemaining).toBe(3600);
   });
+  it("REJECTS a book that loses money even at a $0 bid (FMV nets less than shipping)", () => {
+    const listing: RawAuctionListing = {
+      id: "listing-worthless",
+      source: "ebay",
+      title: "Green Lantern #7 CGC 9.4 1961 1st Appearance of Sinestro",
+      currentBid: 1.00,
+      shippingCost: 17.50,
+      bidCount: 0,
+      secondsRemaining: 540,
+      url: "https://ebay.com/itm/worthless",
+      imageUrl: "https://example.com/gl7.jpg",
+      anchorFmv: 20.00, // nets 20*0.87-5 = 12.40, below the 17.50 shipping
+    };
+    const evalResult = evaluateAuctionListing(listing, { ...defaultProfile, minGrade: 9.2, maxGrade: 9.8, requireProvenSales: false, minDiscountPercent: 0 });
+    expect(evalResult.passed).toBe(false);
+    expect(evalResult.rejectionReason).toMatch(/CANNOT PROFIT/);
+  });
 });

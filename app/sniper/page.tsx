@@ -18,6 +18,7 @@ import { LiveLotStrip } from "@/components/sniper/LiveLotStrip";
 import { LotMarketChart } from "@/components/sniper/LotMarketChart";
 import { usePaperOrders, PaperTicket, PaperLedger } from "@/components/sniper/PaperDesk";
 import { ReplayRoom } from "@/components/sniper/ReplayRoom";
+import { SniperVideos } from "@/components/sniper/SniperVideos";
 
 const WINDOW_STEP = 24;
 
@@ -2476,7 +2477,6 @@ export default function SniperRadarPage() {
                   { id: "all", label: "ALL PERSPECTIVES", icon: "🌐" },
                   { id: "matrix", label: "PRICE MATRIX (EBAY • CB • PP)", icon: "⚖️" },
                   { id: "investopedia", label: "INVESTOPEDIA DUE DILIGENCE", icon: "💼" },
-                  { id: "video", label: "VIDEO INTELLIGENCE", icon: "🎥" },
                   { id: "financial", label: "FINANCIAL & ARBITRAGE", icon: "📊" },
                   { id: "chart", label: "TRADINGVIEW & HISTORICALS", icon: "📈" },
                   { id: "census", label: "POPULATION CENSUS", icon: "🏛️" },
@@ -2630,6 +2630,17 @@ export default function SniperRadarPage() {
                     Authentic High-Resolution Slab Well • 1600px Studio Up-Rez Active
                   </div>
                 </div>
+
+                <SniperVideos
+                  series={inspectedDeal.resolvedSeries}
+                  issue={String(inspectedDeal.resolvedIssue ?? "")}
+                  creators={[...(inspectedDeal.gcdMetadata?.writers ?? []), ...(inspectedDeal.gcdMetadata?.pencilers ?? [])].slice(0, 2)}
+                  archive={inspectedDeal.videoDossier?.comicBaseVideo ? {
+                    title: inspectedDeal.videoDossier.comicBaseVideo.headline,
+                    videoUrl: inspectedDeal.videoDossier.comicBaseVideo.videoUrl,
+                    poster: inspectedDeal.listing.imageUrl,
+                  } : undefined}
+                />
               </div>
 
               {/* Right Column: Multi-Perspective Rail Intelligence Dossier */}
@@ -2852,82 +2863,6 @@ export default function SniperRadarPage() {
                         {inspectedDeal.investopediaLens.capitalAssetPricingNote}
                       </div>
                     </div>
-                  </div>
-                )}
-
-                {/* ════════════════════════════════════════════════════════════════════════
-                    PERSPECTIVE C: VIDEO INTELLIGENCE & ARCHIVAL RETROSPECTIVE
-                    ════════════════════════════════════════════════════════════════════════ */}
-                {(modalPerspective === "all" || modalPerspective === "video") && (
-                  <div className="bg-[#070C18] border border-rose-500/40 rounded-xl p-4 space-y-3.5 shadow-xl">
-                    <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-mono font-bold text-rose-400 uppercase flex items-center gap-1.5">
-                          <span>🎥</span> VIDEO INTELLIGENCE &amp; ARCHIVAL RETROSPECTIVES
-                        </span>
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-500/30">
-                          {inspectedDeal.videoDossier?.hasVideo ? "Archival Video Match" : "Video Intelligence"}
-                        </span>
-                      </div>
-                      <span className="text-[10px] font-mono text-slate-400">
-                        ComicBase Theater &amp; Review Comps
-                      </span>
-                    </div>
-
-                    {inspectedDeal.videoDossier?.comicBaseVideo ? (
-                      <div className="bg-black/80 rounded-lg p-3.5 border border-rose-500/30 space-y-3">
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-rose-950 border border-rose-500/40 text-rose-300 inline-block mb-1">
-                              {inspectedDeal.videoDossier.comicBaseVideo.type.toUpperCase()} • {inspectedDeal.videoDossier.comicBaseVideo.creatorOrSubject}
-                            </span>
-                            <h4 className="text-sm font-bold text-white">
-                              {inspectedDeal.videoDossier.comicBaseVideo.headline}
-                            </h4>
-                          </div>
-                          <span className="text-xs font-mono font-bold text-slate-400 bg-slate-900 px-2 py-1 rounded">
-                            {Math.floor(inspectedDeal.videoDossier.comicBaseVideo.duration / 60)}:
-                            {String(inspectedDeal.videoDossier.comicBaseVideo.duration % 60).padStart(2, "0")}
-                          </span>
-                        </div>
-
-                        <div className="rounded-lg overflow-hidden border border-slate-800 bg-black aspect-video flex items-center justify-center relative">
-                          <video
-                            controls
-                            className="w-full h-full object-contain"
-                            poster={inspectedDeal.listing.imageUrl}
-                            src={inspectedDeal.videoDossier.comicBaseVideo.videoUrl}
-                          />
-                        </div>
-
-                        <p className="text-xs text-slate-300 leading-relaxed font-sans">
-                          {inspectedDeal.videoDossier.comicBaseVideo.description}
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="bg-black/60 rounded-lg p-3 border border-slate-800 space-y-2">
-                        <div className="text-xs text-slate-300 font-sans leading-relaxed">
-                          No direct internal ComicBase creator interview is archived for this specific issue, but active collector video reviews and CGC census analysis videos are indexed across market channels:
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 font-mono text-xs">
-                          <Link
-                            href={`/video-archive?q=${encodeURIComponent(inspectedDeal.resolvedSeries + " #" + inspectedDeal.resolvedIssue)}`}
-                            className="p-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-cyan-300 flex items-center justify-between transition"
-                          >
-                            <span>▶ CGC Market Analysis Archive</span>
-                            <span className="text-[10px]">↗</span>
-                          </Link>
-                          <Link
-                            href={`/video-archive?q=${encodeURIComponent(inspectedDeal.resolvedSeries + " #" + inspectedDeal.resolvedIssue)}`}
-                            className="p-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-rose-300 flex items-center justify-between transition"
-                          >
-                            <span>▶ Key Issue Spotlight Archive</span>
-                            <span className="text-[10px]">↗</span>
-                          </Link>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 )}
 
