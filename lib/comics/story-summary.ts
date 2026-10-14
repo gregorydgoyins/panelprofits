@@ -40,6 +40,7 @@ export interface StorySummary {
     vehicles?: StoryEntityLink[];
   };
   credits?: {
+    coverArtists?: string[];
     writers?: string[];
     pencilers?: string[];
     colorists?: string[];

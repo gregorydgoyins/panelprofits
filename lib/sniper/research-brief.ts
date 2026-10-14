@@ -27,6 +27,20 @@ SOURCE EVIDENCE:
 ${JSON.stringify({ title: summary.storyTitle, synopsis: summary.text.slice(0, 9000), credits: summary.credits, characters: summary.entities, referenceOnly: summary.referenceOnly, year: summary.referenceYear, source: summary.source, sourceUrl: summary.sourceUrl })}`;
 }
 
+export function groundedBrief(input: StorySummaryInput, summary: StorySummary, brief: ResearchBrief): ResearchBrief {
+  const book = `${researchTitle(input.series)} #${input.issueNumber}`;
+  const writers = summary.credits?.writers?.join(", ");
+  const artists = summary.credits?.pencilers?.join(", ");
+  const coverArtists = summary.credits?.coverArtists?.join(", ");
+  const character = summary.entities?.featuredCharacters?.[0]?.label;
+  const intro = `${book}${!writers && !artists ? ": sourced story and collector research" : ""}${writers ? ` is written by ${writers}` : ""}${artists ? `${writers ? ", with" : " features"} interior art by ${artists}` : ""}.`;
+  return { ...brief, intro, lessons: [
+    { heading: "Separate story significance from key status", text: `${character ? `${character}’s role in this story` : "The events in this issue"} supplies reading context, not proof of scarcity or price appreciation. Before paying a first-appearance premium, verify the publication sequence and distinguish a cameo from a full appearance. A memorable story does not establish resale value.` },
+    { heading: "Buy the exact edition you researched", text: `${coverArtists ? `The sourced cover credits name ${coverArtists}; interior artwork and cover artwork are separate credits. ` : "Interior artist credits do not identify every cover variant. "}Compare the photographed cover, printing, publisher, grader and label with each completed-sale record. Keep different covers, reprints, signed copies and restored copies out of an exact-edition comparison.` },
+    { heading: "Let sale evidence set the bid ceiling", text: "Use the listing-grade sales snapshot below, inspect its dates and source links, then subtract selling fees, shipping, other costs and your required margin from a conservative comparable value. Few transactions mean less certainty about price and time to sell. Grading expense and optimistic asking prices do not establish intrinsic value." },
+  ] };
+}
+
 export async function makeResearchBrief(input: StorySummaryInput, summary: StorySummary): Promise<ResearchBrief> {
   const hash = createHash("sha256").update(briefPrompt(input, summary)).digest("hex");
   const key = comicKey(researchTitle(input.series), input.issueNumber, summary.referenceYear ?? input.year);
@@ -36,7 +50,7 @@ export async function makeResearchBrief(input: StorySummaryInput, summary: Story
   try { stored = data?.summary ? JSON.parse(data.summary) : null; } catch { /* Legacy text record. */ }
   if (stored?.researchBrief?.version === VERSION && stored.researchBrief.hash === hash) {
     const parsed = briefSchema.safeParse(stored.researchBrief.content);
-    if (parsed.success) return parsed.data;
+    if (parsed.success) return groundedBrief(input, summary, parsed.data);
   }
   const requestKey = `${key}:${hash}`;
   const existing = pending.get(requestKey);
@@ -52,7 +66,7 @@ export async function makeResearchBrief(input: StorySummaryInput, summary: Story
     // Enforce the compact display limits without discarding valid extra learning points.
     if (Array.isArray(raw.lessons)) raw.lessons = raw.lessons.slice(0, 3);
     if (Array.isArray(raw.sections)) raw.sections = raw.sections.slice(0, 3).map((section: any) => ({ ...section, points: Array.isArray(section.points) ? section.points.slice(0, 3) : section.points }));
-    const brief = briefSchema.parse(raw);
+    const brief = briefSchema.parse(groundedBrief(input, summary, raw));
     if (/[$€£]|\b\d+(?:\.\d+)?\s*%/.test(JSON.stringify(brief))) throw new Error("Brief included unsupported financial figures");
     if (stored) await db.from("issue_story_summaries").update({ summary: JSON.stringify({ ...stored, researchBrief: { version: VERSION, hash, content: brief } }) }).eq("comic_key", key);
     return brief;

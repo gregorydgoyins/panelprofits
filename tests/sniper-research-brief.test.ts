@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { marketBrief } from "@/lib/sniper/market-brief";
-import { briefPrompt, briefSchema } from "@/lib/sniper/research-brief";
+import { briefPrompt, briefSchema, groundedBrief } from "@/lib/sniper/research-brief";
 const input = { listingGrade: 9.8, chartGrade: 9.8, count: 3, median: 100, low: 80, high: 120, latest: { price: 100, date: "2026-10-14" }, allInCost: 110 };
 describe("evidence-based investor brief", () => {
   it("does not value a listing using another grade", () => {
@@ -23,6 +23,13 @@ describe("evidence-based investor brief", () => {
     const text = marketBrief({ ...input, variant: "Todd Nauck", editionTerms: "nauck" }).map(p => p.text).join(" ");
     expect(text).toContain("restricted to nauck");
     expect(text).toContain("must still be confirmed");
+  });
+  it("uses verified creator roles and replaces invented cover claims", () => {
+    const result = groundedBrief({ series: "Amazing Spider-Man", issueNumber: "300", year: 1988, publisher: "Marvel" }, { text: "Source plot", storyTitle: null, source: "Fandom", sourceUrl: "https://marvel.fandom.com", license: null, credits: { writers: ["David Michelinie"], pencilers: ["Todd McFarlane"] } }, { intro: "Wrong debut claim", sections: [], lessons: [{ heading: "Cover", text: "Michael Golden drew this cover" }] });
+    expect(result.intro).toContain("interior art by Todd McFarlane");
+    expect(JSON.stringify(result.lessons)).not.toContain("Michael Golden");
+    expect(result.lessons).toHaveLength(3);
+    expect(result.intro).not.toContain("debut");
   });
   it("requires grounded plot, excludes fabricated prices and speculation", () => {
     const prompt = briefPrompt({ series: "Strange Academy", issueNumber: "14", year: 2021, publisher: "Marvel" }, { text: "Doyle sees a future confrontation.", storyTitle: null, source: "Marvel", sourceUrl: "https://www.marvel.com", license: null });
