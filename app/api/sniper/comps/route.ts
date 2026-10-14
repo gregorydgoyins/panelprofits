@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminServerClient } from "@/lib/supabase/admin";
-import benchmarksData from "@/lib/pricing/pricecharting-cgc-benchmarks.json";
+import { readSalesForBook } from "@/lib/sniper/market-store";
+import { dedupeSales } from "@/lib/sniper/candles";
 
 export const dynamic = "force-dynamic";
 
@@ -48,117 +49,20 @@ async function computeGET(request: Request) {
     );
   }
 
-  const comps: RealizedSaleComp[] = [];
-
-  // 1. Check verified CGC & GPA completed sale observations
-  const benchmarkKey = `${series} #${issue}`;
-  const benchmarkEntry = (benchmarksData as Record<string, any>)[benchmarkKey];
-  const derivedDates = new Set(
-    (benchmarkEntry?.allObservations ?? [])
-      .filter((o: any) => o.type === "PRICECHARTING_GUIDE_OBSERVATION" || o.type === "PANEL_PROFITS_DERIVED_FMV")
-      .map((o: any) => o.date)
-  );
-
-  if (benchmarkEntry?.allObservations && Array.isArray(benchmarkEntry.allObservations)) {
-    for (const obs of benchmarkEntry.allObservations) {
-      if (obs.type === "PRICECHARTING_GUIDE_OBSERVATION" || obs.type === "PANEL_PROFITS_DERIVED_FMV") continue;
-      const amt = Number(obs.amount);
-      const dt = obs.date || obs.observedAt;
-      const gradeNum = parseFloat(String(obs.grade ?? "").replace(/[^0-9.]/g, ""));
-      if (amt > 0 && dt && Number.isFinite(gradeNum) && gradeNum > 0) {
-        comps.push({
-          venue: obs.authority || obs.type || "CGC / GPA",
-          date: String(dt).slice(0, 10),
-          grade: gradeNum,
-          price: amt,
-        });
-      }
-    }
-  }
-
-  if (benchmarkEntry?.cgc && Array.isArray(benchmarkEntry.cgc)) {
-    for (const sale of benchmarkEntry.cgc) {
-      const dt = sale.observedAt || sale.date;
-      if (dt && derivedDates.has(dt)) continue;
-      const amt = Number(sale.amount);
-      const gradeNum = parseFloat(String(sale.grade ?? "").replace(/[^0-9.]/g, ""));
-      if (amt > 0 && dt && Number.isFinite(gradeNum) && gradeNum > 0) {
-        comps.push({
-          venue: sale.venue || "CGC",
-          date: String(dt).slice(0, 10),
-          grade: gradeNum,
-          price: amt,
-        });
-      }
-    }
-  }
-
-  // 2. Query Supabase graded_sales_observations
-  try {
-    const db = createAdminServerClient();
-    const { data: dbSales } = await db
-      .from("graded_sales_observations")
-      .select("sale_price, sale_date, grade_numeric, native_grade_text, venue, title_name")
-      .ilike("title_name", `%${series}%`)
-      .eq("issue_number_raw", issue)
-      .gt("sale_price", 0)
-      .order("sale_date", { ascending: false })
-      .limit(30);
-
-    if (dbSales && dbSales.length > 0) {
-      for (const s of dbSales) {
-        if (s.sale_price && s.sale_date) {
-          const gradeNum =
-            s.grade_numeric != null
-              ? Number(s.grade_numeric)
-              : parseFloat(String(s.native_grade_text ?? "").replace(/[^0-9.]/g, ""));
-          if (!Number.isFinite(gradeNum) || gradeNum <= 0) continue;
-          comps.push({
-            venue: s.venue || "GPA / Certified",
-            date: String(s.sale_date).slice(0, 10),
-            grade: gradeNum,
-            price: Number(s.sale_price),
-          });
-        }
-      }
-    }
-  } catch (err) {
-    console.warn("[Comps API] Supabase fetch error:", err);
-  }
-
-  // 3. Current asking prices for the same book from the live feed (stored by the snapshot job; no eBay call here)
-  try {
-    const db = createAdminServerClient();
-    const clean = series.replace(/[%_]/g, " ").replace(/^the\s+/i, "").trim();
-    const { data: asks } = await db
-      .from("sniper_listings")
-      .select("title,price_usd,grade,url,buying_option")
-      .eq("status", "live")
-      .ilike("series", `%${clean}%`)
-      .eq("issue", String(issue).replace(/^#/, ""))
-      .gt("price_usd", 0)
-      .gte("last_seen", new Date(Date.now() - 45 * 60000).toISOString())
-      .limit(12);
-    for (const a of asks ?? []) {
-      comps.push({
-        venue: a.buying_option === "AUCTION" ? "eBay live auction (current bid)" : "eBay live ask",
-        date: "Live Floor",
-        grade: a.grade != null ? Number(a.grade) : 0,
-        price: Number(a.price_usd),
-        title: a.title,
-        url: a.url,
-      });
-    }
-  } catch (err) {
-    console.warn("[Comps API] live feed read error:", err);
-  }
-
-  // Sort comps: Live floor listings first, then recent sales by date descending
-  const sorted = comps.sort((a, b) => {
-    if (a.date === "Live Floor" && b.date !== "Live Floor") return -1;
-    if (b.date === "Live Floor" && a.date !== "Live Floor") return 1;
-    return b.date.localeCompare(a.date);
-  });
+  // Every recorded sale for this book, from the same place the chart reads: ComicConnect sold archive, the graded-sales
+  // register, stored benchmark observations, and eBay auctions we watched close (final bid, not confirmed by eBay).
+  // Live asks and current bids are not sales and are not listed.
+  const sales = dedupeSales(await readSalesForBook(series, String(issue).replace(/^#/, "")));
+  const comps: RealizedSaleComp[] = sales
+    .filter((s) => s.grade != null && s.grade > 0)
+    .map((s) => ({
+      venue: s.confirmed ? s.venue : `${s.venue} (final bid watched)`,
+      date: s.date.slice(0, 10),
+      grade: Number(s.grade),
+      price: s.price,
+      url: s.url,
+    }));
+  const sorted = comps.sort((a, b) => b.date.localeCompare(a.date)).slice(0, 60);
 
   return NextResponse.json({
     success: true,

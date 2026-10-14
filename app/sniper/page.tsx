@@ -439,10 +439,14 @@ export default function SniperRadarPage() {
   const [showPlansModal, setShowPlansModal] = useState<boolean>(false);
   const [liveComps, setLiveComps] = useState<Array<{ venue: string; date: string; grade: number; price: number; title?: string; url?: string }> | null>(null);
   const [loadingComps, setLoadingComps] = useState<boolean>(false);
-  // The price chart and sales ledger only appear when there are 2+ real recorded sales (the live bid is not a sale).
-  const hasChartSales =
-    !loadingComps &&
-    ((liveComps && liveComps.length > 0 ? liveComps : inspectedDeal?.historicalComps ?? []).filter((c) => c.date !== "Live Floor").length >= 2);
+  // The price chart and sales ledger only appear when a grade has 2+ real recorded sales (a live bid is not a sale).
+  const hasChartSales = (() => {
+    if (loadingComps) return false;
+    const sales = liveComps && liveComps.length > 0 ? liveComps : inspectedDeal?.historicalComps ?? [];
+    const perGrade = new Map<number, number>();
+    for (const c of sales) perGrade.set(c.grade, (perGrade.get(c.grade) ?? 0) + 1);
+    return Array.from(perGrade.values()).some((n) => n >= 2);
+  })();
 
   // Fetch verified real-time eBay and certified sales comps whenever an item is inspected
   useEffect(() => {
