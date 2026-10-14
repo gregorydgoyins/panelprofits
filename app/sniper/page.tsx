@@ -19,6 +19,27 @@ import { LotMarketChart } from "@/components/sniper/LotMarketChart";
 import { usePaperOrders, PaperTicket, PaperLedger } from "@/components/sniper/PaperDesk";
 import { ReplayRoom } from "@/components/sniper/ReplayRoom";
 
+const WINDOW_STEP = 24;
+
+/** Renders the next batch of cards when it scrolls near the viewport (and a button as a fallback). */
+function LoadMoreSentinel({ remaining, onMore }: { remaining: number; onMore: () => void }) {
+  const ref = React.useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver((entries) => { if (entries[0]?.isIntersecting) onMore(); }, { rootMargin: "1200px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [onMore, remaining]);
+  return (
+    <div ref={ref} className="py-4 text-center">
+      <button onClick={onMore} className="text-xs font-mono bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 px-4 py-2 rounded-lg cursor-pointer">
+        Show more ({remaining} left)
+      </button>
+    </div>
+  );
+}
+
 /** CBCS publishes no census, so the number is unknown (N/A). Other graders show "Census not found" when their own data has no match. */
 function censusMissing(grader?: string | null): string {
   return /cbcs/i.test(grader ?? "") ? "N/A" : "Census not found";
@@ -200,6 +221,8 @@ export default function SniperRadarPage() {
 
   // Primary 3-Section View Switcher: LIVE AUCTIONS | WHAT YOU MISSED | WHAT YOU'VE ACQUIRED
   const [viewMode, setViewMode] = useState<"LIVE" | "MISSED" | "ACQUIRED">("LIVE");
+  const [liveShown, setLiveShown] = useState<number>(WINDOW_STEP);
+  const [missedShown, setMissedShown] = useState<number>(WINDOW_STEP);
 
   // DYNAMIC LIVE AUCTION STREAM (Active Open-Web Stream)
   const [auctionsList, setAuctionsList] = useState<RawAuctionListing[]>([]);
@@ -242,9 +265,18 @@ export default function SniperRadarPage() {
   }, []);
 
   // 24/7 Continuous Multi-Exchange Auto-Replenishment (Background sync every 20s once authenticated)
+  // The first load starts with the page, in parallel with the auth check (the auctions endpoint is public); polling still waits for auth.
+  const firstLiveFetch = React.useRef(false);
+  useEffect(() => {
+    firstLiveFetch.current = true;
+    fetchLiveAuctions();
+  }, [fetchLiveAuctions]);
+
   useEffect(() => {
     if (!isAuthenticated) return;
-    fetchLiveAuctions();
+    const alreadyLoading = firstLiveFetch.current;
+    firstLiveFetch.current = false;
+    if (!alreadyLoading) fetchLiveAuctions();
     const pollInterval = setInterval(() => {
       fetchLiveAuctions();
     }, 20000);
@@ -1257,7 +1289,7 @@ export default function SniperRadarPage() {
                 </div>
               ) : (
                 <div className="space-y-5">
-                  {liveDeals.map((deal) => {
+                  {liveDeals.slice(0, liveShown).map((deal) => {
                     const liveSecs = liveAuctionTimers[deal.listing.id] ?? deal.listing.secondsRemaining;
                     const isSnipedInPaper = paper.forItem(deal.listing.id) != null;
                     const isVaulted = acquiredBooks.some((b) => b.listingId === deal.listing.id);
@@ -1890,6 +1922,9 @@ export default function SniperRadarPage() {
                       </div>
                     );
                   })}
+                  {liveDeals.length > liveShown && (
+                    <LoadMoreSentinel remaining={liveDeals.length - liveShown} onMore={() => setLiveShown((n) => n + WINDOW_STEP)} />
+                  )}
                 </div>
               )}
             </div>
@@ -1913,7 +1948,7 @@ export default function SniperRadarPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {missedDeals.map((deal) => (
+                  {missedDeals.slice(0, missedShown).map((deal) => (
                     <div
                       key={deal.listing.id}
                       className="bg-[#0E131F] border border-slate-800/80 rounded-xl p-4 flex flex-col md:flex-row gap-4 items-start opacity-90"
@@ -2015,6 +2050,9 @@ export default function SniperRadarPage() {
                       </div>
                     </div>
                   ))}
+                  {missedDeals.length > missedShown && (
+                    <LoadMoreSentinel remaining={missedDeals.length - missedShown} onMore={() => setMissedShown((n) => n + WINDOW_STEP)} />
+                  )}
                 </div>
               )}
             </div>

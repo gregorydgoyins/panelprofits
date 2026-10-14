@@ -24,6 +24,9 @@ interface SlabEncasementProps {
   onClick?: () => void;
 }
 
+/** Same eBay image at a smaller size: cards and thumbnails don't need the 1600px original. Non-eBay URLs pass through unchanged. */
+const ebaySize = (url: string, px: number): string => url.replace(/\/s-l\d+/i, `/s-l${px}`);
+
 export function SlabEncasement({
   gradingCompany = "CGC",
   grade,
@@ -55,6 +58,7 @@ export function SlabEncasement({
 
   // eBay-Style Interactive Loupe & Magnifier Zoom State (Direct DOM + rAF: 0 React re-renders on mousemove)
   const isLoupeEnabled = size === "lg" || size === "xl" || !onClick;
+  const warmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isZooming, setIsZooming] = useState<boolean>(false);
   const [zoomScale, setZoomScale] = useState<number>(2.5); // 1x, 2.5x, 4x
   const [isLoupeLocked, setIsLoupeLocked] = useState<boolean>(false);
@@ -497,6 +501,8 @@ export function SlabEncasement({
   return (
     <div
       onClick={onClick}
+      onPointerEnter={!isLoupeEnabled && currentDisplayImage ? () => { warmTimer.current = setTimeout(() => { const im = new Image(); im.src = uprezEbayImage(currentDisplayImage); }, 200); } : undefined}
+      onPointerLeave={!isLoupeEnabled ? () => { if (warmTimer.current) clearTimeout(warmTimer.current); } : undefined}
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
       onKeyDown={onClick ? (e) => { if (e.key === "Enter" || e.key === " ") onClick(); } : undefined}
@@ -540,7 +546,7 @@ export function SlabEncasement({
           <div className="relative w-full h-full overflow-hidden flex items-center justify-center">
             <img
               ref={imageRef}
-              src={uprezEbayImage(currentDisplayImage)}
+              src={isLoupeEnabled ? uprezEbayImage(currentDisplayImage) : ebaySize(uprezEbayImage(currentDisplayImage), 500)}
               alt={title}
               onError={() => {
                 if (!proxyFallbackUrl && currentDisplayImage.startsWith("http")) {
@@ -561,6 +567,7 @@ export function SlabEncasement({
                 willChange: isZooming ? "transform" : "auto",
               }}
               loading="lazy"
+              decoding="async"
             />
 
             {/* eBay-Style Crosshair / Loupe Reticle Overlay */}
@@ -673,7 +680,7 @@ export function SlabEncasement({
               }`}
               title={`View Photo #${i + 1}`}
             >
-              <img src={img} alt={`Thumb ${i + 1}`} className="w-full h-full object-cover" />
+              <img src={ebaySize(img, 140)} alt={`Thumb ${i + 1}`} loading="lazy" decoding="async" className="w-full h-full object-cover" />
             </button>
           ))}
           {allImages.length > 5 && (
