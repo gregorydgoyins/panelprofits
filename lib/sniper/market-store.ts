@@ -287,7 +287,7 @@ const INSIGHTS_SCOPE = "https://api.ebay.com/oauth/api_scope/buy.marketplace.ins
  * nothing is stored and the reason is logged. If it ever works, confirmed sales start flowing into sniper_sales on their own.
  */
 async function tryInsights(db: any, slot: number, nowMs: number, statuses: Record<string, number>): Promise<{ sales: number; state: string }> {
-  const { data: recent } = await db.from("sniper_runs").select("note,started_at").gt("started_at", new Date(nowMs - 24 * 3600_000).toISOString()).like("note", "%insights=unavailable%").limit(1);
+  const { data: recent } = await db.from("sniper_runs").select("note,started_at").gt("started_at", new Date(nowMs - 24 * 3600_000).toISOString()).like("note", "%insights=unavailable%").not("note", "like", "%insights=unavailable(cached)%").limit(1);
   if (recent && recent.length) return { sales: 0, state: "unavailable(cached)" };
 
   const id = process.env.EBAY_CLIENT_ID, secret = process.env.EBAY_CLIENT_SECRET;
