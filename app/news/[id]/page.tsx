@@ -1,7 +1,7 @@
 import { ArrowLeft, Newspaper } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getNewsStories, getNewsStory, shortNewsSource } from "@/lib/news/feed";
+import { getNewsStory, shortNewsSource } from "@/lib/news/feed";
 import { getDynamicEntitiesForText } from "@/lib/news/entities";
 import { getRelatedDossiersForText } from "@/lib/news/related-dossiers";
 import { RelatedDossiersRail } from "@/components/news/RelatedDossiersRail";
@@ -17,13 +17,10 @@ import { parseAndSynthesizeArticle } from "@/lib/news/article-parser";
 
 export const revalidate = 300;
 
+// News pages build on first request and retain the five-minute ISR cache.
+// External article enrichment must not block unrelated production deployments.
 export async function generateStaticParams() {
-  try {
-    const stories = await getNewsStories(24);
-    return stories.map((s) => ({ id: s.id }));
-  } catch {
-    return [];
-  }
+  return [];
 }
 
 export default async function NewsStoryPage({ params }: { params: Promise<{ id: string }> }) {

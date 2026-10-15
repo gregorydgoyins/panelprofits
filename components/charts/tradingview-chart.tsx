@@ -40,6 +40,7 @@ interface TradingViewChartProps {
   pricecharting?: PriceChartingBenchmarks;
   cgcSales?: CgcSaleObservation[];
   height?: number;
+  completedSalesOnly?: boolean;
 }
 
 export function TradingViewChart({
@@ -54,6 +55,7 @@ export function TradingViewChart({
   pricecharting,
   cgcSales = [],
   height = 380,
+  completedSalesOnly = false,
 }: TradingViewChartProps) {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const chartRef = React.useRef<IChartApi | null>(null);
@@ -61,7 +63,7 @@ export function TradingViewChart({
   const volumeSeriesRef = React.useRef<ISeriesApi<any> | null>(null);
 
   const [chartType, setChartType] = React.useState<"AREA" | "CANDLESTICK" | "LADDER" | "TERMINAL">("AREA");
-  const [timeframe, setTimeframe] = React.useState<"30D" | "90D" | "1Y" | "ALL">("90D");
+  const [timeframe, setTimeframe] = React.useState<"30D" | "90D" | "1Y" | "ALL">(completedSalesOnly ? "ALL" : "90D");
   const [hoveredPrice, setHoveredPrice] = React.useState<number | null>(null);
   const [hoveredDate, setHoveredDate] = React.useState<string | null>(null);
 
@@ -71,22 +73,19 @@ export function TradingViewChart({
   // Filter dataset by timeframe
   const filteredCandles = React.useMemo(() => {
     if (!candlestickData || candlestickData.length === 0) return [];
-    if (timeframe === "30D") return candlestickData.slice(-30);
-    if (timeframe === "90D") return candlestickData.slice(-60);
+    if (timeframe !== "ALL") return candlestickData.filter(p => Date.parse(p.time) >= Date.now() - (timeframe === "30D" ? 30 : timeframe === "90D" ? 90 : 365) * 86400000);
     return candlestickData;
   }, [candlestickData, timeframe]);
 
   const filteredArea = React.useMemo(() => {
     if (!areaData || areaData.length === 0) return [];
-    if (timeframe === "30D") return areaData.slice(-30);
-    if (timeframe === "90D") return areaData.slice(-60);
+    if (timeframe !== "ALL") return areaData.filter(p => Date.parse(p.time) >= Date.now() - (timeframe === "30D" ? 30 : timeframe === "90D" ? 90 : 365) * 86400000);
     return areaData;
   }, [areaData, timeframe]);
 
   const filteredVolume = React.useMemo(() => {
     if (!volumeData || volumeData.length === 0) return [];
-    if (timeframe === "30D") return volumeData.slice(-30);
-    if (timeframe === "90D") return volumeData.slice(-60);
+    if (timeframe !== "ALL") return volumeData.filter(p => Date.parse(p.time) >= Date.now() - (timeframe === "30D" ? 30 : timeframe === "90D" ? 90 : 365) * 86400000);
     return volumeData;
   }, [volumeData, timeframe]);
 
@@ -311,6 +310,7 @@ export function TradingViewChart({
             >
               Candles
             </button>
+            {!completedSalesOnly && <>
             <button
               onClick={() => setChartType("LADDER")}
               className={`rounded px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider transition-colors ${
@@ -333,6 +333,7 @@ export function TradingViewChart({
             >
               Terminal
             </button>
+            </>}
           </div>
 
           {/* Timeframe Chips */}

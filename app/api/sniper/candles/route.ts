@@ -1,8 +1,10 @@
+import { readEbaySalesForBook } from "@/lib/sniper/ebay-sales-view";
 import { NextResponse } from "next/server";
 import { readSalesForBook } from "@/lib/sniper/market-store";
 import { buildCandles, dedupeSales, gradesTraded, pickBucket, saleStats, type Bucket } from "@/lib/sniper/candles";
 
 export const runtime = "nodejs";
+export const maxDuration = 30;
 export const dynamic = "force-dynamic";
 
 const BUCKETS: Bucket[] = ["day", "week", "month", "quarter", "year"];
@@ -18,7 +20,14 @@ export async function GET(request: Request) {
   const issue = sp.get("issue") || "";
   if (!series || !issue) return NextResponse.json({ success: false, error: "series and issue required" }, { status: 400 });
 
-  const all = dedupeSales(await readSalesForBook(series, issue));
+  const [recorded, view] = await Promise.all([
+    sp.get("source") === "ebay" ? Promise.resolve([]) : readSalesForBook(series, issue),
+    readEbaySalesForBook(series, issue, sp.get("grader"), (sp.get("editionTerms") || "").split("|").filter(term => /^[a-z0-9]{2,40}$/i.test(term)).slice(0, 4)),
+  ]);
+  const { history: ebay, sales: direct } = view;
+  // Closing bids are observations, not completed-sale prices. Keep them out of the sold-sales chart.
+  const excludedBidObservations = recorded.filter((s) => !s.confirmed).length;
+  const all = dedupeSales([...recorded.filter((s) => s.confirmed), ...direct]);
   const grades = gradesTraded(all);
   const wanted = sp.get("grade") ? parseFloat(sp.get("grade")!) : NaN;
   const grade = Number.isFinite(wanted) ? wanted : grades[0]?.grade ?? null;
@@ -38,10 +47,12 @@ export async function GET(request: Request) {
     volume: candles.map((c) => ({ time: c.time, value: c.volume, dollars: c.dollars })),
     stats: saleStats(atGrade),
     sources,
-    sales: atGrade.slice(-25).reverse(),
+    sales: [...atGrade].reverse(),
     totalSalesAllGrades: all.length,
+    excludedBidObservations,
+    ebay: { available: ebay.available, stage: ebay.stage, status: ebay.status, code: ebay.code, message: ebay.message, checkedAt: ebay.checkedAt, provider: ebay.provider, hasMore: ebay.hasMore },
     note: atGrade.length === 0
-      ? "No sales recorded for this book at this grade yet. The tracker records every auction it watches close; history builds from here."
+      ? `No confirmed sales for this book at this grade. ${ebay.available ? `CompSniper returned ${ebay.total} single-unit records, but none matched the selected comic, grader, grade and edition filters. Other records are available in the complete ledger.` : `eBay sold-history access: ${ebay.message}`}`
       : undefined,
   });
 }

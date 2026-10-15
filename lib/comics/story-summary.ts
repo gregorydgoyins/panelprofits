@@ -1,3 +1,4 @@
+import { researchTitle, publisherFromTitle } from "@/lib/sniper/research-title";
 /**
  * Verifiable per-issue story descriptions and encyclopedic due diligence dossiers.
  *
@@ -39,14 +40,18 @@ export interface StorySummary {
     vehicles?: StoryEntityLink[];
   };
   credits?: {
+    coverArtists?: string[];
     writers?: string[];
     pencilers?: string[];
     colorists?: string[];
     letterers?: string[];
     editors?: string[];
   };
+  referenceYear?: number | null;
+  referenceOnly?: boolean;
   source: string;
   sourceUrl: string;
+  creditsSourceUrl?: string;
   license: string | null;
 }
 
@@ -56,6 +61,7 @@ export interface StorySummaryInput {
   year: number | null;
   publisher: string | null;
   volume?: number | null;
+  allowSeriesReference?: boolean;
 }
 
 const UA = "PanelProfitsBot/1.0 (+https://comicbookstockexchange.com; story-description lookup)";
@@ -184,13 +190,13 @@ export function parseFandomWikitext(wikitext: string, host: string): Omit<StoryS
   const storyTitle = tM ? tM[1].trim() : null;
 
   // Synopsis
-  const synM = wikitext.match(/\|\s*Synopsis1\s*=\s*([\s\S]*?)(?=\n\|[A-Z]|\n==|\n\}\})/);
+  const synM = wikitext.match(/\|\s*Synopsis1\s*=\s*([\s\S]*?)(?=\n\s*\|\s*[A-Za-z][A-Za-z0-9_ ]*\s*=|\n==|\n\s*\}\})/);
   const rawSynopsis = synM ? synM[1].trim() : "";
   if (!rawSynopsis || rawSynopsis.length < 40) return null;
   const text = parseWikitextLinks(rawSynopsis);
 
   // Appearing
-  const appM = wikitext.match(/\|\s*Appearing1\s*=\s*([\s\S]*?)(?=\n\|[A-Z]|\n==|\n\}\})/);
+  const appM = wikitext.match(/\|\s*Appearing1\s*=\s*([\s\S]*?)(?=\n\s*\|\s*[A-Za-z][A-Za-z0-9_ ]*\s*=|\n==|\n\s*\}\})/);
   const entities: NonNullable<StorySummary["entities"]> = {
     firstAppearances: [],
     featuredCharacters: [],
@@ -459,10 +465,29 @@ async function fromLocg(input: StorySummaryInput): Promise<ProviderOutcome> {
 
 /* ------------------------------------------------------------------ public */
 
-export async function getStorySummary(input: StorySummaryInput): Promise<StorySummary | null> {
+async function readStorySummary(input: StorySummaryInput): Promise<StorySummary | null> {
   if (!input.series?.trim() || !String(input.issueNumber ?? "").trim()) return null;
+  input = { ...input, series: researchTitle(input.series), publisher: publisherFromTitle(input.series) || input.publisher };
   const key = comicKey(input.series, String(input.issueNumber), input.year);
   const db = createAdminServerClient();
+
+  // Unverified seller identities may show a sourced issue reference, visibly separated from an edition match.
+  if (input.allowSeriesReference) {
+    const { data: reference } = await db.from("issue_story_summaries").select("*")
+      .eq("series", input.series).eq("issue_number", String(input.issueNumber))
+      .not("summary", "is", null).order("checked_at", { ascending: false }).limit(1).maybeSingle();
+    if (reference?.summary) {
+      try {
+        const parsed = JSON.parse(reference.summary);
+        if (typeof parsed.text === "string") return {
+          ...parsed,
+          text: parsed.text.split(/\n\s*\|\s*[A-Za-z][A-Za-z0-9_ ]*\s*=/)[0].trim(),
+          source: reference.source, sourceUrl: reference.source_url, license: reference.license,
+          referenceYear: reference.year, referenceOnly: true,
+        };
+      } catch { /* A legacy plain-text cache continues through the regular lookup. */ }
+    }
+  }
 
   try {
     const { data } = await db.from("issue_story_summaries").select("*").eq("comic_key", key).maybeSingle();
@@ -473,11 +498,12 @@ export async function getStorySummary(input: StorySummaryInput): Promise<StorySu
           const parsed = JSON.parse(data.summary);
           if (parsed && typeof parsed === "object" && typeof parsed.text === "string") {
             return {
-              text: parsed.text,
+              text: parsed.text.split(/\n\s*\|\s*[A-Za-z][A-Za-z0-9_ ]*\s*=/)[0].trim(),
               storyTitle: data.story_title || parsed.storyTitle || null,
               quote: parsed.quote || null,
               entities: parsed.entities || undefined,
               credits: parsed.credits || undefined,
+              creditsSourceUrl: parsed.creditsSourceUrl || undefined,
               source: data.source,
               sourceUrl: data.source_url,
               license: data.license,
@@ -531,4 +557,31 @@ export async function getStorySummary(input: StorySummaryInput): Promise<StorySu
     }
   }
   return hit;
+}
+
+/** Keep confirmed internal wiki pages; link other characters to their actual source wiki. */
+export function sourceStoryLinks(summary: StorySummary, existing: Set<string>): StorySummary {
+  if (!summary.entities || !summary.sourceUrl) return summary;
+  let host: string;
+  try { host = new URL(summary.sourceUrl).hostname; } catch { return summary; }
+  if (!host.endsWith(".fandom.com")) return summary;
+  const entities = Object.fromEntries(Object.entries(summary.entities).map(([role, entries]) => [role,
+    entries?.map(entity => {
+      if (!entity.url.startsWith("/wiki/entry/")) return entity;
+      const slug = decodeURIComponent(entity.url.slice("/wiki/entry/".length));
+      return existing.has(slug) ? entity : { ...entity, url: `https://${host}/wiki/${encodeURIComponent(entity.target.replace(/ /g, "_"))}` };
+    }),
+  ]));
+  return { ...summary, entities };
+}
+
+export async function getStorySummary(input: StorySummaryInput): Promise<StorySummary | null> {
+  const summary = await readStorySummary(input);
+  if (!summary?.entities) return summary;
+  const slugs = [...new Set(Object.values(summary.entities).flatMap(entries => (entries ?? [])
+    .filter(entity => entity.url.startsWith("/wiki/entry/"))
+    .map(entity => decodeURIComponent(entity.url.slice("/wiki/entry/".length)))))];
+  if (!slugs.length) return summary;
+  const { data } = await createAdminServerClient().from("ppcf_wiki_pages").select("slug").in("slug", slugs);
+  return sourceStoryLinks(summary, new Set((data ?? []).map(row => row.slug)));
 }

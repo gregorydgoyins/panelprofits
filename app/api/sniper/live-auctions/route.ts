@@ -1,3 +1,4 @@
+import { slabIssueYear, issueEra } from "@/lib/sniper/slab-identity";
 import { NextResponse } from "next/server";
 import { normalizeAuctionTitle, parseAndFilterListing } from "@/lib/sniper/anti-bullshit";
 import { resolveAuthoritativePublisher } from "@/lib/comics/publisher-authority";
@@ -291,7 +292,8 @@ async function computeGET(request: Request) {
             ? item.fairMarketValue
             : undefined);
 
-        const resolvedPub = dbMeta.publisher || item.gcdMetadata?.publisher || undefined;
+        const labelYear = slabIssueYear(item.label);
+        const resolvedPub = item.label?.publisher || dbMeta.publisher || item.gcdMetadata?.publisher || undefined;
 
         const realTimeBid = Number(item.currentBid || 0);
         const realTimeBidCount = Number(item.bidCount ?? 0);
@@ -344,8 +346,8 @@ async function computeGET(request: Request) {
           normalizedTitle: cleanTitle,
           graderNotes: cleanedNotes,
           itemDescription: cleanedDesc,
-          year: dbMeta.year ?? item.year ?? parsed.extractedYear,
-          era: dbMeta.era ?? item.era ?? parsed.extractedEra,
+          year: labelYear ?? dbMeta.year ?? item.year ?? parsed.extractedYear,
+          era: labelYear ? issueEra(labelYear) : dbMeta.era ?? item.era ?? parsed.extractedEra,
           imageUrl: safeCoverUrl,
           galleryImages: galleryList.length > 0 ? galleryList : [safeCoverUrl],
           currentBid: isBin ? (item.buyItNowPrice ?? item.currentBid) : realTimeBid,

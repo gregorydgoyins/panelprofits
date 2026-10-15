@@ -11,12 +11,15 @@ interface SniperStoryLoreProps {
   year?: number | null;
   publisher?: string | null;
   accent?: string;
+  editionVerified?: boolean;
   fallbackLore?: string;
   whyItsAGoodBuy?: string;
 }
 
 function resolveInternalLoreUrl(url: string, fallbackLabel: string): string {
   if (!url) return `/comics?q=${encodeURIComponent(fallbackLabel)}`;
+  if (/^https?:\/\//i.test(url)) return url;
+  if (url.startsWith("/")) return url;
   if (url.includes("/wiki/")) {
     const parts = url.split("/wiki/");
     const raw = parts[parts.length - 1];
@@ -52,6 +55,8 @@ function renderMarkdownWithLinks(text: string) {
       <Link
         key={`${internalUrl}-${match.index}`}
         href={internalUrl}
+        target={internalUrl.startsWith("http") ? "_blank" : undefined}
+        rel={internalUrl.startsWith("http") ? "noopener noreferrer" : undefined}
         className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2 font-medium transition-colors"
       >
         {label}
@@ -73,6 +78,8 @@ function EntityBadge({ entity, badgeColor }: { entity: StoryEntityLink; badgeCol
   return (
     <Link
       href={internalUrl}
+      target={internalUrl.startsWith("http") ? "_blank" : undefined}
+      rel={internalUrl.startsWith("http") ? "noopener noreferrer" : undefined}
       className={`inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-mono transition-all hover:scale-105 ${badgeColor}`}
       title={entity.target}
     >
@@ -90,6 +97,7 @@ export function SniperStoryLore({
   year,
   publisher,
   accent = "cyan",
+  editionVerified = true,
   fallbackLore,
   whyItsAGoodBuy,
 }: SniperStoryLoreProps) {
@@ -99,10 +107,12 @@ export function SniperStoryLore({
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
+    setSummary(null);
 
     const queryParams = new URLSearchParams({
       series,
       issueNumber,
+      ...(!editionVerified ? { allowSeriesReference: "true" } : {}),
       ...(year ? { year: String(year) } : {}),
       ...(publisher ? { publisher } : {}),
     });
@@ -129,7 +139,7 @@ export function SniperStoryLore({
     return () => {
       isMounted = false;
     };
-  }, [series, issueNumber, year, publisher]);
+  }, [series, issueNumber, year, publisher, editionVerified]);
 
   if (loading) {
     return (
@@ -180,6 +190,8 @@ export function SniperStoryLore({
 
   return (
     <div className="space-y-4">
+      {summary.referenceOnly && <p className="text-xs leading-5 text-amber-200 border border-amber-500/30 rounded-lg p-3 bg-amber-950/20">Issue reference: {series} #{issueNumber}{summary.referenceYear ? ` (${summary.referenceYear})` : ""}. This sourced record is research context; it is not a confirmed match to the seller’s edition.</p>}
+      {!editionVerified && !summary.referenceOnly && <p className="text-xs leading-5 text-amber-200 border border-amber-500/30 rounded-lg p-3 bg-amber-950/20">Story and creator research follows the seller’s stated series and issue. The slab identity and edition have not been verified; confirm the label before applying this information to the listing.</p>}
       {/* Lead Story Title & Epigraph Banner */}
       <div className="bg-slate-950/60 border border-slate-800 rounded-lg p-3.5 space-y-2">
         <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
@@ -190,7 +202,7 @@ export function SniperStoryLore({
             </span>
           </div>
           <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-500/30">
-            Fandom MediaWiki Canon
+            Story & Character Archive
           </span>
         </div>
 
@@ -231,6 +243,7 @@ export function SniperStoryLore({
                 <strong className="text-cyan-400">Color:</strong> {credits.colorists.join(", ")}
               </span>
             )}
+            {credits.letterers?.length ? <span className="px-2 py-0.5 rounded bg-slate-900 border border-slate-700 text-slate-300"><strong className="text-cyan-400">Lettering:</strong> {credits.letterers.join(", ")}</span> : null}
             {credits.editors && credits.editors.length > 0 && (
               <span className="px-2 py-0.5 rounded bg-slate-900 border border-slate-700 text-slate-300">
                 <strong className="text-cyan-400">Editor:</strong> {credits.editors.join(", ")}
@@ -299,6 +312,7 @@ export function SniperStoryLore({
             </div>
           )}
 
+          {!!entities.otherCharacters?.length && <div className="space-y-1"><h4 className="text-[11px] font-mono text-slate-300 uppercase">Supporting &amp; other characters</h4><div className="flex flex-wrap gap-1">{entities.otherCharacters.map((entity, i) => <EntityBadge key={`other-${entity.target}-${i}`} entity={entity} badgeColor="bg-slate-900 border border-slate-700 text-slate-200 hover:border-cyan-400" />)}</div></div>}
           {/* Landmark Tech, Weapons & Vehicles */}
           {hasItems && (
             <div className="space-y-1">
@@ -342,7 +356,7 @@ export function SniperStoryLore({
       {/* Full Interactive Hyperlinked Synopsis */}
       <div className="space-y-2 bg-[#070C18] border border-slate-800/90 rounded-lg p-3.5">
         <h4 className="text-[11px] font-mono uppercase tracking-widest text-slate-400 font-bold">
-          Verified Fandom Narrative Synopsis
+          Source narrative synopsis
         </h4>
         <div className="space-y-2.5 max-h-[360px] overflow-y-auto pr-2 custom-scrollbar text-xs text-slate-300 leading-relaxed font-sans">
           {paragraphs.map((p, i) => (
@@ -355,11 +369,11 @@ export function SniperStoryLore({
       <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-500 font-mono pt-1 border-t border-slate-800">
         <div>
           Source:{" "}
-          <span className="text-slate-300 font-mono">
-            {summary.source}
-          </span>
+          <a href={summary.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-cyan-300 font-mono underline underline-offset-4">
+            {summary.source} ↗
+          </a>
         </div>
-        <span className="text-cyan-400/80">LOCAL CBR KNOWLEDGE REPOSITORY VERIFIED</span>
+        <span className="text-cyan-400/80">SOURCE-LINKED ISSUE RESEARCH</span>
       </div>
     </div>
   );

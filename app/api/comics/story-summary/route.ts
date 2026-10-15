@@ -27,6 +27,7 @@ export async function GET(request: Request) {
         year: Number.isNaN(year) ? null : year,
         publisher,
         volume: Number.isNaN(volume) ? null : volume,
+        allowSeriesReference: searchParams.get("allowSeriesReference") === "true",
       }),
       new Promise<null>((resolve) => setTimeout(() => resolve(null), 9000)),
     ]);

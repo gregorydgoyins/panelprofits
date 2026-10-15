@@ -8,6 +8,7 @@ import {
   publishersAgree,
   clipAtSentence,
   comicKey,
+  sourceStoryLinks,
 } from "@/lib/comics/story-summary";
 import { coverSourceContradictsPublisher } from "@/lib/comics/cover-trust";
 
@@ -81,6 +82,20 @@ describe("fandom wikitext parsing", () => {
   });
 });
 
+describe("multi-story Fandom records", () => {
+  it("stops at a padded field instead of showing a second synopsis or template metadata", () => {
+    const result = parseFandomWikitext(`{{Comic Template
+| StoryTitle1 = Lead story
+| Synopsis1 = The lead story follows the warrior across the kingdom to confront an invading army.
+ | Synopsis2 = This bonus story must not leak into the lead synopsis.
+ | Notes = Editorial metadata.
+}}`, "dynamiteentertainment.fandom.com");
+    expect(result?.text).toContain("lead story follows");
+    expect(result?.text).not.toContain("bonus story");
+    expect(result?.text).not.toContain("Editorial");
+  });
+});
+
 describe("League of Comic Geeks parsing", () => {
   it("reads publisher, release year and description", () => {
     const html = `<div>CRUSADE COMICS &nbsp; · &nbsp; RELEASED APR 12, 1995</div>
@@ -129,5 +144,15 @@ describe("cover trust", () => {
   });
   it("rejects DC wiki covers on Image books", () => {
     expect(coverSourceContradictsPublisher("dc_fandom_vol1", "Image")).toBe(true);
+  });
+});
+
+describe("real character wiki destinations", () => {
+  it("preserves known internal pages and sends absent entries to the source wiki", () => {
+    const result = sourceStoryLinks({ text: "Source story", storyTitle: null, source: "Fandom", sourceUrl: "https://dynamiteentertainment.fandom.com/wiki/Queen_Sonja_Vol_1_1", license: null,
+      entities: { featuredCharacters: [{ label: "Red Sonja", target: "Red Sonja (Earth-818793)", url: "/wiki/entry/red-sonja-earth-818793" }, { label: "Known", target: "Known", url: "/wiki/entry/known" }] },
+    }, new Set(["known"]));
+    expect(result.entities?.featuredCharacters?.[0].url).toBe("https://dynamiteentertainment.fandom.com/wiki/Red_Sonja_(Earth-818793)");
+    expect(result.entities?.featuredCharacters?.[1].url).toBe("/wiki/entry/known");
   });
 });

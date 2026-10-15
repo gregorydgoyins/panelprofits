@@ -12,9 +12,10 @@ import {
 import { evaluateAuctionListing } from "@/lib/sniper/radar-engine";
 import { getEraDisplayName } from "@/lib/sniper/anti-bullshit";
 import { SlabEncasement } from "@/components/sniper/SlabEncasement";
-import { SniperStoryLore } from "@/components/sniper/SniperStoryLore";
+import { SniperResearchBrief } from "@/components/sniper/SniperResearchBrief";
 import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
 import { LiveLotStrip } from "@/components/sniper/LiveLotStrip";
+import { SniperLearningPanel } from "@/components/sniper/SniperLearningPanel";
 import { LotMarketChart } from "@/components/sniper/LotMarketChart";
 import { usePaperOrders, PaperTicket, PaperLedger } from "@/components/sniper/PaperDesk";
 import { ReplayRoom } from "@/components/sniper/ReplayRoom";
@@ -159,6 +160,8 @@ function formatVenueActionText(source: string, isBuyItNow?: boolean): string {
 }
 
 export default function SniperRadarPage() {
+  const [researchBeta, setResearchBeta] = useState(false);
+  useEffect(() => { setResearchBeta(new URLSearchParams(window.location.search).get("beta") === "research"); }, []);
   // Owner Password Authentication Gate State (verified server-side via /api/sniper/auth)
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [passwordInput, setPasswordInput] = useState<string>("");
@@ -434,49 +437,15 @@ export default function SniperRadarPage() {
   // High-Resolution Front View Lightbox Inspection State
   const [inspectedDeal, setInspectedDeal] = useState<CandidateEvaluation | null>(null);
   const [modalPerspective, setModalPerspective] = useState<
-    "all" | "matrix" | "investopedia" | "video" | "financial" | "chart" | "census" | "lore" | "gcd" | "signature"
+    "all" | "matrix" | "investopedia" | "learn" | "video" | "financial" | "chart" | "census" | "lore" | "gcd" | "signature"
   >("all");
   const [showPlansModal, setShowPlansModal] = useState<boolean>(false);
-  const [liveComps, setLiveComps] = useState<Array<{ venue: string; date: string; grade: number; price: number; title?: string; url?: string }> | null>(null);
-  const [loadingComps, setLoadingComps] = useState<boolean>(false);
-  // The price chart and sales ledger only appear when a grade has 2+ real recorded sales (a live bid is not a sale).
-  const hasChartSales = (() => {
-    if (loadingComps) return false;
-    const sales = liveComps && liveComps.length > 0 ? liveComps : inspectedDeal?.historicalComps ?? [];
-    const perGrade = new Map<number, number>();
-    for (const c of sales) perGrade.set(c.grade, (perGrade.get(c.grade) ?? 0) + 1);
-    return Array.from(perGrade.values()).some((n) => n >= 2);
-  })();
-
-  // Fetch verified real-time eBay and certified sales comps whenever an item is inspected
-  useEffect(() => {
-    if (!inspectedDeal) {
-      setLiveComps(null);
-      return;
-    }
-
-    setLoadingComps(true);
-    const params = new URLSearchParams({
-      series: inspectedDeal.resolvedSeries,
-      issue: inspectedDeal.resolvedIssue,
-    });
-
-    fetch(`/api/sniper/comps?${params.toString()}`)
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data?.success && Array.isArray(data.comps)) {
-          setLiveComps(data.comps);
-        } else {
-          setLiveComps([]);
-        }
-        setLoadingComps(false);
-      })
-      .catch(() => {
-        setLiveComps([]);
-        setLoadingComps(false);
-      });
-  }, [inspectedDeal?.resolvedSeries, inspectedDeal?.resolvedIssue]);
-
+  const showSalesChart = Boolean(inspectedDeal);
+  const [expandQuickResearch, setExpandQuickResearch] = useState(false);
+  useEffect(() => { setExpandQuickResearch(false); setModalPerspective("all"); }, [inspectedDeal?.listing.id]);
+  const researchSecs = inspectedDeal ? (liveAuctionTimers[inspectedDeal.listing.id] ?? inspectedDeal.listing.secondsRemaining) : 0;
+  const shortResearch = Boolean(inspectedDeal && !inspectedDeal.listing.isBuyItNow && researchSecs <= 3600);
+  const fullResearch = !shortResearch || expandQuickResearch;
 
   // Paper Snipe Orders Ledger State
   const paper = usePaperOrders();
@@ -808,6 +777,14 @@ export default function SniperRadarPage() {
         </div>
       )}
 
+      {researchBeta && <section className="max-w-7xl w-full mx-auto px-4 py-5 space-y-3">
+        <div><p className="text-[10px] font-mono tracking-[0.2em] text-cyan-400 uppercase">Two-comic research beta</p><h2 className="text-xl font-semibold mt-1">Live listing. Complete research.</h2><p className="text-xs text-slate-400 mt-1">Choose a comic to open its sales chart, story, characters, wiki, glossary and learning material.</p></div>
+        <div className="grid gap-3 sm:grid-cols-2">{evaluations.map(deal => <button key={deal.listing.id} onClick={() => setInspectedDeal(deal)} className="text-left flex gap-4 rounded-xl border border-cyan-500/25 bg-[#0E131F] p-4 hover:border-cyan-400 transition">
+          <img src={deal.listing.imageUrl} alt={deal.listing.title} className="w-16 h-24 object-contain rounded bg-black" />
+          <span className="flex flex-col justify-center"><strong className="text-base text-white">{deal.resolvedSeries} #{deal.resolvedIssue}</strong><span className="text-xs text-cyan-300 mt-1">{deal.gradingCompany} {deal.resolvedGrade} · {deal.listing.isBuyItNow ? "Buy It Now" : "Live auction"}</span><span className="text-xs text-slate-400 mt-2">Open complete research ↗</span></span>
+        </button>)}</div>
+        {isLoadingLive && <p className="text-xs text-slate-400">Loading the two live listings…</p>}
+      </section>}
       {/* TOP HEADER / NAVIGATION */}
       <header className="border-b border-slate-800 bg-[#0E131F]/90 backdrop-blur sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3">
@@ -834,6 +811,7 @@ export default function SniperRadarPage() {
           </div>
 
           <div className="flex items-center gap-3">
+            <a href={researchBeta ? "/sniper" : "/sniper?beta=research"} className="text-xs rounded-lg border border-emerald-500/40 px-3 py-1.5 text-emerald-300 hover:bg-emerald-950/40">{researchBeta ? "Full radar" : "Two-comic research beta"}</a>
             <button
               onClick={() => fetchLiveAuctions(true)}
               disabled={isLoadingLive}
@@ -2478,16 +2456,22 @@ export default function SniperRadarPage() {
                 </div>
               </div>
 
-              {/* Multi-Perspective Navigation Selector */}
+              {shortResearch && <div className="rounded-lg border border-amber-500/30 bg-amber-950/20 p-3 flex items-center justify-between gap-3 text-xs">
+              <span className="text-amber-200">Closing within one hour · quick research prioritizes pricing; story, creators and glossary remain available on the right.</span>
+              <button onClick={() => setExpandQuickResearch(v => !v)} className="rounded border border-amber-400/40 px-3 py-1.5 text-amber-200 whitespace-nowrap hover:bg-amber-900/40">{expandQuickResearch ? "Compact view" : "Expand full research"}</button>
+            </div>}
+            {/* Multi-Perspective Navigation Selector */}
 
               <div className="flex flex-wrap items-center gap-1.5 pt-1">
                 {[
                   { id: "all", label: "ALL PERSPECTIVES", icon: "🌐" },
                   { id: "matrix", label: "PRICE MATRIX (EBAY • CB • PP)", icon: "⚖️" },
                   { id: "financial", label: "FINANCIAL & ARBITRAGE", icon: "📊" },
-                  ...(hasChartSales ? [{ id: "chart", label: "TRADINGVIEW & HISTORICALS", icon: "📈" }] : []),
+                  { id: "chart", label: "COMPLETED SALES & PRICE HISTORY", icon: "📈" },
+                  { id: "investopedia", label: "INVESTOPEDIA", icon: "📖" },
+                  { id: "learn", label: "WHAT TO LEARN", icon: "🎓" },
                   { id: "census", label: "POPULATION CENSUS", icon: "🏛️" },
-                  { id: "lore", label: "LORE & CANON", icon: "📜" },
+                  { id: "lore", label: "STORY, CHARACTERS & WIKI", icon: "📜" },
                   { id: "gcd", label: "GCD BIBLIOGRAPHIC", icon: "📚" },
                   ...(inspectedDeal.isYellowLabel ? [{ id: "signature", label: "SIGNATURE PROVENANCE", icon: "✍️" }] : []),
                 ].map((tab) => (
@@ -2639,7 +2623,7 @@ export default function SniperRadarPage() {
                 </div>
 
                 <SniperVideos
-                  series={inspectedDeal.resolvedSeries}
+                  series={inspectedDeal.label?.title || inspectedDeal.resolvedSeries}
                   issue={String(inspectedDeal.resolvedIssue ?? "")}
                   creators={[...(inspectedDeal.gcdMetadata?.writers ?? []), ...(inspectedDeal.gcdMetadata?.pencilers ?? [])].slice(0, 2)}
                   archive={inspectedDeal.videoDossier?.comicBaseVideo ? {
@@ -2652,8 +2636,51 @@ export default function SniperRadarPage() {
 
               {/* Right Column: Multi-Perspective Rail Intelligence Dossier */}
               <div className="lg:col-span-7 space-y-4">
+                {/* ════════════════════════════════════════════════════════════════════════
+                    PERSPECTIVE 3: HISTORICAL LORE & COLLECTOR CANON
+                    ════════════════════════════════════════════════════════════════════════ */}
+                {((modalPerspective === "all") || modalPerspective === "lore") && (
+                  <div className="bg-[#070C18] border border-amber-500/40 rounded-xl p-4 space-y-4 shadow-lg">
+                    <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono font-bold text-amber-400 uppercase flex items-center gap-1.5">
+                          <span>📜</span> QUICK RESEARCH SUMMARY
+                        </span>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-500/30">
+                          Story · lessons · sources
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-500/40 uppercase">
+                        Issue research
+                      </span>
+                    </div>
+
+                    {/* Integrated Encyclopedic Fandom Lore Dossier */}
+                    <SniperResearchBrief
+                      series={inspectedDeal.label?.title || inspectedDeal.resolvedSeries}
+                      issueNumber={inspectedDeal.resolvedIssue}
+                      year={inspectedDeal.resolvedYear}
+                      publisher={inspectedDeal.gcdMetadata?.publisher}
+                      editionVerified={Boolean(inspectedDeal.label?.title)}
+                      listingTitle={inspectedDeal.listing.title}
+                      grader={inspectedDeal.gradingCompany}
+                      grade={inspectedDeal.resolvedGrade}
+                    />
+
+                    {modalPerspective === "lore" && inspectedDeal.longTermHoldingThesis && (
+                      <div className="text-xs text-purple-200/90 leading-relaxed font-sans bg-purple-950/20 border border-purple-500/20 p-3 rounded-lg">
+                        <strong className="text-purple-400 font-mono text-[11px] block uppercase mb-1">
+                          Long-Term Holding Thesis (Beyond Short Flips):
+                        </strong>
+                        {inspectedDeal.longTermHoldingThesis}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+
                 {/* BUY IT NOW SENSIBILITY & UPSIDE THESIS */}
-                {inspectedDeal.isBuyItNow && inspectedDeal.buyItNowSensibilityWhy && (
+                {modalPerspective === "financial" && inspectedDeal.isBuyItNow && inspectedDeal.buyItNowSensibilityWhy && (
                   <div className="bg-emerald-950/40 border-2 border-emerald-500/60 rounded-xl p-4 space-y-2 shadow-xl">
                     <div className="flex items-center justify-between border-b border-emerald-500/30 pb-2">
                       <span className="text-xs font-mono font-bold text-emerald-400 uppercase flex items-center gap-1.5">
@@ -2689,7 +2716,7 @@ export default function SniperRadarPage() {
                 {/* ════════════════════════════════════════════════════════════════════════
                     PERSPECTIVE A: MULTI-SOURCE COMPARATIVE PRICE MATRIX (EBAY • CB • PP)
                     ════════════════════════════════════════════════════════════════════════ */}
-                {(modalPerspective === "all" || modalPerspective === "matrix") && inspectedDeal.priceMatrix && (
+                {(modalPerspective === "matrix") && inspectedDeal.priceMatrix && (
                   <div className="bg-[#070C18] border border-cyan-500/50 rounded-xl p-4 space-y-3.5 shadow-xl">
                     <div className="flex items-center justify-between border-b border-slate-800 pb-2">
                       <div className="flex items-center gap-2">
@@ -2714,7 +2741,7 @@ export default function SniperRadarPage() {
                         <thead>
                           <tr className="text-slate-500 border-b border-slate-800 text-[10px] uppercase">
                             <th className="pb-1.5 font-bold">Grade Tier</th>
-                            <th className="pb-1.5 font-bold text-right">eBay Realized</th>
+                            <th className="pb-1.5 font-bold text-right">eBay live quote</th>
                             <th className="pb-1.5 font-bold text-right">Panel Profits FMV</th>
                             <th className="pb-1.5 font-bold text-right">ComicBase Catalog</th>
                             <th className="pb-1.5 font-bold text-right">GoCollect / GPA</th>
@@ -2778,7 +2805,7 @@ export default function SniperRadarPage() {
                 {/* ════════════════════════════════════════════════════════════════════════
                     PERSPECTIVE 1: FINANCIAL & ARBITRAGE MATH
                     ════════════════════════════════════════════════════════════════════════ */}
-                {(modalPerspective === "all" || modalPerspective === "financial") && (
+                {(modalPerspective === "financial") && (
                   <div className="bg-[#070C18] border border-cyan-500/40 rounded-xl p-4 space-y-3.5 shadow-lg">
 
                     <div className="flex items-center justify-between border-b border-slate-800 pb-2">
@@ -2890,12 +2917,12 @@ export default function SniperRadarPage() {
                 {/* ════════════════════════════════════════════════════════════════════════
                     PERSPECTIVE 2: TRADINGVIEW TECHNICALS & HISTORICAL SALES LEDGER
                     ════════════════════════════════════════════════════════════════════════ */}
-                {hasChartSales && (modalPerspective === "all" || modalPerspective === "chart") && (
+                {showSalesChart && (modalPerspective === "all" || modalPerspective === "chart") && (
                   <div className="bg-[#070C18] border border-cyan-500/40 rounded-xl p-4 space-y-3.5 shadow-lg">
                     <div className="flex items-center justify-between border-b border-slate-800 pb-2">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-mono font-bold text-cyan-400 uppercase flex items-center gap-1.5">
-                          <span>📈</span> TRADINGVIEW PRICE CHART &amp; REALIZED HISTORY
+                          <span>📈</span> COMPLETED SALES &amp; PRICE HISTORY
                         </span>
                         <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/30">
                           Lightweight Charts™
@@ -2911,95 +2938,26 @@ export default function SniperRadarPage() {
                         series={inspectedDeal.resolvedSeries}
                         issue={inspectedDeal.resolvedIssue}
                         grade={inspectedDeal.resolvedGrade}
+                        grader={inspectedDeal.gradingCompany}
                         itemId={inspectedDeal.listing.id}
                         ticker={formatComicEquityTicker(inspectedDeal.resolvedSeries, inspectedDeal.resolvedIssue)}
                         currentBid={inspectedDeal.listing.currentBid}
+                        allInCost={inspectedDeal.allInCost}
+                        editionTerms={/\bNauck\b/i.test(inspectedDeal.listing.title) ? "nauck" : undefined}
+                        variant={/\bNauck\b/i.test(inspectedDeal.listing.title) ? "Todd Nauck" : inspectedDeal.variantType || (/variant/i.test(inspectedDeal.listing.title) ? "listed variant" : undefined)}
                       />
                     </div>
 
-                    {/* LAST 10 REALIZED MARKET SALES OVER TIME */}
-                    <div className="space-y-2 pt-2 border-t border-slate-800/80">
-                      <div className="flex items-center justify-between text-xs font-mono">
-                        <span className="text-slate-300 font-bold uppercase flex items-center gap-1.5">
-                          <span>🏷️</span> Last 10 Verified Realized Sales Comp Ledger
-                        </span>
-                        <span className="text-[10px] text-cyan-400">
-                          eBay Realized • Heritage • GPA Analysis Index
-                        </span>
-                      </div>
-
-                      <div className="overflow-x-auto">
-                        {loadingComps ? (
-                          <div className="p-4 text-center text-xs font-mono text-slate-500 animate-pulse">
-                            Querying live eBay Developer API &amp; verified certified comp registers...
-                          </div>
-                        ) : (() => {
-                            const activeComps =
-                              liveComps && liveComps.length > 0
-                                ? liveComps
-                                : inspectedDeal.historicalComps && inspectedDeal.historicalComps.length > 0
-                                ? inspectedDeal.historicalComps
-                                : [];
-
-                            if (activeComps.length === 0) {
-                              return (
-                                <div className="p-4 text-center text-xs font-mono text-slate-500 bg-black/40 rounded-lg border border-slate-800">
-                                  No certified secondary market sales recorded yet for this specific issue edition. Current bids anchored against universal FMV baseline.
-                                </div>
-                              );
-                            }
-
-                            return (
-                              <table className="w-full text-[11px] font-mono text-left">
-                                <thead>
-                                  <tr className="text-slate-500 border-b border-slate-800 text-[10px] uppercase">
-                                    <th className="pb-1.5 font-bold">Venue</th>
-                                    <th className="pb-1.5 font-bold">Observation Date</th>
-                                    <th className="pb-1.5 font-bold">Grade</th>
-                                    <th className="pb-1.5 font-bold text-right">Realized / Ask Price</th>
-                                    <th className="pb-1.5 font-bold text-right">Trajectory vs Cost</th>
-                                  </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-800/60">
-                                  {activeComps.slice(0, 12).map((comp, idx) => {
-                                    const delta = ((comp.price - inspectedDeal.allInCost) / inspectedDeal.allInCost) * 100;
-                                    return (
-                                      <tr key={idx} className="hover:bg-slate-900/40">
-                                        <td className="py-1.5 text-slate-300 font-medium flex items-center gap-1.5">
-                                          <span>{comp.venue}</span>
-                                          {comp.url && (
-                                            <a
-                                              href={comp.url}
-                                              target="_blank"
-                                              rel="noopener noreferrer"
-                                              className="text-cyan-400 hover:text-cyan-200"
-                                            >
-                                              ↗
-                                            </a>
-                                          )}
-                                        </td>
-                                        <td className="py-1.5 text-slate-400">{comp.date}</td>
-                                        <td className="py-1.5 text-cyan-300 font-bold">{comp.grade ? comp.grade.toFixed(1) : inspectedDeal.resolvedGrade.toFixed(1)}</td>
-                                        <td className="py-1.5 text-right text-emerald-400 font-bold">${comp.price.toFixed(2)}</td>
-                                        <td className={`py-1.5 text-right font-bold ${delta >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                          {delta >= 0 ? `+${Math.round(delta)}%` : `${Math.round(delta)}%`}
-                                        </td>
-                                      </tr>
-                                    );
-                                  })}
-                                </tbody>
-                              </table>
-                            );
-                          })()}
-                      </div>
-                    </div>
                   </div>
                 )}
 
+                {((modalPerspective === "all") || modalPerspective === "investopedia" || modalPerspective === "learn") && (
+                  <SniperLearningPanel series={inspectedDeal.resolvedSeries} issue={inspectedDeal.resolvedIssue} section={modalPerspective === "learn" ? "learn" : "investopedia"} />
+                )}
                 {/* ════════════════════════════════════════════════════════════════════════
                     PERSPECTIVE 3: POPULATION & CENSUS INTEL
                     ════════════════════════════════════════════════════════════════════════ */}
-                {(modalPerspective === "all" || modalPerspective === "census") && (
+                {((modalPerspective === "all" && fullResearch) || modalPerspective === "census") && (
                   <div className="bg-[#070C18] border border-purple-500/40 rounded-xl p-4 space-y-3 shadow-lg">
                     <div className="flex items-center justify-between border-b border-slate-800 pb-2">
                       <span className="text-xs font-mono font-bold text-purple-400 uppercase flex items-center gap-1.5">
@@ -3038,53 +2996,13 @@ export default function SniperRadarPage() {
                 )}
 
                 {/* ════════════════════════════════════════════════════════════════════════
-                    PERSPECTIVE 3: HISTORICAL LORE & COLLECTOR CANON
-                    ════════════════════════════════════════════════════════════════════════ */}
-                {(modalPerspective === "all" || modalPerspective === "lore") && (
-                  <div className="bg-[#070C18] border border-amber-500/40 rounded-xl p-4 space-y-4 shadow-lg">
-                    <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-mono font-bold text-amber-400 uppercase flex items-center gap-1.5">
-                          <span>📜</span> FANDOM STORY SYNOPSIS &amp; HISTORICAL CANON
-                        </span>
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-500/30">
-                          Wiki Cross-Walk
-                        </span>
-                      </div>
-                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-500/40 uppercase">
-                        {inspectedDeal.historicalSignificanceTier || "HISTORIC_LANDMARK"}
-                      </span>
-                    </div>
-
-                    {/* Integrated Encyclopedic Fandom Lore Dossier */}
-                    <SniperStoryLore
-                      series={inspectedDeal.resolvedSeries}
-                      issueNumber={inspectedDeal.resolvedIssue}
-                      year={inspectedDeal.resolvedYear}
-                      publisher={inspectedDeal.gcdMetadata?.publisher}
-                      fallbackLore={inspectedDeal.historicalSignificanceLore}
-                      whyItsAGoodBuy={inspectedDeal.whyItsAGoodBuy}
-                    />
-
-                    {inspectedDeal.longTermHoldingThesis && (
-                      <div className="text-xs text-purple-200/90 leading-relaxed font-sans bg-purple-950/20 border border-purple-500/20 p-3 rounded-lg">
-                        <strong className="text-purple-400 font-mono text-[11px] block uppercase mb-1">
-                          Long-Term Holding Thesis (Beyond Short Flips):
-                        </strong>
-                        {inspectedDeal.longTermHoldingThesis}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* ════════════════════════════════════════════════════════════════════════
                     PERSPECTIVE 4: GRAND COMICS DATABASE™ (GCD) BIBLIOGRAPHIC RECORD
                     ════════════════════════════════════════════════════════════════════════ */}
-                {(modalPerspective === "all" || modalPerspective === "gcd") && (
+                {((modalPerspective === "all" && fullResearch) || modalPerspective === "gcd") && (
                   <div className="bg-[#070C18] border border-blue-500/40 rounded-xl p-4 space-y-3 shadow-lg">
                     <div className="flex items-center justify-between border-b border-slate-800 pb-2">
                       <span className="text-xs font-mono font-bold text-blue-400 uppercase flex items-center gap-1.5">
-                        <span>📚</span> GRAND COMICS DATABASE™ (GCD) CREATIVE CANON
+                        <span>📚</span> GRAND COMICS DATABASE™ (GCD) BIBLIOGRAPHIC RECORD
                       </span>
                       <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-500/40 uppercase">
                         Bibliographic Authority
@@ -3180,7 +3098,7 @@ export default function SniperRadarPage() {
                 {/* ════════════════════════════════════════════════════════════════════════
                     PERSPECTIVE 5: SIGNATURE SERIES PROVENANCE (YELLOW LABEL ONLY)
                     ════════════════════════════════════════════════════════════════════════ */}
-                {inspectedDeal.isYellowLabel && (modalPerspective === "all" || modalPerspective === "signature") && (
+                {inspectedDeal.isYellowLabel && ((modalPerspective === "all" && fullResearch) || modalPerspective === "signature") && (
                   <div className="bg-[#070C18] border border-amber-500/60 rounded-xl p-4 space-y-3 shadow-lg">
                     <div className="flex items-center justify-between border-b border-amber-500/20 pb-2">
                       <span className="text-xs font-mono font-bold text-amber-400 uppercase flex items-center gap-1.5">

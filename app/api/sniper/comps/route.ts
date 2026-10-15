@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminServerClient } from "@/lib/supabase/admin";
 import { after } from "next/server";
 import { readSalesForBook, refreshCompSniper } from "@/lib/sniper/market-store";
+import { readEbaySalesForBook } from "@/lib/sniper/ebay-sales-view";
 import { dedupeSales } from "@/lib/sniper/candles";
 
 export const dynamic = "force-dynamic";
@@ -60,11 +61,16 @@ async function computeGET(request: Request) {
   const raced = await Promise.race([refresh, new Promise<null>((r) => setTimeout(() => r(null), 8000))]);
   if (raced === null) after(() => refresh);
 
-  const sales = dedupeSales(await readSalesForBook(series, String(issue).replace(/^#/, "")));
+  const issueClean = String(issue).replace(/^#/, "");
+  const [ebay, recorded] = await Promise.all([
+    readEbaySalesForBook(series, issueClean, searchParams.get("grader")).catch(() => ({ sales: [] as Awaited<ReturnType<typeof readSalesForBook>> })),
+    readSalesForBook(series, issueClean).catch(() => []),
+  ]);
+  const sales = dedupeSales([...ebay.sales, ...recorded]);
   const comps: RealizedSaleComp[] = sales
     .filter((s) => s.grade != null && s.grade > 0)
     .map((s) => ({
-      venue: s.confirmed ? s.venue : `${s.venue} (final bid watched)`,
+      venue: s.source === "ebay_insights" || s.source === "ebay_history" ? "eBay completed sale" : s.confirmed ? s.venue : `${s.venue} (final bid watched)`,
       date: s.date.slice(0, 10),
       grade: Number(s.grade),
       price: s.price,

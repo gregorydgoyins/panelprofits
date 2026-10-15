@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { videoTopic } from "@/lib/sniper/research-title";
 
 interface Vid { videoId: string; title: string; channel: string; thumbnail: string; kind: "book" | "creator" | "series" | "explainer" }
 
@@ -14,18 +15,20 @@ const LABEL: Record<Vid["kind"], string> = {
 /** Small video cards for the left column. Nothing is loaded until a card is clicked, so the thumbnail is the only cost. */
 export function SniperVideos({ series, issue, creators, archive }: { series: string; issue: string; creators?: string[]; archive?: { title: string; videoUrl: string; poster?: string } }) {
   const [videos, setVideos] = useState<Vid[]>([]);
+  const [loading, setLoading] = useState(true);
   const [playing, setPlaying] = useState<string | null>(null);
 
   useEffect(() => {
     let live = true;
+    setLoading(true);
     setVideos([]);
     setPlaying(null);
     if (!series) return;
     const qs = new URLSearchParams({ series, issue, creators: (creators ?? []).join("|") });
     fetch(`/api/sniper/videos?${qs}`)
       .then((r) => (r.ok ? r.json() : { videos: [] }))
-      .then((j) => { if (live) setVideos(Array.isArray(j.videos) ? j.videos : []); })
-      .catch(() => {});
+      .then((j) => { if (live) { setVideos(Array.isArray(j.videos) ? j.videos : []); setLoading(false); } })
+      .catch(() => { if (live) setLoading(false); });
     return () => { live = false; };
   }, [series, issue, (creators ?? []).join("|")]);
 
@@ -43,8 +46,12 @@ export function SniperVideos({ series, issue, creators, archive }: { series: str
           </div>
         </div>
       )}
-      {videos.map((v) => (
+      <h3 className="text-sm font-semibold text-rose-300 w-full">Related comics &amp; creator videos</h3>
+      {loading && <p className="text-xs text-slate-400">Finding videos about {videoTopic(series)}…</p>}
+      {!loading && !videos.some(v => v.kind !== "explainer") && <p className="text-xs text-slate-400">No related videos returned by the video provider. Browse the topic search below.</p>}
+      {[...videos.filter(v => v.kind !== "explainer"), ...videos.filter(v => v.kind === "explainer").slice(0, 1)].map((v) => (
         <div key={v.videoId} className="rounded-lg border border-slate-800 bg-slate-950/80 overflow-hidden">
+          {v.kind === "explainer" && <h3 className="p-3 text-sm font-semibold text-emerald-300 border-b border-slate-800">Financial explainer</h3>}
           <div className="relative aspect-video bg-black">
             {playing === v.videoId ? (
               <iframe
@@ -73,8 +80,8 @@ export function SniperVideos({ series, issue, creators, archive }: { series: str
         <a href={`/video-archive?q=${archiveQ}`} className="p-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-cyan-300 flex items-center justify-between transition">
           <span>▶ Market archive</span><span>↗</span>
         </a>
-        <a href={`/video-archive?q=${archiveQ}`} className="p-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-rose-300 flex items-center justify-between transition">
-          <span>▶ Key issue spotlight</span><span>↗</span>
+        <a href={`https://www.youtube.com/results?search_query=${encodeURIComponent(videoTopic(series) + " comics history")}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-rose-300 flex items-center justify-between transition">
+          <span>▶ More related videos</span><span>↗</span>
         </a>
       </div>
     </div>
