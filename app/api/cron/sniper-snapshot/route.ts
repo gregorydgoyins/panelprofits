@@ -3,7 +3,7 @@ import { runSnapshot } from "@/lib/sniper/market-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 240;
 
 /**
  * Pulls the current eBay comic auctions into the Sniper store (about 6–8 Browse calls of up to 200 lots each).
