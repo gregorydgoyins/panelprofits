@@ -17,6 +17,7 @@ import { captureCensus } from "./census-resolve";
 import { fetchLiveVenueListings, fetchVenueCompletedSales } from "./venue-adapters";
 import type { RawAuctionListing } from "./types";
 import { seriesKey, type SaleObs } from "./candles";
+import { fetchCompSniper } from "./compsniper";
 import benchmarksData from "@/lib/pricing/pricecharting-cgc-benchmarks.json";
 
 export const SNAPSHOT_MIN_INTERVAL_MS = 4 * 60_000;
@@ -328,6 +329,52 @@ async function tryInsights(db: any, slot: number, nowMs: number, statuses: Recor
     return { sales: out.length, state: "ok" };
   } catch (e) {
     return { sales: 0, state: `unavailable(${(e as Error).message.slice(0, 40)})` };
+  }
+}
+
+// ───────────────────────────── CompSniper (completed eBay sales for one book) ─────────────────────────────
+
+const COMPSNIPER_TTL_MS = 7 * 24 * 3600_000;      // a book is fetched at most once a week
+const COMPSNIPER_RETRY_MS = 60 * 60_000;          // after a failure, wait an hour
+const COMPSNIPER_PENDING_MS = 2 * 60_000;         // another request is already fetching this book
+
+/**
+ * Fills one book's sold history from CompSniper (needs COMPSNIPER_API_KEY). Stored as confirmed sales in sniper_sales,
+ * so the chart, the sales list and the stats pick them up with no other change. Safe to call on every detail open:
+ * the fetch log keeps it to one call per book per week.
+ */
+export async function refreshCompSniper(series: string, issue: string): Promise<{ state: string; sales?: number }> {
+  const apiKey = process.env.COMPSNIPER_API_KEY;
+  if (!apiKey) return { state: "no key" };
+  const db: any = createAdminServerClient();
+  const key = `compsniper:${seriesKey(series, issue)}`;
+  const now = Date.now();
+
+  const { data: prev } = await db.from("sniper_vendor_fetch").select("fetched_at,status").eq("key", key).maybeSingle();
+  if (prev) {
+    const age = now - new Date(prev.fetched_at).getTime();
+    if (prev.status === "ok" && age < COMPSNIPER_TTL_MS) return { state: "fresh" };
+    if (prev.status === "pending" && age < COMPSNIPER_PENDING_MS) return { state: "pending" };
+    if (prev.status === "failed" && age < COMPSNIPER_RETRY_MS) return { state: "backoff" };
+  }
+  await db.from("sniper_vendor_fetch").upsert({ key, fetched_at: new Date(now).toISOString(), status: "pending", items: 0, sales: 0 });
+
+  try {
+    const r = await fetchCompSniper(series, issue, { apiKey, fetchFn: fetch, parse: parseAndFilterListing as any, keyOf: seriesKey });
+    if (r.status < 200 || r.status >= 300) {
+      await db.from("sniper_vendor_fetch").upsert({ key, fetched_at: new Date().toISOString(), status: "failed", http_status: r.status, items: 0, sales: 0 });
+      return { state: `failed(${r.status})` };
+    }
+    let written = 0;
+    for (const part of chunk(r.rows, 100)) {
+      const { error } = await db.from("sniper_sales").upsert(part, { onConflict: "id", ignoreDuplicates: true });
+      if (!error) written += part.length;
+    }
+    await db.from("sniper_vendor_fetch").upsert({ key, fetched_at: new Date().toISOString(), status: "ok", http_status: r.status, items: r.totalItems, sales: written });
+    return { state: "ok", sales: written };
+  } catch (e) {
+    await db.from("sniper_vendor_fetch").upsert({ key, fetched_at: new Date().toISOString(), status: "failed", items: 0, sales: 0 });
+    return { state: `failed(${(e as Error).message.slice(0, 40)})` };
   }
 }
 
