@@ -31,7 +31,7 @@ export function writeupKey(l: WriteupListing): string {
     .replace(/\b(?:cgc|cbcs|pgx|egs|psa)\b/g, " ").replace(/\b(?:universal|signature series|qualified|restored)\b/g, " ")
     .replace(/\b(?:10|9\.[0-9]|[0-8]\.[0-9]|[0-9]\.[0-9])\b/g, " ").replace(/\b\d{7,12}\b/g, " ")
     .replace(/[^a-z0-9#]+/g, " ").replace(/\s+/g, " ").trim();
-  return createHash("sha256").update(`${edition}|${(l.publisher || "").toLowerCase()}|${l.year ?? ""}`).digest("hex").slice(0, 40);
+  return createHash("sha256").update(edition).digest("hex").slice(0, 40);
 }
 
 export function writeupPrompt(l: WriteupListing, today = new Date().toISOString().slice(0, 10)): string {
@@ -97,6 +97,17 @@ export function attachRefs<T extends { synopsis: { intro: string; points: any[] 
   return { parsed: result, sources: used.map((c) => rawSources[c]).slice(0, 10) };
 }
 
+/** What the database already holds for this edition. Never calls Gemini, so it is as fast as a table read. */
+export async function readCachedWriteup(l: WriteupListing): Promise<{ writeup: ListingWriteup | null; failedRecently: boolean }> {
+  if (!l.title.trim()) return { writeup: null, failedRecently: false };
+  try {
+    const db: any = createAdminServerClient();
+    const { data } = await db.from("sniper_listing_writeup").select("content,failed_at,written_at").eq("key", writeupKey(l)).maybeSingle();
+    if (data?.content && Date.now() - new Date(data.written_at).getTime() < TTL_MS) return { writeup: data.content as ListingWriteup, failedRecently: false };
+    return { writeup: null, failedRecently: Boolean(data?.failed_at && Date.now() - new Date(data.failed_at).getTime() < FAIL_TTL_MS) };
+  } catch { return { writeup: null, failedRecently: false }; }
+}
+
 export async function makeListingWriteup(l: WriteupListing): Promise<ListingWriteup | null> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey || !l.title.trim()) return null;
@@ -129,4 +140,47 @@ export async function makeListingWriteup(l: WriteupListing): Promise<ListingWrit
   if (pending.size > 100) pending.delete(pending.keys().next().value!);
   work.finally(() => pending.delete(key)).catch(() => {});
   return work;
+}
+
+/**
+ * Writes the research for the slabs now on the board before anyone opens them, so opening a lot is a table read.
+ * Soonest-closing lots first; one write-up per edition however many copies are listed.
+ */
+export async function prepareWriteups(opts: { budgetMs?: number; maxNew?: number; concurrency?: number } = {}): Promise<{ checked: number; written: number; failed: number }> {
+  const { budgetMs = 150_000, maxNew = 25, concurrency = 5 } = opts;
+  const out = { checked: 0, written: 0, failed: 0 };
+  if (!process.env.GEMINI_API_KEY) return out;
+  const started = Date.now();
+  const db: any = createAdminServerClient();
+  const { data: rows } = await db.from("sniper_listings")
+    .select("title,series,issue,pub_year,publisher,grader")
+    .eq("status", "live").not("grader", "is", null).gt("end_time", new Date().toISOString())
+    .order("end_time", { ascending: true }).limit(400);
+  const byKey = new Map<string, WriteupListing>();
+  for (const r of rows ?? []) {
+    if (!r.title) continue;
+    const l: WriteupListing = { title: r.title, series: r.series, issue: r.issue, year: r.pub_year, publisher: r.publisher, grader: r.grader };
+    const k = writeupKey(l);
+    if (!byKey.has(k)) byKey.set(k, l);
+  }
+  out.checked = byKey.size;
+  const keys = Array.from(byKey.keys());
+  const done = new Set<string>();
+  for (let i = 0; i < keys.length; i += 100) {
+    const { data } = await db.from("sniper_listing_writeup").select("key,content,written_at,failed_at").in("key", keys.slice(i, i + 100));
+    for (const r of data ?? []) {
+      const fresh = r.content && Date.now() - new Date(r.written_at).getTime() < TTL_MS;
+      const failed = !r.content && r.failed_at && Date.now() - new Date(r.failed_at).getTime() < FAIL_TTL_MS;
+      if (fresh || failed) done.add(r.key);
+    }
+  }
+  const todo = keys.filter((k) => !done.has(k)).slice(0, maxNew).map((k) => byKey.get(k)!);
+  let next = 0;
+  await Promise.all(Array.from({ length: Math.min(concurrency, todo.length) }, async () => {
+    while (next < todo.length && Date.now() - started < budgetMs - 50_000) { // leave room for the last call to finish
+      const l = todo[next++];
+      (await makeListingWriteup(l)) ? out.written++ : out.failed++;
+    }
+  }));
+  return out;
 }

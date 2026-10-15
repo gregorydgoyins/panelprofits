@@ -6,6 +6,7 @@ describe("listing write-up", () => {
     const b = writeupKey({ title: "Spider-Gwen Ghost-Spider #1 CGC 9.6 J Scott Campbell SDCC 2024 EXL 4455667788" });
     expect(a).toBe(b);
     expect(writeupKey({ title: "Spider-Gwen Ghost-Spider #1 CGC 9.8" })).not.toBe(a);
+    expect(writeupKey({ title: "Spider-Gwen Ghost-Spider # 1 CGC 9.8 J Scott Campbell SDCC 2024 EXL", publisher: "Marvel", year: 2018 })).toBe(a);
   });
   it("asks about the exact listing and demands sourced facts", () => {
     const p = writeupPrompt({ title: "Edge of Venomverse #1 Comics Elite Roberto Poggi Variant" }, "2026-10-15");

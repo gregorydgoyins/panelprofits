@@ -17,14 +17,19 @@ export function SniperListingResearch(p: Props) {
   const [writeup, setWriteup] = useState<ListingWriteup | null | undefined>(undefined);
   const [showBrief, setShowBrief] = useState(false);
   useEffect(() => {
-    let live = true;
+    let live = true, timer: ReturnType<typeof setTimeout> | undefined, tries = 0;
     setWriteup(undefined); setShowBrief(false);
     const q = new URLSearchParams({ title: p.listingTitle, series: p.series, issue: p.issueNumber });
     if (p.year) q.set("year", String(p.year));
     if (p.publisher) q.set("publisher", p.publisher);
     if (p.grader) q.set("grader", p.grader);
-    fetch(`/api/sniper/listing-writeup?${q}`).then(r => r.ok ? r.json() : Promise.reject()).then(j => { if (live) setWriteup(j.writeup ?? null); }).catch(() => { if (live) setWriteup(null); });
-    return () => { live = false; };
+    const load = () => fetch(`/api/sniper/listing-writeup?${q}`).then(r => r.ok ? r.json() : Promise.reject()).then(j => {
+      if (!live) return;
+      if (j.state === "pending" && ++tries < 14) { timer = setTimeout(load, 5000); return; } // saved write-up not ready yet: it is being written, ask again
+      setWriteup(j.writeup ?? null);
+    }).catch(() => { if (live) setWriteup(null); });
+    load();
+    return () => { live = false; if (timer) clearTimeout(timer); };
   }, [p.listingTitle, p.series, p.issueNumber, p.year, p.publisher, p.grader]);
 
   const brief = <SniperResearchBrief series={p.series} issueNumber={p.issueNumber} year={p.year} publisher={p.publisher} editionVerified={p.editionVerified} listingTitle={p.listingTitle} grader={p.grader} grade={p.grade} />;
