@@ -78,7 +78,7 @@ export function LotMarketChart({ series, issue, grade, itemId, ticker, currentBi
     if (grader) q.set("grader", grader);
     if (pick != null) q.set("grade", String(pick));
     if (itemId) q.set("item", itemId);
-    fetch(`/api/sniper/candles?${q}`)
+    fetch(`/api/sniper/candles?${q}`, { signal: AbortSignal.timeout(35000) })
       .then((r) => (r.ok ? r.json() : null))
       .then((j) => { if (live) {
         if (j?.success && pick === grade && j.stats?.n === 0 && j.grades?.length > 0 && grade != null) {
@@ -154,8 +154,8 @@ export function LotMarketChart({ series, issue, grade, itemId, ticker, currentBi
         </>
       ) : (
         <div className="p-4 text-center text-xs font-mono text-slate-400 bg-black/40 rounded-lg border border-slate-800 space-y-1">
-          <div>No exact chart matches in the saved records for this book{pick != null ? ` at ${pick.toFixed(1)}` : ""} yet.</div>
-          <div className="text-slate-500">{data?.note ?? "Other covers, grades and raw copies may be present in the completed-sale records below."}</div>
+          <div>{!data ? "Completed sales could not be loaded. Close and reopen this research view to retry." : `No exact chart matches in the saved records for this book${pick != null ? ` at ${pick.toFixed(1)}` : ""} yet.`}</div>
+          <div className="text-slate-500">{data?.note ?? (data ? "Other covers, grades and raw copies may be present in the completed-sale records below." : "A failed request does not mean there were no completed sales.")}</div>
         </div>
       )}
 
