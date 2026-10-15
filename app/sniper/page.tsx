@@ -247,7 +247,7 @@ export default function SniperRadarPage() {
       });
       const data = await res.json();
       if (data.success && Array.isArray(data.auctions)) {
-        setAuctionsList(new URLSearchParams(window.location.search).get("beta") === "research" ? data.auctions.filter((a: RawAuctionListing) => ["237113700303", "800784650134"].some(id => a.id.includes(id))) : data.auctions);
+        setAuctionsList(data.auctions);
         setLastRefreshedAt(new Date().toLocaleTimeString());
         if (data.source) setLiveStreamSource(data.source);
         setDataAsOf(data.dataAsOf ?? null);
