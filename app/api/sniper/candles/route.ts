@@ -52,7 +52,7 @@ export async function GET(request: Request) {
     excludedBidObservations,
     ebay: { available: ebay.available, stage: ebay.stage, status: ebay.status, code: ebay.code, message: ebay.message, checkedAt: ebay.checkedAt, provider: ebay.provider, hasMore: ebay.hasMore },
     note: atGrade.length === 0
-      ? `No confirmed sales for this book at this grade. ${ebay.available ? "eBay returned no matching sales." : `eBay sold-history access: ${ebay.message}`}`
+      ? `No confirmed sales for this book at this grade. ${ebay.available ? `CompSniper returned ${ebay.total} single-unit records, but none matched the selected comic, grader, grade and edition filters. Other records are available in the complete ledger.` : `eBay sold-history access: ${ebay.message}`}`
       : undefined,
   });
 }

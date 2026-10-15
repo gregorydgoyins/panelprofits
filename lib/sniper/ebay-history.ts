@@ -2,7 +2,7 @@ import { createAdminServerClient } from "@/lib/supabase/admin";
 import { searchEbaySold, type EbaySoldResult } from "./ebay-sold";
 
 export interface EbayHistoryResult extends EbaySoldResult { provider: string; rawRecords?: Record<string, any>[]; hasMore?: boolean }
-const cache = new Map<string, Promise<EbayHistoryResult>>();
+const cache = new Map<string, { at: number; result: Promise<EbayHistoryResult> }>();
 export function historyQueryKey(query: string) {
   return query.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 }
@@ -11,9 +11,9 @@ export function historyQueryKey(query: string) {
 export async function readCompletedEbaySales(query: string): Promise<EbayHistoryResult> {
   const queryKey = historyQueryKey(query);
   const hit = cache.get(queryKey);
-  if (hit) return hit;
+  if (hit && Date.now() - hit.at < 60000) return hit.result;
   const result = readSavedOrFetch(query, queryKey);
-  cache.set(queryKey, result);
+  cache.set(queryKey, { at: Date.now(), result });
   if (cache.size > 100) cache.delete(cache.keys().next().value!);
   const value = await result;
   if (!value.available) cache.delete(queryKey);

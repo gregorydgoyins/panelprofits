@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { CompletedSalesRecords } from "./CompletedSalesRecords";
 import { marketBrief } from "@/lib/sniper/market-brief";
 import { TradingViewChart } from "@/components/charts/tradingview-chart";
 
@@ -153,12 +154,12 @@ export function LotMarketChart({ series, issue, grade, itemId, ticker, currentBi
         </>
       ) : (
         <div className="p-4 text-center text-xs font-mono text-slate-400 bg-black/40 rounded-lg border border-slate-800 space-y-1">
-          <div>No recorded sales for this book{pick != null ? ` at ${pick.toFixed(1)}` : ""} yet.</div>
-          <div className="text-slate-500">{data?.note ?? "Every auction the tracker watches close is recorded; the chart fills in from there."}</div>
+          <div>No exact chart matches in the saved records for this book{pick != null ? ` at ${pick.toFixed(1)}` : ""} yet.</div>
+          <div className="text-slate-500">{data?.note ?? "Other covers, grades and raw copies may be present in the completed-sale records below."}</div>
         </div>
       )}
 
-      {data?.ebay?.available && <p className="text-[10px] leading-4 text-slate-500">History saved {data.ebay.checkedAt?.slice(0, 10)}. {data.ebay.hasMore ? "This is the first page of up to 50 search matches; more history exists. Comic, grader and grade checks determine the sales shown." : "All matching sales in the returned page are available below."}</p>}
+      {data?.ebay?.available && <p className="text-[10px] leading-4 text-slate-500">History saved {data.ebay.checkedAt?.slice(0, 10)}. {data.ebay.hasMore ? "Additional provider history remains beyond the retrieved pages." : "All available pages in the requested history window were retrieved."} The chart filters by comic, grader, grade and selected edition terms.</p>}
       {data?.ebay && !data.ebay.available && candles.length > 0 && (
         <div className="text-[10px] font-mono text-amber-300/80">eBay sold history unavailable: {data.ebay.message} Displaying confirmed sales from the listed sources.</div>
       )}
@@ -189,6 +190,7 @@ export function LotMarketChart({ series, issue, grade, itemId, ticker, currentBi
           {data.sales.length > 10 && <button onClick={() => setShowAllSales(v => !v)} className="mt-2 text-xs text-cyan-300 underline underline-offset-4">{showAllSales ? "Show latest 10" : `Show all ${data.sales.length} completed sales in this sample`}</button>}
         </div>
       )}
+      <CompletedSalesRecords series={series} issue={issue} />
     </div>
   );
 }
