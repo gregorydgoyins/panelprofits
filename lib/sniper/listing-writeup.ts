@@ -80,7 +80,7 @@ const norm = (t: string) => t.toLowerCase().replace(/\\"/g, '"').replace(/[^a-z0
 /** Attach to each point the sources Gemini says back that sentence, and renumber the shared source list. */
 export function attachRefs<T extends { synopsis: { intro: string; points: any[] }; investment: { points: any[] } }>(parsed: T, rawSources: Array<{ title: string; uri: string }>, supports: Support[]): { parsed: T; sources: Array<{ title: string; uri: string }> } {
   const used: number[] = [];
-  const slot = (chunk: number) => { if (!rawSources[chunk]?.uri) return -1; let i = used.indexOf(chunk); if (i < 0) { used.push(chunk); i = used.length - 1; } return i; };
+  const slot = (chunk: number) => { if (!rawSources[chunk]?.uri) return -1; let i = used.indexOf(chunk); if (i < 0) { if (used.length >= 10) return -1; used.push(chunk); i = used.length - 1; } return i; };
   const refsFor = (text: string) => {
     const t = norm(text), out: number[] = [];
     for (const s of supports) {
@@ -128,11 +128,12 @@ export async function makeListingWriteup(l: WriteupListing): Promise<ListingWrit
       if (!rawSources.some((s) => s.uri)) throw new Error("no grounding sources");
       const { parsed, sources } = attachRefs(writeupSchema.parse(parseJson(text)), rawSources, supports);
       const content: ListingWriteup = { ...parsed, sources, model: MODEL, writtenAt: new Date().toISOString() };
-      await db.from("sniper_listing_writeup").upsert({ key, title: l.title.slice(0, 300), content, written_at: content.writtenAt, failed_at: null }).then(() => {}, () => {});
+      const { error } = await db.from("sniper_listing_writeup").upsert({ key, title: l.title.slice(0, 300), content, written_at: content.writtenAt, failed_at: null });
+      if (error) throw new Error(`writeup persistence failed: ${error.message}`);
       return content;
     } catch (error) {
       console.warn("Sniper listing write-up unavailable:", error instanceof Error ? error.message.slice(0, 300) : "error");
-      await db.from("sniper_listing_writeup").upsert({ key, title: l.title.slice(0, 300), content: null, failed_at: new Date().toISOString() }).then(() => {}, () => {});
+      await db.from("sniper_listing_writeup").upsert({ key, title: l.title.slice(0, 300), failed_at: new Date().toISOString() }).then(() => {}, () => {});
       return null;
     }
   })();

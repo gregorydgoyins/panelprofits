@@ -29,4 +29,15 @@ describe("listing write-up", () => {
     expect(out.parsed.investment.points[1].refs).toEqual([]);
     expect(out.sources.map((s: { uri: string }) => s.uri)).toEqual(["https://a", "https://b"]);
   });
+  it("keeps every citation inside the displayed source list", () => {
+    const sources = Array.from({ length: 12 }, (_, i) => ({ title: `Source ${i}`, uri: `https://example.org/${i}` }));
+    const text = "This exact edition has a documented convention release.";
+    const parsed = { synopsis: { intro: text, points: [{ label: "Release", text }] }, investment: { points: [{ label: "Edition", text }] } };
+    const result = attachRefs(parsed, sources, [{ text, chunks: sources.map((_, i) => i) }]);
+    expect(result.sources).toHaveLength(10);
+    for (const point of [...result.parsed.synopsis.points, ...result.parsed.investment.points]) {
+      for (const ref of (point as { refs?: number[] }).refs ?? []) expect(result.sources[ref]).toBeDefined();
+    }
+  });
+
 });

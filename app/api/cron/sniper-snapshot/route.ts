@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
   try {
     const result = await runSnapshot({ force });
     // After the snapshot is answered, write the research for the slabs now listed so opening a lot is a table read.
-    if (!result.skipped) after(() => prepareWriteups().catch((e) => console.warn("[sniper] write-up prep failed:", (e as Error).message)));
+    after(() => prepareWriteups().catch((e) => console.warn("[sniper] write-up prep failed:", (e as Error).message)));
     return NextResponse.json({ ok: true, ...result });
   } catch (e) {
     return NextResponse.json({ ok: false, error: (e as Error).message }, { status: 500 });
