@@ -350,6 +350,11 @@ export async function refreshCompSniper(series: string, issue: string): Promise<
   const key = `compsniper:${seriesKey(series, issue)}`;
   const now = Date.now();
 
+  // If CompSniper refused the key itself (out of requests, bad or blocked key), stop calling for 24 hours for every book.
+  const keyRow = "compsniper:__key";
+  const { data: blocked } = await db.from("sniper_vendor_fetch").select("fetched_at,status").eq("key", keyRow).maybeSingle();
+  if (blocked?.status === "blocked" && now - new Date(blocked.fetched_at).getTime() < 24 * 3600_000) return { state: "blocked" };
+
   const { data: prev } = await db.from("sniper_vendor_fetch").select("fetched_at,status").eq("key", key).maybeSingle();
   if (prev) {
     const age = now - new Date(prev.fetched_at).getTime();
@@ -362,6 +367,9 @@ export async function refreshCompSniper(series: string, issue: string): Promise<
   try {
     const r = await fetchCompSniper(series, issue, { apiKey, fetchFn: fetch, parse: parseAndFilterListing as any, keyOf: seriesKey });
     if (r.status < 200 || r.status >= 300) {
+      if ([401, 402, 403, 429].includes(r.status)) {
+        await db.from("sniper_vendor_fetch").upsert({ key: keyRow, fetched_at: new Date().toISOString(), status: "blocked", http_status: r.status, items: 0, sales: 0 });
+      }
       await db.from("sniper_vendor_fetch").upsert({ key, fetched_at: new Date().toISOString(), status: "failed", http_status: r.status, items: 0, sales: 0 });
       return { state: `failed(${r.status})` };
     }
