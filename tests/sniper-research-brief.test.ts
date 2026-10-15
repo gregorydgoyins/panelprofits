@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { marketBrief } from "@/lib/sniper/market-brief";
-import { briefPrompt, briefSchema, groundedBrief } from "@/lib/sniper/research-brief";
-import { lensLessons } from "@/lib/sniper/research-lessons";
+import { briefPrompt, briefSchema, groundedBrief, lessonClaims } from "@/lib/sniper/research-brief";
 const input = { listingGrade: 9.8, chartGrade: 9.8, count: 3, median: 100, low: 80, high: 120, latest: { price: 100, date: "2026-10-14" }, allInCost: 110 };
 describe("evidence-based investor brief", () => {
   it("does not value a listing using another grade", () => {
@@ -30,21 +29,18 @@ describe("evidence-based investor brief", () => {
     const result = groundedBrief({ series: "Amazing Spider-Man", issueNumber: "300", year: 1988, publisher: "Marvel" }, summary, { intro: "Wrong debut claim", sections: [], lessons: [{ heading: "Cover", text: "This rare limited print run of 2,200 copies is a homage" }, { heading: "B", text: "second lesson text here" }] });
     expect(result.intro).toContain("interior art by Todd McFarlane");
     expect(JSON.stringify(result.lessons)).not.toContain("2,200");
-    expect(result.lessons).toHaveLength(3);
+    expect(result.lessons).toHaveLength(0);
     expect(result.intro).not.toContain("debut");
   });
-  it("keeps lessons the evidence supports and picks a different angle per book", () => {
-    const mk = (names: string[]) => ({ text: "plot", storyTitle: null, source: "x", sourceUrl: "x", license: null, entities: { featuredCharacters: names.map((n) => ({ label: n, target: n, url: "" })) } }) as any;
-    const solo = lensLessons(mk(["Beast"]), { title: "X-Men #1 CGC 9.8", grader: "CGC", grade: 9.8 });
-    const duo = lensLessons(mk(["Green Arrow", "Green Lantern"]), { title: "Green Lantern 76 CGC 9.8 SDCC EXL", grader: "CGC", grade: 9.8 });
-    const team = lensLessons(mk(["Cyclops", "Storm", "Wolverine"]), { title: "Uncanny X-Men 1 2nd print", grader: "CGC", grade: 9.8 });
-    expect(solo[0].heading).toContain("Beast");
-    expect(duo[0].heading).toContain("Green Arrow and Green Lantern");
-    expect(duo[1].text).toContain("convention-exclusive wording");
-    expect(new Set([solo[0].heading, duo[0].heading, team[0].heading]).size).toBe(3);
-    expect(team[2].heading).toContain("reprint");
-    const kept = groundedBrief({ series: "Spider-Gwen", issueNumber: "1", year: null, publisher: null }, mk(["Gwen Stacy"]), { intro: "x".repeat(30), sections: [], lessons: [{ heading: "A", text: "Gwen anchors this relaunch." }, { heading: "B", text: "Check the SDCC cover credit." }] }, { title: "Spider-Gwen 1 SDCC EXL" });
+  it("keeps lessons the evidence supports and drops ones it cannot", () => {
+    const sum = { text: "Gwen moves to Manhattan under TVA orders.", storyTitle: null, source: "x", sourceUrl: "x", license: null } as any;
+    const input = { series: "Spider-Gwen", issueNumber: "1", year: null, publisher: null };
+    const mk = (lessons: any[]) => ({ intro: "x".repeat(30), sections: [], lessons });
+    const kept = groundedBrief(input, sum, mk([{ heading: "A", text: "Gwen hiding from the TVA is the hook." }, { heading: "B", text: "The title says SDCC EXL; verify the cover." }]), { title: "Spider-Gwen 1 SDCC EXL" });
     expect(kept.lessons).toHaveLength(2);
+    const dropped = groundedBrief(input, sum, mk([{ heading: "A", text: "A rare print run of 2,200." }, { heading: "B", text: "Nothing else here." }]), { title: "Spider-Gwen 1" });
+    expect(dropped.lessons).toHaveLength(0);
+    expect(lessonClaims(mk([{ heading: "A", text: "Limited exclusive homage" }]) as any, sum, { title: "Spider-Gwen 1" }).length).toBeGreaterThan(0);
   });
   it("requires grounded plot, excludes fabricated prices and speculation", () => {
     const prompt = briefPrompt({ series: "Strange Academy", issueNumber: "14", year: 2021, publisher: "Marvel" }, { text: "Doyle sees a future confrontation.", storyTitle: null, source: "Marvel", sourceUrl: "https://www.marvel.com", license: null });

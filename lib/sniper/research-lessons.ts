@@ -27,8 +27,6 @@ export function editionSignals(title?: string | null): string[] {
   return out;
 }
 
-const THIN_MARKET = new Set(["convention-exclusive wording", "exclusive wording", "ratio/incentive wording", "virgin cover wording", "sketch cover wording", "signature wording", "retailer-variant wording", "special-finish wording", "Canadian price variant wording"]);
-
 export type Lens = "debut" | "solo" | "pairing" | "team" | "none";
 export function thesisLens(summary: StorySummary): { lens: Lens; names: string[] } {
   const uniq = (xs?: Array<{ label: string }>) => Array.from(new Set((xs ?? []).map((x) => x.label.replace(/\s*\([^)]*\)\s*$/, "").trim()).filter(Boolean)));
@@ -39,37 +37,6 @@ export function thesisLens(summary: StorySummary): { lens: Lens; names: string[]
   if (featured.length === 2) return { lens: "pairing", names: featured };
   if (featured.length >= 3) return { lens: "team", names: featured.slice(0, 4) };
   return { lens: "none", names: [] };
-}
-
-const list = (xs: string[]) => (xs.length <= 1 ? xs[0] ?? "" : `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}`);
-
-/** Plain-language lessons built only from the sourced story and the listing wording. Used when the live write-up is unavailable or fails the evidence check. */
-export function lensLessons(summary: StorySummary, listing: ListingFacts = {}): Array<{ heading: string; text: string }> {
-  const { lens, names } = thesisLens(summary);
-  const n = list(names);
-  const signals = editionSignals(listing.title);
-  const thin = signals.some((s) => THIN_MARKET.has(s));
-  const reprint = signals.some((s) => /reprint|later-printing/.test(s));
-  const slab = [listing.grader, listing.grade != null ? String(listing.grade) : ""].filter(Boolean).join(" ") || "this grade";
-
-  const thesis =
-    lens === "debut" ? { heading: `Decide whether the ${n} debut is a lasting draw`, text: `The sourced record lists ${n} as first appearing in this issue. A debut only carries a premium if the character stays in print and collectors keep asking for it, so look at whether ${n} returns in later books before paying for the debut itself.` }
-    : lens === "solo" ? { heading: `${n} is a one-character thesis`, text: `This issue is built around ${n} alone, so demand comes from ${n} collectors, not from a team or crossover audience. Check whether ${n} leads an ongoing book or only guests here, and whether the other ${n} issues you would hold instead trade at a similar level.` }
-    : lens === "pairing" ? { heading: `Buy the ${names[0]} and ${names[1]} pairing, not one half of it`, text: `${names[0]} and ${names[1]} share this story, which makes it a pair-collector book. Duo collectors want covers and issues where both appear, so compare it against other issues that put them together and against each character's solo books; a pairing issue can sit above or below both.` }
-    : lens === "team" ? { heading: `Know which lineup you are paying for`, text: `${n} appear together here, so this is an ensemble book. Team collectors chase specific lineups, creative runs and landmark issues; work out which of those is the draw before treating a team title as a key.` }
-    : { heading: "Find the reason anyone wants this book", text: "The sourced record names no featured character for this issue, so demand cannot be tied to a character. Establish the draw (a creator, a run, a cover) before assuming a market exists." };
-
-  const edition = signals.length
-    ? { heading: "The title claims a specific edition; prove it", text: `The listing title shows ${list(signals)}. That is the seller's wording, not a verified printing. Match it to the cover on the slab label and photos, then compare only against completed sales that carry the same wording at ${slab}; a different cover or printing is a different book for pricing.` }
-    : { heading: "No variant wording: treat it as the standard cover", text: `The listing title carries no variant or printing wording, so price it against the standard cover at ${slab} unless the photographed cover shows otherwise. Cover credit and interior art are separate credits, so confirm the cover before comparing.` };
-
-  const cheap = reprint
-    ? { heading: "A low price may only reflect a reprint", text: "Later printings and reprints sell for a fraction of first printings. Before calling this cheap, confirm the printing on the label; if it is a reprint, compare it only to reprint sales." }
-    : thin
-      ? { heading: "Thin markets make cheap hard to prove", text: `Special and limited covers trade rarely, so a few sales can give a misleading price at ${slab}. Treat a low ask as cheap only if several recent completed sales of this exact edition and grade support it; with one or two, price in the risk that you may wait to resell.` }
-      : { heading: "Cheap means below recent completed sales, after all costs", text: `A standard-cover book at ${slab} usually has more completed sales to check against. Call it cheap only if the all-in cost (price, shipping, tax, fees on resale) still sits below the middle of recent same-grade sales, and discard sales that are old or from a different edition.` };
-
-  return [thesis, edition, cheap];
 }
 
 const CLAIM_TERMS: Array<[RegExp, RegExp]> = [
