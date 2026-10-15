@@ -249,8 +249,8 @@ export async function getLearningCatalog() {
   try {
     const db = createAdminServerClient();
     const [{ data: courses }, { data: certs }] = await Promise.all([
-      db.from("certification_courses").select("course_id,course_name,level").limit(80),
-      db.from("certifications_master").select("cert_id,cert_name,authority,track,difficulty_level").limit(80),
+      db.from("certification_courses").select("course_id,course_name,level").order("course_id").limit(1000),
+      db.from("certifications_master").select("cert_id,cert_name,authority,track,difficulty_level").order("cert_id").limit(1000),
     ]);
     return {
       classes: (courses || []).map((c) => ({ id: c.course_id, name: c.course_name, level: c.level })),

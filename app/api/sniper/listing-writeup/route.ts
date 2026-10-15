@@ -1,4 +1,4 @@
-import { readLocalLotResearch } from "@/lib/sniper/local-research";
+import { readSavedLotResearch } from "@/lib/sniper/local-research";
 import { readSavedStorySummary } from "@/lib/comics/story-summary";
 import { readCachedWriteup } from "@/lib/sniper/listing-writeup";
 export const runtime = "nodejs";
@@ -13,7 +13,7 @@ export async function GET(request: Request) {
   const itemId = p.get("itemId")?.slice(0, 240);
   const [{ writeup, failedRecently }, localResult, savedStory] = await Promise.all([
     readCachedWriteup(listing),
-    itemId ? readLocalLotResearch(itemId).then(value => ({ value, error: false })).catch(() => ({ value: null, error: true })) : Promise.resolve({ value: null, error: false }),
+    itemId ? readSavedLotResearch(itemId).then(value => ({ value, error: false })).catch(() => ({ value: null, error: true })) : Promise.resolve({ value: null, error: false }),
     itemId ? Promise.resolve(null) : readSavedStorySummary({ series: listing.series || "", issueNumber: listing.issue || "", year: listing.year, publisher: listing.publisher || null }),
   ]);
   const localResearch = localResult.value;

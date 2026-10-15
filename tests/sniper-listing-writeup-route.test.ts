@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const cached = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/sniper/listing-writeup", () => ({ readCachedWriteup: cached }));
 vi.mock("@/lib/comics/story-summary", () => ({ readSavedStorySummary: vi.fn().mockResolvedValue(null) }));
-vi.mock("@/lib/sniper/local-research", () => ({ readLocalLotResearch: vi.fn().mockResolvedValue(null) }));
+vi.mock("@/lib/sniper/local-research", () => ({ readSavedLotResearch: vi.fn().mockResolvedValue(null) }));
 import { GET } from "@/app/api/sniper/listing-writeup/route";
 
 describe("saved listing research endpoint", () => {

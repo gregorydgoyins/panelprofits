@@ -582,7 +582,7 @@ export async function readSavedStorySummary(input: StorySummaryInput): Promise<S
   if (error || !data?.summary) return null;
   try {
     const parsed = JSON.parse(data.summary);
-    if (typeof parsed.text !== "string" || !parsed.text.trim() || /^\s*\|/.test(parsed.text)) return null;
+    if (typeof parsed.text !== "string" || !parsed.text.trim() || /^\s*\|/.test(parsed.text) || /(?:^|\n)\s*\|\s*[A-Za-z][A-Za-z0-9 ]*\s*=/.test(parsed.text)) return null;
     return { ...parsed, source: data.source, sourceUrl: data.source_url, license: data.license };
   } catch { return null; }
 }

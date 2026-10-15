@@ -1,5 +1,5 @@
 import { after, NextRequest, NextResponse } from "next/server";
-import { prepareWriteups } from "@/lib/sniper/listing-writeup";
+import { auditLocalResearch } from "@/lib/sniper/local-research";
 import { runSnapshot } from "@/lib/sniper/market-store";
 
 export const runtime = "nodejs";
@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
   try {
     const result = await runSnapshot({ force });
     // After the snapshot is answered, write the research for the slabs now listed so opening a lot is a table read.
-    after(() => prepareWriteups().catch((e) => console.warn("[sniper] write-up prep failed:", (e as Error).message)));
+    after(() => auditLocalResearch().catch((e) => console.warn("[sniper] saved research enrichment failed:", (e as Error).message)));
     return NextResponse.json({ ok: true, ...result });
   } catch (e) {
     return NextResponse.json({ ok: false, error: (e as Error).message }, { status: 500 });

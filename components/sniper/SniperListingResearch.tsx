@@ -29,7 +29,7 @@ export function SniperListingResearch(p: Props) {
   const [story, setStory] = useState<StorySummary | null>(null);
   const [writeup, setWriteup] = useState<ListingWriteup | null | undefined>(undefined);
   useEffect(() => {
-    let live = true, timer: ReturnType<typeof setTimeout> | undefined, tries = 0;
+    let live = true;
     setWriteup(undefined); setStory(null); setLocalResearch(null); setResearchError(null);
     const q = new URLSearchParams({ title: p.listingTitle, series: p.series, issue: p.issueNumber });
     if (p.itemId) q.set("itemId", p.itemId);
@@ -40,11 +40,10 @@ export function SniperListingResearch(p: Props) {
       if (!live) return;
       setStory(j.story ?? null);
       setLocalResearch(j.localResearch ?? null); setResearchError(j.researchError ?? null);
-      if (!j.story && !j.localResearch && !j.researchError && j.state === "pending" && ++tries < 14) { timer = setTimeout(load, 5000); return; } // saved write-up not ready yet: it is being written, ask again
       setWriteup(j.writeup ?? null);
     }).catch(() => { if (live) setWriteup(null); });
     load();
-    return () => { live = false; if (timer) clearTimeout(timer); };
+    return () => { live = false; };
   }, [p.itemId, p.listingTitle, p.series, p.issueNumber, p.year, p.publisher, p.grader]);
 
   const evidence = <>
@@ -52,7 +51,7 @@ export function SniperListingResearch(p: Props) {
     {localResearch && <section className="space-y-3 border-b border-slate-800 pb-4 text-sm">
       <h3 className="font-semibold text-white">Stored census &amp; price comparisons</h3>
       {localResearch.census && <p className="text-slate-300">Graded population: <strong>{localResearch.census.total.toLocaleString()}</strong> across label types{localResearch.census.atGrade != null ? ` · ${localResearch.census.atGrade.toLocaleString()} at this grade` : ""}. Issue: {localResearch.census.title} #{localResearch.census.issue} ({localResearch.census.year}).</p>}
-      {localResearch.prices.length > 0 && <><p className="text-xs text-slate-400">Stored guide values for comparison; these are not confirmed same-grader sales.</p><table className="w-full text-left text-slate-300"><thead><tr><th>Grade</th><th>Guide value</th><th>Source</th></tr></thead><tbody>{localResearch.prices.map(price => <tr key={price.grade}><td>{price.grade}</td><td>{price.amount.toLocaleString("en-US", { style: "currency", currency: "USD" })}</td><td><a className="text-cyan-300 underline" href={price.url}>{price.source}</a></td></tr>)}</tbody></table></>}
+      {localResearch.prices.length > 0 && <><p className="text-xs text-slate-400">Recorded guide values and separately identified sales. Match grade, label, edition, currency, and observation date.</p><table className="w-full text-left text-slate-300"><thead><tr><th>Grade</th><th>Value</th><th>Source</th></tr></thead><tbody>{localResearch.prices.map((price, i) => <tr key={`${price.source}-${price.grade}-${i}`}><td>{price.grade}</td><td>{price.amount.toLocaleString("en-US", { style: "currency", currency: price.currency || "USD" })}</td><td><a className="text-cyan-300 underline" href={price.url}>{price.source}</a>{price.observedAt && <span className="block text-xs text-slate-500">{price.observedAt}</span>}</td></tr>)}</tbody></table></>}
       {localResearch.missing.length > 0 && <p className="text-xs text-slate-500">No exact stored match: {localResearch.missing.join(", ")}.</p>}
     </section>}
   </>;
@@ -66,10 +65,11 @@ export function SniperListingResearch(p: Props) {
   if (writeup === undefined) return <p className="text-xs text-cyan-300 animate-pulse" role="status">Loading saved edition research…</p>;
   return <section className="space-y-5 text-sm text-slate-300 leading-6">
     {evidence}
-    {savedStory}
-    <div><h3 className="text-lg font-semibold text-white">Story synopsis: {writeup.edition}</h3><p className="text-xs text-slate-500 mt-1">Written for this listing from web sources · check the sources below</p></div>
+    <div className="flex flex-wrap gap-2">{Object.values(story?.entities ?? {}).flatMap(entries => entries ?? []).filter((entity, i, all) => all.findIndex(other => other.url === entity.url) === i).map(entity => <a key={entity.url} href={entity.url} className="text-cyan-300 underline underline-offset-4">{entity.label}</a>)}</div>
+    <div><h3 className="text-lg font-semibold text-white">Story synopsis: {writeup.edition}</h3><p className="text-xs text-slate-500 mt-1">Original analysis from saved source evidence · check the sources below</p></div>
     <div className="space-y-2"><p>{writeup.synopsis.intro}</p><ul className="space-y-2 list-disc pl-5">{writeup.synopsis.points.map((pt, i) => <li key={i}><strong className="text-white">{pt.label}:</strong> {pt.text}<Refs refs={pt.refs} sources={writeup.sources} /></li>)}</ul></div>
     <div className="space-y-2 pt-4 border-t border-slate-800"><h4 className="font-semibold text-emerald-300">{writeup.investment.heading}</h4><ul className="space-y-2 list-disc pl-5">{writeup.investment.points.map((pt, i) => <li key={i}><strong className="text-white">{pt.label}:</strong> {pt.text}<Refs refs={pt.refs} sources={writeup.sources} /></li>)}</ul></div>
+    <nav aria-label="Research learning links" className="space-y-2 border-t border-slate-800 pt-4"><h4 className="font-semibold text-cyan-300">Put the research into practice</h4><div className="flex flex-wrap gap-3"><a href="/learn#sniper-practice" className="text-cyan-300 underline">Practice syllabus &amp; classes</a><a href="/lexicon" className="text-cyan-300 underline">Financial dictionary</a>{localResearch?.ppcfId && <a href={`/wiki/${localResearch.ppcfId}`} className="text-cyan-300 underline">Comic source dossier</a>}</div>{writeup.learning?.map(term => <p key={term.url}><a href={term.url} className="text-cyan-300 underline">{term.term}</a> — {term.definition}</p>)}<p className="text-xs text-slate-500">Apply the evidence in paper trading. Orders use simulated funds.</p></nav>
     <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400"><span>Sources:</span>{writeup.sources.map((s, i) => <a key={i} href={s.uri} target="_blank" rel="noopener noreferrer" className="text-cyan-300 underline underline-offset-4">[{i + 1}] {s.title} ↗</a>)}</div>
   </section>;
 }

@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminServerClient } from "@/lib/supabase/admin";
-import { after } from "next/server";
-import { readSalesForBook, refreshCompSniper } from "@/lib/sniper/market-store";
+import { readSalesForBook } from "@/lib/sniper/market-store";
 import { readEbaySalesForBook } from "@/lib/sniper/ebay-sales-view";
 import { dedupeSales } from "@/lib/sniper/candles";
 
@@ -55,11 +54,7 @@ async function computeGET(request: Request) {
   // Every recorded sale for this book, from the same place the chart reads: ComicConnect sold archive, the graded-sales
   // register, stored benchmark observations, and eBay auctions we watched close (final bid, not confirmed by eBay).
   // Live asks and current bids are not sales and are not listed.
-  // Ask CompSniper for this book's completed eBay sales (once a week per book). Wait up to 8 s so the first open already
-  // shows them; if it takes longer it finishes in the background and the next open has them.
-  const refresh = refreshCompSniper(series, String(issue).replace(/^#/, "")).catch(() => ({ state: "error" }));
-  const raced = await Promise.race([refresh, new Promise<null>((r) => setTimeout(() => r(null), 8000))]);
-  if (raced === null) after(() => refresh);
+  // Opening research reads recorded evidence only. It must not buy a vendor lookup or wait for acquisition.
 
   const issueClean = String(issue).replace(/^#/, "");
   const [ebay, recorded] = await Promise.all([

@@ -1,5 +1,6 @@
 import { Award, BookOpenCheck, GraduationCap } from "lucide-react";
 import { getLearningCatalog } from "@/lib/panel-profits/queries";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +48,27 @@ export default async function LearnPage() {
           <p className="mt-1 text-xs text-slate-500">Standard examinations</p>
         </section>
       </div>
+
+      <section id="sniper-practice" className="mt-8 scroll-mt-24 border border-cyan-500/30 bg-[#0b0f15] p-6 shadow-sm">
+        <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-cyan-400">Applied market practice</p>
+        <h2 className="mt-2 text-xl font-semibold text-slate-100">From research to a paper trade</h2>
+        <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-400">Use an existing Sniper lot to test a buying thesis against recorded evidence. Complete each step before entering a simulated order. A decision to pass is a valid result.</p>
+        <ol className="mt-5 grid gap-4 md:grid-cols-2 text-sm leading-6 text-slate-300 list-decimal list-inside">
+          <li><strong className="text-white">Identify the copy.</strong> Match series, issue, year, printing, cover, grader, grade and label. Open the comic dossier and character links. Record any unresolved identity claim.</li>
+          <li><strong className="text-white">Build the collector thesis.</strong> Use the synopsis and credited creators to explain why this particular issue interests a buyer. Separate story evidence from a prediction of future demand.</li>
+          <li><strong className="text-white">Compare the evidence.</strong> Check provider, edition, grade, currency and date for each price. Distinguish a guide value, a seller’s asking price and a completed sale. Read <Link href="/lexicon/fair-market-value-fmv-benchmark" className="text-cyan-300 underline">fair market value</Link> before choosing a reference.</li>
+          <li><strong className="text-white">Interpret the census.</strong> Check the grading company and edition, then compare the relevant grade with the total. A graded population is not a print run or proof of demand. Study <Link href="/lexicon/scarcity" className="text-cyan-300 underline">scarcity</Link>.</li>
+          <li><strong className="text-white">Set the paper entry.</strong> Choose your maximum simulated price, account for the lot’s stated costs, and write the condition that would make you pass. Do not substitute another grade’s guide value for this copy’s value.</li>
+          <li><strong className="text-white">Review the outcome.</strong> Compare your thesis and limit with the recorded close when available. Explain whether identity, evidence quality or bidding changed your decision. Connect the result to <Link href="/lexicon/price-discovery" className="text-cyan-300 underline">price discovery</Link>.</li>
+        </ol>
+        <Link href="/sniper" className="mt-6 inline-block rounded border border-cyan-500/50 bg-cyan-950/40 px-4 py-2 text-sm font-semibold text-cyan-200 hover:bg-cyan-900/40">Open Sniper paper trading →</Link>
+        <p className="mt-3 text-xs text-slate-500">Practice uses simulated funds. No order is sent to a venue.</p>
+      </section>
+
+      <section className="mt-8 space-y-4">
+        <h2 className="text-lg font-semibold text-slate-100">Course catalog</h2>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{classes.map(course => <article key={course.id} id={`course-${course.id}`} className="scroll-mt-24 rounded border border-slate-800 bg-[#0b0f15] p-4"><p className="text-xs font-mono text-cyan-400">Level {course.level}</p><h3 className="mt-2 text-sm font-semibold text-slate-200">{course.name}</h3></article>)}</div>
+      </section>
 
       {/* Career Pathway Levels */}
       <section className="mt-8 border border-slate-800 bg-[#0b0f15] shadow-sm">
