@@ -12,7 +12,7 @@ import {
 import { evaluateAuctionListing } from "@/lib/sniper/radar-engine";
 import { getEraDisplayName } from "@/lib/sniper/anti-bullshit";
 import { SlabEncasement } from "@/components/sniper/SlabEncasement";
-import { SniperResearchBrief } from "@/components/sniper/SniperResearchBrief";
+import { SniperListingResearch } from "@/components/sniper/SniperListingResearch";
 import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
 import { LiveLotStrip } from "@/components/sniper/LiveLotStrip";
 import { SniperLearningPanel } from "@/components/sniper/SniperLearningPanel";
@@ -2656,13 +2656,13 @@ export default function SniperRadarPage() {
                     </div>
 
                     {/* Integrated Encyclopedic Fandom Lore Dossier */}
-                    <SniperResearchBrief
+                    <SniperListingResearch
+                      listingTitle={inspectedDeal.listing.title}
                       series={inspectedDeal.label?.title || inspectedDeal.resolvedSeries}
                       issueNumber={inspectedDeal.resolvedIssue}
                       year={inspectedDeal.resolvedYear}
                       publisher={inspectedDeal.gcdMetadata?.publisher}
                       editionVerified={Boolean(inspectedDeal.label?.title)}
-                      listingTitle={inspectedDeal.listing.title}
                       grader={inspectedDeal.gradingCompany}
                       grade={inspectedDeal.resolvedGrade}
                     />
