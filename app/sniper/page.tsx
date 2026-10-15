@@ -2650,6 +2650,7 @@ export default function SniperRadarPage() {
 
                     {/* Integrated Encyclopedic Fandom Lore Dossier */}
                     <SniperListingResearch
+                      itemId={inspectedDeal.listing.id}
                       listingTitle={inspectedDeal.listing.title}
                       series={inspectedDeal.label?.title || inspectedDeal.resolvedSeries}
                       issueNumber={inspectedDeal.resolvedIssue}
