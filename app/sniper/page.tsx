@@ -441,11 +441,8 @@ export default function SniperRadarPage() {
   >("all");
   const [showPlansModal, setShowPlansModal] = useState<boolean>(false);
   const showSalesChart = Boolean(inspectedDeal);
-  const [expandQuickResearch, setExpandQuickResearch] = useState(false);
-  useEffect(() => { setExpandQuickResearch(false); setModalPerspective("all"); }, [inspectedDeal?.listing.id]);
-  const researchSecs = inspectedDeal ? (liveAuctionTimers[inspectedDeal.listing.id] ?? inspectedDeal.listing.secondsRemaining) : 0;
-  const shortResearch = Boolean(inspectedDeal && !inspectedDeal.listing.isBuyItNow && researchSecs <= 3600);
-  const fullResearch = !shortResearch || expandQuickResearch;
+  useEffect(() => { setModalPerspective("all"); }, [inspectedDeal?.listing.id]);
+  const fullResearch = true; // every lot opens with all of its research; nothing is held back for lots about to close
 
   // Paper Snipe Orders Ledger State
   const paper = usePaperOrders();
@@ -2456,10 +2453,6 @@ export default function SniperRadarPage() {
                 </div>
               </div>
 
-              {shortResearch && <div className="rounded-lg border border-amber-500/30 bg-amber-950/20 p-3 flex items-center justify-between gap-3 text-xs">
-              <span className="text-amber-200">Closing within one hour · quick research prioritizes pricing; story, creators and glossary remain available on the right.</span>
-              <button onClick={() => setExpandQuickResearch(v => !v)} className="rounded border border-amber-400/40 px-3 py-1.5 text-amber-200 whitespace-nowrap hover:bg-amber-900/40">{expandQuickResearch ? "Compact view" : "Expand full research"}</button>
-            </div>}
             {/* Multi-Perspective Navigation Selector */}
 
               <div className="flex flex-wrap items-center gap-1.5 pt-1">
