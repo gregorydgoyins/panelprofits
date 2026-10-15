@@ -176,8 +176,8 @@ export function parseFandomWikitext(wikitext: string, host: string): Omit<StoryS
   }
 
   // Quotation & Speaker
-  const qM = wikitext.match(/\|\s*Quotation\s*=\s*([\s\S]*?)(?=\n\|)/);
-  const sM = wikitext.match(/\|\s*Speaker\s*=\s*([\s\S]*?)(?=\n\|)/);
+  const qM = wikitext.match(/\|\s*Quotation[ \t]*=[ \t]*([\s\S]*?)(?=\n\|)/);
+  const sM = wikitext.match(/\|\s*Speaker[ \t]*=[ \t]*([\s\S]*?)(?=\n\|)/);
   const quote = qM && qM[1].trim()
     ? {
         text: parseWikitextLinks(qM[1]),
@@ -190,13 +190,13 @@ export function parseFandomWikitext(wikitext: string, host: string): Omit<StoryS
   const storyTitle = tM ? tM[1].trim() : null;
 
   // Synopsis
-  const synM = wikitext.match(/\|\s*Synopsis1\s*=\s*([\s\S]*?)(?=\n\s*\|\s*[A-Za-z][A-Za-z0-9_ ]*\s*=|\n==|\n\s*\}\})/);
+  const synM = wikitext.match(/\|\s*Synopsis1[ \t]*=[ \t]*([\s\S]*?)(?=\n\s*\|\s*[A-Za-z][A-Za-z0-9_ ]*\s*=|\n==|\n\s*\}\})/);
   const rawSynopsis = synM ? synM[1].trim() : "";
   if (!rawSynopsis || rawSynopsis.length < 40) return null;
   const text = parseWikitextLinks(rawSynopsis);
 
   // Appearing
-  const appM = wikitext.match(/\|\s*Appearing1\s*=\s*([\s\S]*?)(?=\n\s*\|\s*[A-Za-z][A-Za-z0-9_ ]*\s*=|\n==|\n\s*\}\})/);
+  const appM = wikitext.match(/\|\s*Appearing1[ \t]*=[ \t]*([\s\S]*?)(?=\n\s*\|\s*[A-Za-z][A-Za-z0-9_ ]*\s*=|\n==|\n\s*\}\})/);
   const entities: NonNullable<StorySummary["entities"]> = {
     firstAppearances: [],
     featuredCharacters: [],
@@ -573,6 +573,18 @@ export function sourceStoryLinks(summary: StorySummary, existing: Set<string>): 
     }),
   ]));
   return { ...summary, entities };
+}
+
+/** Read saved issue evidence only; opening a lot never fetches sources or generates text. */
+export async function readSavedStorySummary(input: StorySummaryInput): Promise<StorySummary | null> {
+  const { data, error } = await createAdminServerClient().from("issue_story_summaries").select("summary,source,source_url,license")
+    .eq("comic_key", comicKey(researchTitle(input.series), input.issueNumber, input.year)).maybeSingle();
+  if (error || !data?.summary) return null;
+  try {
+    const parsed = JSON.parse(data.summary);
+    if (typeof parsed.text !== "string" || !parsed.text.trim() || /^\s*\|/.test(parsed.text)) return null;
+    return { ...parsed, source: data.source, sourceUrl: data.source_url, license: data.license };
+  } catch { return null; }
 }
 
 export async function getStorySummary(input: StorySummaryInput): Promise<StorySummary | null> {

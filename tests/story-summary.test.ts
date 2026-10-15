@@ -10,6 +10,7 @@ import {
   comicKey,
   sourceStoryLinks,
 } from "@/lib/comics/story-summary";
+import { researchTitle } from "@/lib/sniper/research-title";
 import { coverSourceContradictsPublisher } from "@/lib/comics/cover-trust";
 
 // Layout copied from the live Marvel Database page for Avengers Vol 5 #2 (heading/paragraph structure only).
@@ -154,5 +155,20 @@ describe("real character wiki destinations", () => {
     }, new Set(["known"]));
     expect(result.entities?.featuredCharacters?.[0].url).toBe("https://dynamiteentertainment.fandom.com/wiki/Red_Sonja_(Earth-818793)");
     expect(result.entities?.featuredCharacters?.[1].url).toBe("/wiki/entry/known");
+  });
+});
+
+
+describe("empty Fandom synopsis fields", () => {
+  it("does not consume the character list as the synopsis", () => {
+    expect(parseFandomWikitext("| Synopsis1 = \n| Appearing1 = '''Featured Characters:'''\n* [[Mace Windu]]\n* [[Yoda]]\n| Solicit = Published issue description", "marvel.fandom.com")).toBeNull();
+  });
+});
+
+
+describe("Mace Windu issue identity", () => {
+  it("matches the full 2017 series name to the census and story title", () => {
+    expect(researchTitle("Star Wars Mace Windu: Jedi of the Republic")).toBe("Star Wars: Mace Windu");
+    expect(researchTitle("Star Wars: Jedi of the Republic – Mace Windu")).toBe("Star Wars: Mace Windu");
   });
 });

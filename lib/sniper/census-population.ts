@@ -1,3 +1,4 @@
+import { researchTitle } from "./research-title";
 import { createAdminServerClient } from "@/lib/supabase/admin";
 
 /**
@@ -49,7 +50,7 @@ const NON_NUMERIC = new Set(["NG", "PG", "CVR"]);
 const gradeLabel = (k: string) => k.replace("_", ".");
 const PUBLISHER_PREFIX = /^(?:marvel(?:\s+comics)?|dc(?:\s+comics)?|image(?:\s+comics)?|dark\s+horse|idw|boom!?(?:\s+studios)?|valiant|archie|dynamite|aftershock|oni(?:\s+press)?)\s+/i;
 // Listings often put the publisher in front of the series name ("Marvel X-Factor"); CGC titles never do.
-const cleanSeries = (s: string) => s.replace(/\(\s*\d{4}\s*\)/g, "").replace(/\s+/g, " ").trim().replace(PUBLISHER_PREFIX, "");
+const cleanSeries = (s: string) => researchTitle(s).replace(/\(\s*\d{4}\s*\)/g, "").replace(/\s+/g, " ").trim().replace(PUBLISHER_PREFIX, "");
 const cleanIssue = (s: string) => String(s).replace(/^#/, "").trim();
 
 function build(row: PopRow, issue: string, grade?: number | null): GradeCensus {
