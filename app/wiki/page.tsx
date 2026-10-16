@@ -54,7 +54,7 @@ async function getFeaturedLoreEntitiesFromDb(
     reality: page.reality || undefined,
     creators: page.creators || undefined,
     first_appearance: page.first_appearance || undefined,
-    summary: page.summary || `Canonical ${page.universe} entry in Panel Profits knowledge database.`,
+    summary: page.summary || `Panel Profits Wiki · ${page.universe.replace(/_/g," ")}`,
   }));
 }
 
@@ -99,7 +99,7 @@ export default async function WikiPage({ searchParams }: { searchParams: Promise
               reality: page.reality,
               creators: page.creators,
               first_appearance: page.first_appearance,
-              summary: page.summary || `Canonical ${page.universe} entry in Panel Profits knowledge database.`,
+              summary: page.summary || `Panel Profits Wiki · ${page.universe.replace(/_/g," ")}`,
             });
           }
         }
@@ -139,10 +139,10 @@ export default async function WikiPage({ searchParams }: { searchParams: Promise
       {/* Header Bar */}
       <header className="border-b border-slate-800 pb-7">
         <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.28em] text-cyan-300">
-          <BookOpen className="h-3.5 w-3.5" /> Panel Profits Encyclopedia & Financial Knowledge Engine
+          <BookOpen className="h-3.5 w-3.5" /> Panel Profits Wiki
         </div>
         <h1 className="mt-3 text-3xl text-slate-100 sm:text-5xl font-bold tracking-tight">
-          Comic Lore & Equity Oracle
+          Panel Profits Wiki
         </h1>
         <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-400">
           Universal encyclopedic crosswalk connecting Grand Comics Database (GCD) publication history, verified creator lineages, multi-universe character & artifact lore, and Investopedia-style comic equity financial mechanics.
@@ -157,10 +157,10 @@ export default async function WikiPage({ searchParams }: { searchParams: Promise
           defaultValue={queryText}
           aria-label="Search encyclopedia"
           className="min-w-0 flex-1 bg-transparent px-2 py-2 text-sm text-slate-100 outline-none text-slate-100 placeholder:text-slate-500"
-          placeholder="Search 220,000+ characters, teams, lore & financial terms..."
+          placeholder="Search characters, teams, comics and financial terms..."
         />
         <button className="border border-cyan-500/60 bg-cyan-950/40 px-4 py-2 text-[10px] uppercase tracking-[0.14em] text-cyan-200 hover:bg-cyan-900/60 transition-colors rounded font-semibold">
-          Search Oracle
+          Search Wiki
         </button>
       </form>
 
@@ -220,7 +220,7 @@ export default async function WikiPage({ searchParams }: { searchParams: Promise
         {!loreEntities.length && queryText && (
           <div className="border border-slate-800 bg-[#090C14] px-4 py-8 text-center rounded">
             <p className="text-xs text-slate-400 font-mono">
-              No direct lore entities matched &ldquo;{queryText}&rdquo;. Check canonical comic editions below.
+              No direct lore entities matched &ldquo;{queryText}&rdquo;. Check comic edition records below.
             </p>
           </div>
         )}
@@ -318,7 +318,7 @@ export default async function WikiPage({ searchParams }: { searchParams: Promise
       <section className="mt-12" aria-label="PPCF encyclopedia results">
         <div className="mb-4 flex items-center justify-between border-b border-slate-800 pb-3">
           <span className="text-xs font-mono uppercase tracking-[0.18em] text-slate-400">
-            Canonical Edition Records & Crosswalks
+            Comic Edition Records & Crosswalks
           </span>
           <span className="text-xs text-slate-500 font-mono">{comics?.length || 0} Records</span>
         </div>

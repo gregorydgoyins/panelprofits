@@ -136,7 +136,7 @@ export function BattleArena({ initialContenders }: BattleArenaProps) {
               Superhero Battles That Have Never Happened
             </h1>
             <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-              Harnessing canonical stats from the Superhero API, 137,000+ Fandom lore entries, and Panel Profits certified 9.8 secondary market equity valuations. Simulate cross-universe dream matchups with authentic physics and financial market stakes.
+              Using stored character statistics, Panel Profits Wiki research, and grade-specific comic market references. Simulate cross-universe dream matchups with authentic physics and financial market stakes.
             </p>
           </div>
 

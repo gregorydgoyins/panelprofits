@@ -5,7 +5,7 @@ import type { ListingWriteup } from "@/lib/sniper/listing-writeup";
 
 type Props = { research: ResearchLoad; series: string; issueNumber: string; grader?: string; grade?: number };
 function Refs({ refs, sources }: { refs?: number[]; sources: ListingWriteup["sources"] }) {
-  return <>{(refs ?? []).map(n => sources[n] ? <a key={n} href={sources[n].uri} target="_blank" rel="noopener noreferrer" title={sources[n].title} className="ml-1 align-super text-[10px] text-cyan-300 hover:underline">[{n + 1}]</a> : null)}</>;
+  return <>{(refs ?? []).map(n => sources[n] ? <a key={n} href={sources[n].uri} target="_blank" rel="noopener noreferrer" title={`Research reference ${n + 1}`} className="ml-1 align-super text-[10px] text-cyan-300 hover:underline">[{n + 1}]</a> : null)}</>;
 }
 function LinkedSynopsis({ story }: { story: StorySummary }) {
   const links = new Map(Object.values(story.entities ?? {}).flatMap(entries => entries ?? []).map(entity => [entity.label, entity.url]));
@@ -34,8 +34,8 @@ export function SniperListingResearch(p: Props) {
     </section>}
     {(writeup || story) && <section className="space-y-3 border-t border-slate-800 pt-4"><h3 className="text-lg font-semibold text-white">Story: {story?.storyTitle || p.series}</h3>{writeup ? <><p>{writeup.synopsis.intro}</p>{writeup.synopsis.points.map((point,i)=><p key={i}><strong className="text-white">{point.label}. </strong>{point.text}<Refs refs={point.refs} sources={writeup.sources}/></p>)}</> : story && <p className="whitespace-pre-line"><LinkedSynopsis story={story}/></p>}
       <div className="flex flex-wrap gap-2">{characters.map(entity=><a key={entity.url} href={entity.url} className="rounded border border-slate-700 px-2 text-xs text-cyan-300">{entity.label}</a>)}</div>
-      <a href={dossier} className="text-xs text-cyan-300 underline">Panel Profits issue dossier ↗</a>
-      {story && <details className="text-xs text-slate-500"><summary className="cursor-pointer">Underlying story reference &amp; attribution</summary><a href={story.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-cyan-300 underline">{story.source.replace(/ Fandom import$/i," Database")} · {story.license || "Source reference"}</a></details>}
+      <a href={dossier} className="text-xs text-cyan-300 underline">Panel Profits Wiki · issue dossier ↗</a>
+      {story && <details className="text-xs text-slate-500"><summary className="cursor-pointer">Underlying story reference &amp; attribution</summary><a href={story.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-cyan-300 underline">Original text reference · {story.license || "Source reference"}</a></details>}
     </section>}
     {!loading && !writeup && !story && <p className="text-xs text-slate-400">No issue-specific narrative is available in the stored research.</p>}
     <nav aria-label="Research learning links" className="flex flex-wrap gap-3 border-t border-slate-800 pt-4 text-xs"><a href="/learn#sniper-practice" className="text-cyan-300 underline">Practice syllabus</a><a href="/lexicon" className="text-cyan-300 underline">Financial dictionary</a></nav>

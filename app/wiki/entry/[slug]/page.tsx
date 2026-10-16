@@ -139,10 +139,10 @@ export default async function LoreEntityPage({ params, searchParams }: { params:
             {renderIcon()}
             <span className="text-[10px] font-mono uppercase tracking-[0.24em] text-slate-400">
               {entity.type === "creator"
-                ? "Canonical Creative Architect & Legend Dossier"
+                ? "Panel Profits Wiki · Creator"
                 : entity.type === "equity"
-                ? "Canonical Media Adaptation & Storyline Equity Dossier"
-                : "Canonical Multi-Universe Character Dossier"}
+                ? "Panel Profits Wiki · Media and Storyline"
+                : "Panel Profits Wiki · Character"}
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -154,7 +154,7 @@ export default async function LoreEntityPage({ params, searchParams }: { params:
             <span
               className={`px-2.5 py-1 rounded text-[10px] font-mono uppercase tracking-wider border ${getUniverseBadgeStyle()}`}
             >
-              {entity.universe}
+              {entity.universe==="CANONICAL"?"Panel Profits":entity.universe.replace(/_/g," ")}
             </span>
             <span className="px-2.5 py-1 rounded text-[10px] font-mono uppercase tracking-wider border border-purple-800/60 bg-purple-950/40 text-purple-200">
               {entity.type.toUpperCase()}
@@ -214,14 +214,14 @@ export default async function LoreEntityPage({ params, searchParams }: { params:
             {entity.type === "creator" ? "Creator Biography & Career Provenance" : "Landmark Publication Provenance & Core Debut"}
           </div>
           <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">
-            {entity.type === "creator" ? "Canonical Bio Record" : "Canonical 1st Appearance"}
+            {entity.type === "creator" ? "Biography record" : "First appearance"}
           </span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
           <div className="rounded border border-cyan-500/30 bg-[#070C16] p-4">
             <span className="text-[10px] uppercase font-mono tracking-wider text-slate-500">
-              {entity.type === "creator" ? "Active Eras & Dates" : "1st Canonical Appearance"}
+              {entity.type === "creator" ? "Active Eras & Dates" : "First appearance"}
             </span>
             <p className="mt-1 text-base font-bold text-cyan-200">
               {entity.first_appearance?.trim() || "Not recorded"}

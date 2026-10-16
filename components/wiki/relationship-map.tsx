@@ -115,7 +115,7 @@ export function RelationshipMap({
           <div className="relative border-2 border-cyan-400/90 bg-[#0C1626] px-6 py-4 text-center shadow-[0_0_30px_rgba(6,182,212,0.3)] rounded-xl max-w-sm">
             <Fingerprint className="mx-auto h-7 w-7 text-cyan-400" />
             <p className="mt-1 text-[10px] font-mono uppercase tracking-[0.2em] text-cyan-300">
-              Canonical Edition
+              Panel Profits Wiki · Edition
             </p>
             <p className="mt-1 text-xl font-bold text-slate-100">{seriesName || "Edition Record"}</p>
             <p className="mt-1 text-xs text-slate-400">PPCF ID: {ppcfId.slice(0, 12)}...</p>

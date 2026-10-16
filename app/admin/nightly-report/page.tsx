@@ -232,7 +232,7 @@ export default function NightlyReportPage() {
                       <BookOpen className="h-4 w-4" />
                     </span>
                     <h3 className="text-sm font-semibold text-slate-200">
-                      Due Diligence Lore Pre-warming (Fandom MediaWiki)
+                      Panel Profits Wiki research processing
                     </h3>
                   </div>
                   <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/60 text-cyan-300 border border-cyan-500/40">

@@ -5,7 +5,7 @@ import { getAllSuperheroContenders } from "@/lib/battle/battle-engine";
 export const metadata: Metadata = {
   title: "Multiverse Superhero Battle Arena | Panel Profits",
   description:
-    "Simulate iconic cross-universe superhero battles that have never happened using canonical power stats, Fandom lore, and secondary market comic equity valuations.",
+    "Simulate iconic cross-universe superhero battles that have never happened using stored power stats, Panel Profits Wiki research, and secondary market comic equity valuations.",
 };
 
 export default function BattlePage() {

@@ -173,7 +173,7 @@ export function SniperStoryLore({
         )}
 
         <div className="text-[11px] font-mono text-slate-500 bg-black/40 p-2.5 rounded-lg border border-slate-800/80">
-          Archival Fandom synopsis not yet matched for this specific issue edition. Sovereign GCD credits active.
+          No saved Panel Profits Wiki synopsis is matched to this issue edition.
         </div>
       </div>
     );
