@@ -370,10 +370,10 @@ export function SniperStoryLore({
         <div>
           Source:{" "}
           <a href={summary.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-cyan-300 font-mono underline underline-offset-4">
-            {summary.source} ↗
+            Original text reference ↗
           </a>
         </div>
-        <span className="text-cyan-400/80">SOURCE-LINKED ISSUE RESEARCH</span>
+        <span className="text-cyan-400/80">PANEL PROFITS WIKI</span>
       </div>
     </div>
   );

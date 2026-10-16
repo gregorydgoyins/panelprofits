@@ -25,7 +25,7 @@ export function SniperResearchBrief({ series, issueNumber, year, publisher, edit
   }, [series, issueNumber, year, publisher, editionVerified, listingTitle, grader, grade]);
   const brief = result?.brief, source = result?.summary;
   return <section className="space-y-5 text-sm text-slate-300 leading-6">
-    <div><h3 className="text-lg font-semibold text-white">{researchTitle(series)} #{issueNumber}: story &amp; investor brief</h3><p className="text-xs text-slate-500 mt-1">Issue research · original summary · source evidence below</p></div>
+    <div><h3 className="text-lg font-semibold text-white">{researchTitle(series)} #{issueNumber}: story &amp; investor brief</h3><p className="text-xs text-slate-500 mt-1">Panel Profits Wiki · issue research</p></div>
     {!result && <p className="text-xs text-cyan-300 animate-pulse" role="status">Preparing the sourced issue brief…</p>}
     {source?.referenceOnly && <p className="text-xs leading-5 text-amber-200 border-l-2 border-amber-400 pl-3">Research reference{source.referenceYear ? `: ${source.referenceYear} edition` : ""}. The seller’s edition has not been verified; this is not a confirmed match to the offered copy.</p>}
     {brief ? <>
@@ -34,7 +34,7 @@ export function SniperResearchBrief({ series, issueNumber, year, publisher, edit
       {brief.lessons.length > 0 && <section className="space-y-3 pt-4 border-t border-slate-800"><h4 className="font-semibold text-emerald-300">What a disciplined investor can learn</h4><ol className="list-decimal pl-5 space-y-3">{brief.lessons.map((lesson, i) => <li key={i}><strong className="text-white">{lesson.heading}.</strong> {lesson.text}</li>)}</ol></section>}
     </> : result && <div className="space-y-2"><p className="text-xs text-amber-200">{result.error}</p>{source && <><h4 className="font-semibold text-cyan-200">Source synopsis</h4><p>{source.text.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").slice(0, 1600)}</p></>}</div>}
     {source?.credits && <p className="text-xs text-slate-400">{source.credits.writers?.length ? `Writer: ${source.credits.writers.join(", ")}. ` : ""}{source.credits.pencilers?.length ? `Interior art: ${source.credits.pencilers.join(", ")}.` : ""}</p>}
-    {source && <a href={source.sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-block text-xs text-cyan-300 underline underline-offset-4">Source: {source.source} ↗</a>}
+    {source && <a href={source.sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-block text-xs text-cyan-300 underline underline-offset-4">Original text reference ↗</a>}
     {source?.creditsSourceUrl && <a href={source.creditsSourceUrl} target="_blank" rel="noopener noreferrer" className="block text-xs text-cyan-300 underline underline-offset-4">Publisher’s issue &amp; cover credits ↗</a>}
     <details onToggle={event => setExpanded(event.currentTarget.open)} className="border-t border-slate-800 pt-3"><summary className="cursor-pointer text-xs font-semibold text-amber-300">Full synopsis, characters, credits &amp; wiki</summary>{expanded && <div className="mt-4"><SniperStoryLore series={series} issueNumber={issueNumber} year={year} publisher={publisher} editionVerified={editionVerified} /></div>}</details>
   </section>;

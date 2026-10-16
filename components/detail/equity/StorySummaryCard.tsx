@@ -395,13 +395,11 @@ export default async function StorySummaryCard({
       <div className="mt-4 pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-500 relative z-10">
         <div>
           Source:{" "}
-          <span className="text-slate-300 font-mono">
-            {summary.source}
-          </span>
+          <a href={summary.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-slate-300 font-mono underline">Original text reference</a>
           {summary.license ? ` · ${summary.license}` : ""}
         </div>
         <div className="font-mono text-cyan-400/80">
-          PROVENANCE: LOCAL CBR KNOWLEDGE REPOSITORY
+          PANEL PROFITS WIKI
         </div>
       </div>
     </section>
