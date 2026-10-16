@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 const { maybeSingle, db } = vi.hoisted(() => {
   const maybeSingle = vi.fn();
-  const chain: any = { select: () => chain, eq: () => chain, maybeSingle };
+  const chain: any = { select: () => chain, eq: () => chain, abortSignal: () => chain, maybeSingle };
   return { maybeSingle, db: { from: vi.fn(() => chain) } };
 });
 vi.mock("@/lib/supabase/admin", () => ({ createAdminServerClient: () => db }));

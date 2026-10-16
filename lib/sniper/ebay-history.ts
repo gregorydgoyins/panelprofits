@@ -9,7 +9,7 @@ export function historyQueryKey(query: string) {
 
 /** Page reads never acquire a vendor lookup or reuse a rendered-response cache. */
 export async function readCompletedEbaySales(query: string): Promise<EbayHistoryResult> {
-  const { data: saved, error } = await createAdminServerClient().from("sniper_ebay_history").select("state,response").eq("query_key", historyQueryKey(query)).maybeSingle();
+  const { data: saved, error } = await createAdminServerClient().from("sniper_ebay_history").select("state,response").eq("query_key", historyQueryKey(query)).abortSignal(AbortSignal.timeout(6000)).maybeSingle();
   if (error) return unavailable("history_store_unavailable", "Stored eBay evidence could not be read. No provider request was made.");
   if (saved?.response) return saved.response as EbayHistoryResult;
   return unavailable(saved ? "history_pending" : "history_not_acquired", saved ? "A separate history import is pending." : "No eBay history has been acquired for this issue. Other source records remain available in the sales ledger.");
