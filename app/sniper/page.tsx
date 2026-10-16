@@ -17,8 +17,8 @@ import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
 import { LiveLotStrip } from "@/components/sniper/LiveLotStrip";
 import { SniperLearningPanel } from "@/components/sniper/SniperLearningPanel";
 import { LotMarketChart } from "@/components/sniper/LotMarketChart";
-import { usePaperOrders } from "@/components/sniper/PaperDesk";
-import { SniperGame } from "@/components/sniper/SniperGame";
+import { SniperGame, useSniperGame } from "@/components/sniper/SniperGame";
+import { SniperLotTicket } from "@/components/sniper/SniperLotTicket";
 import { SniperVideos } from "@/components/sniper/SniperVideos";
 
 const WINDOW_STEP = 24;
@@ -47,50 +47,6 @@ function censusMissing(grader?: string | null): string {
   return /cbcs/i.test(grader ?? "") ? "N/A" : "Census not found";
 }
 
-
-interface PaperSnipeRecord {
-  orderId: string;
-  listingId: string;
-  comicTitle: string;
-  certNumber?: string;
-  source: string;
-  bidPrice: number;
-  finalSoldPrice: number;
-  status: "WON" | "OUTBID" | "ARMED";
-  paperAlpha: number;
-  whyBought: string;
-  targetWinPrice100Pct?: number;
-  executedAt: string;
-}
-
-export interface AcquiredBook {
-  id: string;
-  orderId: string;
-  listingId: string;
-  comicTitle: string;
-  normalizedTitle: string;
-  resolvedSeries: string;
-  resolvedIssue: string;
-  grade: number;
-  gradingCompany: string;
-  certNumber?: string;
-  imageUrl: string;
-  url: string;
-  source: string;
-  allInCost: number;
-  anchorFmv: number;
-  targetWinPrice100Pct: number;
-  projectedProfit: number;
-  netRoiPercent: number;
-  acquiredAt: string;
-  whyBought: string;
-  isYellowLabel?: boolean;
-  signerName?: string;
-  censusCount98?: number;
-  label?: { grader: string | null; labelType: string | null; grade: number | null } | null;
-  gocollectPrice?: { lastSoldPrice: number | null; lastSoldDate: string | null; fmv: number | null; avg1y: number | null; n1y: number | null; salesCount: number | null };
-  censusTotal?: number;
-}
 
 const ALL_CANONICAL_ERAS: ComicEra[] = [
   "platinum",
@@ -161,10 +117,11 @@ function formatVenueActionText(source: string, isBuyItNow?: boolean): string {
 
 export default function SniperRadarPage() {
   const [researchBeta, setResearchBeta] = useState(false);
-  const [showMarketRadar, setShowMarketRadar] = useState(false);
   useEffect(() => { setResearchBeta(new URLSearchParams(window.location.search).get("beta") === "research"); }, []);
   // Owner Password Authentication Gate State (verified server-side via /api/sniper/auth)
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const desk = useSniperGame(isAuthenticated);
+  const [snipeSuccessToast, setSnipeSuccessToast] = useState<string | null>(null);
   const [passwordInput, setPasswordInput] = useState<string>("");
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState<boolean>(false);
@@ -227,7 +184,6 @@ export default function SniperRadarPage() {
   // Primary 3-Section View Switcher: LIVE AUCTIONS | WHAT YOU MISSED | WHAT YOU'VE ACQUIRED
   const [viewMode, setViewMode] = useState<"LIVE" | "MISSED" | "ACQUIRED">("LIVE");
   const [liveShown, setLiveShown] = useState<number>(WINDOW_STEP);
-  const [missedShown, setMissedShown] = useState<number>(WINDOW_STEP);
 
   // DYNAMIC LIVE AUCTION STREAM (Active Open-Web Stream)
   const [auctionsList, setAuctionsList] = useState<RawAuctionListing[]>([]);
@@ -271,15 +227,14 @@ export default function SniperRadarPage() {
 
   // The research radar reads the saved market feed only while that view is open.
   useEffect(() => {
-    if (!isAuthenticated || (!researchBeta && !showMarketRadar)) return;
+    if (!isAuthenticated) return;
     void fetchLiveAuctions();
     const pollInterval = setInterval(() => void fetchLiveAuctions(), 20000);
     return () => clearInterval(pollInterval);
-  }, [fetchLiveAuctions, isAuthenticated, researchBeta, showMarketRadar]);
+  }, [fetchLiveAuctions, isAuthenticated]);
 
   // Initialize and run real-time 1-second countdown ticker
   useEffect(() => {
-    if (!researchBeta && !showMarketRadar) return;
     setLiveAuctionTimers(prev => {
       const next = { ...prev };
       for (const a of auctionsList) {
@@ -303,7 +258,7 @@ export default function SniperRadarPage() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [auctionsList, researchBeta, showMarketRadar]);
+  }, [auctionsList]);
 
   // Live Auction Scanner Input State
   const [scannerInput, setScannerInput] = useState<string>("");
@@ -435,39 +390,6 @@ export default function SniperRadarPage() {
   useEffect(() => { setModalPerspective("all"); }, [inspectedDeal?.listing.id]);
   const fullResearch = true; // every lot opens with all of its research; nothing is held back for lots about to close
 
-  // Paper Snipe Orders Ledger State
-  const paper = usePaperOrders(researchBeta || showMarketRadar);
-  const paperOrders = paper.orders;
-  // signed: a paper loss counts against you
-  const simulatedAlpha = paper.orders.reduce((a, o) => a + (o.paper_profit_usd != null ? Number(o.paper_profit_usd) : 0), 0);
-  const [snipeSuccessToast, setSnipeSuccessToast] = useState<string | null>(null);
-
-  // Vaulted / Acquired Books State (Persisted in localStorage)
-  const [acquiredBooks, setAcquiredBooks] = useState<AcquiredBook[]>([]);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem("panel_profits_acquired_books");
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed)) {
-            setAcquiredBooks(parsed);
-          }
-        }
-      } catch (err) {
-        console.warn("Could not parse acquired books:", err);
-      }
-    }
-  }, []);
-
-  const saveAcquiredBooks = useCallback((books: AcquiredBook[]) => {
-    setAcquiredBooks(books);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("panel_profits_acquired_books", JSON.stringify(books));
-    }
-  }, []);
-
   const profile: SniperFilterProfile = useMemo(
     () => ({
       maxAllInBudget: maxBudget,
@@ -562,117 +484,10 @@ export default function SniperRadarPage() {
     });
   }, [approvedDeals, liveAuctionTimers]);
 
-  // Missed deals are expired auctions (countdown <= 0)
-  const missedDeals = useMemo(() => {
-    return rawApprovedDeals.filter((deal) => {
-      const liveSecs = liveAuctionTimers[deal.listing.id] ?? deal.listing.secondsRemaining;
-      return liveSecs <= 0;
-    });
-  }, [rawApprovedDeals, liveAuctionTimers]);
-
-  const handleRemoveAcquired = (id: string) => {
-    const updated = acquiredBooks.filter((b) => b.id !== id);
-    saveAcquiredBooks(updated);
-  };
-
-  const exportAcquiredCsv = () => {
-    if (acquiredBooks.length === 0) return;
-    const headers = [
-      "Order ID",
-      "Normalized Title",
-      "Original Title",
-      "Grade",
-      "Company",
-      "Cert Number",
-      "Cost ($)",
-      "FMV ($)",
-      "100% Exit ($)",
-      "Net Profit ($)",
-      "Acquired At",
-      "Thesis",
-    ];
-    const rows = acquiredBooks.map((b) => [
-      b.orderId,
-      `"${b.normalizedTitle.replace(/"/g, '""')}"`,
-      `"${b.comicTitle.replace(/"/g, '""')}"`,
-      b.grade,
-      b.gradingCompany,
-      b.certNumber || "",
-      b.allInCost.toFixed(2),
-      b.anchorFmv > 0 ? b.anchorFmv.toFixed(2) : "Unavailable",
-      b.targetWinPrice100Pct.toFixed(2),
-      b.projectedProfit.toFixed(2),
-      `"${b.acquiredAt}"`,
-      `"${b.whyBought.replace(/"/g, '""')}"`,
-    ]);
-    const csvContent =
-      "data:text/csv;charset=utf-8," +
-      [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute(
-      "download",
-      `panel_profits_vault_${new Date().toISOString().slice(0, 10)}.csv`
-    );
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   // Paper trading: open the lot so the ticket (arm a snipe on an auction, or haggle on a Buy It Now) is in front of the player.
   const executePaperSnipe = (deal: CandidateEvaluation) => {
     startTransition(() => setInspectedDeal(deal));
   };
-
-  // A paper purchase that was won lands in the vault, once.
-  const vaultedOrdersRef = React.useRef<Set<number> | null>(null);
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (!vaultedOrdersRef.current) {
-      try { vaultedOrdersRef.current = new Set(JSON.parse(localStorage.getItem("pp_sniper_vaulted_orders") || "[]")); } catch { vaultedOrdersRef.current = new Set(); }
-    }
-    const seen = vaultedOrdersRef.current!;
-    const fresh = paper.orders.filter((o) => o.status === "won" && !o.result?.replay && o.fill_price_usd != null && !seen.has(o.id));
-    if (!fresh.length) return;
-    const added: AcquiredBook[] = fresh.map((o) => {
-      const deal = rawApprovedDeals.find((d) => d.listing.id === o.item_id);
-      const allIn = Number(o.fill_price_usd) + Number(o.shipping_usd || 0);
-      const profit = o.paper_profit_usd != null ? Number(o.paper_profit_usd) : 0;
-      return {
-        id: `acq-${o.id}`,
-        orderId: `PAPER-${o.id}`,
-        listingId: o.item_id,
-        comicTitle: o.title ?? o.item_id,
-        normalizedTitle: deal?.normalizedTitle ?? o.title ?? o.item_id,
-        resolvedSeries: deal?.resolvedSeries ?? "",
-        resolvedIssue: deal?.resolvedIssue ?? "",
-        grade: deal?.resolvedGrade ?? 0,
-        gradingCompany: deal?.gradingCompany ?? o.result?.grader ?? "",
-        certNumber: deal?.certNumber ?? o.result?.cert ?? undefined,
-        imageUrl: deal?.listing.imageUrl ?? o.result?.imageUrl ?? "",
-        url: deal?.listing.url ?? o.result?.url ?? "",
-        source: deal?.listing.source ?? "ebay",
-        allInCost: allIn,
-        anchorFmv: o.fmv_usd ?? deal?.anchorFmv ?? 0,
-        targetWinPrice100Pct: deal?.targetWinPrice100Pct ?? o.fmv_usd ?? 0,
-        projectedProfit: profit,
-        netRoiPercent: allIn > 0 ? Math.round((profit / allIn) * 100) : 0,
-        acquiredAt: new Date(o.settled_at ?? o.created_at).toLocaleTimeString(),
-        whyBought: o.basis ?? deal?.whyItsAGoodBuy ?? "Won in a paper trade",
-        isYellowLabel: deal?.isYellowLabel,
-        signerName: deal?.signerName,
-        censusCount98: deal?.censusCount98,
-        censusTotal: deal?.censusTotal,
-      } as AcquiredBook;
-    });
-    fresh.forEach((o) => seen.add(o.id));
-    try { localStorage.setItem("pp_sniper_vaulted_orders", JSON.stringify(Array.from(seen))); } catch {}
-    saveAcquiredBooks([...added, ...acquiredBooks]);
-    setSnipeSuccessToast(`🏆 Paper win vaulted: ${added[0].normalizedTitle}`);
-    setTimeout(() => setSnipeSuccessToast(null), 4000);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paper.orders]);
 
   const formatTime = (secs: number) => {
     if (secs <= 0) return "EXPIRED";
@@ -755,7 +570,6 @@ export default function SniperRadarPage() {
     );
   }
 
-  if (!researchBeta && !showMarketRadar) return <div className="min-h-screen bg-[#07090E] text-slate-100"><header className="sticky top-0 z-40 border-b border-slate-800 bg-[#0E131F]/95 backdrop-blur"><div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4"><div><h1 className="text-lg font-black tracking-widest text-cyan-300">SNIPER</h1><p className="mt-1 text-[10px] font-mono uppercase tracking-wider text-slate-500">Research → decision → execution → portfolio</p></div><button onClick={() => setShowMarketRadar(true)} className="rounded-lg border border-slate-600 px-3 py-2 text-xs text-slate-200 hover:border-cyan-400">Open market research radar</button></div></header><SniperGame /></div>;
 
   return (
     <div className="min-h-screen bg-[#07090E] text-slate-100 flex flex-col font-sans">
@@ -803,7 +617,7 @@ export default function SniperRadarPage() {
           <div className="flex items-center gap-3">
             <a href={researchBeta ? "/sniper" : "/sniper?beta=research"} className="text-xs rounded-lg border border-emerald-500/40 px-3 py-1.5 text-emerald-300 hover:bg-emerald-950/40">{researchBeta ? "Full radar" : "Two-comic research beta"}</a>
             <button
-              onClick={() => fetchLiveAuctions(true)}
+              onClick={() => { void fetchLiveAuctions(true); void desk.act({action:"refresh"}); }}
               disabled={isLoadingLive}
               className="text-xs font-mono bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400 text-cyan-300 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition font-bold cursor-pointer"
             >
@@ -812,10 +626,8 @@ export default function SniperRadarPage() {
             </button>
 
             <div className="bg-slate-900/90 border border-emerald-500/40 px-3 py-1 rounded-lg text-right font-mono">
-              <div className="text-[10px] text-slate-400 uppercase">Simulated Alpha</div>
-              <div className={`text-xs font-bold ${simulatedAlpha >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
-                {simulatedAlpha >= 0 ? "+" : "−"}${Math.abs(simulatedAlpha).toFixed(2)}
-              </div>
+              <div className="text-[10px] text-slate-400 uppercase">Sniper cash · reserved</div>
+              <div className="text-xs font-bold text-emerald-400">{desk.game ? `S$${desk.game.account.available.toLocaleString()} · S$${desk.game.account.reserved.toLocaleString()}` : "Loading account…"}</div>
             </div>
 
             <button
@@ -842,8 +654,8 @@ export default function SniperRadarPage() {
           </div>
         </div>
       </header>
-      {!researchBeta && <div className="mx-auto w-full max-w-7xl px-4 pt-5"><button onClick={() => setShowMarketRadar(false)} className="rounded-lg border border-cyan-500/40 px-4 py-2 text-sm text-cyan-200">← Return to your Sniper game</button></div>}
 
+      {desk.error && <div role="alert" className="mx-auto w-full max-w-7xl px-4 pt-3 text-xs text-rose-300">{desk.error} <button onClick={() => void desk.load()} className="ml-2 underline">Retry account</button></div>}
       {/* FIELD MANUAL ACCORDION DRAWER */}
       {showManual && (
         <section className="bg-[#0A0D14] border-b border-amber-500/30 p-5 animate-in slide-in-from-top duration-200">
@@ -1188,7 +1000,7 @@ export default function SniperRadarPage() {
               }`}
             >
               <span>⏰</span>
-              <span>WHAT YOU MISSED ({missedDeals.length})</span>
+              <span>WHAT YOU MISSED ({desk.game?.rounds.filter(r => r.result?.outcome === "outbid").length ?? 0})</span>
             </button>
 
             <button
@@ -1200,7 +1012,7 @@ export default function SniperRadarPage() {
               }`}
             >
               <span>🏆</span>
-              <span>WHAT YOU&apos;VE ACQUIRED ({acquiredBooks.length})</span>
+              <span>WHAT YOU&apos;VE ACQUIRED ({desk.game?.rounds.filter(r => r.asset && !r.asset.soldAt).length ?? 0})</span>
             </button>
           </div>
 
@@ -1249,6 +1061,10 @@ export default function SniperRadarPage() {
                 </span>
               </div>
 
+              <details className="rounded-xl border border-slate-800 bg-[#0E131F] p-4" open={desk.game?.rounds.some(r => r.status === "bidding" || r.status === "awaiting_result") || undefined}>
+                <summary className="cursor-pointer text-xs font-bold font-mono uppercase text-amber-300">Paper desk · committed bids &amp; waiting practice lots</summary>
+                <div className="mt-4"><SniperGame desk={desk} view="rounds" /></div>
+              </details>
               {/* APPROVED LIVE CARDS */}
               {liveDeals.length === 0 ? (
                 <div className="bg-[#0E131F] border border-slate-800 rounded-xl p-8 text-center text-slate-400 space-y-3">
@@ -1258,7 +1074,7 @@ export default function SniperRadarPage() {
                       : `No active ending auctions currently match strategy angle '${strategyTab}'.`}
                   </p>
                   <button
-                    onClick={() => fetchLiveAuctions(true)}
+                    onClick={() => { void fetchLiveAuctions(true); void desk.act({action:"refresh"}); }}
                     className="text-xs font-mono bg-cyan-950 hover:bg-cyan-900 border border-cyan-400 text-cyan-300 px-4 py-2 rounded-lg font-bold transition inline-flex items-center gap-2"
                   >
                     <span>🔄</span>
@@ -1269,8 +1085,6 @@ export default function SniperRadarPage() {
                 <div className="space-y-5">
                   {liveDeals.slice(0, liveShown).map((deal) => {
                     const liveSecs = liveAuctionTimers[deal.listing.id] ?? deal.listing.secondsRemaining;
-                    const isSnipedInPaper = paper.forItem(deal.listing.id) != null;
-                    const isVaulted = acquiredBooks.some((b) => b.listingId === deal.listing.id);
                     const isBreakdownOpen = expandedBreakdownId === deal.listing.id;
 
                     const isPre1975 =
@@ -1882,17 +1696,9 @@ export default function SniperRadarPage() {
 
                               <button
                                 onClick={() => executePaperSnipe(deal)}
-                                className={`px-3.5 py-1.5 rounded text-xs font-mono font-bold border transition cursor-pointer ${
-                                  isSnipedInPaper
-                                    ? "bg-emerald-950 border-emerald-600/50 text-emerald-400"
-                                    : "bg-cyan-600 hover:bg-cyan-500 text-white border-cyan-400 shadow-md"
-                                }`}
+                                className="px-3.5 py-1.5 rounded text-xs font-mono font-bold border transition cursor-pointer bg-cyan-600 hover:bg-cyan-500 text-white border-cyan-400 shadow-md"
                               >
-                                {isSnipedInPaper
-                                  ? "📖 Paper order"
-                                  : deal.isBuyItNow
-                                  ? "🎯 Paper Buy (BIN)"
-                                  : "🎯 Paper Snipe"}
+                                {deal.isBuyItNow ? "📖 Research listing" : "🎯 Paper Snipe"}
                               </button>
                             </div>
                           </div>
@@ -1909,308 +1715,10 @@ export default function SniperRadarPage() {
           )}
 
           {/* VIEW 2: WHAT YOU MISSED WHILE YOU WERE AWAY */}
-          {viewMode === "MISSED" && (
-            <div className="space-y-5">
-              <div className="bg-amber-950/30 border border-amber-500/40 rounded-xl p-4 space-y-1 text-xs font-mono">
-                <h3 className="text-sm font-bold uppercase text-amber-400 flex items-center gap-2">
-                  <span>⏰</span> WHAT YOU MISSED WHILE YOU WERE AWAY ({missedDeals.length})
-                </h3>
-                <p className="text-slate-300 leading-relaxed">
-                  These verified auctions concluded and expired while you were away. Review the final sold prices, anchor book FMVs, and missed profit margins below to calibrate your radar snipe timing.
-                </p>
-              </div>
-
-              {missedDeals.length === 0 ? (
-                <div className="bg-[#0E131F] border border-slate-800 rounded-xl p-8 text-center text-slate-400 font-mono text-xs">
-                  No expired auctions recorded yet. Active stream is live!
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {missedDeals.slice(0, missedShown).map((deal) => (
-                    <div
-                      key={deal.listing.id}
-                      className="bg-[#0E131F] border border-slate-800/80 rounded-xl p-4 flex flex-col md:flex-row gap-4 items-start opacity-90"
-                    >
-                      <div className="flex-shrink-0 mx-auto md:mx-0 flex flex-col items-center w-full md:w-52 max-w-[210px]">
-                        <SlabEncasement
-                          gradingCompany={deal.gradingCompany}
-                          grade={deal.resolvedGrade}
-                          title={deal.normalizedTitle || deal.listing.title}
-                          issueNumber={deal.resolvedIssue}
-                          publisher={deal.gcdMetadata?.publisher}
-                          year={deal.resolvedYear}
-                          era={deal.resolvedEra}
-                          certNumber={deal.certNumber}
-                          pageQuality="WHITE Pages"
-                          isYellowLabel={deal.isYellowLabel}
-                          signatureDetails={deal.signerName}
-                          keyComments={deal.keySignificanceNote}
-                          imageUrl={deal.listing.imageUrl}
-                          galleryImages={deal.galleryImages}
-                          size="sm"
-                          onClick={() => startTransition(() => setInspectedDeal(deal))}
-                        />
-
-                        {/* Final Closed Price Placed Directly Underneath the Image */}
-                        <div className="w-full mt-2 rounded-lg border border-slate-800 bg-black/85 p-2 text-center shadow-md">
-                          <div className="text-[9px] font-mono font-bold text-slate-400 uppercase">
-                            {deal.isBuyItNow ? "🏷️ Closed Buy It Now" : "🔨 Final Hammer Price"}
-                          </div>
-                          <div className="text-xl font-mono font-black text-rose-300">
-                            ${deal.listing.currentBid.toFixed(2)}
-                          </div>
-                          <div className="text-[9px] font-mono text-slate-500">
-                            {deal.listing.bidCount ?? 1} total bids · Concluded
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex-1 space-y-2 text-xs font-mono w-full">
-                        <div className="flex items-center justify-between flex-wrap gap-2">
-                          <div className="flex items-center gap-2">
-                            <span className="px-2 py-0.5 rounded bg-rose-950 border border-rose-600/50 text-rose-300 font-bold text-[10px] uppercase">
-                              AUCTION CONCLUDED
-                            </span>
-                            <span className="text-slate-400">[{deal.listing.source.toUpperCase()}]</span>
-                          </div>
-                          <span className="text-rose-400 font-bold">
-                            Missed Alpha: {deal.anchorFmv > 0 ? `+$${deal.projectedNetProfit.toFixed(2)} (+${deal.netRoiPercent}%)` : "Unavailable"}
-                          </span>
-                        </div>
-
-                        <h4 className="text-sm font-bold text-white">
-                          {deal.normalizedTitle || deal.listing.title}
-                        </h4>
-                        <p className="text-[11px] text-slate-500">
-                          Original Title: &quot;{deal.listing.title}&quot;
-                        </p>
-
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 bg-slate-900/80 border border-slate-800 p-2.5 rounded-lg">
-                          <div>
-                            <span className="text-[10px] text-slate-500 uppercase block">Sold / Closing Price</span>
-                            <strong className="text-white">${deal.allInCost.toFixed(2)}</strong>
-                          </div>
-                          <div>
-                            <span className="text-[10px] text-slate-500 uppercase block">Fair Market FMV</span>
-                            <strong className="text-cyan-300">
-                              {deal.anchorFmv > 0 ? `$${deal.anchorFmv.toFixed(2)}` : "Unavailable"}
-                            </strong>
-                          </div>
-                          <div>
-                            <span className="text-[10px] text-slate-500 uppercase block">Discount Dislocation</span>
-                            <strong className="text-emerald-400">
-                              {deal.anchorFmv > 0 ? `${deal.discountPercent}% below FMV` : "Unavailable"}
-                            </strong>
-                          </div>
-                          <div>
-                            <span className="text-[10px] text-slate-500 uppercase block">100% Exit Potential</span>
-                            <strong className="text-amber-300">${deal.targetWinPrice100Pct.toFixed(2)}</strong>
-                          </div>
-                        </div>
-
-                        <p className="text-[11px] text-slate-400 italic">
-                          💡 Thesis: {deal.whyItsAGoodBuy}
-                        </p>
-
-                        <div className="flex items-center justify-between pt-2 border-t border-slate-800">
-                          <span className="text-[10px] text-slate-500">
-                            Census: {deal.censusCount98 ? `${deal.censusCount98.toLocaleString()} in ${deal.resolvedGrade.toFixed(1)}` : `Grade ${deal.resolvedGrade.toFixed(1)}`} ({deal.censusTotal ? `${deal.censusTotal.toLocaleString()} total` : censusMissing(deal.gradingCompany)})
-                          </span>
-                          <a
-                            href={deal.listing.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-cyan-400 hover:text-cyan-300 underline text-xs"
-                          >
-                            View Ended Listing on {formatVenueName(deal.listing.source)} ↗
-                          </a>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  {missedDeals.length > missedShown && (
-                    <LoadMoreSentinel remaining={missedDeals.length - missedShown} onMore={() => setMissedShown((n) => n + WINDOW_STEP)} />
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-
+          {viewMode === "MISSED" && <SniperGame desk={desk} view="results" />}
           {/* VIEW 3: WHAT YOU'VE ACQUIRED */}
-          {viewMode === "ACQUIRED" && (
-            <div className="space-y-5">
-              {/* SUMMARY KPI CARDS */}
-              {(() => {
-                const totalCost = acquiredBooks.reduce((sum, b) => sum + b.allInCost, 0);
-                const totalFmv = acquiredBooks.reduce((sum, b) => sum + b.anchorFmv, 0);
-                const totalAlpha = acquiredBooks.reduce((sum, b) => sum + b.projectedProfit, 0);
-                const totalExit = acquiredBooks.reduce((sum, b) => sum + b.targetWinPrice100Pct, 0);
-
-                return (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      <div className="bg-[#0E131F] border border-slate-800 p-3.5 rounded-xl font-mono">
-                        <div className="text-[10px] uppercase text-slate-400 font-bold">Vault Holdings</div>
-                        <div className="text-xl font-black text-white mt-1">{acquiredBooks.length} Books</div>
-                        <div className="text-[10px] text-slate-500">Secured acquisitions</div>
-                      </div>
-                      <div className="bg-[#0E131F] border border-slate-800 p-3.5 rounded-xl font-mono">
-                        <div className="text-[10px] uppercase text-slate-400 font-bold">Capital Deployed</div>
-                        <div className="text-xl font-black text-white mt-1">${totalCost.toFixed(2)}</div>
-                        <div className="text-[10px] text-slate-500">All-in cost basis</div>
-                      </div>
-                      <div className="bg-[#0E131F] border border-cyan-500/30 p-3.5 rounded-xl font-mono">
-                        <div className="text-[10px] uppercase text-cyan-400 font-bold">Portfolio FMV</div>
-                        <div className="text-xl font-black text-cyan-300 mt-1">${totalFmv.toFixed(2)}</div>
-                        <div className="text-[10px] text-slate-500">GPA market value</div>
-                      </div>
-                      <div className="bg-[#0E131F] border border-emerald-500/40 p-3.5 rounded-xl font-mono">
-                        <div className="text-[10px] uppercase text-emerald-400 font-bold">Unrealized Net Alpha</div>
-                        <div className="text-xl font-black text-emerald-300 mt-1">+${totalAlpha.toFixed(2)}</div>
-                        <div className="text-[10px] text-emerald-500">Double-Up Exit: ${totalExit.toFixed(2)}</div>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-between items-center bg-[#0E131F] border border-slate-800 p-3 rounded-xl">
-                      <h3 className="text-sm font-bold uppercase text-emerald-400 font-mono flex items-center gap-2">
-                        <span>🏆</span> What You&apos;ve Acquired (Vault Ledger)
-                      </h3>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={exportAcquiredCsv}
-                          disabled={acquiredBooks.length === 0}
-                          className="text-xs font-mono bg-cyan-950 hover:bg-cyan-900 border border-cyan-400 text-cyan-300 px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1 cursor-pointer disabled:opacity-50"
-                        >
-                          <span>📥</span> Export CSV
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (confirm("Are you sure you want to clear your acquired books ledger?")) {
-                              saveAcquiredBooks([]);
-                            }
-                          }}
-                          disabled={acquiredBooks.length === 0}
-                          className="text-xs font-mono bg-rose-950/60 hover:bg-rose-900 border border-rose-800 text-rose-300 px-2.5 py-1.5 rounded-lg transition cursor-pointer disabled:opacity-50"
-                        >
-                          Clear
-                        </button>
-                      </div>
-                    </div>
-
-                    {acquiredBooks.length === 0 ? (
-                      <div className="bg-[#0E131F] border border-slate-800 rounded-xl p-8 text-center text-slate-400 font-mono text-xs space-y-2">
-                        <p>No acquired books in your vault yet.</p>
-                        <p className="text-slate-500">
-                          Execute winning paper snipes in the Live Radar to build your acquired ledger after auction settlement.
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {acquiredBooks.map((book) => (
-                          <div
-                            key={book.id}
-                            className="bg-[#0E131F] border border-emerald-500/40 rounded-xl p-4 flex flex-col md:flex-row gap-4 items-start"
-                          >
-                            <div className="flex-shrink-0 mx-auto md:mx-0 flex flex-col items-center w-full md:w-52 max-w-[210px]">
-                              <SlabEncasement
-                                gradingCompany={book.gradingCompany === "CBCS" ? "CBCS" : "CGC"}
-                                grade={book.grade}
-                                title={book.normalizedTitle || book.comicTitle}
-                                certNumber={book.certNumber}
-                                pageQuality="WHITE Pages"
-                                isYellowLabel={book.isYellowLabel}
-                                signatureDetails={book.signerName}
-                                imageUrl={book.imageUrl}
-                                size="sm"
-                              />
-
-                              {/* Acquired Cost Basis Placed Directly Under Slab */}
-                              <div className="w-full mt-2 rounded-lg border border-emerald-500/30 bg-emerald-950/40 p-2 text-center shadow-md">
-                                <div className="text-[9px] font-mono font-bold text-emerald-400 uppercase">
-                                  🔒 Acquired Cost Basis
-                                </div>
-                                <div className="text-xl font-mono font-black text-emerald-300">
-                                  ${book.allInCost.toFixed(2)}
-                                </div>
-                                <div className="text-[9px] font-mono text-slate-400">
-                                  Holding in Sovereign Vault
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="flex-1 space-y-2 text-xs font-mono w-full">
-                              <div className="flex items-center justify-between flex-wrap gap-2">
-                                <div className="flex items-center gap-2">
-                                  <span className="px-2 py-0.5 rounded bg-emerald-950 border border-emerald-500/50 text-emerald-300 font-bold text-[10px]">
-                                    SECURED IN VAULT
-                                  </span>
-                                  <span className="text-slate-500 text-[10px]">[{book.orderId}] • {book.acquiredAt}</span>
-                                </div>
-                                <button
-                                  onClick={() => handleRemoveAcquired(book.id)}
-                                  className="text-rose-400 hover:text-rose-300 text-[11px] underline"
-                                >
-                                  Remove from Vault
-                                </button>
-                              </div>
-
-                              <h4 className="text-base font-bold text-white">
-                                {book.normalizedTitle || book.comicTitle}
-                              </h4>
-
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 bg-slate-900/90 border border-slate-800 p-2.5 rounded-lg">
-                                <div>
-                                  <span className="text-[10px] text-slate-500 uppercase block">Acquisition Basis</span>
-                                  <strong className="text-white text-sm">${book.allInCost.toFixed(2)}</strong>
-                                </div>
-                                <div>
-                                  <span className="text-[10px] text-cyan-400 uppercase block">Current FMV</span>
-                                  <strong className="text-cyan-300 text-sm">
-                                    {book.anchorFmv > 0 ? `$${book.anchorFmv.toFixed(2)}` : "Unavailable"}
-                                  </strong>
-                                </div>
-                                <div>
-                                  <span className="text-[10px] text-emerald-400 uppercase block">Target 100% Exit</span>
-                                  <strong className="text-emerald-300 text-sm">${book.targetWinPrice100Pct.toFixed(2)}</strong>
-                                </div>
-                                <div>
-                                  <span className="text-[10px] text-amber-400 uppercase block">Unrealized Gain</span>
-                                  <strong className="text-amber-300 text-sm">
-                                    {book.anchorFmv > 0 ? `+$${book.projectedProfit.toFixed(2)}` : "Unavailable"}
-                                  </strong>
-                                </div>
-                              </div>
-
-                              <p className="text-[11px] text-slate-300">
-                                <strong className="text-amber-400">Thesis: </strong>{book.whyBought}
-                              </p>
-
-                              <div className="flex items-center justify-between pt-2 border-t border-slate-800">
-                                <span className="text-[10px] text-slate-500">
-                                  Cert: #{book.certNumber || "Unlisted"} • Source: {book.source.toUpperCase()}
-                                </span>
-                                <a
-                                  href={book.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-cyan-400 hover:text-cyan-300 underline text-xs"
-                                >
-                                  View Listing ↗
-                                </a>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })()}
-            </div>
-          )}
-
+          {viewMode === "ACQUIRED" && <SniperGame desk={desk} view="collection" />}
           {/* PRACTICE ROUNDS + PAPER LEDGER */}
-          <a href="#sniper-game" onClick={() => setShowMarketRadar(false)} className="block rounded-xl border border-cyan-500/30 bg-[#0E131F] p-4 text-cyan-300">Open the Sniper game: cash, committed rounds &amp; collection ↑</a>
 
 
           {/* BLOCKED LISTINGS SECTION */}
@@ -2584,7 +2092,8 @@ export default function SniperRadarPage() {
                     <span>↗</span>
                   </a>
 
-                  <a href="#sniper-game" onClick={() => { setInspectedDeal(null); setShowMarketRadar(false); }} className="block rounded-xl border border-cyan-500/40 bg-cyan-950/30 p-3 text-center text-xs font-bold text-cyan-200">Play in Sniper · cash &amp; portfolio rules</a>
+
+                  <SniperLotTicket key={inspectedDeal.listing.id} desk={desk} itemId={inspectedDeal.listing.id} isBuyItNow={Boolean(inspectedDeal.isBuyItNow)} />
 
                   <div className="grid grid-cols-1 gap-2">
                     <Link
