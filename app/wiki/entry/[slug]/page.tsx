@@ -187,9 +187,9 @@ export default async function LoreEntityPage({ params, searchParams }: { params:
                 {entity.type === "creator" ? (
                   <>Role: <span className="text-purple-400 font-semibold">{entity.creators}</span> · Lineage: <span className="text-cyan-400 font-semibold">{entity.first_appearance}</span></>
                 ) : entity.type === "equity" ? (
-                  <>Asset Class: <span className="text-amber-400 font-semibold">Cinematic & Comic Equity</span> · Reality: {entity.reality || "Canonical Universe"}</>
+                  <>Asset Class: <span className="text-amber-400 font-semibold">Cinematic & Comic Equity</span> · Reality: {entity.reality || "Not recorded"}</>
                 ) : (
-                  <>Multiverse Reality: {entity.reality || (entity.universe === "MARVEL" ? "Earth-616" : entity.universe === "DC" ? "Prime Earth" : "Canonical Continuity")} · Alignment: <span className="text-emerald-400 font-semibold">{entity.alignment || "Good"}</span></>
+                  <>Multiverse Reality: {entity.reality || "Not recorded"} · Alignment: <span className="text-emerald-400 font-semibold">{entity.alignment || "Not recorded"}</span></>
                 )}
               </p>
             </div>
@@ -224,18 +224,10 @@ export default async function LoreEntityPage({ params, searchParams }: { params:
               {entity.type === "creator" ? "Active Eras & Dates" : "1st Canonical Appearance"}
             </span>
             <p className="mt-1 text-base font-bold text-cyan-200">
-              {entity.first_appearance && entity.first_appearance.trim().length > 0
-                ? entity.first_appearance
-                : entity.universe === "MARVEL"
-                ? "Marvel Canonical Landmark Debut"
-                : entity.universe === "DC"
-                ? "Detective Comics #27"
-                : "Historical Benchmark Debut Issue"}
+              {entity.first_appearance?.trim() || "Not recorded"}
             </p>
             <p className="mt-1 text-xs text-slate-400">
-              {entity.type === "creator"
-                ? "Historical career timeline recorded in canonical publishing ledger."
-                : "Historical milestone debut officially recorded in canonical publishing ledger."}
+              {entity.first_appearance ? "Stored publication or biography reference." : "No debut or career-date evidence is attached."}
             </p>
           </div>
 
@@ -244,13 +236,7 @@ export default async function LoreEntityPage({ params, searchParams }: { params:
               {entity.type === "creator" ? "Craft & Discipline" : "Creator Lineage"}
             </span>
             <p className="mt-1 text-base font-bold text-slate-200">
-              {entity.creators && entity.creators.trim().length > 0
-                ? entity.creators
-                : entity.universe === "MARVEL"
-                ? "Marvel Canonical Creative Teams"
-                : entity.universe === "DC"
-                ? "DC Canonical Creative Architects"
-                : "Foundational Creative Architects"}
+              {entity.creators?.trim() || "Not recorded"}
             </p>
             <p className="mt-1 text-xs text-slate-400">
               {entity.type === "creator"
@@ -264,13 +250,7 @@ export default async function LoreEntityPage({ params, searchParams }: { params:
               {entity.type === "creator" ? "Origin & Roots" : "Continuity Coordinates"}
             </span>
             <p className="mt-1 text-base font-mono font-bold text-indigo-300">
-              {entity.reality && entity.reality.trim().length > 0
-                ? entity.reality
-                : entity.universe === "MARVEL"
-                ? "Earth-616"
-                : entity.universe === "DC"
-                ? "Prime Earth / New Earth"
-                : "Canonical Multiverse"}
+              {entity.reality?.trim() || "Not recorded"}
             </p>
             <p className="mt-1 text-xs text-slate-400">
               Universal continuity anchor across multiverse timelines.
@@ -317,7 +297,7 @@ export default async function LoreEntityPage({ params, searchParams }: { params:
 
                 <div className="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-between">
                   <span className="text-[9px] font-mono text-slate-500 uppercase">
-                    Verified Key
+                    Issue reference
                   </span>
                   <Link
                     href={debut.catalogUrl}
