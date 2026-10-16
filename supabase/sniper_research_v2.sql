@@ -12,7 +12,7 @@ declare
   q jsonb; label_name text; authored_key text; normalized_title text; resolved_grader text; gr numeric;
   timer timestamptz := clock_timestamp(); timings jsonb := '{}';
 begin
-  select item_id,title,series,issue,pub_year,edition,grade,grader,label,publisher into lot from public.sniper_listings where item_id=p_item_id;
+  select item_id,title,series,issue,pub_year,edition,grade,grader,label,publisher,research_comic_id into lot from public.sniper_listings where item_id=p_item_id;
   if not found then return null; end if;
   timings := timings || jsonb_build_object('listing',round((extract(epoch from clock_timestamp()-timer)*1000)::numeric,1)); timer := clock_timestamp();
   s := coalesce(nullif(lot.label->>'title',''),lot.series);
@@ -25,6 +25,7 @@ begin
   date_part := substring(lot.label->>'issueDate' from '/([0-9]{2}|[0-9]{4})$');
   yr := case when date_part is null then lot.pub_year when length(date_part)=4 then date_part::integer
     when date_part::integer>30 then 1900+date_part::integer else 2000+date_part::integer end;
+  if yr is null and lot.research_comic_id is not null then select publication_year into yr from public.comics where id=lot.research_comic_id; end if;
   select coalesce(jsonb_agg(to_jsonb(e)),'[]') into editions from (
     select ppcf_id,series_name,variant_name,publication_date from public.ppcf_canonical_comics
     where series_name in (s,lot.series,'The ' || s,'The ' || lot.series) and issue_number=iss order by ppcf_id limit 100
@@ -38,7 +39,7 @@ begin
   end if;
   select coalesce(jsonb_agg(to_jsonb(c)),'[]') into book_rows from (
     select id,series,issue_number,publication_year,cover_variant,direct_or_variant,printing,pp_grade_9_8_price,panel_profits_data,gcd_data->>'cover_price' as original_cover_price
-    from public.comics where series in(s,lot.series) and issue_number=iss and (publication_year=yr or (publication_year=yr-1 and lot.label->>'issueDate' ~ '^[123]/')) limit 50
+    from public.comics where (lot.research_comic_id is not null and id=lot.research_comic_id) or (lot.research_comic_id is null and series in(s,lot.series) and issue_number=iss and (publication_year=yr or (publication_year=yr-1 and lot.label->>'issueDate' ~ '^[123]/'))) limit 50
   ) c;
   timings := timings || jsonb_build_object('comics',round((extract(epoch from clock_timestamp()-timer)*1000)::numeric,1)); timer := clock_timestamp();
   -- Follow existing source-ID crosswalks when a provider encodes the cover in its series title.

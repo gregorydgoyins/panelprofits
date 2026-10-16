@@ -21,8 +21,8 @@ export async function auditLocalResearch(limit=30) {
    const lot=research.identity;let story=research.story;
    if(!story && lot.year){const input={series:lot.series,issueNumber:lot.issue,year:lot.year,publisher:lot.publisher};story=await hydrateStoredFandom(input) || await hydrateStoredGcdStory(input);}
    let writeup=research.writeup;
-   if(!writeup && story && generated<2){generated++;writeup=await makeListingWriteup(lot,story);if(writeup)result.written++;}
-   if(sourceChecks<3 && lot.year && lot.grader){sourceChecks++;const imported=await enrichSaleSources(research);result.salesWritten+=imported.written;}
+   if(!writeup && story && generated<2 && Date.now()-start<100000){generated++;writeup=await makeListingWriteup(lot,story);if(writeup)result.written++;}
+   if(sourceChecks<3 && lot.year && lot.grader && Date.now()-start<120000){sourceChecks++;const imported=await enrichSaleSources(research);result.salesWritten+=imported.written;}
    if(research.history.available && research.history.hasMore && historyPages<1){historyPages++;await continueCompletedEbaySales(`${lot.series} ${lot.issue}`);}
    result.checked++;
    const missing=[...(!story?["synopsis"]:[]),...(!research.localResearch.census?["census"]:[]),...(!research.localResearch.prices.length?["prices"]:[]),...(!writeup?["writeup"]:[])];
