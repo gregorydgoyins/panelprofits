@@ -12,6 +12,7 @@ import {
 import { evaluateAuctionListing } from "@/lib/sniper/radar-engine";
 import { getEraDisplayName } from "@/lib/sniper/anti-bullshit";
 import { SlabEncasement } from "@/components/sniper/SlabEncasement";
+import { useLotResearch } from "@/components/sniper/useLotResearch";
 import { SniperListingResearch } from "@/components/sniper/SniperListingResearch";
 import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
 import { LiveLotStrip } from "@/components/sniper/LiveLotStrip";
@@ -216,7 +217,7 @@ export default function SniperRadarPage() {
         setDataAsOf(data.dataAsOf ?? null);
 
         // Reset countdown timer map with fresh active ticking seconds
-        // The response may come from the CDN cache: take off the seconds that passed since it was built.
+        // Account for transport time since the stored-listings response was built.
         const ageSecs = data.fetchedAt ? Math.max(0, (Date.now() - new Date(data.fetchedAt).getTime()) / 1000) : 0;
         const newTimers: Record<string, number> = {};
         for (const item of data.auctions) {
@@ -390,6 +391,7 @@ export default function SniperRadarPage() {
 
   // High-Resolution Front View Lightbox Inspection State
   const [inspectedDeal, setInspectedDeal] = useState<CandidateEvaluation | null>(null);
+  const lotResearch=useLotResearch(inspectedDeal ? `/api/sniper/research?${new URLSearchParams({itemId:inspectedDeal.listing.id})}` : null);
   const [modalPerspective, setModalPerspective] = useState<
     "all" | "matrix" | "investopedia" | "learn" | "video" | "financial" | "chart" | "census" | "lore" | "gcd" | "signature"
   >("all");
@@ -2120,9 +2122,11 @@ export default function SniperRadarPage() {
                 </div>
 
                 <SniperVideos
+                  key={inspectedDeal.listing.id}
+                  videos={lotResearch.data?.videos || []}
+                  loading={lotResearch.loading}
                   series={inspectedDeal.label?.title || inspectedDeal.resolvedSeries}
                   issue={String(inspectedDeal.resolvedIssue ?? "")}
-                  creators={[...(inspectedDeal.gcdMetadata?.writers ?? []), ...(inspectedDeal.gcdMetadata?.pencilers ?? [])].slice(0, 2)}
                   archive={inspectedDeal.videoDossier?.comicBaseVideo ? {
                     title: inspectedDeal.videoDossier.comicBaseVideo.headline,
                     videoUrl: inspectedDeal.videoDossier.comicBaseVideo.videoUrl,
@@ -2154,11 +2158,12 @@ export default function SniperRadarPage() {
 
                     <div className="rounded-lg overflow-hidden border border-slate-800 bg-slate-950 p-2">
                       <LotMarketChart
+                        key={inspectedDeal.listing.id}
+                        research={lotResearch}
                         series={inspectedDeal.resolvedSeries}
                         issue={inspectedDeal.resolvedIssue}
                         grade={inspectedDeal.resolvedGrade}
                         grader={inspectedDeal.gradingCompany}
-                        itemId={inspectedDeal.listing.id}
                         ticker={formatComicEquityTicker(inspectedDeal.resolvedSeries, inspectedDeal.resolvedIssue)}
                         currentBid={inspectedDeal.listing.currentBid}
                         allInCost={inspectedDeal.allInCost}
@@ -2191,13 +2196,9 @@ export default function SniperRadarPage() {
 
                     {/* Integrated Encyclopedic Fandom Lore Dossier */}
                     <SniperListingResearch
-                      itemId={inspectedDeal.listing.id}
-                      listingTitle={inspectedDeal.listing.title}
+                      research={lotResearch}
                       series={inspectedDeal.label?.title || inspectedDeal.resolvedSeries}
                       issueNumber={inspectedDeal.resolvedIssue}
-                      year={inspectedDeal.resolvedYear}
-                      publisher={inspectedDeal.gcdMetadata?.publisher}
-                      editionVerified={Boolean(inspectedDeal.label?.title)}
                       grader={inspectedDeal.gradingCompany}
                       grade={inspectedDeal.resolvedGrade}
                     />

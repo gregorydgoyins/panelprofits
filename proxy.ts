@@ -3,9 +3,8 @@ import { refreshSupabaseSession } from "@/lib/supabase/proxy";
 
 export async function proxy(request: NextRequest) {
   request.headers.set("x-panel-profits-path", request.nextUrl.pathname);
-  // This page has its own Sniper gate; render it without a Supabase round trip.
-  // API routes still run their existing session refresh and server-side checks.
-  if (request.nextUrl.pathname === "/sniper") return NextResponse.next({ request });
+  // Public evidence routes need no account refresh. Game and account routes retain their own checks.
+  if (["/sniper", "/api/sniper/research", "/api/sniper/listing-writeup", "/api/sniper/candles", "/api/sniper/videos"].includes(request.nextUrl.pathname)) return NextResponse.next({ request });
   return refreshSupabaseSession(request);
 }
 

@@ -1,13 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
-import type { LocalLotResearch } from "@/lib/sniper/local-research";
+import type { ResearchLoad } from "./useLotResearch";
 import type { StorySummary } from "@/lib/comics/story-summary";
 import type { ListingWriteup } from "@/lib/sniper/listing-writeup";
 
-type Props = {
-  researchUrl?: string; itemId?: string; listingTitle: string; series: string; issueNumber: string; year?: number; publisher?: string;
-  grader?: string; grade?: number; editionVerified: boolean;
-};
+type Props = { research: ResearchLoad; series: string; issueNumber: string; grader?: string; grade?: number };
 function Refs({ refs, sources }: { refs?: number[]; sources: ListingWriteup["sources"] }) {
   return <>{(refs ?? []).map(n => sources[n] ? <a key={n} href={sources[n].uri} target="_blank" rel="noopener noreferrer" title={sources[n].title} className="ml-1 align-super text-[10px] text-cyan-300 hover:underline">[{n + 1}]</a> : null)}</>;
 }
@@ -18,32 +14,16 @@ function LinkedSynopsis({ story }: { story: StorySummary }) {
   return <>{story.text.split(new RegExp(`(${names.join("|")})`,"g")).map((part,i) => links.has(part) ? <a key={i} href={links.get(part)} className="text-cyan-300 underline underline-offset-4">{part}</a> : part)}</>;
 }
 export function SniperListingResearch(p: Props) {
-  const [localResearch,setLocalResearch] = useState<LocalLotResearch | null>(null);
-  const [story,setStory] = useState<StorySummary | null>(null);
-  const [writeup,setWriteup] = useState<ListingWriteup | null>(null);
-  const [error,setError] = useState<string | null>(null);
-  const [loading,setLoading] = useState(true);
-  useEffect(() => {
-    const controller = new AbortController();
-    setLoading(true); setStory(null); setWriteup(null); setLocalResearch(null); setError(null);
-    const q = new URLSearchParams({title:p.listingTitle,series:p.series,issue:p.issueNumber});
-    if(p.itemId) q.set("itemId",p.itemId);
-    if(p.year) q.set("year",String(p.year));
-    if(p.publisher) q.set("publisher",p.publisher);
-    if(p.grader) q.set("grader",p.grader);
-    fetch(p.researchUrl || `/api/sniper/listing-writeup?${q}`,{cache:"no-store",signal:AbortSignal.any([controller.signal,AbortSignal.timeout(40000)])})
-      .then(async r => { if(!r.ok) throw new Error("Issue research could not be read"); return r.json(); })
-      .then(j => { if(controller.signal.aborted) return; setStory(j.story ?? null);setWriteup(j.writeup ?? null);setLocalResearch(j.localResearch ?? null);setError(j.researchError ?? null); })
-      .catch(() => { if(!controller.signal.aborted) setError("Issue research could not be read. Your prices and chart remain separate from this request."); })
-      .finally(() => { if(!controller.signal.aborted) setLoading(false); });
-    return () => controller.abort();
-  },[p.researchUrl,p.itemId,p.listingTitle,p.series,p.issueNumber,p.year,p.publisher,p.grader]);
+  const {data,loading,error,retry}=p.research;
+  const localResearch=data?.localResearch;
+  const story=data?.story;
+  const writeup=data?.writeup;
   const dossier = localResearch?.ppcfId ? `/wiki/${localResearch.ppcfId}` : `/comics?q=${encodeURIComponent(`${p.series} #${p.issueNumber}`)}`;
   const characters = [...(story?.entities?.featuredCharacters || []),...(story?.entities?.antagonists || []),...(story?.entities?.otherCharacters || [])].filter((e,i,a)=>a.findIndex(other=>other.url===e.url)===i).slice(0,3);
   const publicationDate = localResearch?.prices.find(price=>price.publicationDate)?.publicationDate;
   return <section className="space-y-5 text-sm text-slate-300 leading-6">
     {loading && <p role="status" className="text-xs text-cyan-300">Reading this issue’s research…</p>}
-    {error && <p role="status" className="text-xs text-amber-300">{error}</p>}
+    {error && <p role="alert" className="text-xs text-amber-300">{error} <button onClick={retry} className="underline">Retry research</button></p>}
     {writeup && <section className="space-y-3"><h3 className="text-lg font-semibold text-emerald-300">{writeup.investment.heading}</h3><p className="text-xs text-slate-500">Panel Profits analysis · {writeup.edition}</p>{writeup.investment.points.map((point,i)=><div key={i}><h4 className="font-semibold text-white">{point.label}</h4><p>{point.text}<Refs refs={point.refs} sources={writeup.sources}/></p></div>)}</section>}
     {localResearch && <section className="space-y-3 border-t border-slate-800 pt-4">
       <h3 className="font-semibold text-white">Price comparisons &amp; graded population</h3>

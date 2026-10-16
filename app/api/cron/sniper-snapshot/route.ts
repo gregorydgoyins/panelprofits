@@ -1,5 +1,5 @@
 import { after, NextRequest, NextResponse } from "next/server";
-import { auditLocalResearch } from "@/lib/sniper/local-research";
+import { auditLocalResearch } from "@/lib/sniper/research-worker";
 import { runSnapshot } from "@/lib/sniper/market-store";
 
 export const runtime = "nodejs";

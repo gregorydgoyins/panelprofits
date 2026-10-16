@@ -1,147 +1,86 @@
 import { createAdminServerClient } from "@/lib/supabase/admin";
-import { readSavedStorySummary, type StorySummary } from "@/lib/comics/story-summary";
-import { panelProfitsGrades, type Grade } from "@/lib/pricing/source-ladder";
+import { panelProfitsGrades } from "@/lib/pricing/source-ladder";
 import type { ComicRecord } from "@/lib/comics/types";
-import { resolveCensus } from "./census-resolve";
+import type { StorySummary } from "@/lib/comics/story-summary";
+import { writeupSchema, type ListingWriteup } from "./writeup-schema";
+import { exactStoredEdition, storedPrices, type EditionRow, type PriceObservation } from "./stored-market-evidence";
+import { matchCompletedComicSale } from "./completed-sale-match";
+import { dedupeSales, type SaleObs } from "./candles";
+import type { EbayHistoryResult } from "./ebay-history";
 import type { GradeCensus } from "./census-population";
-import type { RawAuctionListing } from "./types";
-import { parseAndFilterListing } from "./anti-bullshit";
-import { researchTitle } from "./research-title";
-import { hydrateStoredGcdStory } from "@/lib/comics/stored-gcd-story";
-import { hydrateStoredFandom } from "@/lib/comics/stored-fandom";
-import { readStoredMarketEvidence, resolveStoredPublicationYear, type StoredPrice } from "./stored-market-evidence";
-import { createHash } from "node:crypto";
-import { lookupGoCollectBatch } from "./gocollect-prices";
-import { lookupGradeCensusBatch } from "./census-population";
-
-export interface LocalLotResearch {
-  story: StorySummary | null;
-  census: GradeCensus | null;
-  prices: StoredPrice[];
-  ppcfId?: string | null;
-  missing: string[];
-}
-const normalize = (value: string | null | undefined) => (value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-
-/** Edition matching is exact. Never choose the highest-priced row or fall back to another year. */
-export function matchingLocalComic(rows: ComicRecord[], edition: string | null): ComicRecord | null {
-  if (rows.length >= 50) return null;
-  const matches = rows.filter(row => normalize(row.cover_variant) === normalize(edition)
+import type { LotResearch, LocalLotResearch } from "./research-types";
+import type { SniperVideo } from "./videos";
+export type { LocalLotResearch } from "./research-types";
+const normalize=(value:string|null|undefined)=>(value || "").toLowerCase().replace(/[^a-z0-9]/g,"");
+export function matchingLocalComic(rows:ComicRecord[],edition:string|null):ComicRecord|null {
+  if(rows.length>=50) return null;
+  const matches=rows.filter(row=>normalize(row.cover_variant)===normalize(edition)
     && (!row.printing || /^(?:1|1st|first)$/i.test(row.printing.trim()))
     && (edition || !row.direct_or_variant || /^(?:direct|standard|regular|base)$/i.test(row.direct_or_variant.trim())));
-  return matches.length === 1 ? matches[0] : null;
+  return matches.length===1?matches[0]:null;
 }
-
-/** Reads the existing stores only. No web requests to vendors, no AI calls and no second data store. */
-export async function readLocalLotResearch(itemId: string, hydrate = false): Promise<LocalLotResearch | null> {
-  const db = createAdminServerClient();
-  const { data: row, error } = await db.from("sniper_listings")
-    .select("title,series,issue,pub_year,publisher,edition,grade,grader,label,payload,census,census_at").eq("item_id", itemId).maybeSingle();
-  if (error) throw new Error("Saved listing lookup failed");
-  if (!row) return null;
-  const label = row.label as RawAuctionListing["label"];
-  const payload = (row.payload || {}) as RawAuctionListing;
-  const parsed = parseAndFilterListing(row.title);
-  const series = researchTitle(label?.title || row.series || parsed.extractedSeries || "");
-  const issue = label?.issueNumber || row.issue || parsed.extractedIssue || "";
-  const dateYear = label?.issueDate?.match(/\/(\d{2}|\d{4})$/)?.[1];
-  const n = dateYear ? Number(dateYear) : null;
-  let year = n == null ? row.pub_year || payload.year || parsed.extractedYear || null : n < 100 ? n + (n > 30 ? 1900 : 2000) : n;
-  if (!year && series && issue) year = await resolveStoredPublicationYear(series, issue);
-  const publisher = label?.publisher || row.publisher || null;
-  const edition = label ? label.edition : row.edition || null;
-  // An untranscribed variant cannot be silently treated as the standard edition.
-  const editionUnknown = !label?.title && /\bvariant|virgin|exclusive|incentive|newsstand|reprint|second print|third print|cover [b-z]\b/i.test(row.title) && !edition;
-  const input = { series, issueNumber: issue, year, publisher };
-  const [story, censusMap, priceRows, market] = await Promise.all([
-    series && issue && year ? (hydrate ? hydrateStoredFandom(input).then(imported => imported || readSavedStorySummary(input)).then(saved => saved || hydrateStoredGcdStory(input)) : readSavedStorySummary(input)) : Promise.resolve(null),
-    row.census ? Promise.resolve(new Map([[0, row.census as GradeCensus]])) : !label?.title && row.grader === "CGC" && !edition && !editionUnknown && year
-      ? lookupGradeCensusBatch([{ key: "0", series, issue, year, grade: row.grade ?? parsed.grade }]).then(found => new Map([...found].map(([key, value]) => [Number(key), value])))
-      : resolveCensus([{ ...payload, title: row.title, label, year, resolvedGrade: row.grade ?? parsed.grade }]),
-    series && issue && year && !editionUnknown ? db.from("comics")
-      .select("id,series,issue_number,publication_year,cover_variant,direct_or_variant,printing,pp_grade_9_8_price,panel_profits_data")
-      .eq("series", series).eq("issue_number", issue).eq("publication_year", year).limit(50) : Promise.resolve({ data: [], error: null }),
-    series && issue && year && !editionUnknown ? readStoredMarketEvidence(series, issue, year, edition) : Promise.resolve({ ppcfId: null, prices: [] }),
-  ]);
-  if (priceRows.error) throw new Error("Stored price lookup failed");
-  const comic = matchingLocalComic((priceRows.data || []) as ComicRecord[], edition);
-  const grades = comic ? panelProfitsGrades({ ...comic, panel_profits_data: comic.panel_profits_data || {} }) : {};
-  // These are stored guide comparisons, not claimed same-grader realized sales.
-  const pcSourceId = comic?.panel_profits_data?.["PP Source ID"] || comic?.panel_profits_data?.["PriceCharting ID"];
-  const legacyPrices = Object.entries(grades).filter((entry): entry is [Grade, number] => typeof entry[1] === "number" && entry[1] > 0)
-    .map(([grade, amount]) => ({ grade, amount, source: pcSourceId ? `PriceCharting #${pcSourceId} via Panel Profits · stored guide` : "Panel Profits · stored guide", basis: "Stored grade-specific guide estimate; not a completed sale", kind: "guide", currency: "USD", url: `/comics/${encodeURIComponent(comic!.id)}` }));
-  const prices: StoredPrice[] = [...market.prices, ...legacyPrices];
-  if (label?.title && label.issueNumber && !editionUnknown && !edition) {
-    const found = await lookupGoCollectBatch([{ key: itemId, title: series, issue, date: label.issueDate, grader: label.grader || row.grader, labelType: label.labelType, grade: label.grade ?? row.grade }]);
-    const value = found.get(itemId);
-    if (value?.lastSoldPrice && value.lastSoldDate) prices.push({ grade: value.grade, amount: value.lastSoldPrice, source: `GoCollect · ${value.grader} ${value.labelType} last sale`, url: market.ppcfId ? `/wiki/${market.ppcfId}` : "https://gocollect.com/comics", observedAt: value.lastSoldDate, currency: "USD", kind: "sale" });
+interface CensusRow { title:string; issue_number:string; year?:number; series_year?:number; publisher?:string; total:number; pop?:Record<string,number>; grades?:Record<string,number> }
+export interface LotEvidence {
+  identity:LotResearch["identity"] & {label?:{title?:string;issueDate?:string;publisher?:string}};
+  editions:EditionRow[]; comics:ComicRecord[]; observations:PriceObservation[];
+  story:{summary:string|null;source:string;source_url:string;license:string|null}|null;
+  authored:{content:ListingWriteup|null;failed_at:string|null;written_at:string|null}|null;
+  census:CensusRow[]; gocollect:Array<{slug:string;grader:string;label_type:string;grade:string;last_sold_price:number|null;last_sold_date:string|null}>;
+  videoSets:SniperVideo[][];
+  sales:Array<{item_id:string|null;sold_at:string;price_usd:number;grade:number|null;grader:string;venue:string;source:string;url:string|null}>;
+  history:EbayHistoryResult|null;
+}
+function storyFrom(row:LotEvidence["story"]):StorySummary|null {
+  if(!row?.summary) return null;
+  try {const parsed=JSON.parse(row.summary);if(typeof parsed.text!=="string" || !parsed.text.trim() || /(?:^|\n)\s*\|\s*\w+\s*=/.test(parsed.text)) return null;return {...parsed,source:row.source,sourceUrl:row.source_url,license:row.license};}catch{return null;}
+}
+function censusFrom(rows:CensusRow[],identity:LotResearch["identity"]):GradeCensus|null {
+  const exact=rows.filter(row=>identity.grader==="PSA" ? (!identity.year || (row.series_year!=null && row.series_year<=identity.year)) : row.year===identity.year);
+  if(exact.length!==1) return null;
+  const row=exact[0];const byGrade:Record<string,number>={};
+  for(const [key,count] of Object.entries(row.pop || row.grades || {})){const label=key.replace("_",".");if(/^\d+(?:\.\d+)?$/.test(label)) byGrade[Number(label).toFixed(1)]=Number(count);}
+  const grade=identity.grade;const entries=Object.entries(byGrade);
+  return {title:row.title,issue:row.issue_number,year:row.year || row.series_year || null,total:row.total,byGrade,...(grade!=null?{atGrade:byGrade[grade.toFixed(1)] || 0,higher:entries.filter(([g])=>Number(g)>grade).reduce((n,[,v])=>n+v,0),lower:entries.filter(([g])=>Number(g)<grade).reduce((n,[,v])=>n+v,0),atOrAbove:entries.filter(([g])=>Number(g)>=grade).reduce((n,[,v])=>n+v,0)}:{})};
+}
+/** Pure assembly of original source rows. No cache, hydration, remote research or generated prices. */
+export function assembleLotResearch(raw:LotEvidence):LotResearch {
+  const {label,...identity}=raw.identity;identity.grade=identity.grade==null?null:Number(identity.grade);
+  const editionUnknown=!label?.title && !identity.edition && /\bvariant|virgin|exclusive|incentive|newsstand|reprint|second print|third print|cover [b-z]\b/i.test(identity.title);
+  const exactCase=raw.editions.filter(row=>row.series_name===identity.series);
+  const edition=identity.year && !editionUnknown?exactStoredEdition(exactCase.length?exactCase:raw.editions,identity.year,identity.edition):null;
+  const prices=storedPrices(raw.observations,edition);
+  const comic=!editionUnknown?matchingLocalComic(raw.comics.filter(row=>row.series===identity.series),identity.edition) || matchingLocalComic(raw.comics,identity.edition):null;
+  const sourceId=comic?.panel_profits_data?.["PP Source ID"] || comic?.panel_profits_data?.["PriceCharting ID"];
+  for(const [grade,amount] of Object.entries(comic?panelProfitsGrades({...comic,panel_profits_data:comic.panel_profits_data || {}}):{})) {
+    if(!amount || prices.some(p=>p.grade===grade && p.source.startsWith("PriceCharting") && sourceId)) continue;
+    prices.push({grade,amount,source:sourceId?`PriceCharting #${sourceId} via Panel Profits · stored guide`:"Panel Profits · stored guide",basis:"Stored grade-specific guide estimate; observation date unavailable",kind:"guide",currency:"USD",url:`/comics/${encodeURIComponent(comic!.id)}`});
   }
-  const census = censusMap.get(0) || null;
-  return { story, census, prices, ppcfId: market.ppcfId, missing: [...(!story ? ["synopsis"] : []), ...(!census ? ["census"] : []), ...(!prices.length ? ["prices"] : [])] };
-}
-
-export const lotResearchKey = (itemId: string) => `lot:${createHash("sha256").update(itemId).digest("hex").slice(0, 36)}`;
-
-/** The lot opener reads a prepared snapshot in the existing research cache. */
-export async function readSavedLotResearch(itemId: string): Promise<LocalLotResearch | null> {
-  const { data, error } = await createAdminServerClient().from("sniper_listing_writeup").select("content").eq("key", lotResearchKey(itemId)).maybeSingle();
-  if (error) throw new Error("Saved lot research lookup failed");
-  return data?.content as LocalLotResearch | null;
-}
-
-/** Audit current lots against the local stores; record completeness in the existing fetch log. */
-export async function auditLocalResearch(limit = 30, opts: { generate?: boolean; force?: boolean } = {}) {
-  const db = createAdminServerClient();
-  const started = Date.now();
-  const [data, previous] = await Promise.all([
-    (async () => {
-      const all: Array<{ item_id: string }> = [];
-      for (let offset = 0; ; offset += 1000) {
-        const page = await db.from("sniper_listings").select("item_id").eq("status", "live")
-          .order("end_time", { ascending: true, nullsFirst: false }).order("item_id").range(offset, offset + 999);
-        if (page.error) throw new Error("Local listing audit lookup failed");
-        all.push(...(page.data || []));
-        if ((page.data?.length || 0) < 1000) return all;
-      }
-    })(),
-    (async () => {
-      const all: Array<{ key: string; fetched_at: string }> = [];
-      for (let offset = 0; ; offset += 1000) {
-        const page = await db.from("sniper_vendor_fetch").select("key,fetched_at").like("key", "local-research:%")
-          .order("key").range(offset, offset + 999);
-        if (page.error) throw new Error("Local audit history lookup failed");
-        all.push(...(page.data || []));
-        if ((page.data?.length || 0) < 1000) return all;
-      }
-    })(),
-  ]);
-  const checked = new Map(previous.map(row => [row.key, Date.parse(row.fetched_at)]));
-  const logKey = (id: string) => `local-research:v2:${id}`;
-  const due = data.filter(row => opts.force || Date.now() - (checked.get(logKey(row.item_id)) || 0) > 6 * 3600_000)
-    .sort((a, b) => (checked.get(logKey(a.item_id)) || 0) - (checked.get(logKey(b.item_id)) || 0)).slice(0, limit);
-  const result = { checked: 0, complete: 0, missing: 0, errors: 0, written: 0 };
-  for (const row of due) {
-    if (Date.now() - started > 175_000) break;
-    try {
-      const research = await readLocalLotResearch(row.item_id, true);
-      if (!research) continue;
-      const { error: researchError } = await db.from("sniper_listing_writeup").upsert({ key: lotResearchKey(row.item_id), title: row.item_id, content: research, written_at: new Date().toISOString(), failed_at: null });
-      if (researchError) throw researchError;
-      let hasWriteup = false;
-      if (research.story) {
-        const { data: listing, error: listingError } = await db.from("sniper_listings").select("title,series,issue,pub_year,publisher,grader").eq("item_id", row.item_id).single();
-        if (listingError) throw listingError;
-        const { makeListingWriteup, readCachedWriteup } = await import("./listing-writeup");
-        const input = { ...listing, year: listing.pub_year };
-        hasWriteup = Boolean((await readCachedWriteup(input)).writeup);
-        if (!hasWriteup && opts.generate !== false && await makeListingWriteup(input, research.story)) { result.written++; hasWriteup = true; }
-      }
-      const missing = [...research.missing, ...(!hasWriteup ? ["writeup"] : [])];
-      const { error: saveError } = await db.from("sniper_vendor_fetch").upsert({ key: logKey(row.item_id), fetched_at: new Date().toISOString(), status: missing.length ? `missing:${missing.join(",")}` : "complete", items: 1, sales: 0 });
-      if (saveError) throw saveError;
-      result.checked++;
-      if (missing.length) result.missing++; else result.complete++;
-    } catch { result.errors++; }
+  if(!editionUnknown && !identity.edition && new Set(raw.gocollect.map(row=>row.slug)).size===1) {
+    const row=raw.gocollect[0];if(row?.last_sold_price && row.last_sold_date) prices.push({grade:row.grade,amount:Number(row.last_sold_price),source:`GoCollect · ${row.grader} ${row.label_type} last sale`,url:edition?`/wiki/${edition.ppcf_id}`:"https://gocollect.com/comics",observedAt:row.last_sold_date,currency:"USD",kind:"sale",basis:"Provider-reported last completed sale"});
   }
-  return result;
+  prices.sort((a,b)=>Number(b.kind==="guide" && Number(b.grade)===identity.grade)-Number(a.kind==="guide" && Number(a.grade)===identity.grade) || Number(a.grade)-Number(b.grade));
+  const story=storyFrom(raw.story);const census=editionUnknown?null:censusFrom(raw.census,identity);
+  const content=raw.authored?.content;const parsed=writeupSchema.safeParse(content);
+  const writeup=parsed.success && Array.isArray(content?.sources)?{...content,...parsed.data}:null;
+  const sales:SaleObs[]=!identity.edition && !editionUnknown?raw.sales.map(row=>({itemId:row.item_id || undefined,date:row.sold_at,price:Number(row.price_usd),grade:row.grade==null?null:Number(row.grade),venue:row.venue,source:row.source,confirmed:true,url:row.url || undefined})):[];
+  const terms=identity.edition?identity.edition.toLowerCase().split(/[^a-z0-9]+/).filter(t=>t.length>=2):[];
+  if(!editionUnknown) for(const item of raw.history?.items || []) {
+    const match=matchCompletedComicSale(String(item.title || ""),identity.series,identity.issue,terms);
+    const price=Number(item.lastSoldPrice?.value);const date=item.lastSoldDate;
+    if(!match || match.gradingCompany!==identity.grader || !(price>0) || item.lastSoldPrice?.currency!=="USD" || !date || !Number.isFinite(Date.parse(date))) continue;
+    sales.push({itemId:item.itemId,date,price,grade:match.grade,venue:"eBay",source:raw.history?.provider==="ebay_marketplace_insights"?"ebay_insights":"ebay_history",confirmed:true,url:item.itemWebUrl});
+  }
+  const allVideos=raw.videoSets.flat().filter((v,i,a)=>/^[a-zA-Z0-9_-]{11}$/.test(v.videoId) && a.findIndex(other=>other.videoId===v.videoId)===i);
+  const related=allVideos.filter(v=>v.kind!=="explainer").slice(0,2);const explainer=allVideos.find(v=>v.kind==="explainer");
+  const localResearch:LocalLotResearch={story,census,prices,ppcfId:edition?.ppcf_id || null,missing:[...(!story?["synopsis"]:[]),...(!census?["census"]:[]),...(!prices.length?["prices"]:[])]};
+  return {version:2,identity,writeup,story,localResearch,sales:dedupeSales(sales),videos:[...related,...(explainer?[explainer]:[])],history:{available:Boolean(raw.history?.available),message:raw.history?.message || "No separately acquired eBay history. Source-reported sales remain in the ledger.",checkedAt:raw.history?.checkedAt,hasMore:raw.history?.hasMore},state:writeup?"ready":"pending",researchError:null};
+}
+/** One live database read transaction per selected lot. No rendered-response store or TTL. */
+export async function readLotResearch(itemId:string,signal?:AbortSignal):Promise<LotResearch|null> {
+  const {data,error}=await createAdminServerClient().rpc("sniper_lot_evidence_v2",{p_item_id:itemId}).abortSignal(signal || AbortSignal.timeout(10000));
+  if(error) { console.warn("[sniper-research-v2] Evidence read failed", {code:error.code,message:error.message}); throw new Error("Stored issue evidence could not be read"); }
+  return data?assembleLotResearch(data as LotEvidence):null;
+}
+export async function readLocalLotResearch(itemId:string):Promise<LocalLotResearch|null> {
+  return (await readLotResearch(itemId))?.localResearch || null;
 }

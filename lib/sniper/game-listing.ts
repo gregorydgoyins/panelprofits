@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { createAdminServerClient } from "@/lib/supabase/admin";
-import { readSavedLotResearch } from "./local-research";
+import { readLocalLotResearch } from "./local-research";
 import { gameCommand } from "./game-store";
 
 /** Enroll the selected stored auction; never trust client prices, deadlines or valuation. */
@@ -15,7 +15,7 @@ export async function bidOnStoredListing(owner: string, itemId: string, amount: 
  const {data: lot, error} = await db.from("sniper_listings").select("item_id,title,series,issue,grade,grader,status,buying_option,end_time,price_usd,pub_year,publisher,image_url,url").eq("item_id",itemId).maybeSingle();
  if (error || !lot) throw new Error("Saved auction not found");
  if (lot.status !== "live" || lot.buying_option !== "AUCTION" || !lot.grader || !(Number(lot.price_usd)>0) || !lot.end_time || Date.parse(lot.end_time)<=Date.now()) throw new Error("This saved listing is not an open graded auction");
- const research = await readSavedLotResearch(itemId);
+ const research = await readLocalLotResearch(itemId);
  const values = (research?.prices || []).filter(p => Number(p.grade)===Number(lot.grade) && (p.currency || "USD")==="USD" && (p.kind || "guide")==="guide" && p.amount>0).map(p=>p.amount).sort((a,b)=>a-b);
  const middle = Math.floor(values.length/2);
  const reference = values.length ? (values.length%2 ? values[middle] : (values[middle-1]+values[middle])/2) : null;

@@ -1,5 +1,4 @@
 import { createHash } from "node:crypto";
-import { z } from "zod";
 import { createAdminServerClient } from "@/lib/supabase/admin";
 import type { StorySummary } from "@/lib/comics/story-summary";
 import { generateText } from "ai";
@@ -15,13 +14,9 @@ export interface WriteupListing {
   grader?: string | null;
 }
 
-const point = z.object({ label: z.string().min(2).max(80), text: z.string().min(20).max(700), refs: z.array(z.number().int().min(0)).max(6).optional() });
-export const writeupSchema = z.object({
-  edition: z.string().min(5).max(220),
-  synopsis: z.object({ intro: z.string().min(20).max(500), points: z.array(point).min(1).max(4) }),
-  investment: z.object({ heading: z.string().min(5).max(140), points: z.array(point).min(2).max(5) }),
-});
-export type ListingWriteup = z.infer<typeof writeupSchema> & { sources: Array<{ title: string; uri: string }>; model: string; writtenAt: string; learning?: Array<{ term: string; url: string; definition: string }> };
+export { writeupSchema } from "./writeup-schema";
+export type { ListingWriteup } from "./writeup-schema";
+import { writeupSchema, type ListingWriteup } from "./writeup-schema";
 
 const MODEL = process.env.SNIPER_WRITEUP_MODEL || "gemini-flash-latest";
 const TTL_MS = 30 * 86_400_000;
@@ -99,17 +94,6 @@ export function attachRefs<T extends { synopsis: { intro: string; points: any[] 
   // Anything cited by no point still counts as a source the answer used.
   rawSources.forEach((s, c) => { if (s.uri) slot(c); });
   return { parsed: result, sources: used.map((c) => rawSources[c]).slice(0, 10) };
-}
-
-/** What the database already holds for this edition. Never calls Gemini, so it is as fast as a table read. */
-export async function readCachedWriteup(l: WriteupListing): Promise<{ writeup: ListingWriteup | null; failedRecently: boolean }> {
-  if (!l.title.trim()) return { writeup: null, failedRecently: false };
-  try {
-    const db: any = createAdminServerClient();
-    const { data } = await db.from("sniper_listing_writeup").select("content,failed_at,written_at").eq("key", writeupKey(l)).maybeSingle();
-    if (data?.content && Date.now() - new Date(data.written_at).getTime() < TTL_MS) return { writeup: data.content as ListingWriteup, failedRecently: false };
-    return { writeup: null, failedRecently: Boolean(data?.failed_at && Date.now() - new Date(data.failed_at).getTime() < FAIL_TTL_MS) };
-  } catch { return { writeup: null, failedRecently: false }; }
 }
 
 export function storedWriteupPrompt(l: WriteupListing, story: StorySummary): string {
@@ -217,7 +201,7 @@ export async function prepareWriteups(opts: { budgetMs?: number; maxNew?: number
     while (next < todo.length && Date.now() - started < budgetMs - 50_000) { // leave room for the last call to finish
       const l = todo[next++];
       const { readLocalLotResearch } = await import("./local-research");
-      const research = await readLocalLotResearch(itemIds.get(writeupKey(l))!, true);
+      const research = await readLocalLotResearch(itemIds.get(writeupKey(l))!);
       (await makeListingWriteup(l, research?.story)) ? out.written++ : out.failed++;
     }
   }));

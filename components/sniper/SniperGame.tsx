@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { GameRound, GameState } from "@/lib/sniper/game-store";
 import { SlabEncasement } from "./SlabEncasement";
 import type { GradingCompany } from "@/lib/sniper/types";
+import { useLotResearch } from "./useLotResearch";
 import { SniperListingResearch } from "./SniperListingResearch";
 const money = (n: number) => `S$${Number(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 type Anchor = { server: number; local: number };
@@ -65,6 +66,7 @@ export type SniperGameController = ReturnType<typeof useSniperGame>;
 export function SniperGame({ desk, view }: { desk: SniperGameController; view: "rounds" | "collection" | "results" }) {
  const { game, anchor, error, busy, load, act } = desk;
  const [selected, setSelected] = useState<GameRound | null>(null);
+ const research=useLotResearch(selected?`/api/sniper/game?research=${selected.token}`:null);
  const waiting = game?.rounds.filter(r => r.status === "waiting") || [];
  const active = game?.rounds.filter(r => r.status === "bidding" || r.status === "awaiting_result") || [];
  const assets = game?.rounds.filter(r => r.asset && !r.asset.soldAt) || [];
@@ -74,7 +76,7 @@ export function SniperGame({ desk, view }: { desk: SniperGameController; view: "
   {game?.exhausted && <p role="status" className="rounded-lg border border-rose-500/40 p-4 text-rose-200">Run finished: no cash or owned comics remain. Your results are preserved.</p>}
   {view === "rounds" && active.length > 0 && <div><h3 className="mb-3 text-xs font-bold uppercase tracking-widest text-amber-300">Committed rounds · refresh cannot restart these clocks</h3><div className="space-y-5">{active.map(round => <BidRound key={round.token} round={round} anchor={anchor} busy={busy} research={() => setSelected(round)} submit={amount => void act({action:"bid",token:round.token,amount})} />)}</div></div>}
   {view === "rounds" && <div><div className="mb-3 flex items-center justify-between gap-3"><h3 className="text-xs font-bold uppercase tracking-widest text-cyan-300">Waiting to bid</h3><button disabled={busy || !game} onClick={() => void act({action:"refresh"})} className="rounded-lg border border-slate-600 px-3 py-2 text-xs text-slate-200 hover:border-cyan-400 disabled:opacity-40">Fresh queue</button></div><div className="space-y-5">{waiting.map(round => <BidRound key={round.token} round={round} anchor={anchor} busy={busy} research={() => setSelected(round)} submit={amount => void act({action:"bid",token:round.token,amount})} />)}</div>{game && !waiting.length && <p className="text-sm text-slate-400">No unused recorded lots available in this batch. Refresh to check another batch.</p>}</div>}
-  {selected && <div className="rounded-xl border border-cyan-500/30 bg-[#0d1320] p-5"><div className="mb-5 flex justify-between gap-4"><h3 className="font-semibold text-white">{selected.title}</h3><button onClick={() => setSelected(null)} className="text-sm text-slate-400">Close research</button></div><SniperListingResearch researchUrl={`/api/sniper/game?research=${selected.token}`} listingTitle={selected.title} series={selected.series} issueNumber={selected.issue} year={selected.year || undefined} grader={selected.grader || undefined} grade={selected.grade || undefined} editionVerified={false} /></div>}
+  {selected && <div className="rounded-xl border border-cyan-500/30 bg-[#0d1320] p-5"><div className="mb-5 flex justify-between gap-4"><h3 className="font-semibold text-white">{selected.title}</h3><button onClick={() => setSelected(null)} className="text-sm text-slate-400">Close research</button></div><SniperListingResearch research={research} series={selected.series} issueNumber={selected.issue} grader={selected.grader || undefined} grade={selected.grade || undefined} /></div>}
   {view === "collection" && <div className="grid grid-cols-2 md:grid-cols-4 gap-3">{[
     ["Vault Holdings", `${assets.length} Books`],
     ["Capital Deployed", money(assets.reduce((sum,r)=>sum+r.asset!.cost,0))],

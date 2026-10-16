@@ -16,30 +16,12 @@ export interface RealizedSaleComp {
   url?: string;
 }
 
-// Same book is asked for again and again (every time a lot is opened): keep the answer for a minute, in memory and at the CDN.
-const COMPS_TTL_MS = 60_000;
-const compsCache = new Map<string, { at: number; p: Promise<{ status: number; body: string }> }>();
-const compsHeaders = (status: number) => ({
-  "content-type": "application/json",
-  "cache-control": status === 200 ? "public, s-maxage=60, stale-while-revalidate=300" : "no-store",
-});
-
-export async function GET(request: Request) {
-  const key = new URL(request.url).search;
-  const hit = compsCache.get(key);
-  if (hit && Date.now() - hit.at < COMPS_TTL_MS) {
-    const r = await hit.p;
-    return new Response(r.body, { status: r.status, headers: compsHeaders(r.status) });
-  }
-  const p = computeGET(request).then(async (res) => ({ status: res.status, body: await res.text() }));
-  compsCache.set(key, { at: Date.now(), p });
-  p.then((r) => { if (r.status !== 200) compsCache.delete(key); }).catch(() => compsCache.delete(key));
-  if (compsCache.size > 200) compsCache.delete(compsCache.keys().next().value as string);
-  const r = await p;
-  return new Response(r.body, { status: r.status, headers: compsHeaders(r.status) });
+export async function GET(request:Request) {
+  const response=await readComps(request);
+  response.headers.set("cache-control","no-store");
+  return response;
 }
-
-async function computeGET(request: Request) {
+async function readComps(request:Request) {
   const { searchParams } = new URL(request.url);
   const series = searchParams.get("series");
   const issue = searchParams.get("issue");

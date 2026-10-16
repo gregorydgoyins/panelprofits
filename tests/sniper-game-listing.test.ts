@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({ db: {from:vi.fn(),rpc:vi.fn()}, research:vi.fn(), command:vi.fn() }));
 vi.mock("@/lib/supabase/admin",()=>({createAdminServerClient:()=>mocks.db}));
-vi.mock("@/lib/sniper/local-research",()=>({readSavedLotResearch:mocks.research}));
+vi.mock("@/lib/sniper/local-research",()=>({readLocalLotResearch:mocks.research}));
 vi.mock("@/lib/sniper/game-store",()=>({gameCommand:mocks.command}));
 import { bidOnStoredListing } from "@/lib/sniper/game-listing";
 function query(data:unknown) { const q:any={}; for(const method of ["select","eq","not"]) q[method]=vi.fn(()=>q); q.maybeSingle=vi.fn().mockResolvedValue({data,error:null});q.single=q.maybeSingle;return q; }

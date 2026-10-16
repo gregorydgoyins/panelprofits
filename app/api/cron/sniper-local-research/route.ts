@@ -1,4 +1,4 @@
-import { auditLocalResearch } from "@/lib/sniper/local-research";
+import { auditLocalResearch } from "@/lib/sniper/research-worker";
 export const runtime = "nodejs";
 export const maxDuration = 240;
 export const dynamic = "force-dynamic";

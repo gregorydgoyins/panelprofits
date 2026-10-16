@@ -3,40 +3,18 @@ import { NextResponse } from "next/server";
 import { normalizeAuctionTitle, parseAndFilterListing } from "@/lib/sniper/anti-bullshit";
 import { resolveAuthoritativePublisher } from "@/lib/comics/publisher-authority";
 import { lookupSqliteCover, lookupSqliteGallery } from "@/lib/comics/sqlite-covers";
-import { cachedBatch } from "@/lib/sniper/lookup-cache";
-import { lookupGoCollectBatch, type GoCollectPrice } from "@/lib/sniper/gocollect-prices";
-import { resolveCensus } from "@/lib/sniper/census-resolve";
-import type { GradeCensus } from "@/lib/sniper/census-population";
 import { readLiveListings } from "@/lib/sniper/market-store";
 import { RawAuctionListing } from "@/lib/sniper/types";
-import { createAdminServerClient } from "@/lib/supabase/admin";
-import { dedupeSales, saleStats, seriesKey, type SaleObs } from "@/lib/sniper/candles";
-import { gradeNum, benchmarkSalesForBook, resolveAuctionDbMetadata } from "@/lib/sniper/auction-metadata";
+import { resolveAuctionDbMetadata } from "@/lib/sniper/auction-metadata";
 
 
-const RESP_TTL_MS = 30_000;
-const respCache = new Map<string, { at: number; p: Promise<{ status: number; body: string }> }>();
-
-export async function GET(request: Request) {
-  const key = new URL(request.url).search;
-  const hit = respCache.get(key);
-  if (hit && Date.now() - hit.at < RESP_TTL_MS) {
-    const r = await hit.p;
-    return new Response(r.body, { status: r.status, headers: { "content-type": "application/json", "server-timing": lastTiming, "cache-control": r.status === 200 ? "public, s-maxage=30, stale-while-revalidate=120" : "no-store" } });
-  }
-  const p = computeGET(request).then(async (res) => { lastTiming = res.headers.get("server-timing") ?? ""; return { status: res.status, body: await res.text() }; });
-  respCache.set(key, { at: Date.now(), p });
-  p.then((r) => { if (r.status !== 200) respCache.delete(key); }).catch(() => respCache.delete(key));
-  if (respCache.size > 50) respCache.delete(respCache.keys().next().value as string);
-  const r = await p;
-  return new Response(r.body, { status: r.status, headers: { "content-type": "application/json", "server-timing": lastTiming, "cache-control": r.status === 200 ? "public, s-maxage=30, stale-while-revalidate=120" : "no-store" } });
+export const dynamic="force-dynamic";
+export async function GET(request:Request) {
+  const response=await readRadar(request);
+  response.headers.set("cache-control","no-store");
+  return response;
 }
-
-let lastTiming = "";
-const SALES_TTL_MS = 5 * 60_000;
-const salesCache = new Map<string, { at: number; map: Map<string, SaleObs[]> }>();
-
-async function computeGET(request: Request) {
+async function readRadar(request:Request) {
   const tStart = Date.now();
   const marks: string[] = [];
   const mark = (n: string, since: number) => marks.push(`${n};dur=${Date.now() - since}`);
@@ -139,85 +117,6 @@ async function computeGET(request: Request) {
     }
 
     if (filteredAuctions.length > 0) {
-      const tSales = Date.now();
-      const salesBySeriesKey = new Map<string, SaleObs[]>();
-      try {
-        const keys = Array.from(
-          new Set(
-            filteredAuctions
-              .map((it) => {
-                const p = parseAndFilterListing(String(it.title || ""));
-                return p.extractedSeries && p.extractedSeries !== "Unknown Series"
-                  ? seriesKey(p.extractedSeries, p.extractedIssue || "1")
-                  : null;
-              })
-              .filter((k): k is string => Boolean(k))
-          )
-        );
-        const salesCacheKey = keys.slice().sort().join("|");
-        const cachedSales = salesCache.get(salesCacheKey);
-        if (cachedSales && Date.now() - cachedSales.at < SALES_TTL_MS) {
-          for (const [k, v] of cachedSales.map) salesBySeriesKey.set(k, v);
-        } else if (keys.length > 0) {
-          const db: any = createAdminServerClient();
-          const keyChunks: string[][] = [];
-          for (let i = 0; i < keys.length; i += 100) {
-            keyChunks.push(keys.slice(i, i + 100));
-          }
-          const [sChunkResults, { data: gRows }] = await Promise.all([
-            Promise.all(
-              keyChunks.map((chunk) =>
-                db
-                  .from("sniper_sales")
-                  .select("series_key,sold_at,price_usd,grade,venue,source,confirmed,url")
-                  .in("series_key", chunk)
-                  .limit(1000)
-              )
-            ),
-            db
-              .from("graded_sales_observations")
-              .select("title_name,issue_number_raw,sale_price,sale_date,grade_numeric,native_grade_text,venue,evidence_path,currency")
-              .gt("sale_price", 0)
-              .not("sale_date", "is", null)
-              .limit(1000),
-          ]);
-          for (const res of sChunkResults) {
-            for (const s of res?.data ?? []) {
-              const list = salesBySeriesKey.get(s.series_key) ?? [];
-              list.push({
-                date: s.sold_at,
-                price: Number(s.price_usd),
-                grade: s.grade != null ? Number(s.grade) : null,
-                venue: s.venue,
-                source: s.source,
-                confirmed: !!s.confirmed,
-                url: s.url ?? undefined,
-              });
-              salesBySeriesKey.set(s.series_key, list);
-            }
-          }
-          for (const g of gRows ?? []) {
-            if (g.currency && g.currency !== "USD") continue;
-            const k = seriesKey(String(g.title_name || ""), String(g.issue_number_raw || "1"));
-            if (!k) continue;
-            const list = salesBySeriesKey.get(k) ?? [];
-            list.push({
-              date: String(g.sale_date),
-              price: Number(g.sale_price),
-              grade: g.grade_numeric != null ? Number(g.grade_numeric) : gradeNum(g.native_grade_text),
-              venue: g.venue || "graded register",
-              source: "graded_sales_observations",
-              confirmed: true,
-              url: g.evidence_path ?? undefined,
-            });
-            salesBySeriesKey.set(k, list);
-          }
-          salesCache.set(salesCacheKey, { at: Date.now(), map: new Map(salesBySeriesKey) });
-          if (salesCache.size > 20) salesCache.delete(salesCache.keys().next().value as string);
-        }
-      } catch {}
-      mark("salesQueries", tSales);
-
       const cleanGraderNotes = (raw?: string | null): string | undefined => {
         if (!raw) return undefined;
         const cleaned = raw
@@ -227,34 +126,7 @@ async function computeGET(request: Request) {
         return cleaned.length > 0 ? cleaned : undefined;
       };
 
-      // Census is resolved once per listing (when its label is read) and stored on the listing row, so a page load only
-      // reads it. Listings without a stored answer yet are resolved here (parallel + cached) as a fallback.
-      const unresolved = filteredAuctions.map((item, idx) => ({ item, idx })).filter(({ item }) => !item.censusResolved);
-      const fresh = unresolved.length ? await resolveCensus(unresolved.map((u) => u.item)) : new Map<number, GradeCensus>();
-      const censusByKey = new Map<string, GradeCensus>();
-      filteredAuctions.forEach((item, idx) => {
-        if (item.censusResolved) { if (item.censusValue) censusByKey.set(String(idx), item.censusValue); }
-        else { const pos = unresolved.findIndex((u) => u.idx === idx); const v = fresh.get(pos); if (v) censusByKey.set(String(idx), v); }
-      });
-      const censusByItem = new Map<unknown, GradeCensus | null>(
-        filteredAuctions.map((item, idx) => [item, censusByKey.get(String(idx)) ?? null] as const),
-      );
-
-      // Realized-sale price from GoCollect for the slab's own grader + label type + grade (read off the slab label).
-      let gcPrices = new Map<string, GoCollectPrice>();
-      try {
-        const gcQueries = filteredAuctions.flatMap((item, idx) => {
-          const lb = item.label;
-          if (!lb?.grader || !lb.title || !lb.issueNumber || lb.grade == null) return [];
-          return [{ key: String(idx), title: lb.title, issue: lb.issueNumber, date: lb.issueDate, grader: lb.grader, labelType: lb.labelType, grade: lb.grade }];
-        });
-        const idOf = (q: object) => JSON.stringify({ ...q, key: undefined });
-        gcPrices = await cachedBatch("gocollect", 5 * 60_000, gcQueries, idOf, lookupGoCollectBatch);
-      } catch (err) {
-        console.error("Sniper GoCollect price lookup failed:", err);
-      }
-      const gcByItem = new Map<unknown, GoCollectPrice | null>(filteredAuctions.map((item, idx) => [item, gcPrices.get(String(idx)) ?? null] as const));
-
+      // Radar uses evidence already attached to each stored listing. Research reads happen only for the selected lot.
       const updatedAuctions = filteredAuctions.map((item) => {
         const isBin = Boolean(item.isBuyItNow || item.listingType === "BuyItNow" || (item.buyItNowPrice && item.buyItNowPrice > 0));
 
@@ -276,10 +148,7 @@ async function computeGET(request: Request) {
 
         const parsed = parseAndFilterListing(rawTitle);
         const effectiveGrade = item.resolvedGrade ?? parsed.grade ?? undefined;
-        const sKey = parsed.extractedSeries && parsed.extractedSeries !== "Unknown Series"
-          ? seriesKey(parsed.extractedSeries, parsed.extractedIssue || "1")
-          : "";
-        const dbMeta = resolveAuctionDbMetadata(rawTitle, effectiveGrade, sKey ? salesBySeriesKey.get(sKey) : undefined);
+        const dbMeta = resolveAuctionDbMetadata(rawTitle, effectiveGrade, undefined);
         const resolvedFmv = dbMeta.fmv ?? ((item.anchorFmv && item.anchorFmv > 0)
           ? item.anchorFmv
           : (item.fairMarketValue && item.fairMarketValue > 0)
@@ -327,7 +196,7 @@ async function computeGET(request: Request) {
         }
 
         // Census is exact per-grade data from cgc_population. Not found = undefined (shown as unavailable).
-        const gc = censusByItem.get(item) ?? null;
+        const gc = item.censusValue ?? null;
         const resolvedCensusTotal = gc?.total;
         const resolvedCensusHigher = gc?.higher;
         const resolvedCensus98 = gc?.atGrade;
@@ -355,7 +224,7 @@ async function computeGET(request: Request) {
           censusTotal: resolvedCensusTotal,
           censusHigher: resolvedCensusHigher,
           censusCount98: resolvedCensus98,
-          gocollectPrice: gcByItem.get(item) ?? undefined,
+          gocollectPrice: item.gocollectPrice,
           listingType: isBin ? "BuyItNow" : "Auction",
           isBuyItNow: isBin,
           buyItNowPrice: isBin ? (item.buyItNowPrice ?? item.currentBid) : undefined,

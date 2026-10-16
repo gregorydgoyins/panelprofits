@@ -2,24 +2,11 @@
 
 import * as React from "react";
 import { marketBrief } from "@/lib/sniper/market-brief";
+import { buildCandles, gradesTraded, saleStats, type Bucket } from "@/lib/sniper/candles";
+import type { ResearchLoad } from "./useLotResearch";
 import { TradingViewChart } from "@/components/charts/tradingview-chart";
 
-interface Candle { time: string; open: number; high: number; low: number; close: number; volume: number; dollars: number }
-interface CandlesResponse {
-  success: boolean;
-  grade: number | null;
-  grades: Array<{ grade: number; count: number }>;
-  bucket: string;
-  candles: Candle[];
-  stats: { n: number; last: { price: number; date: string } | null; low: number | null; high: number | null; median: number | null; median90d: number | null };
-  sources: Record<string, number>;
-  sales: Array<{ date: string; price: number; grade: number | null; venue: string; source: string; confirmed: boolean; url?: string }>;
-  lot?: { ticks: Array<{ time: string; price: number; bids: number }> };
-  note?: string;
-  ebay?: { available: boolean; message: string; code: string | null; hasMore?: boolean; checkedAt?: string };
-}
-
-const usd = (n: number | null | undefined) => (n == null ? "—" : `$${n >= 100 ? Math.round(n).toLocaleString() : n.toFixed(2)}`);
+const usd = (n: number | null | undefined) => n==null?"—":n.toLocaleString("en-US",{style:"currency",currency:"USD",minimumFractionDigits:2,maximumFractionDigits:2});
 
 function sourceLabel(src: string, confirmed: boolean): string {
   if (src === "pricecharting_completed_sale") return "PriceCharting · completed sale";
@@ -30,67 +17,21 @@ function sourceLabel(src: string, confirmed: boolean): string {
   return src;
 }
 
-/** This lot's own bid history: one point each time its price moved, from the tracker. */
-function BidHistory({ ticks }: { ticks: Array<{ time: string; price: number; bids: number }> }) {
-  if (ticks.length < 2) return null;
-  const w = 320, h = 56, pad = 4;
-  const t0 = new Date(ticks[0].time).getTime(), t1 = new Date(ticks[ticks.length - 1].time).getTime();
-  const lo = Math.min(...ticks.map((t) => t.price)), hi = Math.max(...ticks.map((t) => t.price));
-  const x = (t: string) => pad + ((new Date(t).getTime() - t0) / Math.max(1, t1 - t0)) * (w - pad * 2);
-  const y = (p: number) => h - pad - ((p - lo) / Math.max(0.01, hi - lo)) * (h - pad * 2);
-  // price holds until the next bid: draw as steps
-  let d = `M ${x(ticks[0].time)} ${y(ticks[0].price)}`;
-  for (let i = 1; i < ticks.length; i++) d += ` L ${x(ticks[i].time)} ${y(ticks[i - 1].price)} L ${x(ticks[i].time)} ${y(ticks[i].price)}`;
-  return (
-    <div className="rounded-lg border border-slate-800 bg-black/40 p-2">
-      <div className="flex justify-between text-[10px] font-mono text-slate-400 mb-1">
-        <span>THIS LOT'S BIDS ({ticks.length} moves seen)</span>
-        <span>{usd(ticks[0].price)} → <span className="text-emerald-300">{usd(ticks[ticks.length - 1].price)}</span></span>
-      </div>
-      <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-14" preserveAspectRatio="none" role="img" aria-label="Bid history for this lot">
-        <path d={d} fill="none" stroke="#34d399" strokeWidth="1.6" vectorEffect="non-scaling-stroke" />
-      </svg>
-    </div>
-  );
-}
-
 /**
  * Candles and volume for a book at a grade, built only from recorded sales; plus this lot's bid history.
  * Shows what exists and says plainly when nothing does.
  */
-export function LotMarketChart({ series, issue, grade, itemId, ticker, currentBid, grader, allInCost, variant, editionTerms }: {
-  series: string; issue: string; grade?: number | null; itemId?: string; ticker: string; currentBid: number; grader?: string; allInCost?: number; variant?: string; editionTerms?: string;
+export function LotMarketChart({ research, series, issue, grade, ticker, currentBid, grader, allInCost, variant, editionTerms }: {
+  research:ResearchLoad; series:string; issue:string; grade?:number|null; ticker:string; currentBid:number; grader?:string; allInCost?:number; variant?:string; editionTerms?:string;
 }) {
-  const [pick, setPick] = React.useState<number | null>(grade ?? null);
-  const [referenceNote, setReferenceNote] = React.useState<string | null>(null);
-  const [showAllSales, setShowAllSales] = React.useState(false);
-  const [bucket, setBucket] = React.useState("day");
-  const [data, setData] = React.useState<CandlesResponse | null>(null);
-  const [loading, setLoading] = React.useState(true);
-
-  React.useEffect(() => { setPick(grade ?? null); setReferenceNote(null); }, [series, issue, grade]);
-
-  React.useEffect(() => {
-    let live = true;
-    setLoading(true);
-    const q = new URLSearchParams({ series, issue, bucket });
-    if (editionTerms) q.set("editionTerms", editionTerms);
-    if (grader) q.set("grader", grader);
-    if (pick != null) q.set("grade", String(pick));
-    if (itemId) q.set("item", itemId);
-    fetch(`/api/sniper/candles?${q}`, { cache: "no-store", signal: AbortSignal.timeout(35000) })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((j) => { if (live) {
-        if (j?.success && pick === grade && j.stats?.n === 0 && j.grades?.length > 0 && grade != null) {
-          const nearest = [...j.grades].sort((a, b) => Math.abs(a.grade - grade) - Math.abs(b.grade - grade))[0].grade;
-          setReferenceNote(`No ${grade.toFixed(1)} sales in this saved sample. The chart shows another grade for reference, not a valuation of this listing.`);
-          setPick(nearest);
-        }
-        setData(j?.success ? j : null); setLoading(false);
-      } })
-      .catch(() => { if (live) { setData(null); setLoading(false); } });
-    return () => { live = false; };
-  }, [series, issue, pick, itemId, bucket, grader, grade, editionTerms]);
+  const [pick,setPick]=React.useState<number|null>(grade ?? null);
+  const [showAllSales,setShowAllSales]=React.useState(false);
+  const [bucket,setBucket]=React.useState<Bucket>("day");
+  const {data:evidence,loading}=research;
+  const all=evidence?.sales || [];
+  const atGrade=all.filter(s=>s.grade===pick);
+  const data=evidence?{grade:pick,grades:gradesTraded(all),bucket,candles:buildCandles(atGrade,bucket),stats:saleStats(atGrade),sales:[...atGrade].reverse(),sources:atGrade.reduce<Record<string,number>>((counts,s)=>{counts[s.source]=(counts[s.source] || 0)+1;return counts;},{}),ebay:evidence.history,note:"Only source-reported completed sales for this edition and grade are shown."}:null;
+  const referenceNote=pick!==grade?"You selected another grade. These sales do not value the listing’s grade.":null;
 
   const candles = data?.candles ?? [];
   const first = candles[0]?.close, last = candles[candles.length - 1]?.close;
@@ -99,7 +40,7 @@ export function LotMarketChart({ series, issue, grade, itemId, ticker, currentBi
   return (
     <div className="space-y-2.5">
 
-      <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400"><span>Sales grouped by</span>{["day", "week", "month"].map(b => <button key={b} onClick={() => setBucket(b)} className={`px-2 py-1 rounded border ${bucket === b ? "border-cyan-400 text-cyan-300 bg-cyan-950/40" : "border-slate-700"}`}>{b}</button>)}</div>
+      <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400"><span>Sales grouped by</span>{(["day", "week", "month"] as const).map(b => <button key={b} onClick={() => setBucket(b)} className={`px-2 py-1 rounded border ${bucket === b ? "border-cyan-400 text-cyan-300 bg-cyan-950/40" : "border-slate-700"}`}>{b}</button>)}</div>
       {data && data.grades.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-mono">
           <span className="text-slate-500 uppercase">Grade</span>
@@ -115,7 +56,6 @@ export function LotMarketChart({ series, issue, grade, itemId, ticker, currentBi
         </div>
       )}
 
-      {/strange academy/i.test(series) && issue === "14" && editionTerms?.toLowerCase().includes("nauck") && <p className="text-xs leading-5 text-amber-200 rounded-lg border border-amber-500/30 p-3">Guide cross-check, October 14, 2026: PriceCharting displays $99.99 for 9.8 on its Nauck page, but the single graded record is a December 15, 2022 “Cover A Ramos” sale. That mismatch does not establish Nauck-variant FMV. <a href="https://www.pricecharting.com/game/comic-books-strange-academy/strange-academy-nauck-14-2021" target="_blank" rel="noopener noreferrer" className="text-cyan-300 underline">Inspect the guide and source record ↗</a></p>}
       {referenceNote && <p className="text-xs leading-5 text-amber-200 border border-amber-500/25 rounded-lg bg-amber-950/20 p-2">{referenceNote}</p>}
       {data?.grade != null && <p className="text-[10px] font-mono text-slate-400">Chart: {grader || "graded"} {data.grade.toFixed(1)} completed sales · listing grade: {grade?.toFixed(1) ?? "unknown"}</p>}
       {loading ? (
@@ -162,9 +102,8 @@ export function LotMarketChart({ series, issue, grade, itemId, ticker, currentBi
       {!loading && data && <section className="space-y-3 text-sm leading-6 text-slate-300 pb-4 border-b border-slate-800"><h3 className="text-base font-semibold text-emerald-300">Sales, value &amp; bid assessment</h3>{marketBrief({ listingGrade: grade, chartGrade: data.grade, grader, count: data.stats.n, median: data.stats.median, low: data.stats.low, high: data.stats.high, latest: data.stats.last, allInCost, variant, editionTerms, hasMore: data.ebay?.hasMore }).map(point => <div key={point.heading}><h4 className="font-semibold text-white">{point.heading}</h4><p>{point.text}</p></div>)}</section>}
       {data?.ebay?.available && <p className="text-[10px] leading-4 text-slate-500">History saved {data.ebay.checkedAt?.slice(0, 10)}. {data.ebay.hasMore ? "Additional provider history remains beyond the retrieved pages." : "All available pages in the requested history window were retrieved."} The chart filters by comic, grader, grade and selected edition terms.</p>}
       {data?.ebay && !data.ebay.available && candles.length > 0 && (
-        <div className="text-[10px] font-mono text-amber-300/80">eBay sold history unavailable: {data.ebay.message} Displaying confirmed sales from the listed sources.</div>
+        <div className="text-[10px] font-mono text-amber-300/80">eBay sold history unavailable: {data.ebay.message} Displaying source-reported completed sales from the listed sources.</div>
       )}
-      {data?.lot?.ticks && <BidHistory ticks={data.lot.ticks} />}
 
       {data && data.sales.length > 0 && (
         <div className="overflow-x-auto">
