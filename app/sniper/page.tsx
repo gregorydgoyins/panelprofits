@@ -12,6 +12,7 @@ import {
 import { evaluateAuctionListing } from "@/lib/sniper/radar-engine";
 import { getEraDisplayName } from "@/lib/sniper/anti-bullshit";
 import { SlabEncasement } from "@/components/sniper/SlabEncasement";
+import { lotUnderwriting } from "@/lib/sniper/lot-underwriting";
 import { useLotResearch } from "@/components/sniper/useLotResearch";
 import { SniperListingResearch } from "@/components/sniper/SniperListingResearch";
 import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
@@ -390,14 +391,14 @@ export default function SniperRadarPage() {
   const [seriesFilter, setSeriesFilter] = useState<string>("");
 
   // High-Resolution Front View Lightbox Inspection State
-  const [inspectedDeal, setInspectedDeal] = useState<CandidateEvaluation | null>(null);
-  const lotResearch=useLotResearch(inspectedDeal ? `/api/sniper/research?${new URLSearchParams({itemId:inspectedDeal.listing.id})}` : null);
+  const [selectedDeal, setInspectedDeal] = useState<CandidateEvaluation | null>(null);
+  const lotResearch=useLotResearch(selectedDeal ? `/api/sniper/research?${new URLSearchParams({itemId:selectedDeal.listing.id})}` : null);
   const [modalPerspective, setModalPerspective] = useState<
     "all" | "matrix" | "investopedia" | "learn" | "video" | "financial" | "chart" | "census" | "lore" | "gcd" | "signature"
   >("all");
   const [showPlansModal, setShowPlansModal] = useState<boolean>(false);
-  const showSalesChart = Boolean(inspectedDeal);
-  useEffect(() => { setModalPerspective("all"); }, [inspectedDeal?.listing.id]);
+  const showSalesChart = Boolean(selectedDeal);
+  useEffect(() => { setModalPerspective("all"); }, [selectedDeal?.listing.id]);
   const fullResearch = true; // every lot opens with all of its research; nothing is held back for lots about to close
 
   const profile: SniperFilterProfile = useMemo(
@@ -446,6 +447,13 @@ export default function SniperRadarPage() {
       seriesFilter,
     ]
   );
+
+  const inspectedDeal=useMemo(()=>{
+    if(!selectedDeal)return null;
+    const evidence=lotUnderwriting(lotResearch.data);
+    return evaluateAuctionListing({...selectedDeal.listing,censusTotal:evidence.census?.total,censusCount98:evidence.census?.atGrade,censusHigher:evidence.census?.higher},
+      {...profile,requireProvenSales:false,requireDoubleUpOnly:false,minDiscountPercent:0},evidence);
+  },[selectedDeal,lotResearch.data,profile]);
 
   // Evaluate All Real Live Auctions
   const evaluations = useMemo(() => {
@@ -1836,12 +1844,12 @@ export default function SniperRadarPage() {
                 {/* Top Row: FMV Anchor & Certified Census Intel */}
                 <div className="flex flex-wrap items-center justify-between gap-2.5 pb-2.5 border-b border-slate-800/80">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] uppercase font-mono font-bold text-slate-400">FMV Anchor:</span>
+                    <span className="text-[10px] uppercase font-mono font-bold text-slate-400">Research reference:</span>
                     <span className="text-base sm:text-lg font-black font-mono text-cyan-300">
                       {inspectedDeal.anchorFmv > 0 ? `$${inspectedDeal.anchorFmv.toFixed(2)}` : "Unavailable"}
                     </span>
                     <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-500/30">
-                      {inspectedDeal.anchorFmv > 0 ? "Fair Market Baseline" : "No Recorded Sales"}
+                      {inspectedDeal.anchorFmv > 0 ? "Grade-matched reference" : "No grade-matched reference"}
                     </span>
                   </div>
 

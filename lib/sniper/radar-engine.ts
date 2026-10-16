@@ -16,9 +16,12 @@ import { findComicBaseVideoForComic } from "@/lib/video/comicbase-archive";
 import { lookupRealCensus } from "../comics/census-authority";
 import { lookupMultiPointPriceHistory } from "../comics/price-history-service";
 
+import type { lotUnderwriting } from "./lot-underwriting";
+
 export function evaluateAuctionListing(
   listing: RawAuctionListing,
-  profile: SniperFilterProfile
+  profile: SniperFilterProfile,
+  research?: ReturnType<typeof lotUnderwriting>
 ): CandidateEvaluation {
   // Parse Listing Title and Attributes
   const parsed = parseAndFilterListing(listing.title, listing.itemDescription, listing.graderNotes);
@@ -220,17 +223,17 @@ export function evaluateAuctionListing(
   }
 
   // GATE 4: Recorded Sales Lookup & "Zero Sales" Anti-Impulse Discipline
-  const localSales = lookupMultiPointPriceHistory(
+  const localSales = research ? [] : lookupMultiPointPriceHistory(
     parsed.extractedSeries,
     parsed.extractedIssue,
     effectiveGrade
   );
-  const realSales =
+  const realSales = research ? research.sales :
     listing.historicalComps && listing.historicalComps.length > 0
       ? listing.historicalComps
       : localSales;
 
-  let anchorFmv = Number(listing.anchorFmv || listing.fairMarketValue || 0);
+  let anchorFmv = research ? Number(research.reference || 0) : Number(listing.anchorFmv || listing.fairMarketValue || 0);
   if (anchorFmv <= 0 && realSales.length > 0) {
     const sortedPrices = realSales.map((s) => s.price).sort((a, b) => a - b);
     const mid = Math.floor(sortedPrices.length / 2);
@@ -352,7 +355,7 @@ export function evaluateAuctionListing(
   );
 
   // Comprehensive Real Census Breakdown (Authoritative Multi-Verifiable Registry Lookup)
-  const realCensus = lookupRealCensus(parsed.extractedSeries, parsed.extractedIssue);
+  const realCensus = research ? null : lookupRealCensus(parsed.extractedSeries, parsed.extractedIssue);
   const resolvedCensusTotal = (listing.censusTotal && listing.censusTotal > 0)
     ? listing.censusTotal
     : realCensus?.totalGraded;
@@ -381,7 +384,7 @@ export function evaluateAuctionListing(
   const isSignedBook = parsed.isSigned || parsed.isLegendarySigned;
   const signaturePremiumMultiplier = listing.signaturePremiumMultiplier ?? 1.0;
 
-  let pricingSourceProvenance = listing.pricingSourceProvenance || "";
+  let pricingSourceProvenance = research?.source || listing.pricingSourceProvenance || "";
   if (!pricingSourceProvenance) {
     if (realSales.length > 0) {
       const venues = Array.from(new Set(realSales.map((s) => s.venue))).join(", ");
