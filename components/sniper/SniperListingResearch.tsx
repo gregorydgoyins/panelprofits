@@ -5,7 +5,7 @@ import type { StorySummary } from "@/lib/comics/story-summary";
 import type { ListingWriteup } from "@/lib/sniper/listing-writeup";
 
 type Props = {
-  itemId?: string; listingTitle: string; series: string; issueNumber: string; year?: number; publisher?: string;
+  researchUrl?: string; itemId?: string; listingTitle: string; series: string; issueNumber: string; year?: number; publisher?: string;
   grader?: string; grade?: number; editionVerified: boolean;
 };
 
@@ -36,7 +36,7 @@ export function SniperListingResearch(p: Props) {
     if (p.year) q.set("year", String(p.year));
     if (p.publisher) q.set("publisher", p.publisher);
     if (p.grader) q.set("grader", p.grader);
-    const load = () => fetch(`/api/sniper/listing-writeup?${q}`).then(r => r.ok ? r.json() : Promise.reject()).then(j => {
+    const load = () => fetch(p.researchUrl || `/api/sniper/listing-writeup?${q}`).then(r => r.ok ? r.json() : Promise.reject()).then(j => {
       if (!live) return;
       setStory(j.story ?? null);
       setLocalResearch(j.localResearch ?? null); setResearchError(j.researchError ?? null);
@@ -44,7 +44,7 @@ export function SniperListingResearch(p: Props) {
     }).catch(() => { if (live) setWriteup(null); });
     load();
     return () => { live = false; };
-  }, [p.itemId, p.listingTitle, p.series, p.issueNumber, p.year, p.publisher, p.grader]);
+  }, [p.researchUrl, p.itemId, p.listingTitle, p.series, p.issueNumber, p.year, p.publisher, p.grader]);
 
   const evidence = <>
     {researchError && <p role="status" className="text-xs text-amber-300">{researchError}</p>}

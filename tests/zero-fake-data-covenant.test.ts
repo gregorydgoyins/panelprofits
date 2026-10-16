@@ -86,7 +86,7 @@ describe("🛡️ Zero Fake Data Covenant Guardrails", () => {
         }
       }
     }
-  });
+  }, 60_000); // Live Supabase integration; assertions above remain unchanged.
 
   it("verifies resolveMarketPricing outputs genuine historical comp data with zero synthetic sine-wave math", () => {
     // Action Comics #252 (Seat #1)

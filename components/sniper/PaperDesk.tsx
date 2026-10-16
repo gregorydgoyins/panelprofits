@@ -31,7 +31,7 @@ export interface PaperOrder {
 const $ = (n: number | null | undefined) => (n == null ? "—" : `$${Number(n).toFixed(2)}`);
 const ROUNDS = 3;
 
-export function usePaperOrders() {
+export function usePaperOrders(enabled = true) {
   const [owner, setOwner] = React.useState("");
   const [orders, setOrders] = React.useState<PaperOrder[]>([]);
   const [busy, setBusy] = React.useState(false);
@@ -52,20 +52,20 @@ export function usePaperOrders() {
   }, []);
 
   const refresh = React.useCallback(async () => {
-    if (!owner) return;
+    if (!owner || !enabled) return;
     try {
       const r = await fetch(`/api/sniper/paper-orders?owner=${encodeURIComponent(owner)}`, { cache: "no-store" });
       const j = await r.json();
       if (j?.success) setOrders(j.orders);
     } catch {}
-  }, [owner]);
+  }, [owner, enabled]);
 
   React.useEffect(() => {
-    if (!owner) return;
+    if (!owner || !enabled) return;
     refresh();
     const t = setInterval(refresh, 15000);
     return () => clearInterval(t);
-  }, [owner, refresh]);
+  }, [owner, refresh, enabled]);
 
   const post = React.useCallback(async (body: Record<string, unknown>) => {
     setBusy(true);
@@ -79,7 +79,7 @@ export function usePaperOrders() {
     } finally {
       setBusy(false);
     }
-  }, [owner, refresh]);
+  }, [owner, refresh, enabled]);
 
   return {
     owner, orders, busy, error, refresh,

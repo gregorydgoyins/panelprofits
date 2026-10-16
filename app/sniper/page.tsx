@@ -17,8 +17,8 @@ import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
 import { LiveLotStrip } from "@/components/sniper/LiveLotStrip";
 import { SniperLearningPanel } from "@/components/sniper/SniperLearningPanel";
 import { LotMarketChart } from "@/components/sniper/LotMarketChart";
-import { usePaperOrders, PaperTicket, PaperLedger } from "@/components/sniper/PaperDesk";
-import { ReplayRoom } from "@/components/sniper/ReplayRoom";
+import { usePaperOrders } from "@/components/sniper/PaperDesk";
+import { SniperGame } from "@/components/sniper/SniperGame";
 import { SniperVideos } from "@/components/sniper/SniperVideos";
 
 const WINDOW_STEP = 24;
@@ -161,6 +161,7 @@ function formatVenueActionText(source: string, isBuyItNow?: boolean): string {
 
 export default function SniperRadarPage() {
   const [researchBeta, setResearchBeta] = useState(false);
+  const [showMarketRadar, setShowMarketRadar] = useState(false);
   useEffect(() => { setResearchBeta(new URLSearchParams(window.location.search).get("beta") === "research"); }, []);
   // Owner Password Authentication Gate State (verified server-side via /api/sniper/auth)
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -268,27 +269,17 @@ export default function SniperRadarPage() {
     }
   }, []);
 
-  // 24/7 Continuous Multi-Exchange Auto-Replenishment (Background sync every 20s once authenticated)
-  // The first load starts with the page, in parallel with the auth check (the auctions endpoint is public); polling still waits for auth.
-  const firstLiveFetch = React.useRef(false);
+  // The research radar reads the saved market feed only while that view is open.
   useEffect(() => {
-    firstLiveFetch.current = true;
-    fetchLiveAuctions();
-  }, [fetchLiveAuctions]);
-
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    const alreadyLoading = firstLiveFetch.current;
-    firstLiveFetch.current = false;
-    if (!alreadyLoading) fetchLiveAuctions();
-    const pollInterval = setInterval(() => {
-      fetchLiveAuctions();
-    }, 20000);
+    if (!isAuthenticated || (!researchBeta && !showMarketRadar)) return;
+    void fetchLiveAuctions();
+    const pollInterval = setInterval(() => void fetchLiveAuctions(), 20000);
     return () => clearInterval(pollInterval);
-  }, [fetchLiveAuctions, isAuthenticated]);
+  }, [fetchLiveAuctions, isAuthenticated, researchBeta, showMarketRadar]);
 
   // Initialize and run real-time 1-second countdown ticker
   useEffect(() => {
+    if (!researchBeta && !showMarketRadar) return;
     setLiveAuctionTimers(prev => {
       const next = { ...prev };
       for (const a of auctionsList) {
@@ -312,7 +303,7 @@ export default function SniperRadarPage() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [auctionsList]);
+  }, [auctionsList, researchBeta, showMarketRadar]);
 
   // Live Auction Scanner Input State
   const [scannerInput, setScannerInput] = useState<string>("");
@@ -445,7 +436,7 @@ export default function SniperRadarPage() {
   const fullResearch = true; // every lot opens with all of its research; nothing is held back for lots about to close
 
   // Paper Snipe Orders Ledger State
-  const paper = usePaperOrders();
+  const paper = usePaperOrders(researchBeta || showMarketRadar);
   const paperOrders = paper.orders;
   // signed: a paper loss counts against you
   const simulatedAlpha = paper.orders.reduce((a, o) => a + (o.paper_profit_usd != null ? Number(o.paper_profit_usd) : 0), 0);
@@ -764,6 +755,8 @@ export default function SniperRadarPage() {
     );
   }
 
+  if (!researchBeta && !showMarketRadar) return <div className="min-h-screen bg-[#07090E] text-slate-100"><header className="sticky top-0 z-40 border-b border-slate-800 bg-[#0E131F]/95 backdrop-blur"><div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4"><div><h1 className="text-lg font-black tracking-widest text-cyan-300">SNIPER</h1><p className="mt-1 text-[10px] font-mono uppercase tracking-wider text-slate-500">Research → decision → execution → portfolio</p></div><button onClick={() => setShowMarketRadar(true)} className="rounded-lg border border-slate-600 px-3 py-2 text-xs text-slate-200 hover:border-cyan-400">Open market research radar</button></div></header><SniperGame /></div>;
+
   return (
     <div className="min-h-screen bg-[#07090E] text-slate-100 flex flex-col font-sans">
       {/* Toast Notification */}
@@ -849,6 +842,7 @@ export default function SniperRadarPage() {
           </div>
         </div>
       </header>
+      {!researchBeta && <div className="mx-auto w-full max-w-7xl px-4 pt-5"><button onClick={() => setShowMarketRadar(false)} className="rounded-lg border border-cyan-500/40 px-4 py-2 text-sm text-cyan-200">← Return to your Sniper game</button></div>}
 
       {/* FIELD MANUAL ACCORDION DRAWER */}
       {showManual && (
@@ -881,7 +875,7 @@ export default function SniperRadarPage() {
               <div>
                 <strong className="text-white block mb-1 text-emerald-300">3. Microwave Execution</strong>
                 <p className="text-slate-400 leading-relaxed">
-                  Auctions ending in under 15 minutes are in the microwave snipe zone. Use T-2s paper execution to simulate bids and measure alpha before putting real capital to work.
+                  Auctions ending in under 15 minutes are in the microwave snipe zone. Practice auction decisions with Sniper dollars. No bids are sent to a venue.
                 </p>
               </div>
             </div>
@@ -2216,8 +2210,8 @@ export default function SniperRadarPage() {
           )}
 
           {/* PRACTICE ROUNDS + PAPER LEDGER */}
-          <ReplayRoom owner={paper.owner} onPlayed={paper.refresh} />
-          <PaperLedger orders={paper.orders} />
+          <a href="#sniper-game" onClick={() => setShowMarketRadar(false)} className="block rounded-xl border border-cyan-500/30 bg-[#0E131F] p-4 text-cyan-300">Open the Sniper game: cash, committed rounds &amp; collection ↑</a>
+
 
           {/* BLOCKED LISTINGS SECTION */}
           <div className="bg-[#0E131F] border border-slate-800/80 rounded-xl p-5 space-y-3">
@@ -2590,15 +2584,7 @@ export default function SniperRadarPage() {
                     <span>↗</span>
                   </a>
 
-                  <PaperTicket
-                    itemId={inspectedDeal.listing.id}
-                    isBuyItNow={Boolean(inspectedDeal.isBuyItNow)}
-                    ask={inspectedDeal.listing.currentBid}
-                    recommendedMax={inspectedDeal.recommendedMaxBid}
-                    fmv={inspectedDeal.anchorFmv || null}
-                    secondsRemaining={liveAuctionTimers[inspectedDeal.listing.id] ?? inspectedDeal.listing.secondsRemaining}
-                    paper={paper}
-                  />
+                  <a href="#sniper-game" onClick={() => { setInspectedDeal(null); setShowMarketRadar(false); }} className="block rounded-xl border border-cyan-500/40 bg-cyan-950/30 p-3 text-center text-xs font-bold text-cyan-200">Play in Sniper · cash &amp; portfolio rules</a>
 
                   <div className="grid grid-cols-1 gap-2">
                     <Link

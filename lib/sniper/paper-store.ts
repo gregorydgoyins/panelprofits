@@ -56,7 +56,7 @@ const hideSeller = (o: PaperOrderRow): PaperOrderRow => (o.status === "negotiati
 
 export async function listOrders(owner: string): Promise<PaperOrderRow[]> {
   if (!okOwner(owner)) return [];
-  const { data } = await db().from("sniper_paper_orders").select("*").eq("owner", owner).order("created_at", { ascending: false }).limit(100);
+  const { data } = await db().from("sniper_paper_orders").select("*").eq("owner", owner).is("game_token", null).order("created_at", { ascending: false }).limit(100);
   const nowMs = Date.now();
   // Neither a practice round nor a live armed auction may reveal win/loss while its clock is still running.
   return ((data ?? []) as PaperOrderRow[]).map(hideSeller).map((o) => {
@@ -99,7 +99,7 @@ export async function listOrders(owner: string): Promise<PaperOrderRow[]> {
 export async function cancelOrder(owner: string, id: number): Promise<boolean> {
   if (!okOwner(owner)) return false;
   const { data } = await db().from("sniper_paper_orders").update({ status: "cancelled", settled_at: new Date().toISOString() })
-    .eq("owner", owner).eq("id", id).in("status", ["armed", "negotiating"]).select("id");
+    .eq("owner", owner).eq("id", id).is("game_token", null).in("status", ["armed", "negotiating"]).select("id");
   return (data ?? []).length > 0;
 }
 
@@ -229,7 +229,7 @@ export async function paperTick(): Promise<{ watched: number; settled: number; u
   // 1. Armed auctions about to close: read eBay every ~3 seconds so the closing price is captured, not guessed.
   const horizon = new Date(started + 75_000).toISOString();
   const { data: closing } = await d.from("sniper_paper_orders").select("item_id,end_time")
-    .eq("status", "armed").eq("kind", "auction").gt("end_time", new Date(started).toISOString()).lt("end_time", horizon);
+    .eq("status", "armed").eq("kind", "auction").is("game_token", null).gt("end_time", new Date(started).toISOString()).lt("end_time", horizon);
   const ids = Array.from(new Set<string>((closing ?? []).map((o: any) => o.item_id)));
   let watched = 0;
   if (ids.length) {
@@ -243,7 +243,7 @@ export async function paperTick(): Promise<{ watched: number; settled: number; u
 
   // 2. Settle orders whose auction has ended.
   const { data: due } = await d.from("sniper_paper_orders").select("*")
-    .eq("status", "armed").eq("kind", "auction").lt("end_time", new Date(Date.now() - 10_000).toISOString()).limit(100);
+    .eq("status", "armed").eq("kind", "auction").is("game_token", null).lt("end_time", new Date(Date.now() - 10_000).toISOString()).limit(100);
   let settled = 0, unresolved = 0;
   for (const o of (due ?? []) as PaperOrderRow[]) {
     let finalPrice: number | null = null, bids = 0, basis = "";

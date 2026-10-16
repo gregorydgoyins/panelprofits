@@ -64,7 +64,7 @@ async function fetchOnce(id: string, legacy: string): Promise<LiveLot> {
       ended: secs != null && secs <= 0,
       reserveMet: typeof it.reservePriceMet === "boolean" ? it.reservePriceMet : null,
       // USD only: other marketplaces quote native currency
-      ...(it.currentBidPrice?.currency && it.currentBidPrice.currency !== "USD" ? { currentBid: null, minNextBid: null } : {}),
+      ...((it.currentBidPrice?.currency || it.price?.currency) && (it.currentBidPrice?.currency || it.price?.currency) !== "USD" ? { currentBid: null, minNextBid: null } : {}),
     };
   } catch (e) {
     return { ...base, error: (e as Error).message };

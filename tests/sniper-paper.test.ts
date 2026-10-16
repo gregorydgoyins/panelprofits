@@ -56,6 +56,7 @@ function makeBuilder(table: keyof typeof mockDbState) {
 
   const chain: any = {
     select: () => chain,
+    is: (k: string, v: any) => { filters.push((r) => v === null ? r[k] == null : r[k] === v); return chain; },
     insert: (row: any) => {
       pendingInsert = row;
       return chain;

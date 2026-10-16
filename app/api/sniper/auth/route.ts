@@ -1,20 +1,13 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { getSniperSigningSecret, verifySniperSessionToken } from "@/lib/sniper/session";
 
 export const dynamic = "force-dynamic";
 
 const COOKIE_NAME = "pp_sniper_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 12; // 12 hours
 
-function getSigningSecret(): string {
-  return (
-    process.env.SNIPER_AUTH_SECRET ||
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    "pp-sniper-server-gate-secret-v1"
-  );
-}
 
 function getAllowedPasscodes(): string[] {
   const configured = process.env.SNIPER_PASSCODES;
@@ -28,28 +21,10 @@ function getAllowedPasscodes(): string[] {
 }
 
 function signToken(payload: string): string {
-  const sig = createHmac("sha256", getSigningSecret()).update(payload).digest("hex");
+  const sig = createHmac("sha256", getSniperSigningSecret()).update(payload).digest("hex");
   return `${payload}.${sig}`;
 }
 
-function verifySniperSessionToken(token: string | undefined): boolean {
-  if (!token) return false;
-  const dotIdx = token.lastIndexOf(".");
-  if (dotIdx <= 0) return false;
-  const payload = token.slice(0, dotIdx);
-  const providedSig = token.slice(dotIdx + 1);
-  const expectedSig = createHmac("sha256", getSigningSecret()).update(payload).digest("hex");
-  try {
-    const a = Buffer.from(providedSig, "hex");
-    const b = Buffer.from(expectedSig, "hex");
-    if (a.length !== b.length || !timingSafeEqual(a, b)) return false;
-  } catch {
-    return false;
-  }
-  const exp = Number(payload.split(":")[1] || 0);
-  if (!Number.isFinite(exp) || Date.now() > exp) return false;
-  return true;
-}
 
 export async function GET() {
   const cookieStore = await cookies();
