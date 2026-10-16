@@ -12,7 +12,9 @@ export async function GET(request:Request) {
     const result=await readLotResearch(itemId,AbortSignal.any([request.signal,AbortSignal.timeout(10000)]));
     const timing={...headers,"server-timing":`evidence;dur=${(performance.now()-started).toFixed(1)}`};
     return result?Response.json(result,{headers:timing}):Response.json({error:"Saved listing not found"},{status:404,headers:timing});
-  } catch {
+  } catch (error) {
+    const details=error as {code?:string;message?:string};
+    console.warn("[sniper-research-v2] Database read failed",{code:details.code,message:details.message?.replace(/postgres(?:ql)?:\/\/\S+/g,"[database connection]")});
     return Response.json({error:"Stored issue evidence is temporarily unavailable. Retry this lot."},{status:503,headers});
   }
 }
