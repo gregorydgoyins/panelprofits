@@ -94,28 +94,11 @@ export default async function LoreEntityPage({ params }: { params: Promise<{ slu
     } catch {}
   }
 
-  if (!entity) {
-    const rawName = decodeURIComponent(slug).replace(/-/g, " ");
-    const formattedTitle = rawName.replace(/\b\w/g, (c) => c.toUpperCase());
-    entity = {
-      slug,
-      title: formattedTitle,
-      universe: "CANONICAL",
-      type: "character",
-      summary: `Canonical collectible due diligence dossier for ${formattedTitle} in the Panel Profits sovereign repository.`,
-      landmark_debuts: [
-        {
-          title: formattedTitle,
-          significance: `Search sovereign catalog records for ${formattedTitle}`,
-          catalogUrl: `/comics?q=${encodeURIComponent(formattedTitle)}`,
-          era: "AUTHENTIC",
-          assetTier: "SOVEREIGN_EQUITY",
-        },
-      ],
-    };
-  }
+  if (!entity) notFound();
 
   const displayTitle = cleanLoreTitle(entity.title);
+  const universeCategory:Record<string,string>={MARVEL:"marvel",DC:"dc",STAR_WARS:"star-wars",IMAGE:"image",IMAGECOMICS:"image",DARK_HORSE:"dark-horse",DARKHORSE:"dark-horse",SPAWN:"spawn",TRANSFORMERS:"transformers"};
+  const typeCategory:Record<string,string>={character:"characters",team:"teams",location:"locations",item:"items"};
   const summaryEntities = entity.summary ? extractEntitiesFromContext(entity.summary) : [];
 
   const renderIcon = () => {
@@ -159,12 +142,13 @@ export default async function LoreEntityPage({ params }: { params: Promise<{ slu
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
       <Link
-        href="/news"
+        href="/wiki"
         className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.14em] text-cyan-400 hover:text-cyan-200 transition-colors"
       >
-        <ArrowLeft className="h-3.5 w-3.5" /> Back to Newsroom & Intelligence
+        <ArrowLeft className="h-3.5 w-3.5" /> Back to Panel Profits Wiki
       </Link>
 
+      <nav aria-label="Article categories" className="mt-4 flex flex-wrap gap-4 text-sm text-cyan-300">{universeCategory[entity.universe] && <Link href={`/wiki/category/${universeCategory[entity.universe]}`}>{entity.universe.replace(/_/g," ")}</Link>}{typeCategory[entity.type] && <Link href={`/wiki/category/${typeCategory[entity.type]}`}>{entity.type}</Link>}</nav>
       {/* Main Dossier Header */}
       <header className="mt-6 border border-slate-800 bg-[#0B0F18] p-6 sm:p-8 rounded-lg shadow-2xl">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 pb-5">
