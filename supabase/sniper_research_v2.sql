@@ -37,8 +37,8 @@ begin
       from jsonb_array_elements(editions) e;
   end if;
   select coalesce(jsonb_agg(to_jsonb(c)),'[]') into book_rows from (
-    select id,series,issue_number,publication_year,cover_variant,direct_or_variant,printing,pp_grade_9_8_price,panel_profits_data
-    from public.comics where series in(s,lot.series) and issue_number=iss and publication_year=yr limit 50
+    select id,series,issue_number,publication_year,cover_variant,direct_or_variant,printing,pp_grade_9_8_price,panel_profits_data,gcd_data->>'cover_price' as original_cover_price
+    from public.comics where series in(s,lot.series) and issue_number=iss and (publication_year=yr or (publication_year=yr-1 and lot.label->>'issueDate' ~ '^[123]/')) limit 50
   ) c;
   timings := timings || jsonb_build_object('comics',round((extract(epoch from clock_timestamp()-timer)*1000)::numeric,1)); timer := clock_timestamp();
   -- Follow existing source-ID crosswalks when a provider encodes the cover in its series title.
@@ -56,6 +56,24 @@ begin
   story_key := btrim(regexp_replace(replace(regexp_replace(regexp_replace(lower(s),'\(\s*[0-9]{4}[^)]*\)','','g'),'^the\s+',''),'&',' and '),'[^a-z0-9]+',' ','g')) || '|' || lower(iss) || '|' || coalesce(yr::text,'');
   select jsonb_build_object('summary',summary,'source',source,'source_url',source_url,'license',license) into story
     from public.issue_story_summaries where comic_key=story_key;
+  -- Existing publisher-page crosswalks also connect cover-specific source titles to the issue plot.
+  if story is null or coalesce(story->>'summary','') ~ '\"text\"\s*:\s*\"\|' then
+    select jsonb_build_object('summary',summary,'source',source,'source_url',source_url,'license',license) into story
+    from public.issue_story_summaries where year=yr and issue_number=iss and source_url=(
+      select case when count(distinct f.wiki || '|' || f.page_title)=1 then min(
+        'https://' || case lower(f.wiki) when 'marvel' then 'marvel.fandom.com' when 'dc' then 'dc.fandom.com'
+          when 'starwars' then 'starwars.fandom.com' when 'darkhorse' then 'darkhorse.fandom.com'
+          when 'image' then 'imagecomics.fandom.com' when 'tmnt' then 'turtlepedia.fandom.com' end
+        || '/wiki/' || replace(f.page_title,' ','_')) end
+      from public.fandom_pp_match f where f.pp_id in(
+        select coalesce(c->'panel_profits_data'->>'PP Source ID',c->'panel_profits_data'->>'PriceCharting ID') from jsonb_array_elements(book_rows) c))
+    limit 1;
+  end if;
+  if (story is null or coalesce(story->>'summary','') ~ '\"text\"\s*:\s*\"\|') and lot.label->>'issueDate' ~ '^[123]/' then
+    select jsonb_build_object('summary',summary,'source',source,'source_url',source_url,'license',license) into story
+    from public.issue_story_summaries where series=s and issue_number=iss and year=yr-1
+      and summary is not null and summary !~ '\"text\"\s*:\s*\"\|' limit 1;
+  end if;
   timings := timings || jsonb_build_object('story',round((extract(epoch from clock_timestamp()-timer)*1000)::numeric,1)); timer := clock_timestamp();
   normalized_title := regexp_replace(lower(lot.title),'#\s*','#','g');
   normalized_title := regexp_replace(normalized_title,'\m(cgc|cbcs|pgx|egs|psa)\M',' ','g');
@@ -93,6 +111,18 @@ begin
     select item_id,sold_at,price_usd,grade,grader,venue,source,url,edition,publication_year from public.sniper_sales
     where series_key=sale_key and confirmed is true and price_usd>0 and grader=resolved_grader order by sold_at limit 5000
   ) t;
+  -- Read the existing graded-sale register directly; never maintain a second copy.
+  select sales || coalesce(jsonb_agg(jsonb_build_object(
+    'item_id',g.provider_sale_id,'sold_at',g.sale_date,'price_usd',g.sale_price,'grade',g.grade_numeric,
+    'grader',gc.name,'venue',g.venue,'source','graded_sales_observations','url',g.evidence_path,
+    'edition',g.edition_name,'publication_year',yr)),'[]') into sales
+  from public.graded_sales_observations g join public.grading_companies gc on gc.id=g.grading_company_id
+  where gc.name=resolved_grader and g.issue_number_raw=iss and g.sale_type='completed_sale'
+    and g.currency='USD' and g.sale_date is not null and g.sale_price>0
+    and g.has_restoration is not true and g.has_signature is not true
+    and coalesce(g.native_designation,'') !~* 'signature|restor|trim|qualified|pedigree|Pacific Coast|Winnipeg'
+    and g.title_name in (s || ' (' || yr || ')',s || ', The (' || yr || ')','The ' || s || ' (' || yr || ')')
+    and coalesce(g.edition_name,'')=coalesce(ed,'');
   timings := timings || jsonb_build_object('sales',round((extract(epoch from clock_timestamp()-timer)*1000)::numeric,1)); timer := clock_timestamp();
   select response into history from public.sniper_ebay_history
     where query_key=btrim(regexp_replace(lower(s || ' ' || regexp_replace(iss,'^#','')),'[^a-z0-9]+',' ','g'));

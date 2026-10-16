@@ -386,11 +386,11 @@ export function TradingViewChart({
         <div className="flex items-center gap-2 flex-wrap text-slate-400">
           <span className="flex items-center gap-1.5 rounded bg-emerald-950/40 border border-emerald-500/30 px-2 py-0.5 text-emerald-300 font-medium">
             <ShieldCheck className="h-3 w-3 text-emerald-400" />
-            Exchange Secondary Benchmark
+            {dataLabel === "DATED GUIDE" ? "Stored guide observations" : completedSalesOnly ? "Recorded completed sales" : "Exchange Secondary Benchmark"}
           </span>
           <span className="flex items-center gap-1.5 rounded bg-cyan-950/40 border border-cyan-500/30 px-2 py-0.5 text-cyan-300 font-medium">
             <Layers className="h-3 w-3 text-cyan-400" />
-            CGC Universal Census & Completed Sales
+            {dataLabel === "DATED GUIDE" ? "PriceCharting · exact edition" : completedSalesOnly ? "Source records linked below" : "CGC Universal Census & Completed Sales"}
           </span>
           {cgcSales.length > 0 && (
             <span className="rounded bg-slate-900 border border-slate-800 px-2 py-0.5 text-slate-300">

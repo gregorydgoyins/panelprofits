@@ -1,3 +1,4 @@
+import {intrinsicEligibility} from "./eligibility";
 import { randomUUID } from "node:crypto";
 import { createAdminServerClient } from "@/lib/supabase/admin";
 import { readLocalLotResearch } from "./local-research";
@@ -16,6 +17,8 @@ export async function bidOnStoredListing(owner: string, itemId: string, amount: 
  if (error || !lot) throw new Error("Saved auction not found");
  if (lot.status !== "live" || lot.buying_option !== "AUCTION" || !lot.grader || !(Number(lot.price_usd)>0) || !lot.end_time || Date.parse(lot.end_time)<=Date.now()) throw new Error("This saved listing is not an open graded auction");
  const research = await readLocalLotResearch(itemId);
+ const raw=research?.prices.find(p=>p.kind==='guide' && p.grade==='RAW' && p.currency==='USD')?.amount;
+ if(!intrinsicEligibility(lot.grade==null?null:Number(lot.grade),raw,research?.coverPrice))throw new Error("This book requires grade 8.5+, recorded raw value of at least $17 and value above its original cover price.");
  const values = (research?.prices || []).filter(p => Number(p.grade)===Number(lot.grade) && (p.currency || "USD")==="USD" && (p.kind || "guide")==="guide" && p.amount>0).map(p=>p.amount).sort((a,b)=>a-b);
  const middle = Math.floor(values.length/2);
  const reference = values.length ? (values.length%2 ? values[middle] : (values[middle-1]+values[middle])/2) : null;

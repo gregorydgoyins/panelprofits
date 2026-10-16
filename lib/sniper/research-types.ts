@@ -9,7 +9,7 @@ export interface StoredPrice {
 }
 export interface LocalLotResearch {
   story: StorySummary | null; census: GradeCensus | null; prices: StoredPrice[];
-  ppcfId: string | null; missing: string[];
+  ppcfId: string | null; missing: string[]; pricechartingId?: string; pricechartingYear?: number; comicId?: string; coverPrice?: number;
 }
 export interface LotResearch {
   version: 2;

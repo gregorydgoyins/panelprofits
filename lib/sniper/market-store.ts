@@ -391,13 +391,7 @@ export async function refreshCompSniper(series: string, issue: string): Promise<
 export async function readLiveListings(limit = 1500): Promise<{ items: RawAuctionListing[]; asOf: string | null }> {
   const db: any = createAdminServerClient();
   const nowMs = Date.now();
-  const { data, error } = await db
-    .from("sniper_listings").select("payload,price_usd,bid_count,end_time,last_seen,label,census,census_at")
-    .eq("status", "live")
-    .gte("last_seen", new Date(nowMs - LISTING_STALE_MS).toISOString())
-    .or(`end_time.is.null,end_time.gt.${new Date(nowMs).toISOString()}`)
-    .order("end_time", { ascending: true, nullsFirst: false })
-    .limit(limit);
+  const { data, error } = await db.rpc("sniper_radar_listings",{p_limit:limit},{get:true});
   if (error) {
     console.error("[sniper] read listings failed:", error.message);
     return { items: [], asOf: null };

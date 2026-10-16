@@ -1,5 +1,6 @@
 "use client";
 
+import {FinancialText} from "./FinancialText";
 import * as React from "react";
 import {LotGuideChart} from "./LotGuideChart";
 import { marketBrief } from "@/lib/sniper/market-brief";
@@ -13,6 +14,8 @@ function sourceLabel(src: string, confirmed: boolean): string {
   if (src === "pricecharting_completed_sale") return "PriceCharting · completed sale";
   if (src === "ebay_last_bid") return "eBay last bid seen";
   if (src === "ebay_insights" || src === "ebay_history") return "eBay sold";
+  if (src === "comicconnect_sold") return "ComicConnect · completed sale";
+  if (src === "heritage_completed_sale") return "Heritage · completed sale";
   if (src === "graded_sales_observations") return "graded register";
   if (src.startsWith("benchmark")) return confirmed ? "CGC / GPA record" : "market observation";
   return src;
@@ -102,7 +105,7 @@ export function LotMarketChart({ research, series, issue, grade, ticker, current
         </div>
       )}
 
-      {!loading && data && <section className="space-y-3 text-sm leading-6 text-slate-300 pb-4 border-b border-slate-800"><h3 className="text-base font-semibold text-emerald-300">Sales, value &amp; bid assessment</h3>{marketBrief({ listingGrade: grade, chartGrade: data.grade, grader, count: data.stats.n, median: data.stats.median, low: data.stats.low, high: data.stats.high, latest: data.stats.last, allInCost, variant, editionTerms, hasMore: data.ebay?.hasMore }).map(point => <div key={point.heading}><h4 className="font-semibold text-white">{point.heading}</h4><p>{point.text}</p></div>)}</section>}
+      {!loading && data && <section className="space-y-3 text-sm leading-6 text-slate-300 pb-4 border-b border-slate-800"><h3 className="text-base font-semibold text-emerald-300">Sales, value &amp; bid assessment</h3>{marketBrief({ listingGrade: grade, chartGrade: data.grade, grader, count: data.stats.n, median: data.stats.median, low: data.stats.low, high: data.stats.high, latest: data.stats.last, allInCost, variant, editionTerms, hasMore: data.ebay?.hasMore }).map(point => <div key={point.heading}><h4 className="font-semibold text-white">{point.heading}</h4><p><FinancialText text={point.text}/></p></div>)}</section>}
       {data?.ebay?.available && <p className="text-[10px] leading-4 text-slate-500">History saved {data.ebay.checkedAt?.slice(0, 10)}. {data.ebay.hasMore ? "Additional provider history remains beyond the retrieved pages." : "All available pages in the requested history window were retrieved."} The chart filters by comic, grader, grade and selected edition terms.</p>}
       {data?.ebay && !data.ebay.available && candles.length > 0 && (
         <div className="text-[10px] font-mono text-amber-300/80">eBay sold history unavailable: {data.ebay.message} Displaying source-reported completed sales from the listed sources.</div>

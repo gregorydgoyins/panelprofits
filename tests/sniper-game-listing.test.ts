@@ -19,10 +19,14 @@ describe("funded bidding from original radar",()=>{
  });
  it("uses only saved exact-grade USD guides, then bids on the unique enrolled row",async()=>{
   mocks.db.from.mockReturnValueOnce(query(null)).mockReturnValueOnce(query(lot)).mockReturnValueOnce(query({game_token:"enrolled-round"}));
-  mocks.research.mockResolvedValue({prices:[{grade:"9.8",amount:100,currency:"USD",kind:"guide"},{grade:"9.8",amount:112,currency:"USD",kind:"guide"},{grade:"9.6",amount:9999},{grade:"9.8",amount:9999,currency:"GBP"},{grade:"9.8",amount:9999,kind:"sale"}]});
+  mocks.research.mockResolvedValue({coverPrice:3.99,prices:[{grade:"RAW",amount:17,currency:"USD",kind:"guide"},{grade:"9.8",amount:100,currency:"USD",kind:"guide"},{grade:"9.8",amount:112,currency:"USD",kind:"guide"},{grade:"9.6",amount:9999},{grade:"9.8",amount:9999,currency:"GBP"},{grade:"9.8",amount:9999,kind:"sale"}]});
   await bidOnStoredListing("player-owner",lot.item_id,104);
   expect(mocks.db.rpc.mock.calls[0][1].p_offer).toMatchObject({itemId:lot.item_id,reference:106,endTime:lot.end_time,opening:1});
   expect(mocks.command).toHaveBeenCalledWith("player-owner","bid","enrolled-round",104);
+ });
+ it("rejects a slab whose underlying comic fails the raw-value floor",async()=>{
+  mocks.db.from.mockReturnValueOnce(query(null)).mockReturnValueOnce(query(lot));mocks.research.mockResolvedValue({coverPrice:3.99,prices:[{grade:"RAW",amount:16.99,currency:"USD",kind:"guide"},{grade:"9.8",amount:106,currency:"USD",kind:"guide"}]});
+  await expect(bidOnStoredListing("player-owner",lot.item_id,104)).rejects.toThrow("recorded raw value");expect(mocks.db.rpc).not.toHaveBeenCalled();
  });
  it("does not let skipped or settled lots restart",async()=>{
   mocks.db.from.mockReturnValueOnce(query({game_token:"owned-round",status:"outbid"}));

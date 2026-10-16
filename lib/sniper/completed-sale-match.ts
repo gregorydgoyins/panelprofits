@@ -3,6 +3,8 @@ import { seriesKey } from "./candles";
 
 /** Match listing evidence to a book without rewriting its title or sale data. */
 export function matchCompletedComicSale(title: string, series: string, issue: string, editionTerms: string[] = []) {
+  if(/\b(?:signed|signature series|restored|qualified|trimmed|SS)\b/i.test(title))return null;
+  if(!editionTerms.length && /\b(?:variant|newsstand|exclusive|incentive|foil|sketch|CPV|reprint|facsimile)\b|\b(?:2nd|3rd|second|third)\s+print/i.test(title))return null;
   const words = new Set(title.toLowerCase().replace(/[^a-z0-9]+/g, " ").split(" "));
   if (editionTerms.some(term => !words.has(term.toLowerCase()))) return null;
   const normalized = title

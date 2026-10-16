@@ -1,4 +1,5 @@
 "use client";
+import {balanceAuctionSites} from "@/lib/sniper/eligibility";
 
 import React, { useState, useEffect, useMemo, useCallback, startTransition } from "react";
 import Link from "next/link";
@@ -372,7 +373,7 @@ export default function SniperRadarPage() {
     "ebay_de",
     "ebay_au",
   ]);
-  const [minGrade, setMinGrade] = useState<number>(0.5);
+  const [minGrade, setMinGrade] = useState<number>(8.5);
   const [maxGrade, setMaxGrade] = useState<number>(10.0);
   const [minAllInCost, setMinAllInCost] = useState<number>(0.0); // $0.00 Floor for misspellings & cracked cases
   const [maxBudget, setMaxBudget] = useState<number>(10000); // Full Range (up to mega keys)
@@ -403,6 +404,7 @@ export default function SniperRadarPage() {
 
   const profile: SniperFilterProfile = useMemo(
     () => ({
+      requireIntrinsicEvidence: true,
       maxAllInBudget: maxBudget,
       minAllInCost: minAllInCost,
       eras: selectedEras,
@@ -462,7 +464,7 @@ export default function SniperRadarPage() {
 
   // Separate Approved vs Rejected
   const rawApprovedDeals = useMemo(
-    () => evaluations.filter((e) => e.passed),
+    () => balanceAuctionSites(evaluations.filter((e) => e.passed),e=>e.listing.source),
     [evaluations]
   );
   const rejectedDeals = useMemo(
@@ -698,9 +700,9 @@ export default function SniperRadarPage() {
                 </p>
               </div>
               <div>
-                <strong className="text-white block mb-1 text-cyan-300">2. Sub-$1,500 Sweet Spot ($0 Floor)</strong>
+                <strong className="text-white block mb-1 text-cyan-300">2. Comic value before grading premiums</strong>
                 <p className="text-slate-400 leading-relaxed">
-                  Floor is set to $0.00 to capture seller typos/misspellings, $25 cracked case reholder flips, and below-grading-cost slabs under $45 without artificial barriers.
+                  Each offered book must have a stored raw comic value of at least $17, above its original cover price, and a slab grade of 8.5 or better. Bid prices, grading costs and potential returns do not establish eligibility.
                 </p>
               </div>
               <div>
@@ -853,7 +855,7 @@ export default function SniperRadarPage() {
                 className="w-full accent-emerald-500 bg-slate-800"
               />
               <div className="flex justify-between text-[10px] font-mono text-slate-500">
-                <span>8.5 (Placeholder)</span>
+                <span>8.5 minimum</span>
                 <span>9.0</span>
                 <span>9.4 (Key)</span>
                 <span>9.6</span>
@@ -1080,6 +1082,8 @@ export default function SniperRadarPage() {
                 </span>
               </div>
 
+              <p className="text-xs text-slate-400">Equal allocation by auction site · Grade 8.5+ · Recorded raw comic value ≥ $17 and above original cover price. Additional filters can reduce the available selection.</p>
+
               <details className="rounded-xl border border-slate-800 bg-[#0E131F] p-4" open={desk.game?.rounds.some(r => r.status === "bidding" || r.status === "awaiting_result") || undefined}>
                 <summary className="cursor-pointer text-xs font-bold font-mono uppercase text-amber-300">Paper desk · committed bids &amp; waiting practice lots</summary>
                 <div className="mt-4"><SniperGame desk={desk} view="rounds" /></div>
@@ -1120,7 +1124,7 @@ export default function SniperRadarPage() {
                     const sigFee = sigCount > 0 ? 30.0 + Math.max(0, sigCount - 1) * 25.0 : 0;
                     const gradingFreight = 18.0;
                     const totalSubmitterSunk = baseGradingFee + sigFee + gradingFreight;
-                    const estPlatformCut = Math.round(deal.anchorFmv * 0.1325 * 100) / 100;
+                    const estPlatformCut = Math.round(deal.anchorFmv * 0.13 * 100) / 100;
                     const estNetAtExit = Math.round((deal.anchorFmv - estPlatformCut - 5.0) * 100) / 100;
 
                     return (
@@ -1139,7 +1143,7 @@ export default function SniperRadarPage() {
                             year={deal.resolvedYear}
                             era={deal.resolvedEra}
                             certNumber={deal.certNumber}
-                            pageQuality="WHITE Pages"
+                            pageQuality={deal.label?.pageQuality || undefined}
                             isYellowLabel={deal.isYellowLabel}
                             signatureDetails={deal.signerName}
                             keyComments={deal.keySignificanceNote}
@@ -1214,6 +1218,7 @@ export default function SniperRadarPage() {
 
                         {/* Details & Dossier (Info Side) */}
                         <div className="flex-1 space-y-3.5 w-full">
+                          {deal.listing.eligibility && <p className="text-xs text-cyan-200">Raw comic value: ${deal.listing.eligibility.intrinsicValue.toFixed(2)} · Original cover: ${deal.listing.eligibility.coverPrice.toFixed(2)} <span className="text-slate-500">· Recorded {deal.listing.eligibility.observedAt}</span></p>}
                           <div>
                             {/* Top Header Row with Countdown Ticker pinned on right away from comic */}
                             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 pb-2.5">
@@ -1576,9 +1581,9 @@ export default function SniperRadarPage() {
                           {/* HISTORICAL VERIFIED SOLD COMPS */}
                           <div className="bg-slate-900/50 border border-slate-800 p-2.5 rounded-lg text-xs space-y-1.5">
                             <div className="flex justify-between items-center text-[10px] font-mono text-slate-400 uppercase font-bold">
-                              <span>Historical Verified Sold Comps (GPA Anchor)</span>
+                              <span>Historical Verified Sold Comps (Recorded sources)</span>
                               <span className="text-emerald-400">
-                                Turn Speed: ~{deal.liquidityTurnDays} Days
+                                Resale time not established
                               </span>
                             </div>
                             <div className="flex flex-wrap items-center gap-2 font-mono text-[11px]">
@@ -1625,7 +1630,7 @@ export default function SniperRadarPage() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                   <div className="space-y-1 text-slate-300 border-r border-slate-800/80 pr-3">
                                     <div className="text-[10px] font-bold text-cyan-400 uppercase">
-                                      1. Submitter Sunk Slabbing Capital
+                                      1. Illustrative grading-cost scenario
                                     </div>
                                     <div className="flex justify-between text-[11px]">
                                       <span>
@@ -1968,7 +1973,7 @@ export default function SniperRadarPage() {
                       {inspectedDeal.anchorFmv > 0 ? `+$${inspectedDeal.projectedNetProfit.toFixed(2)}` : "Unavailable"}
                     </strong>
                     <span className="text-[9px] text-slate-500 block">
-                      Net Gain Realized at Anchor FMV
+                      Modeled net proceeds at the reference
                     </span>
                   </div>
                 </div>
@@ -2019,7 +2024,7 @@ export default function SniperRadarPage() {
                   year={inspectedDeal.resolvedYear}
                   era={inspectedDeal.resolvedEra}
                   certNumber={inspectedDeal.certNumber}
-                  pageQuality="WHITE Pages"
+                  pageQuality={inspectedDeal.label?.pageQuality || undefined}
                   isYellowLabel={inspectedDeal.isYellowLabel}
                   signatureDetails={inspectedDeal.signerName}
                   keyComments={inspectedDeal.historicalSignificanceLore || inspectedDeal.whyItsAGoodBuy}
@@ -2433,7 +2438,7 @@ export default function SniperRadarPage() {
                       <div className="leading-relaxed">
                         <strong className="text-cyan-300 uppercase">Verified Valuation Provenance: </strong>
                         <span className="text-slate-300">
-                          {inspectedDeal.pricingSourceProvenance || "GPA Analysis Certified Auction Index & ComicBase 2025 Market Comp Ladder"}
+                          {inspectedDeal.pricingSourceProvenance || "Open the saved price and sale source records below"}
                         </span>
                       </div>
 

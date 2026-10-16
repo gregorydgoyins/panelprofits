@@ -36,7 +36,7 @@ export function SlabEncasement({
   year,
   era,
   certNumber,
-  pageQuality = "WHITE Pages",
+  pageQuality = "",
   isYellowLabel = false,
   signatureDetails,
   keyComments,

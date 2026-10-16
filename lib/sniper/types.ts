@@ -37,6 +37,7 @@ export type ComicEdition = "direct" | "newsstand" | "variant" | "convention" | "
 export type GradingCompany = "CGC" | "CBCS" | "PSA" | "PGX" | "EGS";
 
 export interface SniperFilterProfile {
+  requireIntrinsicEvidence?: boolean;
   // Era Targeting
   eras: ComicEra[];
   
@@ -84,6 +85,7 @@ export interface SniperFilterProfile {
 import type { SlabLabel } from "./label-reader";
 
 export interface RawAuctionListing {
+  eligibility?: {intrinsicValue:number;coverPrice:number;observedAt:string;sourceId:string;comicId:string;basis:string};
   /** Exact transcription of the slab label from the photo; null when not read/legible. */
   label?: SlabLabel | null;
   /** True when the census answer for this listing is already stored (even if the answer is "not found"). */

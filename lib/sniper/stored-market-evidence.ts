@@ -30,7 +30,7 @@ export function storedPrices(observations: PriceObservation[], match: EditionRow
     const pc=/pricecharting/i.test(row.price_field) || /pricecharting\.com/i.test(row.source_locator || "");
     result.push({grade,amount:Number(row.amount),currency:row.currency || "USD",source:pc?"PriceCharting · guide":catalog?"ComicBase · catalog reference":`${row.source_system} · ${row.price_field}`,
       url:/^https?:\/\//i.test(row.source_locator || "")?row.source_locator!:`/wiki/${match.ppcf_id}`,
-      observedAt:catalog?undefined:row.observed_at || undefined,publicationDate,kind:catalog?"catalog":"guide",
+      observedAt:catalog || row.observed_at?.slice(0,10)===publicationDate || row.observed_at?.slice(0,4)===match.publication_date?undefined:row.observed_at || undefined,publicationDate,kind:catalog?"catalog":"guide",
       basis:catalog?`ComicBase catalog reference; source condition ${grade}. Not a CGC completed sale.`:"Grade-specific guide estimate, not a completed sale"});
   }
   return result;

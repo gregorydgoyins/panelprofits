@@ -37,7 +37,7 @@ export function evaluateAuctionListing(
   const certNum = listing.certNumber || parsed.certNumber;
   const certUrl = certNum
     ? (parsed.gradingCompany === "CBCS"
-        ? `https://www.cbcscomics.com/grading/verify-certification-number?cert_num=${certNum.replace(/[^0-9]/g, "")}`
+        ? `https://www.cbcscomics.com/grading/verify-certification-number?cert_num=${encodeURIComponent(certNum)}`
         : `https://www.cgccomics.com/certlookup/${certNum.replace(/[^0-9]/g, "")}/`)
     : parsed.certLookupUrl;
 
@@ -73,7 +73,7 @@ export function evaluateAuctionListing(
     projectedNetProfit: 0,
     netRoiPercent: 0,
     liquidityVelocity: "ILLIQUID_TRAP",
-    liquidityTurnDays: 90,
+    liquidityTurnDays: 0,
     isViableFlip: false,
     keySignificanceNote: "Unverified",
     verdict: "DISCARD",
@@ -81,10 +81,13 @@ export function evaluateAuctionListing(
     confidenceScore: 0,
   });
 
-  const effectiveGrade: number = parsed.grade ?? listing.resolvedGrade ?? 0;
+  const effectiveGrade: number = listing.label?.grade ?? listing.resolvedGrade ?? parsed.grade ?? 0;
   const effectiveCompany = parsed.gradingCompany || listing.gradingCompany || "CGC";
   const isCertified = parsed.isCertifiedSlab || Boolean(listing.gradingCompany);
 
+  if(profile.requireIntrinsicEvidence && (!listing.eligibility || listing.eligibility.intrinsicValue<17 || listing.eligibility.intrinsicValue<=listing.eligibility.coverPrice || effectiveGrade<8.5)) {
+    return createRejection("REJECTED: Requires grade 8.5+, recorded raw value of at least $17 and value above the original cover price.",1);
+  }
   // GATE 1: Strict Certification, Provenance & Image Gate
   if (!isCertified || effectiveGrade <= 0) {
     return createRejection("REJECTED: Listing is not a certified slab (CGC, CBCS, PSA, PGX, or EGS with verified numeric grade required).", 1);
@@ -191,17 +194,17 @@ export function evaluateAuctionListing(
   if (parsed.isSigned && parsed.signatureCount >= 2 && allInCost <= cgcGradingCostFloor) {
     specialPlay = "BELOW_GRADING_COST";
     const subsidy = (cgcGradingCostFloor - allInCost).toFixed(2);
-    strategySummary = `Multi-Sig Sunk Cost Arbitrage: Submitter paid $${(baseGradingFee + sigAuthFee).toFixed(2)} in grading + ${parsed.signatureCount}x signature verification fees. At $${allInCost.toFixed(2)}, submitter absorbs a $${subsidy} deficit for you!`;
+    strategySummary = `Multi-Sig Sunk Cost Arbitrage: Illustrative grading-cost scenario: $${(baseGradingFee + sigAuthFee).toFixed(2)} in grading + ${parsed.signatureCount}x signature verification fees. At $${allInCost.toFixed(2)}, the modeled difference is $${subsidy} deficit for you!`;
   } else if (profile.belowGradingCost && effectiveGrade >= 9.4 && allInCost <= cgcGradingCostFloor) {
     specialPlay = "BELOW_GRADING_COST";
     const subsidy = (cgcGradingCostFloor - allInCost).toFixed(2);
-    strategySummary = `Slab Cost Floor Arbitrage: Seller spent $${cgcGradingCostFloor.toFixed(2)} to slab & ship. You acquire this ${effectiveGrade} for $${allInCost.toFixed(2)}—a $${subsidy} subsidy on the grading fee alone!`;
+    strategySummary = `Slab Cost Floor Arbitrage: Illustrative grading-cost scenario: $${cgcGradingCostFloor.toFixed(2)} to slab & ship. You acquire this ${effectiveGrade} for $${allInCost.toFixed(2)}—a modeled difference of $${subsidy}; the seller’s actual costs are unknown.`;
   } else if (profile.damagedSlab98 && effectiveGrade === 9.8 && parsed.isDamagedSlab) {
     specialPlay = "REHOLDER_ARBITRAGE";
-    strategySummary = "Cracked/Damaged 9.8 Case: Book inside is pristine 9.8; $25 CGC reholder restores full 9.8 value.";
+    strategySummary = "Cracked/Damaged 9.8 Case: inspect the comic for damage and verify current reholder eligibility and fees. The original grade and resale value are not guaranteed.";
   } else if (parsed.isCrackedCase || (effectiveGrade >= 9.4 && parsed.isDamagedSlab)) {
     specialPlay = "CRACKED_CASE";
-    strategySummary = "Cracked Case Reholder Play: Plastic case is cracked/scuffed, but the comic inside is pristine high-grade. A simple $25 CGC reholder restores full undamaged market FMV with zero grade risk!";
+    strategySummary = "Damaged-holder research: inspect for damage to the comic, verify service eligibility and fees, and compare completed sales. A replacement holder does not guarantee a grade or market value.";
   } else if (parsed.isMisspelled) {
     specialPlay = "MISSPELLED_KEY";
     strategySummary = `Misspelled Sleeper: Listing title has typo (${parsed.misspellingSnippet}) hiding it from search alerts. Scoop it up at zero-competition floor!`;
@@ -289,16 +292,16 @@ export function evaluateAuctionListing(
   const targetWinPrice50Pct = Math.round(((allInCost * 1.5 + 5.00) / 100 * 100 / 0.87) * 100) / 100;
 
   // Liquidity Velocity strictly from recorded sales or active bid count
-  const salesDepth = Math.max(realSales.length, listing.bidCount ?? 0);
+  const salesDepth = realSales.length;
   let liquidityVelocity: "HIGH_VELOCITY_TURN" | "MODERATE_LIQUIDITY" | "ILLIQUID_TRAP" = "ILLIQUID_TRAP";
-  let liquidityTurnDays = 90;
+  const liquidityTurnDays = 0; // No evidence establishes the resale time of this copy.
 
   if (salesDepth >= 12) {
     liquidityVelocity = "HIGH_VELOCITY_TURN";
-    liquidityTurnDays = 14;
+
   } else if (salesDepth >= 4) {
     liquidityVelocity = "MODERATE_LIQUIDITY";
-    liquidityTurnDays = 45;
+
   }
 
   const isViableFlip = liquidityVelocity !== "ILLIQUID_TRAP" && anchorFmv >= 35.00;
@@ -320,31 +323,12 @@ export function evaluateAuctionListing(
   }
 
   // Formulate Explicit Reason Why This Is A Good Buy (Alpha Thesis)
-  let whyItsAGoodBuy = "";
-  if (!hasVerifiedFmv) {
-    whyItsAGoodBuy = "FMV unavailable — no recorded sales at this grade yet.";
-  } else if (specialPlay === "CRACKED_CASE") {
-    whyItsAGoodBuy = `Cracked Case Reholder Play: Plastic slab is cracked/scuffed, but the underlying book inside is an unblemished ${parsed.grade || 9.8}. Submit for a routine $25 CGC reholder to instantly unlock full $${anchorFmv.toFixed(2)} book value (+$${dollarSpread.toFixed(2)} spread, +${netRoiPercent}% net flip ROI).`;
-  } else if (specialPlay === "MISSPELLED_KEY") {
-    whyItsAGoodBuy = `Typo Stealth Arbitrage: Listing title has typographical error (${parsed.misspellingSnippet || "misspelled title"}). Standard buyers and automated search alerts completely miss it. Acquired with zero competition at $${allInCost.toFixed(2)} against verified $${anchorFmv.toFixed(2)} FMV!`;
-  } else if (specialPlay === "CRACK_AND_PRESS") {
-    whyItsAGoodBuy = `Crack & Press Upside: Grader notes state pressable defect. Acquire at $${allInCost.toFixed(2)} all-in, press to 9.8 for $${anchorFmv.toFixed(2)} target FMV (+$${dollarSpread.toFixed(2)} spread, ${netRoiPercent}% net flip ROI).`;
-  } else if (specialPlay === "REHOLDER_ARBITRAGE") {
-    whyItsAGoodBuy = `Slab Damage Arbitrage: Pristine 9.8 book inside cracked/scuffed holder. $25 CGC reholder restores full $${anchorFmv.toFixed(2)} market value with zero grade risk. Projected net flip profit: +$${(projectedNetProfit - 25).toFixed(2)}.`;
-  } else if (specialPlay === "BELOW_GRADING_COST") {
-    const subsidy = (cgcGradingCostFloor - allInCost).toFixed(2);
-    whyItsAGoodBuy = `Grading Sunk Cost Subsidy: Submitter paid $${cgcGradingCostFloor.toFixed(2)} to slab & ship. You acquire this 9.8 for $${allInCost.toFixed(2)} ($${subsidy} subsidy). 50% Win Price is $${targetWinPrice50Pct.toFixed(2)}; 100% Double-up at $${targetWinPrice100Pct.toFixed(2)}.`;
-  } else if (specialPlay === "DOUBLE_UP_KEY") {
-    whyItsAGoodBuy = `Pure Double-Up Key: Trading at a severe ${discountPercent}% dislocation to verified $${anchorFmv.toFixed(2)} FMV. High liquidity (${salesDepth} verified sales). Flip exit at $${targetWinPrice100Pct.toFixed(2)} generates a clean 100% net double-up!`;
-  } else if (specialPlay === "STUMBLED_INTO_GREATNESS") {
-    whyItsAGoodBuy = `Stumbled Into Greatness: Low census or sleeper key with accelerating collector demand. Acquired far below market ladder. Net profit potential: +$${projectedNetProfit.toFixed(2)} (${netRoiPercent}% ROI).`;
-  } else if (specialPlay === "LEGENDARY_SIGNATURE") {
-    whyItsAGoodBuy = `Irreplaceable Provenance: Verified yellow label signature by deceased legend ${parsed.signer}. Premium collectible locked into slab below raw replacement cost. Net flip profit: +$${projectedNetProfit.toFixed(2)}.`;
-  } else if (dollarSpread > 0) {
-    whyItsAGoodBuy = `Below-Comp Opportunity: Priced at $${allInCost.toFixed(2)} all-in (${discountPercent}% below verified $${anchorFmv.toFixed(2)} FMV across ${realSales.length} recorded comp${realSales.length === 1 ? "" : "s"}). Safe snipe ceiling is $${Math.max(0, Math.round(anchorFmv * 0.70 - listing.shippingCost - estTax))}.`;
-  } else {
-    whyItsAGoodBuy = `Verified Comp Benchmark: All-in ask is $${allInCost.toFixed(2)} vs. $${anchorFmv.toFixed(2)} median realized FMV (${realSales.length} recorded Grade ${effectiveGrade.toFixed(1)} comp${realSales.length === 1 ? "" : "s"}). Target snipe entry for 30% margin is $${Math.max(0, Math.round(anchorFmv * 0.70 - listing.shippingCost - estTax))}.`;
-  }
+  const referenceDescription=research?.source || (realSales.length?'Median recorded comparable sales':'Stored price reference; inspect source provenance');
+  let whyItsAGoodBuy = !hasVerifiedFmv
+    ? "FMV unavailable — open the stored research to inspect grade-matched guides and completed-sale evidence."
+    : `${referenceDescription}. All-in acquisition scenario: $${allInCost.toFixed(2)} against a $${anchorFmv.toFixed(2)} reference. The modeled exit uses a 13% selling fee and $5 outbound cost; actual fees, taxes and shipping can differ. This is a comparison, not assured sale proceeds.`;
+  if(hasVerifiedFmv && (specialPlay==='CRACKED_CASE' || specialPlay==='REHOLDER_ARBITRAGE'))whyItsAGoodBuy+=' A damaged holder requires inspection of the comic and current service eligibility. Reholdering does not guarantee an unchanged grade or a sale at the reference value.';
+  if(hasVerifiedFmv && specialPlay==='CRACK_AND_PRESS')whyItsAGoodBuy+=' A press or resubmission can leave the grade unchanged or reduce it; do not underwrite a higher grade as certain.';
 
   // Calculate Safe Snipe Ceiling (Leaves at least 25% margin intact)
   const recommendedMaxBid = hasVerifiedFmv ? Math.max(0, Math.round(anchorFmv * 0.70 - listing.shippingCost - estTax)) : 0;

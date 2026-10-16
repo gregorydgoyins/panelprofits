@@ -231,6 +231,8 @@ export interface RealizedVenueSaleRow {
   confirmed: boolean;
   item_id: string;
   url: string;
+  edition?: string | null;
+  publication_year?: number | null;
 }
 
 /**
@@ -276,7 +278,12 @@ export function parseComicConnectSoldHtml(html: string): RealizedVenueSaleRow[] 
       continue;
     }
 
+    // A signed/restored copy or named cover cannot enter an ordinary unsigned sample.
+    if(parsed.isSigned || /variant|newsstand|exclusive|incentive|restored|qualified|trimmed|pedigree|signature|\bSS\b/i.test(rawTitle + " " + gradeMatch[1]))continue;
+    const actualYear=rawTitle.match(/\b((?:19|20)\d{2})\b/)?.[1];
     out.push({
+      publication_year:actualYear?Number(actualYear):null,
+      edition:null,
       id: `comicconnect|${itemId}|${Math.round(priceUsd * 100)}|${yyyy}-${mm}-${dd}`,
       series_key: seriesKey(parsed.extractedSeries, parsed.extractedIssue),
       series: parsed.extractedSeries,
@@ -562,9 +569,7 @@ export async function fetchVenueCompletedSales(
       ? bookList
       : Array.from({ length: maxBookQueries }, (_, idx) => bookList[(slot * maxBookQueries + idx) % bookList.length]);
 
-  const urls: string[] = [
-    `https://www.comicconnect.com/browse/?filtertype=Sold&stock_category_id%5B0%5D%5Bo%5D=E&stock_category_id%5B0%5D%5Bv%5D=1&sort_type=title_issue&page=${(slot % 10) + 1}`,
-  ];
+  const urls: string[] = [];
 
   for (const b of selectedBooks) {
     const cleanSeries = b.series.replace(/[:;'"!()]/g, " ").replace(/\s+/g, " ").trim();

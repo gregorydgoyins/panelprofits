@@ -8,7 +8,9 @@ export async function hydrateStoredGcdStory(input: StorySummaryInput): Promise<S
   const db = createAdminServerClient();
   const { data: issues, error } = await db.from("ppcf_fast_wiki_read_model")
     .select("ppcf_id,gcd_issue_id,publication_date,variant_name").eq("series_name", input.series)
-    .eq("issue_number", input.issueNumber).ilike("publication_date", `%${input.year}%`).limit(100);
+    .eq("issue_number", input.issueNumber).ilike("publication_date", `%${input.year}%`)
+    .or("variant_name.is.null,variant_name.eq.,variant_name.ilike.Cover A -%,variant_name.ilike.Cover A –%")
+    .limit(20);
   if (error) throw new Error("Story issue crosswalk failed");
   const match = exactStoredEdition(issues || [], input.year, null);
   const issue = issues?.find(row => row.ppcf_id === match?.ppcf_id);

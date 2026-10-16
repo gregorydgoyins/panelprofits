@@ -1,6 +1,6 @@
 import { createHash } from "crypto";
 import { createAdminServerClient } from "@/lib/supabase/admin";
-import { getEbayOAuthToken } from "./ebay-api";
+import { searchEbaySold } from "./ebay-sold";
 
 export interface EbaySoldTransaction {
   itemId: string;
@@ -222,6 +222,7 @@ export function parseEbayComicListing(raw: {
  */
 export function formatToSalesObservation(item: EbaySoldTransaction): IngestedSalesObservation {
   const d = new Date(item.soldDate);
+  if (!Number.isFinite(d.getTime()) || !(item.price>0)) throw new Error("A completed sale requires a positive price and actual sale date");
   const year = isNaN(d.getFullYear()) ? new Date().getFullYear() : d.getFullYear();
   const month = isNaN(d.getMonth()) ? new Date().getMonth() + 1 : d.getMonth() + 1;
   const day = isNaN(d.getDate()) ? new Date().getDate() : d.getDate();
@@ -307,7 +308,7 @@ export async function ingestEbayPastSalesBatch(
 }
 
 /**
- * End-to-end execution: Queries eBay sales and active clearing listings via Buy Browse API
+ * End-to-end execution: Queries official eBay completed sales; active Browse listings are never sale evidence
  * and ingests verified transactions directly into public.gpa_sales_observations.
  * Supports international marketplaces: EBAY_US, EBAY_GB, EBAY_CA, EBAY_AU, EBAY_DE.
  */
@@ -316,79 +317,13 @@ export async function runEbayPastSalesIngestion(
   maxResults = 50,
   marketplaceId = "EBAY_US"
 ): Promise<{ totalFound: number; inserted: number; errors: number }> {
-  const token = await getEbayOAuthToken();
-
-  if (!token) {
-    console.warn("[eBay Sales Ingestion] Missing OAuth token for eBay API.");
-    return { totalFound: 0, inserted: 0, errors: 0 };
-  }
-
-  // Fetch items using modern eBay Buy Browse API with Bearer token
-  const url = `https://api.ebay.com/buy/browse/v1/item_summary/search?q=${encodeURIComponent(
-    keywords
-  )}&limit=${Math.min(maxResults, 100)}`;
-
-  try {
-    const res = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "X-EBAY-C-MARKETPLACE-ID": marketplaceId,
-      },
-    });
-
-    if (!res.ok) {
-      console.warn(`[eBay Sales Ingestion] Search returned HTTP ${res.status}`);
-      return { totalFound: 0, inserted: 0, errors: 0 };
-    }
-
-    const data = await res.json();
-    const items = data?.itemSummaries || [];
-
-    if (!Array.isArray(items) || items.length === 0) {
-      return { totalFound: 0, inserted: 0, errors: 0 };
-    }
-
-    const parsedList: EbaySoldTransaction[] = [];
-    for (const it of items) {
-      const priceVal = parseFloat(it.price?.value || "0");
-      if (priceVal <= 0) continue;
-
-      const title = it.title || "";
-      const itemId = it.itemId || "";
-      const soldDate = it.itemCreationDate || new Date().toISOString();
-      const shippingCost = parseFloat(it.shippingOptions?.[0]?.shippingCost?.value || "0");
-      const bidCount = parseInt(it.bidCount || "0", 10);
-      const itemUrl = it.itemWebUrl;
-      const imageUrl = it.image?.imageUrl;
-      const buyingOption = Array.isArray(it.buyingOptions) && it.buyingOptions.includes("AUCTION")
-        ? "AUCTION"
-        : "FIXED_PRICE";
-
-      const parsed = parseEbayComicListing({
-        itemId,
-        title,
-        price: priceVal,
-        currency: it.price?.currency || "USD",
-        soldDate,
-        shippingCost,
-        bidCount,
-        buyingOption,
-        sellerUsername: it.seller?.username,
-        sellerFeedbackPercentage: it.seller?.feedbackPercentage,
-        sellerFeedbackScore: it.seller?.feedbackScore,
-        topRatedSeller: it.seller?.topRatedSeller,
-        postalCode: it.itemLocation?.postalCode,
-        itemUrl,
-        imageUrl,
-      });
-
-      parsedList.push(parsed);
-    }
-
-    const { inserted, errors } = await ingestEbayPastSalesBatch(parsedList);
-    return { totalFound: parsedList.length, inserted, errors };
-  } catch (err) {
-    console.error("[eBay Sales Ingestion] Fatal error during crawl:", err);
-    return { totalFound: 0, inserted: 0, errors: 0 };
-  }
+  const result = await searchEbaySold(keywords, maxResults);
+  if (!result.available) return { totalFound: 0, inserted: 0, errors: 0 };
+  const transactions = result.items.flatMap(item => {
+    const price=Number(item.lastSoldPrice?.value), soldDate=item.lastSoldDate;
+    if (!(price>0) || !soldDate || !Number.isFinite(Date.parse(soldDate)) || !item.itemId || !item.title) return [];
+    return [parseEbayComicListing({itemId:item.itemId,title:item.title,price,
+      currency:item.lastSoldPrice.currency,soldDate,itemUrl:item.itemWebUrl})];
+  });
+  return {totalFound:transactions.length,...await ingestEbayPastSalesBatch(transactions)};
 }

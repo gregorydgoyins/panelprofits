@@ -1,7 +1,7 @@
 import { createAdminServerClient } from "@/lib/supabase/admin";
 import { searchEbaySold, type EbaySoldResult } from "./ebay-sold";
 
-export interface EbayHistoryResult extends EbaySoldResult { provider: string; rawRecords?: Record<string, any>[]; hasMore?: boolean }
+export interface EbayHistoryResult extends EbaySoldResult { provider: string; rawRecords?: Record<string, any>[]; hasMore?: boolean; pagesFetched?: number; windowEnd?: string }
 const cache = new Map<string, { at: number; result: Promise<EbayHistoryResult> }>();
 export function historyQueryKey(query: string) {
   return query.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
@@ -56,20 +56,45 @@ async function readSavedOrFetch(query: string, queryKey: string): Promise<EbayHi
   return response;
 }
 
-async function readHistory(query: string, key: string): Promise<EbayHistoryResult> {
+/** Worker-only continuation of an already acquired search. One next page per run; atomic ownership across instances. */
+export async function continueCompletedEbaySales(query:string):Promise<number> {
+  const apiKey=process.env.COMPSNIPER_API_KEY;if(!apiKey)return 0;
+  const db=createAdminServerClient(),queryKey=historyQueryKey(query);
+  const {data:saved,error}=await db.from('sniper_ebay_history').select('state,response,completed_at').eq('query_key',queryKey).maybeSingle();
+  const previous=saved?.response as EbayHistoryResult|undefined;
+  if(saved?.state==='pending' && saved.completed_at && Date.now()-Date.parse(saved.completed_at)>15*60000){
+    await db.from('sniper_ebay_history').update({state:'ready'}).eq('query_key',queryKey).eq('state','pending').eq('completed_at',saved.completed_at);return 0;
+  }
+  if(error || saved?.state!=='ready' || !previous?.available || !previous.hasMore || !saved.completed_at)return 0;
+  const {data:claimed}=await db.from('sniper_ebay_history').update({state:'pending'}).eq('query_key',queryKey).eq('state','ready').eq('completed_at',saved.completed_at).select('query_key');
+  if(!claimed?.length)return 0;
+  try {
+    const page=(previous.pagesFetched || 1)+1;
+    const next=await readHistory(query,apiKey,page,previous.windowEnd || previous.checkedAt);
+    if(!next.available)return 0;
+    const records=[...(previous.rawRecords || []),...(next.rawRecords || [])];
+    const items=[...new Map([...previous.items,...next.items].map(r=>[String(r.itemId || r.itemUrl || JSON.stringify(r)),r])).values()];
+    const response={...next,items,rawRecords:records,total:items.length,pagesFetched:page,message:`${items.length} stored single-unit eBay sale records across ${page} search pages.${next.hasMore?' Further history is queued for a background import.':''}`};
+    const {error:writeError}=await db.from('sniper_ebay_history').update({state:'ready',response,completed_at:new Date().toISOString()}).eq('query_key',queryKey);
+    if(writeError)throw new Error('Could not save additional completed-sale history');
+    return next.items.length;
+  } finally {await db.from('sniper_ebay_history').update({state:'ready'}).eq('query_key',queryKey).eq('state','pending');}
+}
+
+async function readHistory(query: string, key: string, page=1, windowEnd?:string): Promise<EbayHistoryResult> {
   const base: EbayHistoryResult = { provider: "compsniper_ebay_product_research", available: false, checkedAt: new Date().toISOString(), stage: "search", status: 0, code: null, message: "", items: [], total: 0, next: null, rawRecords: [] };
-  const end = new Date();
+  const end = windowEnd ? new Date(windowEnd) : new Date();
   const start = new Date(end); start.setUTCFullYear(start.getUTCFullYear() - 3); start.setUTCDate(start.getUTCDate() + 1);
   try {
     // Single-unit rows have an individual soldPrice and soldDate. Aggregate averages are excluded.
     const url = new URL("https://api.compsniper.com/v1/research/sold");
-    url.search = new URLSearchParams({ keyword: query, startDate: start.toISOString().slice(0,10), endDate: end.toISOString().slice(0,10), ebaySite: "ebay.com", sort: "lastSoldDescending", limit: "50", page: "1", singleUnitOnly: "true" }).toString();
+    url.search = new URLSearchParams({ keyword: query, startDate: start.toISOString().slice(0,10), endDate: end.toISOString().slice(0,10), ebaySite: "ebay.com", sort: "lastSoldDescending", limit: "50", page: String(page), singleUnitOnly: "true" }).toString();
     const response = await fetch(url, { headers: { Authorization: `Bearer ${key}` }, cache: "no-store", signal: AbortSignal.timeout(25000) });
     const body = await response.json();
     if (!response.ok) return { ...base, status: response.status, code: body.code || "history_failed", message: body.error || "Sold-history provider refused the request." };
     if (!Array.isArray(body.results)) return { ...base, status: response.status, code: "unexpected_response", message: "No historical results collection returned." };
     const records = body.results.filter((r: any) => r.recordType === "single_unit_listing" && Number(r.soldUnits) === 1 && Number(r.soldPrice?.amount) > 0 && r.soldDate && Number.isFinite(Date.parse(r.soldDate)));
-    return { ...base, available: true, status: response.status, rawRecords: body.results,
+    return { ...base, available: true, status: response.status, rawRecords: body.results,pagesFetched:page,windowEnd:end.toISOString(),
       items: records.map((r: any) => ({ ...r, lastSoldPrice: { value: r.soldPrice.amount, currency: r.soldPrice.currency }, lastSoldDate: r.soldDate, itemWebUrl: r.itemUrl })),
       total: records.length, hasMore: Boolean(body.hasNextPage), message: `Completed single-unit eBay sales over up to three years. ${body.hasNextPage ? "Showing the latest 50 matching listing records; more pages are available from the provider." : ""}`.trim(),
     };

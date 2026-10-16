@@ -104,7 +104,17 @@ export function learningLinks(content: Pick<ListingWriteup, "investment">) {
   const mentioned = findCbrTermsInText(JSON.stringify(content.investment), 4).map(({ entry }) => entry);
   const practice = ["fair-market-value-fmv-benchmark", "price-discovery"].map(getCbrTermBySlug).filter((entry): entry is NonNullable<typeof entry> => entry !== null);
   return [...new Map([...mentioned, ...practice].map(entry => [entry.slug, entry])).values()]
-    .map(entry => ({ term: entry.term, url: `/lexicon/${entry.slug}`, definition: entry.panel_profits_translation }));
+    .map(entry => ({ term: entry.term, url: `/wiki/terms/${entry.slug}`, definition: entry.panel_profits_translation }));
+}
+
+/** Reuse an existing sourced editorial brief only when its named cover artist matches this listing. */
+export function existingEditorialWriteup(l:WriteupListing,story:StorySummary):ListingWriteup|null {
+  const legacy=(story as StorySummary & {researchBrief?:{content?:{intro:string;sections:Array<{points:Array<{label:string;text:string}>}>;lessons:Array<{heading:string;text:string}>}}}).researchBrief?.content;
+  const artists=story.credits?.coverArtists || [];
+  if(!legacy?.lessons?.length || !artists.some(name=>{const last=name.trim().split(/\s+/).pop();return last && last.length>3 && l.title.toLowerCase().includes(last.toLowerCase());}))return null;
+  const parsed=writeupSchema.safeParse({edition:l.title.slice(0,220),synopsis:{intro:legacy.intro,points:legacy.sections.flatMap(s=>s.points).slice(0,4).map(p=>({...p,refs:[0]}))},investment:{heading:'Research thesis for this edition',points:legacy.lessons.slice(0,5).map(p=>({label:p.heading,text:p.text,refs:[0]}))}});
+  if(!parsed.success || /[$€£]|\b\d+(?:\.\d+)?\s*%/.test(JSON.stringify(parsed.data)))return null;
+  return {...parsed.data,sources:[{title:story.source,uri:story.sourceUrl}],model:'Panel Profits stored editorial brief',writtenAt:new Date().toISOString(),learning:learningLinks(parsed.data)};
 }
 
 export async function makeListingWriteup(l: WriteupListing, story?: StorySummary | null): Promise<ListingWriteup | null> {
@@ -119,6 +129,12 @@ export async function makeListingWriteup(l: WriteupListing, story?: StorySummary
     if (!data?.content && data?.failed_at && Date.now() - new Date(data.failed_at).getTime() < FAIL_TTL_MS) return null;
   } catch { /* cache unavailable: write it live */ }
 
+  const existingEditorial=story && existingEditorialWriteup(l,story);
+  if(existingEditorial){
+    const {error}=await db.from('sniper_listing_writeup').upsert({key,title:l.title.slice(0,300),content:existingEditorial,written_at:existingEditorial.writtenAt,failed_at:null});
+    if(error)throw new Error('Could not save existing editorial research');
+    return existingEditorial;
+  }
   if ((!apiKey && !gatewayAvailable) || Date.now() < providerBlockedUntil) return null;
   if (!gatewayAvailable) {
     const { data: provider } = await db.from("sniper_vendor_fetch").select("fetched_at,status").eq("key", "writeup-provider:gemini").maybeSingle();

@@ -24,7 +24,7 @@ async function readRadar(request:Request) {
   const publisherFilter = searchParams.get("publisher");
   const angleFilter = searchParams.get("angle");
   const minGradeParam = searchParams.get("minGrade");
-  const minGrade = minGradeParam ? parseFloat(minGradeParam) : 0.5;
+  const minGrade = Math.max(8.5, minGradeParam ? Number(minGradeParam) || 8.5 : 8.5);
 
   try {
     // Live auctions come from the Sniper store, populated by scheduled snapshots across ComicConnect, Metropolis, Hake's, and eBay.
@@ -149,7 +149,7 @@ async function readRadar(request:Request) {
         const parsed = parseAndFilterListing(rawTitle);
         const effectiveGrade = item.resolvedGrade ?? parsed.grade ?? undefined;
         const dbMeta = resolveAuctionDbMetadata(rawTitle, effectiveGrade, undefined);
-        const resolvedFmv = dbMeta.fmv ?? ((item.anchorFmv && item.anchorFmv > 0)
+        const resolvedFmv = item.eligibility ? undefined : dbMeta.fmv ?? ((item.anchorFmv && item.anchorFmv > 0)
           ? item.anchorFmv
           : (item.fairMarketValue && item.fairMarketValue > 0)
             ? item.fairMarketValue
@@ -209,7 +209,9 @@ async function readRadar(request:Request) {
           normalizedTitle: cleanTitle,
           graderNotes: cleanedNotes,
           itemDescription: cleanedDesc,
-          year: labelYear ?? dbMeta.year ?? item.year ?? parsed.extractedYear,
+          year: labelYear ?? item.year ?? (item.eligibility ? undefined : dbMeta.year ?? parsed.extractedYear),
+          resolvedGrade: item.label?.grade ?? effectiveGrade,
+          gradingCompany: item.label?.grader ?? item.gradingCompany ?? parsed.gradingCompany,
           era: labelYear ? issueEra(labelYear) : dbMeta.era ?? item.era ?? parsed.extractedEra,
           imageUrl: safeCoverUrl,
           galleryImages: galleryList.length > 0 ? galleryList : [safeCoverUrl],
@@ -219,8 +221,8 @@ async function readRadar(request:Request) {
           timeLeftStr: isBin ? "Buy It Now · Available" : formatTimeStr(secs),
           anchorFmv: resolvedFmv,
           fairMarketValue: resolvedFmv,
-          historicalComps: dbMeta.historicalComps.length > 0 ? dbMeta.historicalComps : item.historicalComps,
-          pricingSourceProvenance: dbMeta.pricingSourceProvenance ?? item.pricingSourceProvenance ?? undefined,
+          historicalComps: item.eligibility ? [] : dbMeta.historicalComps.length > 0 ? dbMeta.historicalComps : item.historicalComps,
+          pricingSourceProvenance: item.eligibility ? undefined : dbMeta.pricingSourceProvenance ?? item.pricingSourceProvenance ?? undefined,
           censusTotal: resolvedCensusTotal,
           censusHigher: resolvedCensusHigher,
           censusCount98: resolvedCensus98,
@@ -242,7 +244,7 @@ async function readRadar(request:Request) {
         count: liveAuctions.length,
         auctions: liveAuctions,
         venues: activeVenues,
-        source: "ebay_browse_api",
+        source: "stored_qualified_multi_venue",
         dataAsOf: asOf,
         fetchedAt: new Date().toISOString(),
       }, { headers: { "server-timing": [...marks, `total;dur=${Date.now() - tStart}`].join(", ") } });
@@ -253,7 +255,7 @@ async function readRadar(request:Request) {
       count: 0,
       auctions: [],
       venues: [],
-      source: "ebay_browse_api",
+      source: "stored_qualified_multi_venue",
       dataAsOf: asOf,
       message: asOf
         ? "No live eBay listings match the active filters."
