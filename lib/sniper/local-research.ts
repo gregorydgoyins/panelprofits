@@ -67,8 +67,9 @@ export async function readLocalLotResearch(itemId: string, hydrate = false): Pro
   const comic = matchingLocalComic((priceRows.data || []) as ComicRecord[], edition);
   const grades = comic ? panelProfitsGrades({ ...comic, panel_profits_data: comic.panel_profits_data || {} }) : {};
   // These are stored guide comparisons, not claimed same-grader realized sales.
+  const pcSourceId = comic?.panel_profits_data?.["PP Source ID"] || comic?.panel_profits_data?.["PriceCharting ID"];
   const legacyPrices = Object.entries(grades).filter((entry): entry is [Grade, number] => typeof entry[1] === "number" && entry[1] > 0)
-    .map(([grade, amount]) => ({ grade, amount, source: "Stored price guide", url: `/comics/${encodeURIComponent(comic!.id)}` }));
+    .map(([grade, amount]) => ({ grade, amount, source: pcSourceId ? `PriceCharting #${pcSourceId} via Panel Profits · stored guide` : "Panel Profits · stored guide", basis: "Stored grade-specific guide estimate; not a completed sale", kind: "guide", currency: "USD", url: `/comics/${encodeURIComponent(comic!.id)}` }));
   const prices: StoredPrice[] = [...market.prices, ...legacyPrices];
   if (label?.title && label.issueNumber && !editionUnknown && !edition) {
     const found = await lookupGoCollectBatch([{ key: itemId, title: series, issue, date: label.issueDate, grader: label.grader || row.grader, labelType: label.labelType, grade: label.grade ?? row.grade }]);

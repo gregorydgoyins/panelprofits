@@ -36,7 +36,9 @@ export function dedupeSales(sales: SaleObs[]): SaleObs[] {
   const seen = new Map<string, SaleObs>();
   for (const s of sales) {
     if (!(s.price > 0) || !/^\d{4}-\d{2}-\d{2}/.test(s.date)) continue;
-    const identity = s.itemId || s.url?.match(/\/itm\/(?:[^/]+\/)?(\d{9,14})/)?.[1];
+    const urlIdentity = s.url?.match(/\/itm\/(?:[^/]+\/)?(\d{9,14})/)?.[1];
+    const ebayIdentity = s.itemId?.match(/^(?:ebay-|(?:ebay-)?v1\|)?(\d{9,14})(?:\|0)?$/)?.[1];
+    const identity = urlIdentity || ebayIdentity || s.itemId;
     const key = identity ? `item:${identity}|${day(s.date)}` : `${day(s.date)}|${Math.round(s.price * 100)}|${s.grade ?? "x"}`;
     const prev = seen.get(key);
     if (!prev || (!prev.confirmed && s.confirmed)) seen.set(key, s);

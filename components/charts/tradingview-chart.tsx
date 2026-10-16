@@ -262,7 +262,7 @@ export function TradingViewChart({
               {ticker} · TRADINGVIEW VALUATION ENGINE
             </span>
             <span className="inline-flex items-center gap-1 rounded bg-emerald-950/60 border border-emerald-500/40 px-1.5 py-0.2 text-[9px] font-mono text-emerald-300">
-              <Activity className="h-2.5 w-2.5 animate-pulse" /> LIVE STREAM
+              <Activity className={`h-2.5 w-2.5 ${completedSalesOnly ? "" : "animate-pulse"}`} /> {completedSalesOnly ? "RECORDED SALES" : "LIVE STREAM"}
             </span>
           </div>
 

@@ -1,6 +1,6 @@
 import { createAdminServerClient } from "@/lib/supabase/admin";
 
-export interface StoredPrice { grade: string; amount: number; source: string; url: string; currency?: string; observedAt?: string; kind?: string }
+export interface StoredPrice { grade: string; amount: number; source: string; url: string; currency?: string; observedAt?: string; kind?: string; basis?: string; publicationDate?: string }
 const norm = (s: string | null) => (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
 /** A missing date can be resolved only when the stored title/issue has one publication year. */
 export async function resolveStoredPublicationYear(series: string, issue: string): Promise<number | null> {
@@ -32,6 +32,8 @@ export async function readStoredMarketEvidence(series: string, issue: string, ye
     .select("grade_label,amount,source_system,source_locator,observed_at,currency,price_field")
     .eq("ppcf_id", match.ppcf_id).gt("amount", 0).order("observed_at", { ascending: false }).order("id").limit(1000);
   if (priceError) throw new Error("Crosswalk price lookup failed");
+  const rawPublication = match.publication_date || "";
+  const publicationDate = /^(?:\d{1,2}\/\d{1,2}\/\d{4}|\d{4}-\d{2}-\d{2})$/.test(rawPublication) && Number.isFinite(Date.parse(rawPublication)) ? new Date(rawPublication).toISOString().slice(0,10) : undefined;
   const seen = new Set<string>();
   const prices: StoredPrice[] = [];
   for (const o of observations || []) {
@@ -43,7 +45,10 @@ export async function readStoredMarketEvidence(series: string, issue: string, ye
     seen.add(key);
     prices.push({ grade, amount: Number(o.amount), currency: o.currency || "USD", source: `${o.source_system} · ${o.price_field}`,
       url: /^https?:\/\//i.test(o.source_locator || "") ? o.source_locator : `/wiki/${match.ppcf_id}`,
-      observedAt: o.observed_at, kind: "guide" });
+      observedAt: o.source_system === "COMICBASE" ? undefined : o.observed_at,
+      publicationDate: publicationDate,
+      basis: o.source_system === "COMICBASE" ? `ComicBase catalog reference; source condition ${o.grade_label || "unspecified"}. Not a CGC completed sale.` : "Stored guide estimate, not a completed sale",
+      kind: "guide" });
   }
   return { ppcfId: match.ppcf_id, prices };
 }

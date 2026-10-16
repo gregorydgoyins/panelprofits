@@ -6,6 +6,10 @@ const s = (date: string, price: number, grade: number | null = 9.8, confirmed = 
 });
 
 describe("sniper candles come only from recorded sales", () => {
+  it("counts a PriceCharting sale and the same eBay transaction once", () => {
+    const base = s("2025-06-21",120,9.4,true,"pricecharting_completed_sale");
+    expect(dedupeSales([{...base,itemId:"ebay-136035200051",url:"https://www.ebay.com/itm/136035200051"},{...base,itemId:"136035200051",source:"ebay_history"}])).toHaveLength(1);
+  });
   it("opens on the first sale, closes on the last, and volume is the count", () => {
     const c = buildCandles([s("2026-10-05", 100), s("2026-10-06", 140), s("2026-10-07", 90), s("2026-10-08", 120)], "week");
     expect(c.length).toBe(1);

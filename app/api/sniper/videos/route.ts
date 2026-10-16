@@ -39,7 +39,10 @@ export async function GET(request: Request) {
   if (!apiKey) {
     return Response.json({ videos: [], error: "YOUTUBE_API_KEY is not set" }, { headers: { "cache-control": "no-store" } });
   }
-  const videos = await findVideos({ series, issue, creators }, { apiKey, fetchFn: fetch, cacheGet, cacheSet });
+  const found = await findVideos({ series, issue, creators }, { apiKey, fetchFn: fetch, cacheGet, cacheSet });
+  const related = found.filter(v => v.kind !== "explainer").slice(0,2);
+  const explainer = found.find(v => v.kind === "explainer" && !related.some(r => r.videoId === v.videoId));
+  const videos = [...related, ...(explainer ? [explainer] : [])];
   return Response.json(
     { videos },
     { headers: { "cache-control": videos.length ? "public, s-maxage=86400, stale-while-revalidate=604800" : "no-store" } }

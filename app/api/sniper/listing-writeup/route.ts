@@ -1,4 +1,4 @@
-import { readSavedLotResearch } from "@/lib/sniper/local-research";
+import { readLocalLotResearch } from "@/lib/sniper/local-research";
 import { readSavedStorySummary } from "@/lib/comics/story-summary";
 import { readCachedWriteup } from "@/lib/sniper/listing-writeup";
 export const runtime = "nodejs";
@@ -13,13 +13,13 @@ export async function GET(request: Request) {
   const itemId = p.get("itemId")?.slice(0, 240);
   const [{ writeup, failedRecently }, localResult, savedStory] = await Promise.all([
     readCachedWriteup(listing),
-    itemId ? readSavedLotResearch(itemId).then(value => ({ value, error: false })).catch(() => ({ value: null, error: true })) : Promise.resolve({ value: null, error: false }),
+    itemId ? readLocalLotResearch(itemId).then(value => ({ value, error: false })).catch(() => ({ value: null, error: true })) : Promise.resolve({ value: null, error: false }),
     itemId ? Promise.resolve(null) : readSavedStorySummary({ series: listing.series || "", issueNumber: listing.issue || "", year: listing.year, publisher: listing.publisher || null }),
   ]);
   const localResearch = localResult.value;
   const story = localResearch?.story || savedStory;
   const researchError = localResult.error ? "Stored research could not be read. Try again." : null;
-  if (writeup) return Response.json({ writeup, story, localResearch, researchError, state: "ready" }, { headers: { "cache-control": "public, s-maxage=600" } });
+  if (writeup) return Response.json({ writeup, story, localResearch, researchError, state: "ready" }, { headers: { "cache-control": "no-store" } });
   if (failedRecently) return Response.json({ writeup: null, story, localResearch, researchError, state: "unavailable" }, { headers: { "cache-control": "no-store" } });
   return Response.json({ writeup: null, story, localResearch, researchError, state: "pending" }, { headers: { "cache-control": "no-store" } });
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { CompletedSalesRecords } from "./CompletedSalesRecords";
 import { marketBrief } from "@/lib/sniper/market-brief";
 import { TradingViewChart } from "@/components/charts/tradingview-chart";
 
@@ -23,6 +22,7 @@ interface CandlesResponse {
 const usd = (n: number | null | undefined) => (n == null ? "—" : `$${n >= 100 ? Math.round(n).toLocaleString() : n.toFixed(2)}`);
 
 function sourceLabel(src: string, confirmed: boolean): string {
+  if (src === "pricecharting_completed_sale") return "PriceCharting · completed sale";
   if (src === "ebay_last_bid") return "eBay last bid seen";
   if (src === "ebay_insights" || src === "ebay_history") return "eBay sold";
   if (src === "graded_sales_observations") return "graded register";
@@ -73,12 +73,12 @@ export function LotMarketChart({ series, issue, grade, itemId, ticker, currentBi
   React.useEffect(() => {
     let live = true;
     setLoading(true);
-    const q = new URLSearchParams({ series, issue, bucket, source: "ebay" });
+    const q = new URLSearchParams({ series, issue, bucket });
     if (editionTerms) q.set("editionTerms", editionTerms);
     if (grader) q.set("grader", grader);
     if (pick != null) q.set("grade", String(pick));
     if (itemId) q.set("item", itemId);
-    fetch(`/api/sniper/candles?${q}`, { signal: AbortSignal.timeout(35000) })
+    fetch(`/api/sniper/candles?${q}`, { cache: "no-store", signal: AbortSignal.timeout(35000) })
       .then((r) => (r.ok ? r.json() : null))
       .then((j) => { if (live) {
         if (j?.success && pick === grade && j.stats?.n === 0 && j.grades?.length > 0 && grade != null) {
@@ -98,7 +98,7 @@ export function LotMarketChart({ series, issue, grade, itemId, ticker, currentBi
 
   return (
     <div className="space-y-2.5">
-      {!loading && data && <section className="space-y-3 text-sm leading-6 text-slate-300 pb-4 border-b border-slate-800"><h3 className="text-base font-semibold text-emerald-300">Sales, value &amp; bid assessment</h3>{marketBrief({ listingGrade: grade, chartGrade: data.grade, grader, count: data.stats.n, median: data.stats.median, low: data.stats.low, high: data.stats.high, latest: data.stats.last, allInCost, variant, editionTerms, hasMore: data.ebay?.hasMore }).map(point => <div key={point.heading}><h4 className="font-semibold text-white">{point.heading}</h4><p>{point.text}</p></div>)}</section>}
+
       <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400"><span>Sales grouped by</span>{["day", "week", "month"].map(b => <button key={b} onClick={() => setBucket(b)} className={`px-2 py-1 rounded border ${bucket === b ? "border-cyan-400 text-cyan-300 bg-cyan-950/40" : "border-slate-700"}`}>{b}</button>)}</div>
       {data && data.grades.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-mono">
@@ -159,6 +159,7 @@ export function LotMarketChart({ series, issue, grade, itemId, ticker, currentBi
         </div>
       )}
 
+      {!loading && data && <section className="space-y-3 text-sm leading-6 text-slate-300 pb-4 border-b border-slate-800"><h3 className="text-base font-semibold text-emerald-300">Sales, value &amp; bid assessment</h3>{marketBrief({ listingGrade: grade, chartGrade: data.grade, grader, count: data.stats.n, median: data.stats.median, low: data.stats.low, high: data.stats.high, latest: data.stats.last, allInCost, variant, editionTerms, hasMore: data.ebay?.hasMore }).map(point => <div key={point.heading}><h4 className="font-semibold text-white">{point.heading}</h4><p>{point.text}</p></div>)}</section>}
       {data?.ebay?.available && <p className="text-[10px] leading-4 text-slate-500">History saved {data.ebay.checkedAt?.slice(0, 10)}. {data.ebay.hasMore ? "Additional provider history remains beyond the retrieved pages." : "All available pages in the requested history window were retrieved."} The chart filters by comic, grader, grade and selected edition terms.</p>}
       {data?.ebay && !data.ebay.available && candles.length > 0 && (
         <div className="text-[10px] font-mono text-amber-300/80">eBay sold history unavailable: {data.ebay.message} Displaying confirmed sales from the listed sources.</div>
@@ -190,7 +191,6 @@ export function LotMarketChart({ series, issue, grade, itemId, ticker, currentBi
           {data.sales.length > 10 && <button onClick={() => setShowAllSales(v => !v)} className="mt-2 text-xs text-cyan-300 underline underline-offset-4">{showAllSales ? "Show latest 10" : `Show all ${data.sales.length} completed sales in this sample`}</button>}
         </div>
       )}
-      <CompletedSalesRecords series={series} issue={issue} />
     </div>
   );
 }

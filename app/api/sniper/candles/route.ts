@@ -1,6 +1,6 @@
 import { readEbaySalesForBook } from "@/lib/sniper/ebay-sales-view";
 import { NextResponse } from "next/server";
-import { readSalesForBook } from "@/lib/sniper/market-store";
+import { readStoredCompletedSales } from "@/lib/sniper/stored-completed-sales";
 import { buildCandles, dedupeSales, gradesTraded, pickBucket, saleStats, type Bucket } from "@/lib/sniper/candles";
 
 export const runtime = "nodejs";
@@ -21,7 +21,7 @@ export async function GET(request: Request) {
   if (!series || !issue) return NextResponse.json({ success: false, error: "series and issue required" }, { status: 400 });
 
   const [recorded, view] = await Promise.all([
-    sp.get("source") === "ebay" ? Promise.resolve([]) : readSalesForBook(series, issue),
+    sp.get("editionTerms") ? Promise.resolve([]) : readStoredCompletedSales(series, issue, sp.get("grader")),
     readEbaySalesForBook(series, issue, sp.get("grader"), (sp.get("editionTerms") || "").split("|").filter(term => /^[a-z0-9]{2,40}$/i.test(term)).slice(0, 4)),
   ]);
   const { history: ebay, sales: direct } = view;
@@ -54,5 +54,5 @@ export async function GET(request: Request) {
     note: atGrade.length === 0
       ? `No confirmed sales for this book at this grade. ${ebay.available ? `CompSniper returned ${ebay.total} single-unit records, but none matched the selected comic, grader, grade and edition filters. Other records are available in the complete ledger.` : `eBay sold-history access: ${ebay.message}`}`
       : undefined,
-  });
+  }, { headers: { "cache-control": "no-store" } });
 }

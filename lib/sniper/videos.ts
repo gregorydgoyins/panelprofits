@@ -107,7 +107,7 @@ async function explainers(deps: VideoDeps): Promise<SniperVideo[]> {
   return found;
 }
 
-/** Returns up to six related videos and one financial explainer, most specific first. Never returns a video whose title does not name the book, creator or series. */
+/** Returns up to two related videos and one financial explainer, most specific first. Never returns a video whose title does not name the book, creator or series. */
 export async function findVideos(l: VideoLookup, deps: VideoDeps): Promise<SniperVideo[]> {
   const series = researchTitle(l.series);
   const topic = videoTopic(series);
@@ -120,7 +120,7 @@ export async function findVideos(l: VideoLookup, deps: VideoDeps): Promise<Snipe
   const out: SniperVideo[] = [];
   const add = (rows: Awaited<ReturnType<typeof ytSearch>>, kind: VideoKind, ok: (title: string) => boolean) => {
     for (const r of rows) {
-      if (out.length >= 6) return;
+      if (out.length >= 2) return;
       if (out.some((o) => o.videoId === r.videoId)) continue;
       if (ok(r.title)) out.push({ ...r, kind });
     }
@@ -128,7 +128,7 @@ export async function findVideos(l: VideoLookup, deps: VideoDeps): Promise<Snipe
 
   let searchFailed = false;
   const run = async (q: string, kind: VideoKind, ok: (title: string) => boolean) => {
-    if (out.length >= 6) return;
+    if (out.length >= 2) return;
     try { add(await ytSearch(q, deps), kind, ok); } catch { searchFailed = true; }
   };
 
@@ -136,7 +136,7 @@ export async function findVideos(l: VideoLookup, deps: VideoDeps): Promise<Snipe
   if (issue) await run(`${series} #${issue} comic`, "book", (t) => titleNames(t, series) && new RegExp(`(^|[^0-9])${issue.replace(/[^0-9a-z]/gi, "")}([^0-9]|$)`).test(norm(t)));
   const creators = (l.creators ?? []).map((c) => c.trim()).filter(Boolean).slice(0, 2);
   for (const c of creators) await run(`${c} comic book artist interview`, "creator", (t) => titleNames(t, c));
-  if (out.length < 6) await run(`${topic} comics history`, "series", (t) => titleNames(t, topic));
+  if (out.length < 2) await run(`${topic} comics history`, "series", (t) => titleNames(t, topic));
   // Financial education is separate from subject relevance and appears exactly once.
   const ex = await explainers(deps);
   for (const v of ex.slice(0, 1)) if (!out.some((r) => r.videoId === v.videoId)) out.push(v);

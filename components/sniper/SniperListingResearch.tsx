@@ -8,68 +8,56 @@ type Props = {
   researchUrl?: string; itemId?: string; listingTitle: string; series: string; issueNumber: string; year?: number; publisher?: string;
   grader?: string; grade?: number; editionVerified: boolean;
 };
-
-/** Researched write-up for this exact listing (story synopsis + the collector case for this edition). Reads saved research only. */
 function Refs({ refs, sources }: { refs?: number[]; sources: ListingWriteup["sources"] }) {
-  return <>{(refs ?? []).map((n) => sources[n] ? <a key={n} href={sources[n].uri} target="_blank" rel="noopener noreferrer" title={sources[n].title} className="ml-1 align-super text-[10px] text-cyan-300 hover:underline">[{n + 1}]</a> : null)}</>;
+  return <>{(refs ?? []).map(n => sources[n] ? <a key={n} href={sources[n].uri} target="_blank" rel="noopener noreferrer" title={sources[n].title} className="ml-1 align-super text-[10px] text-cyan-300 hover:underline">[{n + 1}]</a> : null)}</>;
 }
-
 function LinkedSynopsis({ story }: { story: StorySummary }) {
   const links = new Map(Object.values(story.entities ?? {}).flatMap(entries => entries ?? []).map(entity => [entity.label, entity.url]));
   if (!links.size) return <>{story.text}</>;
-  const names = [...links.keys()].sort((a, b) => b.length - a.length).map(name => name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
-  return <>{story.text.split(new RegExp(`(${names.join("|")})`, "g")).map((part, i) => links.has(part)
-    ? <a key={i} href={links.get(part)} className="text-cyan-300 underline underline-offset-4">{part}</a>
-    : part)}</>;
+  const names = [...links.keys()].sort((a,b) => b.length-a.length).map(name => name.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"));
+  return <>{story.text.split(new RegExp(`(${names.join("|")})`,"g")).map((part,i) => links.has(part) ? <a key={i} href={links.get(part)} className="text-cyan-300 underline underline-offset-4">{part}</a> : part)}</>;
 }
-
 export function SniperListingResearch(p: Props) {
-  const [localResearch, setLocalResearch] = useState<LocalLotResearch | null>(null);
-  const [researchError, setResearchError] = useState<string | null>(null);
-  const [story, setStory] = useState<StorySummary | null>(null);
-  const [writeup, setWriteup] = useState<ListingWriteup | null | undefined>(undefined);
+  const [localResearch,setLocalResearch] = useState<LocalLotResearch | null>(null);
+  const [story,setStory] = useState<StorySummary | null>(null);
+  const [writeup,setWriteup] = useState<ListingWriteup | null>(null);
+  const [error,setError] = useState<string | null>(null);
+  const [loading,setLoading] = useState(true);
   useEffect(() => {
-    let live = true;
-    setWriteup(undefined); setStory(null); setLocalResearch(null); setResearchError(null);
-    const q = new URLSearchParams({ title: p.listingTitle, series: p.series, issue: p.issueNumber });
-    if (p.itemId) q.set("itemId", p.itemId);
-    if (p.year) q.set("year", String(p.year));
-    if (p.publisher) q.set("publisher", p.publisher);
-    if (p.grader) q.set("grader", p.grader);
-    const load = () => fetch(p.researchUrl || `/api/sniper/listing-writeup?${q}`).then(r => r.ok ? r.json() : Promise.reject()).then(j => {
-      if (!live) return;
-      setStory(j.story ?? null);
-      setLocalResearch(j.localResearch ?? null); setResearchError(j.researchError ?? null);
-      setWriteup(j.writeup ?? null);
-    }).catch(() => { if (live) setWriteup(null); });
-    load();
-    return () => { live = false; };
-  }, [p.researchUrl, p.itemId, p.listingTitle, p.series, p.issueNumber, p.year, p.publisher, p.grader]);
-
-  const evidence = <>
-    {researchError && <p role="status" className="text-xs text-amber-300">{researchError}</p>}
-    {localResearch && <section className="space-y-3 border-b border-slate-800 pb-4 text-sm">
-      <h3 className="font-semibold text-white">Stored census &amp; price comparisons</h3>
-      {localResearch.census && <p className="text-slate-300">Graded population: <strong>{localResearch.census.total.toLocaleString()}</strong> across label types{localResearch.census.atGrade != null ? ` · ${localResearch.census.atGrade.toLocaleString()} at this grade` : ""}. Issue: {localResearch.census.title} #{localResearch.census.issue} ({localResearch.census.year}).</p>}
-      {localResearch.prices.length > 0 && <><p className="text-xs text-slate-400">Recorded guide values and separately identified sales. Match grade, label, edition, currency, and observation date.</p><table className="w-full text-left text-slate-300"><thead><tr><th>Grade</th><th>Value</th><th>Source</th></tr></thead><tbody>{localResearch.prices.map((price, i) => <tr key={`${price.source}-${price.grade}-${i}`}><td>{price.grade}</td><td>{price.amount.toLocaleString("en-US", { style: "currency", currency: price.currency || "USD" })}</td><td><a className="text-cyan-300 underline" href={price.url}>{price.source}</a>{price.observedAt && <span className="block text-xs text-slate-500">{price.observedAt}</span>}</td></tr>)}</tbody></table></>}
-      {localResearch.missing.length > 0 && <p className="text-xs text-slate-500">No exact stored match: {localResearch.missing.join(", ")}.</p>}
-    </section>}
-  </>;
-  const savedStory = story && <section className="space-y-3 text-sm text-slate-300 leading-6">
-    <h3 className="text-lg font-semibold text-white">Story synopsis</h3>
-    <p className="whitespace-pre-line"><LinkedSynopsis story={story} /></p>
-    <div className="flex flex-wrap gap-2">{Object.values(story.entities ?? {}).flatMap(entries => entries ?? []).filter((entity, i, all) => all.findIndex(other => other.url === entity.url) === i).map(entity => <a key={entity.url} href={entity.url} className="text-cyan-300 underline underline-offset-4">{entity.label}</a>)}</div>
-    <a href={story.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-cyan-300 underline">Source: {story.source}</a>
-  </section>;
-  if (writeup === null) return <>{evidence}{savedStory || <p className="text-xs text-slate-400" role="status">Research for this edition has not been saved yet. Check again after the next listing update.</p>}</>;
-  if (writeup === undefined) return <p className="text-xs text-cyan-300 animate-pulse" role="status">Loading saved edition research…</p>;
+    const controller = new AbortController();
+    setLoading(true); setStory(null); setWriteup(null); setLocalResearch(null); setError(null);
+    const q = new URLSearchParams({title:p.listingTitle,series:p.series,issue:p.issueNumber});
+    if(p.itemId) q.set("itemId",p.itemId);
+    if(p.year) q.set("year",String(p.year));
+    if(p.publisher) q.set("publisher",p.publisher);
+    if(p.grader) q.set("grader",p.grader);
+    fetch(p.researchUrl || `/api/sniper/listing-writeup?${q}`,{cache:"no-store",signal:AbortSignal.any([controller.signal,AbortSignal.timeout(40000)])})
+      .then(async r => { if(!r.ok) throw new Error("Issue research could not be read"); return r.json(); })
+      .then(j => { if(controller.signal.aborted) return; setStory(j.story ?? null);setWriteup(j.writeup ?? null);setLocalResearch(j.localResearch ?? null);setError(j.researchError ?? null); })
+      .catch(() => { if(!controller.signal.aborted) setError("Issue research could not be read. Your prices and chart remain separate from this request."); })
+      .finally(() => { if(!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
+  },[p.researchUrl,p.itemId,p.listingTitle,p.series,p.issueNumber,p.year,p.publisher,p.grader]);
+  const dossier = localResearch?.ppcfId ? `/wiki/${localResearch.ppcfId}` : `/comics?q=${encodeURIComponent(`${p.series} #${p.issueNumber}`)}`;
+  const characters = [...(story?.entities?.featuredCharacters || []),...(story?.entities?.antagonists || []),...(story?.entities?.otherCharacters || [])].filter((e,i,a)=>a.findIndex(other=>other.url===e.url)===i).slice(0,3);
+  const publicationDate = localResearch?.prices.find(price=>price.publicationDate)?.publicationDate;
   return <section className="space-y-5 text-sm text-slate-300 leading-6">
-    {evidence}
-    <div className="flex flex-wrap gap-2">{Object.values(story?.entities ?? {}).flatMap(entries => entries ?? []).filter((entity, i, all) => all.findIndex(other => other.url === entity.url) === i).map(entity => <a key={entity.url} href={entity.url} className="text-cyan-300 underline underline-offset-4">{entity.label}</a>)}</div>
-    <div><h3 className="text-lg font-semibold text-white">Story synopsis: {writeup.edition}</h3><p className="text-xs text-slate-500 mt-1">Original analysis from saved source evidence · check the sources below</p></div>
-    <div className="space-y-2"><p>{writeup.synopsis.intro}</p><ul className="space-y-2 list-disc pl-5">{writeup.synopsis.points.map((pt, i) => <li key={i}><strong className="text-white">{pt.label}:</strong> {pt.text}<Refs refs={pt.refs} sources={writeup.sources} /></li>)}</ul></div>
-    <div className="space-y-2 pt-4 border-t border-slate-800"><h4 className="font-semibold text-emerald-300">{writeup.investment.heading}</h4><ul className="space-y-2 list-disc pl-5">{writeup.investment.points.map((pt, i) => <li key={i}><strong className="text-white">{pt.label}:</strong> {pt.text}<Refs refs={pt.refs} sources={writeup.sources} /></li>)}</ul></div>
-    <nav aria-label="Research learning links" className="space-y-2 border-t border-slate-800 pt-4"><h4 className="font-semibold text-cyan-300">Put the research into practice</h4><div className="flex flex-wrap gap-3"><a href="/learn#sniper-practice" className="text-cyan-300 underline">Practice syllabus &amp; classes</a><a href="/lexicon" className="text-cyan-300 underline">Financial dictionary</a>{localResearch?.ppcfId && <a href={`/wiki/${localResearch.ppcfId}`} className="text-cyan-300 underline">Comic source dossier</a>}</div>{writeup.learning?.map(term => <p key={term.url}><a href={term.url} className="text-cyan-300 underline">{term.term}</a> — {term.definition}</p>)}<p className="text-xs text-slate-500">Apply the evidence in paper trading. Orders use simulated funds.</p></nav>
-    <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400"><span>Sources:</span>{writeup.sources.map((s, i) => <a key={i} href={s.uri} target="_blank" rel="noopener noreferrer" className="text-cyan-300 underline underline-offset-4">[{i + 1}] {s.title} ↗</a>)}</div>
+    {loading && <p role="status" className="text-xs text-cyan-300">Reading this issue’s research…</p>}
+    {error && <p role="status" className="text-xs text-amber-300">{error}</p>}
+    {writeup && <section className="space-y-3"><h3 className="text-lg font-semibold text-emerald-300">{writeup.investment.heading}</h3><p className="text-xs text-slate-500">Panel Profits analysis · {writeup.edition}</p>{writeup.investment.points.map((point,i)=><div key={i}><h4 className="font-semibold text-white">{point.label}</h4><p>{point.text}<Refs refs={point.refs} sources={writeup.sources}/></p></div>)}</section>}
+    {localResearch && <section className="space-y-3 border-t border-slate-800 pt-4">
+      <h3 className="font-semibold text-white">Price comparisons &amp; graded population</h3>
+      <p className="text-xs text-slate-400">This lot: {p.grader || "grader unverified"} {p.grade?.toFixed(1) || "grade unverified"}. A guide for another grade is context, not this slab’s selling price.</p>
+      {publicationDate && <p className="text-xs text-slate-400">Publication date: {new Date(`${publicationDate.slice(0,10)}T12:00:00Z`).toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric",timeZone:"UTC"})}. Price observation date is not established by publication.</p>}
+      {localResearch.prices.length>0 && <div className="overflow-x-auto"><table className="w-full text-left text-xs"><thead className="text-slate-400"><tr><th className="py-2 pr-3">Grade / basis</th><th className="pr-3">Value</th><th>Evidence</th></tr></thead><tbody>{localResearch.prices.map((price,i)=><tr key={`${price.source}-${i}`} className="border-t border-slate-800"><td className="py-3 pr-3">{price.basis?.startsWith("ComicBase") ? "Catalog reference" : price.grade}</td><td className="pr-3 whitespace-nowrap">{price.amount.toLocaleString("en-US",{style:"currency",currency:price.currency || "USD"})}</td><td className="py-3"><a href={price.url} className="text-cyan-300 underline">{price.source}</a><span className="block text-slate-400">{price.basis || (price.kind==="sale" ? "Recorded completed sale" : "Guide reference; not a completed sale")}</span><span className="block text-slate-500">{price.observedAt ? `Observed ${price.observedAt.slice(0,10)}` : "Price observation date unavailable"}</span></td></tr>)}</tbody></table></div>}
+      {localResearch.census && <p>Recorded graded population: <strong>{localResearch.census.total.toLocaleString()}</strong> across label types{localResearch.census.atGrade!=null ? ` · ${localResearch.census.atGrade.toLocaleString()} at this grade` : ""}. {localResearch.census.title} #{localResearch.census.issue} ({localResearch.census.year}). Population alone does not prove demand.</p>}
+    </section>}
+    {(writeup || story) && <section className="space-y-3 border-t border-slate-800 pt-4"><h3 className="text-lg font-semibold text-white">Story: {story?.storyTitle || p.series}</h3>{writeup ? <><p>{writeup.synopsis.intro}</p>{writeup.synopsis.points.map((point,i)=><p key={i}><strong className="text-white">{point.label}. </strong>{point.text}<Refs refs={point.refs} sources={writeup.sources}/></p>)}</> : story && <p className="whitespace-pre-line"><LinkedSynopsis story={story}/></p>}
+      <div className="flex flex-wrap gap-2">{characters.map(entity=><a key={entity.url} href={entity.url} className="rounded border border-slate-700 px-2 text-xs text-cyan-300">{entity.label}</a>)}</div>
+      <a href={dossier} className="text-xs text-cyan-300 underline">Panel Profits issue dossier ↗</a>
+      {story && <details className="text-xs text-slate-500"><summary className="cursor-pointer">Underlying story reference &amp; attribution</summary><a href={story.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-cyan-300 underline">{story.source.replace(/ Fandom import$/i," Database")} · {story.license || "Source reference"}</a></details>}
+    </section>}
+    {!loading && !writeup && !story && <p className="text-xs text-slate-400">No issue-specific narrative is available in the stored research.</p>}
+    <nav aria-label="Research learning links" className="flex flex-wrap gap-3 border-t border-slate-800 pt-4 text-xs"><a href="/learn#sniper-practice" className="text-cyan-300 underline">Practice syllabus</a><a href="/lexicon" className="text-cyan-300 underline">Financial dictionary</a></nav>
   </section>;
 }

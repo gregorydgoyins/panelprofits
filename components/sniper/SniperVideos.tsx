@@ -23,7 +23,7 @@ export function SniperVideos({ series, issue, creators, archive }: { series: str
     setLoading(true);
     setVideos([]);
     setPlaying(null);
-    if (!series) return;
+    if (!series) { setLoading(false); return; }
     const qs = new URLSearchParams({ series, issue, creators: (creators ?? []).join("|") });
     fetch(`/api/sniper/videos?${qs}`)
       .then((r) => (r.ok ? r.json() : { videos: [] }))
@@ -35,6 +35,10 @@ export function SniperVideos({ series, issue, creators, archive }: { series: str
   if (!series) return null;
   const archiveQ = encodeURIComponent(`${series}${issue ? " #" + issue : ""}`);
 
+  const seen = new Set<string>();
+  const related = videos.filter(v => v.kind !== "explainer" && !seen.has(v.videoId) && Boolean(seen.add(v.videoId))).slice(0, archive ? 1 : 2);
+  const explainer = videos.find(v => v.kind === "explainer" && !related.some(r => r.videoId === v.videoId));
+  const selected = [...related, ...(explainer ? [explainer] : [])].slice(0, archive ? 2 : 3);
   return (
     <div className="w-full space-y-2">
       {archive && (
@@ -46,10 +50,10 @@ export function SniperVideos({ series, issue, creators, archive }: { series: str
           </div>
         </div>
       )}
-      <h3 className="text-sm font-semibold text-rose-300 w-full">Related comics &amp; creator videos</h3>
+      <h3 className="text-sm font-semibold text-rose-300 w-full">Watch: this issue &amp; financial context</h3>
       {loading && <p className="text-xs text-slate-400">Finding videos about {videoTopic(series)}…</p>}
       {!loading && !videos.some(v => v.kind !== "explainer") && <p className="text-xs text-slate-400">No related videos returned by the video provider. Browse the topic search below.</p>}
-      {[...videos.filter(v => v.kind !== "explainer"), ...videos.filter(v => v.kind === "explainer").slice(0, 1)].map((v) => (
+      {selected.map((v) => (
         <div key={v.videoId} className="rounded-lg border border-slate-800 bg-slate-950/80 overflow-hidden">
           {v.kind === "explainer" && <h3 className="p-3 text-sm font-semibold text-emerald-300 border-b border-slate-800">Financial explainer</h3>}
           <div className="relative aspect-video bg-black">
@@ -64,7 +68,7 @@ export function SniperVideos({ series, issue, creators, archive }: { series: str
             ) : (
               <button type="button" onClick={() => setPlaying(v.videoId)} className="absolute inset-0 w-full h-full group" aria-label={`Play ${v.title}`}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={v.thumbnail} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                <img src={v.thumbnail} alt="" loading="eager" decoding="async" className="w-full h-full object-cover" />
                 <span className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/10 transition text-white text-2xl">▶</span>
               </button>
             )}

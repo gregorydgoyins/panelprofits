@@ -2134,6 +2134,43 @@ export default function SniperRadarPage() {
               {/* Right Column: Multi-Perspective Rail Intelligence Dossier */}
               <div className="lg:col-span-7 space-y-4">
                 {/* ════════════════════════════════════════════════════════════════════════
+                    PERSPECTIVE 2: TRADINGVIEW TECHNICALS & HISTORICAL SALES LEDGER
+                    ════════════════════════════════════════════════════════════════════════ */}
+                {showSalesChart && (modalPerspective === "all" || modalPerspective === "chart") && (
+                  <div className="bg-[#070C18] border border-cyan-500/40 rounded-xl p-4 space-y-3.5 shadow-lg">
+                    <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono font-bold text-cyan-400 uppercase flex items-center gap-1.5">
+                          <span>📈</span> COMPLETED SALES &amp; PRICE HISTORY
+                        </span>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/30">
+                          Lightweight Charts™
+                        </span>
+                      </div>
+                      <span className="font-mono text-xs font-bold text-slate-400">
+                        ${formatComicEquityTicker(inspectedDeal.resolvedSeries, inspectedDeal.resolvedIssue)}
+                      </span>
+                    </div>
+
+                    <div className="rounded-lg overflow-hidden border border-slate-800 bg-slate-950 p-2">
+                      <LotMarketChart
+                        series={inspectedDeal.resolvedSeries}
+                        issue={inspectedDeal.resolvedIssue}
+                        grade={inspectedDeal.resolvedGrade}
+                        grader={inspectedDeal.gradingCompany}
+                        itemId={inspectedDeal.listing.id}
+                        ticker={formatComicEquityTicker(inspectedDeal.resolvedSeries, inspectedDeal.resolvedIssue)}
+                        currentBid={inspectedDeal.listing.currentBid}
+                        allInCost={inspectedDeal.allInCost}
+                        editionTerms={/\bNauck\b/i.test(inspectedDeal.listing.title) ? "nauck" : undefined}
+                        variant={/\bNauck\b/i.test(inspectedDeal.listing.title) ? "Todd Nauck" : inspectedDeal.variantType || (/variant/i.test(inspectedDeal.listing.title) ? "listed variant" : undefined)}
+                      />
+                    </div>
+
+                  </div>
+                )}
+
+                {/* ════════════════════════════════════════════════════════════════════════
                     PERSPECTIVE 3: HISTORICAL LORE & COLLECTOR CANON
                     ════════════════════════════════════════════════════════════════════════ */}
                 {((modalPerspective === "all") || modalPerspective === "lore") && (
@@ -2141,10 +2178,10 @@ export default function SniperRadarPage() {
                     <div className="flex items-center justify-between border-b border-slate-800 pb-2">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-mono font-bold text-amber-400 uppercase flex items-center gap-1.5">
-                          <span>📜</span> QUICK RESEARCH SUMMARY
+                          <span>📜</span> INVESTMENT CASE &amp; ISSUE RESEARCH
                         </span>
                         <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-500/30">
-                          Story · lessons · sources
+                          Financial case · story · references
                         </span>
                       </div>
                       <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-500/40 uppercase">
@@ -2409,43 +2446,6 @@ export default function SniperRadarPage() {
                         </div>
                       )}
                     </div>
-                  </div>
-                )}
-
-                {/* ════════════════════════════════════════════════════════════════════════
-                    PERSPECTIVE 2: TRADINGVIEW TECHNICALS & HISTORICAL SALES LEDGER
-                    ════════════════════════════════════════════════════════════════════════ */}
-                {showSalesChart && (modalPerspective === "all" || modalPerspective === "chart") && (
-                  <div className="bg-[#070C18] border border-cyan-500/40 rounded-xl p-4 space-y-3.5 shadow-lg">
-                    <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-mono font-bold text-cyan-400 uppercase flex items-center gap-1.5">
-                          <span>📈</span> COMPLETED SALES &amp; PRICE HISTORY
-                        </span>
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/30">
-                          Lightweight Charts™
-                        </span>
-                      </div>
-                      <span className="font-mono text-xs font-bold text-slate-400">
-                        ${formatComicEquityTicker(inspectedDeal.resolvedSeries, inspectedDeal.resolvedIssue)}
-                      </span>
-                    </div>
-
-                    <div className="rounded-lg overflow-hidden border border-slate-800 bg-slate-950 p-2">
-                      <LotMarketChart
-                        series={inspectedDeal.resolvedSeries}
-                        issue={inspectedDeal.resolvedIssue}
-                        grade={inspectedDeal.resolvedGrade}
-                        grader={inspectedDeal.gradingCompany}
-                        itemId={inspectedDeal.listing.id}
-                        ticker={formatComicEquityTicker(inspectedDeal.resolvedSeries, inspectedDeal.resolvedIssue)}
-                        currentBid={inspectedDeal.listing.currentBid}
-                        allInCost={inspectedDeal.allInCost}
-                        editionTerms={/\bNauck\b/i.test(inspectedDeal.listing.title) ? "nauck" : undefined}
-                        variant={/\bNauck\b/i.test(inspectedDeal.listing.title) ? "Todd Nauck" : inspectedDeal.variantType || (/variant/i.test(inspectedDeal.listing.title) ? "listed variant" : undefined)}
-                      />
-                    </div>
-
                   </div>
                 )}
 

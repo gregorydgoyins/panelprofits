@@ -8,7 +8,7 @@ import { bidOnStoredListing } from "@/lib/sniper/game-listing";
 import { gameCommand, gameState } from "@/lib/sniper/game-store";
 import { createServerClient } from "@/lib/supabase/server";
 import { createAdminServerClient } from "@/lib/supabase/admin";
-import { readSavedLotResearch } from "@/lib/sniper/local-research";
+import { readLocalLotResearch } from "@/lib/sniper/local-research";
 import { readCachedWriteup } from "@/lib/sniper/listing-writeup";
 import { resolveStoredPublicationYear } from "@/lib/sniper/stored-market-evidence";
 import { readSavedStorySummary } from "@/lib/comics/story-summary";
@@ -43,7 +43,7 @@ export async function GET(request: Request) {
    if (!z.uuid().safeParse(token).success) return reply({error:"Invalid round"},p,400);
    const { data: round, error } = await createAdminServerClient().from("sniper_paper_orders").select("title,item_id,series,issue,result").eq("owner", p.id).eq("game_token", token).maybeSingle();
    if (error || !round) return reply({error:"Round not found"},p,404);
-   const [{writeup}, localResearch] = await Promise.all([readCachedWriteup({title:round.title}),readSavedLotResearch(round.item_id)]);
+   const [{writeup}, localResearch] = await Promise.all([readCachedWriteup({title:round.title}),readLocalLotResearch(round.item_id)]);
    let story = localResearch?.story || null;
    if (!story) {
     const year = round.result?.year || (round.series && round.issue ? await resolveStoredPublicationYear(round.series,round.issue) : null);
