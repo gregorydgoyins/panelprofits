@@ -129,7 +129,7 @@ export default function SniperRadarPage() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/sniper/auth", { cache: "no-store" })
+    fetch("/api/sniper/auth", { cache: "no-store", signal: AbortSignal.timeout(8000) })
       .then((r) => r.json())
       .then((j) => {
         if (!cancelled) {
@@ -190,6 +190,8 @@ export default function SniperRadarPage() {
   const [isLoadingLive, setIsLoadingLive] = useState<boolean>(false);
   const [lastRefreshedAt, setLastRefreshedAt] = useState<string>("");
   const [liveStreamSource, setLiveStreamSource] = useState<string>("live_ebay_stream");
+  const liveRequest = React.useRef(false);
+  const [liveError, setLiveError] = useState<string | null>(null);
   const [dataAsOf, setDataAsOf] = useState<string | null>(null);
 
   // Active 1-Second Countdown Timers State
@@ -197,12 +199,16 @@ export default function SniperRadarPage() {
 
   // Fetch real live active auctions from /api/sniper/live-auctions
   const fetchLiveAuctions = useCallback(async (refresh = false) => {
+    if (liveRequest.current) return;
+    liveRequest.current = true;
     try {
+      setLiveError(null);
       setIsLoadingLive(true);
       const res = await fetch(`/api/sniper/live-auctions${refresh ? "?refresh=true" : ""}`, {
-        cache: "no-store",
+        cache: "no-store", signal: AbortSignal.timeout(18000),
       });
       const data = await res.json();
+      if (!res.ok || !data.success || !Array.isArray(data.auctions)) throw new Error("Saved listings are temporarily unavailable");
       if (data.success && Array.isArray(data.auctions)) {
         setAuctionsList(data.auctions);
         setLastRefreshedAt(new Date().toLocaleTimeString());
@@ -220,7 +226,9 @@ export default function SniperRadarPage() {
       }
     } catch (err) {
       console.error("Failed to load real live auctions:", err);
+      setLiveError("The saved listing feed timed out or is unavailable. Your account and existing bids are preserved.");
     } finally {
+      liveRequest.current = false;
       setIsLoadingLive(false);
     }
   }, []);
@@ -656,6 +664,7 @@ export default function SniperRadarPage() {
       </header>
 
       {desk.error && <div role="alert" className="mx-auto w-full max-w-7xl px-4 pt-3 text-xs text-rose-300">{desk.error} <button onClick={() => void desk.load()} className="ml-2 underline">Retry account</button></div>}
+      {liveError && <div role="alert" className="mx-auto w-full max-w-7xl px-4 pt-3 text-xs text-amber-300">{liveError} <button onClick={() => void fetchLiveAuctions()} className="ml-2 underline">Retry saved listings</button></div>}
       {/* FIELD MANUAL ACCORDION DRAWER */}
       {showManual && (
         <section className="bg-[#0A0D14] border-b border-amber-500/30 p-5 animate-in slide-in-from-top duration-200">

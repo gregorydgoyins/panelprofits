@@ -31,7 +31,7 @@ export async function MarketShell({ children }: MarketShellProps) {
   if (pathname.startsWith("/sniper")) {
     return (
       <div className="flex min-h-screen flex-col bg-[#07080B] text-slate-100 antialiased">
-        <Header />
+        <React.Suspense fallback={null}><Header /></React.Suspense>
         <main className="flex-1">{children}</main>
         <Footer />
       </div>
