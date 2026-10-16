@@ -9,13 +9,16 @@ export async function savePublicAuctionLots(items:CatalogLot[]) {
  const db=createAdminServerClient();const result={seen:items.length,saved:0,unmatched:0,belowValue:0};
  for(const item of items) {
   const identity=parseAndFilterListing(item.title);
-  if(!identity.extractedSeries || !identity.extractedIssue || !item.year || /\b(variant|exclusive|virgin|newsstand|printing|reprint)\b/i.test(item.title)){result.unmatched++;continue;}
+  if(!identity.extractedSeries || !identity.extractedIssue || !item.year){result.unmatched++;continue;}
   const {data:links,error:linkError}=await db.from('rail_books').select('comics_id').ilike('series',identity.extractedSeries.replace(/[%_\\]/g,'\\$&')).eq('issue_number',identity.extractedIssue).eq('year',item.year).limit(30);
   if(linkError)throw new Error(`Auction crosswalk: ${linkError.message}`);
   const ids=[...new Set((links||[]).map(l=>l.comics_id))];if(!ids.length){result.unmatched++;continue;}
   const {data:books,error:bookError}=await db.from('comics').select('id,publication_year,cover_variant,printing,pp_source_id,panel_profits_data,gcd_data,comicbase_data').in('id',ids);
   if(bookError)throw new Error(`Auction comic evidence: ${bookError.message}`);
-  const matches=(books||[]).filter(c=>c.publication_year===item.year && !c.cover_variant && ['', '1','1st','First'].includes(c.printing||''));
+  const normalized=(s:string)=>s.toLowerCase().replace(/[^a-z0-9]/g,'');
+  const namedEdition=/\b(variant|exclusive|virgin|newsstand)\b/i.test(item.title);
+  const matches=(books||[]).filter(c=>c.publication_year===item.year && ['', '1','1st','First'].includes(c.printing||'') &&
+    (c.cover_variant ? normalized(c.cover_variant).length>=5 && normalized(item.title).includes(normalized(c.cover_variant)) : !namedEdition));
   if(matches.length!==1){result.unmatched++;continue;}
   const book=matches[0],pp=book.panel_profits_data||{},cb=book.comicbase_data||{};
   const sourceId=pp['PP Source ID']||pp['PriceCharting ID']||book.pp_source_id;
@@ -26,7 +29,7 @@ export async function savePublicAuctionLots(items:CatalogLot[]) {
   if(!intrinsicEligibility(item.resolvedGrade,price?.pp_price_raw,cover)){result.belowValue++;continue;}
   const now=Date.now();if(Date.parse(item.auctionEndsAt)<=now)continue;
   const payload={...item,secondsRemaining:Math.floor((Date.parse(item.auctionEndsAt)-now)/1000),eligibility:{intrinsicValue:Number(price!.pp_price_raw),coverPrice:cover!,observedAt:price!.snapshot_date,sourceId:String(sourceId),comicId:book.id,basis:'Stored raw guide; grading premium excluded'}};
-  const row={...listingToRow(payload,now),grade:item.resolvedGrade,grader:item.gradingCompany,pub_year:item.year,research_comic_id:book.id,end_time:item.auctionEndsAt};
+  const row={...listingToRow(payload,now),grade:item.resolvedGrade,grader:item.gradingCompany,pub_year:item.year,edition:book.cover_variant||null,research_comic_id:book.id,end_time:item.auctionEndsAt};
   const {error}=await db.from('sniper_listings').upsert(row,{onConflict:'item_id'});if(error)throw new Error(`Auction persistence: ${error.message}`);
   result.saved++;
  }
