@@ -17,7 +17,8 @@
     "worker:sync-equities": "node --experimental-strip-types --env-file=.env.local scripts/workers/sync_verified_equities_to_supabase.ts",
     "worker:sync-equities:daemon": "node --experimental-strip-types --env-file=.env.local scripts/workers/sync_verified_equities_to_supabase.ts --daemon --interval 300",
     "migrate:overwrite-rounded-prices": "node --experimental-strip-types --env-file=.env.local scripts/workers/overwrite_rounded_prices_in_supabase.ts",
-    "fetch:pricecharting": "python3 ../scripts/download_pricecharting_daily.py --wait"
+    "fetch:pricecharting": "python3 ../scripts/download_pricecharting_daily.py --wait",
+    "sniper:auctions": "node --import tsx scripts/sniper-public-auctions.ts"
   },
   "dependencies": {
     "@radix-ui/react-select": "^2.1.6",
@@ -35,11 +36,14 @@
     "lightweight-charts": "^5.2.1",
     "lucide-react": "^0.475.0",
     "next": "^16.3.5",
+    "node-html-parser": "9.0.4",
     "pg": "^8.23.0",
     "pg-copy-streams": "^7.0.0",
+    "playwright": "1.64.1",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "tailwind-merge": "^3.0.2",
+    "tsx": "4.21.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {

@@ -1,6 +1,7 @@
 import { after, NextRequest, NextResponse } from "next/server";
 import { auditLocalResearch } from "@/lib/sniper/research-worker";
 import { runSnapshot } from "@/lib/sniper/market-store";
+import { importPublicAuctionCatalogs } from "@/lib/sniper/public-auction-import";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,13 +13,18 @@ export const maxDuration = 240;
  * so extra callers cannot spend the eBay quota. `?force=1` skips that only with the cron secret.
  */
 export async function GET(req: NextRequest) {
+  const started=Date.now();
   const bearer = (req.headers.get("authorization") || "").replace(/^Bearer /, "");
   const secrets = [process.env.CRON_SECRET, process.env.GPA_INGESTION_SECRET].filter(Boolean);
   const force = req.nextUrl.searchParams.get("force") === "1" && !!bearer && secrets.includes(bearer);
   try {
     const result = await runSnapshot({ force });
     // After the snapshot is answered, write the research for the slabs now listed so opening a lot is a table read.
-    after(() => auditLocalResearch().catch((e) => console.warn("[sniper] saved research enrichment failed:", (e as Error).message)));
+    after(async () => {
+      await importPublicAuctionCatalogs(1).catch((e) => console.warn("[sniper] public auction catalog import failed:", (e as Error).message));
+      const remaining=Math.max(0,210000-(Date.now()-started));
+      if(remaining>10000)await auditLocalResearch(30,remaining).catch((e) => console.warn("[sniper] saved research enrichment failed:", (e as Error).message));
+    });
     return NextResponse.json({ ok: true, ...result });
   } catch (e) {
     return NextResponse.json({ ok: false, error: (e as Error).message }, { status: 500 });

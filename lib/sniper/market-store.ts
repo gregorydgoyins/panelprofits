@@ -116,7 +116,7 @@ export function listingToRow(it: RawAuctionListing, nowMs: number) {
     currency: it.currency ?? "USD",
     price_native: it.originalBid ?? it.currentBid,
     bid_count: it.bidCount ?? 0,
-    end_time: auction ? new Date(nowMs + Math.max(0, it.secondsRemaining) * 1000).toISOString() : null,
+    end_time: auction ? it.auctionEndsAt || new Date(nowMs + Math.max(0, it.secondsRemaining) * 1000).toISOString() : null,
     url: it.url,
     image_url: it.imageUrl || null,
     gallery: it.galleryImages ?? [],
