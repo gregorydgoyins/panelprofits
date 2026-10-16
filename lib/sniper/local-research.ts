@@ -1,4 +1,4 @@
-import { createAdminServerClient } from "@/lib/supabase/admin";
+import { readLotEvidence } from "./research-database";
 import { panelProfitsGrades } from "@/lib/pricing/source-ladder";
 import type { ComicRecord } from "@/lib/comics/types";
 import type { StorySummary } from "@/lib/comics/story-summary";
@@ -77,8 +77,7 @@ export function assembleLotResearch(raw:LotEvidence):LotResearch {
 }
 /** One live database read transaction per selected lot. No rendered-response store or TTL. */
 export async function readLotResearch(itemId:string,signal?:AbortSignal):Promise<LotResearch|null> {
-  const {data,error}=await createAdminServerClient().rpc("sniper_lot_evidence_v2",{p_item_id:itemId}).abortSignal(signal || AbortSignal.timeout(10000));
-  if(error) { console.warn("[sniper-research-v2] Evidence read failed", {code:error.code,message:error.message}); throw new Error("Stored issue evidence could not be read"); }
+  const data=await readLotEvidence(itemId,signal);
   return data?assembleLotResearch(data as LotEvidence):null;
 }
 export async function readLocalLotResearch(itemId:string):Promise<LocalLotResearch|null> {
