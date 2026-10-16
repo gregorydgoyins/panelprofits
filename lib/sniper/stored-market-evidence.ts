@@ -20,7 +20,8 @@ export function storedPrices(observations: PriceObservation[], match: EditionRow
   const result:StoredPrice[]=[];
   for (const row of observations) {
     if(row.ppcf_id!==match.ppcf_id || /cover price|cost|paid|buy|sell|bid|ask|value year/i.test(row.price_field)) continue;
-    const grade=String(row.grade_label || "");
+    const sourceGrade=String(row.grade_label || "");
+    const grade=/^(RAW|UNGRADED)$/i.test(sourceGrade)?"RAW":sourceGrade.replace("_", ".");
     if(!/^(?:RAW|[0-9]\.[0-9]|10\.0)$/i.test(grade) || !(Number(row.amount)>0)) continue;
     const key=`${row.source_system}|${row.source_record_id}|${grade}|${row.currency}|${row.price_field}`;
     if(seen.has(key)) continue;

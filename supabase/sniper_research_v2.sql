@@ -27,7 +27,7 @@ begin
     when date_part::integer>30 then 1900+date_part::integer else 2000+date_part::integer end;
   select coalesce(jsonb_agg(to_jsonb(e)),'[]') into editions from (
     select ppcf_id,series_name,variant_name,publication_date from public.ppcf_canonical_comics
-    where series_name in (s,lot.series) and issue_number=iss order by ppcf_id limit 100
+    where series_name in (s,lot.series,'The ' || s,'The ' || lot.series) and issue_number=iss order by ppcf_id limit 100
   ) e;
   timings := timings || jsonb_build_object('editions',round((extract(epoch from clock_timestamp()-timer)*1000)::numeric,1)); timer := clock_timestamp();
   if yr is null then
