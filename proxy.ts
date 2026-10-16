@@ -4,6 +4,7 @@ import { refreshSupabaseSession } from "@/lib/supabase/proxy";
 export async function proxy(request: NextRequest) {
   request.headers.set("x-panel-profits-path", request.nextUrl.pathname);
   // Public evidence routes need no account refresh. Game and account routes retain their own checks.
+  if (request.nextUrl.pathname === "/wiki" || request.nextUrl.pathname.startsWith("/wiki/")) return NextResponse.next({ request });
   if (["/sniper", "/api/sniper/research", "/api/sniper/listing-writeup", "/api/sniper/candles", "/api/sniper/videos"].includes(request.nextUrl.pathname)) return NextResponse.next({ request });
   return refreshSupabaseSession(request);
 }

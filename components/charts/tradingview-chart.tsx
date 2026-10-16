@@ -41,6 +41,7 @@ interface TradingViewChartProps {
   cgcSales?: CgcSaleObservation[];
   height?: number;
   completedSalesOnly?: boolean;
+  dataLabel?: string;
 }
 
 export function TradingViewChart({
@@ -56,6 +57,7 @@ export function TradingViewChart({
   cgcSales = [],
   height = 380,
   completedSalesOnly = false,
+  dataLabel,
 }: TradingViewChartProps) {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const chartRef = React.useRef<IChartApi | null>(null);
@@ -171,6 +173,8 @@ export function TradingViewChart({
         topColor: "rgba(16, 185, 129, 0.25)",
         bottomColor: "rgba(16, 185, 129, 0.02)",
         lineWidth: 2,
+        pointMarkersVisible: true,
+        pointMarkersRadius: 4,
         priceLineVisible: false,
       });
       areaSeries.setData(filteredArea as any);
@@ -208,6 +212,8 @@ export function TradingViewChart({
         topColor: `${trendColor}40`,
         bottomColor: `${trendColor}02`,
         lineWidth: 2,
+        pointMarkersVisible: true,
+        pointMarkersRadius: 4,
         priceLineVisible: false,
         crosshairMarkerRadius: 5,
         crosshairMarkerBorderColor: "#FFF",
@@ -262,7 +268,7 @@ export function TradingViewChart({
               {ticker} · TRADINGVIEW VALUATION ENGINE
             </span>
             <span className="inline-flex items-center gap-1 rounded bg-emerald-950/60 border border-emerald-500/40 px-1.5 py-0.2 text-[9px] font-mono text-emerald-300">
-              <Activity className={`h-2.5 w-2.5 ${completedSalesOnly ? "" : "animate-pulse"}`} /> {completedSalesOnly ? "RECORDED SALES" : "LIVE STREAM"}
+              <Activity className={`h-2.5 w-2.5 ${completedSalesOnly ? "" : "animate-pulse"}`} /> {dataLabel || (completedSalesOnly ? "RECORDED SALES" : "LIVE STREAM")}
             </span>
           </div>
 
@@ -270,14 +276,14 @@ export function TradingViewChart({
             <span className="text-3xl font-mono font-bold tracking-tight text-slate-100">
               {`$${(hoveredPrice ?? currentPrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
             </span>
-            <span
+            {(!dataLabel || areaData.length>1) && <span
               className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-mono font-semibold ${
                 isPositive ? "text-emerald-400 bg-emerald-950/60 border border-emerald-500/30" : "text-rose-400 bg-rose-950/60 border border-rose-500/30"
               }`}
             >
               {isPositive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-              {isPositive ? `+${deltaPercent}%` : `${deltaPercent}%`}
-            </span>
+              {isPositive ? `+${deltaPercent.toFixed(2)}%` : `${deltaPercent.toFixed(2)}%`}
+            </span>}
             {hoveredDate && (
               <span className="text-[11px] font-mono text-slate-500 hidden md:inline">
                 {hoveredDate}
@@ -300,7 +306,7 @@ export function TradingViewChart({
             >
               Area
             </button>
-            <button
+            {candlestickData.length>0 && <button
               onClick={() => setChartType("CANDLESTICK")}
               className={`rounded px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider transition-colors ${
                 chartType === "CANDLESTICK"
@@ -309,7 +315,7 @@ export function TradingViewChart({
               }`}
             >
               Candles
-            </button>
+            </button>}
             {!completedSalesOnly && <>
             <button
               onClick={() => setChartType("LADDER")}

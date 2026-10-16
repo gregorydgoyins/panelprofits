@@ -15,6 +15,7 @@ export interface LotResearch {
   version: 2;
   identity: { itemId: string; title: string; series: string; issue: string; year: number | null; publisher: string | null; edition: string | null; grade: number | null; grader: string | null };
   writeup: ListingWriteup | null; story: StorySummary | null; localResearch: LocalLotResearch;
+  guideHistory?: import("./guide-history").GuidePoint[];
   sales: SaleObs[]; videos: SniperVideo[];
   history: { available: boolean; message: string; checkedAt?: string; hasMore?: boolean };
   state: "ready" | "pending"; researchError: null;

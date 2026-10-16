@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import {LotGuideChart} from "./LotGuideChart";
 import { marketBrief } from "@/lib/sniper/market-brief";
 import { buildCandles, gradesTraded, saleStats, type Bucket } from "@/lib/sniper/candles";
 import type { ResearchLoad } from "./useLotResearch";
@@ -24,10 +25,11 @@ function sourceLabel(src: string, confirmed: boolean): string {
 export function LotMarketChart({ research, series, issue, grade, ticker, currentBid, grader, allInCost, variant, editionTerms }: {
   research:ResearchLoad; series:string; issue:string; grade?:number|null; ticker:string; currentBid:number; grader?:string; allInCost?:number; variant?:string; editionTerms?:string;
 }) {
-  const [pick,setPick]=React.useState<number|null>(grade ?? null);
+  const [selection,setSelection]=React.useState<{itemId:string;grade:number|null}|null>(null);
   const [showAllSales,setShowAllSales]=React.useState(false);
   const [bucket,setBucket]=React.useState<Bucket>("day");
   const {data:evidence,loading}=research;
+  const pick=selection?.itemId===evidence?.identity.itemId?selection?.grade ?? null:grade ?? null;
   const all=evidence?.sales || [];
   const atGrade=all.filter(s=>s.grade===pick);
   const data=evidence?{grade:pick,grades:gradesTraded(all),bucket,candles:buildCandles(atGrade,bucket),stats:saleStats(atGrade),sales:[...atGrade].reverse(),sources:atGrade.reduce<Record<string,number>>((counts,s)=>{counts[s.source]=(counts[s.source] || 0)+1;return counts;},{}),ebay:evidence.history,note:"Only source-reported completed sales for this edition and grade are shown."}:null;
@@ -39,6 +41,7 @@ export function LotMarketChart({ research, series, issue, grade, ticker, current
 
   return (
     <div className="space-y-2.5">
+      {!!evidence?.guideHistory?.length && <LotGuideChart key={evidence.identity.itemId} points={evidence.guideHistory} grade={grade} series={series} issue={issue} ticker={ticker}/>}
 
       <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400"><span>Sales grouped by</span>{(["day", "week", "month"] as const).map(b => <button key={b} onClick={() => setBucket(b)} className={`px-2 py-1 rounded border ${bucket === b ? "border-cyan-400 text-cyan-300 bg-cyan-950/40" : "border-slate-700"}`}>{b}</button>)}</div>
       {data && data.grades.length > 0 && (
@@ -47,7 +50,7 @@ export function LotMarketChart({ research, series, issue, grade, ticker, current
           {data.grades.map((g) => (
             <button
               key={g.grade}
-              onClick={() => setPick(g.grade)}
+              onClick={() => evidence && setSelection({itemId:evidence.identity.itemId,grade:g.grade})}
               className={`px-2 py-0.5 rounded border cursor-pointer ${data.grade === g.grade ? "bg-cyan-600 border-cyan-400 text-white font-bold" : "bg-slate-900 border-slate-700 text-slate-300 hover:border-cyan-500"}`}
             >
               {g.grade.toFixed(1)} <span className="opacity-60">· {g.count}</span>

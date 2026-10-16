@@ -8,7 +8,7 @@ declare
   lot record;
   s text; iss text; yr integer; date_part text; ed text; story_key text; sale_key text;
   editions jsonb; book_rows jsonb; observations jsonb; story jsonb; authored jsonb;
-  census_rows jsonb := '[]'; gc_rows jsonb := '[]'; videos jsonb; sales jsonb; history jsonb;
+  census_rows jsonb := '[]'; gc_rows jsonb := '[]'; videos jsonb; sales jsonb; history jsonb; guide_snapshots jsonb;
   q jsonb; label_name text; authored_key text; normalized_title text; resolved_grader text; gr numeric;
   timer timestamptz := clock_timestamp(); timings jsonb := '{}';
 begin
@@ -41,8 +41,17 @@ begin
     from public.comics where series in(s,lot.series) and issue_number=iss and publication_year=yr limit 50
   ) c;
   timings := timings || jsonb_build_object('comics',round((extract(epoch from clock_timestamp()-timer)*1000)::numeric,1)); timer := clock_timestamp();
+  -- Follow existing source-ID crosswalks when a provider encodes the cover in its series title.
+  select editions || coalesce(jsonb_agg(jsonb_build_object('ppcf_id',e.ppcf_id,'series_name',e.series_name,'variant_name',e.variant_name,'publication_date',e.publication_date)),'[]') into editions
+    from public.ppcf_canonical_comics e where e.ppcf_id in(
+      select l.ppcf_id from public.ppcf_source_links l where l.source_system='PANEL_PROFITS' and l.source_record_id in(
+        select coalesce(c->'panel_profits_data'->>'PP Source ID',c->'panel_profits_data'->>'PriceCharting ID') from jsonb_array_elements(book_rows) c))
+    and not exists(select 1 from jsonb_array_elements(editions) existing where existing->>'ppcf_id'=e.ppcf_id);
   select coalesce(jsonb_agg(to_jsonb(p) order by p.observed_at desc,p.id),'[]') into observations
     from public.ppcf_price_observations p where p.ppcf_id in(select e->>'ppcf_id' from jsonb_array_elements(editions) e);
+  select coalesce(jsonb_agg(to_jsonb(h) order by h.snapshot_date),'[]') into guide_snapshots
+    from public.pp_price_history h where h.snapshot_date is not null and h.pp_id in(
+      select coalesce(c->'panel_profits_data'->>'PP Source ID',c->'panel_profits_data'->>'PriceCharting ID') from jsonb_array_elements(book_rows) c);
   timings := timings || jsonb_build_object('observations',round((extract(epoch from clock_timestamp()-timer)*1000)::numeric,1)); timer := clock_timestamp();
   story_key := btrim(regexp_replace(replace(regexp_replace(regexp_replace(lower(s),'\(\s*[0-9]{4}[^)]*\)','','g'),'^the\s+',''),'&',' and '),'[^a-z0-9]+',' ','g')) || '|' || lower(iss) || '|' || coalesce(yr::text,'');
   select jsonb_build_object('summary',summary,'source',source,'source_url',source_url,'license',license) into story
@@ -81,7 +90,7 @@ begin
   timings := timings || jsonb_build_object('gocollect',round((extract(epoch from clock_timestamp()-timer)*1000)::numeric,1)); timer := clock_timestamp();
   sale_key := btrim(regexp_replace(regexp_replace(regexp_replace(regexp_replace(lower(s),'\s*[(\[].*?[)\]]','','g'),'\m(vol\.?|volume|v)\s*[0-9]+\M','','g'),'^the\s+',''),'[^a-z0-9]+',' ','g')) || '|' || lower(regexp_replace(iss,'^#',''));
   select coalesce(jsonb_agg(to_jsonb(t) order by t.sold_at),'[]') into sales from (
-    select item_id,sold_at,price_usd,grade,grader,venue,source,url from public.sniper_sales
+    select item_id,sold_at,price_usd,grade,grader,venue,source,url,edition,publication_year from public.sniper_sales
     where series_key=sale_key and confirmed is true and price_usd>0 and grader=resolved_grader order by sold_at limit 5000
   ) t;
   timings := timings || jsonb_build_object('sales',round((extract(epoch from clock_timestamp()-timer)*1000)::numeric,1)); timer := clock_timestamp();
@@ -94,7 +103,7 @@ begin
   timings := timings || jsonb_build_object('videos',round((extract(epoch from clock_timestamp()-timer)*1000)::numeric,1)); timer := clock_timestamp();
   return jsonb_build_object('timings',timings,'identity',jsonb_build_object('itemId',lot.item_id,'title',lot.title,'series',s,'issue',iss,'year',yr,
     'publisher',coalesce(lot.label->>'publisher',lot.publisher),'edition',ed,'grade',gr,'grader',resolved_grader,'label',lot.label),
-    'editions',editions,'comics',book_rows,'observations',observations,'story',story,'authored',authored,
+    'editions',editions,'comics',book_rows,'guideSnapshots',guide_snapshots,'observations',observations,'story',story,'authored',authored,
     'census',census_rows,'gocollect',gc_rows,'videoSets',videos,'sales',sales,'history',history);
 end $$;
 revoke all on function public.sniper_lot_evidence_v2(text) from public,anon,authenticated;

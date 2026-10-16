@@ -29,7 +29,9 @@ export async function searchPpcfComics(queryText = "", limit = 24): Promise<Ppcf
       .limit(Math.min(Math.max(limit, 1), 100));
 
     const cleanQuery = queryText.trim().replace(/[%_,]/g, " ");
-    if (cleanQuery) query = query.or(`ppcf_id.ilike.%${cleanQuery}%,series_name.ilike.%${cleanQuery}%,issue_title.ilike.%${cleanQuery}%`);
+    const issueQuery=!/^PPCF-/i.test(cleanQuery) && cleanQuery.match(/^(.+?)\s*#\s*([0-9]+[a-z]?)$/i);
+    if(issueQuery) query=query.ilike("series_name",`%${issueQuery[1].trim().split(/[^a-z0-9]+/i).filter(Boolean).join("%")}%`).eq("issue_number",issueQuery[2]);
+    else if (cleanQuery) query = query.or(`ppcf_id.ilike.%${cleanQuery}%,series_name.ilike.%${cleanQuery}%,issue_title.ilike.%${cleanQuery}%`);
 
     const { data, error } = await query;
     if (error) {
