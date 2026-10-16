@@ -61,3 +61,5 @@ Reference pages:
 ## Complete current-archive scan
 
 The streaming scan read all 1,989,947,699 XML bytes: 1,872,670 pages and the same number of current revisions, with 50,702 redirects. Namespace counts include 1,373 Help pages, 11,511 Templates, 793 Categories, 71 Modules and 507 main-namespace pages. Large user and discussion namespaces account for much of the archive. These are useful technical and community records, not 1.87 million comic articles. The full-history archive overlaps this same Community Central site; unique counts across both are not summed.
+
+Browser regression discovered: Star Wars category row `aero` was overridden by the bundled Marvel Aero entity before the database was consulted. Article resolution now reads the exact stored record first, honors an explicit universe context on category links, refuses database errors instead of fabricating a substitute, and only uses a matching local entity when no stored record exists. Creator biographies are no longer queried for every character page.

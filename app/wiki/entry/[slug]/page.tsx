@@ -35,13 +35,21 @@ function cleanLoreTitle(title: string): string {
   return clean.trim();
 }
 
-export default async function LoreEntityPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function LoreEntityPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams:Promise<{universe?:string}> }) {
   const { slug } = await params;
-  let entity: LoreEntitySummary | null = getLoreEntityBySlug(slug);
+  const universe=(await searchParams).universe?.trim().toUpperCase();
+  const supabase=createPublicServerClient();
+  let query=supabase.from("ppcf_wiki_pages").select("slug,display_title,universe,page_type,reality,creators,first_appearance,summary").eq("slug",slug.toLowerCase().trim());
+  if(universe)query=query.eq("universe",universe);
+  const {data:page,error}=await query.maybeSingle();
+  if(error)throw new Error("Stored wiki article could not be read");
+  const local=getLoreEntityBySlug(slug);
+  const pType=(page?.page_type || "").toLowerCase();
+  let entity:LoreEntitySummary|null=page?{slug:page.slug,title:page.display_title,universe:page.universe,type:(pType==="item" || pType==="vehicle"?"item":pType==="location"?"location":pType==="team"?"team":pType==="creator"?"creator":"character"),reality:page.reality,creators:page.creators,first_appearance:page.first_appearance,summary:page.summary || ""}:local && (!universe || local.universe===universe)?local:null;
 
   // Check creator bio authority
   const cleanCreatorSlug = slug.replace(/^creator-/, "");
-  const creatorBio = await getCreatorBio(cleanCreatorSlug);
+  const creatorBio = !page && (!universe || universe==="CANONICAL") && (slug.startsWith("creator-") || entity?.type==="creator") ? await getCreatorBio(cleanCreatorSlug) : null;
   if (creatorBio && (!entity || slug.startsWith("creator-") || !entity.first_appearance)) {
     entity = {
       slug,
@@ -51,7 +59,7 @@ export default async function LoreEntityPage({ params }: { params: Promise<{ slu
       reality: creatorBio.birthCity ? `Origin: ${creatorBio.birthCity}` : "Comic Creative Architect",
       creators: creatorBio.description || "Comic Book Creative Architect",
       first_appearance: creatorBio.deathDate
-        ? `1939–${creatorBio.deathDate.slice(0, 4)}`
+        ? `${creatorBio.birthDate?.slice(0,4) || "Birth date unknown"}–${creatorBio.deathDate.slice(0, 4)}`
         : creatorBio.birthDate
         ? `Active (b. ${creatorBio.birthDate.slice(0, 4)})`
         : "Historic Master Architect",
@@ -67,31 +75,6 @@ export default async function LoreEntityPage({ params }: { params: Promise<{ slu
         },
       ],
     };
-  }
-
-  if (!entity) {
-    try {
-      const supabase = createPublicServerClient();
-      const { data: page } = await supabase
-        .from("ppcf_wiki_pages")
-        .select("*")
-        .eq("slug", slug.toLowerCase().trim())
-        .maybeSingle();
-
-      if (page) {
-        const pType = (page.page_type || "").toLowerCase();
-        entity = {
-          slug: page.slug,
-          title: page.display_title,
-          universe: page.universe,
-          type: (pType === "item" || pType === "vehicle" ? "item" : pType === "location" ? "location" : pType === "team" ? "team" : "character") as LoreEntitySummary["type"],
-          reality: page.reality,
-          creators: page.creators,
-          first_appearance: page.first_appearance,
-          summary: page.summary || `Canonical ${page.universe} entry in Panel Profits knowledge database.`,
-        };
-      }
-    } catch {}
   }
 
   if (!entity) notFound();
