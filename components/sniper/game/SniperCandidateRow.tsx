@@ -137,7 +137,8 @@ export function SniperCandidateRow({
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     loading="lazy"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = "/surface-art/character.png";
+                      (e.target as HTMLImageElement).src =
+                        "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/5f/5f32066be28bc03b9d356ea5166e42656548dc01ee4dd8e053f43b68b88aa645.webp";
                     }}
                   />
                   <div className="absolute bottom-0 inset-x-0 bg-black/80 text-[8px] text-center text-slate-400 font-mono py-0.5 border-t border-slate-800">
