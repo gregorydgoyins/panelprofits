@@ -1,7 +1,7 @@
 "use client";
 
-import React from "react";
-import { Briefcase, Crown, Shield, Archive, RotateCcw, TrendingUp, TrendingDown } from "lucide-react";
+import React, { useState } from "react";
+import { Briefcase, Crown, Shield, Archive, RotateCcw, TrendingUp, TrendingDown, Info } from "lucide-react";
 import type { GameRole, BrokerLevel, WonBook } from "@/lib/sniper/sim/types";
 
 interface SniperHUDProps {
@@ -27,6 +27,7 @@ export function SniperHUD({
   onOpenVault,
   onResetRole,
 }: SniperHUDProps) {
+  const [showRulesModal, setShowRulesModal] = useState<boolean>(false);
   const isBroker = role === "broker";
   const profit = bankroll - startingBankroll;
   const isPositive = profit >= 0;
@@ -63,9 +64,63 @@ export function SniperHUD({
                 {isBroker ? `Lvl ${brokerLevel} · ${brokerTitle}` : "Whale Syndicate"}
               </span>
             </div>
-            <h2 className="text-lg font-mono font-bold text-white uppercase tracking-tight">
-              {isBroker ? "The Broker" : "The Whale"}
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-mono font-bold text-white uppercase tracking-tight">
+                {isBroker ? "The Broker" : "The Whale"}
+              </h2>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowRulesModal(!showRulesModal)}
+                  onMouseEnter={() => setShowRulesModal(true)}
+                  onMouseLeave={() => setShowRulesModal(false)}
+                  className={`text-[9.5px] font-mono px-2 py-0.5 rounded border transition-colors flex items-center gap-1 ${
+                    isBroker
+                      ? "text-cyan-300 border-cyan-500/40 bg-cyan-950/60 hover:bg-cyan-900/60"
+                      : "text-amber-300 border-amber-500/40 bg-amber-950/60 hover:bg-amber-900/60"
+                  }`}
+                  aria-label="View trading participant rules"
+                >
+                  <Info className="h-3 w-3" />
+                  <span>Participant Rules</span>
+                </button>
+
+                {showRulesModal && (
+                  <div className="absolute top-full left-0 mt-2 z-50 w-72 sm:w-80 rounded-xl border border-slate-700 bg-[#030712] p-3.5 shadow-2xl backdrop-blur-xl pointer-events-none">
+                    <div
+                      className={`font-mono font-bold text-xs uppercase mb-1 flex items-center gap-1.5 ${
+                        isBroker ? "text-cyan-300" : "text-amber-300"
+                      }`}
+                    >
+                      {isBroker ? <Briefcase className="h-3.5 w-3.5" /> : <Crown className="h-3.5 w-3.5" />}
+                      <span>{isBroker ? "The Broker: Fiduciary Mandate" : "The Whale: Private Capital Rules"}</span>
+                    </div>
+                    <div className="text-[11px] leading-relaxed text-slate-300 font-sans space-y-1.5 mt-1">
+                      {isBroker ? (
+                        <>
+                          <p>• <strong>Capital:</strong> Managing $5,000 Client AUM across mixed Raw &amp; Mid-Grades.</p>
+                          <p>• <strong>Win Rule:</strong> Profitable rounds attract +15% client additions.</p>
+                          <p>• <strong>Loss Rule:</strong> 2 consecutive losses trigger client capital redemptions.</p>
+                          <p className="text-[10px] text-cyan-400 font-mono mt-1 pt-1 border-t border-slate-800">
+                            *Sovereign = Panel Profits Proprietary Asset Tier
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <p>• <strong>Capital:</strong> $20,000 Personal Bankroll on Heritage/ComicConnect museum grails.</p>
+                          <p>• <strong>Trap Alert:</strong> Watch for stale 2021 market peak comps on Page 2.</p>
+                          <p>• <strong>Win Rule:</strong> Exploit seller-subsidized sunk slabbing fees for instant margin.</p>
+                          <p className="text-[10px] text-amber-400 font-mono mt-1 pt-1 border-t border-slate-800">
+                            *Sovereign = Panel Profits Proprietary Asset Tier
+                          </p>
+                        </>
+                      )}
+                    </div>
+                    <div className="absolute bottom-full left-6 border-4 border-transparent border-b-[#030712]" />
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 

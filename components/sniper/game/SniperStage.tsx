@@ -1,7 +1,23 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Clock, Shield, AlertTriangle, Layers, Flame, Lock, LineChart, BookOpen, Video, DollarSign, CheckCircle2 } from "lucide-react";
+import {
+  Clock,
+  Shield,
+  AlertTriangle,
+  Layers,
+  Flame,
+  Lock,
+  LineChart,
+  BookOpen,
+  Video,
+  DollarSign,
+  CheckCircle2,
+  HelpCircle,
+  Info,
+  Gavel,
+  ShieldAlert,
+} from "lucide-react";
 import type { GameRole, LotItem } from "@/lib/sniper/sim/types";
 import { SlabEncasement } from "@/components/sniper/SlabEncasement";
 import { SniperChart } from "./SniperChart";
@@ -11,6 +27,60 @@ import { SniperBreakevenCard } from "./SniperBreakevenCard";
 import { SniperVideos } from "@/components/sniper/SniperVideos";
 import { SniperCandidateRow } from "./SniperCandidateRow";
 import { PriceChartingGradeTable } from "./PriceChartingGradeTable";
+
+function FloorRulePill({
+  phase,
+  badge,
+  icon,
+  title,
+  body,
+  tip,
+}: {
+  phase: string;
+  badge: string;
+  icon: React.ReactNode;
+  title: string;
+  body: string;
+  tip: string;
+}) {
+  const [showTip, setShowTip] = useState(false);
+
+  return (
+    <div
+      className="relative rounded-lg border border-slate-800 bg-[#060A14] hover:border-slate-700 p-2.5 transition-colors cursor-pointer group"
+      onMouseEnter={() => setShowTip(true)}
+      onMouseLeave={() => setShowTip(false)}
+      onClick={() => setShowTip(!showTip)}
+    >
+      <div className="flex items-center justify-between gap-1 mb-1">
+        <span className={`inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[9px] font-mono font-bold uppercase border ${badge}`}>
+          {icon}
+          <span>{phase}</span>
+        </span>
+        <HelpCircle className="h-3 w-3 text-slate-500 group-hover:text-cyan-300 transition-colors" />
+      </div>
+      <div className="text-[11px] font-mono font-bold text-slate-200 uppercase truncate">
+        {title}
+      </div>
+      <div className="text-[10px] text-slate-400 font-sans leading-tight mt-0.5 line-clamp-2">
+        {body}
+      </div>
+
+      {showTip && (
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 w-72 rounded-xl border border-cyan-500/50 bg-[#030712] p-3 shadow-2xl backdrop-blur-xl pointer-events-none">
+          <div className="text-cyan-300 font-mono font-bold text-[11px] mb-1 flex items-center gap-1">
+            <Info className="h-3 w-3 shrink-0" />
+            <span>{title}</span>
+          </div>
+          <p className="text-[10px] text-slate-300 font-sans leading-relaxed">
+            {tip}
+          </p>
+          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#030712]" />
+        </div>
+      )}
+    </div>
+  );
+}
 
 interface SniperStageProps {
   role: GameRole;
@@ -184,6 +254,59 @@ export function SniperStage({
       {/* PAGE 1: THE LEAD / FLOOR BIDDING PAGE */}
       {activeTab === "lead" && (
         <div className="space-y-6">
+          {/* 4 Timing & Execution Rules Pills Bar on the Floor */}
+          <div className="rounded-xl border border-slate-800 bg-[#060A14] p-3 text-xs font-mono">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-2 pb-2 border-b border-slate-800/80">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5 text-cyan-400" />
+                  Floor Protocol &amp; Timing Rules (4 Phases)
+                </span>
+                <span className="text-[9px] text-slate-500 font-sans hidden sm:inline">
+                  · Hover or tap any pill for rules intel
+                </span>
+              </div>
+              <span className="text-[9px] font-mono text-cyan-400 bg-cyan-950/60 border border-cyan-500/30 px-2 py-0.5 rounded">
+                *Sovereign = Panel Profits Proprietary Asset Tier
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              <FloorRulePill
+                phase="T-240s Phase"
+                badge="bg-emerald-950/80 text-emerald-300 border-emerald-500/40"
+                icon={<Clock className="h-3 w-3" />}
+                title="1. 240s Decision Clock"
+                body="4 mins to inspect Floor, Financing &amp; Lore across all 3 pages."
+                tip="Simulates live auction room diligence (Heritage / ComicConnect). Gives you 240 seconds to cross-examine recorded sales comps, multi-grade spreads, and historical price drift before placing a bid."
+              />
+              <FloorRulePill
+                phase="T-30s Lockout"
+                badge="bg-rose-950/80 text-rose-300 border-rose-500/40"
+                icon={<Lock className="h-3 w-3" />}
+                title="2. 30s Hard Lockout"
+                body="Floor locks at T-30s ('In It to Win It'). You cannot chicken out."
+                tip="Authentic gavel protocol. Once the auctioneer reaches final calls in the last 30 seconds, bids cannot be retracted. The pass/chicken-out button is permanently disabled until hammer strike."
+              />
+              <FloorRulePill
+                phase="Pre-Lockout Exit"
+                badge="bg-amber-950/80 text-amber-300 border-amber-500/40"
+                icon={<ShieldAlert className="h-3 w-3" />}
+                title="3. 10% Chicken-Out Valve"
+                body="Spot a bad spread? Bail before T-30s for 10% to save the other 90%."
+                tip="Graham &amp; Dodd capital preservation. A 10% haircut to escape an overbid or illiquid trap saves you from absorbing an unrecoverable 50%+ loss on secondary liquidation."
+              />
+              <FloorRulePill
+                phase="T-0s Clearing"
+                badge="bg-cyan-950/80 text-cyan-300 border-cyan-500/40"
+                icon={<Gavel className="h-3 w-3" />}
+                title="4. Hammer Strike &amp; Vault"
+                body="Gavel drops at T-0s. Wins below seller breakeven bank positive ROI."
+                tip="*Proprietary Classification: 'Sovereign' is Panel Profits' proprietary institutional asset tier, representing audited catalog equities with verified float, liquidity spreads, and margin-of-safety thresholds."
+              />
+            </div>
+          </div>
+
           {/* Row of Underwriting Decisions Strip */}
           {candidates && candidates.length > 0 && onSelectLot && (
             <SniperCandidateRow
