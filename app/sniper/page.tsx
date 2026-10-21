@@ -1602,88 +1602,18 @@ export default function SniperRadarPage() {
                                   <strong>{deal.anchorFmv > 0 ? `$${deal.anchorFmv.toFixed(2)}` : "Unavailable"}</strong>
                                 </span>
                               )}
-                              <span className="text-slate-500 font-sans text-xs">
-                                vs. Target Exit{" "}
-                                <strong className="text-amber-300 font-mono">
-                                  ${deal.targetWinPrice100Pct.toFixed(2)}
-                                </strong>
-                              </span>
+                              {deal.anchorFmv > 0 && (
+                                <span className="text-slate-400 font-mono text-xs">
+                                  Spread:{" "}
+                                  <strong className={deal.dollarSpread > 0 ? "text-emerald-400" : "text-rose-400"}>
+                                    {deal.dollarSpread > 0 ? `+$${deal.dollarSpread.toFixed(2)}` : `-$${Math.abs(deal.dollarSpread).toFixed(2)}`}
+                                  </strong>{" "}
+                                  <span className="text-slate-500 font-sans">
+                                    ({deal.discountPercent > 0 ? `${deal.discountPercent}% below FMV` : "At/Above FMV"})
+                                  </span>
+                                </span>
+                              )}
                             </div>
-                          </div>
-
-                          {/* THE WHOLE TOMATO ACCORDION */}
-                          <div className="border border-slate-800 rounded-lg overflow-hidden">
-                            <button
-                              onClick={() =>
-                                setExpandedBreakdownId(isBreakdownOpen ? null : deal.listing.id)
-                              }
-                              className="w-full bg-slate-900/90 hover:bg-slate-900 p-2 text-left text-xs font-mono font-bold text-amber-400 flex justify-between items-center transition cursor-pointer"
-                            >
-                              <span>🍅 THE WHOLE TOMATO COST BREAKDOWN (SLABBING &amp; RESALE ANATOMY)</span>
-                              <span className="text-slate-400 font-normal">
-                                {isBreakdownOpen ? "▲ Hide Breakdown" : "▼ Inspect Full Math"}
-                              </span>
-                            </button>
-
-                            {isBreakdownOpen && (
-                              <div className="p-3 bg-slate-950/70 border-t border-slate-800 text-xs font-mono space-y-3 animate-in fade-in duration-150">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                  <div className="space-y-1 text-slate-300 border-r border-slate-800/80 pr-3">
-                                    <div className="text-[10px] font-bold text-cyan-400 uppercase">
-                                      1. Illustrative grading-cost scenario
-                                    </div>
-                                    <div className="flex justify-between text-[11px]">
-                                      <span>
-                                        Base Tier ({isPre1975 ? "Vintage Pre-1975" : "Modern Post-1975"}):
-                                      </span>
-                                      <span className="text-white">${baseGradingFee.toFixed(2)}</span>
-                                    </div>
-                                    {sigCount > 0 && (
-                                      <div className="flex justify-between text-[11px]">
-                                        <span>Signature Verification ({sigCount}x signers):</span>
-                                        <span className="text-amber-300">+${sigFee.toFixed(2)}</span>
-                                      </div>
-                                    )}
-                                    <div className="flex justify-between text-[11px]">
-                                      <span>Freight &amp; Handling:</span>
-                                      <span className="text-white">+${gradingFreight.toFixed(2)}</span>
-                                    </div>
-                                    <div className="flex justify-between text-[11px] font-bold border-t border-slate-800 pt-1 text-cyan-300">
-                                      <span>Total Prior Sunk Cost on Slab:</span>
-                                      <span>${totalSubmitterSunk.toFixed(2)}</span>
-                                    </div>
-                                  </div>
-
-                                  <div className="space-y-1 text-slate-300">
-                                    <div className="text-[10px] font-bold text-emerald-400 uppercase">
-                                      2. Resale Platform Exit Cut
-                                    </div>
-                                    <div className="flex justify-between text-[11px]">
-                                      <span>Target FMV Flip Gross:</span>
-                                      <span className="text-white">
-                                        {deal.anchorFmv > 0 ? `$${deal.anchorFmv.toFixed(2)}` : "Unavailable"}
-                                      </span>
-                                    </div>
-                                    <div className="flex justify-between text-[11px]">
-                                      <span>Platform Cut (~13.25%):</span>
-                                      <span className="text-rose-400">
-                                        {deal.anchorFmv > 0 ? `-$${estPlatformCut.toFixed(2)}` : "—"}
-                                      </span>
-                                    </div>
-                                    <div className="flex justify-between text-[11px]">
-                                      <span>Packaging &amp; Mailer:</span>
-                                      <span className="text-rose-400">-$5.00</span>
-                                    </div>
-                                    <div className="flex justify-between text-[11px] font-bold border-t border-slate-800 pt-1 text-emerald-300">
-                                      <span>Net Cash Realized at Exit:</span>
-                                      <span>
-                                        {deal.anchorFmv > 0 ? `$${estNetAtExit.toFixed(2)}` : "Unavailable"}
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
                           </div>
 
                           {/* ACTION ROW */}
@@ -1933,47 +1863,45 @@ export default function SniperRadarPage() {
                     </span>
                   </div>
 
-                  {/* Box 2: Double-Up (2x) Win Price */}
-                  <div className="bg-black/70 p-2.5 rounded-lg border border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.15)] hover:border-emerald-400 transition">
-                    <div className="flex items-center justify-between text-[10px] text-emerald-400 uppercase font-bold">
-                      <span>Double-Up (2x)</span>
-                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/30">100% Net</span>
+                  {/* Box 2: Verified Market FMV */}
+                  <div className="bg-black/70 p-2.5 rounded-lg border border-slate-800 hover:border-cyan-500/50 transition">
+                    <div className="flex items-center justify-between text-[10px] text-slate-400 uppercase">
+                      <span>Verified Market FMV</span>
+                      <span className="text-cyan-400 font-bold">{inspectedDeal.gradingCompany} {inspectedDeal.resolvedGrade.toFixed(1)}</span>
                     </div>
-                    <strong className="text-emerald-300 text-base sm:text-lg block my-0.5 font-bold">
-                      ${inspectedDeal.targetWinPrice100Pct.toFixed(2)}
-                    </strong>
-                    <span className="text-[9px] text-slate-400 block">
-                      Exit Target to Double Cash
-                    </span>
-                  </div>
-
-                  {/* Box 3: 50% Win Box (1.5x) */}
-                  <div className="bg-black/70 p-2.5 rounded-lg border border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.15)] hover:border-cyan-400 transition">
-                    <div className="flex items-center justify-between text-[10px] text-cyan-400 uppercase font-bold">
-                      <span>50% Win Box (1.5x)</span>
-                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-cyan-950 text-cyan-300 border border-cyan-500/30">50% Net</span>
-                    </div>
-                    <strong className="text-cyan-300 text-base sm:text-lg block my-0.5 font-bold">
-                      ${inspectedDeal.targetWinPrice50Pct.toFixed(2)}
-                    </strong>
-                    <span className="text-[9px] text-slate-400 block">
-                      Fast Turn Target Exit Price
-                    </span>
-                  </div>
-
-                  {/* Box 4: Projected Net Profit & ROI */}
-                  <div className="bg-black/70 p-2.5 rounded-lg border border-amber-500/40 hover:border-amber-400 transition">
-                    <div className="flex items-center justify-between text-[10px] text-amber-400 uppercase font-bold">
-                      <span>Net Flip Spread</span>
-                      <span className="text-amber-300">
-                        {inspectedDeal.anchorFmv > 0 ? `+${inspectedDeal.netRoiPercent}% ROI` : "—"}
-                      </span>
-                    </div>
-                    <strong className="text-amber-300 text-base sm:text-lg block my-0.5 font-bold">
-                      {inspectedDeal.anchorFmv > 0 ? `+$${inspectedDeal.projectedNetProfit.toFixed(2)}` : "Unavailable"}
+                    <strong className="text-white text-base sm:text-lg block my-0.5 font-bold">
+                      {inspectedDeal.anchorFmv > 0 ? `$${inspectedDeal.anchorFmv.toFixed(2)}` : "Unavailable"}
                     </strong>
                     <span className="text-[9px] text-slate-500 block">
-                      Modeled net proceeds at the reference
+                      Recorded Secondary Benchmark
+                    </span>
+                  </div>
+
+                  {/* Box 3: Market Dollar Spread */}
+                  <div className="bg-black/70 p-2.5 rounded-lg border border-emerald-500/40 hover:border-emerald-400 transition">
+                    <div className="flex items-center justify-between text-[10px] text-emerald-400 uppercase font-bold">
+                      <span>Dollar Spread</span>
+                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/30">FMV − Cost</span>
+                    </div>
+                    <strong className={`text-base sm:text-lg block my-0.5 font-bold ${inspectedDeal.dollarSpread >= 0 ? "text-emerald-300" : "text-rose-400"}`}>
+                      {inspectedDeal.anchorFmv > 0 ? `${inspectedDeal.dollarSpread >= 0 ? "+" : "-"}$${Math.abs(inspectedDeal.dollarSpread).toFixed(2)}` : "—"}
+                    </strong>
+                    <span className="text-[9px] text-slate-400 block">
+                      Direct Spread to Market Value
+                    </span>
+                  </div>
+
+                  {/* Box 4: Discount to Market */}
+                  <div className="bg-black/70 p-2.5 rounded-lg border border-cyan-500/40 hover:border-cyan-400 transition">
+                    <div className="flex items-center justify-between text-[10px] text-cyan-400 uppercase font-bold">
+                      <span>Discount to Market</span>
+                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-cyan-950 text-cyan-300 border border-cyan-500/30">Margin of Safety</span>
+                    </div>
+                    <strong className={`text-base sm:text-lg block my-0.5 font-bold ${inspectedDeal.discountPercent >= 0 ? "text-cyan-300" : "text-rose-400"}`}>
+                      {inspectedDeal.anchorFmv > 0 ? `${inspectedDeal.discountPercent}%` : "—"}
+                    </strong>
+                    <span className="text-[9px] text-slate-400 block">
+                      {inspectedDeal.discountPercent >= 0 ? "Acquisition Below Verified FMV" : "Acquisition Above FMV (No Margin)"}
                     </span>
                   </div>
                 </div>
@@ -2380,55 +2308,28 @@ export default function SniperRadarPage() {
                         )}
                       </div>
                       <div className="bg-black/60 p-2.5 rounded-lg border border-slate-800">
-                        <span className="text-emerald-400 text-[10px] uppercase block">Double-Up (2x)</span>
-                        <strong className="text-emerald-300 text-sm">${inspectedDeal.targetWinPrice100Pct.toFixed(2)}</strong>
-                        <span className={`text-[9px] block ${inspectedDeal.anchorFmv > 0 && inspectedDeal.targetWinPrice100Pct > inspectedDeal.anchorFmv ? "text-amber-400" : "text-slate-500"}`}>
-                          {inspectedDeal.anchorFmv <= 0 ? "sell price to double your cost" : inspectedDeal.targetWinPrice100Pct > inspectedDeal.anchorFmv ? "above FMV: needs a buyer over market" : "100% Net Profit"}
+                        <span className="text-cyan-400 text-[10px] uppercase block">Market FMV</span>
+                        <strong className="text-white text-sm">{inspectedDeal.anchorFmv > 0 ? `$${inspectedDeal.anchorFmv.toFixed(2)}` : "Unavailable"}</strong>
+                        <span className="text-[9px] text-slate-500 block">
+                          Recorded benchmark
                         </span>
                       </div>
                       <div className="bg-black/60 p-2.5 rounded-lg border border-slate-800">
-                        <span className="text-cyan-400 text-[10px] uppercase block">Fast Turn (1.5x)</span>
-                        <strong className="text-cyan-300 text-sm">${inspectedDeal.targetWinPrice50Pct.toFixed(2)}</strong>
-                        <span className={`text-[9px] block ${inspectedDeal.anchorFmv > 0 && inspectedDeal.targetWinPrice50Pct > inspectedDeal.anchorFmv ? "text-amber-400" : "text-slate-500"}`}>
-                          {inspectedDeal.anchorFmv <= 0 ? "sell price for 1.5x your cost" : inspectedDeal.targetWinPrice50Pct > inspectedDeal.anchorFmv ? "above FMV: needs a buyer over market" : "50% Net Margin"}
+                        <span className="text-emerald-400 text-[10px] uppercase block">Dollar Spread</span>
+                        <strong className={`text-sm ${inspectedDeal.dollarSpread >= 0 ? "text-emerald-300" : "text-rose-400"}`}>
+                          {inspectedDeal.anchorFmv > 0 ? `${inspectedDeal.dollarSpread >= 0 ? "+" : "-"}$${Math.abs(inspectedDeal.dollarSpread).toFixed(2)}` : "—"}
+                        </strong>
+                        <span className="text-[9px] text-slate-500 block">
+                          FMV minus total cost
                         </span>
                       </div>
                       <div className="bg-black/60 p-2.5 rounded-lg border border-slate-800">
-                        <span className="text-amber-400 text-[10px] uppercase block">Net Margin</span>
-                        {inspectedDeal.anchorFmv > 0 ? (
-                          <>
-                            <strong className="text-amber-300 text-sm">{inspectedDeal.netRoiPercent >= 0 ? "+" : ""}{inspectedDeal.netRoiPercent}%</strong>
-                            <span className="text-[9px] text-amber-400/80 block">{inspectedDeal.projectedNetProfit >= 0 ? "+" : "-"}${Math.abs(inspectedDeal.projectedNetProfit).toFixed(2)} Net</span>
-                          </>
-                        ) : (
-                          <>
-                            <strong className="text-slate-500 text-sm">n/a</strong>
-                            <span className="text-[9px] text-slate-500 block">needs a valuation</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Sunk Slabbing Math & Whole Tomato Advantage */}
-                    <div className="bg-black/40 border border-slate-800 rounded-lg p-3 space-y-1.5 text-xs font-mono">
-                      <div className="flex items-center justify-between border-b border-slate-800/80 pb-1">
-                        <span className="text-[10px] text-cyan-300 font-bold uppercase">Whole Tomato Sunk Cost Advantage</span>
-                        <span className="text-[10px] text-emerald-400 font-bold">Free Certified Sunk Equity</span>
-                      </div>
-                      <div className="flex justify-between text-slate-300">
-                        <span>Prior Owner Grading &amp; Encasing Fee Sunk:</span>
-                        <span className="text-amber-300 font-bold">
-                          ${inspectedDeal.resolvedEra === "silver" || inspectedDeal.resolvedEra === "golden" ? "63.00" : "48.00"}
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-slate-300">
-                        <span>Your Acquisition Cost (All-In):</span>
-                        <span className="text-white">${inspectedDeal.allInCost.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between font-bold text-emerald-400 border-t border-slate-800 pt-1">
-                        <span>Net Captured Instant Equity:</span>
-                        <span className={inspectedDeal.anchorFmv > 0 ? "" : "text-slate-500"}>
-                          {inspectedDeal.anchorFmv > 0 ? `+$${Math.max(0, (inspectedDeal.anchorFmv - inspectedDeal.allInCost)).toFixed(2)}` : "n/a (no FMV)"}
+                        <span className="text-amber-400 text-[10px] uppercase block">Discount to FMV</span>
+                        <strong className={`text-sm ${inspectedDeal.discountPercent >= 0 ? "text-amber-300" : "text-rose-400"}`}>
+                          {inspectedDeal.anchorFmv > 0 ? `${inspectedDeal.discountPercent}%` : "—"}
+                        </strong>
+                        <span className="text-[9px] text-slate-500 block">
+                          {inspectedDeal.discountPercent >= 0 ? "Margin of safety" : "Over FMV"}
                         </span>
                       </div>
                     </div>

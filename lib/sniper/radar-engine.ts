@@ -316,10 +316,10 @@ export function evaluateAuctionListing(
     }
   }
 
-  // Double-Up Angle Detection
+  // Deep Discount Market Angle Detection
   if (!specialPlay && hasVerifiedFmv && discountPercent >= 50 && isViableFlip) {
     specialPlay = "DOUBLE_UP_KEY";
-    strategySummary = `The Double-Up Play: 2x cash potential. Acquiring at ${discountPercent}% discount to FMV ($${anchorFmv.toFixed(2)}). Exit at $${targetWinPrice100Pct.toFixed(2)} to double your investment after fees.`;
+    strategySummary = `50%+ Market Discount Play: Acquiring at a ${discountPercent}% discount below recorded market FMV ($${anchorFmv.toFixed(2)}). Substantial margin of safety against benchmark sales.`;
   }
 
   // Formulate Explicit Reason Why This Is A Good Buy (Alpha Thesis)
