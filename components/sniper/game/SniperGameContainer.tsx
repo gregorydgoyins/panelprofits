@@ -23,6 +23,7 @@ export function SniperGameContainer() {
   const [netRoi, setNetRoi] = useState<number>(0);
 
   const [currentLot, setCurrentLot] = useState<LotItem | null>(null);
+  const [candidates, setCandidates] = useState<LotItem[]>([]);
   const [userBid, setUserBid] = useState<number | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<number>(ROUND_DURATION_SECS);
   const [roundStatus, setRoundStatus] = useState<RoundStatus>("research");
@@ -84,6 +85,11 @@ export function SniperGameContainer() {
         const data = await res.json();
         if (data.ok && data.lot) {
           setCurrentLot(data.lot);
+          if (Array.isArray(data.lots) && data.lots.length > 0) {
+            setCandidates(data.lots);
+          } else {
+            setCandidates([data.lot]);
+          }
         }
       } catch (err) {
         console.error("Error loading next simulation lot:", err);
@@ -93,6 +99,13 @@ export function SniperGameContainer() {
     },
     []
   );
+
+  // Candidate Selection Handler (from Row of Decisions)
+  const handleSelectCandidate = (selected: LotItem) => {
+    setCurrentLot(selected);
+    setUserBid(null);
+    setRoundStatus("research");
+  };
 
   // Role Selection Handler
   const handleSelectRole = (chosenRole: GameRole) => {
@@ -114,6 +127,7 @@ export function SniperGameContainer() {
   const handleResetRole = () => {
     setRole(null);
     setCurrentLot(null);
+    setCandidates([]);
     localStorage.removeItem(STORAGE_KEY);
   };
 
@@ -308,6 +322,8 @@ export function SniperGameContainer() {
         <SniperStage
           role={role}
           lot={currentLot}
+          candidates={candidates}
+          onSelectLot={handleSelectCandidate}
           userBid={userBid}
           bankroll={bankroll}
           timeRemaining={timeRemaining}

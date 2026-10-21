@@ -45,6 +45,8 @@ export interface LotItem {
   spreadRawTo98: number | null;
   ratio96To98: number | null;
   salesVolume: number | null;
+  volumeFrequency?: string;
+  videos?: Array<{ source?: string; title: string; url: string }> | null;
   cgcCensus: number | null;
   lastSoldDate: string;
   isStaleComp: boolean;

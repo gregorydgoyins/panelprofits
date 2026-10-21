@@ -9,10 +9,14 @@ import { SniperDossier } from "./SniperDossier";
 import { SniperControls } from "./SniperControls";
 import { SniperBreakevenCard } from "./SniperBreakevenCard";
 import { SniperVideos } from "@/components/sniper/SniperVideos";
+import { SniperCandidateRow } from "./SniperCandidateRow";
+import { PriceChartingGradeTable } from "./PriceChartingGradeTable";
 
 interface SniperStageProps {
   role: GameRole;
   lot: LotItem;
+  candidates?: LotItem[];
+  onSelectLot?: (lot: LotItem) => void;
   userBid: number | null;
   bankroll: number;
   timeRemaining: number;
@@ -24,6 +28,8 @@ interface SniperStageProps {
 export function SniperStage({
   role,
   lot,
+  candidates,
+  onSelectLot,
   userBid,
   bankroll,
   timeRemaining,
@@ -46,6 +52,11 @@ export function SniperStage({
   // Fetch videos for Tab 3
   useEffect(() => {
     let cancelled = false;
+    if (lot.videos && Array.isArray(lot.videos) && lot.videos.length > 0) {
+      setVideoList(lot.videos);
+      setLoadingVideos(false);
+      return;
+    }
     async function loadVids() {
       setLoadingVideos(true);
       try {
@@ -62,7 +73,7 @@ export function SniperStage({
     }
     loadVids();
     return () => { cancelled = true; };
-  }, [lot.series, lot.issueNumber]);
+  }, [lot.series, lot.issueNumber, lot.videos]);
 
   return (
     <div className="space-y-6">
@@ -172,84 +183,95 @@ export function SniperStage({
 
       {/* PAGE 1: THE LEAD / FLOOR BIDDING PAGE */}
       {activeTab === "lead" && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Left: The Slab / Cover Encasement */}
-          <div className="lg:col-span-5 rounded-xl border border-slate-800 bg-[#070A11] p-5 shadow-2xl flex flex-col items-center">
-            <div className="w-full flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
-              <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
-                Lot Encasement
-              </span>
-              <span className="rounded bg-slate-900 border border-slate-800 px-2 py-0.5 text-[10px] font-mono font-bold text-cyan-300 uppercase">
-                {lot.grader} {lot.grade}
-              </span>
+        <div className="space-y-6">
+          {/* Row of Underwriting Decisions Strip */}
+          {candidates && candidates.length > 0 && onSelectLot && (
+            <SniperCandidateRow
+              candidates={candidates}
+              activeLotId={lot.id}
+              onSelectLot={onSelectLot}
+            />
+          )}
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* Left: The Slab / Cover Encasement */}
+            <div className="lg:col-span-5 rounded-xl border border-slate-800 bg-[#070A11] p-5 shadow-2xl flex flex-col items-center">
+              <div className="w-full flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
+                  Lot Encasement
+                </span>
+                <span className="rounded bg-slate-900 border border-slate-800 px-2 py-0.5 text-[10px] font-mono font-bold text-cyan-300 uppercase">
+                  {lot.grader} {lot.grade}
+                </span>
+              </div>
+
+              <div className="w-full flex justify-center py-2">
+                <SlabEncasement
+                  gradingCompany={lot.grader as any}
+                  grade={Number(lot.grade)}
+                  title={lot.title}
+                  issueNumber={lot.issueNumber}
+                  certNumber={lot.certNumber}
+                  imageUrl={lot.coverUrl}
+                  isYellowLabel={lot.isYellowLabel}
+                  signatureDetails={lot.signatureDetails || undefined}
+                  size="md"
+                />
+              </div>
+
+              <div className="w-full mt-4 pt-4 border-t border-slate-800/80 text-center font-mono">
+                <h2 className="text-base font-bold text-white leading-snug">{lot.title}</h2>
+                <div className="flex items-center justify-center gap-3 mt-1.5 text-xs text-slate-400">
+                  <span>{lot.series}</span>
+                  <span>·</span>
+                  <span>Issue #{lot.issueNumber}</span>
+                </div>
+              </div>
             </div>
 
-            <div className="w-full flex justify-center py-2">
-              <SlabEncasement
-                gradingCompany={lot.grader as any}
-                grade={Number(lot.grade)}
-                title={lot.title}
-                issueNumber={lot.issueNumber}
-                certNumber={lot.certNumber}
-                imageUrl={lot.coverUrl}
-                isYellowLabel={lot.isYellowLabel}
-                signatureDetails={lot.signatureDetails || undefined}
-                size="md"
+            {/* Right: Bidding Keypad & Floor Decisions */}
+            <div className="lg:col-span-7 space-y-6">
+              <SniperControls
+                lot={lot}
+                userBid={userBid}
+                bankroll={bankroll}
+                timeRemaining={timeRemaining}
+                onPlaceBid={onPlaceBid}
+                onChickenOut={onChickenOut}
+                onPassLot={onPassLot}
               />
-            </div>
 
-            <div className="w-full mt-4 pt-4 border-t border-slate-800/80 text-center font-mono">
-              <h2 className="text-base font-bold text-white leading-snug">{lot.title}</h2>
-              <div className="flex items-center justify-center gap-3 mt-1.5 text-xs text-slate-400">
-                <span>{lot.series}</span>
-                <span>·</span>
-                <span>Issue #{lot.issueNumber}</span>
-              </div>
-            </div>
-          </div>
+              {/* Sunk Slabbing Cost & Breakeven Analysis Card */}
+              <SniperBreakevenCard
+                lot={lot}
+                currentBid={userBid ?? lot.openingBid}
+              />
 
-          {/* Right: Bidding Keypad & Floor Decisions */}
-          <div className="lg:col-span-7 space-y-6">
-            <SniperControls
-              lot={lot}
-              userBid={userBid}
-              bankroll={bankroll}
-              timeRemaining={timeRemaining}
-              onPlaceBid={onPlaceBid}
-              onChickenOut={onChickenOut}
-              onPassLot={onPassLot}
-            />
-
-            {/* Sunk Slabbing Cost & Breakeven Analysis Card */}
-            <SniperBreakevenCard
-              lot={lot}
-              currentBid={userBid ?? lot.openingBid}
-            />
-
-            {/* Quick Underwriting Summary Card */}
-            <div className="rounded-xl border border-slate-800 bg-[#070A11] p-5 font-mono text-xs space-y-3">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                <span className="text-slate-400 uppercase tracking-wider text-[10px]">Floor Due Diligence</span>
-                <span className="text-cyan-300">Turnover: {lot.salesVolume ?? 15} sales/yr</span>
-              </div>
-              <p className="text-slate-300 leading-relaxed">
-                {role === "broker" ? (
-                  <span>
-                    Fiduciary Note: As The Broker, your edge is disciplined entry. Verify the raw-to-9.8 spread (${lot.spreadRawTo98 ?? "N/A"}) and avoid overpaying relative to the benchmark ladder.
-                  </span>
-                ) : (
-                  <span>
-                    Whale High-Roller Alert: High-ticket {lot.grader} {lot.grade} lot. Check Page 2 to inspect if the comp date ({lot.lastSoldDate}) is stale before bidding aggressive size.
-                  </span>
-                )}
-              </p>
-              <div className="pt-2 flex gap-3 text-cyan-400">
-                <button onClick={() => setActiveTab("financials")} className="underline hover:text-cyan-300 text-xs">
-                  → Inspect Full TradingView Chart &amp; Ladder
-                </button>
-                <button onClick={() => setActiveTab("story")} className="underline hover:text-cyan-300 text-xs">
-                  → Read 3-Act Story &amp; Watch Videos
-                </button>
+              {/* Quick Underwriting Summary Card */}
+              <div className="rounded-xl border border-slate-800 bg-[#070A11] p-5 font-mono text-xs space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                  <span className="text-slate-400 uppercase tracking-wider text-[10px]">Floor Due Diligence</span>
+                  <span className="text-cyan-300">Turnover: {lot.salesVolume ?? 15} sales/yr</span>
+                </div>
+                <p className="text-slate-300 leading-relaxed">
+                  {role === "broker" ? (
+                    <span>
+                      Fiduciary Note: As The Broker, your edge is disciplined entry. Verify the raw-to-9.8 spread (${lot.spreadRawTo98 ?? "N/A"}) and avoid overpaying relative to the benchmark ladder.
+                    </span>
+                  ) : (
+                    <span>
+                      Whale High-Roller Alert: High-ticket {lot.grader} {lot.grade} lot. Check Page 2 to inspect if the comp date ({lot.lastSoldDate}) is stale before bidding aggressive size.
+                    </span>
+                  )}
+                </p>
+                <div className="pt-2 flex gap-3 text-cyan-400">
+                  <button onClick={() => setActiveTab("financials")} className="underline hover:text-cyan-300 text-xs">
+                    → Inspect Full TradingView Chart &amp; Ladder
+                  </button>
+                  <button onClick={() => setActiveTab("story")} className="underline hover:text-cyan-300 text-xs">
+                    → Read 3-Act Story &amp; Watch Videos
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -276,6 +298,9 @@ export function SniperStage({
 
             <SniperChart lot={lot} />
           </div>
+
+          {/* Authentic PriceCharting Multi-Grade Matrix */}
+          <PriceChartingGradeTable lot={lot} />
 
           {/* Sunk Slabbing Cost & Breakeven Analysis */}
           <SniperBreakevenCard

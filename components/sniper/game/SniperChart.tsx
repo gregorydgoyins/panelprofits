@@ -10,7 +10,17 @@ interface SniperChartProps {
 }
 
 export function SniperChart({ lot }: SniperChartProps) {
-  const points = lot.chartPoints || [];
+  const rawPoints = lot.chartPoints || [];
+  const pointsMap = new Map<string, number>();
+  for (const pt of rawPoints) {
+    if (pt.time && Number.isFinite(pt.value)) {
+      pointsMap.set(pt.time, pt.value);
+    }
+  }
+  const points = Array.from(pointsMap.entries())
+    .map(([time, value]) => ({ time, value }))
+    .sort((a, b) => a.time.localeCompare(b.time));
+
   const currentPrice = lot.fmv;
   const firstPrice = points.length > 0 ? points[0].value : currentPrice;
   const deltaPercent = firstPrice > 0 ? ((currentPrice - firstPrice) / firstPrice) * 100 : 0;
