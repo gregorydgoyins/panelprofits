@@ -32,13 +32,12 @@ export function SniperGameContainer() {
   const [history, setHistory] = useState<RoundHistoryItem[]>([]);
   const [isVaultOpen, setIsVaultOpen] = useState<boolean>(false);
 
-  // Restore saved state from localStorage on initial client mount
+  // Restore saved bankroll and stats on mount, but let user choose role up front
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed.role) setRole(parsed.role);
         if (parsed.bankroll) setBankroll(parsed.bankroll);
         if (parsed.startingBankroll) setStartingBankroll(parsed.startingBankroll);
         if (parsed.brokerLevel) setBrokerLevel(parsed.brokerLevel);
@@ -117,6 +116,13 @@ export function SniperGameContainer() {
     setCurrentLot(null);
     localStorage.removeItem(STORAGE_KEY);
   };
+
+  // Auto-load lot if role is chosen but no lot loaded
+  useEffect(() => {
+    if (role && !currentLot && !loadingLot) {
+      loadNextLot(role, brokerLevel);
+    }
+  }, [role, currentLot, loadingLot, brokerLevel, loadNextLot]);
 
   // Timer Tick Engine
   useEffect(() => {
