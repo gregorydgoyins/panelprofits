@@ -10,7 +10,7 @@ export async function proxy(request: NextRequest) {
     request.nextUrl.pathname === "/api/mcp" ||
     request.nextUrl.pathname.startsWith("/api/mcp/") ||
     request.nextUrl.pathname === "/sniper" ||
-    request.nextUrl.pathname.startsWith("/api/sniper/")
+    (request.nextUrl.pathname.startsWith("/api/sniper/") && !request.nextUrl.pathname.startsWith("/api/sniper/game"))
   ) {
     return NextResponse.next({ request });
   }

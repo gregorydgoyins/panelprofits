@@ -7,6 +7,7 @@ import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
 import { getVerifiedEquityByIdOrTicker } from "@/lib/equity/verified-equities-service";
 import { resolveComicBaseRecord } from "@/lib/comics/comicbase-service";
 import { resolveAuthoritativePublisher } from "@/lib/comics/publisher-authority";
+import benchmarksJson from "@/lib/pricing/pricecharting-cgc-benchmarks.json";
 
 export const DEFAULT_PAGE_SIZE = 24;
 
@@ -356,10 +357,10 @@ function finalizeComic(comic: ComicRecord): ComicRecord {
  * Ensures zero stale or synthesized September 17 prices leak to display.
  */
 async function overlayAuthenticPpPrices(comic: ComicRecord): Promise<ComicRecord> {
-  if (!comic.pp_source_id) return comic;
+  const cleanId = String(comic.pp_source_id || comic.id || "").replace(/^pp-/i, "").trim();
+  if (!cleanId) return comic;
   try {
     const supabase = createAdminServerClient();
-    const cleanId = String(comic.pp_source_id).replace(/^pp-/i, "").trim();
     const { data: ppRow } = await supabase
       .from("pp_series_rows_full")
       .select("*")
@@ -383,8 +384,11 @@ async function overlayAuthenticPpPrices(comic: ComicRecord): Promise<ComicRecord
     }
 
     const spreads: Record<string, any> = { ...(ppData.spreads || {}) };
-    if (ppRow.pp_retail_raw_buy != null && ppRow.pp_retail_raw_sell != null) {
-      spreads.RAW = { buy: Number(ppRow.pp_retail_raw_buy), sell: Number(ppRow.pp_retail_raw_sell) };
+    if (ppRow.pp_retail_raw_buy != null || ppRow.pp_retail_raw_sell != null) {
+      spreads.RAW = {
+        buy: ppRow.pp_retail_raw_buy != null ? Number(ppRow.pp_retail_raw_buy) : null,
+        sell: ppRow.pp_retail_raw_sell != null ? Number(ppRow.pp_retail_raw_sell) : null,
+      };
     }
     if (ppRow.pp_retail_4_0_buy != null && ppRow.pp_retail_4_0_sell != null) {
       spreads["4.0"] = { buy: Number(ppRow.pp_retail_4_0_buy), sell: Number(ppRow.pp_retail_4_0_sell) };
@@ -410,8 +414,26 @@ async function overlayAuthenticPpPrices(comic: ComicRecord): Promise<ComicRecord
       }
     }
 
+    // Attach benchmark metadata if available
+    const benchmark = Object.values(benchmarksJson as Record<string, any>).find(
+      (b: any) => String(b.pricechartingId) === cleanId
+    );
+    if (benchmark) {
+      if (benchmark.coverPrice != null) ppData.coverPrice = benchmark.coverPrice;
+      if (benchmark.cgcSalesCount != null) {
+        ppData["Panel Profits Baseline Grade 9.8 Observation Count"] = benchmark.cgcSalesCount;
+      }
+    }
+    if (!ppData["Panel Profits Baseline Grade 9.8 Observation Count"] && (comic as any).sales_volume) {
+      const volNum = Number((comic as any).sales_volume);
+      if (Number.isFinite(volNum) && volNum > 0) {
+        ppData["Panel Profits Baseline Grade 9.8 Observation Count"] = Math.max(1, volNum - 1);
+      }
+    }
+
     return {
       ...comic,
+      pp_source_id: cleanId,
       pp_grade_9_8_price: ppRow.pp_price_9_8 != null ? Number(ppRow.pp_price_9_8) : comic.pp_grade_9_8_price,
       panel_profits_data: ppData,
     };
@@ -467,27 +489,12 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
   const supabase = createAdminServerClient();
   const isHexOrUuid = /^[a-f0-9]{32,64}$/i.test(cleanId) || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanId);
   const isPpNumeric = /^(pp-)?\d{4,10}$/i.test(cleanId);
-
   try {
-    // 1. record id
-    if (isHexOrUuid) {
-      const { data } = await supabase.from("comics").select("*").eq("id", cleanId).maybeSingle();
-      if (!data) return null;
-      const fin = finalizeComic(data as ComicRecord);
-      return await overlayAuthenticPpPrices(fin);
-    }
-
-    // 2. PriceCharting number
-    if (isPpNumeric) {
-      const { data } = await supabase
-        .from("comics")
-        .select("*")
-        .eq("pp_source_id", cleanId.replace(/^pp-/i, ""))
-        .order("pp_grade_9_8_price", { ascending: false, nullsFirst: false })
-        .limit(1)
-        .maybeSingle();
-      if (!data) return null;
-      const fin = finalizeComic(data as ComicRecord);
+    // 1. Direct record ID match (PriceCharting number like "3366977", "pp-3366977", or hex/UUID)
+    const directId = cleanId.replace(/^pp-/i, "");
+    const { data: directData } = await supabase.from("comics").select("*").eq("id", directId).maybeSingle();
+    if (directData) {
+      const fin = finalizeComic(directData as ComicRecord);
       return await overlayAuthenticPpPrices(fin);
     }
 

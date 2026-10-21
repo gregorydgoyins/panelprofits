@@ -23,7 +23,7 @@ interface TopChartSectionProps {
   sales?: ChartSale[];
 }
 
-export function TopChartSection({
+function TopChartSection({
   variantId,
   variant,
   keyPrices,

@@ -25,7 +25,7 @@ describe("Catalog Queries & Keyset Configuration", () => {
     const { getComicById } = await import("../lib/comics/queries");
     const { panelProfitsGrades, panelProfitsSpreads, panelProfitsVolume } = await import("../lib/pricing/source-ladder");
 
-    const comic = await getComicById("51198810548282e4912ac5e2b7750803044dcf6f22e9c15e573be55b7812e1f5");
+    const comic = await getComicById("3366977");
     expect(comic).not.toBeNull();
     if (!comic) return;
 

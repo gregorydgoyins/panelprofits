@@ -43,5 +43,3 @@ export function DealerQuotesCard({ anchors, asOf }: { anchors: Record<string, Sp
     </div>
   );
 }
-
-export default DealerQuotesCard;

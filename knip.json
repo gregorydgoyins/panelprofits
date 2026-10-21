@@ -1,0 +1,15 @@
+{
+  "$schema": "https://unpkg.com/knip@5/overview/configuration-schema.json",
+  "entry": [
+    "proxy.ts",
+    "tests/**/*.{ts,tsx}"
+  ],
+  "ignore": [
+    "_quarantine/**",
+    "quarantine/**",
+    "gpa-extension/**",
+    "scripts/**",
+    "ecosystem.config.cjs",
+    "scripts-backfill-labels.mts"
+  ]
+}

@@ -76,5 +76,3 @@ export function ProvenanceLedger({ items, accentColor = '#3b82f6' }: { items: Pr
     </div>
   );
 }
-
-export default ProvenanceLedger;

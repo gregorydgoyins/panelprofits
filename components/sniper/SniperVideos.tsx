@@ -51,7 +51,6 @@ export function SniperVideos({ series, issue, videos, loading, archive }: { seri
               />
             ) : (
               <button type="button" onClick={() => setPlaying(v.videoId)} className="absolute inset-0 w-full h-full group" aria-label={`Play ${v.title}`}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={v.thumbnail} alt="" loading="eager" decoding="async" className="w-full h-full object-cover" />
                 <span className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/10 transition text-white text-2xl">▶</span>
               </button>

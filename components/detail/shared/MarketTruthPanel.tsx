@@ -54,5 +54,3 @@ export function MarketTruthPanel({ price98, price98AsOf, lastSale, salesCount, c
     </div>
   );
 }
-
-export default MarketTruthPanel;

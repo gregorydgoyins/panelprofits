@@ -42,7 +42,7 @@ interface HeroSectionProps {
   historyPoints?: Array<{ observedAt: string; priceUsd: number; source?: string }>;
 }
 
-export function HeroSection({
+function HeroSection({
   variantId,
   variant,
   completeness,

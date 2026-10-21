@@ -176,5 +176,3 @@ export function BreadcrumbsNav({
     </div>
   );
 }
-
-export default BreadcrumbsNav;

@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import {FinancialText} from "./FinancialText";
 import type { ResearchLoad } from "./useLotResearch";
 import type { StorySummary } from "@/lib/comics/story-summary";
@@ -40,6 +41,6 @@ export function SniperListingResearch(p: Props) {
       {story && <details className="text-xs text-slate-500"><summary className="cursor-pointer">Underlying story reference &amp; attribution</summary><a href={story.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-cyan-300 underline">Original text reference · {story.license || "Source reference"}</a></details>}
     </section>}
     {!loading && !writeup && !story && <p className="text-xs text-slate-400">No issue-specific narrative is available in the stored research.</p>}
-    <nav aria-label="Research learning links" className="flex flex-wrap gap-3 border-t border-slate-800 pt-4 text-xs"><a href="/learn#sniper-practice" className="text-cyan-300 underline">Practice syllabus</a><a href="/wiki/terms" className="text-cyan-300 underline">Financial dictionary</a></nav>
+    <nav aria-label="Research learning links" className="flex flex-wrap gap-3 border-t border-slate-800 pt-4 text-xs"><Link href="/learn#sniper-practice" className="text-cyan-300 underline">Practice syllabus</Link><Link href="/wiki/terms" className="text-cyan-300 underline">Financial dictionary</Link></nav>
   </section>;
 }
