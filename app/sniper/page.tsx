@@ -23,6 +23,7 @@ import { LotMarketChart } from "@/components/sniper/LotMarketChart";
 import { SniperGame, useSniperGame } from "@/components/sniper/SniperGame";
 import { SniperLotTicket } from "@/components/sniper/SniperLotTicket";
 import { SniperVideos } from "@/components/sniper/SniperVideos";
+import { LandedEquityCalculator } from "@/components/sniper/LandedEquityCalculator";
 
 const WINDOW_STEP = 24;
 
@@ -2280,8 +2281,22 @@ export default function SniperRadarPage() {
                 )}
 
                 {/* ════════════════════════════════════════════════════════════════════════
-                    PERSPECTIVE 1: FINANCIAL & ARBITRAGE MATH
+                    PERSPECTIVE 1: FINANCIAL & ARBITRAGE MATH & LANDED REPLACEMENT COST
                     ════════════════════════════════════════════════════════════════════════ */}
+                {(modalPerspective === "financial" || modalPerspective === "all") && (
+                  <LandedEquityCalculator
+                    currentListingPrice={inspectedDeal.isBuyItNow ? (inspectedDeal.buyItNowPrice ?? inspectedDeal.listing.currentBid) : inspectedDeal.listing.currentBid}
+                    currentListingGrade={inspectedDeal.resolvedGrade}
+                    isBuyItNow={inspectedDeal.isBuyItNow}
+                    benchmarkFmv98={inspectedDeal.anchorFmv}
+                    year={inspectedDeal.resolvedYear}
+                    title={inspectedDeal.resolvedSeries || inspectedDeal.listing.title}
+                    issue={inspectedDeal.resolvedIssue}
+                    isYellowLabel={inspectedDeal.isYellowLabel}
+                    signerName={inspectedDeal.signerName}
+                  />
+                )}
+
                 {(modalPerspective === "financial") && (
                   <div className="bg-[#070C18] border border-cyan-500/40 rounded-xl p-4 space-y-3.5 shadow-lg">
 
