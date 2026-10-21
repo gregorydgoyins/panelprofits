@@ -1,0 +1,460 @@
+"use client";
+
+import React, { useState } from "react";
+import {
+  ShieldCheck,
+  Flame,
+  ExternalLink,
+  Calculator,
+  DollarSign,
+  Receipt,
+  Store,
+  Layers,
+  ArrowRight,
+  TrendingUp,
+  AlertTriangle,
+  Clock,
+  Sparkles,
+} from "lucide-react";
+import type { LotItem, EncasementFormulaKey } from "@/lib/sniper/sim/types";
+import { calculateExitScenarios } from "@/lib/sniper/sim/encasement-math";
+import { LandedEquityCalculator } from "@/components/sniper/LandedEquityCalculator";
+
+interface SniperBreakevenCardProps {
+  lot: LotItem;
+  currentBid: number;
+}
+
+export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProps) {
+  const [selectedFormulaKey, setSelectedFormulaKey] = useState<EncasementFormulaKey>(
+    lot.activeFormulaKey || (lot.isYellowLabel ? "signature" : "pressed")
+  );
+  const [activeView, setActiveView] = useState<"invoice" | "liquidation" | "escalator">("invoice");
+
+  // Retrieve active formula (or fallback to pressed)
+  const activeFormula = lot.formulas?.[selectedFormulaKey] || lot.formulas?.pressed || {
+    key: selectedFormulaKey,
+    name: "Clean & Press + Grade (CCS)",
+    badgeLabel: `${lot.grader} Universal + CCS Pressing`,
+    description: "Industry gold standard for 9.8 candidates.",
+    isYellowLabel: false,
+    baseGradingFee: lot.baseGradingFee,
+    pressingFee: lot.pressingFee,
+    witnessFee: lot.witnessFee || 0,
+    creatorSigningFee: lot.creatorSigningFee || 0,
+    invoiceFee: lot.invoiceFee || 5.0,
+    serviceTax: lot.serviceTax || 4.20,
+    taxRatePercent: 7.0,
+    shippingHandlingFee: lot.shippingHandlingFee || 25.0,
+    slabbingCostFloor: lot.slabbingCostFloor,
+    estimatedRawBasis: lot.estimatedRawBasis,
+    mailerBoxFee: 5.0,
+    sellerTotalCostBasis: lot.sellerTotalCostBasis,
+    venueFeeDragPercent: 13.25,
+    breakevenSalePrice: lot.breakevenSalePrice,
+  };
+
+  // Re-calculate the 4 real-world liquidation exit channels against the current active bid
+  const exitScenarios = calculateExitScenarios(lot.fmv, currentBid);
+
+  // Valuation Verdict & Arbitrage Conditions
+  const lcsOfferFloor = Math.round(lot.fmv * 0.40 * 100) / 100;
+  const isBelowLcsFloor = currentBid <= lcsOfferFloor;
+  const isBelowSlabFloor = currentBid <= activeFormula.slabbingCostFloor;
+  const isOvervalued = currentBid > lot.fmv;
+  const isBelowBreakeven = currentBid < activeFormula.breakevenSalePrice;
+
+  return (
+    <div className="rounded-xl border border-slate-800 bg-[#070A11] p-5 shadow-2xl space-y-4 font-mono text-xs">
+      {/* ── Top Header: Registry Verification & Official Cert Lookup ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
+        <div className="flex items-center gap-2.5">
+          <ShieldCheck className="h-4 w-4 text-emerald-400" />
+          <span className="text-slate-400 uppercase text-[10px] tracking-wider">
+            Verified Registry Slab
+          </span>
+          <span
+            className={`rounded border px-2 py-0.5 font-bold text-[11px] ${
+              lot.isYellowLabel
+                ? "bg-amber-950/80 border-amber-500/60 text-amber-300"
+                : "bg-slate-900 border-slate-800 text-white"
+            }`}
+          >
+            {lot.grader} {lot.grade} {lot.isYellowLabel ? "★ SIGNATURE" : ""}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-slate-400 text-[11px]">Cert #:</span>
+          <a
+            href={lot.certVerificationUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={`Verify on ${lot.grader} official registry`}
+            className="flex items-center gap-1 font-bold text-cyan-300 hover:text-cyan-200 bg-cyan-950/60 border border-cyan-500/40 rounded px-2.5 py-1 text-xs transition-colors"
+          >
+            <span>{lot.certNumber}</span>
+            <ExternalLink className="h-3 w-3" />
+          </a>
+        </div>
+      </div>
+
+      {/* ── Valuation Alert Verdict ── */}
+      {isOvervalued ? (
+        <div className="rounded-lg border border-rose-500/50 bg-rose-950/30 p-3 flex items-start gap-2.5">
+          <AlertTriangle className="h-4 w-4 text-rose-400 shrink-0 mt-0.5" />
+          <div className="text-[11px] text-rose-200 space-y-0.5">
+            <span className="font-bold text-rose-300 uppercase tracking-wider block">
+              ⚠️ OVERVALUED — DO NOT BUY AT THIS PRICE
+            </span>
+            <span>
+              Current bid (${currentBid.toLocaleString()}) exceeds the verified fair market value (${lot.fmv.toLocaleString()}).
+              A comic does not become worth more because an investor wants a return. Never invent higher resale targets to justify an overpayment!
+            </span>
+          </div>
+        </div>
+      ) : isBelowLcsFloor ? (
+        <div className="rounded-lg border border-purple-500/50 bg-purple-950/30 p-3 flex items-start gap-2.5">
+          <Sparkles className="h-4 w-4 text-purple-400 shrink-0 mt-0.5" />
+          <div className="text-[11px] text-purple-200 space-y-0.5">
+            <span className="font-bold text-purple-300 uppercase tracking-wider block">
+              💎 LCS BULLETPROOF FLOOR ARBITRAGE
+            </span>
+            <span>
+              Current bid (${currentBid.toLocaleString()}) is below the instant Local Comic Shop buy-list cash floor (${lcsOfferFloor.toLocaleString()}).
+              You can liquidate this slab for same-day walk-in cash and lock in an immediate positive spread!
+            </span>
+          </div>
+        </div>
+      ) : isBelowSlabFloor ? (
+        <div className="rounded-lg border border-emerald-500/50 bg-emerald-950/30 p-3 flex items-start gap-2.5">
+          <Flame className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+          <div className="text-[11px] text-emerald-200 space-y-0.5">
+            <span className="font-bold text-emerald-300 uppercase tracking-wider block">
+              🔥 BELOW-SLABBING-COST ARBITRAGE
+            </span>
+            <span>
+              Current bid (${currentBid}) is below the seller&apos;s out-of-pocket slabbing fee (${activeFormula.slabbingCostFloor}).
+              The seller is effectively <strong>subsidizing ${(activeFormula.slabbingCostFloor - currentBid).toFixed(2)}</strong> of encapsulation costs—you acquire the comic and holder below replacement cost!
+            </span>
+          </div>
+        </div>
+      ) : isBelowBreakeven ? (
+        <div className="rounded-lg border border-cyan-500/40 bg-cyan-950/20 p-3 flex items-start gap-2.5">
+          <TrendingUp className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
+          <div className="text-[11px] text-cyan-200 space-y-0.5">
+            <span className="font-bold text-cyan-300 uppercase tracking-wider block">
+              🛡️ BELOW SELLER BREAKEVEN OPPORTUNITY
+            </span>
+            <span>
+              Bid is ${(activeFormula.breakevenSalePrice - currentBid).toFixed(2)} below the seller&apos;s net breakeven exit (${activeFormula.breakevenSalePrice.toFixed(2)}).
+              The seller absorbs the platform fee drag and sunken capital.
+            </span>
+          </div>
+        </div>
+      ) : null}
+
+      {/* ── Formula Selection Bar (The 4 Submission Invoicing Tiers) ── */}
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between text-[10px] text-slate-400 uppercase tracking-wider">
+          <span className="flex items-center gap-1.5">
+            <Calculator className="h-3.5 w-3.5 text-cyan-400" />
+            <span>Submission Encasement Formula (Select To Inspect)</span>
+          </span>
+          <span className="text-slate-500">4 Authentic Invoicing Tiers</span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+          {(
+            [
+              { key: "pressed", label: "Clean & Press", sub: "Grade + CCS ($89)", icon: "🧼" },
+              { key: "standard", label: "Standard Grade", sub: "Blue Label ($62)", icon: "📘" },
+              { key: "signature", label: "Signature Series", sub: "Yellow Label ($141)", icon: "✍️" },
+              { key: "reholder", label: "Re-holder", sub: "Fresh Case ($57)", icon: "🔄" },
+            ] as const
+          ).map((tier) => {
+            const isSelected = selectedFormulaKey === tier.key;
+            const formulaData = lot.formulas?.[tier.key];
+            const floor = formulaData?.slabbingCostFloor ?? 0;
+            return (
+              <button
+                key={tier.key}
+                type="button"
+                onClick={() => setSelectedFormulaKey(tier.key)}
+                className={`p-2 rounded-lg border text-left transition-all ${
+                  isSelected
+                    ? "bg-cyan-950/80 border-cyan-400 text-white shadow-md ring-1 ring-cyan-500/50"
+                    : "bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-900"
+                }`}
+              >
+                <div className="flex items-center justify-between text-[10px] font-bold">
+                  <span className="flex items-center gap-1">
+                    <span>{tier.icon}</span>
+                    <span>{tier.label}</span>
+                  </span>
+                  {lot.activeFormulaKey === tier.key && (
+                    <span className="text-[8px] bg-cyan-900 text-cyan-200 px-1 py-0.2 rounded uppercase">
+                      Active
+                    </span>
+                  )}
+                </div>
+                <div className="mt-1 flex items-baseline justify-between text-[11px]">
+                  <span className="text-slate-500 text-[9px]">Sunk Floor:</span>
+                  <span className="font-bold text-white">${floor.toFixed(2)}</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Sub-Tab Switcher: Invoice Receipt vs 4 Liquidation Channels ── */}
+      <div className="flex items-center gap-2 border-b border-slate-800 pt-1 pb-2">
+        <button
+          type="button"
+          onClick={() => setActiveView("invoice")}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition ${
+            activeView === "invoice"
+              ? "bg-slate-800 text-cyan-300 border border-cyan-500/40"
+              : "text-slate-400 hover:text-slate-200"
+          }`}
+        >
+          <Receipt className="h-3.5 w-3.5" />
+          <span>1. Encasement Invoice Receipt &amp; Breakeven</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveView("liquidation")}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition ${
+            activeView === "liquidation"
+              ? "bg-slate-800 text-emerald-300 border border-emerald-500/40"
+              : "text-slate-400 hover:text-slate-200"
+          }`}
+        >
+          <Store className="h-3.5 w-3.5" />
+          <span>2. Liquidation (4 Channels)</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveView("escalator")}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition ${
+            activeView === "escalator"
+              ? "bg-slate-800 text-amber-300 border border-amber-500/40 shadow-sm"
+              : "text-slate-400 hover:text-slate-200"
+          }`}
+        >
+          <TrendingUp className="h-3.5 w-3.5" />
+          <span>3. Landed Escalator (9.2 → 9.8)</span>
+        </button>
+      </div>
+
+      {/* ── VIEW 1: Encasement Invoice Receipt & Whole Tomato Breakeven ── */}
+      {activeView === "invoice" && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1 animate-in fade-in duration-150">
+          {/* Left Column: Line-Item Submission Invoice Receipt */}
+          <div className="space-y-2 rounded-lg bg-slate-950/80 border border-slate-800/80 p-3.5">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+              <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Receipt className="h-3.5 w-3.5" />
+                <span>Submission Invoice Line-Items</span>
+              </span>
+              <span className="text-[9px] text-slate-500 font-bold uppercase">
+                {activeFormula.badgeLabel}
+              </span>
+            </div>
+
+            <div className="space-y-1.5 text-[11px] text-slate-300">
+              <div className="flex justify-between">
+                <span className="text-slate-400">Base Grading Fee ({lot.grader}):</span>
+                <span className="text-white font-bold">${activeFormula.baseGradingFee.toFixed(2)}</span>
+              </div>
+
+              {activeFormula.pressingFee > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Clean &amp; Press (CCS Pressing):</span>
+                  <span className="text-cyan-300 font-bold">+${activeFormula.pressingFee.toFixed(2)}</span>
+                </div>
+              )}
+
+              {activeFormula.witnessFee > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Authorized Witness Authentication:</span>
+                  <span className="text-amber-300 font-bold">+${activeFormula.witnessFee.toFixed(2)}</span>
+                </div>
+              )}
+
+              {activeFormula.creatorSigningFee > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Creator Signing Fee ({lot.signatureDetails ? "Witnessed" : "Talent"}):</span>
+                  <span className="text-amber-300 font-bold">+${activeFormula.creatorSigningFee.toFixed(2)}</span>
+                </div>
+              )}
+
+              <div className="flex justify-between">
+                <span className="text-slate-400">Submission Invoice Processing Fee:</span>
+                <span className="text-white">+${activeFormula.invoiceFee.toFixed(2)}</span>
+              </div>
+
+              <div className="flex justify-between">
+                <span className="text-slate-400">State Service Tax ({activeFormula.taxRatePercent}% on services):</span>
+                <span className="text-white">+${activeFormula.serviceTax.toFixed(2)}</span>
+              </div>
+
+              <div className="flex justify-between">
+                <span className="text-slate-400">Insured Return Courier Shipping:</span>
+                <span className="text-white">+${activeFormula.shippingHandlingFee.toFixed(2)}</span>
+              </div>
+
+              <div className="flex justify-between border-t border-slate-800 pt-2 font-bold text-cyan-300 text-xs">
+                <span>Total Sunk Out-of-Pocket Floor:</span>
+                <span className="text-cyan-200">${activeFormula.slabbingCostFloor.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: The Whole Tomato Resale Anatomy */}
+          <div className="space-y-2 rounded-lg bg-slate-950/80 border border-slate-800/80 p-3.5">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+              <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Calculator className="h-3.5 w-3.5" />
+                <span>The Whole Tomato Resale Basis</span>
+              </span>
+              <span className="text-[9px] text-slate-500 font-bold uppercase">
+                Exit Platform Drag
+              </span>
+            </div>
+
+            <div className="space-y-1.5 text-[11px] text-slate-300">
+              <div className="flex justify-between">
+                <span className="text-slate-400">Estimated Raw Comic Acquisition:</span>
+                <span className="text-white font-bold">${activeFormula.estimatedRawBasis.toFixed(2)}</span>
+              </div>
+
+              <div className="flex justify-between">
+                <span className="text-slate-400">Total Sunk Encasement Floor:</span>
+                <span className="text-cyan-300 font-bold">+${activeFormula.slabbingCostFloor.toFixed(2)}</span>
+              </div>
+
+              <div className="flex justify-between">
+                <span className="text-slate-400">Insured Mailer &amp; Boxing:</span>
+                <span className="text-white">+${activeFormula.mailerBoxFee.toFixed(2)}</span>
+              </div>
+
+              <div className="flex justify-between border-t border-slate-800/80 pt-1 text-slate-200">
+                <span>Seller All-In Invested Basis:</span>
+                <span className="text-white font-bold">${activeFormula.sellerTotalCostBasis.toFixed(2)}</span>
+              </div>
+
+              <div className="flex justify-between text-slate-400">
+                <span>Resale Drag (eBay / Marketplace {activeFormula.venueFeeDragPercent}%):</span>
+                <span className="text-rose-400">÷ 0.8675</span>
+              </div>
+
+              <div className="flex justify-between border-t border-slate-800 pt-2 font-bold text-amber-300 text-xs">
+                <span>Seller Breakeven Sale Target:</span>
+                <span className="text-amber-200">${activeFormula.breakevenSalePrice.toFixed(2)}</span>
+              </div>
+            </div>
+
+            <div className="mt-2 rounded bg-slate-900/80 p-2 text-[10px] text-slate-400 leading-relaxed border border-slate-800">
+              <span className="text-cyan-300 font-bold block mb-0.5">Underwriting Takeaway:</span>
+              <span>
+                Any purchase below <strong>${activeFormula.breakevenSalePrice.toFixed(0)}</strong> transfers seller-subsidized value to you.
+                Bids below <strong>${activeFormula.slabbingCostFloor.toFixed(0)}</strong> mean you pay less than the plastic and grading labor itself!
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── VIEW 2: Real-World Liquidation Channels (4 Scenarios) ── */}
+      {activeView === "liquidation" && (
+        <div className="space-y-2 pt-1 animate-in fade-in duration-150">
+          <div className="text-[10px] text-slate-400 leading-relaxed">
+            Liquidation proceeds calculated against verified FMV (<strong>${lot.fmv.toLocaleString()}</strong>) and current bid (<strong>${currentBid.toLocaleString()}</strong>).
+            Different channels yield radically different net payouts and liquidity speeds:
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+            {Object.values(exitScenarios).map((scenario) => {
+              const isProfit = scenario.netProfit >= 0;
+              return (
+                <div
+                  key={scenario.channelKey}
+                  className={`rounded-lg border p-3 space-y-2 ${
+                    scenario.channelKey === "lcs"
+                      ? "bg-purple-950/20 border-purple-500/40"
+                      : scenario.channelKey === "collector"
+                      ? "bg-emerald-950/20 border-emerald-500/40"
+                      : scenario.channelKey === "auction"
+                      ? "bg-cyan-950/20 border-cyan-500/40"
+                      : "bg-slate-950/80 border-slate-800"
+                  }`}
+                >
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
+                    <div>
+                      <span className="text-xs font-bold text-white block">{scenario.name}</span>
+                      <span className="text-[9px] text-slate-400">{scenario.venue}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[9px] text-slate-400 block uppercase flex items-center gap-1 justify-end">
+                        <Clock className="h-2.5 w-2.5" />
+                        <span>{scenario.liquidationVelocity}</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-1 text-[11px]">
+                    <div>
+                      <span className="text-[9px] text-slate-500 uppercase block">Gross Sale</span>
+                      <span className="text-slate-200 font-bold">${scenario.grossResalePrice.toFixed(0)}</span>
+                    </div>
+                    <div>
+                      <span className="text-[9px] text-slate-500 uppercase block">Net Proceeds</span>
+                      <span className="text-white font-bold">${scenario.netProceeds.toFixed(2)}</span>
+                    </div>
+                    <div>
+                      <span className="text-[9px] text-slate-500 uppercase block">Net Profit / ROI</span>
+                      <span
+                        className={`font-black ${
+                          isProfit ? "text-emerald-400" : "text-rose-400"
+                        }`}
+                      >
+                        {isProfit ? `+$${scenario.netProfit.toFixed(0)}` : `-$${Math.abs(scenario.netProfit).toFixed(0)}`}
+                        <span className="text-[9px] font-normal ml-0.5">
+                          ({scenario.roiPercent > 0 ? "+" : ""}{scenario.roiPercent}%)
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="text-[10px] text-slate-400 leading-tight pt-1 border-t border-slate-800/60">
+                    {scenario.description}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── VIEW 3: Landed Replacement Escalator & Real-World Underwriting ── */}
+      {activeView === "escalator" && (
+        <div className="pt-1 animate-in fade-in duration-150">
+          <LandedEquityCalculator
+            currentListingPrice={currentBid}
+            currentListingGrade={parseFloat(lot.grade) || 9.8}
+            isBuyItNow={false}
+            benchmarkFmv98={lot.priceLadder?.grade98 ?? lot.fmv}
+            benchmarkFmv96={lot.priceLadder?.grade96 ?? undefined}
+            benchmarkFmv94={lot.priceLadder?.grade94 ?? undefined}
+            benchmarkFmv92={lot.priceLadder?.grade92 ?? undefined}
+            title={lot.title}
+            issue={lot.issueNumber}
+            isYellowLabel={lot.isYellowLabel}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
