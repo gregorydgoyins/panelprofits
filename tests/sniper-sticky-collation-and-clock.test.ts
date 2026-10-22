@@ -26,7 +26,17 @@ function mockLot(id: string, opening: number, hammer: number, fmv: number): LotI
     isStaleComp: false,
     staleCompAgeDays: 10,
     investopediaSlug: "dollar-cost-averaging",
-    priceLadder: { grade98: fmv, grade96: fmv * 0.5, grade94: fmv * 0.35, grade92: fmv * 0.25, raw: fmv * 0.15 },
+    priceLadder: {
+      raw: fmv * 0.15,
+      grade40: null,
+      grade60: null,
+      grade80: null,
+      grade92: fmv * 0.25,
+      grade94: fmv * 0.35,
+      grade96: fmv * 0.5,
+      grade98: fmv,
+      grade100: null,
+    },
     activeFormulaKey: "standard",
     formulas: {} as any,
     exitScenarios: {} as any,
@@ -41,7 +51,7 @@ function mockLot(id: string, opening: number, hammer: number, fmv: number): LotI
     breakevenSalePrice: 200,
     isBelowGradingCost: false,
     sellerSubsidizedAmount: 0,
-  };
+  } as unknown as LotItem;
 }
 
 describe("Sniper Multi-Auction Sticky Collation & Clock Fight Engine", () => {
