@@ -414,6 +414,7 @@ export function SniperStage({
                   issueNumber={lot.issueNumber}
                   certNumber={lot.certNumber}
                   imageUrl={lot.coverUrl}
+                  galleryImages={lot.galleryImages}
                   isYellowLabel={lot.isYellowLabel}
                   signatureDetails={lot.signatureDetails || undefined}
                   size="md"

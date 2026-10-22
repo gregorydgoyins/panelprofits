@@ -32,6 +32,7 @@ export interface LotItem {
   series: string;
   issueNumber: string;
   coverUrl: string;
+  galleryImages?: string[];
   grade: string;
   grader: "CGC" | "CBCS" | "PSA";
   era?: string;

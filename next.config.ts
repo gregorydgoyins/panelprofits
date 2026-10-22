@@ -64,6 +64,10 @@ const nextConfig: NextConfig = {
         hostname: "storage.googleapis.com",
         pathname: "/panel-profits-covers-all/**",
       },
+      {
+        protocol: "https",
+        hostname: "**.ebayimg.com",
+      },
     ],
   },
   async headers() {
