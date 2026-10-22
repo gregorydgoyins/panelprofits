@@ -18,6 +18,8 @@ import {
   Gavel,
   ShieldAlert,
   ExternalLink,
+  Sparkles,
+  TrendingUp,
 } from "lucide-react";
 import type { GameRole, LotItem, StickyLotBid, BidEvent } from "@/lib/sniper/sim/types";
 import { SlabEncasement } from "@/components/sniper/SlabEncasement";
@@ -586,35 +588,87 @@ export function SniperStage({
       {/* PAGE 3: THE STORY, LORE & VIDEOS DOSSIER */}
       {activeTab === "story" && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Left: 3-Act Continuity Summary with Purple Laser Rimlight */}
-          <div className="relative lg:col-span-7 rounded-xl border-2 border-purple-500 bg-gradient-to-r from-[#140726] via-[#0B0316] to-[#140726] p-6 shadow-[0_0_0_1px_rgba(192,132,252,1),0_0_16px_rgba(168,85,247,0.85),inset_0_1px_2px_rgba(255,255,255,0.35)] ring-1 ring-purple-300/60 space-y-4">
-            <div className="absolute inset-x-0 -top-px h-[2px] bg-gradient-to-r from-transparent via-purple-300 to-transparent shadow-[0_0_12px_rgba(168,85,247,1)]" />
-            <div className="flex items-center gap-2.5 border-b border-purple-500/30 pb-3">
-              <BookOpen className="h-5 w-5 text-purple-400" />
-              <h3 className="text-base font-mono font-bold text-white uppercase tracking-wider">
-                Three-Act Narrative Continuity Summary
-              </h3>
-            </div>
+          {/* Left: 3-Act Continuity Summary & Why You Should Buy Dossier */}
+          <div className="relative lg:col-span-7 space-y-6">
+            {/* 1. WHY YOU SHOULD BUY: CORE INVESTMENT THESIS & RHETORIC */}
+            <div className="relative rounded-xl border-2 border-emerald-500 bg-gradient-to-r from-[#061e12] via-[#020f08] to-[#061e12] p-6 shadow-[0_0_0_1px_rgba(52,211,153,1),0_0_18px_rgba(16,185,129,0.85),inset_0_1px_2px_rgba(255,255,255,0.35)] ring-1 ring-emerald-300/60 space-y-4">
+              <div className="absolute inset-x-0 -top-px h-[2px] bg-gradient-to-r from-transparent via-emerald-300 to-transparent shadow-[0_0_12px_rgba(16,185,129,1)]" />
+              <div className="flex items-center justify-between border-b border-emerald-500/30 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <Sparkles className="h-5 w-5 text-emerald-400" />
+                  <h3 className="text-base font-mono font-bold text-white uppercase tracking-wider">
+                    Why You Should Buy: Investment Thesis &amp; Rhetoric
+                  </h3>
+                </div>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-semibold uppercase tracking-wider">
+                  Alpha Dossier
+                </span>
+              </div>
 
-            <div className="text-xs font-sans text-slate-300 leading-relaxed space-y-3 prose prose-invert max-w-none">
-              <div className="whitespace-pre-line">
-                {lot.summary}
+              <div className="text-xs font-sans text-emerald-100/90 leading-relaxed bg-emerald-950/40 border border-emerald-500/30 rounded-lg p-4">
+                <p className="font-medium text-emerald-200 leading-relaxed">
+                  {lot.whyInvest || "Observable market demand with high liquidity in graded secondary turnover. Zero-inferiority guarantee backed by recorded historical comps and auction clearing velocity."}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 font-mono text-xs">
+                <div className="bg-black/40 border border-emerald-500/20 rounded p-2.5">
+                  <span className="text-[10px] text-emerald-400 uppercase tracking-wider block mb-1">
+                    Demand Driver &amp; IP Moat
+                  </span>
+                  <span className="text-slate-300 text-[11px] font-sans block">
+                    Core key character continuity, live-action franchise demand &amp; tier-1 publisher pedigree.
+                  </span>
+                </div>
+                <div className="bg-black/40 border border-emerald-500/20 rounded p-2.5">
+                  <span className="text-[10px] text-cyan-400 uppercase tracking-wider block mb-1">
+                    Graded Census Float
+                  </span>
+                  <span className="text-slate-300 text-[11px] font-sans block">
+                    Finite top-grade registry census creates structured downward price resistance.
+                  </span>
+                </div>
               </div>
             </div>
 
-            {/* Fiduciary Investment Checklist */}
-            <div className="mt-6 pt-4 border-t border-purple-500/30 space-y-2 font-mono text-xs">
-              <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-400 block mb-2">
-                Bibliographic Due Diligence
-              </span>
-              <div className="space-y-1.5 text-slate-300 text-[11px]">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
-                  <span>Verified Canonical Identity &amp; Series Pedigree</span>
+            {/* 2. THREE-ACT NARRATIVE CONTINUITY SUMMARY (SYNOPSIS) */}
+            <div className="relative rounded-xl border-2 border-purple-500 bg-gradient-to-r from-[#140726] via-[#0B0316] to-[#140726] p-6 shadow-[0_0_0_1px_rgba(192,132,252,1),0_0_16px_rgba(168,85,247,0.85),inset_0_1px_2px_rgba(255,255,255,0.35)] ring-1 ring-purple-300/60 space-y-4">
+              <div className="absolute inset-x-0 -top-px h-[2px] bg-gradient-to-r from-transparent via-purple-300 to-transparent shadow-[0_0_12px_rgba(168,85,247,1)]" />
+              <div className="flex items-center gap-2.5 border-b border-purple-500/30 pb-3">
+                <BookOpen className="h-5 w-5 text-purple-400" />
+                <h3 className="text-base font-mono font-bold text-white uppercase tracking-wider">
+                  Three-Act Narrative Continuity Summary
+                </h3>
+              </div>
+
+              <div className="text-xs font-sans text-slate-300 leading-relaxed space-y-3 prose prose-invert max-w-none">
+                <div className="whitespace-pre-line">
+                  {lot.summary}
                 </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
-                  <span>Intellectual Property Moat: Established First Appearance &amp; Key Run</span>
+              </div>
+
+              {/* Fiduciary Investment Checklist */}
+              <div className="mt-6 pt-4 border-t border-purple-500/30 space-y-2 font-mono text-xs">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-400 block mb-2">
+                  Bibliographic Due Diligence &amp; Asset Pedigree
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-300 text-[11px]">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                    <span>Verified Canonical Series Pedigree</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                    <span>Key Appearance &amp; Origin Milestone</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                    <span>Cross-Market Valuation Parity</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                    <span>Defensible Sunk Replacement Floor</span>
+                  </div>
                 </div>
               </div>
             </div>
