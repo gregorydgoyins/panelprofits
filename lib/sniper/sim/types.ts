@@ -55,6 +55,10 @@ export interface LotItem {
   isStaleComp: boolean;
   staleCompAgeDays: number;
   investopediaSlug: string;
+  venue?: "ebay" | "heritage" | "mycomicshop" | "comiclink" | "comicconnect";
+  venueDisplayName?: string;
+  venueLotId?: string;
+  sourceListingUrl?: string;
   priceLadder: {
     raw: number | null;
     grade40: number | null;

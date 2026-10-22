@@ -195,19 +195,38 @@ export function SniperCandidateRow({
               )}
 
               <div>
-                {/* Top Row: Grader & Spread */}
-                <div className="flex items-center justify-between text-[10px] pb-1.5 border-b border-slate-800/80">
-                  <span
-                    className={`font-bold px-1.5 py-0.2 rounded border text-[9px] ${
-                      lot.isYellowLabel
-                        ? "bg-amber-950/80 border-amber-500/50 text-amber-300"
-                        : "bg-slate-900 border-slate-800 text-cyan-300"
-                    }`}
-                  >
-                    {lot.grader} {lot.grade} {lot.isYellowLabel ? "★" : ""}
-                  </span>
+                {/* Top Row: Grader & Venue & Spread */}
+                <div className="flex items-center justify-between text-[10px] pb-1.5 border-b border-slate-800/80 gap-1">
+                  <div className="flex items-center gap-1 overflow-hidden">
+                    <span
+                      className={`font-bold px-1.5 py-0.2 rounded border text-[9px] shrink-0 ${
+                        lot.isYellowLabel
+                          ? "bg-amber-950/80 border-amber-500/50 text-amber-300"
+                          : "bg-slate-900 border-slate-800 text-cyan-300"
+                      }`}
+                    >
+                      {lot.grader} {lot.grade} {lot.isYellowLabel ? "★" : ""}
+                    </span>
 
-                  <span className="text-emerald-400 font-bold bg-emerald-950/60 border border-emerald-500/40 px-1.5 py-0.2 rounded text-[9px]">
+                    {lot.venueDisplayName && (
+                      <span
+                        className="px-1.5 py-0.2 rounded text-[8px] font-mono font-bold truncate border border-purple-500/40 bg-purple-950/60 text-purple-200"
+                        title={lot.venueLotId ? `${lot.venueDisplayName} · Lot #${lot.venueLotId}` : lot.venueDisplayName}
+                      >
+                        {lot.venue === "heritage"
+                          ? "Heritage"
+                          : lot.venue === "mycomicshop"
+                          ? "MyComicShop"
+                          : lot.venue === "comiclink"
+                          ? "ComicLink"
+                          : lot.venue === "comicconnect"
+                          ? "ComicConnect"
+                          : "eBay Live"}
+                      </span>
+                    )}
+                  </div>
+
+                  <span className="text-emerald-400 font-bold bg-emerald-950/60 border border-emerald-500/40 px-1.5 py-0.2 rounded text-[9px] shrink-0">
                     {spreadPct > 0 ? `-${spreadPct}% to FMV` : "At FMV"}
                   </span>
                 </div>
@@ -233,8 +252,13 @@ export function SniperCandidateRow({
                     <h4 className="text-white font-bold text-[11px] line-clamp-1 leading-tight group-hover:text-cyan-300 transition-colors">
                       {lot.title}
                     </h4>
-                    <div className="text-[9px] text-slate-400 truncate">
-                      {lot.series} #{lot.issueNumber}
+                    <div className="text-[9px] text-slate-400 truncate flex items-center justify-between gap-1">
+                      <span className="truncate">{lot.series} #{lot.issueNumber}</span>
+                      {lot.venueLotId && (
+                        <span className="text-[8px] font-mono text-purple-300/80 truncate shrink-0">
+                          #{lot.venueLotId.slice(-6)}
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-baseline justify-between text-[10px] pt-1">
                       <span className="text-slate-400">Bid:</span>

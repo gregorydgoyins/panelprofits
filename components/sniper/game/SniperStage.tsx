@@ -17,6 +17,7 @@ import {
   Info,
   Gavel,
   ShieldAlert,
+  ExternalLink,
 } from "lucide-react";
 import type { GameRole, LotItem } from "@/lib/sniper/sim/types";
 import { SlabEncasement } from "@/components/sniper/SlabEncasement";
@@ -374,13 +375,35 @@ export function SniperStage({
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             {/* Left: The Slab / Cover Encasement */}
             <div className="lg:col-span-5 rounded-xl border border-slate-800 bg-[#070A11] p-5 shadow-2xl flex flex-col items-center">
-              <div className="w-full flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
-                  Lot Encasement
-                </span>
-                <span className="rounded bg-slate-900 border border-slate-800 px-2 py-0.5 text-[10px] font-mono font-bold text-cyan-300 uppercase">
-                  {lot.grader} {lot.grade}
-                </span>
+              <div className="w-full flex items-center justify-between border-b border-slate-800 pb-3 mb-4 gap-2">
+                <div className="flex items-center gap-2 overflow-hidden">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 shrink-0">
+                    Live Lot
+                  </span>
+                  {lot.venueDisplayName && (
+                    <a
+                      href={lot.sourceListingUrl || "#"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold border border-purple-500/40 bg-purple-950/60 text-purple-200 hover:text-cyan-300 hover:border-cyan-400 transition-colors truncate"
+                      title={lot.venueLotId ? `${lot.venueDisplayName} · Lot #${lot.venueLotId}` : lot.venueDisplayName}
+                    >
+                      <span className="truncate">{lot.venueDisplayName}</span>
+                      <ExternalLink className="h-2.5 w-2.5 shrink-0" />
+                    </a>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {lot.venueLotId && (
+                    <span className="text-[9px] font-mono text-purple-300/70 hidden sm:inline">
+                      #{lot.venueLotId.slice(-6)}
+                    </span>
+                  )}
+                  <span className="rounded bg-slate-900 border border-slate-800 px-2 py-0.5 text-[10px] font-mono font-bold text-cyan-300 uppercase">
+                    {lot.grader} {lot.grade}
+                  </span>
+                </div>
               </div>
 
               <div className="w-full flex justify-center py-2">

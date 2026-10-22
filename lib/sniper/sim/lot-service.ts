@@ -502,6 +502,42 @@ export function transformRowToLot(
     },
   ];
 
+  // Live Auction Venue Provenance (Heritage Auctions, MyComicShop, eBay Live, ComicLink, ComicConnect)
+  let venue: "ebay" | "heritage" | "mycomicshop" | "comiclink" | "comicconnect" = "ebay";
+  let venueDisplayName = "eBay Live";
+  let venueLotId = `EBAY-${Math.floor(100000000000 + Math.random() * 900000000000)}`;
+  let sourceListingUrl = `https://www.ebay.com/itm/${venueLotId.replace("EBAY-", "")}`;
+
+  if (chosenFmv >= 2500 || !eraInfo.isHighGradeOnly) {
+    venue = "heritage";
+    const haAuctionNum = 47000 + Math.floor(Math.random() * 200);
+    const haLotNum = 10000 + Math.floor(Math.random() * 89999);
+    venueLotId = `HA-${haAuctionNum}-${haLotNum}`;
+    venueDisplayName = `Heritage Auctions (Sale #${haAuctionNum})`;
+    sourceListingUrl = `https://comics.ha.com/c/search/results.zx?dept=1938&mode=live&auction_name=${haAuctionNum}`;
+  } else if (chosenFmv >= 1000) {
+    const isCL = Math.random() < 0.5;
+    if (isCL) {
+      venue = "comiclink";
+      const clId = Math.floor(1500000 + Math.random() * 400000);
+      venueLotId = `CL-${clId}`;
+      venueDisplayName = "ComicLink Focused Auction";
+      sourceListingUrl = `https://www.comiclink.com/auctions/preview.asp?code=2026oct`;
+    } else {
+      venue = "comicconnect";
+      const ccId = Math.floor(800000 + Math.random() * 200000);
+      venueLotId = `CC-${ccId}`;
+      venueDisplayName = "ComicConnect Event Auction";
+      sourceListingUrl = `https://www.comicconnect.com/item/${ccId}`;
+    }
+  } else if (Math.random() < 0.55) {
+    venue = "mycomicshop";
+    const mcsItemId = Math.floor(5000000 + Math.random() * 4000000);
+    venueLotId = `MCS-${mcsItemId}`;
+    venueDisplayName = "MyComicShop Weekly Auction";
+    sourceListingUrl = `https://www.mycomicshop.com/auctions?agid=828`;
+  }
+
   return {
     id: book.id,
     title: book.title,
@@ -515,6 +551,10 @@ export function transformRowToLot(
     isHighGradeOnly: eraInfo.isHighGradeOnly,
     certNumber,
     certVerificationUrl,
+    venue,
+    venueDisplayName,
+    venueLotId,
+    sourceListingUrl,
     fmv: chosenFmv,
     openingBid,
     currentBid: openingBid,
