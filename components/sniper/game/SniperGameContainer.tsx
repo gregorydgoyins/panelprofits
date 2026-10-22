@@ -114,7 +114,8 @@ export function SniperGameContainer() {
   const handleRefreshChoices = async () => {
     if (!role) return;
     try {
-      const res = await fetch(`/api/sniper/sim/lot?role=${role}&level=${brokerLevel}`);
+      const currentIds = candidates.map((c) => c.id).join(",");
+      const res = await fetch(`/api/sniper/sim/lot?role=${role}&level=${brokerLevel}&exclude=${currentIds}`);
       const data = await res.json();
       if (data.ok && Array.isArray(data.lots) && data.lots.length > 0) {
         setCandidates(data.lots);
@@ -137,7 +138,8 @@ export function SniperGameContainer() {
     }
     if (!role) return;
     try {
-      const res = await fetch(`/api/sniper/sim/lot?role=${role}&level=${brokerLevel}`);
+      const currentIds = candidates.map((c) => c.id).join(",");
+      const res = await fetch(`/api/sniper/sim/lot?role=${role}&level=${brokerLevel}&exclude=${currentIds}`);
       const data = await res.json();
       if (data.ok && Array.isArray(data.lots) && data.lots.length > 0) {
         const replacement =

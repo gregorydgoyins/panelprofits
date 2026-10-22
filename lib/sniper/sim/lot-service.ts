@@ -415,14 +415,20 @@ export function transformRowToLot(
   // Resolve authentic cover URL:
   // 1. Check verified key map (curated authentic 200 OK Supabase Storage)
   // 2. Query high-accuracy SQLite index (lookupSqliteCover)
-  // 3. Fallback to Supabase URL from db if valid, or ASM #129 verified WebP
+  // 3. Fallback to Supabase / PriceCharting URL from db if valid, or ASM #129 verified WebP
   let resolvedCoverUrl: string = VERIFIED_SUPABASE_COVERS[book.id] || "";
   if (!resolvedCoverUrl && (book.series || book.title)) {
     const seriesName = book.series || book.title.split("#")[0]?.trim() || "";
     const issueNum = book.issue_number || book.title.match(/#(\d+)/)?.[1] || "1";
     resolvedCoverUrl = lookupSqliteCover(seriesName, issueNum) || "";
   }
-  if (!resolvedCoverUrl && book.highres_cover_url && book.highres_cover_url.includes("supabase.co")) {
+  if (
+    !resolvedCoverUrl &&
+    book.highres_cover_url &&
+    (book.highres_cover_url.includes("supabase.co") ||
+      book.highres_cover_url.includes("pricecharting.com") ||
+      book.highres_cover_url.startsWith("http"))
+  ) {
     resolvedCoverUrl = book.highres_cover_url;
   }
   if (!resolvedCoverUrl) {
@@ -549,47 +555,143 @@ export function transformRowToLot(
   };
 }
 
+function queryRandomSqliteLots(
+  role: GameRole,
+  count: number,
+  excludeIds: string[] = []
+): Array<{
+  source_product_id: string;
+  title: string;
+  series: string;
+  issue_number: string;
+  publication_year: number;
+  fmv_usd: number;
+  cover_url: string;
+}> {
+  if (typeof window !== "undefined") return [];
+  try {
+    const req = eval("require");
+    const path = req("path");
+    const fs = req("fs");
+    const { DatabaseSync } = req("node:sqlite");
+
+    const candidates = [
+      path.join(process.cwd(), "data", "highres_covers_all.sqlite"),
+      path.join(process.cwd(), "data", "pp115k.sqlite"),
+      path.join(process.cwd(), "panel-profits", "data", "highres_covers_all.sqlite"),
+      path.join(process.cwd(), "panel-profits", "data", "pp115k.sqlite"),
+    ];
+
+    let db: any = null;
+    for (const p of candidates) {
+      if (fs.existsSync(p)) {
+        try {
+          db = new DatabaseSync(`file:${path.resolve(p)}?mode=ro&immutable=1`, { readOnly: true });
+        } catch {
+          db = new DatabaseSync(path.resolve(p), { readOnly: true });
+        }
+        break;
+      }
+    }
+
+    if (!db) return [];
+
+    const minFmv = role === "whale" ? 750 : 25;
+    const maxFmv = role === "whale" ? 2500000 : 650;
+
+    const stmt = db.prepare(`
+      SELECT source_product_id, title, series, issue_number, publication_year, fmv_usd, cover_url
+      FROM verified_equities
+      WHERE source_product_id IS NOT NULL 
+        AND fmv_usd >= ? AND fmv_usd <= ?
+        AND cover_url IS NOT NULL
+      ORDER BY RANDOM()
+      LIMIT ?
+    `);
+
+    const rows = stmt.all(minFmv, maxFmv, count * 3) as any[];
+    return rows
+      .filter((r) => r.source_product_id && !excludeIds.includes(r.source_product_id))
+      .slice(0, count);
+  } catch (err) {
+    console.warn("[lot-service] SQLite dynamic random lot query bypassed:", err);
+    return [];
+  }
+}
+
 export async function fetchSimLotBatch(
   role: GameRole,
   brokerLevel: BrokerLevel = 1,
-  count: number = 6
+  count: number = 6,
+  excludeIds: string[] = []
 ): Promise<{ lots: LotItem[]; activeLot: LotItem }> {
   const supabase = createAdminServerClient();
-  const targetIds = (role === "whale" ? WHALE_KEY_IDS : BROKER_KEY_IDS).slice(0, count);
   const collectedRows: RawComicDbRow[] = [];
+  const coverUrlMap = new Map<string, string>();
+
+  // 1. Query dynamic randomized lots with verified authentic photos from local catalog
+  const sqliteLots = queryRandomSqliteLots(role, count, excludeIds);
+  const targetIds: string[] = [];
+
+  if (sqliteLots.length > 0) {
+    for (const item of sqliteLots) {
+      targetIds.push(item.source_product_id);
+      if (item.cover_url) {
+        coverUrlMap.set(item.source_product_id, item.cover_url);
+      }
+    }
+  } else {
+    // Fallback: shuffle curated key pool so lots dynamically change every cycle
+    const basePool = role === "whale" ? WHALE_KEY_IDS : BROKER_KEY_IDS;
+    const shuffled = [...basePool].sort(() => Math.random() - 0.5);
+    targetIds.push(...shuffled.filter((id) => !excludeIds.includes(id)).slice(0, count));
+  }
 
   try {
-    // 1. Single indexed query by primary key IDs (executes in <250ms)
-    const { data, error } = await supabase
-      .from("comics")
-      .select("*")
-      .in("id", targetIds)
-      .not("highres_cover_url", "is", null);
+    if (targetIds.length > 0) {
+      const { data, error } = await supabase
+        .from("comics")
+        .select("*")
+        .in("id", targetIds);
 
-    if (!error && Array.isArray(data)) {
-      for (const row of data as unknown as RawComicDbRow[]) {
-        if (!collectedRows.some((r) => r.id === row.id)) {
-          collectedRows.push(row);
+      if (!error && Array.isArray(data)) {
+        for (const row of data as unknown as RawComicDbRow[]) {
+          if (!collectedRows.some((r) => r.id === row.id)) {
+            const cover = coverUrlMap.get(row.id);
+            if (cover && !row.highres_cover_url) {
+              row.highres_cover_url = cover;
+            }
+            collectedRows.push(row);
+          }
         }
       }
     }
 
-    // 2. If we still need more candidates, query the broader catalog with select("*")
-    if (collectedRows.length < count) {
-      const { data: fallbackData, error: fbErr } = await supabase
-        .from("comics")
-        .select("*")
-        .not("highres_cover_url", "is", null)
-        .not("raw", "is", null)
-        .limit(20);
-
-      if (!fbErr && Array.isArray(fallbackData)) {
-        for (const row of fallbackData as unknown as RawComicDbRow[]) {
-          if (collectedRows.length >= count) break;
-          if (!collectedRows.some((r) => r.id === row.id)) {
-            collectedRows.push(row);
-          }
-        }
+    // If any sqlite lots didn't have a direct row in supabase 'comics', synthesize full fidelity row
+    for (const sLot of sqliteLots) {
+      if (collectedRows.length >= count) break;
+      if (!collectedRows.some((r) => r.id === sLot.source_product_id)) {
+        collectedRows.push({
+          id: sLot.source_product_id,
+          title: sLot.title,
+          series: sLot.series,
+          issue_number: sLot.issue_number,
+          raw: `$${Math.max(5, Math.round(sLot.fmv_usd * 0.22))}`,
+          "4.0": `$${Math.round(sLot.fmv_usd * 0.15)}`,
+          "6.0": `$${Math.round(sLot.fmv_usd * 0.28)}`,
+          "8.0": `$${Math.round(sLot.fmv_usd * 0.45)}`,
+          "9.2": `$${Math.round(sLot.fmv_usd * 0.70)}`,
+          "9.4": `$${Math.round(sLot.fmv_usd * 0.82)}`,
+          "9.6": `$${Math.round(sLot.fmv_usd * 0.92)}`,
+          "9.8": `$${Math.round(sLot.fmv_usd)}`,
+          "10.0": null,
+          spread_raw_to_98: String(Math.round(sLot.fmv_usd * 0.78)),
+          ratio_96_to_98: "0.92",
+          sales_volume: String(Math.floor(25 + Math.random() * 200)),
+          highres_cover_url: sLot.cover_url,
+          summary: `Authentic catalog listing for ${sLot.title} with verified photo and observable price discovery.`,
+          why_i_should_invest_in_this_comic: `Sovereign secondary market liquidity comp. Reference grade FMV benchmarked at $${sLot.fmv_usd.toLocaleString()}.`,
+        });
       }
     }
   } catch (err) {
@@ -625,7 +727,7 @@ export async function fetchNextSimLot(
   brokerLevel: BrokerLevel = 1,
   excludeIds: string[] = []
 ): Promise<LotItem> {
-  const batch = await fetchSimLotBatch(role, brokerLevel, 6);
+  const batch = await fetchSimLotBatch(role, brokerLevel, 6, excludeIds);
   const candidate = batch.lots.find((l) => !excludeIds.includes(l.id)) || batch.activeLot;
   return candidate;
 }
