@@ -289,7 +289,7 @@ export function calculateExitScenarios(fmv: number, acquisitionCost: number): Re
 }
 
 export interface ReplacementCostBreakdown {
-  pathKey: "cpr" | "press_resubmit";
+  pathKey: "cpr" | "standard" | "signature";
   pathName: string;
   rawPrice: number;
   prepFee: number;
@@ -300,6 +300,11 @@ export interface ReplacementCostBreakdown {
   invoiceFee: number;
   serviceTax: number;
   allInCost: number;
+  isCprEligible: boolean;
+  cprIneligibilityReason?: string;
+  targetBumpGrade?: string;
+  targetBumpFmv?: number;
+  cprNetBenefit?: number;
 }
 
 export interface HopeFactorYield {
@@ -331,49 +336,118 @@ export interface MinimumGradeScreen {
   equityWinIfExceeded: number;
 }
 
+export interface WholeTomatoEightBallAnalysis {
+  rawStreetValue: number;
+  serviceExpenses: number;
+  wholeTomato: number; // Intrinsic replacement value = Raw + Services
+  lastSoldPrice: number; // Last recorded comp price
+  currentBid: number;
+  eightBallSpread: number; // Whole Tomato - Last Sold Price - Current Bid
+  isAheadOfEightBall: boolean;
+  replacementAdvantage: number; // Whole Tomato - Current Bid
+  priceDiscoverySpread: number; // Last Sold Price - Current Bid
+}
+
 export interface FullReplacementAnalysis {
+  wholeTomato: WholeTomatoEightBallAnalysis;
+  standard: ReplacementCostBreakdown;
   cpr: ReplacementCostBreakdown;
-  pressResubmit: ReplacementCostBreakdown;
   hopeFactor: HopeFactorYield;
   screenRule: MinimumGradeScreen;
+  isLot98: boolean;
+  activeGrade: string;
 }
 
 /**
- * Calculates authentic replacement mathematics:
- * 1. Clean, Press & Resubmit (CPR): Raw + CPR fee + Grading fee + Shipping (both ways) + Insurance (both ways) + Invoice fee + Tax
- * 2. Press & Resubmit: Raw + Pressing fee + Grading fee + Shipping (both ways) + Insurance (both ways) + Invoice fee + Tax
- * 3. The Hope Factor: Yield distribution (P(9.8)=15%, P(9.6)=35%, P(9.4)=32%, P(<=9.2)=18%) vs human prediction bias (>9.2 unpredictability)
- * 4. Minimum Grade Culling / Screen Rule: Only grade if >= 9.4; pay $5 invoice + $9 reject fee if it misses; equity win if exceeded.
+ * Calculates authentic replacement mathematics & Whole Tomato Eight-Ball Valuation:
+ *
+ * 1. Whole Tomato Intrinsic Value: Raw street value + Grading + Inbound Shipping ($25) +
+ *    Insured Return ($25) + Insurance ($15) + Invoice ($5) + Tax.
+ * 2. Eight-Ball Formula: Whole Tomato (Intrinsic Value) - Last Sold Price - Current Bid.
+ *    Shows whether the buyer is Ahead of the Eight Ball or Behind the Eight Ball.
+ * 3. Strict CPR Rules: You do NOT clean and press a 9.8 (there is nowhere to go).
+ *    CPR is only calculated for sub-9.4 books (e.g. 8.5 or 9.0) hoping for a 0.5 to 1.5 point bump.
+ * 4. Hope Factor: Probabilistic yield curve for raw submissions.
+ * 5. Minimum Grade Screen Rule: Grade only if >= 9.4; pay $5 invoice + $9 reject fee if it fails.
  */
 export function calculateReplacementAnalysis({
   rawPrice,
   currentBid,
+  lastSoldPrice = 0,
+  lotGrade = "9.8",
   fmv98,
   fmv96,
   fmv94,
   fmv92,
   isVintage = false,
+  isYellowLabel = false,
+  signaturesCount = 1,
   grader = "CGC",
 }: {
   rawPrice: number;
   currentBid: number;
+  lastSoldPrice?: number;
+  lotGrade?: string;
   fmv98: number;
   fmv96: number;
   fmv94: number;
   fmv92: number;
   isVintage?: boolean;
+  isYellowLabel?: boolean;
+  signaturesCount?: number;
   grader?: string;
 }): FullReplacementAnalysis {
   const baseGrading = grader === "CGC" ? (isVintage ? 55.0 : 35.0) : (isVintage ? 45.0 : 25.0);
   const twoWayShipping = 50.0; // $25 inbound + $25 outbound
-  const twoWayInsurance = 15.0; // $7.50 each way declared transit insurance
+  const twoWayInsurance = 15.0; // Declared value transit protection
   const invoiceFee = 5.0;
   const taxRate = 0.07;
+  const signingFee = isYellowLabel ? 25.0 * signaturesCount : 0.0;
 
-  // Path 1: Clean, Press & Resubmit (CPR)
+  // ── Standard Universal Replacement (Auction Standard) ──
+  const stdTaxable = baseGrading + invoiceFee + signingFee;
+  const stdTax = Math.round(stdTaxable * taxRate * 100) / 100;
+  const stdServices = baseGrading + twoWayShipping + twoWayInsurance + invoiceFee + stdTax + signingFee;
+  const stdAllIn = Math.round((rawPrice + stdServices) * 100) / 100;
+
+  const numGrade = parseFloat(lotGrade);
+  const isLot98 = lotGrade === "9.8" || lotGrade === "10.0" || lotGrade === "9.9";
+  // You do NOT clean and press a 9.8. CPR is strictly for mid/high candidates like 8.0, 8.5, 9.0, 9.2
+  const isCprEligible = !isNaN(numGrade) && numGrade < 9.4 && numGrade >= 7.5;
+
+  const standard: ReplacementCostBreakdown = {
+    pathKey: "standard",
+    pathName: isYellowLabel ? `Signature Series Replacement (${signaturesCount}x)` : "Standard Certified Replacement",
+    rawPrice,
+    prepFee: signingFee,
+    prepFeeName: isYellowLabel ? "Creator Signing Fee" : "No Pressing (As-Is)",
+    gradingFee: baseGrading,
+    twoWayShipping,
+    twoWayInsurance,
+    invoiceFee,
+    serviceTax: stdTax,
+    allInCost: stdAllIn,
+    isCprEligible: false,
+  };
+
+  // ── Clean, Press & Resubmit (CPR) — Calculated for 8.5 / 9.0 / 9.2 Candidates Only ──
   const cprFee = 30.0;
-  const cprTax = Math.round((cprFee + baseGrading + invoiceFee) * taxRate * 100) / 100;
-  const cprAllIn = Math.round((rawPrice + cprFee + baseGrading + twoWayShipping + twoWayInsurance + invoiceFee + cprTax) * 100) / 100;
+  const cprTaxable = baseGrading + cprFee + invoiceFee + signingFee;
+  const cprTax = Math.round(cprTaxable * taxRate * 100) / 100;
+  const cprServices = baseGrading + cprFee + twoWayShipping + twoWayInsurance + invoiceFee + cprTax + signingFee;
+  const cprAllIn = Math.round((rawPrice + cprServices) * 100) / 100;
+
+  let targetBumpGrade = "9.4";
+  let targetBumpFmv = fmv94;
+  if (numGrade <= 8.5) {
+    targetBumpGrade = "9.0/9.2";
+    targetBumpFmv = fmv92;
+  } else if (numGrade <= 9.2) {
+    targetBumpGrade = "9.4/9.6";
+    targetBumpFmv = fmv96;
+  }
+  const currentLotFmv = isLot98 ? fmv98 : numGrade >= 9.6 ? fmv96 : numGrade >= 9.4 ? fmv94 : fmv92;
+  const cprNetBenefit = isCprEligible ? targetBumpFmv - currentLotFmv - (cprFee + baseGrading + 15) : 0;
 
   const cpr: ReplacementCostBreakdown = {
     pathKey: "cpr",
@@ -387,28 +461,38 @@ export function calculateReplacementAnalysis({
     invoiceFee,
     serviceTax: cprTax,
     allInCost: cprAllIn,
+    isCprEligible,
+    cprIneligibilityReason: isLot98
+      ? "Clean & Press Does Not Apply (9.8 is practical top-grade — nowhere to go)"
+      : numGrade >= 9.4
+      ? "High-grade 9.4+ already certified — pressing risk exceeds expected upside"
+      : undefined,
+    targetBumpGrade,
+    targetBumpFmv,
+    cprNetBenefit: Math.round(cprNetBenefit * 100) / 100,
   };
 
-  // Path 2: Press & Resubmit
-  const pressFee = 18.0;
-  const pressTax = Math.round((pressFee + baseGrading + invoiceFee) * taxRate * 100) / 100;
-  const pressAllIn = Math.round((rawPrice + pressFee + baseGrading + twoWayShipping + twoWayInsurance + invoiceFee + pressTax) * 100) / 100;
+  // ── The Whole Tomato Replacement Cost & Eight-Ball Position ──
+  // Whole Tomato Intrinsic Value = Raw Street Value + Sunk Services
+  const activeReplacementCost = isCprEligible ? cprAllIn : stdAllIn;
+  const effectiveLastSold = lastSoldPrice > 0 ? lastSoldPrice : currentLotFmv;
+  const eightBallSpread = Math.round((activeReplacementCost - effectiveLastSold - currentBid) * 100) / 100;
+  const replacementAdvantage = Math.round((activeReplacementCost - currentBid) * 100) / 100;
+  const priceDiscoverySpread = Math.round((effectiveLastSold - currentBid) * 100) / 100;
 
-  const pressResubmit: ReplacementCostBreakdown = {
-    pathKey: "press_resubmit",
-    pathName: "Press & Resubmit",
-    rawPrice,
-    prepFee: pressFee,
-    prepFeeName: "Standard Pressing Fee",
-    gradingFee: baseGrading,
-    twoWayShipping,
-    twoWayInsurance,
-    invoiceFee,
-    serviceTax: pressTax,
-    allInCost: pressAllIn,
+  const wholeTomato: WholeTomatoEightBallAnalysis = {
+    rawStreetValue: rawPrice,
+    serviceExpenses: isCprEligible ? cprServices : stdServices,
+    wholeTomato: activeReplacementCost,
+    lastSoldPrice: effectiveLastSold,
+    currentBid,
+    eightBallSpread,
+    isAheadOfEightBall: eightBallSpread >= 0,
+    replacementAdvantage,
+    priceDiscoverySpread,
   };
 
-  // Hope Factor Probabilistic Yield Distribution
+  // ── Hope Factor Probabilistic Yield Distribution ──
   const p98 = 0.15;
   const p96 = 0.35;
   const p94 = 0.32;
@@ -418,8 +502,8 @@ export function calculateReplacementAnalysis({
     p98 * fmv98 + p96 * fmv96 + p94 * fmv94 + p92OrLower * fmv92
   );
   const expectedGrade = Math.round((p98 * 9.8 + p96 * 9.6 + p94 * 9.4 + p92OrLower * 9.0) * 10) / 10;
-  const spreadVsAllIn = expectedValue - cprAllIn;
-  const frenzySpread = cprAllIn - currentBid;
+  const spreadVsAllIn = Math.round((expectedValue - activeReplacementCost) * 100) / 100;
+  const frenzySpread = Math.round((activeReplacementCost - currentBid) * 100) / 100;
 
   const hopeFactor: HopeFactorYield = {
     p98,
@@ -436,11 +520,11 @@ export function calculateReplacementAnalysis({
     frenzySpread,
   };
 
-  // Minimum Grade Screen Rule ("Only Grade If >= 9.4")
+  // ── Minimum Grade Screen Rule ("Only Grade If >= 9.4") ──
   const rejectFee = 9.0;
   const totalRejectFee = invoiceFee + rejectFee; // $14.00
   const totalSunkIfRejected = totalRejectFee + twoWayShipping + twoWayInsurance; // $14 + $50 + $15 = $79.00
-  const equityWinIfExceeded = Math.max(0, fmv98 - cprAllIn);
+  const equityWinIfExceeded = Math.max(0, fmv98 - activeReplacementCost);
 
   const screenRule: MinimumGradeScreen = {
     thresholdGrade: "9.4",
@@ -457,9 +541,12 @@ export function calculateReplacementAnalysis({
   };
 
   return {
+    wholeTomato,
+    standard,
     cpr,
-    pressResubmit,
     hopeFactor,
     screenRule,
+    isLot98,
+    activeGrade: lotGrade,
   };
 }
