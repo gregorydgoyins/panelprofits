@@ -47,7 +47,7 @@ function FloorRulePill({
 
   return (
     <div
-      className="relative rounded-lg border border-slate-700/80 bg-[#050B16] hover:border-cyan-300 p-2.5 transition-colors cursor-pointer group hover:shadow-[0_0_10px_rgba(34,211,238,0.4)] ring-1 ring-transparent hover:ring-cyan-300/40"
+      className="relative rounded-lg border border-slate-700/80 bg-[#050B16] hover:border-white p-2.5 transition-colors cursor-pointer group hover:shadow-[0_0_10px_rgba(255,255,255,0.5)] ring-1 ring-transparent hover:ring-white/40"
       onMouseEnter={() => setShowTip(true)}
       onMouseLeave={() => setShowTip(false)}
       onClick={() => setShowTip(!showTip)}
@@ -255,9 +255,9 @@ export function SniperStage({
       {activeTab === "lead" && (
         <div className="space-y-6">
           {/* 4 Timing & Execution Rules Pills Bar on the Floor */}
-          <div className="relative rounded-xl border-2 border-cyan-400 bg-gradient-to-r from-[#060E1C] via-[#040A14] to-[#060E1C] p-3 text-xs font-mono shadow-[0_0_16px_rgba(34,211,238,0.65),inset_0_1px_2px_rgba(255,255,255,0.25)] ring-1 ring-cyan-300/50">
+          <div className="relative rounded-xl border-2 border-white bg-gradient-to-r from-[#060E1C] via-[#040A14] to-[#060E1C] p-3 text-xs font-mono shadow-[0_0_18px_rgba(255,255,255,0.85),inset_0_1px_2px_rgba(255,255,255,0.4)] ring-1 ring-white/60">
             {/* Top Radiant Neon Rimlight Flare */}
-            <div className="absolute inset-x-0 -top-px h-[2px] bg-gradient-to-r from-transparent via-cyan-300 to-transparent shadow-[0_0_12px_rgba(34,211,238,1)]" />
+            <div className="absolute inset-x-0 -top-px h-[2px] bg-gradient-to-r from-transparent via-white to-transparent shadow-[0_0_14px_rgba(255,255,255,1)]" />
 
             <div className="flex flex-wrap items-center justify-between gap-2 mb-2 pb-2 border-b border-cyan-500/20">
               <div className="flex items-center gap-2">

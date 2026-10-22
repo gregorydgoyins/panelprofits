@@ -46,7 +46,7 @@ function InteractiveRulePill({
 
   return (
     <div
-      className="relative group rounded-xl border border-slate-700/80 bg-[#050B16] hover:border-cyan-300 p-4 transition-all duration-200 flex flex-col justify-between cursor-pointer hover:shadow-[0_0_12px_rgba(34,211,238,0.5)] ring-1 ring-transparent hover:ring-cyan-300/40"
+      className="relative group rounded-xl border border-slate-700/80 bg-[#050B16] hover:border-white p-4 transition-all duration-200 flex flex-col justify-between cursor-pointer hover:shadow-[0_0_12px_rgba(255,255,255,0.5)] ring-1 ring-transparent hover:ring-white/40"
       onMouseEnter={() => setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
       onClick={() => setShowTooltip(!showTooltip)}
@@ -128,9 +128,9 @@ export function RoleSelector({ onSelectRole }: RoleSelectorProps) {
       {/* Two Role Cards with Brighter Rimlights */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* THE BROKER */}
-        <div className="relative group rounded-2xl border-2 border-cyan-300 bg-gradient-to-b from-[#0A1630] via-[#060E20] to-[#03060C] p-6 md:p-8 flex flex-col justify-between shadow-[0_0_18px_rgba(34,211,238,0.85),inset_0_1px_2px_rgba(255,255,255,0.4)] ring-1 ring-cyan-200/60 hover:border-white hover:shadow-[0_0_24px_rgba(34,211,238,1),inset_0_0_15px_rgba(34,211,238,0.35)] hover:ring-cyan-100 transition-all duration-200">
+        <div className="relative group rounded-2xl border-2 border-white bg-gradient-to-b from-[#0A1630] via-[#060E20] to-[#03060C] p-6 md:p-8 flex flex-col justify-between shadow-[0_0_20px_rgba(255,255,255,0.9),inset_0_1px_2px_rgba(255,255,255,0.6)] ring-1 ring-white/70 hover:shadow-[0_0_28px_rgba(255,255,255,1),inset_0_0_10px_rgba(255,255,255,0.5)] hover:ring-white transition-all duration-200">
           {/* Top Radiant Neon Rimlight Flare */}
-          <div className="absolute inset-x-0 -top-px h-[2px] bg-gradient-to-r from-transparent via-cyan-200 to-transparent shadow-[0_0_14px_rgba(34,211,238,1)]" />
+          <div className="absolute inset-x-0 -top-px h-[2px] bg-gradient-to-r from-transparent via-white to-transparent shadow-[0_0_16px_rgba(255,255,255,1)]" />
 
           <div>
             <div className="flex items-center justify-between border-b border-cyan-500/20 pb-4">
@@ -214,9 +214,9 @@ export function RoleSelector({ onSelectRole }: RoleSelectorProps) {
         </div>
 
         {/* THE WHALE */}
-        <div className="relative group rounded-2xl border-2 border-amber-300 bg-gradient-to-b from-[#221606] via-[#120B02] to-[#03060C] p-6 md:p-8 flex flex-col justify-between shadow-[0_0_18px_rgba(251,191,36,0.85),inset_0_1px_2px_rgba(255,255,255,0.4)] ring-1 ring-amber-200/60 hover:border-white hover:shadow-[0_0_24px_rgba(251,191,36,1),inset_0_0_15px_rgba(251,191,36,0.35)] hover:ring-amber-100 transition-all duration-200">
+        <div className="relative group rounded-2xl border-2 border-white bg-gradient-to-b from-[#221606] via-[#120B02] to-[#03060C] p-6 md:p-8 flex flex-col justify-between shadow-[0_0_20px_rgba(255,255,255,0.9),inset_0_1px_2px_rgba(255,255,255,0.6)] ring-1 ring-white/70 hover:shadow-[0_0_28px_rgba(255,255,255,1),inset_0_0_10px_rgba(255,255,255,0.5)] hover:ring-white transition-all duration-200">
           {/* Top Radiant Neon Rimlight Flare */}
-          <div className="absolute inset-x-0 -top-px h-[2px] bg-gradient-to-r from-transparent via-amber-200 to-transparent shadow-[0_0_14px_rgba(251,191,36,1)]" />
+          <div className="absolute inset-x-0 -top-px h-[2px] bg-gradient-to-r from-transparent via-white to-transparent shadow-[0_0_16px_rgba(255,255,255,1)]" />
 
           <div>
             <div className="flex items-center justify-between border-b border-amber-500/20 pb-4">
@@ -301,9 +301,9 @@ export function RoleSelector({ onSelectRole }: RoleSelectorProps) {
       </div>
 
       {/* The 4 Core Timing & Execution Rules Pills */}
-      <div className="relative mt-12 rounded-2xl border-2 border-cyan-400 bg-gradient-to-b from-[#071324] via-[#050C17] to-[#03070E] p-6 shadow-[0_0_18px_rgba(34,211,238,0.7),inset_0_1px_2px_rgba(255,255,255,0.25)] ring-1 ring-cyan-300/50 backdrop-blur-md">
+      <div className="relative mt-12 rounded-2xl border-2 border-white bg-gradient-to-b from-[#071324] via-[#050C17] to-[#03070E] p-6 shadow-[0_0_20px_rgba(255,255,255,0.85),inset_0_1px_2px_rgba(255,255,255,0.5)] ring-1 ring-white/70 backdrop-blur-md">
         {/* Top Radiant Neon Rimlight Flare */}
-        <div className="absolute inset-x-0 -top-px h-[2px] bg-gradient-to-r from-transparent via-cyan-300 to-transparent shadow-[0_0_14px_rgba(34,211,238,1)]" />
+        <div className="absolute inset-x-0 -top-px h-[2px] bg-gradient-to-r from-transparent via-white to-transparent shadow-[0_0_16px_rgba(255,255,255,1)]" />
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-cyan-500/20 pb-4 mb-6">
           <div className="flex items-center gap-2.5">
