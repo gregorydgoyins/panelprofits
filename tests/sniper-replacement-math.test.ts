@@ -19,13 +19,14 @@ describe("Sniper Replacement Cost & Bidding Frenzy Driver", () => {
     expect(cpr.rawPrice).toBe(150.0);
     expect(cpr.prepFee).toBe(30.0);
     expect(cpr.gradingFee).toBe(35.0);
-    expect(cpr.twoWayShipping).toBe(50.0);
-    expect(cpr.twoWayInsurance).toBe(15.0);
+    expect(cpr.outgoingShipping).toBe(15.0);
+    expect(cpr.returnShipping).toBe(28.0);
+    expect(cpr.twoWayShipping).toBe(43.0);
     expect(cpr.invoiceFee).toBe(5.0);
-    expect(cpr.serviceTax).toBe(4.9); // (30 + 35 + 5) * 0.07 = 4.90
+    expect(cpr.serviceTax).toBe(4.2); // (30 + 35 + 5) * 0.06 = 4.20
 
-    // Sum: 150 + 30 + 35 + 50 + 15 + 5 + 4.9 = 289.90
-    expect(cpr.allInCost).toBe(289.9);
+    // Sum: 150 + 30 + 35 + 15 + 28 + 5 + 4.2 = 267.20
+    expect(cpr.allInCost).toBe(267.2);
   });
 
   it("computes exact Standard Certified all-in formula (as-is auction standard)", () => {
@@ -43,12 +44,13 @@ describe("Sniper Replacement Cost & Bidding Frenzy Driver", () => {
     const std = analysis.standard;
     expect(std.rawPrice).toBe(100.0);
     expect(std.gradingFee).toBe(35.0);
-    expect(std.twoWayShipping).toBe(50.0);
-    expect(std.twoWayInsurance).toBe(15.0);
+    expect(std.outgoingShipping).toBe(15.0);
+    expect(std.returnShipping).toBe(28.0);
+    expect(std.twoWayShipping).toBe(43.0);
     expect(std.invoiceFee).toBe(5.0);
-    expect(std.serviceTax).toBe(2.8); // (35 + 5) * 0.07 = 2.80
-    // 100 + 35 + 50 + 15 + 5 + 2.8 = 207.80
-    expect(std.allInCost).toBe(207.8);
+    expect(std.serviceTax).toBe(2.4); // (35 + 5) * 0.06 = 2.40
+    // 100 + 35 + 15 + 28 + 5 + 2.4 = 185.40
+    expect(std.allInCost).toBe(185.4);
   });
 
   it("evaluates the Hope Factor yield risk and human unpredictability > 9.2", () => {
@@ -72,7 +74,7 @@ describe("Sniper Replacement Cost & Bidding Frenzy Driver", () => {
     expect(hope.expectedValue).toBe(440);
   });
 
-  it("validates CGC screening rule: pay $5 invoice + $9 reject fee if < 9.4", () => {
+  it("validates CGC 9.8 screening rule: pay $5 invoice + $9 reject fee + $28 return ship + tax = ~$44 cap", () => {
     const analysis = calculateReplacementAnalysis({
       rawPrice: 150.0,
       currentBid: 220.0,
@@ -85,11 +87,11 @@ describe("Sniper Replacement Cost & Bidding Frenzy Driver", () => {
     });
 
     const screen = analysis.screenRule;
-    expect(screen.thresholdGrade).toBe("9.4");
+    expect(screen.thresholdGrade).toBe("9.8");
     expect(screen.invoiceFee).toBe(5.0);
     expect(screen.rejectFee).toBe(9.0);
     expect(screen.totalRejectFee).toBe(14.0);
-    expect(screen.totalSunkIfRejected).toBe(79.0); // 14 + 50 + 15 = 79
+    expect(screen.totalSunkIfRejected).toBe(42.84); // 14 + 28 + (14 * 0.06 = 0.84) = 42.84 (~$44)
     expect(screen.savedGradingFee).toBe(35.0);
   });
 
@@ -173,12 +175,12 @@ describe("Sniper Replacement Cost & Bidding Frenzy Driver", () => {
       isVintage: false,
       grader: "CGC",
     });
-    // Standard all-in = 140 + 35(grade) + 50(ship) + 15(ins) + 5(inv) + 2.80(tax) = 247.80
-    // Eight-ball spread = 247.80 - 100 - 50 = +97.80
-    expect(ahead.wholeTomato.eightBallSpread).toBe(97.8);
+    // Standard all-in = 140 + 35(grade) + 15(out) + 28(return) + 5(inv) + 2.40(tax) = 225.40
+    // Eight-ball spread = 225.40 - 100 - 50 = +75.40
+    expect(ahead.wholeTomato.eightBallSpread).toBe(75.4);
     expect(ahead.wholeTomato.isAheadOfEightBall).toBe(true);
 
-    // Behind: wholeTomato ($247.80) - lastSold ($200) - currentBid ($150) = -$102.20
+    // Behind: wholeTomato ($225.40) - lastSold ($200) - currentBid ($150) = -$124.60
     const behind = calculateReplacementAnalysis({
       rawPrice: 140.0,
       currentBid: 150.0,
@@ -191,7 +193,7 @@ describe("Sniper Replacement Cost & Bidding Frenzy Driver", () => {
       isVintage: false,
       grader: "CGC",
     });
-    expect(behind.wholeTomato.eightBallSpread).toBe(-102.2);
+    expect(behind.wholeTomato.eightBallSpread).toBe(-124.6);
     expect(behind.wholeTomato.isAheadOfEightBall).toBe(false);
   });
 });

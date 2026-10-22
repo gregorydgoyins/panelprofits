@@ -43,6 +43,17 @@ export function SniperGameContainer() {
   // Multi-Auction Sticky Collation (Max 5 Concurrent Auctions)
   const [stickyBids, setStickyBids] = useState<StickyLotBid[]>([]);
   const [bidEvents, setBidEvents] = useState<BidEvent[]>([]);
+  const currentLotTriggersRef = useRef<{ [milestone: string]: boolean }>({});
+  const timeRemainingRef = useRef(timeRemaining);
+  const currentFloorBidRef = useRef(currentFloorBid);
+
+  useEffect(() => {
+    timeRemainingRef.current = timeRemaining;
+  }, [timeRemaining]);
+
+  useEffect(() => {
+    currentFloorBidRef.current = currentFloorBid;
+  }, [currentFloorBid]);
 
   const [vault, setVault] = useState<WonBook[]>([]);
   const [history, setHistory] = useState<RoundHistoryItem[]>([]);
@@ -102,16 +113,41 @@ export function SniperGameContainer() {
         const data = await res.json();
         if (data.ok && data.lot) {
           setCurrentLot(data.lot);
-          setCurrentFloorBid(data.lot.openingBid);
-          setBidEvents([
+          currentLotTriggersRef.current = {};
+          const openBid = data.lot.openingBid;
+          const curBid = data.lot.currentBid || openBid;
+          setCurrentFloorBid(curBid);
+
+          const initialEvents: BidEvent[] = [
             {
-              timestamp: Date.now(),
+              timestamp: Date.now() - 120000,
               bidder: "floor",
-              amount: data.lot.openingBid,
+              amount: openBid,
               clockSecs: ROUND_DURATION_SECS,
               note: "Floor opening comp",
             },
-          ]);
+          ];
+
+          if (curBid > openBid) {
+            const midSecs = Math.round(ROUND_DURATION_SECS * 0.65);
+            const midBid = Math.round(openBid + (curBid - openBid) * 0.55);
+            initialEvents.push({
+              timestamp: Date.now() - 45000,
+              bidder: "rival",
+              amount: midBid,
+              clockSecs: midSecs,
+              note: "Early Proxy Discovery",
+            });
+            initialEvents.push({
+              timestamp: Date.now(),
+              bidder: "floor",
+              amount: curBid,
+              clockSecs: ROUND_DURATION_SECS,
+              note: "Active Floor Line",
+            });
+          }
+
+          setBidEvents(initialEvents);
 
           if (Array.isArray(data.lots) && data.lots.length > 0) {
             setCandidates(data.lots);
@@ -131,6 +167,7 @@ export function SniperGameContainer() {
   // Candidate Selection Handler (from Row of Decisions or Sticky Rail)
   const handleSelectCandidate = (selected: LotItem) => {
     setCurrentLot(selected);
+    currentLotTriggersRef.current = {};
 
     // If already in sticky bids, sync active user bid and clock
     const existingSticky = stickyBids.find((b) => b.lotId === selected.id);
@@ -150,17 +187,42 @@ export function SniperGameContainer() {
       );
     } else {
       setUserBid(null);
-      setCurrentFloorBid(selected.openingBid);
-      setTimeRemaining(selected.secondsRemaining ?? ROUND_DURATION_SECS);
-      setBidEvents([
+      const openBid = selected.openingBid;
+      const curBid = selected.currentBid || openBid;
+      const secs = selected.secondsRemaining ?? ROUND_DURATION_SECS;
+      setCurrentFloorBid(curBid);
+      setTimeRemaining(secs);
+
+      const initialEvents: BidEvent[] = [
         {
+          timestamp: Date.now() - 120000,
+          bidder: "floor",
+          amount: openBid,
+          clockSecs: ROUND_DURATION_SECS,
+          note: "Floor opening comp",
+        },
+      ];
+
+      if (curBid > openBid) {
+        const midSecs = Math.round((ROUND_DURATION_SECS + secs) / 2);
+        const midBid = Math.round(openBid + (curBid - openBid) * 0.55);
+        initialEvents.push({
+          timestamp: Date.now() - 35000,
+          bidder: "rival",
+          amount: midBid,
+          clockSecs: midSecs,
+          note: "Organic Proxy Push",
+        });
+        initialEvents.push({
           timestamp: Date.now(),
           bidder: "floor",
-          amount: selected.openingBid,
-          clockSecs: selected.secondsRemaining ?? ROUND_DURATION_SECS,
-          note: "Floor opening",
-        },
-      ]);
+          amount: curBid,
+          clockSecs: secs,
+          note: "Active Floor Line",
+        });
+      }
+
+      setBidEvents(initialEvents);
       setRoundStatus("research");
     }
   };
@@ -247,8 +309,65 @@ export function SniperGameContainer() {
     if (!role || loadingLot) return;
 
     const interval = setInterval(() => {
-      // 1. Tick down selected lot timer
-      setTimeRemaining((prev) => Math.max(0, prev - 1));
+      // 1. Tick down selected lot timer and check for expiration
+      setTimeRemaining((prev) => {
+        const newSecs = Math.max(0, prev - 1);
+        if (newSecs === 0 && currentLot) {
+          if (!currentLotTriggersRef.current.p0) {
+            currentLotTriggersRef.current.p0 = true;
+            resolveHammer();
+          }
+        }
+        return newSecs;
+      });
+
+      // 1b. Organic floor proxy action for currentLot if not yet sticky
+      if (currentLot && !stickyBids.some((b) => b.lotId === currentLot.id)) {
+        const secs = timeRemainingRef.current - 1;
+        const hammer = currentLot.hammerPrice;
+        const curBid = currentFloorBidRef.current;
+
+        const bumpFloor = (key: string, minInc: number, maxInc: number, note: string, bidder: "floor" | "rival") => {
+          if (!currentLotTriggersRef.current[key] && curBid < hammer) {
+            currentLotTriggersRef.current[key] = true;
+            const inc = Math.floor(minInc + Math.random() * (maxInc - minInc + 1));
+            const nextBid = Math.min(hammer, curBid + inc);
+            setCurrentFloorBid(nextBid);
+            setBidEvents((prev) => [
+              ...prev,
+              {
+                timestamp: Date.now(),
+                bidder,
+                amount: nextBid,
+                clockSecs: Math.max(0, secs),
+                note,
+              },
+            ]);
+          }
+        };
+
+        if (secs <= 180 && secs > 130) bumpFloor("p180", 10, 20, "Organic proxy raise", "floor");
+        if (secs <= 120 && secs > 70) bumpFloor("p120", 15, 25, "Floor collector bid", "floor");
+        if (secs <= 60 && secs > 35) bumpFloor("p60", 15, 30, "Pre-lockout proxy push", "floor");
+        if (secs <= 30 && secs > 5) bumpFloor("p30", 20, 35, "30s late proxy bot", "rival");
+        if (secs <= 5 && secs > 1) bumpFloor("p5", 25, 50, "5s sniper blitz", "rival");
+        if (secs <= 1 && secs > 0) {
+          if (!currentLotTriggersRef.current.p1) {
+            currentLotTriggersRef.current.p1 = true;
+            setCurrentFloorBid(hammer);
+            setBidEvents((prev) => [
+              ...prev,
+              {
+                timestamp: Date.now(),
+                bidder: "rival",
+                amount: hammer,
+                clockSecs: 1,
+                note: "1s final hammer reserve push",
+              },
+            ]);
+          }
+        }
+      }
 
       // 2. Tick down and trigger clock fights for all sticky bidded lots
       setStickyBids((prevBids) => {

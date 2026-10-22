@@ -18,6 +18,10 @@ import {
   Shield,
   FileCheck,
   AlertCircle,
+  Package,
+  Layers,
+  ArrowDown,
+  ShieldCheck,
 } from "lucide-react";
 import type { LotItem } from "@/lib/sniper/sim/types";
 import { calculateReplacementAnalysis } from "@/lib/sniper/sim/encasement-math";
@@ -58,6 +62,8 @@ export function SniperReplacementCard({ lot, currentBid }: SniperReplacementCard
   );
 
   const activeCostData = activeTab === "cpr" && cpr.isCprEligible ? cpr : standard;
+  const manufacturingSavings = Math.round((activeCostData.allInCost - currentBid) * 100) / 100;
+  const isPositiveAdvantage = manufacturingSavings >= 0;
 
   return (
     <div className="relative rounded-xl border-2 border-cyan-400 bg-gradient-to-r from-[#031520] via-[#020D14] to-[#031520] p-5 shadow-[0_0_0_1px_rgba(34,211,238,1),0_0_16px_rgba(6,182,212,0.85),0_0_28px_rgba(8,145,178,0.45),inset_0_1px_2px_rgba(255,255,255,0.35),inset_0_0_10px_rgba(34,211,238,0.25)] ring-1 ring-cyan-300/60 space-y-5 font-mono text-xs">
@@ -101,264 +107,334 @@ export function SniperReplacementCard({ lot, currentBid }: SniperReplacementCard
         </div>
       </div>
 
-      {/* ── THE EIGHT-BALL COMPOSITE SPREAD EQUATION BAR ── */}
-      <div className="rounded-xl border border-cyan-500/40 bg-gradient-to-r from-[#021A24] via-[#010E14] to-[#021A24] p-3.5 shadow-lg space-y-2">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-cyan-500/20 pb-2">
-          <div className="flex items-center gap-1.5 text-cyan-300 font-bold text-xs uppercase tracking-wider">
-            <span>Eight-Ball Valuation Formula:</span>
-            <span className="text-white font-mono">
-              Whole Tomato (Intrinsic Value) − Last Sold Comp − Current Bid
-            </span>
-          </div>
-          <span className="text-[10px] text-slate-400 font-sans">
-            Measures your net equity cushion against recent clears and active hammer bid
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 text-center text-[11px] pt-1">
-          {/* Step 1: Whole Tomato Intrinsic Value */}
-          <div className="p-2.5 rounded-lg border border-cyan-500/30 bg-black/50">
-            <span className="text-[10px] text-slate-400 uppercase tracking-wider block">
-              Whole Tomato Intrinsic Value
-            </span>
-            <div className="text-base font-bold text-cyan-300">
-              ${wholeTomato.wholeTomato.toFixed(2)}
+      {/* ── Strict 9.8 Rule Banner (Nowhere to Go) ── */}
+      {isLot98 && (
+        <div className="rounded-xl border-2 border-amber-500/80 bg-gradient-to-r from-amber-950/60 via-amber-900/30 to-amber-950/60 p-3 text-amber-200 shadow-[0_0_12px_rgba(245,158,11,0.3)]">
+          <div className="flex items-start gap-2.5">
+            <ShieldAlert className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <h4 className="font-bold text-amber-300 text-xs tracking-wider uppercase flex items-center gap-1.5">
+                <span>⚠️ Clean &amp; Press (CPR) Does Not Apply to a 9.8 — There is Nowhere to Go</span>
+              </h4>
+              <p className="text-[11px] text-amber-100/90 font-sans leading-relaxed">
+                You do not clean and press a 9.8 certified comic. A 9.8 is already the practical top-grade pinnacle. CPR is exclusively reserved for sub-9.4 books (e.g. an 8.5 or 9.0) hoping to gain a half-point or point-and-a-half bump. For a 9.8, your manufacturing baseline is strictly <strong>Standard Certified Replacement</strong>.
+              </p>
             </div>
-            <span className="text-[9px] text-slate-500 block">Raw + All Sunk Expenses</span>
-          </div>
-
-          {/* Step 2: Last Sold Comp */}
-          <div className="p-2.5 rounded-lg border border-slate-800 bg-black/50">
-            <span className="text-[10px] text-slate-400 uppercase tracking-wider block">
-              − Last Sold Price (Comp)
-            </span>
-            <div className="text-base font-bold text-amber-300">
-              -${wholeTomato.lastSoldPrice.toFixed(2)}
-            </div>
-            <span className="text-[9px] text-slate-500 block">Observable Market Clearing</span>
-          </div>
-
-          {/* Step 3: Current Bid */}
-          <div className="p-2.5 rounded-lg border border-slate-800 bg-black/50">
-            <span className="text-[10px] text-slate-400 uppercase tracking-wider block">
-              − Current Auction Bid
-            </span>
-            <div className="text-base font-bold text-purple-300">
-              -${wholeTomato.currentBid.toFixed(2)}
-            </div>
-            <span className="text-[9px] text-slate-500 block">Active Bidding Level</span>
-          </div>
-
-          {/* Step 4: Net Eight-Ball Result */}
-          <div className={`p-2.5 rounded-lg border ${wholeTomato.isAheadOfEightBall ? "border-emerald-500/40 bg-emerald-950/30" : "border-rose-500/40 bg-rose-950/30"}`}>
-            <span className="text-[10px] uppercase tracking-wider block text-slate-300 font-bold">
-              = Net Eight-Ball Spread
-            </span>
-            <div className={`text-base font-black ${wholeTomato.isAheadOfEightBall ? "text-emerald-400" : "text-rose-400"}`}>
-              {wholeTomato.isAheadOfEightBall ? `+$${wholeTomato.eightBallSpread.toFixed(2)}` : `-$${Math.abs(wholeTomato.eightBallSpread).toFixed(2)}`}
-            </div>
-            <span className={`text-[9px] font-bold block ${wholeTomato.isAheadOfEightBall ? "text-emerald-300" : "text-rose-300"}`}>
-              {wholeTomato.isAheadOfEightBall ? "Ahead of Eight Ball" : "Behind Eight Ball"}
-            </span>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* ── CLEAN & PRESS (CPR) RULE ENFORCEMENT ── */}
-      {isLot98 ? (
-        <div className="rounded-lg border border-amber-500/40 bg-amber-950/20 p-3 flex items-start gap-2.5 text-[11px]">
-          <Info className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
-          <div className="space-y-0.5">
-            <span className="font-bold text-amber-300 uppercase tracking-wider block">
-              ⚠️ CLEAN &amp; PRESS (CPR) DOES NOT APPLY TO A 9.8 — THERE IS NOWHERE TO GO
-            </span>
-            <p className="text-[10px] text-slate-300 leading-relaxed font-sans">
-              You do not clean and press a 9.8 certified comic. A 9.8 is already the practical top-grade pinnacle. CPR is exclusively reserved for sub-9.4 books (e.g., an 8.5 or 9.0) hoping to gain a half-point or a point and a half. The replacement cost below reflects standard raw-to-slab manufacturing.
-            </p>
-          </div>
-        </div>
-      ) : cpr.isCprEligible ? (
-        <div className="rounded-lg border border-purple-500/40 bg-purple-950/20 p-3 space-y-2 text-[11px]">
-          <div className="flex items-center justify-between border-b border-purple-500/20 pb-1.5">
-            <div className="flex items-center gap-1.5 text-purple-300 font-bold">
-              <Sparkles className="h-3.5 w-3.5 text-purple-400" />
-              <span>CALCULATED CPR CANDIDATE ({lot.grade} → TARGET {cpr.targetBumpGrade})</span>
+      {/* ── Calculated Point-Bump Hope for Sub-9.4 Candidates (8.5 / 9.0 / 9.2) ── */}
+      {!isLot98 && cpr.isCprEligible && (
+        <div className="rounded-xl border-2 border-purple-500/80 bg-gradient-to-r from-purple-950/60 via-purple-900/30 to-purple-950/60 p-3 text-purple-200 shadow-[0_0_12px_rgba(168,85,247,0.3)]">
+          <div className="flex items-start gap-2.5">
+            <Flame className="h-5 w-5 text-purple-300 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <h4 className="font-bold text-purple-200 text-xs tracking-wider uppercase">
+                  Calculated CPR Candidate ({lot.grade} → Target {cpr.targetBumpGrade})
+                </h4>
+                <span className="rounded bg-purple-950 border border-purple-400 px-1.5 py-0.2 text-[9px] font-bold text-purple-300">
+                  Target FMV: ${cpr.targetBumpFmv}
+                </span>
+              </div>
+              <p className="text-[11px] text-purple-100/90 font-sans leading-relaxed">
+                Because this book is a {lot.grade}, cleaning and pressing is a calculated exercise aiming for a point or point-and-a-half bump (targeting {cpr.targetBumpGrade} at ${cpr.targetBumpFmv}). Pressing expense ($30 CPR fee + $35 grading + $15 Priority out + $28 return courier + 6% FL tax) = ${activeCostData.sunkExpenses}.
+              </p>
             </div>
-            <span className="text-[9px] bg-purple-900 text-purple-200 px-2 py-0.5 rounded uppercase">
-              Calculated Point-Bump Hope
+          </div>
+        </div>
+      )}
+
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      {/* ── THE 3 CLEAN VERTICAL BOXES (As Explained: Soundness & Logic) ── */}
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      <div className="space-y-4">
+        {/* Toggle between Standard Universal vs Calculated CPR (if eligible) */}
+        {!isLot98 && cpr.isCprEligible && (
+          <div className="flex items-center gap-2 p-1 rounded-lg bg-black/60 border border-slate-800 w-fit">
+            <button
+              type="button"
+              onClick={() => setActiveTab("standard")}
+              className={`px-3 py-1 rounded text-[10px] font-bold uppercase transition-all ${
+                activeTab === "standard"
+                  ? "bg-cyan-500 text-slate-950 shadow-[0_0_8px_rgba(6,182,212,0.6)]"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              Standard As-Is Replacement ($85.40 Sunk)
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("cpr")}
+              className={`px-3 py-1 rounded text-[10px] font-bold uppercase transition-all ${
+                activeTab === "cpr"
+                  ? "bg-purple-500 text-white shadow-[0_0_8px_rgba(168,85,247,0.6)]"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              🧼 Clean, Press &amp; Resubmit ($117.20 Sunk)
+            </button>
+          </div>
+        )}
+
+        {/* ── BOX 1: THE FACTORY BILL (Sunk Grading & Logistics Expenses) ── */}
+        <div className="rounded-xl border-2 border-slate-700 bg-gradient-to-b from-[#0E131F] to-[#070A11] p-4 space-y-3 shadow-lg">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+            <div className="flex items-center gap-2">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-cyan-500/20 border border-cyan-400 text-cyan-300 font-bold text-[10px]">
+                1
+              </span>
+              <h4 className="font-bold text-white text-xs uppercase tracking-wider">
+                Box 1: The Factory Bill (Sunk Grading &amp; Logistics)
+              </h4>
+            </div>
+            <span className="text-slate-400 text-[10px]">
+              Flat non-negotiable costs to certify plastic
             </span>
           </div>
-          <p className="text-[10px] text-slate-300 leading-relaxed font-sans">
-            Because this book is a {lot.grade}, cleaning and pressing is a calculated exercise aiming for a <strong>point or point and a half bump</strong> (targeting {cpr.targetBumpGrade} at ${cpr.targetBumpFmv?.toLocaleString()}).
-            Pressing expense ($30 CPR + $35 grading + $50 shipping + $15 insurance + $5 invoice) = $139.90.
-            Estimated net upgrade benefit: <strong className={cpr.cprNetBenefit && cpr.cprNetBenefit > 0 ? "text-emerald-400" : "text-rose-400"}>${cpr.cprNetBenefit?.toFixed(2)}</strong>.
-          </p>
-        </div>
-      ) : null}
 
-      {/* ── THE 7-LAYER DOCUMENTED REPLACEMENT EXPENSE BREAKDOWN ── */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between text-[11px] font-bold text-slate-300 border-b border-slate-800 pb-1">
-          <span className="uppercase tracking-wider text-cyan-300">
-            Documented Replacement Cost Schedule ({activeCostData.pathName})
-          </span>
-          <span className="text-[10px] text-slate-400 font-normal">
-            Formula: Raw Street Value + Grading + Inbound ($25) + Return ($25) + Insurance ($15) + Invoice ($5) + Tax
-          </span>
-        </div>
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 text-[11px]">
+            {/* 1. Base Tier Grading */}
+            <div className="rounded-lg bg-black/50 border border-slate-800 p-2">
+              <span className="text-[10px] text-slate-400 block">Tier Grading Fee</span>
+              <span className="font-bold text-white text-sm">${activeCostData.gradingFee.toFixed(2)}</span>
+              <span className="text-[9px] text-slate-500 block truncate">{lot.grader} {isVintage ? "Vintage" : "Modern"}</span>
+            </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 text-[11px]">
-          {/* 1. Raw Purchase */}
-          <div className="p-2.5 rounded-lg border border-slate-800 bg-black/50 space-y-1">
-            <span className="text-slate-400 text-[9px] uppercase tracking-wider block">1. Raw Street Value</span>
-            <div className="text-sm font-bold text-white">${activeCostData.rawPrice.toFixed(2)}</div>
-            <span className="text-[9px] text-slate-500 block">Underlying book</span>
+            {/* 2. CGC Intake Invoice */}
+            <div className="rounded-lg bg-black/50 border border-slate-800 p-2">
+              <span className="text-[10px] text-slate-400 block">Invoice Fee</span>
+              <span className="font-bold text-white text-sm">${activeCostData.invoiceFee.toFixed(2)}</span>
+              <span className="text-[9px] text-slate-500 block">CGC Intake</span>
+            </div>
+
+            {/* 3. Straight Florida State Sales Tax (6.0%) */}
+            <div className="rounded-lg bg-black/50 border border-slate-800 p-2">
+              <span className="text-[10px] text-slate-400 block">FL Sales Tax (6.0%)</span>
+              <span className="font-bold text-cyan-300 text-sm">${activeCostData.serviceTax.toFixed(2)}</span>
+              <span className="text-[9px] text-slate-500 block">Straight FL Tax</span>
+            </div>
+
+            {/* 4. Outgoing Priority Mail ($15.00) */}
+            <div className="rounded-lg bg-black/50 border border-slate-800 p-2">
+              <span className="text-[10px] text-slate-400 block">Outgoing Shipping</span>
+              <span className="font-bold text-white text-sm">${activeCostData.outgoingShipping.toFixed(2)}</span>
+              <span className="text-[9px] text-slate-500 block">USPS Priority Out</span>
+            </div>
+
+            {/* 5. Return Insured Courier ($28.00 base) */}
+            <div className="rounded-lg bg-black/50 border border-slate-800 p-2">
+              <span className="text-[10px] text-slate-400 block">Return Courier</span>
+              <span className="font-bold text-white text-sm">${activeCostData.returnShipping.toFixed(2)}</span>
+              <span className="text-[9px] text-slate-500 block">CGC FedEx Base</span>
+            </div>
           </div>
 
-          {/* 2. Service/Prep Fee */}
-          <div className="p-2.5 rounded-lg border border-cyan-500/30 bg-cyan-950/20 space-y-1">
-            <span className="text-cyan-400 text-[9px] uppercase tracking-wider block">2. {activeCostData.prepFeeName}</span>
-            <div className="text-sm font-bold text-cyan-200">${activeCostData.prepFee.toFixed(2)}</div>
-            <span className="text-[9px] text-slate-500 block">{activeCostData.prepFee > 0 ? "Documented fee" : "None required"}</span>
-          </div>
+          {/* Optional CPR row if active */}
+          {activeTab === "cpr" && cpr.isCprEligible && (
+            <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-purple-950/40 border border-purple-500/40 text-purple-200 text-[11px]">
+              <span>+ Clean &amp; Press (CPR) Preparation Fee:</span>
+              <span className="font-bold text-white">${cpr.prepFee.toFixed(2)}</span>
+            </div>
+          )}
 
-          {/* 3. Grading Fee */}
-          <div className="p-2.5 rounded-lg border border-slate-800 bg-black/50 space-y-1">
-            <span className="text-slate-400 text-[9px] uppercase tracking-wider block">3. {lot.grader} Grading</span>
-            <div className="text-sm font-bold text-white">${activeCostData.gradingFee.toFixed(2)}</div>
-            <span className="text-[9px] text-slate-500 block">{isVintage ? "Vintage Tier" : "Modern Tier"}</span>
-          </div>
-
-          {/* 4. Inbound + Return Shipping */}
-          <div className="p-2.5 rounded-lg border border-slate-800 bg-black/50 space-y-1">
-            <span className="text-slate-400 text-[9px] uppercase tracking-wider block">4. 2-Way Shipping</span>
-            <div className="text-sm font-bold text-white">${activeCostData.twoWayShipping.toFixed(2)}</div>
-            <span className="text-[9px] text-slate-500 block">$25 in + $25 out</span>
-          </div>
-
-          {/* 5. Transit Insurance */}
-          <div className="p-2.5 rounded-lg border border-slate-800 bg-black/50 space-y-1">
-            <span className="text-slate-400 text-[9px] uppercase tracking-wider block">5. 2-Way Insurance</span>
-            <div className="text-sm font-bold text-white">${activeCostData.twoWayInsurance.toFixed(2)}</div>
-            <span className="text-[9px] text-slate-500 block">Declared transit</span>
-          </div>
-
-          {/* 6. Invoice Processing */}
-          <div className="p-2.5 rounded-lg border border-slate-800 bg-black/50 space-y-1">
-            <span className="text-slate-400 text-[9px] uppercase tracking-wider block">6. CGC Invoice</span>
-            <div className="text-sm font-bold text-white">${activeCostData.invoiceFee.toFixed(2)}</div>
-            <span className="text-[9px] text-slate-500 block">Standard intake</span>
-          </div>
-
-          {/* 7. Service Tax */}
-          <div className="p-2.5 rounded-lg border border-slate-800 bg-black/50 space-y-1">
-            <span className="text-slate-400 text-[9px] uppercase tracking-wider block">7. 7% Tax</span>
-            <div className="text-sm font-bold text-white">${activeCostData.serviceTax.toFixed(2)}</div>
-            <span className="text-[9px] text-slate-500 block">Service tax</span>
+          {/* Box 1 Total Sunk Expense */}
+          <div className="flex items-center justify-between pt-2 border-t border-slate-800 font-bold text-xs">
+            <span className="text-slate-300 uppercase">
+              = Total Sunk Expense to Certify (Box 1 Floor):
+            </span>
+            <span className="text-cyan-300 text-sm">
+              ${activeCostData.sunkExpenses.toFixed(2)}
+            </span>
           </div>
         </div>
 
-        {/* Sum Total & Replacement Advantage Comparison */}
-        <div className="p-3 rounded-lg border border-cyan-400/50 bg-gradient-to-r from-cyan-950/60 to-black flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <span className="text-[10px] text-slate-400 uppercase tracking-wider block">
-              Whole Tomato Replacement Value (Intrinsic Cost)
-            </span>
-            <div className="text-xl font-bold text-cyan-300">
-              ${activeCostData.allInCost.toFixed(2)}
+        {/* Down Arrow Connector */}
+        <div className="flex justify-center -my-1">
+          <ArrowDown className="h-4 w-4 text-cyan-400/60" />
+        </div>
+
+        {/* ── BOX 2: THE WHOLE TOMATO (Cost to Replicate from Scratch) ── */}
+        <div className="rounded-xl border-2 border-amber-500/60 bg-gradient-to-b from-[#1C1204] to-[#0A0701] p-4 space-y-3 shadow-lg">
+          <div className="flex items-center justify-between border-b border-amber-500/30 pb-2">
+            <div className="flex items-center gap-2">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-500/20 border border-amber-400 text-amber-300 font-bold text-[10px]">
+                2
+              </span>
+              <h4 className="font-bold text-amber-200 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                <span>🍅 Box 2: The Whole Tomato (Cost to Replicate from Zero)</span>
+              </h4>
             </div>
+            <span className="text-amber-300/70 text-[10px]">
+              Raw Comic Basis + Box 1 Sunk Bill
+            </span>
           </div>
 
-          <div className="flex items-center gap-4 text-[11px]">
-            <div>
-              <span className="text-slate-500 text-[10px] block">Live Auction Bid:</span>
-              <span className="font-bold text-white text-base">${currentBid.toLocaleString()}</span>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-[11px]">
+            {/* Raw Basis */}
+            <div className="rounded-lg bg-black/60 border border-slate-800 p-2.5">
+              <span className="text-slate-400 text-[10px] block">1. Underlying Raw Comic Basis:</span>
+              <span className="font-bold text-white text-base">${activeCostData.rawPrice.toFixed(2)}</span>
+              <span className="text-[9px] text-slate-500 block">Observable street/market price</span>
             </div>
-            <ArrowRight className="h-4 w-4 text-cyan-400" />
-            <div>
-              <span className="text-slate-500 text-[10px] block">Whole Tomato Buyer Advantage:</span>
-              <span className={`font-bold text-base ${wholeTomato.replacementAdvantage >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
-                {wholeTomato.replacementAdvantage >= 0 ? `+$${wholeTomato.replacementAdvantage.toFixed(2)} Advantage` : `-$${Math.abs(wholeTomato.replacementAdvantage).toFixed(2)} Disadvantage`}
+
+            {/* Plus Box 1 */}
+            <div className="rounded-lg bg-black/60 border border-slate-800 p-2.5">
+              <span className="text-slate-400 text-[10px] block">2. Plus Box 1 (Total Sunk Bill):</span>
+              <span className="font-bold text-cyan-300 text-base">+${activeCostData.sunkExpenses.toFixed(2)}</span>
+              <span className="text-[9px] text-slate-500 block">Grading + FL tax + 2-way shipping</span>
+            </div>
+
+            {/* Total Whole Tomato */}
+            <div className="rounded-lg bg-amber-950/60 border border-amber-500/60 p-2.5 flex flex-col justify-center">
+              <span className="text-amber-300 text-[10px] block font-bold uppercase">Whole Tomato Replacement:</span>
+              <span className="font-bold text-amber-200 text-lg">${activeCostData.allInCost.toFixed(2)}</span>
+              <span className="text-[9px] text-amber-300/80 block">Your true manufacturing cost</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Down Arrow Connector */}
+        <div className="flex justify-center -my-1">
+          <ArrowDown className="h-4 w-4 text-emerald-400/60" />
+        </div>
+
+        {/* ── BOX 3: THE AUCTION SNAPSHOT (Your Real Advantage) ── */}
+        <div
+          className={`rounded-xl border-2 p-4 space-y-3 shadow-xl ${
+            isPositiveAdvantage
+              ? "border-emerald-500/80 bg-gradient-to-b from-[#061C12] to-[#020A06]"
+              : "border-rose-500/80 bg-gradient-to-b from-[#20070F] to-[#0A0205]"
+          }`}
+        >
+          <div
+            className={`flex items-center justify-between border-b pb-2 ${
+              isPositiveAdvantage ? "border-emerald-500/30" : "border-rose-500/30"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <span
+                className={`flex h-5 w-5 items-center justify-center rounded-full font-bold text-[10px] ${
+                  isPositiveAdvantage
+                    ? "bg-emerald-500/20 border border-emerald-400 text-emerald-300"
+                    : "bg-rose-500/20 border border-rose-400 text-rose-300"
+                }`}
+              >
+                3
+              </span>
+              <h4
+                className={`font-bold text-xs uppercase tracking-wider ${
+                  isPositiveAdvantage ? "text-emerald-300" : "text-rose-300"
+                }`}
+              >
+                Box 3: The Auction Reality Check (Box 2 minus Current Bid)
+              </h4>
+            </div>
+            <span className={isPositiveAdvantage ? "text-emerald-300 text-[10px]" : "text-rose-300 text-[10px]"}>
+              {isPositiveAdvantage ? "BUYER ADVANTAGE (LOCKED-IN EQUITY)" : "AUCTION PREMIUM (BID EXCEEDS REPLACEMENT)"}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center text-[11px]">
+            {/* Box 2 Whole Tomato */}
+            <div className="rounded-lg bg-black/60 border border-slate-800 p-2.5">
+              <span className="text-slate-400 text-[10px] block">Box 2: Whole Tomato Cost:</span>
+              <span className="font-bold text-white text-base">${activeCostData.allInCost.toFixed(2)}</span>
+              <span className="text-[9px] text-slate-500 block">Cost to build from scratch</span>
+            </div>
+
+            {/* Minus Live Bid */}
+            <div className="rounded-lg bg-black/60 border border-slate-800 p-2.5">
+              <span className="text-slate-400 text-[10px] block">Minus Current Auction Bid:</span>
+              <span className="font-bold text-cyan-300 text-base">-${currentBid.toFixed(2)}</span>
+              <span className="text-[9px] text-slate-500 block">Observable clearing level</span>
+            </div>
+
+            {/* Net Advantage */}
+            <div
+              className={`rounded-lg p-2.5 border flex flex-col justify-center ${
+                isPositiveAdvantage
+                  ? "bg-emerald-950/80 border-emerald-400 text-emerald-200"
+                  : "bg-rose-950/80 border-rose-400 text-rose-200"
+              }`}
+            >
+              <span className="text-[10px] font-bold uppercase block">
+                {isPositiveAdvantage ? "Your Manufacturing Savings:" : "Bidding Frenzy Premium:"}
+              </span>
+              <span className="font-bold text-lg">
+                {isPositiveAdvantage
+                  ? `+$${manufacturingSavings.toFixed(2)} Advantage`
+                  : `-$${Math.abs(manufacturingSavings).toFixed(2)} Underwater`}
+              </span>
+              <span className="text-[9px] block opacity-80">
+                {isPositiveAdvantage ? "Locked-in equity vs DIY slabbing" : "Cheaper to build yourself"}
               </span>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* ── THE HOPE FACTOR: RAW SUBMISSION YIELD RISK & SCREENING RULES ── */}
-      <div className="rounded-lg border border-purple-500/40 bg-gradient-to-r from-[#170928] via-[#0D0417] to-[#170928] p-4 space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-purple-500/20 pb-2">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-purple-400" />
-            <span className="text-purple-200 font-bold text-xs uppercase tracking-wider">
-              The &quot;Hope Factor&quot; &amp; The Minimum Grade Screen Rule
+          {/* 4-Step Eight-Ball Equation */}
+          <div className="pt-2 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-2 text-[10px] text-slate-400 font-mono">
+            <span>
+              Eight-Ball Formula: Whole Tomato (${activeCostData.allInCost.toFixed(2)}) − Last Comp (${wholeTomato.lastSoldPrice.toFixed(2)}) − Current Bid (${currentBid.toFixed(2)}) =
+            </span>
+            <span
+              className={`font-bold px-2 py-0.5 rounded ${
+                wholeTomato.isAheadOfEightBall
+                  ? "bg-emerald-950 border border-emerald-500 text-emerald-300"
+                  : "bg-rose-950 border border-rose-500 text-rose-300"
+              }`}
+            >
+              {wholeTomato.isAheadOfEightBall
+                ? `+$${wholeTomato.eightBallSpread.toFixed(2)} (Ahead)`
+                : `-$${Math.abs(wholeTomato.eightBallSpread).toFixed(2)} (Behind)`}
             </span>
           </div>
-          <span className="text-[10px] text-amber-300 font-sans">
-            Collector Reality: Nobody can consistently predict over a 9.2 from raw inspection.
-          </span>
-        </div>
-
-        {/* Probabilistic Yield Curve */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-[11px]">
-          <div className="p-2 rounded bg-black/50 border border-amber-500/30">
-            <span className="text-amber-400 font-bold text-xs block">9.8 Mint (15% Odds)</span>
-            <span className="text-slate-400 text-[10px] block">${fmv98.toLocaleString()} FMV</span>
-            <span className="text-[9px] text-emerald-400">Top-Grade Target</span>
-          </div>
-          <div className="p-2 rounded bg-black/50 border border-purple-500/30">
-            <span className="text-purple-400 font-bold text-xs block">9.6 Near Mint+ (35% Odds)</span>
-            <span className="text-slate-400 text-[10px] block">${fmv96.toLocaleString()} FMV</span>
-            <span className="text-[9px] text-cyan-400">High-Grade Expectation</span>
-          </div>
-          <div className="p-2 rounded bg-black/50 border border-cyan-500/30">
-            <span className="text-cyan-400 font-bold text-xs block">9.4 Near Mint (32% Odds)</span>
-            <span className="text-slate-400 text-[10px] block">${fmv94.toLocaleString()} FMV</span>
-            <span className="text-[9px] text-slate-400">Minimum Screen Floor</span>
-          </div>
-          <div className="p-2 rounded bg-black/50 border border-rose-500/30">
-            <span className="text-rose-400 font-bold text-xs block">≤ 9.2 Sub-Grade (18% Odds)</span>
-            <span className="text-slate-400 text-[10px] block">${fmv92.toLocaleString()} FMV</span>
-            <span className="text-[9px] text-rose-400">Reject Screen Trigger</span>
-          </div>
-        </div>
-
-        {/* CGC Screening Defense Rule */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px] pt-1">
-          <div className="p-2.5 rounded bg-black/40 border border-rose-500/30 space-y-1">
-            <div className="flex items-center gap-1.5 text-rose-300 font-bold">
-              <XCircle className="h-3.5 w-3.5 text-rose-400" />
-              <span>If Book Scores &lt; 9.4 (18% Risk)</span>
-            </div>
-            <p className="text-[10px] text-slate-300 leading-relaxed font-sans">
-              CGC rejects encapsulation. You pay the <strong>${screenRule.invoiceFee} invoice fee + ${screenRule.rejectFee} reject fee ($14.00 total)</strong> plus shipping.
-              You save the ${screenRule.savedGradingFee.toFixed(2)} full slabbing charge and avoid holding an underwater slab!
-            </p>
-          </div>
-
-          <div className="p-2.5 rounded bg-black/40 border border-emerald-500/30 space-y-1">
-            <div className="flex items-center gap-1.5 text-emerald-300 font-bold">
-              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
-              <span>If Book Meets/Beats 9.4 (82% Odds)</span>
-            </div>
-            <p className="text-[10px] text-slate-300 leading-relaxed font-sans">
-              Encapsulation proceeds. If it lands at 9.8, you lock in an <strong>Equity Win</strong> of{" "}
-              <strong>+${screenRule.equityWinIfExceeded.toFixed(2)}</strong> over your manufacturing replacement cost.
-            </p>
-          </div>
         </div>
       </div>
 
-      {/* Rationale: Why Bidders Bid Up This Certified Slab */}
-      <div className="p-3 rounded-lg border border-cyan-500/30 bg-black/60 flex items-start gap-2.5 text-[11px] text-slate-300">
-        <Info className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
-        <div className="space-y-1">
-          <span className="font-bold text-cyan-300 uppercase tracking-wider block">
-            Why Bidders Bid Up Certified Slabs (The Bidding Frenzy Driver)
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      {/* ── 9.8 PRE-SCREEN SAFETY NET & WHY 9.8 RAW IS GAMBLING ────────── */}
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      <div className="rounded-xl border border-slate-700 bg-black/60 p-4 space-y-3 text-[11px]">
+        <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4 text-emerald-400" />
+            <h4 className="font-bold text-white text-xs uppercase tracking-wider">
+              The 9.8 Pre-Screen Safety Net &amp; Why Hunting Raw 9.8s is Gambling
+            </h4>
+          </div>
+          <span className="rounded bg-slate-900 border border-slate-700 px-2 py-0.5 text-[9px] font-bold text-slate-300">
+            CGC Intake Screen
           </span>
-          <p className="text-[10px] text-slate-400 leading-relaxed font-sans">
-            When an auction lot sits below the Whole Tomato replacement cost (${activeCostData.allInCost.toFixed(2)}), bidding aggressively is 100% rational. The buyer avoids paying two-way shipping ($50), insurance ($15), 6–8 week turnaround drag, and eliminates the 18% hope-factor risk of an underwater grade. Buying this certified slab below replacement cost is locked-in equity!
-          </p>
+        </div>
+
+        <p className="text-slate-300 font-sans leading-relaxed">
+          If submitting raw copies targeting 9.8, setting a <strong>9.8 Pre-Screen</strong> caps your grading loss at only <strong>${screenRule.totalSunkIfRejected.toFixed(2)}</strong> ($9 reject fee + $28 return shipping + $5 invoice + 6% FL tax) if the book misses 9.8. You save <strong>${screenRule.savedGradingFee.toFixed(2)}</strong> in wasted slabbing charges, the comic stays raw in your hands, and you can recover your raw principal.
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+          {/* Reject scenario */}
+          <div className="rounded-lg bg-rose-950/30 border border-rose-500/40 p-2.5 space-y-1">
+            <span className="text-rose-300 font-bold uppercase text-[10px] block flex items-center gap-1">
+              <XCircle className="h-3 w-3" />
+              <span>If Book Misses 9.8 (Caps Loss at ~$44)</span>
+            </span>
+            <p className="text-[10px] text-slate-300 font-sans">
+              CGC rejects encapsulation. You pay $9 reject + $5 invoice + $28 return courier ($42.84 total). You save the full slabbing fee and avoid holding an underwater 9.4/9.6 slab!
+            </p>
+          </div>
+
+          {/* Pass scenario */}
+          <div className="rounded-lg bg-emerald-950/30 border border-emerald-500/40 p-2.5 space-y-1">
+            <span className="text-emerald-300 font-bold uppercase text-[10px] block flex items-center gap-1">
+              <CheckCircle2 className="h-3 w-3" />
+              <span>Why Buying This Slab Wins</span>
+            </span>
+            <p className="text-[10px] text-slate-300 font-sans">
+              Buying this certified slab below Whole Tomato cost ($&lt;${activeCostData.allInCost.toFixed(2)}) completely eliminates the turnaround delay (6–8 weeks), two-way shipping hassle, and the hope-factor grading risk!
+            </p>
+          </div>
         </div>
       </div>
     </div>

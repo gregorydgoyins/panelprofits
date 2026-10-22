@@ -43,9 +43,9 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
     witnessFee: lot.witnessFee || 0,
     creatorSigningFee: lot.creatorSigningFee || 0,
     invoiceFee: lot.invoiceFee || 5.0,
-    serviceTax: lot.serviceTax || 4.20,
-    taxRatePercent: 7.0,
-    shippingHandlingFee: lot.shippingHandlingFee || 25.0,
+    serviceTax: lot.serviceTax || 2.40,
+    taxRatePercent: 6.0,
+    shippingHandlingFee: lot.shippingHandlingFee || 43.0,
     slabbingCostFloor: lot.slabbingCostFloor,
     estimatedRawBasis: lot.estimatedRawBasis,
     mailerBoxFee: 5.0,
@@ -333,13 +333,18 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
               </div>
 
               <div className="flex justify-between">
-                <span className="text-slate-400">State Service Tax ({activeFormula.taxRatePercent}% on services):</span>
-                <span className="text-white">+${activeFormula.serviceTax.toFixed(2)}</span>
+                <span className="text-slate-400">Outgoing Shipping (Priority Mail out):</span>
+                <span className="text-white">+$15.00</span>
               </div>
 
               <div className="flex justify-between">
-                <span className="text-slate-400">Insured Return Courier Shipping:</span>
-                <span className="text-white">+${activeFormula.shippingHandlingFee.toFixed(2)}</span>
+                <span className="text-slate-400">Insured Return Courier Shipping ({lot.grader} FedEx/UPS):</span>
+                <span className="text-white">+$28.00</span>
+              </div>
+
+              <div className="flex justify-between">
+                <span className="text-slate-400">Florida State Sales Tax ({activeFormula.taxRatePercent}% on taxable fees):</span>
+                <span className="text-white">+${activeFormula.serviceTax.toFixed(2)}</span>
               </div>
 
               <div className="flex justify-between border-t border-slate-800 pt-2 font-bold text-cyan-300 text-xs">

@@ -29,19 +29,21 @@ export function buildEncasementFormulas({
 } {
   const mailerBoxFee = 5.0;
   const venueFeeDragPercent = 13.25; // 13.25% eBay / marketplace platform fee + payment processing
-  const taxRatePercent = 7.0; // 7.0% State service tax on taxable grading, pressing, handling
+  const taxRatePercent = 6.0; // 6.0% Straight Florida sales tax (Sarasota, FL) on taxable grading & invoice fees
+  const outgoingShipping = 15.0; // $15.00 Priority Mail padded mailer/gemini box out
+  const returnShipping = 28.0; // $28.00 base CGC return FedEx/UPS insured courier
+  const totalTwoWayShipping = outgoingShipping + returnShipping; // $43.00
 
   // ──────────────────────────────────────────────────────────────────────────
   // TIER 1: Clean & Press + Grade (CCS)
-  // "30 to grade + 25 pressing + 25 return shipping + invoice + tax on service"
+  // "35 to grade + 30 pressing + 43 two-way shipping + 5 invoice + 6% FL tax on services"
   // ──────────────────────────────────────────────────────────────────────────
-  const ccsBase = grader === "CGC" ? (isVintage ? 45.0 : 30.0) : grader === "CBCS" ? (isVintage ? 40.0 : 25.0) : (isVintage ? 35.0 : 25.0);
-  const ccsPressing = grader === "PSA" ? 0.0 : isVintage ? 35.0 : 25.0;
+  const ccsBase = grader === "CGC" ? (isVintage ? 55.0 : 35.0) : grader === "CBCS" ? (isVintage ? 45.0 : 30.0) : (isVintage ? 40.0 : 30.0);
+  const ccsPressing = grader === "PSA" ? 0.0 : isVintage ? 40.0 : 30.0;
   const ccsInvoice = grader === "PSA" ? 10.0 : 5.0;
-  const ccsShipping = 25.0;
   const ccsTaxable = ccsBase + ccsPressing + ccsInvoice;
   const ccsTax = Math.round(ccsTaxable * (taxRatePercent / 100) * 100) / 100;
-  const ccsTotalSunk = ccsBase + ccsPressing + ccsInvoice + ccsTax + ccsShipping;
+  const ccsTotalSunk = ccsBase + ccsPressing + ccsInvoice + ccsTax + totalTwoWayShipping;
   const ccsCostBasis = estimatedRawBasis + ccsTotalSunk + mailerBoxFee;
   const ccsBreakeven = Math.round((ccsCostBasis / (1 - venueFeeDragPercent / 100)) * 100) / 100;
 
@@ -58,7 +60,7 @@ export function buildEncasementFormulas({
     invoiceFee: ccsInvoice,
     serviceTax: ccsTax,
     taxRatePercent,
-    shippingHandlingFee: ccsShipping,
+    shippingHandlingFee: totalTwoWayShipping,
     slabbingCostFloor: Math.round(ccsTotalSunk * 100) / 100,
     estimatedRawBasis,
     mailerBoxFee,
@@ -73,10 +75,9 @@ export function buildEncasementFormulas({
   // ──────────────────────────────────────────────────────────────────────────
   const stdBase = ccsBase;
   const stdInvoice = ccsInvoice;
-  const stdShipping = 25.0;
   const stdTaxable = stdBase + stdInvoice;
   const stdTax = Math.round(stdTaxable * (taxRatePercent / 100) * 100) / 100;
-  const stdTotalSunk = stdBase + stdInvoice + stdTax + stdShipping;
+  const stdTotalSunk = stdBase + stdInvoice + stdTax + totalTwoWayShipping;
   const stdCostBasis = estimatedRawBasis + stdTotalSunk + mailerBoxFee;
   const stdBreakeven = Math.round((stdCostBasis / (1 - venueFeeDragPercent / 100)) * 100) / 100;
 
@@ -93,7 +94,7 @@ export function buildEncasementFormulas({
     invoiceFee: stdInvoice,
     serviceTax: stdTax,
     taxRatePercent,
-    shippingHandlingFee: stdShipping,
+    shippingHandlingFee: totalTwoWayShipping,
     slabbingCostFloor: Math.round(stdTotalSunk * 100) / 100,
     estimatedRawBasis,
     mailerBoxFee,
@@ -107,14 +108,13 @@ export function buildEncasementFormulas({
   // "signed has different mathematics"
   // ──────────────────────────────────────────────────────────────────────────
   const sigBase = ccsBase;
-  const sigPressing = grader === "PSA" ? 0.0 : 25.0; // High-grade signings are almost universally pressed
+  const sigPressing = grader === "PSA" ? 0.0 : 30.0; // High-grade signings are almost universally pressed
   const sigWitness = grader === "CGC" ? 25.0 * signaturesCount : grader === "CBCS" ? 20.0 * signaturesCount : 25.0 * signaturesCount;
   const sigCreator = 25.0 * signaturesCount; // Standard signing fee (e.g. McFarlane, Miller, Lee)
   const sigInvoice = ccsInvoice;
-  const sigShipping = 25.0;
   const sigTaxable = sigBase + sigPressing + sigWitness + sigInvoice;
   const sigTax = Math.round(sigTaxable * (taxRatePercent / 100) * 100) / 100;
-  const sigTotalSunk = sigBase + sigPressing + sigWitness + sigCreator + sigInvoice + sigTax + sigShipping;
+  const sigTotalSunk = sigBase + sigPressing + sigWitness + sigCreator + sigInvoice + sigTax + totalTwoWayShipping;
   const sigCostBasis = estimatedRawBasis + sigTotalSunk + mailerBoxFee;
   const sigBreakeven = Math.round((sigCostBasis / (1 - venueFeeDragPercent / 100)) * 100) / 100;
 
@@ -131,7 +131,7 @@ export function buildEncasementFormulas({
     invoiceFee: sigInvoice,
     serviceTax: sigTax,
     taxRatePercent,
-    shippingHandlingFee: sigShipping,
+    shippingHandlingFee: totalTwoWayShipping,
     slabbingCostFloor: Math.round(sigTotalSunk * 100) / 100,
     estimatedRawBasis,
     mailerBoxFee,
@@ -295,11 +295,16 @@ export interface ReplacementCostBreakdown {
   prepFee: number;
   prepFeeName: string;
   gradingFee: number;
-  twoWayShipping: number;
+  outgoingShipping: number; // $15.00 Priority Mail Out
+  returnShipping: number; // $28.00 base CGC Return Courier
+  twoWayShipping: number; // $15 + $28 = $43.00
   twoWayInsurance: number;
   invoiceFee: number;
   serviceTax: number;
-  allInCost: number;
+  taxRatePercent: number; // 6.0% FL State Sales Tax
+  sunkExpenses: number; // Box 1 Total Sunk Certification Bill
+  allInCost: number; // Box 2 Whole Tomato Cost (Raw + Box 1)
+  manufacturingAdvantage: number; // Box 3 Advantage (Whole Tomato - Current Bid)
   isCprEligible: boolean;
   cprIneligibilityReason?: string;
   targetBumpGrade?: string;
@@ -327,6 +332,8 @@ export interface MinimumGradeScreen {
   invoiceFee: number;
   rejectFee: number;
   totalRejectFee: number;
+  outgoingShipping: number;
+  returnShipping: number;
   twoWayShipping: number;
   twoWayInsurance: number;
   totalSunkIfRejected: number;
@@ -359,16 +366,14 @@ export interface FullReplacementAnalysis {
 }
 
 /**
- * Calculates authentic replacement mathematics & Whole Tomato Eight-Ball Valuation:
+ * Calculates authentic replacement mathematics & 3-Box Vertical Whole Tomato Valuation:
  *
- * 1. Whole Tomato Intrinsic Value: Raw street value + Grading + Inbound Shipping ($25) +
- *    Insured Return ($25) + Insurance ($15) + Invoice ($5) + Tax.
- * 2. Eight-Ball Formula: Whole Tomato (Intrinsic Value) - Last Sold Price - Current Bid.
- *    Shows whether the buyer is Ahead of the Eight Ball or Behind the Eight Ball.
- * 3. Strict CPR Rules: You do NOT clean and press a 9.8 (there is nowhere to go).
- *    CPR is only calculated for sub-9.4 books (e.g. 8.5 or 9.0) hoping for a 0.5 to 1.5 point bump.
- * 4. Hope Factor: Probabilistic yield curve for raw submissions.
- * 5. Minimum Grade Screen Rule: Grade only if >= 9.4; pay $5 invoice + $9 reject fee if it fails.
+ * 1. Box 1: Sunk Certification & Logistics Bill
+ *    Grading Fee + $5 Invoice + Straight Florida State Sales Tax (6.0%) + $15 Priority Out + $28 Return Courier (+ $30 CPR only if sub-9.4).
+ * 2. Box 2: The Whole Tomato (Raw Basis + Box 1 Sunk Costs).
+ * 3. Box 3: The Live Auction Comparison (Box 2 Whole Tomato - Current Hammer Bid = Manufacturing Advantage).
+ * 4. 9.8 Pre-Screen Safety Net: Setting a 9.8 pre-screen caps grading loss at ~$44 ($9 reject + $28 return + $5 invoice) if it misses 9.8.
+ *    Saves $35-$55 slabbing charges; hunting raw 9.8 without a screen is pure gambling.
  */
 export function calculateReplacementAnalysis({
   rawPrice,
@@ -398,16 +403,18 @@ export function calculateReplacementAnalysis({
   grader?: string;
 }): FullReplacementAnalysis {
   const baseGrading = grader === "CGC" ? (isVintage ? 55.0 : 35.0) : (isVintage ? 45.0 : 25.0);
-  const twoWayShipping = 50.0; // $25 inbound + $25 outbound
-  const twoWayInsurance = 15.0; // Declared value transit protection
+  const outgoingShipping = 15.0; // Priority Mail padded mailer/box to Sarasota, FL
+  const returnShipping = 28.0; // CGC base insured courier return (FedEx/UPS)
+  const twoWayShipping = outgoingShipping + returnShipping; // $43.00
+  const twoWayInsurance = 0.0; // Included in courier declared tier
   const invoiceFee = 5.0;
-  const taxRate = 0.07;
+  const taxRate = 0.06; // Straight Florida state sales tax (6.0%) in Sarasota, FL
   const signingFee = isYellowLabel ? 25.0 * signaturesCount : 0.0;
 
-  // ── Standard Universal Replacement (Auction Standard) ──
+  // ── Standard Universal Replacement (Box 1 Sunk Factory Bill) ──
   const stdTaxable = baseGrading + invoiceFee + signingFee;
   const stdTax = Math.round(stdTaxable * taxRate * 100) / 100;
-  const stdServices = baseGrading + twoWayShipping + twoWayInsurance + invoiceFee + stdTax + signingFee;
+  const stdServices = Math.round((baseGrading + outgoingShipping + returnShipping + invoiceFee + stdTax + signingFee) * 100) / 100;
   const stdAllIn = Math.round((rawPrice + stdServices) * 100) / 100;
 
   const numGrade = parseFloat(lotGrade);
@@ -422,11 +429,16 @@ export function calculateReplacementAnalysis({
     prepFee: signingFee,
     prepFeeName: isYellowLabel ? "Creator Signing Fee" : "No Pressing (As-Is)",
     gradingFee: baseGrading,
+    outgoingShipping,
+    returnShipping,
     twoWayShipping,
     twoWayInsurance,
     invoiceFee,
     serviceTax: stdTax,
+    taxRatePercent: 6.0,
+    sunkExpenses: stdServices,
     allInCost: stdAllIn,
+    manufacturingAdvantage: Math.round((stdAllIn - currentBid) * 100) / 100,
     isCprEligible: false,
   };
 
@@ -434,7 +446,7 @@ export function calculateReplacementAnalysis({
   const cprFee = 30.0;
   const cprTaxable = baseGrading + cprFee + invoiceFee + signingFee;
   const cprTax = Math.round(cprTaxable * taxRate * 100) / 100;
-  const cprServices = baseGrading + cprFee + twoWayShipping + twoWayInsurance + invoiceFee + cprTax + signingFee;
+  const cprServices = Math.round((baseGrading + cprFee + outgoingShipping + returnShipping + invoiceFee + cprTax + signingFee) * 100) / 100;
   const cprAllIn = Math.round((rawPrice + cprServices) * 100) / 100;
 
   let targetBumpGrade = "9.4";
@@ -456,11 +468,16 @@ export function calculateReplacementAnalysis({
     prepFee: cprFee,
     prepFeeName: "CPR (Clean & Press) Fee",
     gradingFee: baseGrading,
+    outgoingShipping,
+    returnShipping,
     twoWayShipping,
     twoWayInsurance,
     invoiceFee,
     serviceTax: cprTax,
+    taxRatePercent: 6.0,
+    sunkExpenses: cprServices,
     allInCost: cprAllIn,
+    manufacturingAdvantage: Math.round((cprAllIn - currentBid) * 100) / 100,
     isCprEligible,
     cprIneligibilityReason: isLot98
       ? "Clean & Press Does Not Apply (9.8 is practical top-grade — nowhere to go)"
@@ -471,10 +488,12 @@ export function calculateReplacementAnalysis({
     targetBumpFmv,
     cprNetBenefit: Math.round(cprNetBenefit * 100) / 100,
   };
-
   // ── The Whole Tomato Replacement Cost & Eight-Ball Position ──
-  // Whole Tomato Intrinsic Value = Raw Street Value + Sunk Services
+  // Box 1: Sunk Certification Expenses
+  // Box 2: Whole Tomato Intrinsic Value = Raw Street Basis + Box 1
+  // Box 3: Manufacturing Advantage = Whole Tomato - Current Bid
   const activeReplacementCost = isCprEligible ? cprAllIn : stdAllIn;
+  const activeSunkExpenses = isCprEligible ? cprServices : stdServices;
   const effectiveLastSold = lastSoldPrice > 0 ? lastSoldPrice : currentLotFmv;
   const eightBallSpread = Math.round((activeReplacementCost - effectiveLastSold - currentBid) * 100) / 100;
   const replacementAdvantage = Math.round((activeReplacementCost - currentBid) * 100) / 100;
@@ -482,7 +501,7 @@ export function calculateReplacementAnalysis({
 
   const wholeTomato: WholeTomatoEightBallAnalysis = {
     rawStreetValue: rawPrice,
-    serviceExpenses: isCprEligible ? cprServices : stdServices,
+    serviceExpenses: activeSunkExpenses,
     wholeTomato: activeReplacementCost,
     lastSoldPrice: effectiveLastSold,
     currentBid,
@@ -520,17 +539,21 @@ export function calculateReplacementAnalysis({
     frenzySpread,
   };
 
-  // ── Minimum Grade Screen Rule ("Only Grade If >= 9.4") ──
+  // ── Minimum Grade Screen Rule ("Pre-Screen Caps Loss at ~$44") ──
   const rejectFee = 9.0;
   const totalRejectFee = invoiceFee + rejectFee; // $14.00
-  const totalSunkIfRejected = totalRejectFee + twoWayShipping + twoWayInsurance; // $14 + $50 + $15 = $79.00
+  const rejectTax = Math.round((rejectFee + invoiceFee) * taxRate * 100) / 100; // $0.84
+  // If book misses 9.8, loss is capped at $9 reject + $5 invoice + $28 return shipping + tax = $42.84 (~$44.00)
+  const totalSunkIfRejected = Math.round((totalRejectFee + returnShipping + rejectTax) * 100) / 100;
   const equityWinIfExceeded = Math.max(0, fmv98 - activeReplacementCost);
 
   const screenRule: MinimumGradeScreen = {
-    thresholdGrade: "9.4",
+    thresholdGrade: isLot98 ? "9.8" : "9.4",
     invoiceFee,
     rejectFee,
     totalRejectFee,
+    outgoingShipping,
+    returnShipping,
     twoWayShipping,
     twoWayInsurance,
     totalSunkIfRejected,
