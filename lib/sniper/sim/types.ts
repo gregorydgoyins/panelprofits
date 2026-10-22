@@ -34,6 +34,9 @@ export interface LotItem {
   coverUrl: string;
   grade: string;
   grader: "CGC" | "CBCS" | "PSA";
+  era?: string;
+  eraDisplayName?: string;
+  isHighGradeOnly?: boolean;
   certNumber: string;
   certVerificationUrl: string;
   fmv: number;

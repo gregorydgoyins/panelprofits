@@ -147,37 +147,141 @@ const HIGH_FIDELITY_FALLBACK: RawComicDbRow = {
   why_i_should_invest_in_this_comic: "Historical blue-chip key marking the 1st Appearance of Frank Castle (The Punisher). Anchor asset with 484 recorded sales/yr and massive raw-to-9.8 spread.",
 };
 
+export function detectBookEraAndPolicy(pubYear: number, title: string = "", series: string = ""): {
+  era: string;
+  eraDisplayName: string;
+  isHighGradeOnly: boolean;
+} {
+  const combined = `${title} ${series}`.toLowerCase();
+  const isIndy = /spawn|savage dragon|hellboy|walking dead|tmnt|teenage mutant ninja turtles|radiant black|something is killing the children|saga/i.test(combined);
+
+  if (isIndy) {
+    return {
+      era: "indy",
+      eraDisplayName: "Independent / Indy (8.5+ Institutional Minimum)",
+      isHighGradeOnly: true,
+    };
+  }
+  if (pubYear < 1938) {
+    return {
+      era: "platinum",
+      eraDisplayName: "Platinum Age (0.5 – 9.8 Vintage Range)",
+      isHighGradeOnly: false,
+    };
+  }
+  if (pubYear <= 1945) {
+    return {
+      era: "golden",
+      eraDisplayName: "Golden Age (0.5 – 9.8 Vintage Range)",
+      isHighGradeOnly: false,
+    };
+  }
+  if (pubYear <= 1955) {
+    return {
+      era: "atomic",
+      eraDisplayName: "Atomic Age (0.5 – 9.8 Vintage Range)",
+      isHighGradeOnly: false,
+    };
+  }
+  if (pubYear <= 1969) {
+    return {
+      era: "silver",
+      eraDisplayName: "Silver Age (0.5 – 9.8 Vintage Range)",
+      isHighGradeOnly: false,
+    };
+  }
+  if (pubYear <= 1983) {
+    return {
+      era: "bronze",
+      eraDisplayName: "Bronze Age (8.5+ Institutional Minimum)",
+      isHighGradeOnly: true,
+    };
+  }
+  if (pubYear <= 1991) {
+    return {
+      era: "copper",
+      eraDisplayName: "Copper Age (8.5+ Institutional Minimum)",
+      isHighGradeOnly: true,
+    };
+  }
+  if (pubYear <= 2009) {
+    return {
+      era: "modern",
+      eraDisplayName: "Modern Age (8.5+ Institutional Minimum)",
+      isHighGradeOnly: true,
+    };
+  }
+  return {
+    era: "postmodern",
+    eraDisplayName: "Post-Modern Age (8.5+ Institutional Minimum)",
+    isHighGradeOnly: true,
+  };
+}
+
 export function transformRowToLot(
   book: RawComicDbRow,
   role: GameRole,
   brokerLevel: BrokerLevel = 1,
   forcedGrade?: string
 ): LotItem {
-  type GradedKey = "4.0" | "6.0" | "8.0" | "9.2" | "9.4" | "9.6" | "9.8" | "10.0";
-  let targetGradeKey: GradedKey = (forcedGrade as GradedKey) || "8.0";
+  // Publication year & era underwriting policy
+  const yearMatch = book.title.match(/\b(19\d\d|20\d\d)\b/);
+  const pubYear = yearMatch ? Number(yearMatch[1]) : 1990;
+  const isVintage = pubYear < 1975;
+  const eraInfo = detectBookEraAndPolicy(pubYear, book.title, book.series || "");
 
-  if (!forcedGrade) {
-    if (role === "broker") {
-      const roll = Math.random();
-      if (brokerLevel === 1) {
-        if (roll < 0.40) targetGradeKey = "4.0";
-        else if (roll < 0.75) targetGradeKey = "6.0";
-        else if (roll < 0.95) targetGradeKey = "8.0";
-        else targetGradeKey = "9.2";
-      } else if (brokerLevel === 2) {
-        if (roll < 0.35) targetGradeKey = "6.0";
-        else if (roll < 0.70) targetGradeKey = "8.0";
-        else if (roll < 0.90) targetGradeKey = "9.2";
-        else targetGradeKey = "9.4";
-      } else {
-        if (roll < 0.25) targetGradeKey = "8.0";
-        else if (roll < 0.55) targetGradeKey = "9.4";
-        else if (roll < 0.85) targetGradeKey = "9.6";
-        else targetGradeKey = "9.8";
+  type GradedKey = "4.0" | "6.0" | "8.0" | "9.2" | "9.4" | "9.6" | "9.8" | "10.0";
+  let targetGradeKey: GradedKey = (forcedGrade as GradedKey) || (eraInfo.isHighGradeOnly ? "9.8" : "8.0");
+
+  // Underwriting Policy:
+  // Bronze through Post-Modern (bronze, copper, modern, indy, postmodern) are strictly 8.5 and above.
+  // Atomic, Golden, Platinum (and Silver) allow 0.5 through 9.8 vintage range.
+  if (eraInfo.isHighGradeOnly) {
+    if (forcedGrade) {
+      const numGrade = parseFloat(forcedGrade);
+      if (Number.isFinite(numGrade) && numGrade < 8.5) {
+        // Upgrade sub-8.5 requested grade to minimum acceptable institutional grade (9.2)
+        targetGradeKey = "9.2";
       }
     } else {
-      const whaleGrades: GradedKey[] = ["6.0", "8.0", "9.2", "9.4", "9.6", "9.8"];
-      targetGradeKey = whaleGrades[Math.floor(Math.random() * whaleGrades.length)];
+      const roll = Math.random();
+      if (role === "broker") {
+        if (brokerLevel === 1) {
+          targetGradeKey = roll < 0.60 ? "9.2" : roll < 0.90 ? "9.4" : "9.6";
+        } else if (brokerLevel === 2) {
+          targetGradeKey = roll < 0.35 ? "9.2" : roll < 0.75 ? "9.4" : "9.6";
+        } else {
+          targetGradeKey = roll < 0.20 ? "9.4" : roll < 0.60 ? "9.6" : "9.8";
+        }
+      } else {
+        targetGradeKey = roll < 0.15 ? "9.4" : roll < 0.45 ? "9.6" : "9.8";
+      }
+    }
+  } else {
+    // Pre-Bronze Vintage: 0.5 through 9.8 allowable
+    if (!forcedGrade) {
+      const roll = Math.random();
+      if (role === "broker") {
+        if (brokerLevel === 1) {
+          if (roll < 0.40) targetGradeKey = "4.0";
+          else if (roll < 0.75) targetGradeKey = "6.0";
+          else if (roll < 0.95) targetGradeKey = "8.0";
+          else targetGradeKey = "9.2";
+        } else if (brokerLevel === 2) {
+          if (roll < 0.35) targetGradeKey = "6.0";
+          else if (roll < 0.70) targetGradeKey = "8.0";
+          else if (roll < 0.90) targetGradeKey = "9.2";
+          else targetGradeKey = "9.4";
+        } else {
+          if (roll < 0.25) targetGradeKey = "8.0";
+          else if (roll < 0.55) targetGradeKey = "9.4";
+          else if (roll < 0.85) targetGradeKey = "9.6";
+          else targetGradeKey = "9.8";
+        }
+      } else {
+        const whaleGrades: GradedKey[] = ["6.0", "8.0", "9.2", "9.4", "9.6", "9.8"];
+        targetGradeKey = whaleGrades[Math.floor(Math.random() * whaleGrades.length)];
+      }
     }
   }
 
@@ -195,8 +299,13 @@ export function transformRowToLot(
 
   let chosenFmv = parseUsd(book[targetGradeKey]);
   if (!chosenFmv) {
-    chosenFmv = ladder.grade98 || ladder.grade96 || ladder.grade80 || ladder.grade60 || 150;
-    targetGradeKey = ladder.grade98 ? "9.8" : ladder.grade80 ? "8.0" : "6.0";
+    if (eraInfo.isHighGradeOnly) {
+      chosenFmv = ladder.grade98 || ladder.grade96 || ladder.grade94 || ladder.grade92 || 150;
+      targetGradeKey = ladder.grade98 ? "9.8" : ladder.grade96 ? "9.6" : ladder.grade94 ? "9.4" : "9.2";
+    } else {
+      chosenFmv = ladder.grade98 || ladder.grade96 || ladder.grade80 || ladder.grade60 || ladder.grade40 || 150;
+      targetGradeKey = ladder.grade98 ? "9.8" : ladder.grade80 ? "8.0" : ladder.grade60 ? "6.0" : "4.0";
+    }
   }
 
   const gradeDisplay = targetGradeKey;
@@ -222,11 +331,6 @@ export function transformRowToLot(
     certNumber = String(Math.floor(50000000 + Math.random() * 40000000));
     certVerificationUrl = `https://www.psacard.com/cert/${certNumber}`;
   }
-
-  // Publication year & Encasement Sunk Cost
-  const yearMatch = book.title.match(/\b(19\d\d|20\d\d)\b/);
-  const pubYear = yearMatch ? Number(yearMatch[1]) : 1990;
-  const isVintage = pubYear < 1975;
 
   const hasSignature = grader !== "PSA" && (role === "whale" ? Math.random() < 0.28 : Math.random() < 0.16);
   const creatorName = hasSignature ? FAMOUS_CREATORS[Math.floor(Math.random() * FAMOUS_CREATORS.length)] : undefined;
@@ -258,7 +362,10 @@ export function transformRowToLot(
   const trueClearingPrice = Math.round(chosenFmv * fmvAdjustment);
 
   const openingRatio = 0.55 + Math.random() * 0.15;
-  const openingBid = Math.max(15, Math.round((chosenFmv * openingRatio) / 5) * 5);
+  const calculatedOpening = Math.max(15, Math.round((chosenFmv * openingRatio) / 5) * 5);
+  // Institutional hard cap: $10,000 maximum opening floor bid
+  // The comic can land/hammer wherever it clears over $10k, but its opening bid is capped at $10k
+  const openingBid = Math.min(10000, calculatedOpening);
 
   const isBelowGradingCost = openingBid <= slabbingCostFloor;
   const sellerSubsidizedAmount = isBelowGradingCost ? Math.round(slabbingCostFloor - openingBid) : 0;
@@ -397,6 +504,9 @@ export function transformRowToLot(
     coverUrl: resolvedCoverUrl,
     grade: gradeDisplay,
     grader,
+    era: eraInfo.era,
+    eraDisplayName: eraInfo.eraDisplayName,
+    isHighGradeOnly: eraInfo.isHighGradeOnly,
     certNumber,
     certVerificationUrl,
     fmv: chosenFmv,

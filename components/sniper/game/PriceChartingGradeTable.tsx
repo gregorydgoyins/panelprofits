@@ -83,12 +83,21 @@ export function PriceChartingGradeTable({ lot }: PriceChartingGradeTableProps) {
             PriceCharting Certified Grade &amp; Velocity Matrix
           </h4>
         </div>
-        <div className="flex items-center gap-2 text-[10px] text-slate-400">
+        <div className="flex flex-wrap items-center gap-2 text-[10px]">
+          {lot.isHighGradeOnly ? (
+            <span className="px-2 py-0.5 rounded bg-amber-950/80 border border-amber-500/50 text-amber-300 font-bold">
+              Era Policy: 8.5+ Institutional Floor (Bronze–PostModern)
+            </span>
+          ) : (
+            <span className="px-2 py-0.5 rounded bg-purple-950/80 border border-purple-500/50 text-purple-300 font-bold">
+              Vintage Era Policy: 0.5 – 9.8 Dealable (Atomic/Golden/Platinum)
+            </span>
+          )}
           <span className="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-cyan-300">
-            Buy (0.66x) / Sell (1.10x) Invariants
+            Buy (0.66x) / Sell (1.10x)
           </span>
           <span className="px-2 py-0.5 rounded bg-emerald-950 border border-emerald-500/30 text-emerald-300">
-            Volume Frequency Verified
+            Volume Verified
           </span>
         </div>
       </div>
@@ -103,7 +112,7 @@ export function PriceChartingGradeTable({ lot }: PriceChartingGradeTableProps) {
               <th className="py-2 px-3">Dealer Buy (0.66)</th>
               <th className="py-2 px-3">Dealer Sell (1.10)</th>
               <th className="py-2 px-3">Volume Velocity</th>
-              <th className="py-2 px-3 text-right">Status</th>
+              <th className="py-2 px-3 text-right">Underwriting Status</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800/60 font-mono">
@@ -111,6 +120,8 @@ export function PriceChartingGradeTable({ lot }: PriceChartingGradeTableProps) {
               const buyPrice = Math.round(r.price * 0.66 * 100) / 100;
               const sellPrice = Math.round(r.price * 1.10 * 100) / 100;
               const isLotGrade = lot.grade === r.gradeNum;
+              const numGrade = parseFloat(r.gradeNum);
+              const isBelowCutoff = lot.isHighGradeOnly && (r.gradeNum === "Raw" || (Number.isFinite(numGrade) && numGrade < 8.5));
 
               return (
                 <tr
@@ -118,6 +129,8 @@ export function PriceChartingGradeTable({ lot }: PriceChartingGradeTableProps) {
                   className={`transition-colors ${
                     isLotGrade
                       ? "bg-cyan-950/40 text-cyan-200 font-bold"
+                      : isBelowCutoff
+                      ? "hover:bg-slate-900/30 text-slate-400 opacity-80"
                       : "hover:bg-slate-900/40 text-slate-300"
                   }`}
                 >
@@ -147,9 +160,15 @@ export function PriceChartingGradeTable({ lot }: PriceChartingGradeTableProps) {
                     </span>
                   </td>
                   <td className="py-2.5 px-3 text-right">
-                    <span className="text-[10px] text-slate-500 font-mono">
-                      Recorded Sale
-                    </span>
+                    {isBelowCutoff ? (
+                      <span className="text-[10px] text-slate-500 font-mono">
+                        Sub-8.5 (Comps Only)
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-emerald-400 font-mono font-semibold">
+                        Institutional Dealable
+                      </span>
+                    )}
                   </td>
                 </tr>
               );
@@ -158,8 +177,13 @@ export function PriceChartingGradeTable({ lot }: PriceChartingGradeTableProps) {
         </table>
       </div>
 
-      <div className="text-[10px] text-slate-500 bg-black/60 p-2.5 rounded-lg border border-slate-800 leading-relaxed">
-        * Grounded Empirical Semantic Contract: Raw prices above cover price constitute authentic transaction evidence. Dealer Buy is benchmarked at 66% of FMV; Dealer Sell is benchmarked at 110% of FMV.
+      <div className="text-[10px] text-slate-400 bg-black/60 p-2.5 rounded-lg border border-slate-800 leading-relaxed space-y-1">
+        <p>
+          * <strong>Underwriting Grade Threshold:</strong> Bronze through Post-Modern eras (Bronze, Copper, Modern, Independent, Post-Modern) are strictly dealable at <strong>8.5 and above</strong>. Sub-8.5 tiers serve as valuation context only. Atomic, Golden, and Platinum vintage keys accept <strong>0.5 through 9.8</strong>.
+        </p>
+        <p className="text-slate-500">
+          * <strong>Opening Bid Ceiling:</strong> Initial starting bids are hard-capped at <strong>$10,000 maximum</strong>. Hammer prices clear unconstrained over $10,000 based on market bidding.
+        </p>
       </div>
     </div>
   );
