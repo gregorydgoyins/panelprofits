@@ -322,6 +322,73 @@ export function transformRowToLot(
     resolvedCoverUrl = VERIFIED_SUPABASE_COVERS["2314852"]; // High-fidelity ASM #129 WebP fallback
   }
 
+  const multiGradeSales = [
+    {
+      grade: "9.8",
+      label: "9.8 NM/MT",
+      salesCount: 9,
+      price: ladder.grade98 || chosenFmv,
+      lastCompDate: compDate,
+      color: "#F59E0B",
+    },
+    {
+      grade: "9.6",
+      label: "9.6 NM+",
+      salesCount: 2,
+      price: ladder.grade96 || Math.round(chosenFmv * 0.45),
+      lastCompDate: new Date(Date.now() - 42 * 86400000).toISOString().slice(0, 10),
+      color: "#A855F7",
+    },
+    {
+      grade: "9.4",
+      label: "9.4 NM",
+      salesCount: 5,
+      price: ladder.grade94 || Math.round(chosenFmv * 0.35),
+      lastCompDate: new Date(Date.now() - 14 * 86400000).toISOString().slice(0, 10),
+      color: "#38BDF8",
+    },
+    {
+      grade: "9.2",
+      label: "9.2 NM-",
+      salesCount: 3,
+      price: ladder.grade92 || Math.round(chosenFmv * 0.28),
+      lastCompDate: new Date(Date.now() - 21 * 86400000).toISOString().slice(0, 10),
+      color: "#22D3EE",
+    },
+    {
+      grade: "8.0",
+      label: "8.0 VF",
+      salesCount: 8,
+      price: ladder.grade80 || Math.round(chosenFmv * 0.18),
+      lastCompDate: new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10),
+      color: "#10B981",
+    },
+    {
+      grade: "6.0",
+      label: "6.0 FN",
+      salesCount: 4,
+      price: ladder.grade60 || Math.round(chosenFmv * 0.12),
+      lastCompDate: new Date(Date.now() - 35 * 86400000).toISOString().slice(0, 10),
+      color: "#F97316",
+    },
+    {
+      grade: "4.0",
+      label: "4.0 VG",
+      salesCount: 3,
+      price: ladder.grade40 || Math.round(chosenFmv * 0.08),
+      lastCompDate: new Date(Date.now() - 60 * 86400000).toISOString().slice(0, 10),
+      color: "#FB7185",
+    },
+    {
+      grade: "Raw",
+      label: "Ungraded ⚑",
+      salesCount: 12,
+      price: ladder.raw || Math.round(chosenFmv * 0.05),
+      lastCompDate: new Date(Date.now() - 2 * 86400000).toISOString().slice(0, 10),
+      color: "#94A3B8",
+    },
+  ];
+
   return {
     id: book.id,
     title: book.title,
@@ -350,6 +417,7 @@ export function transformRowToLot(
     investopediaSlug,
     priceLadder: ladder,
     chartPoints,
+    multiGradeSales,
     isYellowLabel,
     signatureDetails,
     baseGradingFee: activeFormula.baseGradingFee,
@@ -423,7 +491,19 @@ export async function fetchSimLotBatch(
     collectedRows.push(HIGH_FIDELITY_FALLBACK);
   }
 
-  const lots = collectedRows.map((row) => transformRowToLot(row, role, brokerLevel));
+  // Staggered durations so lots end at different rates (hours, minutes, seconds)
+  const staggeredDurations = [240, 1850, 78, 7420, 14400, 480];
+
+  const lots = collectedRows.map((row, idx) => {
+    const lot = transformRowToLot(row, role, brokerLevel);
+    const secs = staggeredDurations[idx % staggeredDurations.length];
+    lot.secondsRemaining = secs;
+    lot.totalDurationSeconds = secs;
+    lot.endsAt = new Date(Date.now() + secs * 1000).toISOString();
+    lot.lotStatus = secs <= 90 ? "hot" : "active";
+    return lot;
+  });
+
   return {
     lots,
     activeLot: lots[0],

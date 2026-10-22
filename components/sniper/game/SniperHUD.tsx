@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Briefcase, Crown, Shield, Archive, RotateCcw, TrendingUp, TrendingDown, Info } from "lucide-react";
 import type { GameRole, BrokerLevel, WonBook } from "@/lib/sniper/sim/types";
+import { TooltipToggle } from "@/components/shell/tooltip-toggle";
 
 interface SniperHUDProps {
   role: GameRole;
@@ -158,8 +159,10 @@ export function SniperHUD({
           </div>
         </div>
 
-        {/* Right: Actions (Vault & Archetype Switch) */}
+        {/* Right: Actions (Tooltip Toggle, Vault & Archetype Switch) */}
         <div className="flex items-center gap-2.5 w-full md:w-auto justify-end">
+          <TooltipToggle />
+
           <button
             onClick={onOpenVault}
             className="flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-900/80 hover:bg-slate-800 px-3 py-2 text-xs font-mono text-slate-200 transition-colors"

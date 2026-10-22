@@ -105,6 +105,51 @@ export function SniperGameContainer() {
     setCurrentLot(selected);
     setUserBid(null);
     setRoundStatus("research");
+    if (selected.secondsRemaining && selected.secondsRemaining > 0) {
+      setTimeRemaining(selected.secondsRemaining);
+    }
+  };
+
+  // Full 4-Lot Rail Refresh Handler
+  const handleRefreshChoices = async () => {
+    if (!role) return;
+    try {
+      const res = await fetch(`/api/sniper/sim/lot?role=${role}&level=${brokerLevel}`);
+      const data = await res.json();
+      if (data.ok && Array.isArray(data.lots) && data.lots.length > 0) {
+        setCandidates(data.lots);
+        if (!data.lots.some((l: LotItem) => l.id === currentLot?.id)) {
+          setCurrentLot(data.lots[0]);
+          setUserBid(null);
+          setTimeRemaining(data.lots[0].secondsRemaining ?? ROUND_DURATION_SECS);
+        }
+      }
+    } catch (e) {
+      console.warn("Could not refresh lot choices:", e);
+    }
+  };
+
+  // Individual Lot Expiration & Seamless Replacement Handler
+  const handleLotExpired = async (expiredId: string) => {
+    if (expiredId === currentLot?.id) {
+      resolveHammer();
+      return;
+    }
+    if (!role) return;
+    try {
+      const res = await fetch(`/api/sniper/sim/lot?role=${role}&level=${brokerLevel}`);
+      const data = await res.json();
+      if (data.ok && Array.isArray(data.lots) && data.lots.length > 0) {
+        const replacement =
+          data.lots.find((l: LotItem) => !candidates.some((c) => c.id === l.id)) || data.lots[0];
+        const freshSecs = Math.floor(900 + Math.random() * 2700);
+        replacement.secondsRemaining = freshSecs;
+        replacement.totalDurationSeconds = freshSecs;
+        setCandidates((prev) => prev.map((c) => (c.id === expiredId ? replacement : c)));
+      }
+    } catch (e) {
+      console.warn("Failed to replace expired rail lot:", e);
+    }
   };
 
   // Role Selection Handler
@@ -324,6 +369,8 @@ export function SniperGameContainer() {
           lot={currentLot}
           candidates={candidates}
           onSelectLot={handleSelectCandidate}
+          onRefreshChoices={handleRefreshChoices}
+          onLotExpired={handleLotExpired}
           userBid={userBid}
           bankroll={bankroll}
           timeRemaining={timeRemaining}

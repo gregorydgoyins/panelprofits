@@ -6,6 +6,7 @@ import { SignOutButton } from "./sign-out-button";
 import { PrimaryNav } from "./primary-nav";
 import { PlayerSettings } from "./player-settings";
 import { MarketClocks } from "./market-clocks";
+import { TooltipToggle } from "./tooltip-toggle";
 
 export async function Header() {
   const user = await getCurrentUser();
@@ -59,8 +60,9 @@ export async function Header() {
         <div className="flex min-h-12 w-full items-center justify-between gap-4">
         <PrimaryNav />
 
-        {/* Right Action: Account or Sign In */}
-        <div className="flex items-center gap-2">
+        {/* Right Action: Tooltip Toggle under DEAL RADAR + Account/Sign In */}
+        <div className="flex items-center gap-2.5">
+          <TooltipToggle />
           {user ? (
             <div className="flex items-center gap-2">
               <Link

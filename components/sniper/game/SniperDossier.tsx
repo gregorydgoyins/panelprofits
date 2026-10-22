@@ -16,8 +16,9 @@ export function SniperDossier({ role, lot }: SniperDossierProps) {
   if (!isBroker) {
     // Redacted Whale Dossier
     return (
-      <div className="rounded-xl border border-amber-500/30 bg-[#070A11] p-5 shadow-xl">
-        <div className="flex items-center gap-2.5 border-b border-slate-800 pb-3">
+      <div className="relative rounded-xl border-2 border-amber-400 bg-gradient-to-r from-[#1E1103] via-[#100902] to-[#1E1103] p-5 shadow-[0_0_0_1px_rgba(251,191,36,1),0_0_16px_rgba(245,158,11,0.85),inset_0_1px_2px_rgba(255,255,255,0.35)] ring-1 ring-amber-300/60">
+        <div className="absolute inset-x-0 -top-px h-[2px] bg-gradient-to-r from-transparent via-amber-300 to-transparent shadow-[0_0_12px_rgba(251,191,36,1)]" />
+        <div className="flex items-center gap-2.5 border-b border-amber-500/30 pb-3">
           <ShieldAlert className="h-5 w-5 text-amber-400" />
           <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-white">
             Whale Intelligence Profile
@@ -27,7 +28,7 @@ export function SniperDossier({ role, lot }: SniperDossierProps) {
           </span>
         </div>
 
-        <div className="mt-4 p-4 rounded-lg bg-black/40 border border-slate-800 text-xs font-mono text-slate-400 space-y-3">
+        <div className="mt-4 p-4 rounded-lg bg-black/40 border border-amber-500/30 text-xs font-mono text-slate-400 space-y-3">
           <p className="flex items-start gap-2">
             <Lock className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
             <span>
@@ -37,7 +38,7 @@ export function SniperDossier({ role, lot }: SniperDossierProps) {
           <p className="text-slate-400">
             You must evaluate this <strong className="text-white">{lot.grader} {lot.grade}</strong> lot using your own market knowledge, verified past auction dates, and pricing discipline.
           </p>
-          <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px]">
+          <div className="pt-2 border-t border-amber-500/30 flex items-center justify-between text-[11px]">
             <span className="text-slate-500">Sales Volume Index:</span>
             <span className="text-amber-300 font-bold">{lot.salesVolume ? `${lot.salesVolume} trades/yr` : "Infrequent / High Scarcity"}</span>
           </div>
@@ -50,9 +51,10 @@ export function SniperDossier({ role, lot }: SniperDossierProps) {
   const ladder = lot.priceLadder;
 
   return (
-    <div className="rounded-xl border border-cyan-500/30 bg-[#070A11] p-5 shadow-xl space-y-5">
+    <div className="relative rounded-xl border-2 border-purple-500 bg-gradient-to-r from-[#140726] via-[#0B0316] to-[#140726] p-5 shadow-[0_0_0_1px_rgba(192,132,252,1),0_0_16px_rgba(168,85,247,0.85),inset_0_1px_2px_rgba(255,255,255,0.35)] ring-1 ring-purple-300/60 space-y-5">
+      <div className="absolute inset-x-0 -top-px h-[2px] bg-gradient-to-r from-transparent via-purple-300 to-transparent shadow-[0_0_12px_rgba(168,85,247,1)]" />
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+      <div className="flex items-center justify-between border-b border-purple-500/30 pb-3">
         <div className="flex items-center gap-2.5">
           <FileText className="h-4 w-4 text-cyan-400" />
           <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-white">

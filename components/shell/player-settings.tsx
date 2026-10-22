@@ -24,11 +24,13 @@ export function PlayerSettings() {
   const [open, setOpen] = React.useState(false);
   const [timezone, setTimezone] = React.useState("UTC");
   const [showSeconds, setShowSeconds] = React.useState(true);
+  const [tooltipsEnabled, setTooltipsEnabled] = React.useState(true);
   const [railVisibility, setRailVisibility] = React.useState<Record<string, boolean>>({});
 
   React.useEffect(() => {
     setTimezone(localStorage.getItem("pp-clock-timezone") || "UTC");
     setShowSeconds(localStorage.getItem("pp-clock-seconds") !== "false");
+    setTooltipsEnabled(localStorage.getItem("pp-tooltips-enabled") !== "false");
     setRailVisibility(Object.fromEntries(RAILS.map(([key, , defaultValue]) => {
       const storageKey = key === "market-barometers" ? "pp-barometers-visible" : key === "market-clocks" ? "pp-clock-rail-visible" : `pp-rail-visible-${key}`;
       const stored = localStorage.getItem(storageKey);
@@ -46,6 +48,12 @@ export function PlayerSettings() {
     setShowSeconds(value);
     localStorage.setItem("pp-clock-seconds", String(value));
     window.dispatchEvent(new CustomEvent("pp-clock-settings"));
+  }
+
+  function updateTooltips(value: boolean) {
+    setTooltipsEnabled(value);
+    localStorage.setItem("pp-tooltips-enabled", String(value));
+    window.dispatchEvent(new CustomEvent("pp-tooltip-settings", { detail: { enabled: value } }));
   }
 
   function updateRail(key: string, value: boolean) {
@@ -88,7 +96,11 @@ export function PlayerSettings() {
             <span>Show seconds</span>
             <input type="checkbox" checked={showSeconds} onChange={(event) => updateSeconds(event.target.checked)} className="accent-cyan-300" />
           </label>
-          <p className="mt-4 border-t border-slate-800 pt-3 text-[10px] leading-4 text-slate-500">Your clock preference stays in this browser and controls the market-session timestamps.</p>
+          <label className="mt-3 flex items-center justify-between gap-3 text-xs text-slate-300">
+            <span>Show tooltips &amp; intel</span>
+            <input type="checkbox" checked={tooltipsEnabled} onChange={(event) => updateTooltips(event.target.checked)} className="accent-cyan-300" />
+          </label>
+          <p className="mt-4 border-t border-slate-800 pt-3 text-[10px] leading-4 text-slate-500">Your clock and tooltip preferences stay in this browser.</p>
           <div className="mt-4 border-t border-slate-800 pt-3">
             <p className="text-[10px] uppercase tracking-[0.16em] text-cyan-300">Dashboard rails</p>
             <div className="mt-2 space-y-2">{RAILS.map(([key, label, defaultValue]) => <label key={key} className="flex items-center justify-between gap-3 text-xs text-slate-300"><span>{label}</span><input type="checkbox" checked={railVisibility[key] ?? defaultValue} onChange={(event) => updateRail(key, event.target.checked)} className="accent-cyan-300" /></label>)}</div>

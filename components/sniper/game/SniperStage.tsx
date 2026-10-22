@@ -27,6 +27,7 @@ import { SniperBreakevenCard } from "./SniperBreakevenCard";
 import { SniperVideos } from "@/components/sniper/SniperVideos";
 import { SniperCandidateRow } from "./SniperCandidateRow";
 import { PriceChartingGradeTable } from "./PriceChartingGradeTable";
+import { useTooltipsEnabled } from "@/components/shell/tooltip-toggle";
 
 function FloorRulePill({
   phase,
@@ -44,6 +45,7 @@ function FloorRulePill({
   tip: string;
 }) {
   const [showTip, setShowTip] = useState(false);
+  const tooltipsEnabled = useTooltipsEnabled();
 
   return (
     <div
@@ -66,7 +68,7 @@ function FloorRulePill({
         {body}
       </div>
 
-      {showTip && (
+      {showTip && tooltipsEnabled && (
         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 w-72 rounded-xl border border-purple-500/60 bg-[#0E051B] p-3 shadow-2xl backdrop-blur-xl pointer-events-none">
           <div className="text-purple-300 font-mono font-bold text-[11px] mb-1 flex items-center gap-1">
             <Info className="h-3 w-3 shrink-0" />
@@ -87,6 +89,8 @@ interface SniperStageProps {
   lot: LotItem;
   candidates?: LotItem[];
   onSelectLot?: (lot: LotItem) => void;
+  onRefreshChoices?: () => void;
+  onLotExpired?: (lotId: string) => void;
   userBid: number | null;
   bankroll: number;
   timeRemaining: number;
@@ -100,6 +104,8 @@ export function SniperStage({
   lot,
   candidates,
   onSelectLot,
+  onRefreshChoices,
+  onLotExpired,
   userBid,
   bankroll,
   timeRemaining,
@@ -146,27 +152,76 @@ export function SniperStage({
   }, [lot.series, lot.issueNumber, lot.videos]);
 
   return (
-    <div className="space-y-6">
-      {/* Persistent Floor Header: Clock, Active Bid, & The 3 Page Tabs */}
+    <div className="space-y-5">
+      {/* ── Layer 1: Breadcrumb Trail across Floor & Research Layers ── */}
+      <div className="flex items-center justify-between text-[11px] font-mono px-3.5 py-2 rounded-xl border border-purple-500/30 bg-[#0A0515] text-slate-400 shadow-md">
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={() => setActiveTab("lead")}
+            className="text-cyan-400 font-bold hover:text-cyan-300 transition-colors flex items-center gap-1"
+          >
+            <span>Floor Rail (4 Lots)</span>
+          </button>
+          <span className="text-slate-600">/</span>
+          <span className="text-white font-semibold flex items-center gap-1.5">
+            <span className="px-1.5 py-0.2 rounded bg-purple-950/80 border border-purple-500/40 text-[9px] text-purple-300 font-bold">
+              {lot.grader} {lot.grade}
+            </span>
+            <span className="truncate max-w-[200px] sm:max-w-none">{lot.title}</span>
+          </span>
+          <span className="text-slate-600">/</span>
+          <span className="text-purple-300 font-bold uppercase">
+            {activeTab === "lead" ? "Page 1: Floor & Bids" : activeTab === "financials" ? "Page 2: Financing & TradingView" : "Page 3: Lore & Videos"}
+          </span>
+        </div>
+        <div className="text-[10px] text-slate-500 hidden sm:inline">
+          Active Underwriting Target · Cert #{lot.certNumber ? lot.certNumber.slice(-4) : "VERIFIED"}
+        </div>
+      </div>
+
+      {/* ── Layer 2: 4-Lot Strip Across the Top with Staggered Timers ── */}
+      {candidates && candidates.length > 0 && onSelectLot && (
+        <SniperCandidateRow
+          candidates={candidates}
+          activeLotId={lot.id}
+          onSelectLot={onSelectLot}
+          onRefreshChoices={onRefreshChoices}
+          onLotExpired={onLotExpired}
+        />
+      )}
+
+      {/* ── Layer 3: Persistent Floor Round Clock & The 3 Page Tabs with Neon Rimlights ── */}
       <div
-        className={`rounded-xl border p-4 transition-colors ${
+        className={`relative rounded-xl border-2 p-4 transition-all duration-300 ${
           isLockout
-            ? "border-rose-500/60 bg-gradient-to-r from-rose-950/40 via-red-950/20 to-[#070A11] animate-pulse"
+            ? "border-rose-500 bg-gradient-to-r from-[#220712] via-[#14030A] to-[#220712] shadow-[0_0_0_1px_rgba(244,63,94,1),0_0_20px_rgba(244,63,94,0.9),0_0_35px_rgba(225,29,72,0.5),inset_0_1px_2px_rgba(255,255,255,0.4)] ring-1 ring-rose-400"
             : timeRemaining <= 60
-            ? "border-amber-500/40 bg-amber-950/20"
-            : "border-slate-800 bg-[#070A11]"
+            ? "border-amber-400 bg-gradient-to-r from-[#221404] via-[#140B02] to-[#221404] shadow-[0_0_0_1px_rgba(251,191,36,1),0_0_16px_rgba(245,158,11,0.85),inset_0_1px_2px_rgba(255,255,255,0.35)] ring-1 ring-amber-300/60"
+            : "border-cyan-400 bg-gradient-to-r from-[#061526] via-[#040C16] to-[#061526] shadow-[0_0_0_1px_rgba(34,211,238,1),0_0_16px_rgba(6,182,212,0.85),0_0_28px_rgba(8,145,178,0.45),inset_0_1px_2px_rgba(255,255,255,0.35)] ring-1 ring-cyan-300/60"
         }`}
       >
+        {/* Top Radiant Neon Rimlight Flare */}
+        <div
+          className={`absolute inset-x-0 -top-px h-[2px] bg-gradient-to-r from-transparent to-transparent ${
+            isLockout
+              ? "via-rose-300 shadow-[0_0_14px_rgba(244,63,94,1)]"
+              : timeRemaining <= 60
+              ? "via-amber-300 shadow-[0_0_14px_rgba(251,191,36,1)]"
+              : "via-cyan-300 shadow-[0_0_14px_rgba(34,211,238,1)]"
+          }`}
+        />
+
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           {/* Clock & Status */}
           <div className="flex items-center gap-3 w-full md:w-auto">
             <div
               className={`p-2.5 rounded-xl border ${
                 isLockout
-                  ? "bg-rose-500/20 border-rose-500/50 text-rose-400"
+                  ? "bg-rose-500/20 border-rose-500/50 text-rose-400 shadow-[0_0_10px_rgba(244,63,94,0.5)]"
                   : timeRemaining <= 60
-                  ? "bg-amber-500/20 border-amber-500/40 text-amber-400"
-                  : "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                  ? "bg-amber-500/20 border-amber-500/40 text-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.5)]"
+                  : "bg-cyan-500/20 border-cyan-500/40 text-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.5)]"
               }`}
             >
               {isLockout ? <Lock className="h-5 w-5" /> : <Clock className="h-5 w-5" />}
@@ -192,7 +247,11 @@ export function SniperStage({
           <div className="flex items-baseline gap-2">
             <span
               className={`font-mono text-3xl md:text-5xl font-black tabular-nums tracking-tight ${
-                isLockout ? "text-rose-400 drop-shadow-[0_0_12px_rgba(244,63,94,0.6)]" : "text-emerald-400"
+                isLockout
+                  ? "text-rose-400 drop-shadow-[0_0_12px_rgba(244,63,94,0.8)]"
+                  : timeRemaining <= 60
+                  ? "text-amber-400 drop-shadow-[0_0_12px_rgba(251,191,36,0.8)]"
+                  : "text-emerald-400 drop-shadow-[0_0_12px_rgba(16,185,129,0.8)]"
               }`}
             >
               {timeFormatted}
@@ -203,7 +262,7 @@ export function SniperStage({
           </div>
 
           {/* Current Bid Snapshot */}
-          <div className="hidden lg:block text-right border-l border-slate-800 pl-6 font-mono text-xs">
+          <div className="hidden lg:block text-right border-l border-slate-800/80 pl-6 font-mono text-xs">
             <span className="text-slate-500 block uppercase text-[10px]">Your Bid</span>
             <span className="text-base font-bold text-white">
               {userBid ? `$${userBid.toLocaleString()}` : "None Placed"}
@@ -211,41 +270,44 @@ export function SniperStage({
           </div>
         </div>
 
-        {/* The Three Dedicated Page Navigation Tabs */}
-        <div className="mt-4 pt-4 border-t border-slate-800/80 flex items-center justify-center sm:justify-start gap-2 overflow-x-auto">
+        {/* The Three Dedicated Page Navigation Tabs with Laser Rimlights */}
+        <div className="mt-4 pt-4 border-t border-slate-800/80 flex items-center justify-center sm:justify-start gap-3 overflow-x-auto">
+          {/* Tab 1: Lead Page (Cyan Laser Rimlight) */}
           <button
             onClick={() => setActiveTab("lead")}
-            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-mono font-bold uppercase tracking-wider transition-all ${
+            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 ${
               activeTab === "lead"
-                ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-lg"
-                : "text-slate-400 hover:text-slate-200 border border-transparent"
+                ? "border-2 border-cyan-400 text-cyan-200 bg-cyan-950/80 shadow-[0_0_0_1px_rgba(34,211,238,0.9),0_0_14px_rgba(34,211,238,0.7),inset_0_0_8px_rgba(34,211,238,0.25)] ring-1 ring-cyan-300/50"
+                : "border border-cyan-500/30 text-slate-400 hover:text-cyan-200 hover:border-cyan-400/70 bg-black/40"
             }`}
           >
-            <DollarSign className="h-4 w-4" />
+            <DollarSign className="h-4 w-4 text-cyan-400" />
             <span>1. Lead Page (The Floor &amp; Bids)</span>
           </button>
 
+          {/* Tab 2: Financing & TradingView (Emerald Laser Rimlight) */}
           <button
             onClick={() => setActiveTab("financials")}
-            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-mono font-bold uppercase tracking-wider transition-all ${
+            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 ${
               activeTab === "financials"
-                ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 shadow-lg"
-                : "text-slate-400 hover:text-slate-200 border border-transparent"
+                ? "border-2 border-emerald-400 text-emerald-200 bg-emerald-950/80 shadow-[0_0_0_1px_rgba(52,211,153,0.9),0_0_14px_rgba(16,185,129,0.7),inset_0_0_8px_rgba(16,185,129,0.25)] ring-1 ring-emerald-300/50"
+                : "border border-emerald-500/30 text-slate-400 hover:text-emerald-200 hover:border-emerald-400/70 bg-black/40"
             }`}
           >
-            <LineChart className="h-4 w-4" />
+            <LineChart className="h-4 w-4 text-emerald-400" />
             <span>2. Financing &amp; TradingView</span>
           </button>
 
+          {/* Tab 3: Story, Lore & Videos (Purple Laser Rimlight) */}
           <button
             onClick={() => setActiveTab("story")}
-            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-mono font-bold uppercase tracking-wider transition-all ${
+            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-mono font-bold uppercase tracking-wider transition-all duration-200 ${
               activeTab === "story"
-                ? "bg-purple-500/20 text-purple-300 border border-purple-500/50 shadow-lg"
-                : "text-slate-400 hover:text-slate-200 border border-transparent"
+                ? "border-2 border-purple-400 text-purple-200 bg-purple-950/80 shadow-[0_0_0_1px_rgba(192,132,252,0.9),0_0_14px_rgba(168,85,247,0.7),inset_0_0_8px_rgba(168,85,247,0.25)] ring-1 ring-purple-300/50"
+                : "border border-purple-500/30 text-slate-400 hover:text-purple-200 hover:border-purple-400/70 bg-black/40"
             }`}
           >
-            <BookOpen className="h-4 w-4" />
+            <BookOpen className="h-4 w-4 text-purple-400" />
             <span>3. Story, Lore &amp; Videos</span>
           </button>
         </div>
@@ -311,15 +373,6 @@ export function SniperStage({
               />
             </div>
           </div>
-
-          {/* Row of Underwriting Decisions Strip */}
-          {candidates && candidates.length > 0 && onSelectLot && (
-            <SniperCandidateRow
-              candidates={candidates}
-              activeLotId={lot.id}
-              onSelectLot={onSelectLot}
-            />
-          )}
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             {/* Left: The Slab / Cover Encasement */}
@@ -409,17 +462,18 @@ export function SniperStage({
       {/* PAGE 2: THE FINANCING & TRADINGVIEW ANALYSIS PAGE */}
       {activeTab === "financials" && (
         <div className="space-y-6">
-          <div className="rounded-xl border border-slate-800 bg-[#070A11] p-5 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+          <div className="relative rounded-xl border-2 border-emerald-400 bg-gradient-to-r from-[#061C14] via-[#04120D] to-[#061C14] p-5 shadow-[0_0_0_1px_rgba(52,211,153,1),0_0_16px_rgba(16,185,129,0.85),0_0_28px_rgba(5,150,105,0.45),inset_0_1px_2px_rgba(255,255,255,0.35),inset_0_0_10px_rgba(16,185,129,0.25)] ring-1 ring-emerald-300/60">
+            <div className="absolute inset-x-0 -top-px h-[2px] bg-gradient-to-r from-transparent via-emerald-300 to-transparent shadow-[0_0_12px_rgba(16,185,129,1)]" />
+            <div className="flex items-center justify-between border-b border-emerald-500/30 pb-3 mb-4">
               <div>
-                <span className="text-[10px] font-mono uppercase tracking-widest text-slate-500">
+                <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-300/80">
                   Institutional Technical Terminal
                 </span>
                 <h3 className="text-lg font-mono font-bold text-white">
                   TRADINGVIEW LIGHTWEIGHT CHARTS &amp; SOVEREIGN LADDERS
                 </h3>
               </div>
-              <span className="rounded bg-emerald-950 border border-emerald-500/40 px-2.5 py-1 text-xs font-mono font-bold text-emerald-300">
+              <span className="rounded bg-emerald-950 border border-emerald-500/40 px-2.5 py-1 text-xs font-mono font-bold text-emerald-300 shadow-[0_0_8px_rgba(16,185,129,0.5)]">
                 100% AUTHENTIC RECORDED COMPS
               </span>
             </div>
@@ -444,9 +498,10 @@ export function SniperStage({
       {/* PAGE 3: THE STORY, LORE & VIDEOS DOSSIER */}
       {activeTab === "story" && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Left: 3-Act Continuity Summary */}
-          <div className="lg:col-span-7 rounded-xl border border-slate-800 bg-[#070A11] p-6 shadow-2xl space-y-4">
-            <div className="flex items-center gap-2.5 border-b border-slate-800 pb-3">
+          {/* Left: 3-Act Continuity Summary with Purple Laser Rimlight */}
+          <div className="relative lg:col-span-7 rounded-xl border-2 border-purple-500 bg-gradient-to-r from-[#140726] via-[#0B0316] to-[#140726] p-6 shadow-[0_0_0_1px_rgba(192,132,252,1),0_0_16px_rgba(168,85,247,0.85),inset_0_1px_2px_rgba(255,255,255,0.35)] ring-1 ring-purple-300/60 space-y-4">
+            <div className="absolute inset-x-0 -top-px h-[2px] bg-gradient-to-r from-transparent via-purple-300 to-transparent shadow-[0_0_12px_rgba(168,85,247,1)]" />
+            <div className="flex items-center gap-2.5 border-b border-purple-500/30 pb-3">
               <BookOpen className="h-5 w-5 text-purple-400" />
               <h3 className="text-base font-mono font-bold text-white uppercase tracking-wider">
                 Three-Act Narrative Continuity Summary
@@ -460,7 +515,7 @@ export function SniperStage({
             </div>
 
             {/* Fiduciary Investment Checklist */}
-            <div className="mt-6 pt-4 border-t border-slate-800 space-y-2 font-mono text-xs">
+            <div className="mt-6 pt-4 border-t border-purple-500/30 space-y-2 font-mono text-xs">
               <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-400 block mb-2">
                 Bibliographic Due Diligence
               </span>
@@ -477,9 +532,10 @@ export function SniperStage({
             </div>
           </div>
 
-          {/* Right: Embedded Videos & Explainer Context */}
-          <div className="lg:col-span-5 rounded-xl border border-slate-800 bg-[#070A11] p-5 shadow-2xl space-y-4">
-            <div className="flex items-center gap-2.5 border-b border-slate-800 pb-3">
+          {/* Right: Embedded Videos & Explainer Context with Rose Laser Rimlight */}
+          <div className="relative lg:col-span-5 rounded-xl border-2 border-rose-500 bg-gradient-to-r from-[#220712] via-[#14030A] to-[#220712] p-5 shadow-[0_0_0_1px_rgba(251,113,133,1),0_0_16px_rgba(244,63,94,0.85),0_0_28px_rgba(225,29,72,0.45),inset_0_1px_2px_rgba(255,255,255,0.35),inset_0_0_10px_rgba(244,63,94,0.25)] ring-1 ring-rose-300/60 space-y-4">
+            <div className="absolute inset-x-0 -top-px h-[2px] bg-gradient-to-r from-transparent via-rose-300 to-transparent shadow-[0_0_12px_rgba(244,63,94,1)]" />
+            <div className="flex items-center gap-2.5 border-b border-rose-500/30 pb-3">
               <Video className="h-5 w-5 text-rose-400" />
               <h3 className="text-sm font-mono font-bold text-white uppercase tracking-wider">
                 Video Reels &amp; Financial Explainers

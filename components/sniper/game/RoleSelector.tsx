@@ -18,6 +18,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import type { GameRole } from "@/lib/sniper/sim/types";
+import { useTooltipsEnabled } from "@/components/shell/tooltip-toggle";
 
 interface RoleSelectorProps {
   onSelectRole: (role: GameRole) => void;
@@ -43,6 +44,7 @@ function InteractiveRulePill({
   tooltipBody,
 }: RulePillProps) {
   const [showTooltip, setShowTooltip] = useState(false);
+  const tooltipsEnabled = useTooltipsEnabled();
 
   return (
     <div
@@ -83,7 +85,7 @@ function InteractiveRulePill({
       </div>
 
       {/* Floating Tooltip Bubble */}
-      {showTooltip && (
+      {showTooltip && tooltipsEnabled && (
         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 z-50 w-72 sm:w-80 rounded-xl border border-purple-500/60 bg-[#0E051B] p-3.5 shadow-[0_0_30px_rgba(0,0,0,0.9)] backdrop-blur-xl pointer-events-none">
           <div className="flex items-center gap-1.5 text-purple-300 font-mono font-bold text-xs mb-1.5">
             <Info className="h-3.5 w-3.5 shrink-0" />

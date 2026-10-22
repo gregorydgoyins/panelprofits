@@ -83,6 +83,20 @@ export interface LotItem {
   activeFormulaKey: EncasementFormulaKey;
   formulas: Record<EncasementFormulaKey, EncasementFormulaDetail>;
   exitScenarios: Record<string, ExitScenario>;
+  // Live Auction Rail Tickers & Dynamic Staggered Expirations
+  secondsRemaining?: number;
+  totalDurationSeconds?: number;
+  endsAt?: string;
+  lotStatus?: "active" | "hot" | "ended" | "replacing";
+  // Multi-Grade Recorded Sales Observations (e.g. 9 sales @ 9.8, 2 @ 9.6, 5 @ 9.4)
+  multiGradeSales?: Array<{
+    grade: string;
+    label: string;
+    salesCount: number;
+    price: number;
+    lastCompDate: string;
+    color: string;
+  }>;
 }
 
 export interface ExitScenario {

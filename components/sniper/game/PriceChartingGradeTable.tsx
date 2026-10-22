@@ -72,8 +72,11 @@ export function PriceChartingGradeTable({ lot }: PriceChartingGradeTableProps) {
   ];
 
   return (
-    <div className="rounded-xl border border-slate-800 bg-[#070A12] p-4 sm:p-5 shadow-2xl space-y-4 font-mono text-xs">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-3">
+    <div className="relative rounded-xl border-2 border-cyan-400 bg-gradient-to-r from-[#061526] via-[#040C16] to-[#061526] p-4 sm:p-5 shadow-[0_0_0_1px_rgba(34,211,238,1),0_0_16px_rgba(6,182,212,0.85),0_0_28px_rgba(8,145,178,0.45),inset_0_1px_2px_rgba(255,255,255,0.35),inset_0_0_10px_rgba(34,211,238,0.25)] ring-1 ring-cyan-300/60 space-y-4 font-mono text-xs">
+      {/* Top Radiant Neon Rimlight Flare */}
+      <div className="absolute inset-x-0 -top-px h-[2px] bg-gradient-to-r from-transparent via-cyan-300 to-transparent shadow-[0_0_12px_rgba(34,211,238,1)]" />
+
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-cyan-500/30 pb-3">
         <div className="flex items-center gap-2">
           <Table className="h-4 w-4 text-cyan-400" />
           <h4 className="text-xs sm:text-sm font-bold text-white uppercase tracking-wider">
