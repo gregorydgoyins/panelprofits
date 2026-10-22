@@ -96,10 +96,10 @@ export function SniperPostMortem({
             <Flame className="h-5 w-5 text-emerald-400 shrink-0 mt-0.5" />
             <div className="text-emerald-200 space-y-0.5">
               <span className="font-bold text-emerald-300 uppercase tracking-wider block">
-                🔥 SLAB COST FLOOR ARBITRAGE WON!
+                🔥 FACTORY SLABBING FLOOR ARBITRAGE WON!
               </span>
               <span>
-                You acquired this {lot.grader} {lot.grade} for <strong>${cost}</strong>, which is <strong>${lot.sellerSubsidizedAmount} BELOW</strong> the seller&apos;s out-of-pocket slabbing fee alone (${lot.slabbingCostFloor}). The seller absorbed the loss on grading!
+                You acquired this {lot.grader} {lot.grade} for <strong>${cost}</strong>, which is <strong>${(lot.buyerManufacturingAdvantage ?? lot.sellerSubsidizedAmount)} BELOW</strong> the factory slabbing bill alone (${lot.slabbingCostFloor}). You acquired the comic for free and paid less than physical encapsulation invoice fees!
               </span>
             </div>
           </div>

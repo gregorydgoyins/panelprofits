@@ -194,7 +194,7 @@ export function RoleSelector({ onSelectRole }: RoleSelectorProps) {
               {activeBrokerIntel && (
                 <div className="mt-2.5 p-3 rounded-lg bg-cyan-950/40 border border-cyan-500/30 text-[11px] text-cyan-200 font-sans space-y-1 leading-relaxed">
                   <p>• <strong>Mandate:</strong> Fiduciary capital growth. Protect client principal with strict spread discipline.</p>
-                  <p>• <strong>Win Condition:</strong> Close rounds at or below seller sunk cost floor to bank client appreciation.</p>
+                  <p>• <strong>Win Condition:</strong> Close rounds at or below factory slabbing cost floor ($85.40) to bank client appreciation.</p>
                   <p>• <strong>Risk:</strong> 2 consecutive losing rounds trigger a client margin redemption (-$1,000 AUM).</p>
                 </div>
               )}
@@ -280,7 +280,7 @@ export function RoleSelector({ onSelectRole }: RoleSelectorProps) {
               {activeWhaleIntel && (
                 <div className="mt-2.5 p-3 rounded-lg bg-amber-950/40 border border-amber-500/30 text-[11px] text-amber-200 font-sans space-y-1 leading-relaxed">
                   <p>• <strong>Mandate:</strong> Private high-net-worth syndicate. Target blue-chip keys with deep liquidity spreads.</p>
-                  <p>• <strong>Win Condition:</strong> Exploit seller-subsidized sunk encasement fees on vintage slabs.</p>
+                  <p>• <strong>Win Condition:</strong> Exploit factory encasement floor discounts on vintage slabs to acquire high-grade equity below replication cost.</p>
                   <p>• <strong>Risk:</strong> Overbidding on a stale 2021 peak comp inflicts rapid, unrecoverable capital drawdowns.</p>
                 </div>
               )}
@@ -330,7 +330,7 @@ export function RoleSelector({ onSelectRole }: RoleSelectorProps) {
             title="1. 240s Due Diligence Clock"
             summary="Task: Cross-examine Page 1 encasement fees, Page 2 TradingView drift, and Page 3 market lore to calculate your strict maximum bid ceiling."
             tooltipTitle="Strategic Objective: Information Arbitrage"
-            tooltipBody="Exploit information asymmetry by pricing true replacement costs before consensus catches up. Your objective is to identify seller mispricings and quantify margin-of-safety spreads before committing capital."
+            tooltipBody="Exploit information asymmetry by pricing true replacement costs before consensus catches up. Your objective is to calculate The Whole Tomato (DIY replication cost) and quantify margin-of-safety spreads before committing capital."
           />
 
           {/* Pill 2: 30s Hard Lockout */}
@@ -361,9 +361,9 @@ export function RoleSelector({ onSelectRole }: RoleSelectorProps) {
             badgeColor="bg-cyan-950/80 text-cyan-300 border border-cyan-500/40"
             icon={<Gavel className="h-3 w-3" />}
             title="4. Hammer Strike & Vault"
-            summary="Task: Gavel drops at T-0s. Clear the lot below seller acquisition + certification costs to instantly book equity surplus into your Vault."
+            summary="Task: Gavel drops at T-0s. Clear the lot below DIY replacement cost (The Whole Tomato) to instantly book equity surplus into your Vault."
             tooltipTitle="Portfolio Objective: Sovereign Vault Accumulation"
-            tooltipBody="Capture verified economic value into Panel Profits' proprietary Sovereign tier. Every win acquired below audited seller sunk costs compounds client AUM and validates true secondary floor value."
+            tooltipBody="Capture verified economic value into Panel Profits' proprietary Sovereign tier. Every win acquired below audited DIY replacement costs compounds client AUM and validates true secondary floor value."
           />
         </div>
       </div>

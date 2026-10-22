@@ -22,6 +22,8 @@ export interface EncasementFormulaDetail {
   estimatedRawBasis: number;
   mailerBoxFee: number;
   sellerTotalCostBasis: number;
+  buyerReplacementCost?: number;
+  wholeTomatoSpread?: number;
   venueFeeDragPercent: number;
   breakevenSalePrice: number;
 }
@@ -85,9 +87,12 @@ export interface LotItem {
   slabbingCostFloor: number;
   estimatedRawBasis: number;
   sellerTotalCostBasis: number;
+  buyerReplacementCost?: number;
   breakevenSalePrice: number;
   isBelowGradingCost: boolean;
   sellerSubsidizedAmount: number;
+  buyerManufacturingAdvantage?: number;
+  wholeTomatoSpread?: number;
   activeFormulaKey: EncasementFormulaKey;
   formulas: Record<EncasementFormulaKey, EncasementFormulaDetail>;
   exitScenarios: Record<string, ExitScenario>;

@@ -65,6 +65,7 @@ export function buildEncasementFormulas({
     estimatedRawBasis,
     mailerBoxFee,
     sellerTotalCostBasis: Math.round(ccsCostBasis * 100) / 100,
+    buyerReplacementCost: Math.round(ccsCostBasis * 100) / 100,
     venueFeeDragPercent,
     breakevenSalePrice: ccsBreakeven,
   };
@@ -99,6 +100,7 @@ export function buildEncasementFormulas({
     estimatedRawBasis,
     mailerBoxFee,
     sellerTotalCostBasis: Math.round(stdCostBasis * 100) / 100,
+    buyerReplacementCost: Math.round(stdCostBasis * 100) / 100,
     venueFeeDragPercent,
     breakevenSalePrice: stdBreakeven,
   };
@@ -136,6 +138,7 @@ export function buildEncasementFormulas({
     estimatedRawBasis,
     mailerBoxFee,
     sellerTotalCostBasis: Math.round(sigCostBasis * 100) / 100,
+    buyerReplacementCost: Math.round(sigCostBasis * 100) / 100,
     venueFeeDragPercent,
     breakevenSalePrice: sigBreakeven,
   };
@@ -171,6 +174,7 @@ export function buildEncasementFormulas({
     estimatedRawBasis,
     mailerBoxFee,
     sellerTotalCostBasis: Math.round(rehCostBasis * 100) / 100,
+    buyerReplacementCost: Math.round(rehCostBasis * 100) / 100,
     venueFeeDragPercent,
     breakevenSalePrice: rehBreakeven,
   };

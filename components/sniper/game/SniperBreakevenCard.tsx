@@ -50,9 +50,16 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
     estimatedRawBasis: lot.estimatedRawBasis,
     mailerBoxFee: 5.0,
     sellerTotalCostBasis: lot.sellerTotalCostBasis,
+    buyerReplacementCost: lot.buyerReplacementCost || lot.sellerTotalCostBasis,
     venueFeeDragPercent: 13.25,
     breakevenSalePrice: lot.breakevenSalePrice,
   };
+
+  // Canonical Buyer DIY Replacement Calculations (Make vs. Buy)
+  const buyerReplacementCost = activeFormula.buyerReplacementCost || activeFormula.sellerTotalCostBasis;
+  const wholeTomatoAdvantage = buyerReplacementCost - currentBid;
+  const slabbingFloorSpread = activeFormula.slabbingCostFloor - currentBid;
+  const eightBallCushion = lot.fmv - currentBid;
 
   // Re-calculate the 4 real-world liquidation exit channels against the current active bid
   const exitScenarios = calculateExitScenarios(lot.fmv, currentBid);
@@ -62,7 +69,7 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
   const isBelowLcsFloor = currentBid <= lcsOfferFloor;
   const isBelowSlabFloor = currentBid <= activeFormula.slabbingCostFloor;
   const isOvervalued = currentBid > lot.fmv;
-  const isBelowBreakeven = currentBid < activeFormula.breakevenSalePrice;
+  const isBelowReplacementCost = currentBid < buyerReplacementCost;
 
   return (
     <div className="relative rounded-xl border-2 border-amber-400 bg-gradient-to-r from-[#1E1103] via-[#100902] to-[#1E1103] p-5 shadow-[0_0_0_1px_rgba(251,191,36,1),0_0_16px_rgba(245,158,11,0.85),0_0_28px_rgba(217,119,6,0.45),inset_0_1px_2px_rgba(255,255,255,0.35),inset_0_0_10px_rgba(251,191,36,0.25)] ring-1 ring-amber-300/60 space-y-4 font-mono text-xs">
@@ -134,24 +141,24 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
           <Flame className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
           <div className="text-[11px] text-emerald-200 space-y-0.5">
             <span className="font-bold text-emerald-300 uppercase tracking-wider block">
-              🔥 BELOW-SLABBING-COST ARBITRAGE
+              🔥 BELOW-FACTORY-SLABBING-FLOOR ARBITRAGE
             </span>
             <span>
-              Current bid (${currentBid}) is below the seller&apos;s out-of-pocket slabbing fee (${activeFormula.slabbingCostFloor}).
-              The seller is effectively <strong>subsidizing ${(activeFormula.slabbingCostFloor - currentBid).toFixed(2)}</strong> of encapsulation costs—you acquire the comic and holder below replacement cost!
+              Current bid (${currentBid}) is below the factory slabbing bill alone (${activeFormula.slabbingCostFloor.toFixed(2)}).
+              You acquire the comic and holder for less than physical certification costs—saving ${(activeFormula.slabbingCostFloor - currentBid).toFixed(2)} before accounting for the raw book itself!
             </span>
           </div>
         </div>
-      ) : isBelowBreakeven ? (
+      ) : isBelowReplacementCost ? (
         <div className="rounded-lg border border-cyan-500/40 bg-cyan-950/20 p-3 flex items-start gap-2.5">
           <TrendingUp className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
           <div className="text-[11px] text-cyan-200 space-y-0.5">
             <span className="font-bold text-cyan-300 uppercase tracking-wider block">
-              🛡️ BELOW SELLER BREAKEVEN OPPORTUNITY
+              🛡️ BUYER MANUFACTURING ADVANTAGE (THE WHOLE TOMATO)
             </span>
             <span>
-              Bid is ${(activeFormula.breakevenSalePrice - currentBid).toFixed(2)} below the seller&apos;s net breakeven exit (${activeFormula.breakevenSalePrice.toFixed(2)}).
-              The seller absorbs the platform fee drag and sunken capital.
+              Bid is ${(buyerReplacementCost - currentBid).toFixed(2)} below your DIY replication cost (${buyerReplacementCost.toFixed(2)}).
+              Acquiring this certified slab avoids ${(buyerReplacementCost - currentBid).toFixed(2)} in out-of-pocket DIY replication and submission friction.
             </span>
           </div>
         </div>
@@ -257,7 +264,7 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
           }`}
         >
           <Receipt className="h-3.5 w-3.5" />
-          <span>1. Encasement Invoice Receipt &amp; Breakeven</span>
+          <span>1. Buyer DIY Replacement Cost &amp; The Whole Tomato</span>
         </button>
         <button
           type="button"
@@ -285,126 +292,185 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
         </button>
       </div>
 
-      {/* ── VIEW 1: Encasement Invoice Receipt & Whole Tomato Breakeven ── */}
+      {/* ── VIEW 1: Buyer DIY Replacement Cost & The Whole Tomato (Box 1, 2, 3) ── */}
       {activeView === "invoice" && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1 animate-in fade-in duration-150">
-          {/* Left Column: Line-Item Submission Invoice Receipt */}
-          <div className="space-y-2 rounded-lg bg-slate-950/80 border border-slate-800/80 p-3.5">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-              <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Receipt className="h-3.5 w-3.5" />
-                <span>Submission Invoice Line-Items</span>
-              </span>
-              <span className="text-[9px] text-slate-500 font-bold uppercase">
-                {activeFormula.badgeLabel}
-              </span>
+        <div className="space-y-3 pt-1 animate-in fade-in duration-150">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Left Column: BOX 1 - Line-Item Submission Invoice Receipt (The Sunk Slabbing Floor) */}
+            <div className="space-y-2 rounded-lg bg-slate-950/80 border border-slate-800/80 p-3.5 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-2">
+                  <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Receipt className="h-3.5 w-3.5" />
+                    <span>Box 1: Sunk Factory Encasement Bill</span>
+                  </span>
+                  <span className="text-[9px] text-slate-500 font-bold uppercase">
+                    {activeFormula.badgeLabel}
+                  </span>
+                </div>
+
+                <div className="space-y-1.5 text-[11px] text-slate-300">
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Base Grading Fee ({lot.grader}):</span>
+                    <span className="text-white font-bold">${activeFormula.baseGradingFee.toFixed(2)}</span>
+                  </div>
+
+                  {activeFormula.pressingFee > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Clean &amp; Press (CCS Pressing):</span>
+                      <span className="text-cyan-300 font-bold">+${activeFormula.pressingFee.toFixed(2)}</span>
+                    </div>
+                  )}
+
+                  {activeFormula.witnessFee > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Authorized Witness Authentication:</span>
+                      <span className="text-amber-300 font-bold">+${activeFormula.witnessFee.toFixed(2)}</span>
+                    </div>
+                  )}
+
+                  {activeFormula.creatorSigningFee > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Creator Signing Fee ({lot.signatureDetails ? "Witnessed" : "Talent"}):</span>
+                      <span className="text-amber-300 font-bold">+${activeFormula.creatorSigningFee.toFixed(2)}</span>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Submission Invoice Processing Fee:</span>
+                    <span className="text-white">+${activeFormula.invoiceFee.toFixed(2)}</span>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Outgoing Shipping (Priority Mail out):</span>
+                    <span className="text-white">+$15.00</span>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Insured Return Courier Shipping ({lot.grader} FedEx/UPS):</span>
+                    <span className="text-white">+$28.00</span>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Florida State Sales Tax ({activeFormula.taxRatePercent}% Sarasota, FL):</span>
+                    <span className="text-white">+${activeFormula.serviceTax.toFixed(2)}</span>
+                  </div>
+
+                  <div className="flex justify-between border-t border-slate-800 pt-2 font-bold text-cyan-300 text-xs">
+                    <span>Total Sunk Factory Floor:</span>
+                    <span className="text-cyan-200">${activeFormula.slabbingCostFloor.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-3 rounded bg-cyan-950/30 p-2 text-[10px] text-cyan-300/80 leading-relaxed border border-cyan-800/40">
+                <span className="font-bold text-cyan-200 block mb-0.5">🔒 Flat Encasement Consideration:</span>
+                <span>
+                  This is the irreducible manufacturing cost. Even if someone gave you the raw comic for zero dollars, slabbing it yourself requires writing this ${activeFormula.slabbingCostFloor.toFixed(2)} check.
+                </span>
+              </div>
             </div>
 
-            <div className="space-y-1.5 text-[11px] text-slate-300">
-              <div className="flex justify-between">
-                <span className="text-slate-400">Base Grading Fee ({lot.grader}):</span>
-                <span className="text-white font-bold">${activeFormula.baseGradingFee.toFixed(2)}</span>
-              </div>
-
-              {activeFormula.pressingFee > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Clean &amp; Press (CCS Pressing):</span>
-                  <span className="text-cyan-300 font-bold">+${activeFormula.pressingFee.toFixed(2)}</span>
+            {/* Right Column: BOX 2 & BOX 3 - The Whole Tomato DIY Replication & Make vs Buy Reality */}
+            <div className="space-y-3">
+              {/* BOX 2: The Whole Tomato (DIY Buyer Replacement Cost) */}
+              <div className="space-y-2 rounded-lg bg-slate-950/80 border border-slate-800/80 p-3.5">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                  <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Calculator className="h-3.5 w-3.5" />
+                    <span>Box 2: The Whole Tomato (DIY Replication)</span>
+                  </span>
+                  <span className="text-[9px] text-amber-300/80 font-bold uppercase">
+                    Buyer Replacement Cost
+                  </span>
                 </div>
-              )}
 
-              {activeFormula.witnessFee > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Authorized Witness Authentication:</span>
-                  <span className="text-amber-300 font-bold">+${activeFormula.witnessFee.toFixed(2)}</span>
+                <div className="space-y-1.5 text-[11px] text-slate-300">
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Estimated Raw Comic Acquisition:</span>
+                    <span className="text-white font-bold">${activeFormula.estimatedRawBasis.toFixed(2)}</span>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Sunk Factory Encasement Bill (Box 1):</span>
+                    <span className="text-cyan-300 font-bold">+${activeFormula.slabbingCostFloor.toFixed(2)}</span>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Insured Mailer &amp; Boxing:</span>
+                    <span className="text-white">+${activeFormula.mailerBoxFee.toFixed(2)}</span>
+                  </div>
+
+                  <div className="flex justify-between border-t border-slate-800 pt-2 font-bold text-amber-300 text-xs">
+                    <span>Total DIY Replacement Cost (The Whole Tomato):</span>
+                    <span className="text-amber-200 font-extrabold">${buyerReplacementCost.toFixed(2)}</span>
+                  </div>
                 </div>
-              )}
+              </div>
 
-              {activeFormula.creatorSigningFee > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Creator Signing Fee ({lot.signatureDetails ? "Witnessed" : "Talent"}):</span>
-                  <span className="text-amber-300 font-bold">+${activeFormula.creatorSigningFee.toFixed(2)}</span>
+              {/* BOX 3: Make vs. Buy Reality Check (Line 2 Minus Current Bid) */}
+              <div className="space-y-2 rounded-lg bg-slate-950/80 border border-slate-800/80 p-3.5">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                  <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Layers className="h-3.5 w-3.5" />
+                    <span>Box 3: Make vs. Buy Reality Check</span>
+                  </span>
+                  <span className="text-[9px] text-emerald-300/80 font-bold uppercase">
+                    Line 2 − Current Bid
+                  </span>
                 </div>
-              )}
 
-              <div className="flex justify-between">
-                <span className="text-slate-400">Submission Invoice Processing Fee:</span>
-                <span className="text-white">+${activeFormula.invoiceFee.toFixed(2)}</span>
-              </div>
+                <div className="space-y-1.5 text-[11px] text-slate-300">
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">The Whole Tomato (DIY Replacement):</span>
+                    <span className="text-amber-300 font-bold">${buyerReplacementCost.toFixed(2)}</span>
+                  </div>
 
-              <div className="flex justify-between">
-                <span className="text-slate-400">Outgoing Shipping (Priority Mail out):</span>
-                <span className="text-white">+$15.00</span>
-              </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Current Auction Hammer Bid:</span>
+                    <span className="text-white font-bold">-${currentBid.toFixed(2)}</span>
+                  </div>
 
-              <div className="flex justify-between">
-                <span className="text-slate-400">Insured Return Courier Shipping ({lot.grader} FedEx/UPS):</span>
-                <span className="text-white">+$28.00</span>
-              </div>
+                  <div className="flex justify-between border-t border-slate-800/80 pt-1 text-xs font-bold">
+                    <span className="text-slate-200">Buyer Advantage (Whole Tomato Spread):</span>
+                    <span className={wholeTomatoAdvantage >= 0 ? "text-emerald-400" : "text-rose-400"}>
+                      {wholeTomatoAdvantage >= 0 ? `+$${wholeTomatoAdvantage.toFixed(2)}` : `-$${Math.abs(wholeTomatoAdvantage).toFixed(2)}`}
+                    </span>
+                  </div>
 
-              <div className="flex justify-between">
-                <span className="text-slate-400">Florida State Sales Tax ({activeFormula.taxRatePercent}% on taxable fees):</span>
-                <span className="text-white">+${activeFormula.serviceTax.toFixed(2)}</span>
-              </div>
+                  <div className="flex justify-between text-[10px] text-slate-400 pt-0.5">
+                    <span>Current Bid vs. Sunk Factory Floor:</span>
+                    <span className={slabbingFloorSpread > 0 ? "text-emerald-400 font-bold" : "text-slate-400"}>
+                      {slabbingFloorSpread > 0 ? `-$${slabbingFloorSpread.toFixed(2)} BELOW floor` : `+$${Math.abs(slabbingFloorSpread).toFixed(2)} above floor`}
+                    </span>
+                  </div>
 
-              <div className="flex justify-between border-t border-slate-800 pt-2 font-bold text-cyan-300 text-xs">
-                <span>Total Sunk Out-of-Pocket Floor:</span>
-                <span className="text-cyan-200">${activeFormula.slabbingCostFloor.toFixed(2)}</span>
+                  <div className="flex justify-between text-[10px] text-slate-400">
+                    <span>Behind-the-8-Ball Cushion (FMV − Bid):</span>
+                    <span className={eightBallCushion >= 0 ? "text-cyan-300 font-bold" : "text-rose-400 font-bold"}>
+                      {eightBallCushion >= 0 ? `+$${eightBallCushion.toFixed(2)} (Ahead)` : `-$${Math.abs(eightBallCushion).toFixed(2)} (Behind)`}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Right Column: The Whole Tomato Resale Anatomy */}
-          <div className="space-y-2 rounded-lg bg-slate-950/80 border border-slate-800/80 p-3.5">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-              <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Calculator className="h-3.5 w-3.5" />
-                <span>The Whole Tomato Resale Basis</span>
-              </span>
-              <span className="text-[9px] text-slate-500 font-bold uppercase">
-                Exit Platform Drag
-              </span>
-            </div>
-
-            <div className="space-y-1.5 text-[11px] text-slate-300">
-              <div className="flex justify-between">
-                <span className="text-slate-400">Estimated Raw Comic Acquisition:</span>
-                <span className="text-white font-bold">${activeFormula.estimatedRawBasis.toFixed(2)}</span>
-              </div>
-
-              <div className="flex justify-between">
-                <span className="text-slate-400">Total Sunk Encasement Floor:</span>
-                <span className="text-cyan-300 font-bold">+${activeFormula.slabbingCostFloor.toFixed(2)}</span>
-              </div>
-
-              <div className="flex justify-between">
-                <span className="text-slate-400">Insured Mailer &amp; Boxing:</span>
-                <span className="text-white">+${activeFormula.mailerBoxFee.toFixed(2)}</span>
-              </div>
-
-              <div className="flex justify-between border-t border-slate-800/80 pt-1 text-slate-200">
-                <span>Seller All-In Invested Basis:</span>
-                <span className="text-white font-bold">${activeFormula.sellerTotalCostBasis.toFixed(2)}</span>
-              </div>
-
-              <div className="flex justify-between text-slate-400">
-                <span>Resale Drag (eBay / Marketplace {activeFormula.venueFeeDragPercent}%):</span>
-                <span className="text-rose-400">÷ 0.8675</span>
-              </div>
-
-              <div className="flex justify-between border-t border-slate-800 pt-2 font-bold text-amber-300 text-xs">
-                <span>Seller Breakeven Sale Target:</span>
-                <span className="text-amber-200">${activeFormula.breakevenSalePrice.toFixed(2)}</span>
-              </div>
-            </div>
-
-            <div className="mt-2 rounded bg-slate-900/80 p-2 text-[10px] text-slate-400 leading-relaxed border border-slate-800">
-              <span className="text-cyan-300 font-bold block mb-0.5">Underwriting Takeaway:</span>
-              <span>
-                Any purchase below <strong>${activeFormula.breakevenSalePrice.toFixed(0)}</strong> transfers seller-subsidized value to you.
-                Bids below <strong>${activeFormula.slabbingCostFloor.toFixed(0)}</strong> mean you pay less than the plastic and grading labor itself!
-              </span>
-            </div>
+          {/* Underwriting Takeaway: The Buyer's Make-vs-Buy Decision Rule */}
+          <div className="rounded-lg bg-slate-900/90 p-3 text-[11px] text-slate-300 leading-relaxed border border-slate-800 space-y-1.5">
+            <span className="text-amber-300 font-bold block uppercase tracking-wider text-[10px] flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+              <span>The Buyer&apos;s Make-vs-Buy Underwriting Rule:</span>
+            </span>
+            <p>
+              • <strong>Ignore Seller Basis:</strong> What the seller paid ($0, garage sale, attic find, or inherited) is completely irrelevant to you. Your only consideration is: <em>&ldquo;How much does it cost ME to replace this comic if I don&apos;t buy it right now?&rdquo;</em>
+            </p>
+            <p>
+              • <strong>Box 1 Sunk Factory Floor (${activeFormula.slabbingCostFloor.toFixed(2)}):</strong> Any winning bid below this level means you acquire the comic book for <em>free</em> and buy the slab below the cost of the plastic, grading labor, Florida tax, and two-way shipping!
+            </p>
+            <p>
+              • <strong>Box 2 The Whole Tomato (${buyerReplacementCost.toFixed(2)}):</strong> Replicating this exact slab yourself costs raw purchase + ${activeFormula.slabbingCostFloor.toFixed(2)} factory fees + turnaround wait times. Winning below this ceiling guarantees a manufacturing advantage.
+            </p>
           </div>
         </div>
       )}

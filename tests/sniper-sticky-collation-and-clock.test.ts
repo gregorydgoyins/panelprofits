@@ -48,9 +48,11 @@ function mockLot(id: string, opening: number, hammer: number, fmv: number): LotI
     slabbingCostFloor: 107.8,
     estimatedRawBasis: fmv * 0.15,
     sellerTotalCostBasis: fmv * 0.15 + 107.8,
+    buyerReplacementCost: fmv * 0.15 + 107.8,
     breakevenSalePrice: 200,
     isBelowGradingCost: false,
     sellerSubsidizedAmount: 0,
+    buyerManufacturingAdvantage: 0,
   } as unknown as LotItem;
 }
 

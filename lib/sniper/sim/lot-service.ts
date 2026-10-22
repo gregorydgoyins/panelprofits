@@ -413,7 +413,8 @@ export function transformRowToLot(
 
   const activeFormula = formulas[activeKey];
   const slabbingCostFloor = activeFormula.slabbingCostFloor;
-  const sellerTotalCostBasis = activeFormula.sellerTotalCostBasis;
+  const buyerReplacementCost = activeFormula.buyerReplacementCost || activeFormula.sellerTotalCostBasis;
+  const sellerTotalCostBasis = buyerReplacementCost;
   const breakevenSalePrice = activeFormula.breakevenSalePrice;
 
   // Stale Comps & Clearing Prices
@@ -431,7 +432,8 @@ export function transformRowToLot(
   const openingBid = Math.min(10000, calculatedOpening);
 
   const isBelowGradingCost = openingBid <= slabbingCostFloor;
-  const sellerSubsidizedAmount = isBelowGradingCost ? Math.round(slabbingCostFloor - openingBid) : 0;
+  const buyerManufacturingAdvantage = isBelowGradingCost ? Math.round(slabbingCostFloor - openingBid) : 0;
+  const sellerSubsidizedAmount = buyerManufacturingAdvantage;
 
   // TradingView Historical Chart Points (strictly sorted by ascending date)
   const rawChartPoints: Array<{ time: string; value: number }> = [];
@@ -649,9 +651,11 @@ export function transformRowToLot(
     slabbingCostFloor,
     estimatedRawBasis,
     sellerTotalCostBasis,
+    buyerReplacementCost,
     breakevenSalePrice,
     isBelowGradingCost,
     sellerSubsidizedAmount,
+    buyerManufacturingAdvantage,
     activeFormulaKey: activeKey,
     formulas,
     exitScenarios,
@@ -794,12 +798,14 @@ export function transformListingToLot(
 
   const activeFormula = formulas[activeKey];
   const slabbingCostFloor = activeFormula.slabbingCostFloor;
-  const sellerTotalCostBasis = activeFormula.sellerTotalCostBasis;
+  const buyerReplacementCost = activeFormula.buyerReplacementCost || activeFormula.sellerTotalCostBasis;
+  const sellerTotalCostBasis = buyerReplacementCost;
   const breakevenSalePrice = activeFormula.breakevenSalePrice;
   const isBelowGradingCost = openingBid <= slabbingCostFloor;
-  const sellerSubsidizedAmount = isBelowGradingCost
+  const buyerManufacturingAdvantage = isBelowGradingCost
     ? Math.round(slabbingCostFloor - openingBid)
     : 0;
+  const sellerSubsidizedAmount = buyerManufacturingAdvantage;
 
   const compDate = new Date(Date.now() - Math.floor(10 + Math.random() * 45) * 86400000)
     .toISOString()
@@ -954,9 +960,11 @@ export function transformListingToLot(
     slabbingCostFloor,
     estimatedRawBasis,
     sellerTotalCostBasis,
+    buyerReplacementCost,
     breakevenSalePrice,
     isBelowGradingCost,
     sellerSubsidizedAmount,
+    buyerManufacturingAdvantage,
     activeFormulaKey: activeKey,
     formulas,
     exitScenarios: calculateExitScenarios(chosenFmv, openingBid),

@@ -107,7 +107,7 @@ export function SniperHUD({
                         <>
                           <p>• <strong>Capital:</strong> $20,000 Personal Bankroll on Heritage/ComicConnect museum grails.</p>
                           <p>• <strong>Trap Alert:</strong> Watch for stale 2021 market peak comps on Page 2.</p>
-                          <p>• <strong>Win Rule:</strong> Exploit seller-subsidized sunk slabbing fees for instant margin.</p>
+                          <p>• <strong>Win Rule:</strong> Exploit factory slabbing floor discounts ($85.40 floor) for instant margin.</p>
                         </>
                       )}
                     </div>

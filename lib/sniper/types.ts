@@ -230,7 +230,7 @@ export interface CandidateEvaluation {
     | "DOUBLE_UP_KEY"
     | "STUMBLED_INTO_GREATNESS";
   strategySummary?: string;
-  cgcGradingCostFloor?: number; // What it actually cost seller to grade ($30 modern + $15 ship = $45 floor)
+  cgcGradingCostFloor?: number; // Sunk factory encasement floor ($35 modern + $43 ship + $5 invoice + 6% FL tax = $85.40 floor)
   censusCount98?: number;       // Census population in 9.8
   censusTotal?: number;         // Total copies on Census across all grades
   censusHigher?: number;        // Copies 9.9/10.0 graded higher than 9.8

@@ -392,7 +392,7 @@ export function SniperStage({
                 icon={<Clock className="h-3 w-3" />}
                 title="1. 240s Decision Clock"
                 body="Task: Cross-examine Page 1 fees, Page 2 drift, and Page 3 lore to calculate your strict bid ceiling."
-                tip="Strategic Objective: Information Arbitrage — Exploit market asymmetry by discovering seller-subsidized certification costs and identifying margin-of-safety spreads before deploying bids."
+                tip="Strategic Objective: Replacement Value Arbitrage — Calculate true DIY replication cost (The Whole Tomato) vs. current auction bids to lock in guaranteed manufacturing advantage."
               />
               <FloorRulePill
                 phase="T-30s Lockout"
@@ -415,8 +415,8 @@ export function SniperStage({
                 badge="bg-cyan-950/80 text-cyan-300 border-cyan-500/40"
                 icon={<Gavel className="h-3 w-3" />}
                 title="4. Hammer Strike &amp; Vault"
-                body="Task: Gavel drops at T-0s. Clear the lot below seller acquisition + slab costs to deposit equity surplus into your Vault."
-                tip="Portfolio Objective: Sovereign Vault Accumulation — Capture verified intrinsic value into Panel Profits' proprietary Sovereign tier, locking in seller-subsidized encasement equity."
+                body="Task: Gavel drops at T-0s. Clear the lot below DIY replacement cost (The Whole Tomato) to deposit equity surplus into your Vault."
+                tip="Portfolio Objective: Sovereign Vault Accumulation — Capture verified intrinsic value into Panel Profits' proprietary Sovereign tier, locking in manufacturing replacement equity."
               />
             </div>
           </div>
