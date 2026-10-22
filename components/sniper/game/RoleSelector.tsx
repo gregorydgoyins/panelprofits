@@ -46,7 +46,7 @@ function InteractiveRulePill({
 
   return (
     <div
-      className="relative group rounded-xl border border-slate-700/80 bg-[#050B16] hover:border-white p-4 transition-all duration-200 flex flex-col justify-between cursor-pointer hover:shadow-[0_0_12px_rgba(255,255,255,0.5)] ring-1 ring-transparent hover:ring-white/40"
+      className="relative group rounded-xl border-2 border-purple-500/80 bg-gradient-to-b from-[#140827] via-[#0E051C] to-[#07020F] p-4 transition-all duration-200 flex flex-col justify-between cursor-pointer shadow-[0_0_0_1px_rgba(168,85,247,0.7),0_0_12px_rgba(168,85,247,0.6),inset_0_0_8px_rgba(168,85,247,0.25)] ring-1 ring-purple-400/40 hover:border-purple-300 hover:shadow-[0_0_0_2px_rgba(216,180,254,0.9),0_0_20px_rgba(168,85,247,0.9),inset_0_0_12px_rgba(168,85,247,0.4)] hover:ring-purple-300"
       onMouseEnter={() => setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
       onClick={() => setShowTooltip(!showTooltip)}
@@ -62,38 +62,38 @@ function InteractiveRulePill({
           </span>
           <button
             type="button"
-            className="text-slate-500 hover:text-cyan-300 transition-colors p-0.5"
+            className="text-slate-400 hover:text-purple-300 transition-colors p-0.5"
             aria-label={`Rule details for ${title}`}
           >
             <HelpCircle className="h-3.5 w-3.5" />
           </button>
         </div>
 
-        <h4 className="text-xs font-mono font-bold text-white uppercase tracking-wide group-hover:text-cyan-300 transition-colors">
+        <h4 className="text-xs font-mono font-bold text-white uppercase tracking-wide group-hover:text-purple-300 transition-colors">
           {title}
         </h4>
-        <p className="mt-1 text-[11px] leading-relaxed text-slate-400 font-sans">
+        <p className="mt-1 text-[11px] leading-relaxed text-slate-300 font-sans">
           {summary}
         </p>
       </div>
 
-      <div className="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-mono text-slate-500">
+      <div className="mt-3 pt-2 border-t border-purple-500/30 flex items-center justify-between text-[10px] font-mono text-purple-300/80">
         <span>TAP / HOVER FOR RULE INTEL</span>
-        <span className="text-cyan-400 group-hover:translate-x-0.5 transition-transform">→</span>
+        <span className="text-purple-400 group-hover:translate-x-0.5 transition-transform">→</span>
       </div>
 
       {/* Floating Tooltip Bubble */}
       {showTooltip && (
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 z-50 w-72 sm:w-80 rounded-xl border border-cyan-500/50 bg-[#030712] p-3.5 shadow-[0_0_30px_rgba(0,0,0,0.9)] backdrop-blur-xl pointer-events-none">
-          <div className="flex items-center gap-1.5 text-cyan-300 font-mono font-bold text-xs mb-1.5">
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 z-50 w-72 sm:w-80 rounded-xl border border-purple-500/60 bg-[#0E051B] p-3.5 shadow-[0_0_30px_rgba(0,0,0,0.9)] backdrop-blur-xl pointer-events-none">
+          <div className="flex items-center gap-1.5 text-purple-300 font-mono font-bold text-xs mb-1.5">
             <Info className="h-3.5 w-3.5 shrink-0" />
             <span>{tooltipTitle}</span>
           </div>
-          <p className="text-[11px] leading-relaxed text-slate-300 font-sans">
+          <p className="text-[11px] leading-relaxed text-slate-200 font-sans">
             {tooltipBody}
           </p>
           {/* Tooltip caret */}
-          <div className="absolute top-full left-1/2 -translate-x-1/2 border-6 border-transparent border-t-[#030712]" />
+          <div className="absolute top-full left-1/2 -translate-x-1/2 border-6 border-transparent border-t-[#0E051B]" />
         </div>
       )}
     </div>
@@ -128,9 +128,9 @@ export function RoleSelector({ onSelectRole }: RoleSelectorProps) {
       {/* Two Role Cards with Brighter Rimlights */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* THE BROKER */}
-        <div className="relative group rounded-2xl border-2 border-white bg-gradient-to-b from-[#0A1630] via-[#060E20] to-[#03060C] p-6 md:p-8 flex flex-col justify-between shadow-[0_0_20px_rgba(255,255,255,0.9),inset_0_1px_2px_rgba(255,255,255,0.6)] ring-1 ring-white/70 hover:shadow-[0_0_28px_rgba(255,255,255,1),inset_0_0_10px_rgba(255,255,255,0.5)] hover:ring-white transition-all duration-200">
+        <div className="relative group rounded-2xl border-2 border-cyan-400 bg-gradient-to-b from-[#0A1630] via-[#060E20] to-[#03060C] p-6 md:p-8 flex flex-col justify-between shadow-[0_0_0_1px_rgba(34,211,238,1),0_0_15px_rgba(34,211,238,0.85),0_0_30px_rgba(6,182,212,0.45),inset_0_1px_2px_rgba(255,255,255,0.4),inset_0_0_12px_rgba(34,211,238,0.3)] ring-1 ring-cyan-300/60 hover:shadow-[0_0_0_1px_rgba(255,255,255,1),0_0_22px_rgba(34,211,238,1),0_0_40px_rgba(6,182,212,0.6),inset_0_0_15px_rgba(34,211,238,0.5)] hover:border-cyan-300 transition-all duration-200">
           {/* Top Radiant Neon Rimlight Flare */}
-          <div className="absolute inset-x-0 -top-px h-[2px] bg-gradient-to-r from-transparent via-white to-transparent shadow-[0_0_16px_rgba(255,255,255,1)]" />
+          <div className="absolute inset-x-0 -top-px h-[2px] bg-gradient-to-r from-transparent via-cyan-200 to-transparent shadow-[0_0_14px_rgba(34,211,238,1)]" />
 
           <div>
             <div className="flex items-center justify-between border-b border-cyan-500/20 pb-4">
@@ -205,7 +205,7 @@ export function RoleSelector({ onSelectRole }: RoleSelectorProps) {
           <div className="mt-8 pt-6 border-t border-slate-800">
             <button
               onClick={() => onSelectRole("broker")}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-mono font-bold py-3.5 px-4 transition-all duration-200 text-sm uppercase tracking-wider shadow-[0_0_20px_rgba(34,211,238,0.4)] hover:shadow-[0_0_30px_rgba(34,211,238,0.6)]"
+              className="relative w-full flex items-center justify-center gap-2 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-mono font-bold py-3.5 px-4 transition-all duration-200 text-sm uppercase tracking-wider border-2 border-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.5)] hover:border-white hover:ring-2 hover:ring-cyan-300 hover:shadow-[0_0_0_2px_rgba(255,255,255,1),0_0_25px_rgba(34,211,238,1),inset_0_0_10px_rgba(255,255,255,0.7)]"
             >
               <span>Play as The Broker</span>
               <ChevronRight className="h-4 w-4" />
@@ -214,9 +214,9 @@ export function RoleSelector({ onSelectRole }: RoleSelectorProps) {
         </div>
 
         {/* THE WHALE */}
-        <div className="relative group rounded-2xl border-2 border-white bg-gradient-to-b from-[#221606] via-[#120B02] to-[#03060C] p-6 md:p-8 flex flex-col justify-between shadow-[0_0_20px_rgba(255,255,255,0.9),inset_0_1px_2px_rgba(255,255,255,0.6)] ring-1 ring-white/70 hover:shadow-[0_0_28px_rgba(255,255,255,1),inset_0_0_10px_rgba(255,255,255,0.5)] hover:ring-white transition-all duration-200">
+        <div className="relative group rounded-2xl border-2 border-amber-400 bg-gradient-to-b from-[#221606] via-[#120B02] to-[#03060C] p-6 md:p-8 flex flex-col justify-between shadow-[0_0_0_1px_rgba(251,191,36,1),0_0_15px_rgba(251,191,36,0.85),0_0_30px_rgba(245,158,11,0.45),inset_0_1px_2px_rgba(255,255,255,0.4),inset_0_0_12px_rgba(251,191,36,0.3)] ring-1 ring-amber-300/60 hover:shadow-[0_0_0_1px_rgba(255,255,255,1),0_0_22px_rgba(251,191,36,1),0_0_40px_rgba(245,158,11,0.6),inset_0_0_15px_rgba(251,191,36,0.5)] hover:border-amber-300 transition-all duration-200">
           {/* Top Radiant Neon Rimlight Flare */}
-          <div className="absolute inset-x-0 -top-px h-[2px] bg-gradient-to-r from-transparent via-white to-transparent shadow-[0_0_16px_rgba(255,255,255,1)]" />
+          <div className="absolute inset-x-0 -top-px h-[2px] bg-gradient-to-r from-transparent via-amber-200 to-transparent shadow-[0_0_14px_rgba(251,191,36,1)]" />
 
           <div>
             <div className="flex items-center justify-between border-b border-amber-500/20 pb-4">
@@ -291,7 +291,7 @@ export function RoleSelector({ onSelectRole }: RoleSelectorProps) {
           <div className="mt-8 pt-6 border-t border-slate-800">
             <button
               onClick={() => onSelectRole("whale")}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-mono font-bold py-3.5 px-4 transition-all duration-200 text-sm uppercase tracking-wider shadow-[0_0_20px_rgba(251,191,36,0.4)] hover:shadow-[0_0_30px_rgba(251,191,36,0.6)]"
+              className="relative w-full flex items-center justify-center gap-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-mono font-bold py-3.5 px-4 transition-all duration-200 text-sm uppercase tracking-wider border-2 border-amber-300 shadow-[0_0_15px_rgba(251,191,36,0.5)] hover:border-white hover:ring-2 hover:ring-amber-300 hover:shadow-[0_0_0_2px_rgba(255,255,255,1),0_0_25px_rgba(251,191,36,1),inset_0_0_10px_rgba(255,255,255,0.7)]"
             >
               <span>Play as The Whale</span>
               <ChevronRight className="h-4 w-4" />
@@ -301,25 +301,25 @@ export function RoleSelector({ onSelectRole }: RoleSelectorProps) {
       </div>
 
       {/* The 4 Core Timing & Execution Rules Pills */}
-      <div className="relative mt-12 rounded-2xl border-2 border-white bg-gradient-to-b from-[#071324] via-[#050C17] to-[#03070E] p-6 shadow-[0_0_20px_rgba(255,255,255,0.85),inset_0_1px_2px_rgba(255,255,255,0.5)] ring-1 ring-white/70 backdrop-blur-md">
+      <div className="relative mt-12 rounded-2xl border-2 border-purple-500 bg-gradient-to-b from-[#140728] via-[#0B0317] to-[#05010C] p-6 shadow-[0_0_0_1px_rgba(192,132,252,1),0_0_16px_rgba(168,85,247,0.85),0_0_32px_rgba(147,51,234,0.45),inset_0_1px_2px_rgba(255,255,255,0.35),inset_0_0_14px_rgba(168,85,247,0.25)] ring-1 ring-purple-300/60 backdrop-blur-md">
         {/* Top Radiant Neon Rimlight Flare */}
-        <div className="absolute inset-x-0 -top-px h-[2px] bg-gradient-to-r from-transparent via-white to-transparent shadow-[0_0_16px_rgba(255,255,255,1)]" />
+        <div className="absolute inset-x-0 -top-px h-[2px] bg-gradient-to-r from-transparent via-purple-300 to-transparent shadow-[0_0_16px_rgba(168,85,247,1)]" />
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-cyan-500/20 pb-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-purple-500/30 pb-4 mb-6">
           <div className="flex items-center gap-2.5">
-            <div className="p-1.5 rounded-lg bg-cyan-500/20 border border-cyan-400 text-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.4)]">
+            <div className="p-1.5 rounded-lg bg-purple-500/20 border border-purple-400 text-purple-300 shadow-[0_0_12px_rgba(168,85,247,0.6)]">
               <Clock className="h-4 w-4" />
             </div>
             <div>
               <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-white">
                 Sniper Exchange Underwriting Rules (4 Timing Phases)
               </h3>
-              <p className="text-[11px] text-slate-400 font-mono">
+              <p className="text-[11px] text-purple-200/70 font-mono">
                 Strict chronological auction floor pacing · Hover or tap any pill for full institutional mechanics
               </p>
             </div>
           </div>
-          <div className="text-[10px] font-mono text-cyan-300 bg-cyan-950/70 border border-cyan-500/40 px-2.5 py-1 rounded-full self-start sm:self-auto shadow-sm">
+          <div className="text-[10px] font-mono text-purple-300 bg-purple-950/80 border border-purple-500/50 px-2.5 py-1 rounded-full self-start sm:self-auto shadow-sm">
             *Sovereign = Panel Profits Proprietary Asset Tier
           </div>
         </div>
@@ -332,9 +332,9 @@ export function RoleSelector({ onSelectRole }: RoleSelectorProps) {
             badgeColor="bg-emerald-950/80 text-emerald-300 border border-emerald-500/40"
             icon={<Clock className="h-3 w-3" />}
             title="1. 240s Due Diligence Clock"
-            summary="You have exactly 4 minutes to analyze the book across all 3 pages (Floor, Financing & TradingView, Lore) before placing a bid."
-            tooltipTitle="Phase 1: The 240s Analysis Window"
-            tooltipBody="Simulates live auction room pacing at Heritage or ComicConnect. Gives underwriters 240 seconds to cross-examine recorded sales comps, multi-grade spreads, and historical price drift before placing capital at risk."
+            summary="Task: Cross-examine Page 1 encasement fees, Page 2 TradingView drift, and Page 3 market lore to calculate your strict maximum bid ceiling."
+            tooltipTitle="Strategic Objective: Information Arbitrage"
+            tooltipBody="Exploit information asymmetry by pricing true replacement costs before consensus catches up. Your objective is to identify seller mispricings and quantify margin-of-safety spreads before committing capital."
           />
 
           {/* Pill 2: 30s Hard Lockout */}
@@ -343,9 +343,9 @@ export function RoleSelector({ onSelectRole }: RoleSelectorProps) {
             badgeColor="bg-rose-950/80 text-rose-300 border border-rose-500/40"
             icon={<Lock className="h-3 w-3" />}
             title="2. 30s Hard Lockout"
-            summary="At T-30s, the floor locks ('In It to Win It'). You cannot chicken out or cancel your bid once the final 30 seconds begin."
-            tooltipTitle="Phase 2: The 30s Hard Lockout"
-            tooltipBody="Authentic auction gavel protocol. When the auctioneer begins final calls in the last 30 seconds, bids cannot be retracted. The pass/chicken-out button is permanently disabled until hammer strike."
+            summary="Task: Finalize bidding conviction before T-30s. At 30 seconds, pass buttons freeze and active floor bids enter binding gavel settlement."
+            tooltipTitle="Execution Objective: Auction Gavel Discipline"
+            tooltipBody="Enforce institutional execution under pressure. Simulates live auction room pacing where hesitation costs deals, and reckless last-second chasing triggers catastrophic capital entrapment."
           />
 
           {/* Pill 3: 10% Chicken-Out Circuit Breaker */}
@@ -354,9 +354,9 @@ export function RoleSelector({ onSelectRole }: RoleSelectorProps) {
             badgeColor="bg-amber-950/80 text-amber-300 border border-amber-500/40"
             icon={<ShieldAlert className="h-3 w-3" />}
             title="3. 10% Chicken-Out Valve"
-            summary="Spot a stale comp or realize you overbid? Bail out before T-30s for a flat 10% penalty to protect the other 90% of your bankroll."
-            tooltipTitle="Phase 3: Graham & Dodd Capital Defense"
-            tooltipBody="Teaches strict loss minimization. Taking a 10% penalty on your last bid saves you from suffering a 50%+ catastrophic holding loss on an illiquid book with bad spread."
+            summary="Task: Hit the 'Pass / Abort' switch before T-30s if you detect a stale 2021 peak comp, compressed spread, or overpaid bid."
+            tooltipTitle="Risk Objective: Graham & Dodd Capital Defense"
+            tooltipBody="Honor Rule #1 of institutional finance: preserve dry powder. Sacrificing a 10% penalty to kill an overpaid trade protects 90% of your bankroll for high-conviction vintage grails."
           />
 
           {/* Pill 4: Hammer Strike & Sovereign Vault */}
@@ -365,9 +365,9 @@ export function RoleSelector({ onSelectRole }: RoleSelectorProps) {
             badgeColor="bg-cyan-950/80 text-cyan-300 border border-cyan-500/40"
             icon={<Gavel className="h-3 w-3" />}
             title="4. Hammer Strike & Vault"
-            summary="At T-0s, the gavel falls. Winning bids below true seller breakeven bank positive equity into your Sovereign Vault."
-            tooltipTitle="Phase 4: Sovereign Clearing & Settlement"
-            tooltipBody="*Proprietary Classification: 'Sovereign' is Panel Profits' proprietary institutional asset tier, representing audited catalog equities with verified float, liquidity spreads, and margin-of-safety thresholds."
+            summary="Task: Gavel drops at T-0s. Clear the lot below seller acquisition + certification costs to instantly book equity surplus into your Vault."
+            tooltipTitle="Portfolio Objective: Sovereign Vault Accumulation"
+            tooltipBody="Capture verified economic value into Panel Profits' proprietary Sovereign tier. Every win acquired below audited seller sunk costs compounds client AUM and validates true secondary floor value."
           />
         </div>
       </div>

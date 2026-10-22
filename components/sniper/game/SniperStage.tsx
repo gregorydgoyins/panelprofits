@@ -47,7 +47,7 @@ function FloorRulePill({
 
   return (
     <div
-      className="relative rounded-lg border border-slate-700/80 bg-[#050B16] hover:border-white p-2.5 transition-colors cursor-pointer group hover:shadow-[0_0_10px_rgba(255,255,255,0.5)] ring-1 ring-transparent hover:ring-white/40"
+      className="relative rounded-lg border-2 border-purple-500/70 bg-gradient-to-b from-[#140827] via-[#0E051C] to-[#07020F] p-2.5 transition-all cursor-pointer group shadow-[0_0_0_1px_rgba(168,85,247,0.6),0_0_8px_rgba(168,85,247,0.5),inset_0_0_6px_rgba(168,85,247,0.2)] hover:border-purple-300 hover:shadow-[0_0_0_1px_rgba(216,180,254,0.9),0_0_16px_rgba(168,85,247,0.85),inset_0_0_10px_rgba(168,85,247,0.35)] hover:ring-1 hover:ring-purple-300"
       onMouseEnter={() => setShowTip(true)}
       onMouseLeave={() => setShowTip(false)}
       onClick={() => setShowTip(!showTip)}
@@ -57,25 +57,25 @@ function FloorRulePill({
           {icon}
           <span>{phase}</span>
         </span>
-        <HelpCircle className="h-3 w-3 text-slate-500 group-hover:text-cyan-300 transition-colors" />
+        <HelpCircle className="h-3 w-3 text-slate-400 group-hover:text-purple-300 transition-colors" />
       </div>
-      <div className="text-[11px] font-mono font-bold text-slate-200 uppercase truncate">
+      <div className="text-[11px] font-mono font-bold text-white uppercase truncate group-hover:text-purple-200 transition-colors">
         {title}
       </div>
-      <div className="text-[10px] text-slate-400 font-sans leading-tight mt-0.5 line-clamp-2">
+      <div className="text-[10px] text-slate-300 font-sans leading-tight mt-0.5 line-clamp-2">
         {body}
       </div>
 
       {showTip && (
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 w-72 rounded-xl border border-cyan-500/50 bg-[#030712] p-3 shadow-2xl backdrop-blur-xl pointer-events-none">
-          <div className="text-cyan-300 font-mono font-bold text-[11px] mb-1 flex items-center gap-1">
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 w-72 rounded-xl border border-purple-500/60 bg-[#0E051B] p-3 shadow-2xl backdrop-blur-xl pointer-events-none">
+          <div className="text-purple-300 font-mono font-bold text-[11px] mb-1 flex items-center gap-1">
             <Info className="h-3 w-3 shrink-0" />
             <span>{title}</span>
           </div>
-          <p className="text-[10px] text-slate-300 font-sans leading-relaxed">
+          <p className="text-[10px] text-slate-200 font-sans leading-relaxed">
             {tip}
           </p>
-          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#030712]" />
+          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#0E051B]" />
         </div>
       )}
     </div>
@@ -255,23 +255,23 @@ export function SniperStage({
       {activeTab === "lead" && (
         <div className="space-y-6">
           {/* 4 Timing & Execution Rules Pills Bar on the Floor */}
-          <div className="relative rounded-xl border-2 border-white bg-gradient-to-r from-[#060E1C] via-[#040A14] to-[#060E1C] p-3 text-xs font-mono shadow-[0_0_18px_rgba(255,255,255,0.85),inset_0_1px_2px_rgba(255,255,255,0.4)] ring-1 ring-white/60">
+          <div className="relative rounded-xl border-2 border-purple-500 bg-gradient-to-r from-[#140726] via-[#0B0316] to-[#140726] p-3 text-xs font-mono shadow-[0_0_0_1px_rgba(192,132,252,1),0_0_16px_rgba(168,85,247,0.85),0_0_28px_rgba(147,51,234,0.45),inset_0_1px_2px_rgba(255,255,255,0.35),inset_0_0_10px_rgba(168,85,247,0.25)] ring-1 ring-purple-300/60">
             {/* Top Radiant Neon Rimlight Flare */}
-            <div className="absolute inset-x-0 -top-px h-[2px] bg-gradient-to-r from-transparent via-white to-transparent shadow-[0_0_14px_rgba(255,255,255,1)]" />
+            <div className="absolute inset-x-0 -top-px h-[2px] bg-gradient-to-r from-transparent via-purple-300 to-transparent shadow-[0_0_12px_rgba(168,85,247,1)]" />
 
-            <div className="flex flex-wrap items-center justify-between gap-2 mb-2 pb-2 border-b border-cyan-500/20">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-2 pb-2 border-b border-purple-500/30">
               <div className="flex items-center gap-2">
-                <div className="p-1 rounded bg-cyan-500/20 border border-cyan-400 text-cyan-300 shadow-[0_0_8px_rgba(34,211,238,0.5)]">
+                <div className="p-1 rounded bg-purple-500/20 border border-purple-400 text-purple-300 shadow-[0_0_8px_rgba(168,85,247,0.6)]">
                   <Clock className="h-3.5 w-3.5" />
                 </div>
                 <span className="text-[10px] font-bold text-slate-200 uppercase tracking-widest">
                   Sniper Exchange Underwriting Rules (4 Timing Phases)
                 </span>
-                <span className="text-[9px] text-slate-400 font-sans hidden sm:inline">
+                <span className="text-[9px] text-purple-200/70 font-sans hidden sm:inline">
                   · Hover or tap any pill for rules intel
                 </span>
               </div>
-              <span className="text-[9px] font-mono text-cyan-300 bg-cyan-950/80 border border-cyan-400/50 px-2 py-0.5 rounded shadow-sm">
+              <span className="text-[9px] font-mono text-purple-300 bg-purple-950/80 border border-purple-500/50 px-2 py-0.5 rounded shadow-sm">
                 *Sovereign = Panel Profits Proprietary Asset Tier
               </span>
             </div>
@@ -282,32 +282,32 @@ export function SniperStage({
                 badge="bg-emerald-950/80 text-emerald-300 border-emerald-500/40"
                 icon={<Clock className="h-3 w-3" />}
                 title="1. 240s Decision Clock"
-                body="4 mins to inspect Floor, Financing &amp; Lore across all 3 pages."
-                tip="Simulates live auction room diligence (Heritage / ComicConnect). Gives you 240 seconds to cross-examine recorded sales comps, multi-grade spreads, and historical price drift before placing a bid."
+                body="Task: Cross-examine Page 1 fees, Page 2 drift, and Page 3 lore to calculate your strict bid ceiling."
+                tip="Strategic Objective: Information Arbitrage — Exploit market asymmetry by discovering seller-subsidized certification costs and identifying margin-of-safety spreads before deploying bids."
               />
               <FloorRulePill
                 phase="T-30s Lockout"
                 badge="bg-rose-950/80 text-rose-300 border-rose-500/40"
                 icon={<Lock className="h-3 w-3" />}
                 title="2. 30s Hard Lockout"
-                body="Floor locks at T-30s ('In It to Win It'). You cannot chicken out."
-                tip="Authentic gavel protocol. Once the auctioneer reaches final calls in the last 30 seconds, bids cannot be retracted. The pass/chicken-out button is permanently disabled until hammer strike."
+                body="Task: Lock in bidding conviction before T-30s. At 30 seconds, pass freezes and active bids enter binding gavel settlement."
+                tip="Execution Objective: Auction Gavel Discipline — Enforce psychological execution under pressure where canceling bids is prohibited once final calls commence."
               />
               <FloorRulePill
                 phase="Pre-Lockout Exit"
                 badge="bg-amber-950/80 text-amber-300 border-amber-500/40"
                 icon={<ShieldAlert className="h-3 w-3" />}
                 title="3. 10% Chicken-Out Valve"
-                body="Spot a bad spread? Bail before T-30s for 10% to save the other 90%."
-                tip="Graham &amp; Dodd capital preservation. A 10% haircut to escape an overbid or illiquid trap saves you from absorbing an unrecoverable 50%+ loss on secondary liquidation."
+                body="Task: Trigger the emergency abort switch before T-30s if you detect a stale 2021 comp or overpaid bid."
+                tip="Risk Objective: Graham &amp; Dodd Capital Defense — Preserve dry powder. Absorbing a 10% haircut to eliminate a compromised trade protects 90% of your bankroll for prime vintage grails."
               />
               <FloorRulePill
                 phase="T-0s Clearing"
                 badge="bg-cyan-950/80 text-cyan-300 border-cyan-500/40"
                 icon={<Gavel className="h-3 w-3" />}
                 title="4. Hammer Strike &amp; Vault"
-                body="Gavel drops at T-0s. Wins below seller breakeven bank positive ROI."
-                tip="*Proprietary Classification: 'Sovereign' is Panel Profits' proprietary institutional asset tier, representing audited catalog equities with verified float, liquidity spreads, and margin-of-safety thresholds."
+                body="Task: Gavel drops at T-0s. Clear the lot below seller acquisition + slab costs to deposit equity surplus into your Vault."
+                tip="Portfolio Objective: Sovereign Vault Accumulation — Capture verified intrinsic value into Panel Profits' proprietary Sovereign tier, locking in seller-subsidized encasement equity."
               />
             </div>
           </div>
