@@ -47,7 +47,7 @@ function FloorRulePill({
 
   return (
     <div
-      className="relative rounded-lg border border-slate-800 bg-[#060A14] hover:border-slate-700 p-2.5 transition-colors cursor-pointer group"
+      className="relative rounded-lg border border-slate-700/80 bg-[#050B16] hover:border-cyan-300 p-2.5 transition-colors cursor-pointer group hover:shadow-[0_0_10px_rgba(34,211,238,0.4)] ring-1 ring-transparent hover:ring-cyan-300/40"
       onMouseEnter={() => setShowTip(true)}
       onMouseLeave={() => setShowTip(false)}
       onClick={() => setShowTip(!showTip)}
@@ -255,18 +255,23 @@ export function SniperStage({
       {activeTab === "lead" && (
         <div className="space-y-6">
           {/* 4 Timing & Execution Rules Pills Bar on the Floor */}
-          <div className="rounded-xl border border-slate-800 bg-[#060A14] p-3 text-xs font-mono">
-            <div className="flex flex-wrap items-center justify-between gap-2 mb-2 pb-2 border-b border-slate-800/80">
+          <div className="relative rounded-xl border-2 border-cyan-400 bg-gradient-to-r from-[#060E1C] via-[#040A14] to-[#060E1C] p-3 text-xs font-mono shadow-[0_0_16px_rgba(34,211,238,0.65),inset_0_1px_2px_rgba(255,255,255,0.25)] ring-1 ring-cyan-300/50">
+            {/* Top Radiant Neon Rimlight Flare */}
+            <div className="absolute inset-x-0 -top-px h-[2px] bg-gradient-to-r from-transparent via-cyan-300 to-transparent shadow-[0_0_12px_rgba(34,211,238,1)]" />
+
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-2 pb-2 border-b border-cyan-500/20">
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest flex items-center gap-1.5">
-                  <Clock className="h-3.5 w-3.5 text-cyan-400" />
-                  Floor Protocol &amp; Timing Rules (4 Phases)
+                <div className="p-1 rounded bg-cyan-500/20 border border-cyan-400 text-cyan-300 shadow-[0_0_8px_rgba(34,211,238,0.5)]">
+                  <Clock className="h-3.5 w-3.5" />
+                </div>
+                <span className="text-[10px] font-bold text-slate-200 uppercase tracking-widest">
+                  Sniper Exchange Underwriting Rules (4 Timing Phases)
                 </span>
-                <span className="text-[9px] text-slate-500 font-sans hidden sm:inline">
+                <span className="text-[9px] text-slate-400 font-sans hidden sm:inline">
                   · Hover or tap any pill for rules intel
                 </span>
               </div>
-              <span className="text-[9px] font-mono text-cyan-400 bg-cyan-950/60 border border-cyan-500/30 px-2 py-0.5 rounded">
+              <span className="text-[9px] font-mono text-cyan-300 bg-cyan-950/80 border border-cyan-400/50 px-2 py-0.5 rounded shadow-sm">
                 *Sovereign = Panel Profits Proprietary Asset Tier
               </span>
             </div>
