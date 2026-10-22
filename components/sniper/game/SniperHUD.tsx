@@ -102,18 +102,12 @@ export function SniperHUD({
                           <p>• <strong>Capital:</strong> Managing $5,000 Client AUM across mixed Raw &amp; Mid-Grades.</p>
                           <p>• <strong>Win Rule:</strong> Profitable rounds attract +15% client additions.</p>
                           <p>• <strong>Loss Rule:</strong> 2 consecutive losses trigger client capital redemptions.</p>
-                          <p className="text-[10px] text-cyan-400 font-mono mt-1 pt-1 border-t border-slate-800">
-                            *Sovereign = Panel Profits Proprietary Asset Tier
-                          </p>
                         </>
                       ) : (
                         <>
                           <p>• <strong>Capital:</strong> $20,000 Personal Bankroll on Heritage/ComicConnect museum grails.</p>
                           <p>• <strong>Trap Alert:</strong> Watch for stale 2021 market peak comps on Page 2.</p>
                           <p>• <strong>Win Rule:</strong> Exploit seller-subsidized sunk slabbing fees for instant margin.</p>
-                          <p className="text-[10px] text-amber-400 font-mono mt-1 pt-1 border-t border-slate-800">
-                            *Sovereign = Panel Profits Proprietary Asset Tier
-                          </p>
                         </>
                       )}
                     </div>

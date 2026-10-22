@@ -122,9 +122,6 @@ export function RoleSelector({ onSelectRole }: RoleSelectorProps) {
         <p className="mt-3 text-sm md:text-base text-slate-300 max-w-2xl mx-auto font-sans leading-relaxed">
           Master real secondary market mechanics through live ticking countdowns. Place bids, detect stale comp traps, and enforce Graham &amp; Dodd margin of safety before risking real capital.
         </p>
-        <p className="mt-1 text-xs font-mono text-cyan-400">
-          *Sovereign is Panel Profits&apos; proprietary underwriting tier classification, representing verified institutional assets.
-        </p>
       </div>
 
       {/* Two Role Cards with Brighter Rimlights */}
@@ -320,9 +317,6 @@ export function RoleSelector({ onSelectRole }: RoleSelectorProps) {
                 Strict chronological auction floor pacing · Hover or tap any pill for full institutional mechanics
               </p>
             </div>
-          </div>
-          <div className="text-[10px] font-mono text-purple-300 bg-purple-950/80 border border-purple-500/50 px-2.5 py-1 rounded-full self-start sm:self-auto shadow-sm">
-            *Sovereign = Panel Profits Proprietary Asset Tier
           </div>
         </div>
 

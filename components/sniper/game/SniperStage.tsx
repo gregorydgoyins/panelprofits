@@ -333,9 +333,6 @@ export function SniperStage({
                   · Hover or tap any pill for rules intel
                 </span>
               </div>
-              <span className="text-[9px] font-mono text-purple-300 bg-purple-950/80 border border-purple-500/50 px-2 py-0.5 rounded shadow-sm">
-                *Sovereign = Panel Profits Proprietary Asset Tier
-              </span>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
