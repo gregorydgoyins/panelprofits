@@ -47,9 +47,9 @@ export function buildEncasementFormulas({
 
   const pressedFormula: EncasementFormulaDetail = {
     key: "pressed",
-    name: "Clean & Press + Grade (CCS)",
-    badgeLabel: `${grader} Universal + CCS Pressing`,
-    description: "Industry gold standard for 9.8 candidates. Includes professional heat press, stain mitigation, and archival encapsulation.",
+    name: "Clean & Press (Hypothetical CPR Upside)",
+    badgeLabel: `${grader} Universal + CCS Pressing (Hypothetical CPR)`,
+    description: "Hypothetical buyer model. Not every comic below 9.8 is a CPR candidate—this exercise models what could happen if an 8.5 or 9.2 turns in favor of the buyer upon pressing and regrading.",
     isYellowLabel: false,
     baseGradingFee: ccsBase,
     pressingFee: ccsPressing,
@@ -68,7 +68,8 @@ export function buildEncasementFormulas({
   };
 
   // ──────────────────────────────────────────────────────────────────────────
-  // TIER 2: Standard Universal (Grade Only, No Pressing)
+  // TIER 2: Standard Universal (Grade Only, No Pressing) - AUCTION DEFAULT
+  // "standard is the way that these auctions usually go"
   // ──────────────────────────────────────────────────────────────────────────
   const stdBase = ccsBase;
   const stdInvoice = ccsInvoice;
@@ -81,9 +82,9 @@ export function buildEncasementFormulas({
 
   const standardFormula: EncasementFormulaDetail = {
     key: "standard",
-    name: "Standard Universal (Grade Only)",
-    badgeLabel: `${grader} Universal Blue Label`,
-    description: "Direct encapsulation without pressing. Graded strictly in raw submission condition as-received from collection.",
+    name: "Standard Universal (Auction Baseline)",
+    badgeLabel: `${grader} Universal Blue Label (Auction Standard)`,
+    description: "Standard secondary market auction reality. Encapsulated as-is without pressing. Graded strictly in raw submission condition as-received from collection.",
     isYellowLabel: false,
     baseGradingFee: stdBase,
     pressingFee: 0,
@@ -103,6 +104,7 @@ export function buildEncasementFormulas({
 
   // ──────────────────────────────────────────────────────────────────────────
   // TIER 3: Signature Series (Yellow Label - Witnessed Signature + Signing Fee)
+  // "signed has different mathematics"
   // ──────────────────────────────────────────────────────────────────────────
   const sigBase = ccsBase;
   const sigPressing = grader === "PSA" ? 0.0 : 25.0; // High-grade signings are almost universally pressed
@@ -118,9 +120,9 @@ export function buildEncasementFormulas({
 
   const signatureFormula: EncasementFormulaDetail = {
     key: "signature",
-    name: `Signature Series (${signaturesCount}x Witnessed)`,
-    badgeLabel: `${grader} Signature Series (Yellow Label)`,
-    description: `Official authorized witness verification. Includes creator signing fee for ${creatorName || "headline creator"} + official witness authentication seal.`,
+    name: `Signature Series (${signaturesCount}x Signed Mathematics)`,
+    badgeLabel: `${grader} Signature Series (Witnessed Signed)`,
+    description: `Signed mathematics: Official authorized witness authentication (${sigWitness.toFixed(0)}) + creator signing fee (${sigCreator.toFixed(0)}) for ${creatorName || "headline creator"}. Carries distinct secondary valuation and authentication premiums.`,
     isYellowLabel: true,
     baseGradingFee: sigBase,
     pressingFee: sigPressing,
@@ -140,6 +142,7 @@ export function buildEncasementFormulas({
 
   // ──────────────────────────────────────────────────────────────────────────
   // TIER 4: Re-holder / Reslab Service (Fresh Acrylic Casing)
+  // "re holder is in the same hypothetical as CPR"
   // ──────────────────────────────────────────────────────────────────────────
   const rehFee = 25.0;
   const rehInvoice = ccsInvoice;
@@ -152,9 +155,9 @@ export function buildEncasementFormulas({
 
   const reholderFormula: EncasementFormulaDetail = {
     key: "reholder",
-    name: "Re-holder / Reslab Service",
-    badgeLabel: `${grader} Re-holder (Mint Casing)`,
-    description: "Case replacement for scuffed, scratched, or chipped slabs. Transfers label and certified book into a fresh hologram case.",
+    name: "Re-holder / Reslab (Hypothetical Casing)",
+    badgeLabel: `${grader} Re-holder (Hypothetical Re-case)`,
+    description: "Hypothetical post-acquisition casing scenario. Case replacement for scuffed, scratched, or chipped slabs to restore mint visual presentation without affecting the underlying grade.",
     isYellowLabel: false,
     baseGradingFee: rehFee,
     pressingFee: 0,
@@ -173,18 +176,14 @@ export function buildEncasementFormulas({
   };
 
   const formulas: Record<EncasementFormulaKey, EncasementFormulaDetail> = {
-    pressed: pressedFormula,
     standard: standardFormula,
     signature: signatureFormula,
+    pressed: pressedFormula,
     reholder: reholderFormula,
   };
 
-  let activeKey: EncasementFormulaKey = "pressed";
-  if (isYellowLabel) {
-    activeKey = "signature";
-  } else if (grader === "PSA") {
-    activeKey = "standard";
-  }
+  // Standard universal is the way auctions usually go; signed has different mathematics; CPR and reholder are hypothetical exercises
+  let activeKey: EncasementFormulaKey = isYellowLabel ? "signature" : "standard";
 
   return { formulas, activeKey };
 }

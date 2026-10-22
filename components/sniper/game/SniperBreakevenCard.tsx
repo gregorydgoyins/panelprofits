@@ -27,16 +27,16 @@ interface SniperBreakevenCardProps {
 
 export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProps) {
   const [selectedFormulaKey, setSelectedFormulaKey] = useState<EncasementFormulaKey>(
-    lot.activeFormulaKey || (lot.isYellowLabel ? "signature" : "pressed")
+    lot.activeFormulaKey || (lot.isYellowLabel ? "signature" : "standard")
   );
   const [activeView, setActiveView] = useState<"invoice" | "liquidation" | "escalator">("invoice");
 
-  // Retrieve active formula (or fallback to pressed)
-  const activeFormula = lot.formulas?.[selectedFormulaKey] || lot.formulas?.pressed || {
+  // Retrieve active formula (or fallback to standard universal auction baseline)
+  const activeFormula = lot.formulas?.[selectedFormulaKey] || lot.formulas?.standard || {
     key: selectedFormulaKey,
-    name: "Clean & Press + Grade (CCS)",
-    badgeLabel: `${lot.grader} Universal + CCS Pressing`,
-    description: "Industry gold standard for 9.8 candidates.",
+    name: "Standard Universal (Auction Baseline)",
+    badgeLabel: `${lot.grader} Universal Blue Label (Auction Standard)`,
+    description: "Standard secondary market auction reality. Encapsulated as-is without pressing.",
     isYellowLabel: false,
     baseGradingFee: lot.baseGradingFee,
     pressingFee: lot.pressingFee,
@@ -157,23 +157,49 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
         </div>
       ) : null}
 
-      {/* ── Formula Selection Bar (The 4 Submission Invoicing Tiers) ── */}
-      <div className="space-y-1.5">
-        <div className="flex items-center justify-between text-[10px] text-slate-400 uppercase tracking-wider">
+      {/* ── Formula Selection Bar (Auction Reality vs Hypothetical Exercises) ── */}
+      <div className="space-y-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[10px] text-slate-400 uppercase tracking-wider">
           <span className="flex items-center gap-1.5">
             <Calculator className="h-3.5 w-3.5 text-cyan-400" />
             <span>Submission Encasement Formula (Select To Inspect)</span>
           </span>
-          <span className="text-slate-500">4 Authentic Invoicing Tiers</span>
+          <span className="text-amber-300 font-semibold text-[9px]">
+            Standard = Auction Baseline · Signed = Separate Math · CPR &amp; Reholder = Hypothetical
+          </span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
           {(
             [
-              { key: "pressed", label: "Clean & Press", sub: "Grade + CCS ($89)", icon: "🧼" },
-              { key: "standard", label: "Standard Grade", sub: "Blue Label ($62)", icon: "📘" },
-              { key: "signature", label: "Signature Series", sub: "Yellow Label ($141)", icon: "✍️" },
-              { key: "reholder", label: "Re-holder", sub: "Fresh Case ($57)", icon: "🔄" },
+              {
+                key: "standard",
+                label: "Standard Grade",
+                sub: "Blue Label ($62) · As Listed",
+                icon: "📘",
+                isHypothetical: false,
+              },
+              {
+                key: "signature",
+                label: "Signature Series",
+                sub: "Yellow Label ($141) · Witnessed",
+                icon: "✍️",
+                isHypothetical: false,
+              },
+              {
+                key: "pressed",
+                label: "Clean & Press (CPR)",
+                sub: "Hypothetical CPR ($89) · 8.5/9.2",
+                icon: "🧼",
+                isHypothetical: true,
+              },
+              {
+                key: "reholder",
+                label: "Re-holder / Reslab",
+                sub: "Hypothetical Case ($57) · Re-case",
+                icon: "🔄",
+                isHypothetical: true,
+              },
             ] as const
           ).map((tier) => {
             const isSelected = selectedFormulaKey === tier.key;
@@ -193,13 +219,17 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
                 <div className="flex items-center justify-between text-[10px] font-bold">
                   <span className="flex items-center gap-1">
                     <span>{tier.icon}</span>
-                    <span>{tier.label}</span>
+                    <span className="truncate">{tier.label}</span>
                   </span>
-                  {lot.activeFormulaKey === tier.key && (
-                    <span className="text-[8px] bg-cyan-900 text-cyan-200 px-1 py-0.2 rounded uppercase">
+                  {lot.activeFormulaKey === tier.key ? (
+                    <span className="text-[8px] bg-cyan-900 text-cyan-200 px-1 py-0.2 rounded uppercase shrink-0">
                       Active
                     </span>
-                  )}
+                  ) : tier.isHypothetical ? (
+                    <span className="text-[7.5px] bg-amber-950/80 text-amber-300 border border-amber-500/40 px-1 py-0.2 rounded uppercase shrink-0">
+                      Hypothetical
+                    </span>
+                  ) : null}
                 </div>
                 <div className="mt-1 flex items-baseline justify-between text-[11px]">
                   <span className="text-slate-500 text-[9px]">Sunk Floor:</span>
@@ -208,6 +238,10 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
               </button>
             );
           })}
+        </div>
+
+        <div className="text-[10px] text-slate-400 bg-black/40 px-2.5 py-1.5 rounded border border-slate-800 leading-relaxed">
+          <strong className="text-slate-200">Auctions Reality Note:</strong> Standard Universal is how secondary market auctions usually go. Signed books carry separate witness/creator mathematics. Clean &amp; Press (CPR) and Re-holder are hypothetical exercises modeling potential buyer actions (e.g. what could happen if an 8.5 or 9.2 turns in favor of the buyer, or a cracked case needs a fresh slab).
         </div>
       </div>
 
@@ -247,7 +281,7 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
           }`}
         >
           <TrendingUp className="h-3.5 w-3.5" />
-          <span>3. Landed Escalator (9.2 → 9.8)</span>
+          <span>3. Hypothetical CPR Escalator (8.5/9.2 → 9.8)</span>
         </button>
       </div>
 
@@ -441,9 +475,20 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
         </div>
       )}
 
-      {/* ── VIEW 3: Landed Replacement Escalator & Real-World Underwriting ── */}
+      {/* ── VIEW 3: Hypothetical CPR Escalator & Real-World Underwriting ── */}
       {activeView === "escalator" && (
-        <div className="pt-1 animate-in fade-in duration-150">
+        <div className="pt-1 space-y-3 animate-in fade-in duration-150">
+          <div className="rounded-lg border border-amber-500/40 bg-amber-950/30 p-3 flex items-start gap-2.5 text-xs font-mono">
+            <Sparkles className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+            <div className="space-y-0.5 text-amber-200 text-[11px] leading-relaxed">
+              <span className="text-amber-300 uppercase block font-bold">
+                * Hypothetical Buyer Exercise (Not All Sub-9.8 Books Are CPR Candidates)
+              </span>
+              <span>
+                Not every comic below a 9.8 is a candidate for cracking, pressing, and regrading. In this exercise, it is a hypothetical model demonstrating what could happen if an 8.5 or 9.2 candidate turns in favor of the buyer upon pressing and resubmission. Standard grading is how secondary market auctions usually sell. Treat all CPR projections strictly as hypothetical upside scenarios.
+              </span>
+            </div>
+          </div>
           <LandedEquityCalculator
             currentListingPrice={currentBid}
             currentListingGrade={parseFloat(lot.grade) || 9.8}

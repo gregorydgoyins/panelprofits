@@ -398,10 +398,10 @@ export function LandedEquityCalculator({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-2">
           <div>
             <h4 className="text-xs sm:text-sm font-black text-white uppercase font-mono flex items-center gap-1.5">
-              <span>📈</span> The Realization Escalator (Both Wins Ladder)
+              <span>📈</span> The Hypothetical Realization Escalator (8.5 / 9.2 → 9.8 Model)
             </h4>
-            <span className="text-[10px] text-slate-400 font-mono">
-              9.2 Base Hit $\rightarrow$ 9.8 Grand Slam Home Run • Calculated Against Landed Basis
+            <span className="text-[10px] text-amber-300 font-mono block">
+              * Hypothetical Buyer Exercise: Not every sub-9.8 comic is a CPR candidate. Models what could happen if an 8.5 or 9.2 turns in favor of the buyer upon pressing and regrading.
             </span>
           </div>
 
