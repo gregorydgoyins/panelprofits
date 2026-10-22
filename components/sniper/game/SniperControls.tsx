@@ -29,6 +29,10 @@ export function SniperControls({
 
   const [customBid, setCustomBid] = useState<string>(String(minNextBid));
 
+  React.useEffect(() => {
+    setCustomBid(String(minNextBid));
+  }, [lot.id, userBid, lot.openingBid, minNextBid]);
+
   const chickenOutPenalty = userBid ? Math.round(userBid * 0.10) : 0;
 
   const handleQuickAdd = (increment: number) => {
@@ -111,6 +115,22 @@ export function SniperControls({
             <ArrowUpRight className="h-4 w-4" />
           </button>
         </div>
+
+        {/* Live Proposed Delta on the Fly */}
+        {Number(customBid) > currentLeader && (
+          <div className="flex items-center justify-between text-[11px] font-mono px-3 py-1.5 rounded-lg bg-black/60 border border-slate-800 text-slate-300">
+            <span className="flex items-center gap-1">
+              <span className="text-slate-500">Proposed Delta:</span>
+              <strong className="text-emerald-400 font-bold">+${Number(customBid) - currentLeader} vs Floor</strong>
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="text-slate-500">FMV Cushion:</span>
+              <strong className={Number(customBid) <= lot.fmv ? "text-cyan-300" : "text-amber-400"}>
+                ${lot.fmv - Number(customBid)}
+              </strong>
+            </span>
+          </div>
+        )}
       </form>
 
       {/* Floor Decision Buttons: Chicken Out vs Pass */}
@@ -118,25 +138,13 @@ export function SniperControls({
         {/* Chicken Out Button */}
         {userBid ? (
           <button
+            type="button"
             onClick={onChickenOut}
-            disabled={isLockout}
-            className={`w-full flex-1 flex items-center justify-center gap-2 rounded-xl border p-3 font-mono text-xs font-bold transition-all ${
-              isLockout
-                ? "border-slate-800 bg-slate-950 text-slate-600 cursor-not-allowed"
-                : "border-rose-500/40 bg-rose-950/20 text-rose-300 hover:bg-rose-950/40 hover:border-rose-400"
-            }`}
+            className="w-full flex-1 flex items-center justify-center gap-2 rounded-xl border p-3 font-mono text-xs font-bold transition-all border-rose-500/50 bg-rose-950/30 text-rose-300 hover:bg-rose-950/60 hover:border-rose-400 shadow-[0_0_8px_rgba(244,63,94,0.2)]"
+            title="Forfeit 10% penalty on your bid to immediately abort and release this sticky slot"
           >
-            {isLockout ? (
-              <>
-                <Lock className="h-4 w-4" />
-                <span>30s LOCKOUT ENGAGED · IN IT TO WIN IT</span>
-              </>
-            ) : (
-              <>
-                <AlertOctagon className="h-4 w-4 text-rose-400" />
-                <span>CHICKEN OUT (-10% Penalty: -${chickenOutPenalty})</span>
-              </>
-            )}
+            <AlertOctagon className="h-4 w-4 text-rose-400" />
+            <span>CHICKEN OUT (-10% Hit: -${chickenOutPenalty})</span>
           </button>
         ) : (
           <button

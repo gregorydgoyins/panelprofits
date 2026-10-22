@@ -19,7 +19,7 @@ import {
   ShieldAlert,
   ExternalLink,
 } from "lucide-react";
-import type { GameRole, LotItem } from "@/lib/sniper/sim/types";
+import type { GameRole, LotItem, StickyLotBid, BidEvent } from "@/lib/sniper/sim/types";
 import { SlabEncasement } from "@/components/sniper/SlabEncasement";
 import { SniperChart } from "./SniperChart";
 import { SniperDossier } from "./SniperDossier";
@@ -29,6 +29,9 @@ import { SniperReplacementCard } from "./SniperReplacementCard";
 import { SniperVideos } from "@/components/sniper/SniperVideos";
 import { SniperCandidateRow } from "./SniperCandidateRow";
 import { PriceChartingGradeTable } from "./PriceChartingGradeTable";
+import { StickyBiddedRail } from "./StickyBiddedRail";
+import { SniperBidTrajectoryChart } from "./SniperBidTrajectoryChart";
+import { calculateReplacementAnalysis } from "@/lib/sniper/sim/encasement-math";
 import { useTooltipsEnabled } from "@/components/shell/tooltip-toggle";
 
 function FloorRulePill({
@@ -99,6 +102,11 @@ interface SniperStageProps {
   onPlaceBid: (amount: number) => void;
   onChickenOut: () => void;
   onPassLot: () => void;
+  stickyBids?: StickyLotBid[];
+  onChickenOutLot?: (lotId: string) => void;
+  onRaiseStickyBid?: (lotId: string, amount: number) => void;
+  currentFloorBid?: number;
+  bidEvents?: BidEvent[];
 }
 
 export function SniperStage({
@@ -114,11 +122,40 @@ export function SniperStage({
   onPlaceBid,
   onChickenOut,
   onPassLot,
+  stickyBids,
+  onChickenOutLot,
+  onRaiseStickyBid,
+  currentFloorBid,
+  bidEvents,
 }: SniperStageProps) {
   // Three Dedicated Pages: "lead" (Floor & Bidding), "financials" (TradingView & Valuation), "story" (Lore & Videos)
   const [activeTab, setActiveTab] = useState<"lead" | "financials" | "story">("lead");
   const [videoList, setVideoList] = useState<any[]>([]);
   const [loadingVideos, setLoadingVideos] = useState<boolean>(false);
+
+  const ladder = lot.priceLadder;
+  const fmv98 = ladder.grade98 || lot.fmv;
+  const fmv96 = ladder.grade96 || Math.round(lot.fmv * 0.45);
+  const fmv94 = ladder.grade94 || Math.round(lot.fmv * 0.35);
+  const fmv92 = ladder.grade92 || Math.round(lot.fmv * 0.28);
+  const rawBasis = lot.estimatedRawBasis || ladder.raw || Math.max(10, Math.round(lot.fmv * 0.15));
+  const isVintage = (lot.era || "").includes("golden") || (lot.era || "").includes("silver") || (lot.era || "").includes("bronze");
+  const lastSoldPrice = lot.hammerPrice || lot.fmv;
+
+  const analysis = calculateReplacementAnalysis({
+    rawPrice: rawBasis,
+    currentBid: currentFloorBid ?? lot.openingBid,
+    lastSoldPrice,
+    lotGrade: lot.grade,
+    fmv98,
+    fmv96,
+    fmv94,
+    fmv92,
+    isVintage,
+    grader: lot.grader,
+    isYellowLabel: lot.isYellowLabel,
+  });
+  const wholeTomatoCost = analysis.wholeTomato.wholeTomato;
 
   const isLockout = timeRemaining <= 30;
 
@@ -181,6 +218,17 @@ export function SniperStage({
           Active Underwriting Target · Cert #{lot.certNumber ? lot.certNumber.slice(-4) : "VERIFIED"}
         </div>
       </div>
+
+      {/* ── Sticky Bidded Auctions Collation Board (Max 5 Slots) ── */}
+      {stickyBids && stickyBids.length > 0 && onChickenOutLot && onRaiseStickyBid && onSelectLot && (
+        <StickyBiddedRail
+          stickyBids={stickyBids}
+          activeLotId={lot.id}
+          onSelectLot={onSelectLot}
+          onChickenOutLot={onChickenOutLot}
+          onRaiseBid={onRaiseStickyBid}
+        />
+      )}
 
       {/* ── Layer 2: 4-Lot Strip Across the Top with Staggered Timers ── */}
       {candidates && candidates.length > 0 && onSelectLot && (
@@ -442,6 +490,18 @@ export function SniperStage({
                 onPlaceBid={onPlaceBid}
                 onChickenOut={onChickenOut}
                 onPassLot={onPassLot}
+              />
+
+              {/* Real-Time Bid Trajectory & Clock Friction Chart */}
+              <SniperBidTrajectoryChart
+                lot={lot}
+                userBid={userBid}
+                currentBid={currentFloorBid ?? lot.openingBid}
+                timeRemaining={timeRemaining}
+                wholeTomatoCost={wholeTomatoCost}
+                lastSoldComp={lastSoldPrice}
+                bidEvents={bidEvents ?? []}
+                isLockout={isLockout}
               />
 
               {/* Sunk Slabbing Cost & Breakeven Analysis Card */}

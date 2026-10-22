@@ -168,6 +168,28 @@ export interface RoundHistoryItem {
   date: string;
 }
 
+export interface BidEvent {
+  timestamp: number;
+  bidder: "user" | "rival" | "floor";
+  amount: number;
+  clockSecs: number;
+  note?: string;
+}
+
+export interface StickyLotBid {
+  lotId: string;
+  lot: LotItem;
+  userBid: number;
+  currentBid: number;
+  timeRemaining: number;
+  hammerPrice: number;
+  status: "leading" | "outbid" | "won" | "lost" | "chickened_out";
+  bidHistory: BidEvent[];
+  rival30sTriggered?: boolean;
+  rival5sTriggered?: boolean;
+  rival1sTriggered?: boolean;
+}
+
 export interface SimGameState {
   role: GameRole | null;
   bankroll: number;
@@ -182,6 +204,8 @@ export interface SimGameState {
   roundStatus: RoundStatus;
   userBid: number | null;
   timeRemaining: number;
+  stickyBids: StickyLotBid[];
   vault: WonBook[];
   history: RoundHistoryItem[];
 }
+
