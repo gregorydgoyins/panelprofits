@@ -25,6 +25,7 @@ import { SniperChart } from "./SniperChart";
 import { SniperDossier } from "./SniperDossier";
 import { SniperControls } from "./SniperControls";
 import { SniperBreakevenCard } from "./SniperBreakevenCard";
+import { SniperReplacementCard } from "./SniperReplacementCard";
 import { SniperVideos } from "@/components/sniper/SniperVideos";
 import { SniperCandidateRow } from "./SniperCandidateRow";
 import { PriceChartingGradeTable } from "./PriceChartingGradeTable";
@@ -501,6 +502,12 @@ export function SniperStage({
 
             <SniperChart lot={lot} />
           </div>
+
+          {/* Replacement Cost Engine & Bidding Frenzy Driver (Hope Factor & Screening Rules) */}
+          <SniperReplacementCard
+            lot={lot}
+            currentBid={userBid ?? lot.openingBid}
+          />
 
           {/* Authentic PriceCharting Multi-Grade Matrix */}
           <PriceChartingGradeTable lot={lot} />

@@ -287,3 +287,179 @@ export function calculateExitScenarios(fmv: number, acquisitionCost: number): Re
     },
   };
 }
+
+export interface ReplacementCostBreakdown {
+  pathKey: "cpr" | "press_resubmit";
+  pathName: string;
+  rawPrice: number;
+  prepFee: number;
+  prepFeeName: string;
+  gradingFee: number;
+  twoWayShipping: number;
+  twoWayInsurance: number;
+  invoiceFee: number;
+  serviceTax: number;
+  allInCost: number;
+}
+
+export interface HopeFactorYield {
+  p98: number;
+  p96: number;
+  p94: number;
+  p92OrLower: number;
+  fmv98: number;
+  fmv96: number;
+  fmv94: number;
+  fmv92: number;
+  expectedValue: number;
+  expectedGrade: number;
+  spreadVsAllIn: number;
+  frenzySpread: number;
+}
+
+export interface MinimumGradeScreen {
+  thresholdGrade: string;
+  invoiceFee: number;
+  rejectFee: number;
+  totalRejectFee: number;
+  twoWayShipping: number;
+  twoWayInsurance: number;
+  totalSunkIfRejected: number;
+  rejectProbability: number;
+  passProbability: number;
+  savedGradingFee: number;
+  equityWinIfExceeded: number;
+}
+
+export interface FullReplacementAnalysis {
+  cpr: ReplacementCostBreakdown;
+  pressResubmit: ReplacementCostBreakdown;
+  hopeFactor: HopeFactorYield;
+  screenRule: MinimumGradeScreen;
+}
+
+/**
+ * Calculates authentic replacement mathematics:
+ * 1. Clean, Press & Resubmit (CPR): Raw + CPR fee + Grading fee + Shipping (both ways) + Insurance (both ways) + Invoice fee + Tax
+ * 2. Press & Resubmit: Raw + Pressing fee + Grading fee + Shipping (both ways) + Insurance (both ways) + Invoice fee + Tax
+ * 3. The Hope Factor: Yield distribution (P(9.8)=15%, P(9.6)=35%, P(9.4)=32%, P(<=9.2)=18%) vs human prediction bias (>9.2 unpredictability)
+ * 4. Minimum Grade Culling / Screen Rule: Only grade if >= 9.4; pay $5 invoice + $9 reject fee if it misses; equity win if exceeded.
+ */
+export function calculateReplacementAnalysis({
+  rawPrice,
+  currentBid,
+  fmv98,
+  fmv96,
+  fmv94,
+  fmv92,
+  isVintage = false,
+  grader = "CGC",
+}: {
+  rawPrice: number;
+  currentBid: number;
+  fmv98: number;
+  fmv96: number;
+  fmv94: number;
+  fmv92: number;
+  isVintage?: boolean;
+  grader?: string;
+}): FullReplacementAnalysis {
+  const baseGrading = grader === "CGC" ? (isVintage ? 55.0 : 35.0) : (isVintage ? 45.0 : 25.0);
+  const twoWayShipping = 50.0; // $25 inbound + $25 outbound
+  const twoWayInsurance = 15.0; // $7.50 each way declared transit insurance
+  const invoiceFee = 5.0;
+  const taxRate = 0.07;
+
+  // Path 1: Clean, Press & Resubmit (CPR)
+  const cprFee = 30.0;
+  const cprTax = Math.round((cprFee + baseGrading + invoiceFee) * taxRate * 100) / 100;
+  const cprAllIn = Math.round((rawPrice + cprFee + baseGrading + twoWayShipping + twoWayInsurance + invoiceFee + cprTax) * 100) / 100;
+
+  const cpr: ReplacementCostBreakdown = {
+    pathKey: "cpr",
+    pathName: "Clean, Press & Resubmit (CPR)",
+    rawPrice,
+    prepFee: cprFee,
+    prepFeeName: "CPR (Clean & Press) Fee",
+    gradingFee: baseGrading,
+    twoWayShipping,
+    twoWayInsurance,
+    invoiceFee,
+    serviceTax: cprTax,
+    allInCost: cprAllIn,
+  };
+
+  // Path 2: Press & Resubmit
+  const pressFee = 18.0;
+  const pressTax = Math.round((pressFee + baseGrading + invoiceFee) * taxRate * 100) / 100;
+  const pressAllIn = Math.round((rawPrice + pressFee + baseGrading + twoWayShipping + twoWayInsurance + invoiceFee + pressTax) * 100) / 100;
+
+  const pressResubmit: ReplacementCostBreakdown = {
+    pathKey: "press_resubmit",
+    pathName: "Press & Resubmit",
+    rawPrice,
+    prepFee: pressFee,
+    prepFeeName: "Standard Pressing Fee",
+    gradingFee: baseGrading,
+    twoWayShipping,
+    twoWayInsurance,
+    invoiceFee,
+    serviceTax: pressTax,
+    allInCost: pressAllIn,
+  };
+
+  // Hope Factor Probabilistic Yield Distribution
+  const p98 = 0.15;
+  const p96 = 0.35;
+  const p94 = 0.32;
+  const p92OrLower = 0.18;
+
+  const expectedValue = Math.round(
+    p98 * fmv98 + p96 * fmv96 + p94 * fmv94 + p92OrLower * fmv92
+  );
+  const expectedGrade = Math.round((p98 * 9.8 + p96 * 9.6 + p94 * 9.4 + p92OrLower * 9.0) * 10) / 10;
+  const spreadVsAllIn = expectedValue - cprAllIn;
+  const frenzySpread = cprAllIn - currentBid;
+
+  const hopeFactor: HopeFactorYield = {
+    p98,
+    p96,
+    p94,
+    p92OrLower,
+    fmv98,
+    fmv96,
+    fmv94,
+    fmv92,
+    expectedValue,
+    expectedGrade,
+    spreadVsAllIn,
+    frenzySpread,
+  };
+
+  // Minimum Grade Screen Rule ("Only Grade If >= 9.4")
+  const rejectFee = 9.0;
+  const totalRejectFee = invoiceFee + rejectFee; // $14.00
+  const totalSunkIfRejected = totalRejectFee + twoWayShipping + twoWayInsurance; // $14 + $50 + $15 = $79.00
+  const equityWinIfExceeded = Math.max(0, fmv98 - cprAllIn);
+
+  const screenRule: MinimumGradeScreen = {
+    thresholdGrade: "9.4",
+    invoiceFee,
+    rejectFee,
+    totalRejectFee,
+    twoWayShipping,
+    twoWayInsurance,
+    totalSunkIfRejected,
+    rejectProbability: p92OrLower,
+    passProbability: Math.round((p98 + p96 + p94) * 100) / 100,
+    savedGradingFee: baseGrading,
+    equityWinIfExceeded,
+  };
+
+  return {
+    cpr,
+    pressResubmit,
+    hopeFactor,
+    screenRule,
+  };
+}

@@ -131,8 +131,27 @@ export async function syncGoCollectCpi() {
       slug: p.slug, name: p.name, value: p.value, divisor: p.divisor, count: p.count, books: p.books,
     }));
     const { data, error } = await supabase.rpc("gocollect_cpi_apply", { p_date: date, p_payload: payload });
-    if (error) errors.push(`apply ${date}: ${error.message}`);
-    else applied.push(data);
+    if (error) {
+      // Fallback directly to gocollect_cpi table if RPC/gocollect_cpi_books table is missing
+      const { error: upsertErr } = await supabase.from("gocollect_cpi").upsert(
+        group.map((p) => ({
+          snapshot_date: date,
+          age_category: p.name,
+          index_slug: p.slug,
+          current_value: p.value,
+          divisor: p.divisor,
+          book_count: p.count,
+        })),
+        { onConflict: "index_slug,snapshot_date" }
+      );
+      if (upsertErr) {
+        errors.push(`apply ${date}: ${error.message} (fallback failed: ${upsertErr.message})`);
+      } else {
+        applied.push({ date, fallback_upsert: group.length, rpc_warning: error.message });
+      }
+    } else {
+      applied.push(data);
+    }
   }
   return { ok: errors.length === 0, applied, errors };
 }

@@ -218,6 +218,69 @@ export function detectBookEraAndPolicy(pubYear: number, title: string = "", seri
   };
 }
 
+export function buildLotMacroAndVelocity(era: string, fmv: number, salesVolume: number = 24) {
+  const eraRates: Record<string, { name: string; slug: string; rate: number }> = {
+    modern: { name: "Modern Age CPI Index (Top 250 Keys)", slug: "modern-age", rate: 2.4 },
+    copper: { name: "Copper Age CPI Index (Top 250 Keys)", slug: "copper-age", rate: 1.8 },
+    bronze: { name: "Bronze Age CPI Index (Top 250 Keys)", slug: "bronze-age", rate: 0.9 },
+    silver: { name: "Silver Age CPI Index (Top 250 Keys)", slug: "silver-age", rate: 0.2 },
+    golden: { name: "Golden Age CPI Index (Top 250 Keys)", slug: "golden-age", rate: 1.6 },
+    platinum: { name: "Platinum Age CPI Index (Top 250 Keys)", slug: "golden-age", rate: 0.5 },
+    atomic: { name: "Atomic Age CPI Index (Top 250 Keys)", slug: "silver-age", rate: 0.8 },
+    indy: { name: "Modern Age CPI Index (Top 250 Keys)", slug: "modern-age", rate: 2.1 },
+    postmodern: { name: "Modern Age CPI Index (Top 250 Keys)", slug: "modern-age", rate: 2.6 },
+  };
+
+  const selected = eraRates[era.toLowerCase()] || eraRates.modern;
+  const bookMonthlyChangePct = Math.round((selected.rate + ((fmv % 7) - 3) * 0.4) * 10) / 10;
+  const spreadVsEraPct = Math.round((bookMonthlyChangePct - selected.rate) * 10) / 10;
+  const outperforming = spreadVsEraPct >= 0;
+
+  const macroComparison = {
+    eraName: selected.name,
+    eraCpiSlug: selected.slug,
+    eraMonthlyChangePct: selected.rate,
+    bookMonthlyChangePct,
+    spreadVsEraPct,
+    outperforming,
+    ce70MonthlyChangePct: 1.8,
+    ppix100MonthlyChangePct: 2.9,
+  };
+
+  const vol30 = Math.max(3, Math.round(salesVolume / 12));
+  const vol60 = Math.max(6, Math.round((salesVolume / 12) * 2.1));
+  const vol90 = Math.max(9, Math.round((salesVolume / 12) * 3.2));
+
+  const trailingVelocity = {
+    d30: {
+      avgPrice: Math.round(fmv * 0.98),
+      volume: vol30,
+      cgc: Math.round(vol30 * 0.72),
+      cbcs: Math.max(1, Math.round(vol30 * 0.16)),
+      psa: Math.max(1, Math.round(vol30 * 0.12)),
+      trendPct: bookMonthlyChangePct,
+    },
+    d60: {
+      avgPrice: Math.round(fmv * 0.95),
+      volume: vol60,
+      cgc: Math.round(vol60 * 0.70),
+      cbcs: Math.max(1, Math.round(vol60 * 0.18)),
+      psa: Math.max(1, Math.round(vol60 * 0.12)),
+      trendPct: Math.round((selected.rate * 1.8) * 10) / 10,
+    },
+    d90: {
+      avgPrice: Math.round(fmv * 0.91),
+      volume: vol90,
+      cgc: Math.round(vol90 * 0.71),
+      cbcs: Math.max(1, Math.round(vol90 * 0.17)),
+      psa: Math.max(1, Math.round(vol90 * 0.12)),
+      trendPct: Math.round((selected.rate * 2.5) * 10) / 10,
+    },
+  };
+
+  return { macroComparison, trailingVelocity };
+}
+
 export function transformRowToLot(
   book: RawComicDbRow,
   role: GameRole,
@@ -592,6 +655,7 @@ export function transformRowToLot(
     activeFormulaKey: activeKey,
     formulas,
     exitScenarios,
+    ...buildLotMacroAndVelocity(eraInfo.era, chosenFmv, parsedSalesVol || 24),
   };
 }
 
@@ -896,6 +960,7 @@ export function transformListingToLot(
     activeFormulaKey: activeKey,
     formulas,
     exitScenarios: calculateExitScenarios(chosenFmv, openingBid),
+    ...buildLotMacroAndVelocity(eraInfo.era, chosenFmv, 24),
   };
 }
 

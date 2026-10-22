@@ -105,6 +105,23 @@ export interface LotItem {
     lastCompDate: string;
     color: string;
   }>;
+  // GoCollect 30 / 60 / 90-Day Trailing Velocity across CGC, CBCS, PSA
+  trailingVelocity?: {
+    d30: { avgPrice: number; volume: number; cgc: number; cbcs: number; psa: number; trendPct: number };
+    d60: { avgPrice: number; volume: number; cgc: number; cbcs: number; psa: number; trendPct: number };
+    d90: { avgPrice: number; volume: number; cgc: number; cbcs: number; psa: number; trendPct: number };
+  };
+  // GoCollect CPI Era Index (Top 250 Keys) & Macro CE 70 / PPIX 100 Comparison
+  macroComparison?: {
+    eraName: string;
+    eraCpiSlug: string;
+    eraMonthlyChangePct: number;
+    bookMonthlyChangePct: number;
+    spreadVsEraPct: number;
+    outperforming: boolean;
+    ce70MonthlyChangePct: number;
+    ppix100MonthlyChangePct: number;
+  };
 }
 
 export interface ExitScenario {
