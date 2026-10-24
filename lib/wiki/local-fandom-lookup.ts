@@ -199,26 +199,63 @@ export function lookupInvestopedia(term: string): WikiLookupResult | null {
 
 function cleanWikiText(val: string | null | undefined): string {
   if (!val) return "";
-  return val
-    .replace(/^\|\s*(?:CurrentAlias|Aliases|Name)\s*=\s*/i, "")
-    .replace(/\*+/g, "")
-    .replace(/\[\[(?:[^|\]]*\|)?([^\]]+)\]\]/g, "$1")
-    .replace(/\{\{[^}]+\}\}/g, "")
-    .split("\n")[0]
-    .trim();
+  let s = val;
+  // Strip MediaWiki templates {{...}}
+  s = s.replace(/\{\{[^}]*\}\}/g, "");
+  // Strip MediaWiki links [[Target|Label]] -> Label, [[Target]] -> Target
+  s = s.replace(/\[\[(?:[^|\]]*\|)?([^\]]+)\]\]/g, "$1");
+  // Strip pipe attributes like | Aliases =, | RealName =, | CurrentAlias =, | Nicknames =, | EditorialNames =
+  s = s.replace(/\|\s*[A-Za-z0-9_-]+\s*=\s*/g, "");
+  // Strip category tags like Category:...
+  s = s.replace(/Category:[^\]\)\,]*/gi, "");
+  // Strip HTML tags
+  s = s.replace(/<[^>]*>/g, "");
+  // Strip extra whitespace and asterisks
+  s = s.replace(/\*+/g, "").replace(/\s+/g, " ").trim();
+  // Strip trailing issue citations inside an alias string
+  if (s.includes(";")) s = s.split(";")[0].trim();
+  if (s.includes(",")) s = s.split(",")[0].trim();
+  if (s.includes("\n")) s = s.split("\n")[0].trim();
+  return s;
 }
 
 /**
  * Look up character, creator, item, or team in Marvel Database (130,000+ entities)
  */
-export function lookupMarvelDatabase(name: string): WikiLookupResult | null {
+export function lookupMarvelDatabase(name: string, typeHint?: string): WikiLookupResult | null {
   const db = getDatabase("marvel");
   if (!db) return null;
 
   try {
     const cleanName = name.trim();
 
-    // 1. Check marvel_characters (103,802 rows) - Try exact match first
+    // 1. If creator hint, check marvel_creators (8,705 rows) FIRST
+    if (typeHint === "creator") {
+      let stmt = db.prepare(`
+        SELECT name, birth_date, country
+        FROM marvel_creators
+        WHERE LOWER(name) = LOWER(?) OR LOWER(name) LIKE LOWER(?)
+        LIMIT 1
+      `);
+      const cRow = stmt.get(cleanName, `${cleanName}%`) as any;
+      if (cRow) {
+        const creatorName = cRow.name.replace(/\(.*?\)/g, "").trim();
+        return {
+          term: creatorName,
+          slug: creatorName.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+          category: "Marvel Creator Retrospective",
+          definition: `Credited comic book creator for Marvel Comics.`,
+          translation: `Bullpen talent whose scripting, penciling, or cover artwork drives certified census premiums and key collector appeal.`,
+          type: "creator",
+          universe: "Marvel Bullpen",
+          role: "Legendary Creator",
+          sourceDb: "marvel_database.db",
+          url: `/catalog?q=${encodeURIComponent(creatorName)}`,
+        };
+      }
+    }
+
+    // 2. Check marvel_characters (103,802 rows) - Try exact match first
     let stmt = db.prepare(`
       SELECT page_title, name, current_alias, creators, first_appearance, universe, alignment
       FROM marvel_characters
@@ -244,7 +281,7 @@ export function lookupMarvelDatabase(name: string): WikiLookupResult | null {
       const alias = cleanWikiText(row.current_alias);
       const rawName = cleanWikiText(row.name);
       const cleanTitle = row.page_title.split("(")[0].trim();
-      const displayTitle = alias || rawName || cleanTitle || cleanName;
+      const displayTitle = (alias && !alias.startsWith("|")) ? alias : (rawName && !rawName.startsWith("|")) ? rawName : cleanTitle || cleanName;
 
       return {
         term: displayTitle,
@@ -262,7 +299,7 @@ export function lookupMarvelDatabase(name: string): WikiLookupResult | null {
       };
     }
 
-    // 2. Check marvel_creators (8,705 rows)
+    // 3. Check marvel_creators (8,705 rows) if not already checked
     stmt = db.prepare(`
       SELECT name, birth_date, country
       FROM marvel_creators
@@ -271,9 +308,10 @@ export function lookupMarvelDatabase(name: string): WikiLookupResult | null {
     `);
     const cRow = stmt.get(cleanName, `${cleanName}%`) as any;
     if (cRow) {
+      const creatorName = cRow.name.replace(/\(.*?\)/g, "").trim();
       return {
-        term: cRow.name,
-        slug: cRow.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+        term: creatorName,
+        slug: creatorName.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
         category: "Marvel Creator Retrospective",
         definition: `Credited comic book creator for Marvel Comics.`,
         translation: `Bullpen talent whose scripting, penciling, or cover artwork drives certified census premiums and key collector appeal.`,
@@ -281,7 +319,7 @@ export function lookupMarvelDatabase(name: string): WikiLookupResult | null {
         universe: "Marvel Bullpen",
         role: "Legendary Creator",
         sourceDb: "marvel_database.db",
-        url: `/catalog?q=${encodeURIComponent(cRow.name)}`,
+        url: `/catalog?q=${encodeURIComponent(creatorName)}`,
       };
     }
 
@@ -460,26 +498,44 @@ export function lookupUnifiedFandomEntity(
     if (inv) return inv;
   }
 
-  // 2. Route by universe hint if present
-  if (uniUpper.includes("MARVEL")) {
-    const m = lookupMarvelDatabase(clean);
-    if (m) return m;
-  } else if (uniUpper.includes("DC")) {
+  // 2. Known DC character routing to prevent Marvel parodies (e.g. Earth-3131 Marville) from stealing DC icons
+  const dcPattern = /\b(batman|superman|wonder woman|bruce wayne|clark kent|diana prince|joker|lex luthor|robin|nightwing|catwoman|flash|barry allen|wally west|green lantern|hal jordan|aquaman|cyborg|harley quinn|shazam|captain marvel jr|martian manhunter|zatanna|green arrow|oliver queen|deathstroke|slade wilson|darkseid|black canary|hawkman|hawkgirl|supergirl|batgirl|barbara gordon|damian wayne|tim drake|jason todd|riddler|penguin|two-face|bane|poison ivy|scarecrow|ras al ghul|ra's al ghul|talia al ghul|lobo|constantine|john constantine|swamp thing|sandman|dream of the endless|morpheus|lucifer morningstar)\b/i;
+  const isLikelyDc = dcPattern.test(clean);
+
+  // 3. Route by universe hint or DC pattern
+  if (uniUpper.includes("DC") || isLikelyDc) {
     const d = lookupDcDatabase(clean);
     if (d) return d;
+  }
+  if (uniUpper.includes("MARVEL")) {
+    const m = lookupMarvelDatabase(clean, typeHint);
+    if (m) return m;
   } else if (uniUpper.includes("STAR WARS") || uniUpper.includes("LUCAS")) {
     const sw = lookupStarWarsDatabase(clean);
     if (sw) return sw;
   }
 
-  // 3. General cascade across all local databases
-  // Check Marvel (130k entities)
-  const m = lookupMarvelDatabase(clean);
-  if (m) return m;
+  // 4. If typeHint is creator, check creators first
+  if (typeHint === "creator") {
+    const mc = lookupMarvelDatabase(clean, "creator");
+    if (mc) return mc;
+    const dc = lookupDcDatabase(clean);
+    if (dc) return dc;
+  }
 
-  // Check DC (39k entities)
-  const d = lookupDcDatabase(clean);
-  if (d) return d;
+  // 5. General cascade across all local databases
+  // Check DC first if likely DC, otherwise Marvel
+  if (isLikelyDc) {
+    const d = lookupDcDatabase(clean);
+    if (d) return d;
+    const m = lookupMarvelDatabase(clean, typeHint);
+    if (m) return m;
+  } else {
+    const m = lookupMarvelDatabase(clean, typeHint);
+    if (m) return m;
+    const d = lookupDcDatabase(clean);
+    if (d) return d;
+  }
 
   // Check Star Wars (44k entities)
   const sw = lookupStarWarsDatabase(clean);

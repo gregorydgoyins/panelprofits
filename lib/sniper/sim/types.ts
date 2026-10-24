@@ -110,7 +110,7 @@ export interface LotItem {
   isStaleComp: boolean;
   staleCompAgeDays: number;
   investopediaSlug: string;
-  venue?: "ebay" | "heritage" | "mycomicshop" | "comiclink" | "comicconnect" | "hipcomic";
+  venue?: "ebay" | "heritage" | "mycomicshop" | "comiclink" | "comicconnect" | "hipcomic" | "hakes";
   venueDisplayName?: string;
   venueLotId?: string;
   sourceListingUrl?: string;
@@ -138,7 +138,7 @@ export interface LotItem {
   historicalComps?: Array<{
     time: string;
     price: number;
-    venue: "Heritage" | "eBay" | "ComicLink" | "ComicConnect" | "MyComicShop";
+    venue: string;
     venueType: "pedigree" | "street_floor" | "institutional";
     grade: string;
     notes?: string;

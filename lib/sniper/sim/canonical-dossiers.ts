@@ -67,12 +67,48 @@ export function buildFandomLoreFromCachedSummary(
     .replace(/<!--[\s\S]*?-->/gi, "")
     .replace(/&nbsp;/gi, " ")
     .trim();
-  if (!rawText || /^\s*\|/.test(rawText)) return null;
+  if (!rawText) return null;
 
-  // Split text into readable scenes / paragraphs
-  const paragraphs = rawText
+  // Split lines, filter out infobox key-value pairs (lines starting with '|'), and extract narrative paragraphs & notes
+  const lines = rawText.split("\n");
+  const storyLines: string[] = [];
+  const parsedNotes: string[] = [];
+  let inNotes = false;
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      if (storyLines.length > 0 && storyLines[storyLines.length - 1] !== "") {
+        storyLines.push("");
+      }
+      continue;
+    }
+    // Section headers
+    if (/^==\s*(?:Notes|Trivia|Recommended Reading|See Also)\s*==/i.test(trimmed) || /^\|\s*(?:Notes|Trivia)\s*=/i.test(trimmed)) {
+      inNotes = true;
+      continue;
+    }
+    if (inNotes) {
+      if (/^==/i.test(trimmed) && !/Notes|Trivia/i.test(trimmed)) {
+        inNotes = false;
+      } else {
+        const cleanNote = trimmed.replace(/^[\*\#\|]\s*/, "").trim();
+        if (cleanNote && cleanNote.length > 10 && !cleanNote.startsWith("|")) parsedNotes.push(cleanNote);
+        continue;
+      }
+    }
+    // Filter out template parameter lines like | Editor = ... or | Appearing = ...
+    if (/^\|\s*[A-Za-z0-9_-]+\s*=/i.test(trimmed)) continue;
+    if (trimmed.startsWith("|") && !trimmed.includes(" ")) continue;
+    // Skip section headers
+    if (trimmed.startsWith("==") && trimmed.endsWith("==")) continue;
+    storyLines.push(trimmed);
+  }
+
+  const cleanNarrative = storyLines.join("\n").trim();
+  const paragraphs = cleanNarrative
     .split(/\n\s*\n/)
-    .map((p: string) => p.trim())
+    .map((p: string) => p.replace(/\n+/g, " ").trim())
     .filter((p: string) => p.length > 20 && !p.startsWith("|") && !p.startsWith("=="));
 
   if (paragraphs.length === 0) return null;
@@ -156,6 +192,7 @@ export function buildFandomLoreFromCachedSummary(
       ? `Chronological Continuity: Preceded by ${series} #${prevNum}; Succeeded by ${series} #${nextNum}.`
       : `Continuity Sequence: Issue #${issueNumber} in ${series} continuity.`,
     ...(firstApps.length ? [`Key Milestone: Historic first appearance of ${firstApps.join(", ")}.`] : []),
+    ...parsedNotes,
     `Source Provenance: Authenticated from ${sourceName} MediaWiki lore index.`,
   ];
 

@@ -240,6 +240,8 @@ export function SniperCandidateRow({
                           ? "ComicLink"
                           : lot.venue === "comicconnect"
                           ? "ComicConnect"
+                          : lot.venue === "hakes"
+                          ? "Hake's"
                           : "eBay Live"}
                       </span>
                     )}
