@@ -135,6 +135,7 @@ export function SniperStage({
   const [activeTab, setActiveTab] = useState<"lead" | "financials" | "story">("lead");
   const [videoList, setVideoList] = useState<any[]>([]);
   const [loadingVideos, setLoadingVideos] = useState<boolean>(false);
+  const [includePressing, setIncludePressing] = useState<boolean>(false);
 
   const ladder = lot.priceLadder;
   const fmv98 = ladder.grade98 || lot.fmv;
@@ -144,6 +145,10 @@ export function SniperStage({
   const rawBasis = lot.estimatedRawBasis || ladder.raw || Math.max(10, Math.round(lot.fmv * 0.15));
   const isVintage = (lot.era || "").includes("golden") || (lot.era || "").includes("silver") || (lot.era || "").includes("bronze");
   const lastSoldPrice = lot.hammerPrice || lot.fmv;
+
+  const numGrade = parseFloat(lot.grade || "9.8");
+  const isHighGrade = lot.grade === "9.8" || lot.grade === "10.0" || lot.grade === "9.9" || (!isNaN(numGrade) && numGrade > 9.4);
+  const isPressingCandidate = !isHighGrade && !isNaN(numGrade) && numGrade <= 9.4;
 
   const analysis = calculateReplacementAnalysis({
     rawPrice: rawBasis,
@@ -157,6 +162,7 @@ export function SniperStage({
     isVintage,
     grader: lot.grader,
     isYellowLabel: lot.isYellowLabel,
+    includePressing: isPressingCandidate ? includePressing : false,
   });
   const wholeTomatoCost = analysis.wholeTomato.wholeTomato;
 
@@ -514,30 +520,61 @@ export function SniperStage({
                   </span>
                 </div>
 
-                {/* Mathematical Replacement Formula */}
+                {/* Mathematical Replacement Formula: Raw Price is ALWAYS the core asset foundation */}
                 <div className="grid grid-cols-3 gap-2 text-center py-1">
                   <div className="p-2 rounded-lg bg-black/60 border border-slate-800">
-                    <span className="text-[10px] text-slate-400 block uppercase">1. Raw Basis</span>
+                    <span className="text-[10px] text-slate-400 block uppercase font-bold">1. Raw Comic Price</span>
                     <strong className="text-white text-sm font-bold">${rawBasis.toFixed(2)}</strong>
-                    <span className="text-[9px] text-slate-500 block">PriceCharting Ungraded</span>
+                    <span className="text-[9px] text-slate-500 block">Indispensable Foundation</span>
                   </div>
                   <div className="p-2 rounded-lg bg-black/60 border border-slate-800">
-                    <span className="text-[10px] text-slate-400 block uppercase">2. Sunk Slabbing</span>
-                    <strong className="text-cyan-300 text-sm font-bold">${lot.slabbingCostFloor.toFixed(2)}</strong>
-                    <span className="text-[9px] text-slate-500 block">FL Fees + Ship + Tax</span>
+                    <span className="text-[10px] text-slate-400 block uppercase font-bold">2. Sunk Slabbing Floor</span>
+                    <strong className="text-cyan-300 text-sm font-bold">${analysis.wholeTomato.serviceExpenses.toFixed(2)}</strong>
+                    <span className="text-[9px] text-slate-500 block">Grading + $8 Inv + Ship + Tax</span>
                   </div>
                   <div className="p-2 rounded-lg bg-emerald-950/40 border border-emerald-500/40">
-                    <span className="text-[10px] text-emerald-300 block uppercase font-bold">Total DIY Cost</span>
+                    <span className="text-[10px] text-emerald-300 block uppercase font-bold">3. Total Replacement</span>
                     <strong className="text-emerald-300 text-sm font-bold">${wholeTomatoCost.toFixed(2)}</strong>
-                    <span className="text-[9px] text-emerald-400/70 block">Whole Tomato Sum</span>
+                    <span className="text-[9px] text-emerald-400/70 block">The Whole Tomato</span>
                   </div>
                 </div>
+
+                {/* Explicit Formula Recap Pill */}
+                <div className="rounded bg-black/50 border border-emerald-500/20 px-2.5 py-1 text-[9.5px] text-slate-300 flex items-center justify-between">
+                  <span className="text-slate-400">Equation:</span>
+                  <span className="font-semibold text-emerald-300">
+                    Raw (${rawBasis.toFixed(2)}) + Slabbing Floor (${analysis.wholeTomato.serviceExpenses.toFixed(2)}) = Total DIY (${wholeTomatoCost.toFixed(2)})
+                  </span>
+                </div>
+
+                {/* Interactive Clean & Press Variable on <=9.4 */}
+                {isPressingCandidate ? (
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-slate-900/80 border border-slate-800 text-[10px]">
+                    <label className="flex items-center gap-2 cursor-pointer select-none text-slate-300">
+                      <input
+                        type="checkbox"
+                        checked={includePressing}
+                        onChange={(e) => setIncludePressing(e.target.checked)}
+                        className="rounded border-slate-700 text-cyan-500 focus:ring-0 bg-slate-800 h-3.5 w-3.5"
+                      />
+                      <span>Include Optional Clean &amp; Press ({isVintage ? "+$40.00" : "+$30.00"})</span>
+                    </label>
+                    <span className="text-[9px] text-slate-400 italic">
+                      {includePressing ? "Pressing active on ≤9.4" : "$0.00 default (as-is raw)"}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between p-1.5 px-2.5 rounded-lg bg-slate-950/60 border border-slate-900 text-[9.5px] text-slate-500">
+                    <span className="italic">Clean &amp; Press: Ineligible ($0.00)</span>
+                    <span className="font-mono text-[9px] text-slate-400">Top-grade copies (&gt;9.4) are never pressed</span>
+                  </div>
+                )}
 
                 {/* Buyer Manufacturing Advantage Callout */}
                 {(() => {
                   const currentActiveBid = Math.max(currentFloorBid ?? 0, userBid ?? 0, lot.openingBid);
-                  const isBelowSlab = currentActiveBid <= lot.slabbingCostFloor;
-                  const slabAdvantage = lot.slabbingCostFloor - currentActiveBid;
+                  const isBelowSlab = currentActiveBid <= analysis.wholeTomato.serviceExpenses;
+                  const slabAdvantage = analysis.wholeTomato.serviceExpenses - currentActiveBid;
                   const diyAdvantage = wholeTomatoCost - currentActiveBid;
 
                   return (
@@ -560,9 +597,9 @@ export function SniperStage({
                       </div>
                       <p className="text-[10px] text-slate-400 leading-relaxed">
                         {isBelowSlab
-                          ? `Arbitrage Alpha: Bidding $${currentActiveBid} acquires this certified slab for $${slabAdvantage.toFixed(2)} LESS than the grading company invoice alone. The comic book inside is effectively FREE with a negative basis.`
+                          ? `Arbitrage Alpha: Bidding $${currentActiveBid} acquires this certified slab for $${slabAdvantage.toFixed(2)} LESS than the physical certification bill alone. The comic book inside is acquired with zero capital outlay.`
                           : diyAdvantage > 0
-                          ? `Make vs. Buy Advantage: Replicating this certified slab today costs $${wholeTomatoCost.toFixed(2)} (raw comic $${rawBasis.toFixed(2)} + slabbing fees $${lot.slabbingCostFloor.toFixed(2)}). Clearing under $${wholeTomatoCost.toFixed(2)} captures immediate replacement equity.`
+                          ? `Make vs. Buy Advantage: Replicating this certified slab today costs $${wholeTomatoCost.toFixed(2)} (raw comic $${rawBasis.toFixed(2)} + slabbing fees $${analysis.wholeTomato.serviceExpenses.toFixed(2)}). Clearing under $${wholeTomatoCost.toFixed(2)} captures immediate replacement equity.`
                           : `High-Grade Rarity Premium: Grade ${lot.grade} commands equity surplus over DIY manufacturing cost due to low population density and submitter grade fallout risk.`}
                       </p>
                     </div>

@@ -844,8 +844,8 @@ export function generateRichInvestmentThesis(params: {
 
     const is98 = grade === "9.8" || grade === "10.0" || grade === "9.9";
     const overheadBreakdown = is98
-      ? `$${isVintage ? 55 : 35} grading + $43 two-way shipping + $5 invoice + 6% FL sales tax ($0 pressing — clean & press is omitted on 9.8s as pressing risk exceeds any upside at the top grade)`
-      : `$${isVintage ? 55 : 35} grading + $30 pressing + $43 two-way shipping + $5 invoice + 6% FL sales tax`;
+      ? `$${isVintage ? 55 : 35} grading + $43 two-way shipping + $8 online invoice + 6% FL sales tax ($0 pressing — clean & press is omitted on 9.8s as pressing risk exceeds any upside at the top grade)`
+      : `$${isVintage ? 55 : 35} grading + $43 two-way shipping + $8 online invoice + 6% FL sales tax ($0 pressing standard — clean & press is an optional variable on ≤9.4)`;
 
     if (fmv < slabbingCostFloor) {
       paragraphs.push(

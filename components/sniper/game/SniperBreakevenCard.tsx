@@ -19,7 +19,7 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import type { LotItem, EncasementFormulaKey } from "@/lib/sniper/sim/types";
-import { calculateExitScenarios } from "@/lib/sniper/sim/encasement-math";
+import { calculateExitScenarios, buildEncasementFormulas } from "@/lib/sniper/sim/encasement-math";
 import { LandedEquityCalculator } from "@/components/sniper/LandedEquityCalculator";
 
 interface SniperBreakevenCardProps {
@@ -32,30 +32,29 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
     lot.activeFormulaKey || (lot.isYellowLabel ? "signature" : "standard")
   );
   const [activeView, setActiveView] = useState<"invoice" | "liquidation" | "escalator">("invoice");
+  const [includePressing, setIncludePressing] = useState<boolean>(false);
 
-  // Retrieve active formula (or fallback to standard universal auction baseline)
-  const activeFormula = lot.formulas?.[selectedFormulaKey] || lot.formulas?.standard || {
-    key: selectedFormulaKey,
-    name: "Standard Universal (Auction Baseline)",
-    badgeLabel: `${lot.grader} Universal Blue Label (Auction Standard)`,
-    description: "Standard secondary market auction reality. Encapsulated as-is without pressing.",
-    isYellowLabel: false,
-    baseGradingFee: lot.baseGradingFee,
-    pressingFee: lot.pressingFee,
-    witnessFee: lot.witnessFee || 0,
-    creatorSigningFee: lot.creatorSigningFee || 0,
-    invoiceFee: lot.invoiceFee || 5.0,
-    serviceTax: lot.serviceTax || 2.40,
-    taxRatePercent: 6.0,
-    shippingHandlingFee: lot.shippingHandlingFee || 43.0,
-    slabbingCostFloor: lot.slabbingCostFloor,
-    estimatedRawBasis: lot.estimatedRawBasis,
-    mailerBoxFee: 5.0,
-    sellerTotalCostBasis: lot.sellerTotalCostBasis,
-    buyerReplacementCost: lot.buyerReplacementCost || lot.sellerTotalCostBasis,
-    venueFeeDragPercent: 13.25,
-    breakevenSalePrice: lot.breakevenSalePrice,
-  };
+  const numGrade = parseFloat(lot.grade || "9.8");
+  const isHighGrade = lot.grade === "9.8" || lot.grade === "10.0" || lot.grade === "9.9" || (!isNaN(numGrade) && numGrade > 9.4);
+  const isPressingCandidate = !isHighGrade && !isNaN(numGrade) && numGrade <= 9.4;
+
+  const isVintage = (lot.era || "").includes("golden") || (lot.era || "").includes("silver") || (lot.era || "").includes("bronze") || (lot.title || "").includes("198") || (lot.title || "").includes("197");
+
+  // Dynamically build formulas so pressing toggle and $8 online invoice fee are always live and synchronized
+  const { formulas } = buildEncasementFormulas({
+    grader: (lot.grader as any) || "CGC",
+    isVintage,
+    estimatedRawBasis: lot.estimatedRawBasis || lot.priceLadder?.raw || Math.max(10, Math.round(lot.fmv * 0.15)),
+    isYellowLabel: lot.isYellowLabel,
+    creatorName: lot.creatorName,
+    signaturesCount: 1,
+    grade: lot.grade,
+    isLot98: isHighGrade,
+    includePressing: isPressingCandidate ? includePressing : false,
+  });
+
+  // Active formula from fresh calculations
+  const activeFormula = formulas[selectedFormulaKey] || formulas.standard;
 
   // Canonical Buyer DIY Replacement Calculations (Make vs. Buy)
   const buyerReplacementCost = activeFormula.buyerReplacementCost || activeFormula.sellerTotalCostBasis;
@@ -252,7 +251,7 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
             ] as const
           ).map((tier) => {
             const isSelected = selectedFormulaKey === tier.key;
-            const formulaData = lot.formulas?.[tier.key];
+            const formulaData = formulas[tier.key];
             const floor = formulaData?.slabbingCostFloor ?? 0;
             return (
               <button
@@ -357,15 +356,30 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
                     <span className="text-white font-bold">${activeFormula.baseGradingFee.toFixed(2)}</span>
                   </div>
 
-                  {activeFormula.pressingFee > 0 ? (
+                  {isHighGrade ? (
+                    <div className="flex justify-between text-slate-500 text-[10px] italic">
+                      <span>Clean &amp; Press (Ineligible on &gt;9.4):</span>
+                      <span className="text-slate-400 font-mono">$0.00 (Practical Ceiling)</span>
+                    </div>
+                  ) : isPressingCandidate ? (
+                    <div className="flex items-center justify-between p-1.5 rounded bg-slate-900 border border-slate-800">
+                      <label className="flex items-center gap-1.5 cursor-pointer text-slate-300">
+                        <input
+                          type="checkbox"
+                          checked={includePressing}
+                          onChange={(e) => setIncludePressing(e.target.checked)}
+                          className="rounded border-slate-700 text-cyan-500 focus:ring-0 bg-slate-800 h-3.5 w-3.5"
+                        />
+                        <span>Optional Clean &amp; Press ({isVintage ? "+$40.00" : "+$30.00"}):</span>
+                      </label>
+                      <span className={includePressing ? "text-cyan-300 font-bold" : "text-slate-500"}>
+                        {includePressing ? `+$${(isVintage ? 40 : 30).toFixed(2)}` : "$0.00 (Variable)"}
+                      </span>
+                    </div>
+                  ) : activeFormula.pressingFee > 0 ? (
                     <div className="flex justify-between">
                       <span className="text-slate-400">Clean &amp; Press (CCS Pressing):</span>
                       <span className="text-cyan-300 font-bold">+${activeFormula.pressingFee.toFixed(2)}</span>
-                    </div>
-                  ) : (lot.grade === "9.8" || lot.grade === "10.0" || lot.grade === "9.9") ? (
-                    <div className="flex justify-between text-slate-500 text-[10px] italic">
-                      <span>Clean &amp; Press (Omitted on 9.8):</span>
-                      <span className="text-slate-400 font-mono">$0.00 (Practical Ceiling)</span>
                     </div>
                   ) : null}
 
@@ -394,8 +408,8 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
                   )}
 
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Submission Invoice Processing Fee:</span>
-                    <span className="text-white">+${activeFormula.invoiceFee.toFixed(2)}</span>
+                    <span className="text-slate-400">Submission Invoice Processing Fee (Online Standard):</span>
+                    <span className="text-white font-bold">+$8.00</span>
                   </div>
 
                   <div className="flex justify-between">
@@ -443,24 +457,35 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
                 </div>
 
                 <div className="space-y-1.5 text-[11px] text-slate-300">
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Estimated Raw Comic Acquisition:</span>
-                    <span className="text-white font-bold">${activeFormula.estimatedRawBasis.toFixed(2)}</span>
+                  <div className="flex justify-between bg-black/40 p-1.5 rounded border border-slate-800">
+                    <div>
+                      <span className="text-slate-200 font-bold block">1. Raw Comic Price (Indispensable Basis):</span>
+                      <span className="text-[9.5px] text-slate-500">Uncertified market asset foundation</span>
+                    </div>
+                    <span className="text-white font-extrabold text-sm">${activeFormula.estimatedRawBasis.toFixed(2)}</span>
                   </div>
 
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Sunk Factory Encasement Bill (Box 1):</span>
+                    <span className="text-slate-400">2. Sunk Factory Encasement Bill (Box 1 Floor):</span>
                     <span className="text-cyan-300 font-bold">+${activeFormula.slabbingCostFloor.toFixed(2)}</span>
                   </div>
 
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Insured Mailer &amp; Boxing:</span>
+                    <span className="text-slate-400">3. Insured Mailer &amp; Packaging:</span>
                     <span className="text-white">+${activeFormula.mailerBoxFee.toFixed(2)}</span>
                   </div>
 
                   <div className="flex justify-between border-t border-slate-800 pt-2 font-bold text-amber-300 text-xs">
                     <span>Total DIY Replacement Cost (The Whole Tomato):</span>
                     <span className="text-amber-200 font-extrabold">${buyerReplacementCost.toFixed(2)}</span>
+                  </div>
+
+                  {/* Explicit Formula Recap */}
+                  <div className="rounded bg-black/60 border border-amber-500/20 px-2 py-1 text-[9.5px] text-slate-300 flex items-center justify-between">
+                    <span className="text-slate-400">Replacement Equation:</span>
+                    <span className="font-semibold text-amber-300">
+                      Raw (${activeFormula.estimatedRawBasis.toFixed(2)}) + Floor (${activeFormula.slabbingCostFloor.toFixed(2)}) + Box ($5) = ${buyerReplacementCost.toFixed(2)}
+                    </span>
                   </div>
                 </div>
 
