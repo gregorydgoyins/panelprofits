@@ -2,13 +2,14 @@
 
 import React, { useState } from "react";
 import { DollarSign, ShieldAlert, AlertOctagon, ArrowUpRight, SkipForward, Lock } from "lucide-react";
-import type { LotItem } from "@/lib/sniper/sim/types";
+import type { LotItem, GameRole } from "@/lib/sniper/sim/types";
 
 interface SniperControlsProps {
   lot: LotItem;
   userBid: number | null;
   bankroll: number;
   timeRemaining: number;
+  role?: GameRole;
   onPlaceBid: (amount: number) => void;
   onChickenOut: () => void;
   onPassLot: () => void;
@@ -19,13 +20,15 @@ export function SniperControls({
   userBid,
   bankroll,
   timeRemaining,
+  role,
   onPlaceBid,
   onChickenOut,
   onPassLot,
 }: SniperControlsProps) {
   const isLockout = timeRemaining <= 30;
+  const isWhale = role === "whale";
   const currentLeader = Math.max(lot.openingBid, userBid ?? 0);
-  const minNextBid = userBid ? userBid + Math.max(5, Math.round(userBid * 0.05)) : lot.openingBid;
+  const minNextBid = userBid ? userBid + Math.max(isWhale ? 50 : 5, Math.round(userBid * 0.05)) : lot.openingBid;
 
   const [customBid, setCustomBid] = useState<string>(String(minNextBid));
 
@@ -97,15 +100,19 @@ export function SniperControls({
       {/* Bidding Form & Quick Increment Chips */}
       <form onSubmit={handleSubmitBid} className="space-y-3">
         <div className="flex items-center gap-2">
-          {/* Quick Increment Buttons */}
-          {[10, 25, 50, 100, 250].map((inc) => (
+          {/* Quick Increment Buttons (Whale: +$100 to +$2,500; Broker: +$10 to +$250) */}
+          {(isWhale ? [100, 250, 500, 1000, 2500] : [10, 25, 50, 100, 250]).map((inc) => (
             <button
               key={inc}
               type="button"
               onClick={() => handleQuickAdd(inc)}
-              className="flex-1 rounded-lg border border-slate-800 bg-slate-900/60 hover:bg-slate-800 py-1.5 text-xs font-mono font-bold text-slate-300 hover:text-white transition-colors"
+              className={`flex-1 rounded-lg border py-1.5 text-xs font-mono font-bold transition-colors ${
+                isWhale
+                  ? "border-amber-500/30 bg-amber-950/40 hover:bg-amber-900/60 text-amber-300 hover:text-white"
+                  : "border-slate-800 bg-slate-900/60 hover:bg-slate-800 text-slate-300 hover:text-white"
+              }`}
             >
-              +${inc}
+              +${inc >= 1000 ? `${inc / 1000}k` : inc}
             </button>
           ))}
         </div>
@@ -115,12 +122,12 @@ export function SniperControls({
             <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
             <input
               type="number"
-              step="5"
+              step={isWhale ? "25" : "5"}
               min={minNextBid}
               max={bankroll}
               value={customBid}
               onChange={(e) => setCustomBid(e.target.value)}
-              placeholder={`Min $${minNextBid}`}
+              placeholder={`Min $${minNextBid.toLocaleString()}`}
               className="w-full rounded-xl border border-slate-700 bg-black/60 pl-9 pr-4 py-3 font-mono font-bold text-white focus:outline-none focus:ring-2 focus:ring-cyan-400 text-base"
             />
           </div>
@@ -128,7 +135,11 @@ export function SniperControls({
           <button
             type="submit"
             disabled={Number(customBid) > bankroll || Number(customBid) <= (userBid ?? 0)}
-            className="flex items-center gap-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 text-slate-950 font-mono font-bold px-5 py-3 text-sm uppercase tracking-wider transition-colors shrink-0"
+            className={`flex items-center gap-1.5 rounded-xl font-mono font-bold px-5 py-3 text-sm uppercase tracking-wider transition-colors shrink-0 disabled:opacity-40 ${
+              isWhale
+                ? "bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-[0_0_12px_rgba(251,191,36,0.5)]"
+                : "bg-emerald-500 hover:bg-emerald-400 text-slate-950"
+            }`}
           >
             <span>{userBid ? "Raise Bid" : "Place Bid"}</span>
             <ArrowUpRight className="h-4 w-4" />

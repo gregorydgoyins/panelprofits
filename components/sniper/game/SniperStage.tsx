@@ -435,65 +435,146 @@ export function SniperStage({
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            {/* Left: The Slab / Cover Encasement */}
-            <div className="lg:col-span-5 rounded-xl border border-slate-800 bg-[#070A11] p-5 shadow-2xl flex flex-col items-center">
-              <div className="w-full flex items-center justify-between border-b border-slate-800 pb-3 mb-4 gap-2">
-                <div className="flex items-center gap-2 overflow-hidden">
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 shrink-0">
-                    Live Lot
-                  </span>
-                  {lot.venueDisplayName && (
-                    <a
-                      href={lot.sourceListingUrl || "#"}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold border border-purple-500/40 bg-purple-950/60 text-purple-200 hover:text-cyan-300 hover:border-cyan-400 transition-colors truncate"
-                      title={lot.venueLotId ? `${lot.venueDisplayName} · Lot #${lot.venueLotId}` : lot.venueDisplayName}
-                    >
-                      <span className="truncate">{lot.venueDisplayName}</span>
-                      <ExternalLink className="h-2.5 w-2.5 shrink-0" />
-                    </a>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-1.5 shrink-0">
-                  {lot.venueLotId && (
-                    <span className="text-[9px] font-mono text-purple-300/70 hidden sm:inline">
-                      #{lot.venueLotId.slice(-6)}
+            {/* Left Column: Visual Asset, Whole Tomato Equation, and PriceCharting Certified Matrix */}
+            <div className="lg:col-span-5 space-y-5">
+              {/* Slab Card */}
+              <div className="rounded-xl border border-slate-800 bg-[#070A11] p-5 shadow-2xl flex flex-col items-center">
+                <div className="w-full flex items-center justify-between border-b border-slate-800 pb-3 mb-4 gap-2">
+                  <div className="flex items-center gap-2 overflow-hidden">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 shrink-0">
+                      Live Lot
                     </span>
-                  )}
-                  <span className="rounded bg-slate-900 border border-slate-800 px-2 py-0.5 text-[10px] font-mono font-bold text-cyan-300 uppercase">
-                    {lot.grader} {lot.grade}
+                    {lot.venueDisplayName && (
+                      <a
+                        href={lot.sourceListingUrl || "#"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold border border-purple-500/40 bg-purple-950/60 text-purple-200 hover:text-cyan-300 hover:border-cyan-400 transition-colors truncate"
+                        title={lot.venueLotId ? `${lot.venueDisplayName} · Lot #${lot.venueLotId}` : lot.venueDisplayName}
+                      >
+                        <span className="truncate">{lot.venueDisplayName}</span>
+                        <ExternalLink className="h-2.5 w-2.5 shrink-0" />
+                      </a>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {lot.certNumber && (
+                      <a
+                        href={lot.certVerificationUrl || (lot.grader === "CGC" ? `https://www.cgccomics.com/certlookup/${lot.certNumber}/` : "#")}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[9px] font-mono text-cyan-400 hover:text-cyan-300 underline inline-flex items-center gap-0.5"
+                        title={`Verify ${lot.grader} #${lot.certNumber}`}
+                      >
+                        <span>Cert #{lot.certNumber.slice(-6)}</span>
+                        <ExternalLink className="h-2.5 w-2.5" />
+                      </a>
+                    )}
+                    <span className="rounded bg-slate-900 border border-slate-800 px-2 py-0.5 text-[10px] font-mono font-bold text-cyan-300 uppercase">
+                      {lot.grader} {lot.grade}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="w-full flex justify-center py-2">
+                  <SlabEncasement
+                    gradingCompany={lot.grader as any}
+                    grade={Number(lot.grade)}
+                    title={lot.title}
+                    issueNumber={lot.issueNumber}
+                    certNumber={lot.certNumber}
+                    imageUrl={lot.coverUrl}
+                    galleryImages={lot.galleryImages}
+                    isYellowLabel={lot.isYellowLabel}
+                    signatureDetails={lot.signatureDetails || undefined}
+                    size="md"
+                  />
+                </div>
+
+                <div className="w-full mt-4 pt-4 border-t border-slate-800/80 text-center font-mono">
+                  <h2 className="text-base font-bold text-white leading-snug">{lot.title}</h2>
+                  <div className="flex items-center justify-center gap-3 mt-1.5 text-xs text-slate-400">
+                    <span>{lot.series}</span>
+                    <span>·</span>
+                    <span>Issue #{lot.issueNumber}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* The Whole Tomato DIY Replacement Cost Equation Banner */}
+              <div className="relative rounded-xl border-2 border-emerald-500 bg-gradient-to-r from-[#041A12] via-[#020F0A] to-[#041A12] p-4 font-mono text-xs shadow-[0_0_0_1px_rgba(16,185,129,0.8),0_0_16px_rgba(16,185,129,0.4),inset_0_1px_2px_rgba(255,255,255,0.2)] space-y-3">
+                <div className="flex items-center justify-between border-b border-emerald-500/30 pb-2.5">
+                  <div className="flex items-center gap-1.5 font-bold text-emerald-300 uppercase tracking-wider text-[11px]">
+                    <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
+                    <span>The Whole Tomato DIY Cost Equation (Make vs. Buy)</span>
+                  </div>
+                  <span className="text-white font-bold text-sm bg-emerald-950/80 border border-emerald-400/50 px-2 py-0.5 rounded">
+                    ${wholeTomatoCost.toFixed(2)} DIY Basis
                   </span>
                 </div>
-              </div>
 
-              <div className="w-full flex justify-center py-2">
-                <SlabEncasement
-                  gradingCompany={lot.grader as any}
-                  grade={Number(lot.grade)}
-                  title={lot.title}
-                  issueNumber={lot.issueNumber}
-                  certNumber={lot.certNumber}
-                  imageUrl={lot.coverUrl}
-                  galleryImages={lot.galleryImages}
-                  isYellowLabel={lot.isYellowLabel}
-                  signatureDetails={lot.signatureDetails || undefined}
-                  size="md"
-                />
-              </div>
-
-              <div className="w-full mt-4 pt-4 border-t border-slate-800/80 text-center font-mono">
-                <h2 className="text-base font-bold text-white leading-snug">{lot.title}</h2>
-                <div className="flex items-center justify-center gap-3 mt-1.5 text-xs text-slate-400">
-                  <span>{lot.series}</span>
-                  <span>·</span>
-                  <span>Issue #{lot.issueNumber}</span>
+                {/* Mathematical Replacement Formula */}
+                <div className="grid grid-cols-3 gap-2 text-center py-1">
+                  <div className="p-2 rounded-lg bg-black/60 border border-slate-800">
+                    <span className="text-[10px] text-slate-400 block uppercase">1. Raw Basis</span>
+                    <strong className="text-white text-sm font-bold">${rawBasis.toFixed(2)}</strong>
+                    <span className="text-[9px] text-slate-500 block">PriceCharting Ungraded</span>
+                  </div>
+                  <div className="p-2 rounded-lg bg-black/60 border border-slate-800">
+                    <span className="text-[10px] text-slate-400 block uppercase">2. Sunk Slabbing</span>
+                    <strong className="text-cyan-300 text-sm font-bold">${lot.slabbingCostFloor.toFixed(2)}</strong>
+                    <span className="text-[9px] text-slate-500 block">FL Fees + Ship + Tax</span>
+                  </div>
+                  <div className="p-2 rounded-lg bg-emerald-950/40 border border-emerald-500/40">
+                    <span className="text-[10px] text-emerald-300 block uppercase font-bold">Total DIY Cost</span>
+                    <strong className="text-emerald-300 text-sm font-bold">${wholeTomatoCost.toFixed(2)}</strong>
+                    <span className="text-[9px] text-emerald-400/70 block">Whole Tomato Sum</span>
+                  </div>
                 </div>
+
+                {/* Buyer Manufacturing Advantage Callout */}
+                {(() => {
+                  const currentActiveBid = Math.max(currentFloorBid ?? 0, userBid ?? 0, lot.openingBid);
+                  const isBelowSlab = currentActiveBid <= lot.slabbingCostFloor;
+                  const slabAdvantage = lot.slabbingCostFloor - currentActiveBid;
+                  const diyAdvantage = wholeTomatoCost - currentActiveBid;
+
+                  return (
+                    <div className="p-2.5 rounded-lg bg-black/70 border border-emerald-500/30 space-y-1.5">
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="text-slate-300">Active Floor Bid: <strong>${currentActiveBid.toLocaleString()}</strong></span>
+                        {isBelowSlab ? (
+                          <span className="px-2 py-0.5 rounded bg-emerald-950 border border-emerald-400 text-emerald-300 font-bold text-[10px]">
+                            +${slabAdvantage.toFixed(2)} Below Slabbing Cost!
+                          </span>
+                        ) : diyAdvantage > 0 ? (
+                          <span className="px-2 py-0.5 rounded bg-cyan-950 border border-cyan-400 text-cyan-300 font-bold text-[10px]">
+                            +${diyAdvantage.toFixed(2)} DIY Manufacturing Discount
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded bg-amber-950 border border-amber-400 text-amber-300 font-bold text-[10px]">
+                            Premium Over Raw+Slab (+${Math.abs(diyAdvantage).toFixed(2)})
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-slate-400 leading-relaxed">
+                        {isBelowSlab
+                          ? `Arbitrage Alpha: Bidding $${currentActiveBid} acquires this certified slab for $${slabAdvantage.toFixed(2)} LESS than the grading company invoice alone. The comic book inside is effectively FREE with a negative basis.`
+                          : diyAdvantage > 0
+                          ? `Make vs. Buy Advantage: Replicating this certified slab today costs $${wholeTomatoCost.toFixed(2)} (raw comic $${rawBasis.toFixed(2)} + slabbing fees $${lot.slabbingCostFloor.toFixed(2)}). Clearing under $${wholeTomatoCost.toFixed(2)} captures immediate replacement equity.`
+                          : `High-Grade Rarity Premium: Grade ${lot.grade} commands equity surplus over DIY manufacturing cost due to low population density and submitter grade fallout risk.`}
+                      </p>
+                    </div>
+                  );
+                })()}
               </div>
+
+              {/* PriceCharting Multi-Grade Matrix Directly on Page 1 */}
+              <PriceChartingGradeTable lot={lot} compact={true} />
 
               {/* Page 1 Mini TradingView Price Chart & Comps Preview */}
-              <div className="w-full mt-4 pt-3 border-t border-slate-800/80 font-mono space-y-2.5">
+              <div className="rounded-xl border border-slate-800 bg-[#070A11] p-4 font-mono space-y-2.5 shadow-xl">
                 <div className="flex items-center justify-between text-[10px]">
                   <div className="flex items-center gap-1.5 font-bold text-cyan-300 uppercase tracking-wider">
                     <LineChart className="h-3.5 w-3.5 text-cyan-400" />
@@ -538,12 +619,12 @@ export function SniperStage({
                       <div className="relative w-full overflow-hidden">
                         <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-16 overflow-visible">
                           <defs>
-                            <linearGradient id="miniAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                            <linearGradient id="miniAreaGradLead" x1="0" y1="0" x2="0" y2="1">
                               <stop offset="0%" stopColor="#22D3EE" stopOpacity="0.35" />
                               <stop offset="100%" stopColor="#22D3EE" stopOpacity="0.0" />
                             </linearGradient>
                           </defs>
-                          <path d={areaPath} fill="url(#miniAreaGrad)" />
+                          <path d={areaPath} fill="url(#miniAreaGradLead)" />
                           <path d={linePath} fill="none" stroke="#22D3EE" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                           
                           {/* 2021 Peak Marker */}
@@ -589,13 +670,14 @@ export function SniperStage({
               </div>
             </div>
 
-            {/* Right: Bidding Keypad & Floor Decisions */}
+            {/* Right Column: Keypad, Real-Time Bid Trajectory, Florida Invoicing & Fiduciary Intel */}
             <div className="lg:col-span-7 space-y-6">
               <SniperControls
                 lot={lot}
                 userBid={userBid}
                 bankroll={bankroll}
                 timeRemaining={timeRemaining}
+                role={role}
                 onPlaceBid={onPlaceBid}
                 onChickenOut={onChickenOut}
                 onPassLot={onPassLot}

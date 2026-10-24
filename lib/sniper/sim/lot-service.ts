@@ -33,6 +33,8 @@ export const VERIFIED_SUPABASE_COVERS: Record<string, string> = {
   "2401551": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/fc/fc5eefe2781fd59cddd67dcbac158efe8f743875ba0a20f7b3bd0807a4b9fd2c.jpg",
   // Special Marvel Edition #15 (1st Shang-Chi)
   "2412773": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/fb/fb2e944bfa06ffbcf49b020c65de0e426a53abb48d8b6f16f0d7786a33ea42c5.jpg",
+  // Uncanny X-Men #141 (Days of Future Past / 1st Rachel Summers)
+  "2395322": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/3d/3df7c2212f176bfbff09ceb68d973810cbbdc6feda1d0f85724fe236bb9fc0a9.webp",
 };
 
 interface RawComicDbRow {
@@ -114,23 +116,48 @@ const FAMOUS_CREATORS = [
 ];
 
 const WHALE_KEY_IDS = [
-  "2314852", // Amazing Spider-Man #129 (1974)
-  "2386994", // The Incredible Hulk #181 (1974)
-  "2316410", // Batman #251 (1973)
-  "2392665", // Iron Man #55 (1973)
-  "2401551", // Tomb of Dracula #10 (1973)
-  "2315040", // Amazing Spider-Man #300 (1988)
+  "2395322", // Uncanny X-Men #141 (1981 - Days of Future Past)
+  "2314852", // Amazing Spider-Man #129 (1974 - 1st Punisher)
+  "2386994", // The Incredible Hulk #181 (1974 - 1st Wolverine)
+  "2316410", // Batman #251 (1973 - Classic Neal Adams Joker)
+  "2392665", // Iron Man #55 (1973 - 1st Thanos)
+  "2401551", // Tomb of Dracula #10 (1973 - 1st Blade)
+  "2315040", // Amazing Spider-Man #300 (1988 - 1st Venom)
 ];
 
 const BROKER_KEY_IDS = [
+  "2395322", // Uncanny X-Men #141 (1981 - Days of Future Past)
   "2387188", // The Incredible Hulk #377 (1991 - 1st Professor Hulk / Honey I Shrunk the Hulk)
-  "2394364", // New Mutants #98 (1991)
-  "2412773", // Special Marvel Edition #15 (1973)
-  "2399805", // Marvel Premiere #15 (1974)
+  "2394364", // New Mutants #98 (1991 - 1st Deadpool)
+  "2412773", // Special Marvel Edition #15 (1973 - 1st Shang-Chi)
+  "2399805", // Marvel Premiere #15 (1974 - 1st Iron Fist)
   "2393702", // Wolverine #23 (1990)
-  "2315040", // Amazing Spider-Man #300 (1988)
-  "2314852", // Amazing Spider-Man #129 (1974)
+  "2315040", // Amazing Spider-Man #300 (1988 - 1st Venom)
+  "2314852", // Amazing Spider-Man #129 (1974 - 1st Punisher)
 ];
+
+// Canonical Benchmark: Uncanny X-Men #141 (1981 - Days of Future Past)
+export const UNCANNY_XMEN_141_CANONICAL: RawComicDbRow = {
+  id: "2395322",
+  title: "Uncanny X-Men #141 (1981)",
+  series: "Uncanny X-Men",
+  issue_number: "141",
+  raw: "$112.00",
+  "4.0": "$54.84",
+  "6.0": "$73.61",
+  "8.0": "$117.50",
+  "9.2": "$205.96",
+  "9.4": "$350.00",
+  "9.6": "$549.95",
+  "9.8": "$807.50",
+  "10.0": null,
+  spread_raw_to_98: "695.50",
+  ratio_96_to_98: "0.6811",
+  sales_volume: "52",
+  highres_cover_url: "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/3d/3df7c2212f176bfbff09ceb68d973810cbbdc6feda1d0f85724fe236bb9fc0a9.webp",
+  summary: "Act I: In a dystopian alternate 2013 where colossal Sentinels have slaughtered the X-Men and confined mutants to internment camps, Kate Pryde undergoes temporal transposition.\nAct II: Kate's consciousness awakens in her thirteen-year-old self in 1980 at Xavier's School, warning the team of Senator Robert Kelly's impending murder by Mystique's Brotherhood.\nAct III: The X-Men deploy to Washington D.C., intercepting Avalanche, Destiny, and Pyro, desperately fighting to prevent the catastrophic Sentinel future.",
+  why_i_should_invest_in_this_comic: "Landmark Bronze Age milestone establishing the 'Days of Future Past' timeline (Earth-811). 1st Appearances of Rachel Summers, Avalanche, Destiny, and Pyro. Iconic John Byrne 'SLAYED / APPREHENDED' tombstone poster cover. Ungraded raw market value sits at $112.00, while CGC 9.8 benchmark commands $807.50, anchoring immense raw-to-9.8 margin of safety.",
+};
 
 // Fallback high-fidelity book if Supabase is offline
 const HIGH_FIDELITY_FALLBACK: RawComicDbRow = {
@@ -153,6 +180,74 @@ const HIGH_FIDELITY_FALLBACK: RawComicDbRow = {
   highres_cover_url: "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/5f/5f32066be28bc03b9d356ea5166e42656548dc01ee4dd8e053f43b68b88aa645.webp",
   summary: "Act I: Jackal manipulates the Punisher into hunting down Spider-Man.\nAct II: First explosive confrontation on New York rooftops; Punisher realizes Jackal's deceit.\nAct III: Climax at the warehouse; Punisher retreats into the shadows, launching a legendary anti-hero franchise.",
   why_i_should_invest_in_this_comic: "Historical blue-chip key marking the 1st Appearance of Frank Castle (The Punisher). Anchor asset with 484 recorded sales/yr and massive raw-to-9.8 spread.",
+};
+
+export const SOVEREIGN_CANONICAL_KEYS: Record<string, RawComicDbRow> = {
+  "2395322": UNCANNY_XMEN_141_CANONICAL,
+  "2314852": HIGH_FIDELITY_FALLBACK,
+  "2386994": {
+    id: "2386994",
+    title: "The Incredible Hulk #181 (1974)",
+    series: "Incredible Hulk, The",
+    issue_number: "181",
+    raw: "$1850.00",
+    "4.0": "$1950.00",
+    "6.0": "$2800.00",
+    "8.0": "$4400.00",
+    "9.2": "$6800.00",
+    "9.4": "$8500.00",
+    "9.6": "$12500.00",
+    "9.8": "$38000.00",
+    "10.0": null,
+    spread_raw_to_98: "36150.00",
+    ratio_96_to_98: "0.3289",
+    sales_volume: "312",
+    highres_cover_url: "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/c8/c8cd4173f8e224c45b161b021c0affd12317088295fa66b67830e0a6fb961c10.jpg",
+    summary: "Act I: Hulk battles the Wendigo in the Canadian wilderness.\nAct II: Wolverine (Weapon X) drops into the combat zone with adamantium claws drawn.\nAct III: Three-way brawl terminates; Wolverine cements his status as Marvel's premier mutant icon.",
+    why_i_should_invest_in_this_comic: "Apex Bronze Age grail representing the 1st Full Appearance of Wolverine. Tier-1 sovereign demand with 300+ sales/year and generational capital appreciation.",
+  },
+  "2315040": {
+    id: "2315040",
+    title: "Amazing Spider-Man #300 (1988)",
+    series: "Amazing Spider-Man, The",
+    issue_number: "300",
+    raw: "$260.00",
+    "4.0": "$240.00",
+    "6.0": "$350.00",
+    "8.0": "$520.00",
+    "9.2": "$750.00",
+    "9.4": "$950.00",
+    "9.6": "$1450.00",
+    "9.8": "$7350.00",
+    "10.0": null,
+    spread_raw_to_98: "7090.00",
+    ratio_96_to_98: "0.1973",
+    sales_volume: "580",
+    highres_cover_url: "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/78/7830afa2684f718d694dcdca1d5c87d938de6a0544ff7af4f422c39e0fd1ece1.webp",
+    summary: "Act I: Mysterious shadow creature invades Peter Parker's apartment, terrorizing Mary Jane.\nAct II: Eddie Brock reveals himself at Church of the Holy Name, bonded with the alien symbiote into Venom.\nAct III: Peter exploits sanctuary bells and organ pipes to defeat Venom, retiring the black cloth suit.",
+    why_i_should_invest_in_this_comic: "Highest liquidity key in the Copper Age. Todd McFarlane landmark art benchmark and 1st Full Appearance of Venom.",
+  },
+  "2316410": {
+    id: "2316410",
+    title: "Batman #251 (1973)",
+    series: "Batman",
+    issue_number: "251",
+    raw: "$480.00",
+    "4.0": "$380.00",
+    "6.0": "$620.00",
+    "8.0": "$1150.00",
+    "9.2": "$2100.00",
+    "9.4": "$2900.00",
+    "9.6": "$4500.00",
+    "9.8": "$14000.00",
+    "10.0": null,
+    spread_raw_to_98: "13520.00",
+    ratio_96_to_98: "0.3214",
+    sales_volume: "190",
+    highres_cover_url: "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/4d/4d362eae842d2f117bff51ba4c2edadd3a8b363711f0a817445c351afad8e001.webp",
+    summary: "Act I: Joker escapes State Hospital for the Criminally Insane, seeking revenge on his former gang members.\nAct II: Batman tracks the Joker through a sequence of lethal comedic traps across Gotham City.\nAct III: Climax at the abandoned aquarium; Batman captures the Joker, redefining him as a homicidal maniac.",
+    why_i_should_invest_in_this_comic: "Iconic Neal Adams playing card cover. The definitive Bronze Age revitalization of the Joker into a homicidal criminal genius.",
+  },
 };
 
 export function detectBookEraAndPolicy(pubYear: number, title: string = "", series: string = ""): {
@@ -1211,11 +1306,20 @@ function queryRandomSqliteLots(
     for (const p of candidates) {
       if (fs.existsSync(p)) {
         try {
-          db = new DatabaseSync(`file:${path.resolve(p)}?mode=ro&immutable=1`, { readOnly: true });
+          const testDb = new DatabaseSync(`file:${path.resolve(p)}?mode=ro&immutable=1`, { readOnly: true });
+          testDb.prepare("SELECT 1 FROM verified_equities LIMIT 1").get();
+          db = testDb;
+          break;
         } catch {
-          db = new DatabaseSync(path.resolve(p), { readOnly: true });
+          try {
+            const testDb = new DatabaseSync(path.resolve(p), { readOnly: true });
+            testDb.prepare("SELECT 1 FROM verified_equities LIMIT 1").get();
+            db = testDb;
+            break;
+          } catch {
+            // Not a populated verified_equities database, test next candidate
+          }
         }
-        break;
       }
     }
 
@@ -1347,6 +1451,10 @@ export function transformListingToLot(
       if (chosenFmv < 200) chosenFmv = 200 + ((absSeriesHash % 12) + 1) * 10;
     } else {
       if (chosenFmv < 130) chosenFmv = 130 + ((absSeriesHash % 10) + 1) * 10;
+    }
+  } else if (role === "whale") {
+    if (chosenFmv < 750) {
+      chosenFmv = 750 + ((absSeriesHash % 30) + 1) * 50;
     }
   }
 
@@ -1851,6 +1959,11 @@ export function isSovereignLot(
     // Retail / Buy-It-Now listings require minimum threshold
     const minPrice = isMajorSovereign ? 35 : 100;
     if (listing.price_usd != null && listing.price_usd < minPrice) return false;
+  } else if (role === "whale") {
+    // Whale mandate: Sovereign blue-chip keys only ($750 – $50,000+ FMV)
+    if (!isAuctionHouse && listing.price_usd != null && listing.price_usd < 750) return false;
+    const isBlueChipWhale = /141|181|129|300|251|giant-size|tomb of dracula #10|iron man #55|action comics|detective comics|fantastic four #48|fantastic four #49|fantastic four #52|daredevil #1|x-men #1\b|avengers #1\b|avengers #4\b|journey into mystery #83|tales of suspense #39|strange tales #110/i.test(full);
+    if (!isBlueChipWhale && (listing.price_usd == null || listing.price_usd < 750)) return false;
   } else {
     if (!isAuctionHouse && listing.price_usd != null && listing.price_usd < 25) return false;
   }
@@ -1882,6 +1995,8 @@ export async function fetchSimLotBatch(
         if (v === "ebay") {
           q = q.in("grade", [9.4, 9.6, 9.8, "9.4", "9.6", "9.8"]).gte("price_usd", 35);
         }
+      } else if (role === "whale") {
+        q = q.gte("price_usd", 750);
       } else {
         q = q.gte("price_usd", 100);
       }
@@ -1988,7 +2103,21 @@ export async function fetchSimLotBatch(
     console.warn("[sniper-lot-service] Failed querying sniper_listings, falling back to local catalog:", err);
   }
 
-  // 2. If sniper_listings returned fewer than count, fill remainder from local high-res catalog
+  // 2. Prioritize sovereign canonical keys for whale or when pool is shallow
+  if (role === "whale" || realLots.length < count) {
+    const canonicalPool = role === "whale"
+      ? WHALE_KEY_IDS.map((id) => SOVEREIGN_CANONICAL_KEYS[id]).filter(Boolean)
+      : BROKER_KEY_IDS.map((id) => SOVEREIGN_CANONICAL_KEYS[id]).filter(Boolean);
+
+    for (const canonRow of canonicalPool) {
+      if (realLots.length >= count) break;
+      if (!realLots.some((l) => l.id === canonRow.id) && !excludeIds.includes(canonRow.id)) {
+        realLots.push(transformRowToLot(canonRow, role, brokerLevel));
+      }
+    }
+  }
+
+  // 3. If sniper_listings returned fewer than count, fill remainder from local high-res catalog
   if (realLots.length < count) {
     const needed = count - realLots.length;
     const existingIds = [...excludeIds, ...realLots.map((l) => l.id)];
