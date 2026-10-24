@@ -23,13 +23,17 @@ export interface EncasementFormulaDetail {
   shippingHandlingFee: number;
   slabbingCostFloor: number;
   estimatedRawBasis: number;
+  rawTax?: number;
   mailerBoxFee: number;
+  mailerTax?: number;
+  totalSalesTax?: number;
   sellerTotalCostBasis: number;
   buyerReplacementCost?: number;
   wholeTomatoSpread?: number;
   venueFeeDragPercent: number;
   breakevenSalePrice: number;
 }
+
 export interface VariantCoverInfo {
   name: string;
   type: "Direct Edition" | "Newsstand" | "2nd Printing" | "3rd Printing" | "Foil" | "Virgin" | "Retailer Incentive" | "Variant";
@@ -174,11 +178,11 @@ export interface LotItem {
   estimatedRawBasis: number;
   sellerTotalCostBasis: number;
   buyerReplacementCost?: number;
+  wholeTomatoSpread?: number;
   breakevenSalePrice: number;
   isBelowGradingCost: boolean;
   sellerSubsidizedAmount: number;
   buyerManufacturingAdvantage?: number;
-  wholeTomatoSpread?: number;
   activeFormulaKey: EncasementFormulaKey;
   formulas: Record<EncasementFormulaKey, EncasementFormulaDetail>;
   exitScenarios: Record<string, ExitScenario>;
@@ -299,4 +303,3 @@ export interface SimGameState {
   vault: WonBook[];
   history: RoundHistoryItem[];
 }
-

@@ -440,7 +440,7 @@ export function SniperStage({
                 </div>
               </div>
 
-              {/* ── THE WHOLE TOMATO DIY REPLACEMENT COST EQUATION BANNER ── */}
+              {/* ── THE WHOLE TOMATO DIY REPLACEMENT COST EQUATION BANNER (UNIVERSAL SALES TAX EVERYWHERE) ── */}
               <div className="relative rounded-xl border-2 border-emerald-500 bg-gradient-to-r from-[#041A12] via-[#020F0A] to-[#041A12] p-4 font-mono text-xs shadow-[0_0_0_1px_rgba(16,185,129,0.8),0_0_16px_rgba(16,185,129,0.4),inset_0_1px_2px_rgba(255,255,255,0.2)] space-y-3">
                 <div className="flex items-center justify-between border-b border-emerald-500/30 pb-2.5">
                   <div className="flex items-center gap-1.5 font-bold text-emerald-300 uppercase tracking-wider text-[11px]">
@@ -455,27 +455,50 @@ export function SniperStage({
                 {/* Mathematical Replacement Formula: Raw Price is ALWAYS the core asset foundation */}
                 <div className="grid grid-cols-3 gap-2 text-center py-1">
                   <div className="p-2 rounded-lg bg-black/60 border border-slate-800">
-                    <span className="text-[10px] text-slate-400 block uppercase font-bold">1. Raw Comic Price</span>
-                    <strong className="text-white text-sm font-bold">${rawBasis.toFixed(2)}</strong>
-                    <span className="text-[9px] text-slate-500 block">Indispensable Foundation</span>
+                    <span className="text-[10px] text-slate-400 block uppercase font-bold">1. Raw Comic Basis</span>
+                    <strong className="text-white text-sm font-bold">
+                      ${((analysis.wholeTomato.rawStreetValue ?? rawBasis) + (analysis.wholeTomato.rawTax ?? 0)).toFixed(2)}
+                    </strong>
+                    <span className="text-[9px] text-slate-500 block">
+                      ${rawBasis.toFixed(2)} + ${(analysis.wholeTomato.rawTax ?? 0).toFixed(2)} Tax
+                    </span>
                   </div>
                   <div className="p-2 rounded-lg bg-black/60 border border-slate-800">
                     <span className="text-[10px] text-slate-400 block uppercase font-bold">2. Sunk Slabbing Floor</span>
-                    <strong className="text-cyan-300 text-sm font-bold">${analysis.wholeTomato.serviceExpenses.toFixed(2)}</strong>
-                    <span className="text-[9px] text-slate-500 block">Grading + $8 Inv + Ship + Tax</span>
+                    <strong className="text-cyan-300 text-sm font-bold">
+                      ${analysis.wholeTomato.serviceExpenses.toFixed(2)}
+                    </strong>
+                    <span className="text-[9px] text-slate-500 block">
+                      Grading + $8 Inv + Ship + Tax
+                    </span>
                   </div>
                   <div className="p-2 rounded-lg bg-emerald-950/40 border border-emerald-500/40">
                     <span className="text-[10px] text-emerald-300 block uppercase font-bold">3. Total Replacement</span>
-                    <strong className="text-emerald-300 text-sm font-bold">${wholeTomatoCost.toFixed(2)}</strong>
-                    <span className="text-[9px] text-emerald-400/70 block">The Whole Tomato</span>
+                    <strong className="text-emerald-300 text-sm font-bold">
+                      ${wholeTomatoCost.toFixed(2)}
+                    </strong>
+                    <span className="text-[9px] text-emerald-400/70 block">
+                      All-In (Incl. $5.30 Mailer)
+                    </span>
                   </div>
+                </div>
+
+                {/* Universal Sales Tax Mandate Banner */}
+                <div className="rounded bg-black/50 border border-emerald-500/20 px-2.5 py-1.5 text-[9.5px] text-slate-300 space-y-1">
+                  <div className="flex items-center justify-between text-emerald-300 font-bold">
+                    <span>Universal Sales Tax Mandate (6.0% FL):</span>
+                    <span>Total Tax: ${(analysis.wholeTomato.totalSalesTax ?? 0).toFixed(2)}</span>
+                  </div>
+                  <p className="text-[9px] text-slate-400 leading-tight">
+                    Comics, courier shipping, supplies, and slabbing are tangible goods &amp; services — not tax-exempt food. Sales tax applies everywhere across raw purchase, factory encapsulation, and mailer supplies.
+                  </p>
                 </div>
 
                 {/* Explicit Formula Recap Pill */}
                 <div className="rounded bg-black/50 border border-emerald-500/20 px-2.5 py-1 text-[9.5px] text-slate-300 flex items-center justify-between">
                   <span className="text-slate-400">Equation:</span>
                   <span className="font-semibold text-emerald-300">
-                    Raw (${rawBasis.toFixed(2)}) + Slabbing Floor (${analysis.wholeTomato.serviceExpenses.toFixed(2)}) = Total DIY (${wholeTomatoCost.toFixed(2)})
+                    Raw (${((analysis.wholeTomato.rawStreetValue ?? rawBasis) + (analysis.wholeTomato.rawTax ?? 0)).toFixed(2)}) + Slabbing Floor (${analysis.wholeTomato.serviceExpenses.toFixed(2)}) + Mailer ($5.30) = Total DIY (${wholeTomatoCost.toFixed(2)})
                   </span>
                 </div>
 
@@ -489,7 +512,7 @@ export function SniperStage({
                         onChange={(e) => setIncludePressing(e.target.checked)}
                         className="rounded border-slate-700 text-cyan-500 focus:ring-0 bg-slate-800 h-3.5 w-3.5"
                       />
-                      <span>Include Optional Clean &amp; Press ({isVintage ? "+$40.00" : "+$30.00"})</span>
+                      <span>Include Optional Clean &amp; Press ({isVintage ? "+$42.40 incl. tax" : "+$31.80 incl. tax"})</span>
                     </label>
                     <span className="text-[9px] text-slate-400 italic">
                       {includePressing ? "Pressing active on ≤9.4" : "$0.00 default (as-is raw)"}
@@ -531,7 +554,7 @@ export function SniperStage({
                         {isBelowSlab
                           ? `Arbitrage Alpha: Bidding $${currentActiveBid} acquires this certified slab for $${slabAdvantage.toFixed(2)} LESS than physical certification costs alone. The comic book inside is acquired with zero capital outlay.`
                           : diyAdvantage > 0
-                          ? `Make vs. Buy Advantage: Replicating this certified slab today costs $${wholeTomatoCost.toFixed(2)} (raw comic $${rawBasis.toFixed(2)} + slabbing fees $${analysis.wholeTomato.serviceExpenses.toFixed(2)}). Clearing under $${wholeTomatoCost.toFixed(2)} captures immediate replacement equity.`
+                          ? `Make vs. Buy Advantage: Replicating this certified slab today costs $${wholeTomatoCost.toFixed(2)} (raw comic $${((analysis.wholeTomato.rawStreetValue ?? rawBasis) + (analysis.wholeTomato.rawTax ?? 0)).toFixed(2)} + slabbing fees $${analysis.wholeTomato.serviceExpenses.toFixed(2)} + mailer $5.30). Clearing under $${wholeTomatoCost.toFixed(2)} captures immediate replacement equity.`
                           : `High-Grade Rarity Premium: Grade ${lot.grade} commands equity surplus over DIY manufacturing cost due to low census population density and submitter grade fallout risk.`}
                       </p>
                     </div>
@@ -637,7 +660,7 @@ export function SniperStage({
               <SniperBreakevenCard
                 lot={lot}
                 currentBid={Math.max(currentFloorBid ?? 0, userBid ?? 0, lot.openingBid)}
-                role={role}
+                userRole={role}
               />
 
               {/* Fiduciary / Whale Underwriting Intel */}
@@ -697,7 +720,7 @@ export function SniperStage({
           <SniperBreakevenCard
             lot={lot}
             currentBid={Math.max(currentFloorBid ?? 0, userBid ?? 0, lot.openingBid)}
-            role={role}
+            userRole={role}
           />
         </div>
       )}

@@ -19,7 +19,11 @@ export interface BuildEncasementParams {
  * 3. Clean & Press (CPR) - Optional variable ONLY applicable on <= 9.4 candidates with pressable defects
  * 4. Re-holder / Reslab - Fresh casing for cracked/scuffed slabs
  *
- * Online Invoice Handling Standard: $8.00 per submission (online portal convention).
+ * Universal Sales Tax Mandate:
+ * "Sales tax applies everywhere; this is not food."
+ * Under Florida law and US marketplace rules, comics, packaging supplies, courier shipping,
+ * and slabbing services are tangible goods & services subject to Florida state sales tax (6.0%).
+ * None of these are tax-exempt grocery food.
  */
 export function buildEncasementFormulas({
   grader,
@@ -39,9 +43,9 @@ export function buildEncasementFormulas({
   const isHighGrade = isLot98 ?? (grade === "9.8" || grade === "10.0" || grade === "9.9" || (!isNaN(numGrade) && numGrade > 9.4));
   const isPressingCandidate = !isHighGrade && !isNaN(numGrade) && numGrade <= 9.4;
 
-  const mailerBoxFee = 5.0;
+  const mailerBoxFee = 5.0; // Rigid cardboard Gemini mailer / packaging
   const venueFeeDragPercent = 13.25; // 13.25% eBay / marketplace platform fee + payment processing
-  const taxRatePercent = 6.0; // 6.0% Straight Florida sales tax (Sarasota, FL) on taxable grading & invoice fees
+  const taxRatePercent = 6.0; // 6.0% Straight Florida sales tax (Sarasota, FL) applied everywhere (not food)
   const outgoingShipping = 15.0; // $15.00 Priority Mail padded mailer/gemini box out
   const returnShipping = 28.0; // $28.00 base CGC return FedEx/UPS insured courier
   const totalTwoWayShipping = outgoingShipping + returnShipping; // $43.00
@@ -49,16 +53,23 @@ export function buildEncasementFormulas({
   // Online invoice handling standard is $8.00
   const onlineInvoiceFee = 8.0;
 
+  // Universal sales tax on raw comic purchase (comics are taxable tangible personal property, not food)
+  const rawTax = Math.round(estimatedRawBasis * (taxRatePercent / 100) * 100) / 100;
+  // Universal sales tax on mailer packaging supplies
+  const mailerTax = Math.round(mailerBoxFee * (taxRatePercent / 100) * 100) / 100; // $0.30
+
   // ──────────────────────────────────────────────────────────────────────────
   // TIER 1: Standard Universal (Grade Only, No Pressing) - AUCTION DEFAULT
   // Standard secondary market reality: Encapsulated as-is without pressing.
   // ──────────────────────────────────────────────────────────────────────────
   const stdBase = grader === "CGC" ? (isVintage ? 55.0 : 35.0) : grader === "CBCS" ? (isVintage ? 45.0 : 30.0) : (isVintage ? 40.0 : 30.0);
   const stdInvoice = onlineInvoiceFee;
-  const stdTaxable = stdBase + stdInvoice;
-  const stdTax = Math.round(stdTaxable * (taxRatePercent / 100) * 100) / 100;
-  const stdTotalSunk = stdBase + stdInvoice + stdTax + totalTwoWayShipping;
-  const stdCostBasis = estimatedRawBasis + stdTotalSunk + mailerBoxFee;
+  // Sales tax applies to grading, invoice fee, and courier shipping ("this is not food")
+  const stdTaxableServices = stdBase + stdInvoice + totalTwoWayShipping;
+  const stdTax = Math.round(stdTaxableServices * (taxRatePercent / 100) * 100) / 100;
+  const stdTotalSunk = stdTaxableServices + stdTax;
+  const stdTotalTax = rawTax + stdTax + mailerTax;
+  const stdCostBasis = Math.round((estimatedRawBasis + rawTax + stdTotalSunk + mailerBoxFee + mailerTax) * 100) / 100;
   const stdBreakeven = Math.round((stdCostBasis / (1 - venueFeeDragPercent / 100)) * 100) / 100;
 
   const standardFormula: EncasementFormulaDetail = {
@@ -66,8 +77,8 @@ export function buildEncasementFormulas({
     name: "Standard Universal (Auction Baseline)",
     badgeLabel: `${grader} Universal Blue Label (Auction Standard)`,
     description: isHighGrade
-      ? "Standard secondary market auction reality for certified slabs. Encapsulated without pressing ($0 pressing fee) to preserve mint factory state. Top-grade copies (>9.4) are never pressed."
-      : "Standard secondary market auction reality. Encapsulated as-is without pressing ($0 pressing). Most copies even at 9.2 do not warrant the pressing fee, delay, or damage risk.",
+      ? "Standard secondary market auction reality for certified slabs. Encapsulated without pressing ($0 pressing fee) to preserve mint factory state. Top-grade copies (>9.4) are never pressed. Sales tax applies everywhere (raw, services, shipping, mailer) — this is not food."
+      : "Standard secondary market auction reality. Encapsulated as-is without pressing ($0 pressing). Most copies even at 9.2 do not warrant the pressing fee, delay, or damage risk. Sales tax applies everywhere — this is not food.",
     isYellowLabel: false,
     baseGradingFee: stdBase,
     pressingFee: 0,
@@ -79,9 +90,12 @@ export function buildEncasementFormulas({
     shippingHandlingFee: totalTwoWayShipping,
     slabbingCostFloor: Math.round(stdTotalSunk * 100) / 100,
     estimatedRawBasis,
+    rawTax,
     mailerBoxFee,
-    sellerTotalCostBasis: Math.round(stdCostBasis * 100) / 100,
-    buyerReplacementCost: Math.round(stdCostBasis * 100) / 100,
+    mailerTax,
+    totalSalesTax: stdTotalTax,
+    sellerTotalCostBasis: stdCostBasis,
+    buyerReplacementCost: stdCostBasis,
     venueFeeDragPercent,
     breakevenSalePrice: stdBreakeven,
   };
@@ -95,17 +109,18 @@ export function buildEncasementFormulas({
   const sigCreator = 35.0 * signaturesCount; // Guesstimate baseline: ~$35/sig
   const sigPressing = isPressingCandidate && includePressing ? (isVintage ? 40.0 : 30.0) : 0.0;
   const sigInvoice = onlineInvoiceFee;
-  const sigTaxable = sigBase + sigPressing + sigWitness + sigInvoice;
-  const sigTax = Math.round(sigTaxable * (taxRatePercent / 100) * 100) / 100;
-  const sigTotalSunk = sigBase + sigPressing + sigWitness + sigCreator + sigInvoice + sigTax + totalTwoWayShipping;
-  const sigCostBasis = estimatedRawBasis + sigTotalSunk + mailerBoxFee;
+  const sigTaxableServices = sigBase + sigPressing + sigWitness + sigInvoice + totalTwoWayShipping;
+  const sigTax = Math.round(sigTaxableServices * (taxRatePercent / 100) * 100) / 100;
+  const sigTotalSunk = sigTaxableServices + sigCreator + sigTax;
+  const sigTotalTax = rawTax + sigTax + mailerTax;
+  const sigCostBasis = Math.round((estimatedRawBasis + rawTax + sigTotalSunk + mailerBoxFee + mailerTax) * 100) / 100;
   const sigBreakeven = Math.round((sigCostBasis / (1 - venueFeeDragPercent / 100)) * 100) / 100;
 
   const signatureFormula: EncasementFormulaDetail = {
     key: "signature",
     name: `Signature Series (${signaturesCount}x Signed Mathematics)`,
     badgeLabel: `${grader} Signature Series (Witnessed Signed)`,
-    description: `Signed mathematics: Official authorized witness authentication ($${sigWitness.toFixed(0)}) + creator signing fee guesstimate (~$${sigCreator.toFixed(0)}) for ${creatorName || "headline creator"}. (Creator fee is a guesstimate—uncertain without confirmed convention or private signing venue pricing). Pressing omitted ($0) by default.`,
+    description: `Signed mathematics: Official authorized witness authentication ($${sigWitness.toFixed(0)}) + creator signing fee guesstimate (~$${sigCreator.toFixed(0)}) for ${creatorName || "headline creator"}. (Creator fee is a guesstimate—uncertain without confirmed convention or private signing venue pricing). Pressing omitted ($0) by default. Sales tax applies everywhere (not food).`,
     isYellowLabel: true,
     baseGradingFee: sigBase,
     pressingFee: sigPressing,
@@ -120,25 +135,27 @@ export function buildEncasementFormulas({
     shippingHandlingFee: totalTwoWayShipping,
     slabbingCostFloor: Math.round(sigTotalSunk * 100) / 100,
     estimatedRawBasis,
+    rawTax,
     mailerBoxFee,
-    sellerTotalCostBasis: Math.round(sigCostBasis * 100) / 100,
-    buyerReplacementCost: Math.round(sigCostBasis * 100) / 100,
+    mailerTax,
+    totalSalesTax: sigTotalTax,
+    sellerTotalCostBasis: sigCostBasis,
+    buyerReplacementCost: sigCostBasis,
     venueFeeDragPercent,
     breakevenSalePrice: sigBreakeven,
   };
 
   // ──────────────────────────────────────────────────────────────────────────
   // TIER 3: Clean & Press (Optional Variable — Only Applicable on <= 9.4)
-  // "You only press comics that are below 9.8 and even then in certain circumstances;
-  //  not every one, some comics even at 9.2 are not worth the bump or hassle."
   // ──────────────────────────────────────────────────────────────────────────
   const cprBase = stdBase;
   const cprPressing = isPressingCandidate ? (isVintage ? 40.0 : 30.0) : 0.0;
   const cprInvoice = onlineInvoiceFee;
-  const cprTaxable = cprBase + cprPressing + cprInvoice;
-  const cprTax = Math.round(cprTaxable * (taxRatePercent / 100) * 100) / 100;
-  const cprTotalSunk = cprBase + cprPressing + cprInvoice + cprTax + totalTwoWayShipping;
-  const cprCostBasis = estimatedRawBasis + cprTotalSunk + mailerBoxFee;
+  const cprTaxableServices = cprBase + cprPressing + cprInvoice + totalTwoWayShipping;
+  const cprTax = Math.round(cprTaxableServices * (taxRatePercent / 100) * 100) / 100;
+  const cprTotalSunk = cprTaxableServices + cprTax;
+  const cprTotalTax = rawTax + cprTax + mailerTax;
+  const cprCostBasis = Math.round((estimatedRawBasis + rawTax + cprTotalSunk + mailerBoxFee + mailerTax) * 100) / 100;
   const cprBreakeven = Math.round((cprCostBasis / (1 - venueFeeDragPercent / 100)) * 100) / 100;
 
   const pressedFormula: EncasementFormulaDetail = {
@@ -150,8 +167,8 @@ export function buildEncasementFormulas({
       ? `${grader} Universal (No Pressing on >9.4)`
       : `${grader} Universal + Optional Pressing`,
     description: isHighGrade
-      ? "Ineligible ($0 pressing): You do not clean and press a 9.6 or 9.8 certified comic. Top-grade copies are already at the practical ceiling—pressing introduces uncompensated damage risk with nowhere to go."
-      : "Optional variable ($30 pressing). Only select candidates at 9.4 or lower with pressable surface defects justify the fee. Many books even at 9.2 have unpressable defects where pressing is a waste of capital.",
+      ? "Ineligible ($0 pressing): You do not clean and press a 9.6 or 9.8 certified comic. Top-grade copies are already at the practical ceiling—pressing introduces uncompensated damage risk with nowhere to go. Sales tax applies everywhere."
+      : "Optional variable ($30 pressing). Only select candidates at 9.4 or lower with pressable surface defects justify the fee. Many books even at 9.2 have unpressable defects where pressing is a waste of capital. Sales tax applies everywhere.",
     isYellowLabel: false,
     baseGradingFee: cprBase,
     pressingFee: cprPressing,
@@ -163,9 +180,12 @@ export function buildEncasementFormulas({
     shippingHandlingFee: totalTwoWayShipping,
     slabbingCostFloor: Math.round(cprTotalSunk * 100) / 100,
     estimatedRawBasis,
+    rawTax,
     mailerBoxFee,
-    sellerTotalCostBasis: Math.round(cprCostBasis * 100) / 100,
-    buyerReplacementCost: Math.round(cprCostBasis * 100) / 100,
+    mailerTax,
+    totalSalesTax: cprTotalTax,
+    sellerTotalCostBasis: cprCostBasis,
+    buyerReplacementCost: cprCostBasis,
     venueFeeDragPercent,
     breakevenSalePrice: cprBreakeven,
   };
@@ -176,17 +196,18 @@ export function buildEncasementFormulas({
   const rehFee = 25.0;
   const rehInvoice = onlineInvoiceFee;
   const rehShipping = 25.0;
-  const rehTaxable = rehFee + rehInvoice;
-  const rehTax = Math.round(rehTaxable * (taxRatePercent / 100) * 100) / 100;
-  const rehTotalSunk = rehFee + rehInvoice + rehTax + rehShipping;
-  const rehCostBasis = estimatedRawBasis + rehTotalSunk + mailerBoxFee;
+  const rehTaxableServices = rehFee + rehInvoice + rehShipping;
+  const rehTax = Math.round(rehTaxableServices * (taxRatePercent / 100) * 100) / 100;
+  const rehTotalSunk = rehTaxableServices + rehTax;
+  const rehTotalTax = rawTax + rehTax + mailerTax;
+  const rehCostBasis = Math.round((estimatedRawBasis + rawTax + rehTotalSunk + mailerBoxFee + mailerTax) * 100) / 100;
   const rehBreakeven = Math.round((rehCostBasis / (1 - venueFeeDragPercent / 100)) * 100) / 100;
 
   const reholderFormula: EncasementFormulaDetail = {
     key: "reholder",
     name: "Re-holder / Reslab (Fresh Casing)",
     badgeLabel: `${grader} Re-holder (Re-case)`,
-    description: "Casing replacement for scuffed, scratched, or chipped slabs to restore mint optical presentation without affecting the underlying certified grade.",
+    description: "Casing replacement for scuffed, scratched, or chipped slabs to restore mint optical presentation without affecting the underlying certified grade. Sales tax applies everywhere.",
     isYellowLabel: false,
     baseGradingFee: rehFee,
     pressingFee: 0,
@@ -198,9 +219,12 @@ export function buildEncasementFormulas({
     shippingHandlingFee: rehShipping,
     slabbingCostFloor: Math.round(rehTotalSunk * 100) / 100,
     estimatedRawBasis,
+    rawTax,
     mailerBoxFee,
-    sellerTotalCostBasis: Math.round(rehCostBasis * 100) / 100,
-    buyerReplacementCost: Math.round(rehCostBasis * 100) / 100,
+    mailerTax,
+    totalSalesTax: rehTotalTax,
+    sellerTotalCostBasis: rehCostBasis,
+    buyerReplacementCost: rehCostBasis,
     venueFeeDragPercent,
     breakevenSalePrice: rehBreakeven,
   };
@@ -222,7 +246,7 @@ export function buildEncasementFormulas({
  * 1. Online Marketplace (eBay / Shortboxed): FMV - 13.25% fee - $5 packaging
  * 2. Direct Collector (Private Sale / Con cash): 100% FMV ($0 fee, $0 packaging)
  * 3. Quick Liquidation / Local Comic Shop (LCS buy-list): 40% of FMV (immediate cash)
- * 4. Auction House (Heritage / ComicLink): FMV - 10% seller commission - $5 packaging
+ * 4. Premier Auction House (Heritage / ComicLink): FMV - 10% seller commission - $5 packaging
  */
 export function calculateExitScenarios(fmv: number, acquisitionCost: number): Record<string, ExitScenario> {
   // 1. Online Marketplace
@@ -322,6 +346,7 @@ export interface ReplacementCostBreakdown {
   pathKey: "cpr" | "standard" | "signature";
   pathName: string;
   rawPrice: number;
+  rawTax: number; // Sales tax on raw comic acquisition (not food!)
   prepFee: number;
   prepFeeName: string;
   gradingFee: number;
@@ -330,10 +355,13 @@ export interface ReplacementCostBreakdown {
   twoWayShipping: number; // $15 + $28 = $43.00
   twoWayInsurance: number;
   invoiceFee: number; // $8.00 online submission invoice fee
-  serviceTax: number;
+  serviceTax: number; // 6% Sales tax on grading + invoice + courier shipping + prep
+  mailerBoxFee: number; // $5.00 packaging supplies
+  mailerTax: number; // 6% Sales tax on packaging supplies ($0.30)
+  totalSalesTax: number; // Total sales tax across all elements (raw + services + shipping + mailer)
   taxRatePercent: number; // 6.0% FL State Sales Tax
-  sunkExpenses: number; // Box 1 Total Sunk Certification Bill
-  allInCost: number; // Box 2 Whole Tomato Cost (Raw + Box 1)
+  sunkExpenses: number; // Box 1 Total Sunk Certification & Logistics Bill
+  allInCost: number; // Box 2 Whole Tomato Cost (Raw + Raw Tax + Sunk Bill + Mailer + Mailer Tax)
   manufacturingAdvantage: number; // Box 3 Advantage (Whole Tomato - Current Bid)
   isCprEligible: boolean;
   cprIneligibilityReason?: string;
@@ -377,8 +405,12 @@ export interface MinimumGradeScreen {
 
 export interface WholeTomatoEightBallAnalysis {
   rawStreetValue: number;
+  rawTax: number;
   serviceExpenses: number;
-  wholeTomato: number; // Intrinsic replacement value = Raw + Services
+  mailerFee: number;
+  mailerTax: number;
+  totalSalesTax: number;
+  wholeTomato: number; // Intrinsic replacement value = Raw + Raw Tax + Services + Courier + Mailer + Taxes
   lastSoldPrice: number; // Last recorded comp price
   currentBid: number;
   eightBallSpread: number; // Whole Tomato - Last Sold Price - Current Bid
@@ -400,9 +432,12 @@ export interface FullReplacementAnalysis {
 /**
  * Calculates authentic replacement mathematics & 3-Box Vertical Whole Tomato Valuation:
  *
+ * "Sales tax applies everywhere; this is not food."
+ *
  * 1. Box 1: Sunk Certification & Logistics Bill
- *    Grading Fee + $8 Online Invoice + Straight Florida State Sales Tax (6.0%) + $15 Priority Out + $28 Return Courier.
- * 2. Box 2: The Whole Tomato (Raw Basis + Box 1 Sunk Costs). Raw Price is ALWAYS the core asset foundation.
+ *    Grading Fee + $8 Online Invoice + $43 Courier Shipping + Pressing/Signing + 6% Sales Tax on all services/shipping.
+ * 2. Box 2: The Whole Tomato (Raw Basis + Raw Tax + Box 1 Sunk Bill + $5 Mailer + Mailer Tax).
+ *    Raw Price is ALWAYS the core asset foundation.
  * 3. Box 3: The Live Auction Comparison (Box 2 Whole Tomato - Current Hammer Bid = Manufacturing Advantage).
  */
 export function calculateReplacementAnalysis({
@@ -440,7 +475,8 @@ export function calculateReplacementAnalysis({
   const twoWayShipping = outgoingShipping + returnShipping; // $43.00
   const twoWayInsurance = 0.0;
   const invoiceFee = 8.0; // Online submission handling standard: $8.00
-  const taxRate = 0.06; // Straight Florida state sales tax (6.0%) in Sarasota, FL
+  const mailerBoxFee = 5.0; // Rigid cardboard Gemini mailer / packaging
+  const taxRate = 0.06; // Florida state sales tax (6.0%) in Sarasota, FL ("this is not food")
   const signingFee = isYellowLabel ? 25.0 * signaturesCount : 0.0;
 
   const numGrade = parseFloat(lotGrade);
@@ -450,16 +486,28 @@ export function calculateReplacementAnalysis({
   const isCprEligible = !isHighGrade && !isNaN(numGrade) && numGrade <= 9.4 && numGrade >= 7.5;
   const cprFee = isCprEligible ? (isVintage ? 40.0 : 30.0) : 0.0;
 
+  // Universal sales tax applied to raw comic purchase (comics are taxable tangible personal property, not food)
+  const rawTax = Math.round(rawPrice * taxRate * 100) / 100;
+  // Universal sales tax applied to packaging supplies
+  const mailerTax = Math.round(mailerBoxFee * taxRate * 100) / 100; // $0.30
+
   // ── Standard Universal Replacement (Box 1 Sunk Factory Bill, $0 Pressing) ──
-  const stdTaxable = baseGrading + invoiceFee + signingFee;
-  const stdTax = Math.round(stdTaxable * taxRate * 100) / 100;
-  const stdServices = Math.round((baseGrading + outgoingShipping + returnShipping + invoiceFee + stdTax + signingFee) * 100) / 100;
-  const stdAllIn = Math.round((rawPrice + stdServices) * 100) / 100;
+  // Sales tax applies to grading, online invoice, and courier shipping ("this is not food")
+  const stdTaxableServices = baseGrading + invoiceFee + twoWayShipping + signingFee;
+  const stdTax = Math.round(stdTaxableServices * taxRate * 100) / 100;
+  const stdServices = Math.round((stdTaxableServices + stdTax) * 100) / 100;
+  const stdTotalTax = Math.round((rawTax + stdTax + mailerTax) * 100) / 100;
+  const stdAllIn = Math.round((rawPrice + rawTax + stdServices + mailerBoxFee + mailerTax) * 100) / 100;
 
   const standard: ReplacementCostBreakdown = {
     pathKey: "standard",
-    pathName: isYellowLabel ? `Signature Series Replacement (${signaturesCount}x)` : isHighGrade ? "Standard Certified Replacement (No Pressing on >9.4)" : "Standard Certified Replacement",
+    pathName: isYellowLabel
+      ? `Signature Series Replacement (${signaturesCount}x)`
+      : isHighGrade
+      ? "Standard Certified Replacement (No Pressing on >9.4)"
+      : "Standard Certified Replacement",
     rawPrice,
+    rawTax,
     prepFee: signingFee,
     prepFeeName: isYellowLabel ? "Creator Signing Fee (Est. Guesstimate)" : isHighGrade ? "No Pressing ($0 — Top Grade Ceiling)" : "No Pressing ($0 — As-Is Raw)",
     gradingFee: baseGrading,
@@ -469,6 +517,9 @@ export function calculateReplacementAnalysis({
     twoWayInsurance,
     invoiceFee,
     serviceTax: stdTax,
+    mailerBoxFee,
+    mailerTax,
+    totalSalesTax: stdTotalTax,
     taxRatePercent: 6.0,
     sunkExpenses: stdServices,
     allInCost: stdAllIn,
@@ -479,10 +530,11 @@ export function calculateReplacementAnalysis({
   };
 
   // ── Clean, Press & Resubmit (CPR) — Optional Variable for <= 9.4 Candidates Only ──
-  const cprTaxable = baseGrading + cprFee + invoiceFee + signingFee;
-  const cprTax = Math.round(cprTaxable * taxRate * 100) / 100;
-  const cprServices = Math.round((baseGrading + cprFee + outgoingShipping + returnShipping + invoiceFee + cprTax + signingFee) * 100) / 100;
-  const cprAllIn = Math.round((rawPrice + cprServices) * 100) / 100;
+  const cprTaxableServices = baseGrading + cprFee + invoiceFee + twoWayShipping + signingFee;
+  const cprTax = Math.round(cprTaxableServices * taxRate * 100) / 100;
+  const cprServices = Math.round((cprTaxableServices + cprTax) * 100) / 100;
+  const cprTotalTax = Math.round((rawTax + cprTax + mailerTax) * 100) / 100;
+  const cprAllIn = Math.round((rawPrice + rawTax + cprServices + mailerBoxFee + mailerTax) * 100) / 100;
 
   let targetBumpGrade = "9.4";
   let targetBumpFmv = fmv94;
@@ -500,6 +552,7 @@ export function calculateReplacementAnalysis({
     pathKey: "cpr",
     pathName: "Clean, Press & Resubmit (CPR Variable)",
     rawPrice,
+    rawTax,
     prepFee: cprFee,
     prepFeeName: "Optional CPR (Clean & Press) Variable",
     gradingFee: baseGrading,
@@ -509,6 +562,9 @@ export function calculateReplacementAnalysis({
     twoWayInsurance,
     invoiceFee,
     serviceTax: cprTax,
+    mailerBoxFee,
+    mailerTax,
+    totalSalesTax: cprTotalTax,
     taxRatePercent: 6.0,
     sunkExpenses: cprServices,
     allInCost: cprAllIn,
@@ -519,17 +575,17 @@ export function calculateReplacementAnalysis({
       : undefined,
     targetBumpGrade,
     targetBumpFmv,
-    cprNetBenefit: Math.round(cprNetBenefit * 100) / 100,
+    cprNetBenefit,
+    creatorFeeIsGuesstimate: isYellowLabel,
+    creatorFeeNote: isYellowLabel ? "Creator signing fee is an estimated guesstimate (~$25–$100+); uncertain without specific convention or venue pricing." : undefined,
   };
 
-  // ── The Whole Tomato Replacement Cost & Eight-Ball Position ──
-  // Box 1: Sunk Certification Expenses
-  // Box 2: Whole Tomato Intrinsic Value = Raw Street Basis + Box 1
-  // Box 3: Manufacturing Advantage = Whole Tomato - Current Bid
-  // Pressing is an optional variable and is NOT forced into the active replacement baseline!
-  const usePressedBaseline = includePressing && isCprEligible;
-  const activeReplacementCost = usePressedBaseline ? cprAllIn : stdAllIn;
-  const activeSunkExpenses = usePressedBaseline ? cprServices : stdServices;
+  // Determine active breakdown
+  const activeBreakdown = (includePressing && isCprEligible) ? cpr : standard;
+  const activeReplacementCost = activeBreakdown.allInCost;
+  const activeSunkExpenses = activeBreakdown.sunkExpenses;
+
+  // ── Ahead of Eight Ball vs Behind Eight Ball ──
   const effectiveLastSold = lastSoldPrice > 0 ? lastSoldPrice : currentLotFmv;
   const eightBallSpread = Math.round((activeReplacementCost - effectiveLastSold - currentBid) * 100) / 100;
   const replacementAdvantage = Math.round((activeReplacementCost - currentBid) * 100) / 100;
@@ -537,7 +593,11 @@ export function calculateReplacementAnalysis({
 
   const wholeTomato: WholeTomatoEightBallAnalysis = {
     rawStreetValue: rawPrice,
+    rawTax,
     serviceExpenses: activeSunkExpenses,
+    mailerFee: mailerBoxFee,
+    mailerTax,
+    totalSalesTax: activeBreakdown.totalSalesTax,
     wholeTomato: activeReplacementCost,
     lastSoldPrice: effectiveLastSold,
     currentBid,
@@ -575,18 +635,18 @@ export function calculateReplacementAnalysis({
     frenzySpread,
   };
 
-  // ── Minimum Grade Screen Rule ("Pre-Screen Caps Loss at ~$44") ──
+  // ── Minimum Grade Screen Rule ("Pre-Screen Caps Loss at ~$50") ──
   const rejectFee = 9.0;
-  const totalRejectFee = invoiceFee + rejectFee;
-  const rejectTax = Math.round(totalRejectFee * taxRate * 100) / 100;
-  const totalSunkIfRejected = Math.round((totalRejectFee + returnShipping + rejectTax) * 100) / 100;
+  const rejectTaxable = invoiceFee + rejectFee + returnShipping;
+  const rejectTax = Math.round(rejectTaxable * taxRate * 100) / 100;
+  const totalSunkIfRejected = Math.round((rejectTaxable + rejectTax) * 100) / 100;
   const equityWinIfExceeded = Math.max(0, fmv98 - activeReplacementCost);
 
   const screenRule: MinimumGradeScreen = {
     thresholdGrade: isLot98 ? "9.8" : "9.4",
     invoiceFee,
     rejectFee,
-    totalRejectFee,
+    totalRejectFee: invoiceFee + rejectFee,
     outgoingShipping,
     returnShipping,
     twoWayShipping,

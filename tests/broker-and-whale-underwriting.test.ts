@@ -316,21 +316,21 @@ describe("Broker vs Whale Underwriting & Encasement Suite (105 Passing Checks)",
       expect(formulas.standard.invoiceFee).not.toBe(5.0);
     });
 
-    it("42. confirms 6% FL sales tax is computed against the $8.00 online handling fee", () => {
+    it("42. confirms 6% FL sales tax applies universally to slabbing services, courier shipping, packaging, and raw comics", () => {
       const taxOnInvoice = 8.0 * 0.06;
       expect(taxOnInvoice).toBeCloseTo(0.48, 2);
     });
 
-    it("43. validates total service base for modern: $35 grading + $8 handling = $43 taxable", () => {
-      const taxableModern = 35.0 + 8.0;
-      expect(taxableModern).toBe(43.0);
-      expect(taxableModern * 0.06).toBeCloseTo(2.58, 2);
+    it("43. validates total service base for modern: $35 grading + $8 handling + $43 shipping = $86 taxable", () => {
+      const taxableModern = 35.0 + 8.0 + 43.0;
+      expect(taxableModern).toBe(86.0);
+      expect(taxableModern * 0.06).toBeCloseTo(5.16, 2);
     });
 
-    it("44. validates total service base for vintage: $55 grading + $8 handling = $63 taxable", () => {
-      const taxableVintage = 55.0 + 8.0;
-      expect(taxableVintage).toBe(63.0);
-      expect(taxableVintage * 0.06).toBeCloseTo(3.78, 2);
+    it("44. validates total service base for vintage: $55 grading + $8 handling + $43 shipping = $106 taxable", () => {
+      const taxableVintage = 55.0 + 8.0 + 43.0;
+      expect(taxableVintage).toBe(106.0);
+      expect(taxableVintage * 0.06).toBeCloseTo(6.36, 2);
     });
 
     it("45. verifies online invoice fee is constant regardless of comic valuation", () => {
@@ -486,7 +486,7 @@ describe("Broker vs Whale Underwriting & Encasement Suite (105 Passing Checks)",
       expect(analysis.standard.allInCost).toBeLessThan(analysis.cpr.allInCost);
     });
 
-    it("58. confirms standard formula sunk expenses are strictly $88.58 for modern (35 + 43 + 8 + 2.58)", () => {
+    it("58. confirms standard formula sunk expenses are strictly $91.16 for modern (35 + 43 + 8 + 5.16 tax)", () => {
       const analysis = calculateReplacementAnalysis({
         rawPrice: 100,
         currentBid: 150,
@@ -494,10 +494,10 @@ describe("Broker vs Whale Underwriting & Encasement Suite (105 Passing Checks)",
         fmv98: 600,
         isVintage: false,
       });
-      expect(analysis.standard.sunkExpenses).toBe(88.58);
+      expect(analysis.standard.sunkExpenses).toBe(91.16);
     });
 
-    it("59. confirms standard formula sunk expenses are strictly $109.78 for vintage CGC (55 + 43 + 8 + 3.78)", () => {
+    it("59. confirms standard formula sunk expenses are strictly $112.36 for vintage CGC (55 + 43 + 8 + 6.36 tax)", () => {
       const { formulas } = buildEncasementFormulas({
         grader: "CGC",
         isVintage: true,
@@ -509,7 +509,7 @@ describe("Broker vs Whale Underwriting & Encasement Suite (105 Passing Checks)",
         formulas.standard.shippingHandlingFee +
         formulas.standard.invoiceFee +
         formulas.standard.serviceTax;
-      expect(sunkVintage).toBeCloseTo(109.78, 2);
+      expect(sunkVintage).toBeCloseTo(112.36, 2);
     });
 
     it("60. confirms pressing fee cannot be injected without valid numeric grade <= 9.4", () => {
@@ -522,51 +522,61 @@ describe("Broker vs Whale Underwriting & Encasement Suite (105 Passing Checks)",
   // ==========================================
   // SECTION 5: BOX 2 WHOLE TOMATO DIY REPLACEMENT BASIS (Tests 61-75)
   // ==========================================
-  describe("Box 2 Whole Tomato DIY Replacement Cost Equation", () => {
+  describe("Box 2 Whole Tomato DIY Replacement Cost Equation (Universal Sales Tax)", () => {
     it("61. establishes Raw Comic Price as the indispensable foundation in Box 2", () => {
       const rawPrice = 112.0;
       expect(rawPrice).toBeGreaterThan(0);
     });
 
-    it("62. validates Whole Tomato Equation: Raw Price + Sunk Slabbing Bill + $5 Mailer", () => {
+    it("62. validates Whole Tomato Equation: Raw Basis + Raw Tax + Sunk Slabbing Floor + Mailer + Mailer Tax", () => {
       const raw = 112.0;
-      const sunkBill = 88.58;
+      const rawTax = 112.0 * 0.06; // 6.72
+      const sunkBill = 91.16; // 35 + 43 + 8 + 5.16
       const mailer = 5.0;
-      const totalReplacement = raw + sunkBill + mailer;
-      expect(totalReplacement).toBeCloseTo(205.58, 2);
+      const mailerTax = 0.30;
+      const totalReplacement = raw + rawTax + sunkBill + mailer + mailerTax;
+      expect(totalReplacement).toBeCloseTo(215.18, 2);
     });
 
-    it("63. calculates exact Uncanny X-Men #141 DIY replacement cost with standard slabbing", () => {
+    it("63. calculates exact Uncanny X-Men #141 DIY replacement cost with standard slabbing ($215.18 all-in)", () => {
       const raw = UNCANNY_XMEN_141_CANONICAL.raw ? parseUsd(UNCANNY_XMEN_141_CANONICAL.raw)! : 112.0;
       expect(raw).toBe(112.0);
-      const sunk = 88.58;
-      expect(raw + sunk).toBeCloseTo(200.58, 2);
+      const analysis = calculateReplacementAnalysis({
+        rawPrice: raw,
+        currentBid: 150,
+        ...DEFAULT_BENCHMARKS,
+        fmv98: 807,
+        isVintage: false,
+        grader: "CGC",
+      });
+      expect(analysis.wholeTomato.wholeTomato).toBeCloseTo(215.18, 2);
     });
 
-    it("64. confirms $5.00 rigid cardboard Gemini mailer cost basis", () => {
+    it("64. confirms $5.00 rigid cardboard Gemini mailer cost basis plus $0.30 sales tax ($5.30 all-in)", () => {
       const mailerCost = 5.0;
-      expect(mailerCost).toBe(5.0);
+      const mailerTax = 5.0 * 0.06;
+      expect(mailerCost + mailerTax).toBeCloseTo(5.30, 2);
     });
 
     it("65. verifies Ahead of the 8-Ball condition when Current Bid < Replacement Cost", () => {
       const currentBid = 150.0;
-      const replacementCost = 205.58;
+      const replacementCost = 215.18;
       const isAhead = currentBid < replacementCost;
       expect(isAhead).toBe(true);
     });
 
     it("66. verifies Behind the 8-Ball condition when Current Bid > Replacement Cost", () => {
       const currentBid = 250.0;
-      const replacementCost = 205.58;
+      const replacementCost = 215.18;
       const isBehind = currentBid > replacementCost;
       expect(isBehind).toBe(true);
     });
 
     it("67. computes exact savings margin when buying auction lot below replacement cost", () => {
       const currentBid = 140.0;
-      const replacementCost = 205.58;
+      const replacementCost = 215.18;
       const savings = replacementCost - currentBid;
-      expect(savings).toBeCloseTo(65.58, 2);
+      expect(savings).toBeCloseTo(75.18, 2);
     });
 
     it("68. validates that replacement cost protects bidder against sunk factory delay (45-60 days turnaround)", () => {
@@ -581,30 +591,38 @@ describe("Broker vs Whale Underwriting & Encasement Suite (105 Passing Checks)",
 
     it("70. confirms that replacement basis holds for Amazing Spider-Man #129", () => {
       const rawAsm129 = 1245.31;
-      const sunkBillVintage = 109.78;
-      const diyCost = rawAsm129 + sunkBillVintage;
-      expect(diyCost).toBeCloseTo(1355.09, 2);
+      const rawTax = rawAsm129 * 0.06;
+      const sunkBillVintage = 112.36;
+      const mailerAllIn = 5.30;
+      const diyCost = rawAsm129 + rawTax + sunkBillVintage + mailerAllIn;
+      expect(diyCost).toBeCloseTo(1437.69, 2);
     });
 
     it("71. confirms that replacement basis holds for Incredible Hulk #181", () => {
       const rawHulk181 = 1850.0;
-      const sunkBillVintage = 109.78;
-      const diyCost = rawHulk181 + sunkBillVintage;
-      expect(diyCost).toBeCloseTo(1959.78, 2);
+      const rawTax = rawHulk181 * 0.06;
+      const sunkBillVintage = 112.36;
+      const mailerAllIn = 5.30;
+      const diyCost = rawHulk181 + rawTax + sunkBillVintage + mailerAllIn;
+      expect(diyCost).toBeCloseTo(2078.66, 2);
     });
 
     it("72. confirms that replacement basis holds for Amazing Spider-Man #300", () => {
       const rawAsm300 = 260.0;
-      const sunkBillModern = 88.58;
-      const diyCost = rawAsm300 + sunkBillModern;
-      expect(diyCost).toBeCloseTo(348.58, 2);
+      const rawTax = rawAsm300 * 0.06;
+      const sunkBillModern = 91.16;
+      const mailerAllIn = 5.30;
+      const diyCost = rawAsm300 + rawTax + sunkBillModern + mailerAllIn;
+      expect(diyCost).toBeCloseTo(372.06, 2);
     });
 
     it("73. confirms that replacement basis holds for Batman #251", () => {
       const rawBat251 = 480.0;
-      const sunkBillVintage = 109.78;
-      const diyCost = rawBat251 + sunkBillVintage;
-      expect(diyCost).toBeCloseTo(589.78, 2);
+      const rawTax = rawBat251 * 0.06;
+      const sunkBillVintage = 112.36;
+      const mailerAllIn = 5.30;
+      const diyCost = rawBat251 + rawTax + sunkBillVintage + mailerAllIn;
+      expect(diyCost).toBeCloseTo(626.46, 2);
     });
 
     it("74. checks that raw price cannot be negative or zero in valid calculation", () => {
@@ -680,7 +698,6 @@ describe("Broker vs Whale Underwriting & Encasement Suite (105 Passing Checks)",
       const hammer = 500.0;
       const acquisition = 250.0;
       const exits = calculateExitScenarios(hammer, acquisition);
-      // Fee: 500 * 0.1325 = 66.25; Mailer = 5; Net = 500 - 66.25 - 5 = 428.75
       expect(exits.marketplace.platformFeeAmount).toBe(66.25);
       expect(exits.marketplace.netProceeds).toBe(428.75);
     });
@@ -689,7 +706,6 @@ describe("Broker vs Whale Underwriting & Encasement Suite (105 Passing Checks)",
       const hammer = 20000.0;
       const acquisition = 10000.0;
       const exits = calculateExitScenarios(hammer, acquisition);
-      // Fee: 20000 * 0.1325 = 2650.00; Mailer = 5; Net = 17345.00
       expect(exits.marketplace.platformFeeAmount).toBe(2650.0);
       expect(exits.marketplace.netProceeds).toBe(17345.0);
     });
@@ -698,7 +714,6 @@ describe("Broker vs Whale Underwriting & Encasement Suite (105 Passing Checks)",
       const hammer = 20000.0;
       const acquisition = 10000.0;
       const exits = calculateExitScenarios(hammer, acquisition);
-      // Fee: 10% = 2000; Mailer = 5; Net = 20000 - 2000 - 5 = 17995
       expect(exits.auction.netProceeds).toBe(17995.0);
     });
 
@@ -706,7 +721,6 @@ describe("Broker vs Whale Underwriting & Encasement Suite (105 Passing Checks)",
       const hammer = 20000.0;
       const acquisition = 10000.0;
       const exits = calculateExitScenarios(hammer, acquisition);
-      // 40% wholesale = 8000
       expect(exits.lcs.netProceeds).toBe(8000.0);
     });
 

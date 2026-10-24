@@ -2,8 +2,8 @@ import { describe, it, expect } from "vitest";
 import { calculateReplacementAnalysis, buildEncasementFormulas } from "@/lib/sniper/sim/encasement-math";
 import { buildLotMacroAndVelocity } from "@/lib/sniper/sim/lot-service";
 
-describe("Sniper Replacement Cost & Bidding Frenzy Driver", () => {
-  it("computes exact CPR all-in formula: Raw + CPR + Grading + 2-way Shipping + Invoice + Tax on <= 9.4 candidate", () => {
+describe("Sniper Replacement Cost & Bidding Frenzy Driver (Universal Sales Tax)", () => {
+  it("computes exact CPR all-in formula: Raw + Raw Tax + CPR + Grading + 2-way Shipping + Invoice + Service Tax + Mailer + Mailer Tax on <= 9.4 candidate", () => {
     const analysis = calculateReplacementAnalysis({
       rawPrice: 150.0,
       currentBid: 200.0,
@@ -18,19 +18,25 @@ describe("Sniper Replacement Cost & Bidding Frenzy Driver", () => {
 
     const cpr = analysis.cpr;
     expect(cpr.rawPrice).toBe(150.0);
+    expect(cpr.rawTax).toBe(9.0); // 150 * 0.06 = 9.00
     expect(cpr.prepFee).toBe(30.0); // CPR pressing for modern
     expect(cpr.gradingFee).toBe(35.0);
     expect(cpr.outgoingShipping).toBe(15.0);
     expect(cpr.returnShipping).toBe(28.0);
     expect(cpr.twoWayShipping).toBe(43.0);
     expect(cpr.invoiceFee).toBe(8.0); // Online invoice standard $8.00
-    expect(cpr.serviceTax).toBe(4.38); // (30 + 35 + 8) * 0.06 = 4.38
+    // Universal sales tax on services & courier: (30 + 35 + 43 + 8) * 0.06 = 6.96
+    expect(cpr.serviceTax).toBe(6.96);
+    expect(cpr.mailerBoxFee).toBe(5.0);
+    expect(cpr.mailerTax).toBe(0.3);
+    // Total sales tax: 9.00 + 6.96 + 0.30 = 16.26
+    expect(cpr.totalSalesTax).toBe(16.26);
 
-    // Sum: 150 + 30 + 35 + 15 + 28 + 8 + 4.38 = 270.38
-    expect(cpr.allInCost).toBe(270.38);
+    // Sum: 150 + 9 + 30 + 35 + 43 + 8 + 6.96 + 5 + 0.30 = 287.26
+    expect(cpr.allInCost).toBe(287.26);
   });
 
-  it("computes exact Standard Certified all-in formula (as-is auction standard, $0 pressing, $8 online invoice)", () => {
+  it("computes exact Standard Certified all-in formula (as-is auction standard, $0 pressing, $8 online invoice, universal sales tax)", () => {
     const analysis = calculateReplacementAnalysis({
       rawPrice: 100.0,
       currentBid: 150.0,
@@ -44,17 +50,22 @@ describe("Sniper Replacement Cost & Bidding Frenzy Driver", () => {
 
     const std = analysis.standard;
     expect(std.rawPrice).toBe(100.0);
+    expect(std.rawTax).toBe(6.0); // 100 * 0.06 = 6.00
     expect(std.gradingFee).toBe(35.0);
     expect(std.prepFee).toBe(0.0); // $0 pressing
     expect(std.outgoingShipping).toBe(15.0);
     expect(std.returnShipping).toBe(28.0);
     expect(std.twoWayShipping).toBe(43.0);
     expect(std.invoiceFee).toBe(8.0); // Online invoice standard $8.00
-    expect(std.serviceTax).toBe(2.58); // (35 + 8) * 0.06 = 2.58
-    // Sunk slabbing floor: 35 + 43 + 8 + 2.58 = 88.58
-    expect(std.sunkExpenses).toBe(88.58);
-    // Whole Tomato: 100 + 88.58 = 188.58
-    expect(std.allInCost).toBe(188.58);
+    // Universal sales tax on slabbing services & courier: (35 + 43 + 8) * 0.06 = 5.16
+    expect(std.serviceTax).toBe(5.16);
+    // Sunk slabbing floor: 35 + 43 + 8 + 5.16 = 91.16
+    expect(std.sunkExpenses).toBe(91.16);
+    expect(std.mailerBoxFee).toBe(5.0);
+    expect(std.mailerTax).toBe(0.3);
+    expect(std.totalSalesTax).toBe(11.46);
+    // Whole Tomato: 100 + 6.00 + 91.16 + 5.00 + 0.30 = 202.46
+    expect(std.allInCost).toBe(202.46);
   });
 
   it("evaluates the Hope Factor yield risk and human unpredictability > 9.2", () => {
@@ -78,7 +89,7 @@ describe("Sniper Replacement Cost & Bidding Frenzy Driver", () => {
     expect(hope.expectedValue).toBe(440);
   });
 
-  it("validates CGC 9.8 screening rule: pay $8 online invoice + $9 reject fee + $28 return ship + tax = ~$46 cap", () => {
+  it("validates CGC 9.8 screening rule: pay $8 online invoice + $9 reject fee + $28 return ship + tax = ~$47.70 cap", () => {
     const analysis = calculateReplacementAnalysis({
       rawPrice: 150.0,
       currentBid: 220.0,
@@ -95,7 +106,8 @@ describe("Sniper Replacement Cost & Bidding Frenzy Driver", () => {
     expect(screen.invoiceFee).toBe(8.0);
     expect(screen.rejectFee).toBe(9.0);
     expect(screen.totalRejectFee).toBe(17.0);
-    expect(screen.totalSunkIfRejected).toBe(46.02); // 17 + 28 + (17 * 0.06 = 1.02) = 46.02
+    // Taxable services & freight: (8 + 9 + 28) = 45.00; tax = 45 * 0.06 = 2.70; total sunk = 47.70
+    expect(screen.totalSunkIfRejected).toBe(47.7);
     expect(screen.savedGradingFee).toBe(35.0);
   });
 
@@ -157,11 +169,12 @@ describe("Sniper Replacement Cost & Bidding Frenzy Driver", () => {
     expect(defaultAnalysis.cpr.targetBumpGrade).toBe("9.0/9.2");
     expect(defaultAnalysis.cpr.targetBumpFmv).toBe(140.0);
 
-    // By default, pressing is NOT assumed: Whole Tomato uses standard all-in cost (Raw 60 + Slabbing Floor 88.58 = 148.58)
+    // By default, pressing is NOT assumed: Whole Tomato uses standard all-in cost:
+    // Raw 60 + Raw Tax 3.60 + Slabbing Floor 91.16 + Mailer 5.30 = 160.06
     expect(defaultAnalysis.wholeTomato.wholeTomato).toBe(defaultAnalysis.standard.allInCost);
-    expect(defaultAnalysis.wholeTomato.wholeTomato).toBe(148.58);
+    expect(defaultAnalysis.wholeTomato.wholeTomato).toBe(160.06);
 
-    // When includePressing is true, Whole Tomato uses CPR all-in cost (180.38)
+    // When includePressing is true, Whole Tomato uses CPR all-in cost (160.06 + 30 prep + 1.80 tax = 191.86)
     const pressedAnalysis = calculateReplacementAnalysis({
       rawPrice: 60.0,
       currentBid: 80.0,
@@ -177,15 +190,15 @@ describe("Sniper Replacement Cost & Bidding Frenzy Driver", () => {
     });
 
     expect(pressedAnalysis.wholeTomato.wholeTomato).toBe(pressedAnalysis.cpr.allInCost);
-    expect(pressedAnalysis.wholeTomato.wholeTomato).toBe(180.38);
-    const expectedSpread = Math.round((180.38 - 110.0 - 80.0) * 100) / 100;
+    expect(pressedAnalysis.wholeTomato.wholeTomato).toBe(191.86);
+    const expectedSpread = Math.round((191.86 - 110.0 - 80.0) * 100) / 100;
     expect(pressedAnalysis.wholeTomato.eightBallSpread).toBe(expectedSpread);
     expect(pressedAnalysis.wholeTomato.isAheadOfEightBall).toBe(expectedSpread >= 0);
   });
 
   it("verifies exact Ahead of Eight Ball vs Behind Eight Ball calculation", () => {
-    // Standard all-in = 140 + 35(grade) + 15(out) + 28(return) + 8(inv) + 2.58(tax) = 228.58
-    // Ahead: wholeTomato ($228.58) - lastSold ($100) - currentBid ($50) = +$78.58
+    // Standard all-in = 140 + 8.40(raw tax) + 35(grade) + 43(shipping) + 8(inv) + 5.16(service tax) + 5.30(mailer+tax) = 244.86
+    // Ahead: wholeTomato ($244.86) - lastSold ($100) - currentBid ($50) = +$94.86
     const ahead = calculateReplacementAnalysis({
       rawPrice: 140.0,
       currentBid: 50.0,
@@ -198,10 +211,10 @@ describe("Sniper Replacement Cost & Bidding Frenzy Driver", () => {
       isVintage: false,
       grader: "CGC",
     });
-    expect(ahead.wholeTomato.eightBallSpread).toBe(78.58);
+    expect(ahead.wholeTomato.eightBallSpread).toBe(94.86);
     expect(ahead.wholeTomato.isAheadOfEightBall).toBe(true);
 
-    // Behind: wholeTomato ($228.58) - lastSold ($200) - currentBid ($150) = -$121.42
+    // Behind: wholeTomato ($244.86) - lastSold ($200) - currentBid ($150) = -$105.14
     const behind = calculateReplacementAnalysis({
       rawPrice: 140.0,
       currentBid: 150.0,
@@ -214,7 +227,7 @@ describe("Sniper Replacement Cost & Bidding Frenzy Driver", () => {
       isVintage: false,
       grader: "CGC",
     });
-    expect(behind.wholeTomato.eightBallSpread).toBe(-121.42);
+    expect(behind.wholeTomato.eightBallSpread).toBe(-105.14);
     expect(behind.wholeTomato.isAheadOfEightBall).toBe(false);
   });
 
@@ -231,8 +244,8 @@ describe("Sniper Replacement Cost & Bidding Frenzy Driver", () => {
     expect(formulas.standard.pressingFee).toBe(0.0);
     expect(formulas.pressed.pressingFee).toBe(0.0);
     expect(formulas.pressed.description).toContain("You do not clean and press a 9.6 or 9.8");
-    // Standard slabbing floor for 9.8: 35 grading + 8 invoice + 2.58 FL tax + 43 shipping = 88.58
-    expect(formulas.standard.slabbingCostFloor).toBe(88.58);
+    // Standard slabbing floor for 9.8: 35 grading + 8 invoice + 43 shipping + 5.16 FL tax = 91.16
+    expect(formulas.standard.slabbingCostFloor).toBe(91.16);
   });
 
   it("treats creator signing fees as estimated guesstimates uncertain without convention/venue pricing", () => {
