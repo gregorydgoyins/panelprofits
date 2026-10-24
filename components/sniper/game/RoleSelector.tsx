@@ -150,12 +150,12 @@ export function RoleSelector({ onSelectRole }: RoleSelectorProps) {
             {/* Core Stats */}
             <div className="grid grid-cols-2 gap-3 mt-6 text-xs font-mono">
               <div className="rounded-lg bg-black/60 border border-cyan-500/20 p-3">
-                <span className="text-slate-400 uppercase text-[10px]">Lot Price Range</span>
-                <p className="text-white font-bold text-sm mt-0.5">$20.00 – $500.00</p>
+                <span className="text-slate-400 uppercase text-[10px]">Valuation Floor</span>
+                <p className="text-white font-bold text-sm mt-0.5">$130+ ($200+ Signed)</p>
               </div>
               <div className="rounded-lg bg-black/60 border border-cyan-500/20 p-3">
                 <span className="text-slate-400 uppercase text-[10px]">Grade Exposure</span>
-                <p className="text-cyan-300 font-bold text-sm mt-0.5">RAW to 9.8 (Mixed)</p>
+                <p className="text-cyan-300 font-bold text-sm mt-0.5">9.4, 9.6, 9.8 (High Grade)</p>
               </div>
             </div>
 
@@ -170,13 +170,13 @@ export function RoleSelector({ onSelectRole }: RoleSelectorProps) {
               <div className="flex items-start gap-2.5">
                 <Layers className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
                 <span>
-                  <strong className="text-white">Real Mixed Pipeline:</strong> Early rounds are 50% Raw and 30% Mid-Grades (4.0–8.0). Prove positive ROI to unlock high-tier 9.8 Sovereign keys.
+                  <strong className="text-white">Sovereign High-Grade Pipeline:</strong> Strictly filtered for investment-grade 9.4, 9.6, and 9.8 certified keys ($100+ opening floor bids; $150+ for Signature Series). Variants and creator runs welcome.
                 </span>
               </div>
               <div className="flex items-start gap-2.5">
                 <TrendingUp className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
                 <span>
-                  <strong className="text-white">Client AUM Dynamics:</strong> Profitable trades draw +15% client capital additions; consecutive losses trigger client capital redemptions.
+                  <strong className="text-white">Multi-Venue Liquidity:</strong> Staggered real-world horizons spanning eBay Live, ComicConnect, HipComic Daily, MyComicShop Lone Star, and Heritage Auctions.
                 </span>
               </div>
             </div>

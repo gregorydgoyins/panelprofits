@@ -27,6 +27,30 @@ export interface EncasementFormulaDetail {
   venueFeeDragPercent: number;
   breakevenSalePrice: number;
 }
+export interface VariantCoverInfo {
+  name: string;
+  type: "Direct Edition" | "Newsstand" | "2nd Printing" | "3rd Printing" | "Foil" | "Virgin" | "Retailer Incentive" | "Variant";
+  artist?: string;
+  ratio?: string;
+  upcBarcode?: string;
+  censusFloatNotes?: string;
+  rarityTier?: "Standard" | "Scarce" | "Very Scarce" | "Very Rare" | "Grail";
+  estMultiplierVsDirect?: number;
+}
+
+export interface ContinuityLinksInfo {
+  precededBy?: { title: string; issueNumber?: string; url?: string; note?: string };
+  succeededBy?: { title: string; issueNumber?: string; url?: string; note?: string };
+  callbacks?: Array<{ title: string; note: string; url?: string }>;
+  milestones?: string[];
+}
+
+export interface CompsDriftInfo {
+  trend: "strong" | "steady" | "soft" | "rebound";
+  label: string; // e.g. "↗ Strong", "→ Steady", "↘ Soft", "↗ Rebound"
+  pctChange: number; // e.g. +14, -8, +2, +11
+  points: number[]; // Distinct trailing comp points for the sparkline
+}
 
 export interface LotItem {
   id: string;
@@ -47,6 +71,31 @@ export interface LotItem {
   currentBid: number;
   hammerPrice: number;
   summary: string;
+  storyTitle?: string;
+  storyQuote?: { quote: string; speaker: string };
+  creativeCredits?: {
+    writer?: string;
+    penciler?: string;
+    inker?: string;
+    colorist?: string;
+    letterer?: string;
+    editor?: string;
+    editorInChief?: string;
+    coverArtist?: string;
+  };
+  characterRoster?: {
+    featured?: string[];
+    supporting?: string[];
+    antagonists?: string[];
+    other?: string[];
+  };
+  synopsisParagraphs?: string[];
+  fandomUrl?: string;
+  fandomUniverse?: string;
+  categories?: string[];
+  notes?: string[];
+  continuityLinks?: ContinuityLinksInfo;
+  variantCovers?: VariantCoverInfo[];
   whyInvest: string;
   spreadRawTo98: number | null;
   ratio96To98: number | null;
@@ -58,7 +107,7 @@ export interface LotItem {
   isStaleComp: boolean;
   staleCompAgeDays: number;
   investopediaSlug: string;
-  venue?: "ebay" | "heritage" | "mycomicshop" | "comiclink" | "comicconnect";
+  venue?: "ebay" | "heritage" | "mycomicshop" | "comiclink" | "comicconnect" | "hipcomic";
   venueDisplayName?: string;
   venueLotId?: string;
   sourceListingUrl?: string;
@@ -73,7 +122,37 @@ export interface LotItem {
     grade98: number | null;
     grade100: number | null;
   };
+  compsDrift?: CompsDriftInfo;
   chartPoints: Array<{ time: string; value: number }>;
+  candlestickPoints?: Array<{
+    time: string;
+    open: number;
+    high: number;
+    low: number;
+    close: number;
+    volume: number;
+  }>;
+  historicalComps?: Array<{
+    time: string;
+    price: number;
+    venue: "Heritage" | "eBay" | "ComicLink" | "ComicConnect" | "MyComicShop";
+    venueType: "pedigree" | "street_floor" | "institutional";
+    grade: string;
+    notes?: string;
+  }>;
+  marketCycles?: {
+    peak2021Price: number;
+    trough2023Price: number;
+    currentFloorPrice: number;
+    peakDate: string;
+    troughDate: string;
+    cycleDrawdownPct: number;
+    recoveryPct: number;
+    heritagePremiumPct: number;
+    ebayFloorDiscountPct: number;
+    peakLabel?: string;
+    troughLabel?: string;
+  };
   // Encasement Breakeven & Multi-Formula Invoicing
   isYellowLabel: boolean;
   signatureDetails: string | null;

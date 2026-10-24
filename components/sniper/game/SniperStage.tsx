@@ -33,6 +33,7 @@ import { SniperCandidateRow } from "./SniperCandidateRow";
 import { PriceChartingGradeTable } from "./PriceChartingGradeTable";
 import { StickyBiddedRail } from "./StickyBiddedRail";
 import { SniperBidTrajectoryChart } from "./SniperBidTrajectoryChart";
+import { RichContinuityViewer } from "./RichContinuityViewer";
 import { calculateReplacementAnalysis } from "@/lib/sniper/sim/encasement-math";
 import { useTooltipsEnabled } from "@/components/shell/tooltip-toggle";
 
@@ -161,10 +162,20 @@ export function SniperStage({
 
   const isLockout = timeRemaining <= 30;
 
-  // Format time MM:SS
-  const mins = Math.floor(timeRemaining / 60);
-  const secs = timeRemaining % 60;
-  const timeFormatted = `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+  // Format time with days, hours, minutes, and seconds
+  const s = Math.max(0, Math.floor(timeRemaining));
+  const days = Math.floor(s / 86400);
+  const rem = s % 86400;
+  const hours = Math.floor(rem / 3600);
+  const mins = Math.floor((rem % 3600) / 60);
+  const secs = rem % 60;
+
+  const timeFormatted =
+    days > 0
+      ? `${days}d ${hours}h ${mins}m`
+      : hours > 0
+      ? `${hours}h ${mins < 10 ? "0" : ""}${mins}m ${secs < 10 ? "0" : ""}${secs}s`
+      : `${mins}:${secs < 10 ? "0" : ""}${secs}`;
 
   // Fetch videos for Tab 3
   useEffect(() => {
@@ -177,7 +188,7 @@ export function SniperStage({
     async function loadVids() {
       setLoadingVideos(true);
       try {
-        const res = await fetch(`/api/sniper/videos?series=${encodeURIComponent(lot.series)}&issue=${encodeURIComponent(lot.issueNumber)}`);
+        const res = await fetch(`/api/sniper/videos?series=${encodeURIComponent(lot.series)}&issue=${encodeURIComponent(lot.issueNumber)}&era=${encodeURIComponent(lot.era || "")}`);
         if (res.ok) {
           const d = await res.json();
           if (!cancelled && Array.isArray(d.videos)) setVideoList(d.videos);
@@ -190,7 +201,7 @@ export function SniperStage({
     }
     loadVids();
     return () => { cancelled = true; };
-  }, [lot.series, lot.issueNumber, lot.videos]);
+  }, [lot.series, lot.issueNumber, lot.era, lot.videos]);
 
   return (
     <div className="space-y-5">
@@ -389,10 +400,10 @@ export function SniperStage({
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               <FloorRulePill
-                phase="T-240s Phase"
+                phase="Due Diligence Phase"
                 badge="bg-emerald-950/80 text-emerald-300 border-emerald-500/40"
                 icon={<Clock className="h-3 w-3" />}
-                title="1. 240s Decision Clock"
+                title="1. Due Diligence Clock"
                 body="Task: Cross-examine Page 1 fees, Page 2 drift, and Page 3 lore to calculate your strict bid ceiling."
                 tip="Strategic Objective: Replacement Value Arbitrage — Calculate true DIY replication cost (The Whole Tomato) vs. current auction bids to lock in guaranteed manufacturing advantage."
               />
@@ -480,6 +491,102 @@ export function SniperStage({
                   <span>Issue #{lot.issueNumber}</span>
                 </div>
               </div>
+
+              {/* Page 1 Mini TradingView Price Chart & Comps Preview */}
+              <div className="w-full mt-4 pt-3 border-t border-slate-800/80 font-mono space-y-2.5">
+                <div className="flex items-center justify-between text-[10px]">
+                  <div className="flex items-center gap-1.5 font-bold text-cyan-300 uppercase tracking-wider">
+                    <LineChart className="h-3.5 w-3.5 text-cyan-400" />
+                    <span>Market Cycle (2021 Peak → 2026 Floor)</span>
+                  </div>
+                  <span className="text-[9px] px-1.5 py-0.2 rounded bg-cyan-950 text-cyan-300 border border-cyan-500/40 font-bold">
+                    FMV ${lot.fmv.toLocaleString()}
+                  </span>
+                </div>
+
+                {/* SVG Trendline Sparkline */}
+                {(() => {
+                  const pts = lot.chartPoints && lot.chartPoints.length > 1 ? lot.chartPoints : [
+                    { time: "2021-09-15", value: Math.round(lot.fmv * 2.15) },
+                    { time: "2023-08-15", value: Math.round(lot.fmv * 0.74) },
+                    { time: lot.lastSoldDate || "2026-10-15", value: lot.fmv },
+                  ];
+                  const vals = pts.map((p) => p.value);
+                  const min = Math.min(...vals);
+                  const max = Math.max(...vals);
+                  const range = max - min || 1;
+                  const w = 320;
+                  const h = 75;
+                  const padX = 10;
+                  const padY = 8;
+                  const innerW = w - padX * 2;
+                  const innerH = h - padY * 2;
+
+                  const coords = pts.map((p, i) => {
+                    const x = padX + (i / (pts.length - 1)) * innerW;
+                    const y = padY + innerH - ((p.value - min) / range) * innerH;
+                    return { x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10, val: p.value };
+                  });
+
+                  const linePath = coords.map((c, i) => `${i === 0 ? "M" : "L"} ${c.x} ${c.y}`).join(" ");
+                  const areaPath = `${linePath} L ${coords[coords.length - 1].x} ${h} L ${coords[0].x} ${h} Z`;
+                  const maxCoord = coords.reduce((prev, curr) => (curr.val > prev.val ? curr : prev), coords[0]);
+                  const lastCoord = coords[coords.length - 1];
+
+                  return (
+                    <div className="rounded-lg border border-slate-800 bg-black/60 p-2 space-y-2">
+                      <div className="relative w-full overflow-hidden">
+                        <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-16 overflow-visible">
+                          <defs>
+                            <linearGradient id="miniAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#22D3EE" stopOpacity="0.35" />
+                              <stop offset="100%" stopColor="#22D3EE" stopOpacity="0.0" />
+                            </linearGradient>
+                          </defs>
+                          <path d={areaPath} fill="url(#miniAreaGrad)" />
+                          <path d={linePath} fill="none" stroke="#22D3EE" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          
+                          {/* 2021 Peak Marker */}
+                          <circle cx={maxCoord.x} cy={maxCoord.y} r="3" fill="#F59E0B" />
+                          <text x={Math.min(maxCoord.x + 4, w - 65)} y={Math.max(maxCoord.y - 4, 10)} fill="#F59E0B" fontSize="8" fontWeight="bold">
+                            Peak ${maxCoord.val.toLocaleString()}
+                          </text>
+
+                          {/* Last Sale Dot */}
+                          <circle cx={lastCoord.x} cy={lastCoord.y} r="3.5" fill="#10B981" />
+                          <circle cx={lastCoord.x} cy={lastCoord.y} r="6" fill="none" stroke="#10B981" strokeWidth="1" opacity="0.6" />
+                        </svg>
+                      </div>
+
+                      {/* Multi-Source Venue Comparison Chips */}
+                      <div className="grid grid-cols-3 gap-1 text-[9px] text-center pt-1 border-t border-slate-800/80">
+                        <div className="p-1 rounded bg-purple-950/40 border border-purple-500/30">
+                          <span className="text-purple-300 block font-bold">Heritage</span>
+                          <span className="text-white font-mono font-bold">${Math.round(lot.fmv * 1.22).toLocaleString()}</span>
+                        </div>
+                        <div className="p-1 rounded bg-cyan-950/40 border border-cyan-500/30">
+                          <span className="text-cyan-300 block font-bold">Exchange FMV</span>
+                          <span className="text-cyan-200 font-mono font-bold">${lot.fmv.toLocaleString()}</span>
+                        </div>
+                        <div className="p-1 rounded bg-rose-950/40 border border-rose-500/30">
+                          <span className="text-rose-300 block font-bold">eBay Floor</span>
+                          <span className="text-rose-200 font-mono font-bold">${Math.max(15, Math.round(lot.fmv * 0.84)).toLocaleString()}</span>
+                        </div>
+                      </div>
+
+                      {/* Jump to Full Terminal */}
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab("financials")}
+                        className="w-full text-center py-1.5 px-2 rounded border border-emerald-500/40 bg-emerald-950/40 text-emerald-300 hover:text-white hover:bg-emerald-900/60 hover:border-emerald-400 transition-all text-[10px] font-bold flex items-center justify-center gap-1"
+                      >
+                        <TrendingUp className="h-3 w-3" />
+                        <span>Inspect Full 3-Regime Terminal &amp; Ladder (Page 2) →</span>
+                      </button>
+                    </div>
+                  );
+                })()}
+              </div>
             </div>
 
             {/* Right: Bidding Keypad & Floor Decisions */}
@@ -509,7 +616,7 @@ export function SniperStage({
               {/* Sunk Slabbing Cost & Breakeven Analysis Card */}
               <SniperBreakevenCard
                 lot={lot}
-                currentBid={userBid ?? lot.openingBid}
+                currentBid={Math.max(currentFloorBid ?? 0, userBid ?? 0, lot.openingBid)}
               />
 
               {/* Quick Underwriting Summary Card */}
@@ -568,7 +675,7 @@ export function SniperStage({
           {/* Replacement Cost Engine & Bidding Frenzy Driver (Hope Factor & Screening Rules) */}
           <SniperReplacementCard
             lot={lot}
-            currentBid={userBid ?? lot.openingBid}
+            currentBid={Math.max(currentFloorBid ?? 0, userBid ?? 0, lot.openingBid)}
           />
 
           {/* Authentic PriceCharting Multi-Grade Matrix */}
@@ -577,7 +684,7 @@ export function SniperStage({
           {/* Sunk Slabbing Cost & Breakeven Analysis */}
           <SniperBreakevenCard
             lot={lot}
-            currentBid={userBid ?? lot.openingBid}
+            currentBid={Math.max(currentFloorBid ?? 0, userBid ?? 0, lot.openingBid)}
           />
 
           {/* Dossier containing Multi-grade Price Ladder and Spreads */}
@@ -588,90 +695,28 @@ export function SniperStage({
       {/* PAGE 3: THE STORY, LORE & VIDEOS DOSSIER */}
       {activeTab === "story" && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Left: 3-Act Continuity Summary & Why You Should Buy Dossier */}
-          <div className="relative lg:col-span-7 space-y-6">
-            {/* 1. WHY YOU SHOULD BUY: CORE INVESTMENT THESIS & RHETORIC */}
-            <div className="relative rounded-xl border-2 border-emerald-500 bg-gradient-to-r from-[#061e12] via-[#020f08] to-[#061e12] p-6 shadow-[0_0_0_1px_rgba(52,211,153,1),0_0_18px_rgba(16,185,129,0.85),inset_0_1px_2px_rgba(255,255,255,0.35)] ring-1 ring-emerald-300/60 space-y-4">
-              <div className="absolute inset-x-0 -top-px h-[2px] bg-gradient-to-r from-transparent via-emerald-300 to-transparent shadow-[0_0_12px_rgba(16,185,129,1)]" />
-              <div className="flex items-center justify-between border-b border-emerald-500/30 pb-3">
-                <div className="flex items-center gap-2.5">
-                  <Sparkles className="h-5 w-5 text-emerald-400" />
-                  <h3 className="text-base font-mono font-bold text-white uppercase tracking-wider">
-                    Why You Should Buy: Investment Thesis &amp; Rhetoric
-                  </h3>
-                </div>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-semibold uppercase tracking-wider">
-                  Alpha Dossier
-                </span>
-              </div>
-
-              <div className="text-xs font-sans text-emerald-100/90 leading-relaxed bg-emerald-950/40 border border-emerald-500/30 rounded-lg p-4">
-                <p className="font-medium text-emerald-200 leading-relaxed">
-                  {lot.whyInvest || "Observable market demand with high liquidity in graded secondary turnover. Zero-inferiority guarantee backed by recorded historical comps and auction clearing velocity."}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 font-mono text-xs">
-                <div className="bg-black/40 border border-emerald-500/20 rounded p-2.5">
-                  <span className="text-[10px] text-emerald-400 uppercase tracking-wider block mb-1">
-                    Demand Driver &amp; IP Moat
-                  </span>
-                  <span className="text-slate-300 text-[11px] font-sans block">
-                    Core key character continuity, live-action franchise demand &amp; tier-1 publisher pedigree.
-                  </span>
-                </div>
-                <div className="bg-black/40 border border-emerald-500/20 rounded p-2.5">
-                  <span className="text-[10px] text-cyan-400 uppercase tracking-wider block mb-1">
-                    Graded Census Float
-                  </span>
-                  <span className="text-slate-300 text-[11px] font-sans block">
-                    Finite top-grade registry census creates structured downward price resistance.
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* 2. THREE-ACT NARRATIVE CONTINUITY SUMMARY (SYNOPSIS) */}
-            <div className="relative rounded-xl border-2 border-purple-500 bg-gradient-to-r from-[#140726] via-[#0B0316] to-[#140726] p-6 shadow-[0_0_0_1px_rgba(192,132,252,1),0_0_16px_rgba(168,85,247,0.85),inset_0_1px_2px_rgba(255,255,255,0.35)] ring-1 ring-purple-300/60 space-y-4">
-              <div className="absolute inset-x-0 -top-px h-[2px] bg-gradient-to-r from-transparent via-purple-300 to-transparent shadow-[0_0_12px_rgba(168,85,247,1)]" />
-              <div className="flex items-center gap-2.5 border-b border-purple-500/30 pb-3">
-                <BookOpen className="h-5 w-5 text-purple-400" />
-                <h3 className="text-base font-mono font-bold text-white uppercase tracking-wider">
-                  Three-Act Narrative Continuity Summary
-                </h3>
-              </div>
-
-              <div className="text-xs font-sans text-slate-300 leading-relaxed space-y-3 prose prose-invert max-w-none">
-                <div className="whitespace-pre-line">
-                  {lot.summary}
-                </div>
-              </div>
-
-              {/* Fiduciary Investment Checklist */}
-              <div className="mt-6 pt-4 border-t border-purple-500/30 space-y-2 font-mono text-xs">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-400 block mb-2">
-                  Bibliographic Due Diligence &amp; Asset Pedigree
-                </span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-300 text-[11px]">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-                    <span>Verified Canonical Series Pedigree</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-                    <span>Key Appearance &amp; Origin Milestone</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-                    <span>Cross-Market Valuation Parity</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-                    <span>Defensible Sunk Replacement Floor</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+          {/* Left: Interactive Wiki-Linked 3-Act Continuity Summary & Why You Should Buy Dossier */}
+          <div className="relative lg:col-span-7">
+            <RichContinuityViewer
+              summary={lot.summary}
+              whyInvest={lot.whyInvest || "Observable market demand with high liquidity in graded secondary turnover. Zero-inferiority guarantee backed by recorded historical comps and auction clearing velocity."}
+              series={lot.series}
+              issueNumber={lot.issueNumber}
+              grade={lot.grade}
+              grader={lot.grader}
+              fmv={lot.fmv}
+              storyTitle={lot.storyTitle}
+              storyQuote={lot.storyQuote}
+              creativeCredits={lot.creativeCredits}
+              characterRoster={lot.characterRoster}
+              synopsisParagraphs={lot.synopsisParagraphs}
+              fandomUrl={lot.fandomUrl}
+              fandomUniverse={lot.fandomUniverse}
+              categories={lot.categories}
+              notes={lot.notes}
+              continuityLinks={lot.continuityLinks}
+              variantCovers={lot.variantCovers}
+            />
           </div>
 
           {/* Right: Embedded Videos & Explainer Context with Rose Laser Rimlight */}

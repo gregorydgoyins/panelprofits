@@ -47,4 +47,5 @@ scripts/gcd_covers_cache.json
 audit_*.json
 
 data/highres_covers_all.sqlite
+highres_covers_all.sqlite
 data/comicbase.sqlite

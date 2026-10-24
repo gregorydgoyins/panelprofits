@@ -116,6 +116,8 @@ export function SniperGameContainer() {
           currentLotTriggersRef.current = {};
           const openBid = data.lot.openingBid;
           const curBid = data.lot.currentBid || openBid;
+          const lotSecs = data.lot.secondsRemaining ?? ROUND_DURATION_SECS;
+          setTimeRemaining(lotSecs);
           setCurrentFloorBid(curBid);
 
           const initialEvents: BidEvent[] = [
@@ -123,7 +125,7 @@ export function SniperGameContainer() {
               timestamp: Date.now() - 120000,
               bidder: "floor",
               amount: openBid,
-              clockSecs: ROUND_DURATION_SECS,
+              clockSecs: lotSecs,
               note: "Floor opening comp",
             },
           ];
@@ -259,7 +261,7 @@ export function SniperGameContainer() {
       if (data.ok && Array.isArray(data.lots) && data.lots.length > 0) {
         const replacement =
           data.lots.find((l: LotItem) => !candidates.some((c) => c.id === l.id)) || data.lots[0];
-        const freshSecs = Math.floor(900 + Math.random() * 2700);
+        const freshSecs = replacement.secondsRemaining || Math.floor(900 + Math.random() * 2700);
         replacement.secondsRemaining = freshSecs;
         replacement.totalDurationSeconds = freshSecs;
         setCandidates((prev) => prev.map((c) => (c.id === expiredId ? replacement : c)));

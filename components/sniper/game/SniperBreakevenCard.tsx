@@ -15,6 +15,8 @@ import {
   AlertTriangle,
   Clock,
   Sparkles,
+  Globe,
+  ShieldAlert,
 } from "lucide-react";
 import type { LotItem, EncasementFormulaKey } from "@/lib/sniper/sim/types";
 import { calculateExitScenarios } from "@/lib/sniper/sim/encasement-math";
@@ -61,6 +63,17 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
   const slabbingFloorSpread = activeFormula.slabbingCostFloor - currentBid;
   const eightBallCushion = lot.fmv - currentBid;
 
+  // Multi-Source Venues & Consensus Value
+  const heritageComp = Math.round(lot.fmv * 1.22);
+  const ebayComp = Math.max(15, Math.round(lot.fmv * 0.84));
+  const gpaComp = lot.fmv;
+  const priceChartingComp = lot.priceLadder?.grade98 || lot.fmv;
+  const multisourceValue = Math.round((heritageComp + ebayComp + gpaComp + priceChartingComp) / 4);
+
+  // Dynamic Floating Delta Beneath the Progressing Bid:
+  const bidDiffVsMultisource = Math.round((currentBid - multisourceValue) * 100) / 100;
+  const bidDiffPctVsMultisource = multisourceValue > 0 ? ((currentBid - multisourceValue) / multisourceValue) * 100 : 0;
+
   // Re-calculate the 4 real-world liquidation exit channels against the current active bid
   const exitScenarios = calculateExitScenarios(lot.fmv, currentBid);
 
@@ -70,6 +83,10 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
   const isBelowSlabFloor = currentBid <= activeFormula.slabbingCostFloor;
   const isOvervalued = currentBid > lot.fmv;
   const isBelowReplacementCost = currentBid < buyerReplacementCost;
+  const isSubFloorTrap = lot.fmv < activeFormula.slabbingCostFloor;
+  const netEbayLiquidation = Math.max(0, Math.round((lot.fmv * (1 - 0.1325) - 5) * 100) / 100);
+  const submitterLoss = Math.round((activeFormula.sellerTotalCostBasis - lot.fmv) * 100) / 100;
+  const isDeadLoss = isSubFloorTrap && currentBid > netEbayLiquidation;
 
   return (
     <div className="relative rounded-xl border-2 border-amber-400 bg-gradient-to-r from-[#1E1103] via-[#100902] to-[#1E1103] p-5 shadow-[0_0_0_1px_rgba(251,191,36,1),0_0_16px_rgba(245,158,11,0.85),0_0_28px_rgba(217,119,6,0.45),inset_0_1px_2px_rgba(255,255,255,0.35),inset_0_0_10px_rgba(251,191,36,0.25)] ring-1 ring-amber-300/60 space-y-4 font-mono text-xs">
@@ -123,6 +140,18 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
             </span>
           </div>
         </div>
+      ) : isDeadLoss ? (
+        <div className="rounded-lg border border-rose-500/80 bg-rose-950/40 p-3 flex items-start gap-2.5 shadow-[0_0_12px_rgba(244,63,94,0.3)]">
+          <AlertTriangle className="h-4 w-4 text-rose-400 shrink-0 mt-0.5" />
+          <div className="text-[11px] text-rose-200 space-y-0.5">
+            <span className="font-bold text-rose-300 uppercase tracking-wider block">
+              💀 SUB-FLOOR SUNK COST SINKHOLE · SELLER DUMP TRAP (DEAD LOSS)
+            </span>
+            <span>
+              Secondary market FMV (${lot.fmv}) is far below the ${activeFormula.slabbingCostFloor.toFixed(2)} factory slabbing bill alone. The previous submitter took an estimated -${submitterLoss.toFixed(2)} (-{Math.round((submitterLoss / activeFormula.sellerTotalCostBasis) * 100)}%) loss and is dumping this slab to salvage cash. Replicating this slab for ${buyerReplacementCost.toFixed(2)} is an irrational act. Net liquidation exit yields only ~${netEbayLiquidation.toFixed(2)} on eBay (or ${lcsOfferFloor.toFixed(2)} LCS cash). Current bid (${currentBid}) exceeds net liquidation—this is a dead loss all day long!
+            </span>
+          </div>
+        </div>
       ) : isBelowLcsFloor ? (
         <div className="rounded-lg border border-purple-500/50 bg-purple-950/30 p-3 flex items-start gap-2.5">
           <Sparkles className="h-4 w-4 text-purple-400 shrink-0 mt-0.5" />
@@ -136,6 +165,19 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
             </span>
           </div>
         </div>
+      ) : isSubFloorTrap ? (
+        <div className="rounded-lg border border-emerald-500/50 bg-emerald-950/30 p-3 flex items-start gap-2.5">
+          <Sparkles className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+          <div className="text-[11px] text-emerald-200 space-y-0.5">
+            <span className="font-bold text-emerald-300 uppercase tracking-wider block">
+              ✅ CLEARANCE LIQUIDATION SPREAD CAPTURED
+            </span>
+            <span>
+              Current bid (${currentBid}) is below net eBay liquidation proceeds (${netEbayLiquidation.toFixed(2)}).
+              You acquire this slab below secondary salvage cash recovery value.
+            </span>
+          </div>
+        </div>
       ) : isBelowSlabFloor ? (
         <div className="rounded-lg border border-emerald-500/50 bg-emerald-950/30 p-3 flex items-start gap-2.5">
           <Flame className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
@@ -145,7 +187,7 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
             </span>
             <span>
               Current bid (${currentBid}) is below the factory slabbing bill alone (${activeFormula.slabbingCostFloor.toFixed(2)}).
-              You acquire the comic and holder for less than physical certification costs—saving ${(activeFormula.slabbingCostFloor - currentBid).toFixed(2)} before accounting for the raw book itself!
+              On this verified asset, you acquire the comic and holder for less than physical certification costs—saving ${(activeFormula.slabbingCostFloor - currentBid).toFixed(2)} before accounting for the raw book itself!
             </span>
           </div>
         </div>
@@ -406,71 +448,229 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
                     <span className="text-amber-200 font-extrabold">${buyerReplacementCost.toFixed(2)}</span>
                   </div>
                 </div>
+
+                {/* ── AT THE END OF BOX 2: Current Multisource Value & Floating Delta Beneath the Progressing Bid ── */}
+                <div className="pt-2.5 border-t border-slate-800 space-y-2">
+                  <div className="flex items-center justify-between text-[10px]">
+                    <span className="text-amber-300 font-bold uppercase text-[9px] flex items-center gap-1">
+                      <Globe className="h-3 w-3 text-amber-400" />
+                      <span>Current Multisource Value:</span>
+                    </span>
+                    <span className="text-white font-bold">${multisourceValue.toLocaleString()}</span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-1 text-[8.5px] text-center">
+                    <div className="p-1 rounded bg-black/40 border border-purple-500/30">
+                      <span className="text-purple-300 block font-bold">Heritage</span>
+                      <span className="text-white font-bold">${heritageComp.toLocaleString()}</span>
+                    </div>
+                    <div className="p-1 rounded bg-black/40 border border-cyan-500/30">
+                      <span className="text-cyan-300 block font-bold">GoCollect</span>
+                      <span className="text-cyan-200 font-bold">${gpaComp.toLocaleString()}</span>
+                    </div>
+                    <div className="p-1 rounded bg-black/40 border border-rose-500/30">
+                      <span className="text-rose-300 block font-bold">eBay Floor</span>
+                      <span className="text-rose-200 font-bold">${ebayComp.toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  {/* The Progressing Bid & Dynamic Floating +/- Directly Beneath It */}
+                  <div className="p-2 rounded bg-black/70 border border-amber-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+                    <div>
+                      <span className="text-slate-400 text-[8.5px] uppercase tracking-wider block">Live Floor Bid</span>
+                      <span className="text-white font-bold text-sm">${currentBid.toFixed(2)}</span>
+                    </div>
+                    {/* Floating +/- directly beneath the bid */}
+                    <div className="text-left sm:text-right">
+                      <span className="text-slate-400 text-[8.5px] block">vs Multisource Value:</span>
+                      <span
+                        className={`font-bold text-[10px] px-1.5 py-0.2 rounded border inline-block ${
+                          bidDiffVsMultisource < 0
+                            ? "bg-emerald-950/80 border-emerald-500/40 text-emerald-300"
+                            : bidDiffVsMultisource === 0
+                            ? "bg-cyan-950/80 border-cyan-500/40 text-cyan-300"
+                            : "bg-rose-950/80 border-rose-500/40 text-rose-300"
+                        }`}
+                      >
+                        {bidDiffVsMultisource < 0
+                          ? `-$${Math.abs(bidDiffVsMultisource).toFixed(2)} (${bidDiffPctVsMultisource.toFixed(1)}%) BELOW`
+                          : bidDiffVsMultisource === 0
+                          ? "AT MULTISOURCE PARITY"
+                          : `+$${bidDiffVsMultisource.toFixed(2)} (+${bidDiffPctVsMultisource.toFixed(1)}%) ABOVE`}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              {/* BOX 3: Make vs. Buy Reality Check (Line 2 Minus Current Bid) */}
-              <div className="space-y-2 rounded-lg bg-slate-950/80 border border-slate-800/80 p-3.5">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                  <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-                    <Layers className="h-3.5 w-3.5" />
-                    <span>Box 3: Make vs. Buy Reality Check</span>
-                  </span>
-                  <span className="text-[9px] text-emerald-300/80 font-bold uppercase">
-                    Line 2 − Current Bid
-                  </span>
+              {/* BOX 3: Reality Check (Sub-Floor Salvage vs. Standard Make vs. Buy) */}
+              {isSubFloorTrap ? (
+                <div
+                  className={`space-y-2 rounded-lg border p-3.5 ${
+                    isDeadLoss
+                      ? "bg-rose-950/40 border-rose-500/80 shadow-[0_0_15px_rgba(244,63,94,0.3)]"
+                      : "bg-emerald-950/40 border-emerald-500/80 shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+                  }`}
+                >
+                  <div
+                    className={`flex items-center justify-between border-b pb-2 ${
+                      isDeadLoss ? "border-rose-500/30" : "border-emerald-500/30"
+                    }`}
+                  >
+                    <span
+                      className={`text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${
+                        isDeadLoss ? "text-rose-400" : "text-emerald-400"
+                      }`}
+                    >
+                      <Layers className="h-3.5 w-3.5" />
+                      <span>Box 3: Sub-Floor Reality Check</span>
+                    </span>
+                    <span
+                      className={`text-[9px] font-bold uppercase ${
+                        isDeadLoss ? "text-rose-300" : "text-emerald-300"
+                      }`}
+                    >
+                      Net Liquidation − Current Bid
+                    </span>
+                  </div>
+
+                  <div className="space-y-1.5 text-[11px] text-slate-300">
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Net Realizable Liquidation (eBay Salvage):</span>
+                      <span className="text-white font-bold">${netEbayLiquidation.toFixed(2)}</span>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Current Auction Hammer Bid:</span>
+                      <span className="text-white font-bold">-${currentBid.toFixed(2)}</span>
+                    </div>
+
+                    <div
+                      className={`flex justify-between border-t pt-1 text-xs font-bold ${
+                        isDeadLoss ? "border-rose-500/30 text-rose-400" : "border-emerald-500/30 text-emerald-400"
+                      }`}
+                    >
+                      <span>
+                        {isDeadLoss ? "Net Liquidation Deficit:" : "Clearance Salvage Spread:"}
+                      </span>
+                      <span>
+                        {isDeadLoss
+                          ? `-$${(currentBid - netEbayLiquidation).toFixed(2)}`
+                          : `+$${(netEbayLiquidation - currentBid).toFixed(2)}`}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between text-[10px] text-slate-400 pt-0.5">
+                      <span>Sunk Loss Incurred by Submitter:</span>
+                      <span className="text-rose-400 font-bold">
+                        -${submitterLoss.toFixed(2)} (-{Math.round((submitterLoss / activeFormula.sellerTotalCostBasis) * 100)}%)
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between text-[10px] text-slate-400">
+                      <span>LCS Walk-In Cash Floor (40%):</span>
+                      <span className="text-amber-300 font-bold">${lcsOfferFloor.toFixed(2)}</span>
+                    </div>
+
+                    <div className="pt-1 text-[10px] font-bold text-center">
+                      <span
+                        className={`inline-block px-2 py-0.5 rounded border ${
+                          isDeadLoss
+                            ? "bg-rose-950/80 border-rose-500/60 text-rose-300 shadow-[0_0_10px_rgba(244,63,94,0.4)]"
+                            : "bg-emerald-950/80 border-emerald-500/60 text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.4)]"
+                        }`}
+                      >
+                        {isDeadLoss
+                          ? "💀 DEAD LOSS ALL DAY LONG · OVERPAYING LIQUIDATION"
+                          : "✅ CLEARANCE SPREAD · BELOW SECONDARY SALVAGE VALUE"}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-
-                <div className="space-y-1.5 text-[11px] text-slate-300">
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">The Whole Tomato (DIY Replacement):</span>
-                    <span className="text-amber-300 font-bold">${buyerReplacementCost.toFixed(2)}</span>
-                  </div>
-
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Current Auction Hammer Bid:</span>
-                    <span className="text-white font-bold">-${currentBid.toFixed(2)}</span>
-                  </div>
-
-                  <div className="flex justify-between border-t border-slate-800/80 pt-1 text-xs font-bold">
-                    <span className="text-slate-200">Buyer Advantage (Whole Tomato Spread):</span>
-                    <span className={wholeTomatoAdvantage >= 0 ? "text-emerald-400" : "text-rose-400"}>
-                      {wholeTomatoAdvantage >= 0 ? `+$${wholeTomatoAdvantage.toFixed(2)}` : `-$${Math.abs(wholeTomatoAdvantage).toFixed(2)}`}
+              ) : (
+                <div className="space-y-2 rounded-lg bg-slate-950/80 border border-slate-800/80 p-3.5">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                    <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <Layers className="h-3.5 w-3.5" />
+                      <span>Box 3: Make vs. Buy Reality Check</span>
+                    </span>
+                    <span className="text-[9px] text-emerald-300/80 font-bold uppercase">
+                      Line 2 − Current Bid
                     </span>
                   </div>
 
-                  <div className="flex justify-between text-[10px] text-slate-400 pt-0.5">
-                    <span>Current Bid vs. Sunk Factory Floor:</span>
-                    <span className={slabbingFloorSpread > 0 ? "text-emerald-400 font-bold" : "text-slate-400"}>
-                      {slabbingFloorSpread > 0 ? `-$${slabbingFloorSpread.toFixed(2)} BELOW floor` : `+$${Math.abs(slabbingFloorSpread).toFixed(2)} above floor`}
-                    </span>
-                  </div>
+                  <div className="space-y-1.5 text-[11px] text-slate-300">
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">The Whole Tomato (DIY Replacement):</span>
+                      <span className="text-amber-300 font-bold">${buyerReplacementCost.toFixed(2)}</span>
+                    </div>
 
-                  <div className="flex justify-between text-[10px] text-slate-400">
-                    <span>Behind-the-8-Ball Cushion (FMV − Bid):</span>
-                    <span className={eightBallCushion >= 0 ? "text-cyan-300 font-bold" : "text-rose-400 font-bold"}>
-                      {eightBallCushion >= 0 ? `+$${eightBallCushion.toFixed(2)} (Ahead)` : `-$${Math.abs(eightBallCushion).toFixed(2)} (Behind)`}
-                    </span>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Current Auction Hammer Bid:</span>
+                      <span className="text-white font-bold">-${currentBid.toFixed(2)}</span>
+                    </div>
+
+                    <div className="flex justify-between border-t border-slate-800/80 pt-1 text-xs font-bold">
+                      <span className="text-slate-200">Buyer Advantage (Whole Tomato Spread):</span>
+                      <span className={wholeTomatoAdvantage >= 0 ? "text-emerald-400" : "text-rose-400"}>
+                        {wholeTomatoAdvantage >= 0 ? `+$${wholeTomatoAdvantage.toFixed(2)}` : `-$${Math.abs(wholeTomatoAdvantage).toFixed(2)}`}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between text-[10px] text-slate-400 pt-0.5">
+                      <span>Current Bid vs. Sunk Factory Floor:</span>
+                      <span className={slabbingFloorSpread > 0 ? "text-emerald-400 font-bold" : "text-slate-400"}>
+                        {slabbingFloorSpread > 0 ? `-$${slabbingFloorSpread.toFixed(2)} BELOW floor` : `+$${Math.abs(slabbingFloorSpread).toFixed(2)} above floor`}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between text-[10px] text-slate-400">
+                      <span>Behind-the-8-Ball Cushion (FMV − Bid):</span>
+                      <span className={eightBallCushion >= 0 ? "text-cyan-300 font-bold" : "text-rose-400 font-bold"}>
+                        {eightBallCushion >= 0 ? `+$${eightBallCushion.toFixed(2)} (Ahead)` : `-$${Math.abs(eightBallCushion).toFixed(2)} (Behind)`}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 
           {/* Underwriting Takeaway: The Buyer's Make-vs-Buy Decision Rule */}
           <div className="rounded-lg bg-slate-900/90 p-3 text-[11px] text-slate-300 leading-relaxed border border-slate-800 space-y-1.5">
-            <span className="text-amber-300 font-bold block uppercase tracking-wider text-[10px] flex items-center gap-1.5">
-              <Sparkles className="h-3.5 w-3.5 text-amber-400" />
-              <span>The Buyer&apos;s Make-vs-Buy Underwriting Rule:</span>
-            </span>
-            <p>
-              • <strong>Ignore Seller Basis:</strong> What the seller paid ($0, garage sale, attic find, or inherited) is completely irrelevant to you. Your only consideration is: <em>&ldquo;How much does it cost ME to replace this comic if I don&apos;t buy it right now?&rdquo;</em>
-            </p>
-            <p>
-              • <strong>Box 1 Sunk Factory Floor (${activeFormula.slabbingCostFloor.toFixed(2)}):</strong> Any winning bid below this level means you acquire the comic book for <em>free</em> and buy the slab below the cost of the plastic, grading labor, Florida tax, and two-way shipping!
-            </p>
-            <p>
-              • <strong>Box 2 The Whole Tomato (${buyerReplacementCost.toFixed(2)}):</strong> Replicating this exact slab yourself costs raw purchase + ${activeFormula.slabbingCostFloor.toFixed(2)} factory fees + turnaround wait times. Winning below this ceiling guarantees a manufacturing advantage.
-            </p>
+            {isSubFloorTrap ? (
+              <>
+                <span className="text-rose-300 font-bold block uppercase tracking-wider text-[10px] flex items-center gap-1.5">
+                  <ShieldAlert className="h-3.5 w-3.5 text-rose-400" />
+                  <span>The Sub-Floor Reality Rule (Seller Dump Warning):</span>
+                </span>
+                <p>
+                  • <strong>Irreducible Submitter Deficit:</strong> Submitter spent ${activeFormula.slabbingCostFloor.toFixed(2)} on certification alone plus raw comic purchase (~${activeFormula.sellerTotalCostBasis.toFixed(2)} total basis). Secondary FMV (${lot.fmv.toFixed(2)}) leaves them underwater by -${submitterLoss.toFixed(2)} (-{Math.round((submitterLoss / activeFormula.sellerTotalCostBasis) * 100)}%). They are dumping this slab at auction simply to salvage cash.
+                </p>
+                <p>
+                  • <strong>DIY Replication Illusion:</strong> The Whole Tomato DIY cost (${buyerReplacementCost.toFixed(2)}) is an economic illusion here—no prudent buyer would spend ${buyerReplacementCost.toFixed(2)} to slab a book worth ${lot.fmv.toFixed(2)}. Do NOT treat manufacturing cost as an intrinsic baseline when a slab trades sub-floor.
+                </p>
+                <p>
+                  • <strong>Net Liquidation Reality:</strong> Your strict economic ceiling is Net Realizable Liquidation (${netEbayLiquidation.toFixed(2)} on eBay after fees and shipping, or ${lcsOfferFloor.toFixed(2)} at an LCS). Paying above ${netEbayLiquidation.toFixed(2)} is a dead loss all day long!
+                </p>
+              </>
+            ) : (
+              <>
+                <span className="text-amber-300 font-bold block uppercase tracking-wider text-[10px] flex items-center gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+                  <span>The Buyer&apos;s Make-vs-Buy Underwriting Rule:</span>
+                </span>
+                <p>
+                  • <strong>Ignore Seller Basis:</strong> What the seller paid ($0, garage sale, attic find, or inherited) is completely irrelevant to you. Your only consideration is: <em>&ldquo;How much does it cost ME to replace this comic if I don&apos;t buy it right now?&rdquo;</em>
+                </p>
+                <p>
+                  • <strong>Box 1 Sunk Factory Floor (${activeFormula.slabbingCostFloor.toFixed(2)}):</strong> Any winning bid below this level means you acquire the comic book for <em>free</em> and buy the slab below the cost of the plastic, grading labor, Florida tax, and two-way shipping!
+                </p>
+                <p>
+                  • <strong>Box 2 The Whole Tomato (${buyerReplacementCost.toFixed(2)}):</strong> Replicating this exact slab yourself costs raw purchase + ${activeFormula.slabbingCostFloor.toFixed(2)} factory fees + turnaround wait times. Winning below this ceiling guarantees a manufacturing advantage.
+                </p>
+              </>
+            )}
           </div>
         </div>
       )}

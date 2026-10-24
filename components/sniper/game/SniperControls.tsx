@@ -63,6 +63,25 @@ export function SniperControls({
               </span>
             )}
           </div>
+          {/* Floating +/- directly beneath the bid vs multisource value */}
+          <div className="flex items-center gap-1.5 mt-1 font-mono text-[10px]">
+            <span className="text-slate-500">vs Multisource:</span>
+            <span
+              className={`font-bold px-1.5 py-0.2 rounded border ${
+                (userBid ?? lot.openingBid) < lot.fmv
+                  ? "bg-emerald-950/80 border-emerald-500/40 text-emerald-300"
+                  : (userBid ?? lot.openingBid) === lot.fmv
+                  ? "bg-cyan-950/80 border-cyan-500/40 text-cyan-300"
+                  : "bg-rose-950/80 border-rose-500/40 text-rose-300"
+              }`}
+            >
+              {(userBid ?? lot.openingBid) < lot.fmv
+                ? `-$${lot.fmv - (userBid ?? lot.openingBid)} (-${Math.round(((lot.fmv - (userBid ?? lot.openingBid)) / lot.fmv) * 100)}%) BELOW`
+                : (userBid ?? lot.openingBid) === lot.fmv
+                ? "AT MULTISOURCE PARITY"
+                : `+$${(userBid ?? lot.openingBid) - lot.fmv} (+${Math.round((((userBid ?? lot.openingBid) - lot.fmv) / lot.fmv) * 100)}%) ABOVE`}
+            </span>
+          </div>
         </div>
 
         <div className="text-right">

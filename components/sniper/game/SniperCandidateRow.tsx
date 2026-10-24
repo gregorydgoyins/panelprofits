@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import type { LotItem } from "@/lib/sniper/sim/types";
+import { generateCompsDrift } from "@/lib/sniper/sim/lot-service";
 import {
   TrendingUp,
   Clock,
@@ -26,10 +27,18 @@ function formatTickerTime(seconds: number): { text: string; isHot: boolean } {
   const isHot = s <= 90 && s > 0;
   if (s <= 0) return { text: "AUCTION ENDED", isHot: true };
 
-  const hours = Math.floor(s / 3600);
-  const minutes = Math.floor((s % 3600) / 60);
-  const secs = s % 60;
+  const days = Math.floor(s / 86400);
+  const rem = s % 86400;
+  const hours = Math.floor(rem / 3600);
+  const minutes = Math.floor((rem % 3600) / 60);
+  const secs = rem % 60;
 
+  if (days > 0) {
+    return {
+      text: `${days}d ${hours}h ${minutes}m`,
+      isHot: false,
+    };
+  }
   if (hours > 0) {
     return {
       text: `${hours}h ${String(minutes).padStart(2, "0")}m ${String(secs).padStart(2, "0")}s`,
@@ -150,21 +159,31 @@ export function SniperCandidateRow({
           const { text: tickerText, isHot } = formatTickerTime(secs);
           const isEnded = secs <= 0;
 
-          // Sparkline computation
-          const values = points.map((p) => p.value);
-          const minVal = values.length > 0 ? Math.min(...values) : 0;
-          const maxVal = values.length > 0 ? Math.max(...values) : 100;
+          // Sparkline & Trailing Price Momentum (Comps Drift)
+          const drift =
+            lot.compsDrift ||
+            generateCompsDrift(lot.fmv, lot.series, lot.issueNumber, lot.era, lot.isStaleComp);
+          const values = drift.points && drift.points.length >= 2 ? drift.points : [lot.fmv * 0.95, lot.fmv];
+          const minVal = Math.min(...values);
+          const maxVal = Math.max(...values);
           const range = maxVal - minVal || 1;
 
           const sparklineSvgPoints = values
             .map((v, i) => {
               const x = Math.round((i / (values.length - 1 || 1)) * 140);
-              const y = Math.round(36 - ((v - minVal) / range) * 28);
+              const y = Math.round(34 - ((v - minVal) / range) * 26);
               return `${x},${y}`;
             })
             .join(" ");
 
-          const isPositiveTrend = values.length >= 2 ? values[values.length - 1] >= values[0] : true;
+          const isPositiveTrend = drift.trend === "strong" || drift.trend === "rebound";
+          const isSteadyTrend = drift.trend === "steady";
+          const strokeColor = isPositiveTrend ? "#34d399" : isSteadyTrend ? "#22d3ee" : "#fb7185";
+          const trendTextClass = isPositiveTrend
+            ? "text-emerald-400 font-bold"
+            : isSteadyTrend
+            ? "text-cyan-400 font-bold"
+            : "text-rose-400 font-bold";
 
           return (
             <div
@@ -266,6 +285,25 @@ export function SniperCandidateRow({
                         ${lot.currentBid.toLocaleString()}
                       </strong>
                     </div>
+                    {/* Floating +/- directly beneath the bid as auction progresses */}
+                    <div className="flex items-center justify-between text-[8.5px] font-mono leading-none py-0.5">
+                      <span className="text-slate-500">vs Multisource:</span>
+                      <span
+                        className={`font-bold ${
+                          lot.currentBid < lot.fmv
+                            ? "text-emerald-400"
+                            : lot.currentBid === lot.fmv
+                            ? "text-cyan-300"
+                            : "text-rose-400"
+                        }`}
+                      >
+                        {lot.currentBid < lot.fmv
+                          ? `-$${lot.fmv - lot.currentBid} (-${Math.round(((lot.fmv - lot.currentBid) / lot.fmv) * 100)}%)`
+                          : lot.currentBid === lot.fmv
+                          ? "Parity"
+                          : `+$${lot.currentBid - lot.fmv} (+${Math.round(((lot.currentBid - lot.fmv) / lot.fmv) * 100)}%)`}
+                      </span>
+                    </div>
                     <div className="flex items-baseline justify-between text-[9px]">
                       <span className="text-slate-500">FMV:</span>
                       <span className="text-slate-300 font-semibold">
@@ -279,11 +317,11 @@ export function SniperCandidateRow({
                 <div className="bg-black/60 rounded p-1.5 border border-slate-800/80 mb-2">
                   <div className="flex items-center justify-between text-[8px] text-slate-400 mb-0.5">
                     <span className="flex items-center gap-1">
-                      <TrendingUp className="h-2.5 w-2.5 text-cyan-400" />
+                      <TrendingUp className={`h-2.5 w-2.5 ${isPositiveTrend ? "text-emerald-400" : isSteadyTrend ? "text-cyan-400" : "text-rose-400"}`} />
                       <span>Comps Drift</span>
                     </span>
-                    <span className={isPositiveTrend ? "text-emerald-400 font-bold" : "text-rose-400 font-bold"}>
-                      {isPositiveTrend ? "↗ Steady" : "↘ Soft"}
+                    <span className={trendTextClass}>
+                      {drift.label} ({drift.pctChange >= 0 ? "+" : ""}{drift.pctChange}%)
                     </span>
                   </div>
 
@@ -293,8 +331,8 @@ export function SniperCandidateRow({
                         <polyline
                           points={sparklineSvgPoints}
                           fill="none"
-                          stroke={isPositiveTrend ? "#34d399" : "#fb7185"}
-                          strokeWidth="2"
+                          stroke={strokeColor}
+                          strokeWidth="2.2"
                           strokeLinecap="round"
                           strokeLinejoin="round"
                         />
