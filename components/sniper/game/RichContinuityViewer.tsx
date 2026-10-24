@@ -154,6 +154,552 @@ export const WIKI_DICTIONARY: Record<string, TermDefinition> = {
     type: "lexicon",
     url: "/lexicon?term=clean-and-press-regrade-upside",
   },
+  "margin of safety": {
+    term: "Margin of Safety (MOS)",
+    slug: "margin-of-safety",
+    category: "Equities & Market Mechanics",
+    definition: "Investing principle where one only purchases assets when market price is significantly below intrinsic value, minimizing downside risk against estimation error.",
+    translation: "Acquiring graded slabs at or below third-party manufacturing costs ($85.40) or at 30%+ discounts to trailing 90-day volume-weighted FMV, transferring seller equity to the buyer.",
+    comicExample: "Bidding $35 on a CGC 9.4 with an $85.40 manufacturing floor locks in a $50.40 seller-subsidized margin of safety before factoring in the comic's intrinsic demand.",
+    canonicalFormula: "Margin of Safety (%) = (Intrinsic Benchmark FMV - All-In Cost Basis) / Intrinsic Benchmark FMV",
+    type: "lexicon",
+    url: "/wiki/terms/margin-of-safety",
+  },
+  "market capitalization": {
+    term: "Market Capitalization (Asset Float Cap)",
+    slug: "market-capitalization-asset-float-cap",
+    category: "Equities & Market Mechanics",
+    definition: "The total dollar market value of an asset class's outstanding units (Unit Price × Total Units).",
+    translation: "Aggregate market valuation of a comic issue's certified census float across all grade tiers (Census Count × Grade FMV). Reflects total secondary market capital stored in that specific book.",
+    comicExample: "Incredible Hulk #181's 14,000+ certified copies across all grade tiers represent over $65,000,000 in aggregate secondary market capitalization.",
+    canonicalFormula: "Comic Issue Market Cap = ∑ (Census Population[grade] × Verified FMV[grade])",
+    type: "lexicon",
+    url: "/wiki/terms/market-capitalization-asset-float-cap",
+  },
+  "bid-ask spread": {
+    term: "Bid-Ask Spread (FMV Liquidity Spread)",
+    slug: "bid-ask-spread-fmv-liquidity-spread",
+    category: "Equities & Market Mechanics",
+    definition: "The amount by which the lowest asking price exceeds the highest bid price in an open market.",
+    translation: "The spread between wholesale dealer buy-list cash offers (bid) and retail auction/collector asking prices (ask) for a certified slab.",
+    comicExample: "A raw Fantastic Four #48 with a dealer cash buy offer of $1,800 and a retail market FMV of $2,400 has a $600 (25%) liquidity spread.",
+    canonicalFormula: "FMV Liquidity Spread = Retail Ask Price - Wholesale Buy-List Bid Price",
+    type: "lexicon",
+    url: "/wiki/terms/bid-ask-spread-fmv-liquidity-spread",
+  },
+  "cost basis": {
+    term: "Cost Basis (Tax Lot Accounting)",
+    slug: "cost-basis-tax-lot-accounting",
+    category: "Portfolio & Accounting",
+    definition: "The original total value of an asset for tax and accounting purposes, usually the purchase price adjusted for commissions, fees, and additions.",
+    translation: "The exact dollar expenditure incurred to acquire a physical comic or slab: hammer price + 20% buyer's premium + shipping freight + third-party encapsulation fees.",
+    comicExample: "Purchasing a CGC 8.0 Giant-Size X-Men #1 for $3,600 hammer + $720 buyer's premium + $50 shipping establishes an immutable Cost Basis of $4,370.00.",
+    canonicalFormula: "Total Cost Basis = Hammer Price + Buyer's Premium + Insured Freight + Grading Fees",
+    type: "lexicon",
+    url: "/wiki/terms/cost-basis-tax-lot-accounting",
+  },
+  "unrealized gain": {
+    term: "Unrealized Gain / Loss (Unrealized P&L)",
+    slug: "unrealized-gain-loss-unrealized-p-l",
+    category: "Portfolio & Accounting",
+    definition: "A profitable or losing position on an open holding that has not yet been settled via a secondary market sale (paper profit/loss).",
+    translation: "The live mark-to-market difference between active certified grade FMV and original acquisition cost basis.",
+    comicExample: "A CGC 9.4 Amazing Spider-Man #300 acquired at a $2,400 cost basis with a current verified 9.4 FMV of $3,200 reflects an Unrealized Gain of +$800 (+33.3%).",
+    canonicalFormula: "Unrealized P&L ($) = (Current Grade FMV × Quantity) - Total Cost Basis",
+    type: "lexicon",
+    url: "/wiki/terms/unrealized-gain-loss-unrealized-p-l",
+  },
+  "realized gain": {
+    term: "Realized Gain / Loss",
+    slug: "realized-gain-loss",
+    category: "Portfolio & Accounting",
+    definition: "The net profit or loss locked in upon disposing of an asset at a price different from its original purchase price.",
+    translation: "Net cash proceeds recovered upon completed secondary market sale and settlement after deducting platform commissions (13.25%) minus original cost basis.",
+    canonicalFormula: "Realized Gain = Net Auction Settlement (Sale Price - Commission) - Cost Basis",
+    type: "lexicon",
+    url: "/wiki/terms/realized-gain-loss",
+  },
+  "conglomerate media catalyst": {
+    term: "Conglomerate Media Catalyst (Equity Correlation)",
+    slug: "conglomerate-media-catalyst-equity-correlation",
+    category: "Market Intelligence & Catalysts",
+    definition: "Corporate M&A, studio announcements, trailer releases, or casting attachments that trigger rapid narrative re-rating and volume spikes.",
+    translation: "Film or television casting announcements by Disney/Marvel Studios, Warner Bros/DC, or Sony that trigger speculative trading runs on underlying key comic debuts.",
+    comicExample: "Marvel Studios announcing Hugh Jackman's return as Wolverine or RDJ as Doctor Doom in Avengers: Doomsday acted as major catalysts, quadrupling trading volume in respective first appearance keys.",
+    canonicalFormula: "Catalyst Velocity = (7-Day Post-Announcement Volume) / (90-Day Baseline Trading Volume)",
+    type: "lexicon",
+    url: "/wiki/terms/conglomerate-media-catalyst-equity-correlation",
+  },
+  "opportunity cost": {
+    term: "Opportunity Cost",
+    slug: "opportunity-cost",
+    category: "Portfolio & Accounting",
+    definition: "The value of the best available alternative foregone when capital is committed to a specific investment option.",
+    translation: "Allocating capital into speculative modern store variants instead of established blue-chip Silver Age keys carries the opportunity cost of missing generational census appreciation.",
+    comicExample: "Spending $5,000 on modern store-exclusive 1:50 variants rather than a CGC 8.0 Incredible Hulk #181 incurs severe opportunity cost over a multi-year investment horizon.",
+    canonicalFormula: "Opportunity Cost = Return on Best Forgone Asset - Return on Selected Holding",
+    type: "lexicon",
+    url: "/wiki/terms/opportunity-cost",
+  },
+  "concentration risk": {
+    term: "Portfolio Concentration Risk",
+    slug: "concentration-risk",
+    category: "Portfolio & Accounting",
+    definition: "Risk arising from excessive exposure to a single counterparty, asset, or theme, such that losses in that position severely harm overall portfolio value.",
+    translation: "Holding 80%+ of collection capital in a single character franchise (e.g. only Spider-Man or only MCU keys), exposing the investor to single-narrative volatility.",
+    canonicalFormula: "Concentration Ratio = Value of Top 3 Holdings / Total Portfolio Value",
+    type: "lexicon",
+    url: "/wiki/terms/concentration-risk",
+  },
+  "price discovery": {
+    term: "Price Discovery Mechanism",
+    slug: "price-discovery",
+    category: "Trading & Execution",
+    definition: "The continuous process through which competitive bidding in an open marketplace establishes updated market clearing prices.",
+    translation: "Public auction bidding wars on major venues (Heritage, ComicLink, eBay) establishing updated benchmark values for newly surfaced high-grade pedigree copies.",
+    canonicalFormula: "Price Discovery Delta = (Auction Hammer Price - 90d Baseline FMV) / 90d Baseline FMV",
+    type: "lexicon",
+    url: "/wiki/terms/price-discovery",
+  },
+  "liquidity": {
+    term: "Market Liquidity & Turnover Velocity",
+    slug: "liquidity",
+    category: "Trading & Execution",
+    definition: "The efficiency with which an asset can be converted into cash without impacting its market clearing price.",
+    translation: "The transaction velocity and market depth of a certified comic slab on public exchanges. High-liquidity keys like ASM #300 clear within hours; illiquid books require deep markdowns.",
+    canonicalFormula: "Liquidity Ratio = 30-Day Trading Volume ($) / Total Market Float ($)",
+    type: "lexicon",
+    url: "/wiki/terms/liquidity",
+  },
+  "scarcity": {
+    term: "Census Scarcity & Inelastic Supply",
+    slug: "scarcity",
+    category: "Asset Classification & Provenance",
+    definition: "Economic condition where supply is strictly fixed relative to demand, establishing steep upward supply curves and high price inelasticity.",
+    translation: "Pre-1980 Golden, Silver, and Bronze Age comic populations are strictly finite; surviving certified high grades can only diminish over time through damage and attrition.",
+    comicExample: "Even if Action Comics #1 prices surge to $6,000,000, the global certified surviving population cannot increase, creating absolute price inelasticity.",
+    canonicalFormula: "Supply Inelasticity = (% Change in Quantity Supplied) / (% Change in Price) ≈ 0",
+    type: "lexicon",
+    url: "/wiki/terms/scarcity",
+  },
+  "break-even point": {
+    term: "Break-Even Point Calculation",
+    slug: "breakeven-point-definition-examples-and-how-to-calculate",
+    category: "Corporate Finance & Accounting",
+    definition: "The production or clearing price level where total revenue exactly equals total all-in costs, yielding zero net profit and zero net loss.",
+    translation: "The minimum auction hammer price required to recover all acquisition costs, third-party encapsulation overhead ($85.40), and platform seller fees (13.25%).",
+    comicExample: "For a slab acquired at $45 with $8 shipping, the minimum break-even resale price on eBay is $61.10 after platform commissions.",
+    canonicalFormula: "Breakeven Hammer = (Acquisition Cost + Freight) / (1 - Platform Commission Rate 0.1325)",
+    type: "lexicon",
+    url: "/wiki/terms/breakeven-point-definition-examples-and-how-to-calculate",
+  },
+  "asset float": {
+    term: "Asset Float & Census Scarcity Velocity",
+    slug: "asset-float-scarcity-velocity",
+    category: "Equities & Market Mechanics",
+    definition: "The portion of total outstanding shares or units that are actively circulating and available for public secondary trading.",
+    translation: "The number of certified copies recorded on third-party census registries that actively trade on secondary exchanges, excluding copies locked in pedigree vaults or institutional registry sets.",
+    canonicalFormula: "Circulating Float = Total Census Population - Institutionally Locked Registry Copies",
+    type: "lexicon",
+    url: "/wiki/terms/asset-float-scarcity-velocity",
+  },
+  "sovereign store of value": {
+    term: "Sovereign Key Store of Value",
+    slug: "sovereign-key-store-of-value",
+    category: "Asset Classification & Provenance",
+    definition: "An elite blue-chip asset that reliably preserves capital and purchasing power across multi-decade generational horizons.",
+    translation: "Foundational mega-keys (Action Comics #1, Detective #27, AF #15, Hulk #181, X-Men #1) that command permanent institutional collector demand and act as the reserve currency of sequential art.",
+    type: "lexicon",
+    url: "/wiki/terms/first-appearance-key-issue-premium",
+  },
+  "newsstand vs direct": {
+    term: "Newsstand vs. Direct Edition Multiplier",
+    slug: "newsstand-vs-direct-float-multiplier",
+    category: "Distribution & Census Float",
+    definition: "The structural supply differential between mass-retail spinner-rack copies with barcodes and direct-market comic shop editions.",
+    translation: "1980s–1990s newsstand editions suffered 90%+ return and pulping destruction rates, resulting in extreme high-grade census scarcity (2x–5x price multipliers in CGC 9.8).",
+    comicExample: "A CGC 9.8 Amazing Spider-Man #300 Newsstand commands up to a 2.5x price premium over its Direct Edition counterpart due to spinner-rack destruction.",
+    type: "lexicon",
+    url: "/wiki/terms/asset-float-scarcity-velocity",
+  },
+  "cbcs": {
+    term: "CBCS (Comic Book Certification Service)",
+    slug: "cbcs-certification",
+    category: "Grading Authority",
+    definition: "Major independent third-party comic grading service founded by former CGC lead grader Steve Borock, offering signature verification and encapsulation.",
+    translation: "Trades at a modest 5%–15% liquidity discount relative to CGC benchmarks, offering attractive entry margins and verified signature provenance.",
+    type: "lexicon",
+    url: "/wiki/terms/third-party-certification-cgc",
+  },
+
+  // ── X-MEN #12 & JUGGERNAUT MILESTONE ENTITIES ──
+  "juggernaut": {
+    term: "The Unstoppable Juggernaut (Cain Marko)",
+    slug: "juggernaut",
+    category: "Canonical Lore & Character IP",
+    definition: "Abusive stepbrother of Charles Xavier who uncovered the Crimson Gem of Cyttorak in a lost temple, transforming into an unstoppable, invulnerable juggernaut.",
+    translation: "First appearing in X-Men #12 (July 1965), Juggernaut is one of Marvel's premier powerhouse antagonists, cementing #12 as a cornerstone Silver Age blue chip.",
+    type: "character",
+    universe: "MARVEL UNIVERSE (EARTH-616)",
+    role: "Avatar of Cyttorak & Unstoppable Powerhouse",
+    creators: "Stan Lee, Jack Kirby, Alex Toth",
+    firstAppearance: "X-Men #12 (July 1965)",
+    url: "/catalog?q=Juggernaut",
+  },
+  "cain marko": {
+    term: "Cain Marko (Juggernaut Origin)",
+    slug: "cain-marko",
+    category: "Canonical Lore & Character IP",
+    definition: "Stepbrother of Charles Xavier who harbored deep resentment toward Xavier's intellect, later discovering Cyttorak's gem during the Korean War.",
+    translation: "Central figure in X-Men #12 whose psychological trauma and family resentment anchor the emotional core of Silver Age mutant continuity.",
+    type: "character",
+    universe: "MARVEL UNIVERSE (EARTH-616)",
+    role: "Stepbrother of Professor X & Juggernaut Host",
+    creators: "Stan Lee, Jack Kirby, Alex Toth",
+    firstAppearance: "X-Men #12 (July 1965)",
+    url: "/catalog?q=Juggernaut",
+  },
+  "crimson gem of cyttorak": {
+    term: "The Crimson Gem of Cyttorak",
+    slug: "crimson-gem-of-cyttorak",
+    category: "Canonical Artifacts & Relics",
+    definition: "Mystical conduit linking the mortal realm to the extra-dimensional Octessence deity Cyttorak, granting boundless physical momentum and invulnerability.",
+    translation: "The seminal artifact introduced in X-Men #12 that birthed the Juggernaut and remains a recurring cornerstone of Marvel mystic continuity.",
+    type: "artifact",
+    universe: "MARVEL UNIVERSE (EARTH-616)",
+    role: "Mystic Relic of Cyttorak",
+    firstAppearance: "X-Men #12 (July 1965)",
+    url: "/catalog?q=Cyttorak",
+  },
+  "cyttorak": {
+    term: "Cyttorak (Lord of the Crimson Cosmos)",
+    slug: "cyttorak",
+    category: "Canonical Lore & Character IP",
+    definition: "Ancient extra-dimensional entity of destructive momentum, worshipped as an Octessence deity and source of the Juggernaut's unstoppable power.",
+    translation: "Primary cosmic entity in Doctor Strange and X-Men mystic lore; his Crimson Bands of Cyttorak are a staple spell in Marvel continuity.",
+    type: "character",
+    universe: "MARVEL UNIVERSE (EARTH-616)",
+    role: "Cosmic Entity & Ruler of the Crimson Cosmos",
+    firstAppearance: "Strange Tales #124 / X-Men #12",
+    url: "/catalog?q=Cyttorak",
+  },
+  "alex toth": {
+    term: "Alex Toth (Legendary Bullpen Artist)",
+    slug: "alex-toth",
+    category: "Creator Retrospective",
+    definition: "Master sequential artist and animation designer (Space Ghost, Herculoids) celebrated for his minimalist storytelling and dynamic visual economy.",
+    translation: "Illustrated the interior pages of X-Men #12 alongside Jack Kirby, making the issue a celebrated artist showcase for Silver Age collectors.",
+    type: "creator",
+    universe: "Marvel Bullpen",
+    role: "Legendary Penciler & Animator",
+    url: "/catalog?q=Alex+Toth",
+  },
+  "professor x": {
+    term: "Professor Charles Xavier (Origin & Dark Family Secret)",
+    slug: "professor-xavier",
+    category: "Canonical Lore & Character IP",
+    definition: "World's most powerful mutant telepath and founder of the X-Men, whose childhood abuse by stepbrother Cain Marko is revealed in X-Men #12.",
+    translation: "Core protagonist of the mutant franchise. X-Men #12 provides the definitive canonical origin of Xavier's family trauma and motivation.",
+    type: "character",
+    universe: "MARVEL UNIVERSE (EARTH-616)",
+    role: "Founder of the X-Men & Telepathic Mentor",
+    creators: "Stan Lee, Jack Kirby",
+    firstAppearance: "X-Men #1 (September 1963)",
+    url: "/catalog?q=Professor+X",
+  },
+
+  // ── SENSATIONAL SHE-HULK #34 & JOHN BYRNE MILESTONE ENTITIES ──
+  "she-hulk": {
+    term: "Sensational She-Hulk (Jennifer Walters)",
+    slug: "she-hulk",
+    category: "Canonical Lore & Character IP",
+    definition: "Bruce Banner's lawyer cousin who gained emerald superhuman strength through a blood transfusion, retaining her wit, intellect, and legal brilliance.",
+    translation: "Pioneered fourth-wall breaking meta satire under John Byrne; multi-billion dollar cinematic and streaming TV franchise anchor.",
+    type: "character",
+    universe: "MARVEL UNIVERSE (EARTH-616)",
+    role: "Superhuman Attorney & Avenger",
+    creators: "Stan Lee, John Buscema",
+    firstAppearance: "Savage She-Hulk #1 (February 1980)",
+    url: "/catalog?q=She-Hulk",
+  },
+  "jennifer walters": {
+    term: "Jennifer Walters, Esq. (She-Hulk)",
+    slug: "jennifer-walters",
+    category: "Canonical Lore & Character IP",
+    definition: "Top superhuman defense attorney in New York City who routinely defends metahumans while serving as an active member of the Avengers and Fantastic Four.",
+    translation: "Key Marvel protagonist combining legal procedurals with superhero action; back-issue values spiked significantly with MCU streaming adoption.",
+    type: "character",
+    universe: "MARVEL UNIVERSE (EARTH-616)",
+    role: "Superhuman Defense Attorney",
+    url: "/catalog?q=She-Hulk",
+  },
+  "vanity fair parody": {
+    term: "Vanity Fair Demi Moore Homage Cover",
+    slug: "vanity-fair-demi-moore-parody",
+    category: "Iconic Covers & Pop Culture Homages",
+    definition: "John Byrne's famous satirical cover for Sensational She-Hulk #34 parodying Annie Leibovitz's iconic August 1991 Vanity Fair cover of pregnant Demi Moore (with Bruce Willis' baby), replacing the pregnancy bump with an inflated beach ball.",
+    translation: "One of the most celebrated and commercially sought-after homage covers of the Copper Age, driving immense collector demand and media coverage.",
+    type: "lexicon",
+    universe: "MARVEL UNIVERSE (EARTH-616)",
+    role: "Pop Culture Satire Milestone",
+    firstAppearance: "Sensational She-Hulk #34 (December 1991)",
+    url: "/catalog?q=Sensational+She-Hulk+34",
+  },
+  "demi moore beach ball homage": {
+    term: "Demi Moore Pregnancy Beach Ball Homage",
+    slug: "vanity-fair-demi-moore-parody",
+    category: "Iconic Covers & Pop Culture Homages",
+    definition: "The visual punchline of Sensational She-Hulk #34 where She-Hulk mimics Demi Moore's nude pregnancy pose while revealing she is merely holding a beach ball.",
+    translation: "A defining cultural touchstone of early 1990s comic irreverence that helped establish John Byrne's She-Hulk as an enduring collector favorite.",
+    type: "lexicon",
+    url: "/catalog?q=Sensational+She-Hulk+34",
+  },
+  "john byrne": {
+    term: "John Byrne (Visionary Writer & Artist)",
+    slug: "john-byrne",
+    category: "Creator Retrospective",
+    definition: "Superstar creator whose work on Fantastic Four, Uncanny X-Men (Dark Phoenix), Superman (Man of Steel), and Sensational She-Hulk redefined sequential art.",
+    translation: "Byrne's creator pedigree commands enduring market premiums across all his signature runs; his She-Hulk established the meta humor later adopted by Deadpool.",
+    type: "creator",
+    universe: "Marvel Bullpen",
+    role: "Legendary Writer & Artist",
+    url: "/catalog?q=John+Byrne",
+  },
+
+  // ── WOLVERINE & BRONZE AGE KEY ENTITIES ──
+  "wolverine": {
+    term: "Wolverine (James 'Logan' Howlett)",
+    slug: "wolverine",
+    category: "Canonical Lore & Character IP",
+    definition: "Mutant berserker possessing heightened senses, accelerated healing, and an adamantium-bonded skeleton with razor-sharp retractable claws.",
+    translation: "First appearing in Incredible Hulk #181 (November 1974), Wolverine is the single most liquid and valuable character debut of the Bronze Age.",
+    type: "character",
+    universe: "MARVEL UNIVERSE (EARTH-616)",
+    role: "X-Man, Avenger & Weapon X Survivor",
+    creators: "Len Wein, Herb Trimpe, John Romita Sr.",
+    firstAppearance: "Incredible Hulk #181 (November 1974)",
+    url: "/catalog?q=Wolverine",
+  },
+  "logan": {
+    term: "Logan (James Howlett / Wolverine)",
+    slug: "wolverine",
+    category: "Canonical Lore & Character IP",
+    definition: "The civilian alias of James Howlett during his centuries of global wandering, Canadian Department H service, and Weapon X experimentation.",
+    translation: "Cultural icon anchoring multiple decades of comic sales, film franchises, and certified grade census premiums.",
+    type: "character",
+    universe: "MARVEL UNIVERSE (EARTH-616)",
+    role: "Weapon X Operative & X-Man",
+    url: "/catalog?q=Wolverine",
+  },
+  "len wein": {
+    term: "Len Wein (Bullpen Writer & Co-Creator)",
+    slug: "len-wein",
+    category: "Creator Retrospective",
+    definition: "Legendary writer and editor who co-created Wolverine (Hulk #181), Swamp Thing (House of Secrets #92), and revitalized the X-Men in Giant-Size X-Men #1.",
+    translation: "One of the most consequential creators in comic history; issues bearing his co-creations represent permanent blue-chip equities.",
+    type: "creator",
+    universe: "Marvel Bullpen",
+    role: "Writer, Editor & Co-Creator",
+    url: "/catalog?q=Len+Wein",
+  },
+  "herb trimpe": {
+    term: "Herb Trimpe (Definitive Hulk Artist)",
+    slug: "herb-trimpe",
+    category: "Creator Retrospective",
+    definition: "Prolific Marvel artist who drew The Incredible Hulk for seven consecutive years, illustrating the visual debut of Wolverine in Hulk #181.",
+    translation: "Trimpe's dynamic powerhouse artwork defined the Bronze Age look of the Hulk and gave Wolverine his first action sequences.",
+    type: "creator",
+    universe: "Marvel Bullpen",
+    role: "Penciler & Artist",
+    url: "/catalog?q=Herb+Trimpe",
+  },
+
+  // ── AMAZING SPIDER-MAN #129, #300 & KEY CREATORS ──
+  "punisher": {
+    term: "The Punisher (Frank Castle Debut)",
+    slug: "the-punisher",
+    category: "Canonical Lore & Character IP",
+    definition: "Marine veteran Frank Castle who launched a lethal one-man war on organized crime following the gangland murder of his wife and children in Central Park.",
+    translation: "First appearing in Amazing Spider-Man #129 (February 1974), The Punisher established the modern anti-hero archetype, making #129 a top-tier Bronze Age key.",
+    type: "character",
+    universe: "MARVEL UNIVERSE (EARTH-616)",
+    role: "Lethal Vigilante & Anti-Hero",
+    creators: "Gerry Conway, Ross Andru, John Romita Sr.",
+    firstAppearance: "Amazing Spider-Man #129 (February 1974)",
+    url: "/catalog?q=Punisher",
+  },
+  "frank castle": {
+    term: "Frank Castle (The Punisher)",
+    slug: "the-punisher",
+    category: "Canonical Lore & Character IP",
+    definition: "Decorated combat veteran whose skull insignia and unyielding mission against criminal enterprises transformed superhero comics.",
+    translation: "Sovereign comic property with sustained multi-decade film, television, and collector equity.",
+    type: "character",
+    universe: "MARVEL UNIVERSE (EARTH-616)",
+    role: "The Punisher",
+    url: "/catalog?q=Punisher",
+  },
+  "gerry conway": {
+    term: "Gerry Conway (Bullpen Writer & Co-Creator)",
+    slug: "gerry-conway",
+    category: "Creator Retrospective",
+    definition: "Pioneering writer who scripted the seminal 'Death of Gwen Stacy' (ASM #121-122) and created The Punisher (ASM #129) at age 21.",
+    translation: "Conway's storytelling introduced mature, consequential stakes to Bronze Age Marvel comics.",
+    type: "creator",
+    universe: "Marvel Bullpen",
+    role: "Writer & Co-Creator",
+    url: "/catalog?q=Gerry+Conway",
+  },
+  "ross andru": {
+    term: "Ross Andru (Legendary Spider-Man Penciler)",
+    slug: "ross-andru",
+    category: "Creator Retrospective",
+    definition: "Acclaimed penciler whose meticulous New York architectural precision and kinetic action choreography defined Amazing Spider-Man throughout the 1970s.",
+    translation: "Illustrated The Punisher's debut in ASM #129, Superman vs. The Amazing Spider-Man (1976), and countless classic Bronze Age storylines.",
+    type: "creator",
+    universe: "Marvel Bullpen",
+    role: "Penciler & Artist",
+    url: "/catalog?q=Ross+Andru",
+  },
+  "venom": {
+    term: "Venom (Eddie Brock / Alien Symbiote)",
+    slug: "venom",
+    category: "Canonical Lore & Character IP",
+    definition: "Disgraced investigative journalist Eddie Brock bonded to the rejected alien symbiote to exact murderous revenge against Peter Parker.",
+    translation: "First fully appearing in Amazing Spider-Man #300 (May 1988), Venom is the crown jewel villain milestone of the Copper Age, commanding massive 9.8 liquidity.",
+    type: "character",
+    universe: "MARVEL UNIVERSE (EARTH-616)",
+    role: "Lethal Protector & Symbiote Anti-Hero",
+    creators: "David Michelinie, Todd McFarlane",
+    firstAppearance: "Amazing Spider-Man #300 (May 1988)",
+    url: "/catalog?q=Venom",
+  },
+  "todd mcfarlane": {
+    term: "Todd McFarlane (Superstar Artist & Image Founder)",
+    slug: "todd-mcfarlane",
+    category: "Creator Retrospective",
+    definition: "Revolutionary artist who transformed Spider-Man's visual aesthetic (spaghetti webbing, dynamic poses), co-created Venom, and founded Image Comics with Spawn.",
+    translation: "His signature covers (ASM #300, Spider-Man #1, Batman #423, Spawn #1) are foundational liquidity drivers across Copper and Modern comic markets.",
+    type: "creator",
+    universe: "Marvel / Image Comics",
+    role: "Revolutionary Artist & Publisher",
+    url: "/catalog?q=Todd+McFarlane",
+  },
+
+  // ── FANTASTIC FOUR & COSMIC DEBUTS ──
+  "galactus": {
+    term: "Galactus (Devourer of Worlds Debut)",
+    slug: "galactus",
+    category: "Canonical Lore & Character IP",
+    definition: "Cosmic entity surviving from the universe prior to the Big Bang who sustains himself by consuming planetary energy, debuting in Fantastic Four #48.",
+    translation: "Jack Kirby and Stan Lee's cosmic masterpiece; Fantastic Four #48 represents one of the premier mega-keys of the entire Silver Age.",
+    type: "character",
+    universe: "MARVEL UNIVERSE (EARTH-616)",
+    role: "Cosmic Entity & Devourer of Worlds",
+    creators: "Stan Lee, Jack Kirby",
+    firstAppearance: "Fantastic Four #48 (March 1966)",
+    url: "/catalog?q=Galactus",
+  },
+  "silver surfer": {
+    term: "The Silver Surfer (Norrin Radd Debut)",
+    slug: "silver-surfer",
+    category: "Canonical Lore & Character IP",
+    definition: "Philosopher astronomer of Zenn-La who sacrificed his freedom to become the herald of Galactus, wielding the Power Cosmic in Fantastic Four #48.",
+    translation: "Debuted in Fantastic Four #48, embodying Jack Kirby's spiritual cosmic vision; permanent tier-1 Silver Age blue chip.",
+    type: "character",
+    universe: "MARVEL UNIVERSE (EARTH-616)",
+    role: "Herald of Galactus & Cosmic Wanderer",
+    creators: "Jack Kirby, Stan Lee",
+    firstAppearance: "Fantastic Four #48 (March 1966)",
+    url: "/catalog?q=Silver+Surfer",
+  },
+  "black panther": {
+    term: "Black Panther (King T'Challa of Wakanda Debut)",
+    slug: "black-panther",
+    category: "Canonical Lore & Character IP",
+    definition: "Monarch of the technologically advanced, isolationist African nation of Wakanda, debuting in Fantastic Four #52 (July 1966).",
+    translation: "The first superhero of African descent in mainstream American comics; historical milestone commanding sovereign investment equity.",
+    type: "character",
+    universe: "MARVEL UNIVERSE (EARTH-616)",
+    role: "King of Wakanda & Black Panther",
+    creators: "Stan Lee, Jack Kirby",
+    firstAppearance: "Fantastic Four #52 (July 1966)",
+    url: "/catalog?q=Black+Panther",
+  },
+  "jack kirby": {
+    term: "Jack 'King' Kirby (Architect of the Marvel Universe)",
+    slug: "jack-kirby",
+    category: "Creator Retrospective",
+    definition: "The unmatched visual architect who co-created Captain America, the Fantastic Four, X-Men, Hulk, Thor, Iron Man, Silver Surfer, and New Gods.",
+    translation: "Kirby's dynamism and cosmic design established the modern visual language of superhero sequential art; Kirby keys are sovereign blue chips.",
+    type: "creator",
+    universe: "Marvel Bullpen",
+    role: "King of Comics & Co-Creator",
+    url: "/catalog?q=Jack+Kirby",
+  },
+  "stan lee": {
+    term: "Stan Lee (The Voice of the Marvel Age)",
+    slug: "stan-lee",
+    category: "Creator Retrospective",
+    definition: "Bullpen writer, editor, and publisher who co-created Spider-Man, Fantastic Four, Avengers, X-Men, Iron Man, and Thor, introducing flawed, human heroes.",
+    translation: "His signature storytelling and dialogue brought comic books into mainstream cultural respectability, anchoring multi-billion dollar franchises.",
+    type: "creator",
+    universe: "Marvel Bullpen",
+    role: "Writer, Editor & Marvel Patriarch",
+    url: "/catalog?q=Stan+Lee",
+  },
+
+  // ── BATMAN & DC ICONS ──
+  "batman": {
+    term: "Batman (The Dark Knight Genesis)",
+    slug: "batman",
+    category: "Canonical Lore & Character IP",
+    definition: "Billionaire industrialist Bruce Wayne who dedicated his life to waging a relentless war on Gotham City crime following the murder of his parents.",
+    translation: "First appearing in Detective Comics #27 (May 1939), Batman is the single most valuable and enduring character property in comic history.",
+    type: "character",
+    universe: "DC UNIVERSE",
+    role: "The Caped Crusader & World's Greatest Detective",
+    creators: "Bob Kane, Bill Finger",
+    firstAppearance: "Detective Comics #27 (May 1939)",
+    url: "/catalog?q=Batman",
+  },
+  "the joker": {
+    term: "The Joker (Clown Prince of Crime)",
+    slug: "the-joker",
+    category: "Canonical Lore & Character IP",
+    definition: "Batman's greatest and most chaotic adversary, restored to terrifying psychological realism by Denny O'Neil and Neal Adams in Batman #251.",
+    translation: "Batman #251 stands as the quintessential Bronze Age Joker milestone, commanding massive collector demand for its classic Neal Adams cover.",
+    type: "character",
+    universe: "DC UNIVERSE",
+    role: "Harlequin of Hate & Batman's Arch-Nemesis",
+    creators: "Bill Finger, Bob Kane, Jerry Robinson",
+    firstAppearance: "Batman #1 (Spring 1940)",
+    url: "/catalog?q=Joker",
+  },
+  "neal adams": {
+    term: "Neal Adams (Photorealistic Comic Pioneer)",
+    slug: "neal-adams",
+    category: "Creator Retrospective",
+    definition: "Revolutionary artist whose cinematic realism, dynamic anatomy, and gritty atmosphere rescued Batman from 1960s camp and revitalized Green Lantern.",
+    translation: "Adams' covers (Batman #227, #251, Green Lantern #76, X-Men #56-65) command premier artist pedigree valuations.",
+    type: "creator",
+    universe: "DC / Marvel Bullpen",
+    role: "Revolutionary Artist & Creator Rights Champion",
+    url: "/catalog?q=Neal+Adams",
+  },
+  "superman": {
+    term: "Superman (The Archetype of Superheroism)",
+    slug: "superman",
+    category: "Canonical Lore & Character IP",
+    definition: "Kal-El of Krypton, rocketed to Earth as an infant and raised in Smallville as Clark Kent, wielding superhuman powers in defense of truth and justice.",
+    translation: "Action Comics #1 (June 1938) created the entire comic book industry; high-grade pedigree copies hold world auction records at $6,000,000+.",
+    type: "character",
+    universe: "DC UNIVERSE",
+    role: "Man of Steel & Premier Superhero",
+    creators: "Jerry Siegel, Joe Shuster",
+    firstAppearance: "Action Comics #1 (June 1938)",
+    url: "/catalog?q=Superman",
+  },
 
   // ── INCREDIBLE HULK #377 CANONICAL ENTITIES ──
   "bruce banner": {
@@ -279,28 +825,6 @@ export const WIKI_DICTIONARY: Record<string, TermDefinition> = {
   },
 
   // ── SENSATIONAL SHE-HULK #34 CANONICAL ENTITIES ──
-  "she-hulk": {
-    term: "She-Hulk (Jennifer Walters)",
-    slug: "she-hulk",
-    category: "Canonical Lore & Character IP",
-    definition: "Cousin of Bruce Banner who gained superhuman strength through an emergency gamma-infused blood transfusion, retaining her razor-sharp legal intellect and fourth-wall breaking wit.",
-    translation: "Foundational Marvel legal and comedic anchor whose meta runs by John Byrne revolutionized 90s comic storytelling, reinforced by Disney+ MCU live-action series.",
-    type: "character",
-    universe: "MARVEL UNIVERSE (EARTH-616)",
-    role: "Superhuman Attorney & Jade Giantess",
-    url: "/catalog?q=She-Hulk",
-  },
-  "jennifer walters": {
-    term: "Jennifer Walters, Esq. (She-Hulk)",
-    slug: "jennifer-walters",
-    category: "Canonical Lore & Character IP",
-    definition: "Civic attorney and public defender in New York City who balances high-stakes criminal jurisprudence with cosmic superhero brawls.",
-    translation: "Her dual identity as practicing attorney and powerhouse superhero created a distinct, evergreen comic equity genre.",
-    type: "character",
-    universe: "MARVEL UNIVERSE (EARTH-616)",
-    role: "Defense Attorney & Avenger",
-    url: "/catalog?q=Jennifer+Walters",
-  },
   "louise mason": {
     term: "Louise 'Weezi' Mason (The Blonde Phantom)",
     slug: "louise-mason",
@@ -354,17 +878,6 @@ export const WIKI_DICTIONARY: Record<string, TermDefinition> = {
   },
 
   // ── KEY CREATORS ──
-  "john byrne": {
-    term: "John Byrne (Pioneering Writer, Penciler & Meta Innovator)",
-    slug: "john-byrne",
-    category: "Creator Retrospective",
-    definition: "Visionary comic creator who redefined Fantastic Four, Uncanny X-Men, Superman (Man of Steel), and Sensational She-Hulk, introducing fourth-wall breaking meta-comedy to mainstream comics.",
-    translation: "A premier Hall of Fame creator whose creator-owned and Big Two milestone runs command blue-chip liquidity and enduring registry demand.",
-    type: "creator",
-    universe: "MARVEL & DC COMICS",
-    role: "Writer, Artist & Comic Book Hall of Fame Inductee",
-    url: "/catalog?q=John+Byrne",
-  },
   "renee witterstaetter": {
     term: "Renée Witterstaetter (Editor, Publisher & Colorist)",
     slug: "renee-witterstaetter",
@@ -419,17 +932,6 @@ export const WIKI_DICTIONARY: Record<string, TermDefinition> = {
     universe: "MARVEL COMICS",
     role: "Co-Creator of New Mutants & Master Inker",
     url: "/catalog?q=Bob+McLeod",
-  },
-  "todd mcfarlane": {
-    term: "Todd McFarlane (Superstar Creator, Image Founder & Toy Pioneer)",
-    slug: "todd-mcfarlane",
-    category: "Creator Retrospective",
-    definition: "Visionary Canadian comic artist and writer who revolutionized Amazing Spider-Man with dynamic web fluid ('spaghetti webs') and broke all-time sales records with Spider-Man #1 (1990) selling 2.5M copies, before co-founding Image Comics and creating Spawn.",
-    translation: "One of the most commercially influential creators in comic history. His signature dynamic covers and high-grade 9.8 keys anchor modern market liquidity.",
-    type: "creator",
-    universe: "MARVEL & IMAGE COMICS",
-    role: "Writer, Artist, Image Comics Co-Founder & Spawn Creator",
-    url: "/catalog?q=Todd+McFarlane",
   },
   "rick parker": {
     term: "Rick Parker (Master Letterer & Artist)",
@@ -545,39 +1047,6 @@ export const WIKI_DICTIONARY: Record<string, TermDefinition> = {
     universe: "HASBRO / MARVEL UNIVERSE",
     role: "Arashikage Ninja Master & Cobra Bodyguard",
     url: "/catalog?q=Storm+Shadow",
-  },
-  "punisher": {
-    term: "The Punisher (Frank Castle)",
-    slug: "punisher",
-    category: "Canonical Lore & Character IP",
-    definition: "Marine combat veteran who wages a one-man war on organized crime following the murder of his wife and children.",
-    translation: "First appearing in Amazing Spider-Man #129, Castle transformed American superhero fiction and stands as one of the most collected modern anti-heroes.",
-    type: "character",
-    universe: "MARVEL UNIVERSE",
-    role: "Lethal Vigilante Anti-Hero",
-    url: "/catalog?q=Punisher",
-  },
-  "venom": {
-    term: "Venom (Eddie Brock & Symbiote)",
-    slug: "venom",
-    category: "Canonical Lore & Character IP",
-    definition: "The monstrous fusion of disgraced journalist Eddie Brock and the alien Klyntar symbiote rejected by Peter Parker.",
-    translation: "Debuting in Amazing Spider-Man #300, Venom represents one of the highest-grossing character franchises in global entertainment.",
-    type: "character",
-    universe: "MARVEL UNIVERSE",
-    role: "Lethal Protector & Anti-Hero",
-    url: "/catalog?q=Venom",
-  },
-  "wolverine": {
-    term: "Wolverine (Logan / Weapon X)",
-    slug: "wolverine",
-    category: "Canonical Lore & Character IP",
-    definition: "Centuries-old mutant with superhuman regenerative healing, enhanced senses, and an adamantium-bonded skeleton with retractable claws.",
-    translation: "Debuting in The Incredible Hulk #181, Wolverine is the single most valuable modern-era superhero character IP in existence.",
-    type: "character",
-    universe: "MARVEL UNIVERSE",
-    role: "X-Man, Avenger & Lethal Operative",
-    url: "/catalog?q=Wolverine",
   },
   "deadpool": {
     term: "Deadpool (Wade Wilson)",
@@ -753,13 +1222,58 @@ export function RichContinuityViewer({
       ? synopsisParagraphs
       : summary.split("\n\n").filter(Boolean);
 
-  // Extract all terms that appear anywhere in text
+  // Derive tailored governing underwriting & investment terms for this specific lot
+  const isKey =
+    (categories || []).some((c) => /first appearance|debut|key|origin/i.test(c)) ||
+    /#?1\b|#?12\b|#?181\b|#?129\b|#?300\b|#?48\b|#?52\b|#?251\b|#?27\b/i.test(`${series} ${issueNumber}`);
+  const isSubFloor = fmv < 85.4;
+  const isSovereign98 = grade === "9.8";
+  const isHighValue = fmv >= 500;
+  const isMidGrade = !isSovereign98 && ["8.0", "8.5", "9.0", "9.2", "9.4", "9.6"].includes(grade);
+
+  const investmentKeys: string[] = [];
+  if (isKey) {
+    investmentKeys.push("first-appearance-key-issue-premium", "scarcity", "asset-float-scarcity-velocity");
+  }
+  if (isSubFloor) {
+    investmentKeys.push("sunk-cost", "sub-floor dump", "slabbing overhead", "margin-of-safety");
+  }
+  if (isSovereign98) {
+    investmentKeys.push("cgc 9.8", "fair-market-value-fmv-benchmark", "market-capitalization-asset-float-cap");
+  }
+  if (isMidGrade) {
+    investmentKeys.push("grade-compression", "clean & press (cpr)", "bid-ask-spread-fmv-liquidity-spread");
+  }
+  if (isHighValue) {
+    investmentKeys.push("cost-basis-tax-lot-accounting", "unrealized-gain-loss-unrealized-p-l", "liquidity", "pedigree");
+  }
+  // Baseline indispensable underwriting principles
+  investmentKeys.push("price-discovery", "opportunity-cost", "conglomerate-media-catalyst-equity-correlation");
+
+  const governingTerms: TermDefinition[] = [];
+  const seenSlugs = new Set<string>();
+
+  for (const k of investmentKeys) {
+    const term = WIKI_DICTIONARY[k] || Object.values(WIKI_DICTIONARY).find((d) => d.slug === k);
+    if (term && !seenSlugs.has(term.slug)) {
+      seenSlugs.add(term.slug);
+      governingTerms.push(term);
+    }
+  }
+
+  // Extract all terms that appear anywhere in text or are governing terms
   const combinedText = `${summary} ${whyInvest} ${effectiveStoryTitle} ${(notes || []).join(" ")}`.toLowerCase();
-  const presentTerms = Object.values(WIKI_DICTIONARY).filter(
+  const matchedTerms = Object.values(WIKI_DICTIONARY).filter(
     (def) =>
       combinedText.includes(def.term.toLowerCase()) ||
       combinedText.includes(def.slug.replace(/-/g, " "))
   );
+
+  const allTermsMap = new Map<string, TermDefinition>();
+  for (const t of [...governingTerms, ...matchedTerms]) {
+    allTermsMap.set(t.slug, t);
+  }
+  const presentTerms = Array.from(allTermsMap.values());
 
   const lookupEntity = async (name: string, fallbackType: "character" | "creator" | "lexicon" = "character") => {
     const normalized = name.toLowerCase().trim();
@@ -1452,6 +1966,45 @@ export function RichContinuityViewer({
             </span>
           </div>
         </div>
+
+        {/* Governing Financial & Underwriting Investment Terms */}
+        {governingTerms && governingTerms.length > 0 && (
+          <div className="pt-4 border-t border-emerald-500/30 space-y-3 font-mono text-xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-emerald-300 font-bold flex items-center gap-1.5">
+                <Coins className="h-3.5 w-3.5 text-emerald-400" />
+                <span>Governing Financial &amp; Underwriting Investment Terms</span>
+              </span>
+              <span className="text-[10px] text-slate-400">
+                Tap any term for calculation formula &amp; market translation
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 pt-1">
+              {governingTerms.map((term) => (
+                <button
+                  key={term.slug}
+                  type="button"
+                  onClick={() => setActiveDef(term)}
+                  className="text-left rounded-lg border border-emerald-500/30 bg-emerald-950/40 hover:border-emerald-400/80 hover:bg-emerald-900/50 p-2.5 transition-all space-y-1.5 group cursor-pointer shadow-sm"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[9px] font-mono uppercase text-emerald-400/90 font-bold tracking-wider">
+                      {term.category}
+                    </span>
+                    <span className="text-emerald-400 text-xs group-hover:translate-x-0.5 transition-transform">↗</span>
+                  </div>
+                  <div className="text-xs font-mono font-bold text-white group-hover:text-emerald-200">
+                    {term.term}
+                  </div>
+                  <p className="text-[10px] font-sans text-slate-300 line-clamp-2 leading-relaxed">
+                    {term.translation || term.definition}
+                  </p>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* FLOATING DEFINITION MODAL */}

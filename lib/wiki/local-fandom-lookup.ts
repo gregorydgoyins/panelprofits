@@ -1,5 +1,6 @@
 import path from "path";
 import fs from "fs";
+import { CORE_CANON_DICTIONARY } from "@/lib/lexicon/core-canon-dictionary";
 
 export interface WikiLookupResult {
   term: string;
@@ -101,13 +102,30 @@ function getDatabase(dbName: "cbr" | "investopedia" | "marvel" | "dc" | "starwar
  * Look up comic market principles & financial definitions from CBR Lexicon (4,654 terms)
  */
 export function lookupCbrLexicon(term: string): WikiLookupResult | null {
+  const cleanTerm = term.trim();
+  const slug = cleanTerm.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+
+  // Check in-memory Core Canon Dictionary first
+  const coreEntry = CORE_CANON_DICTIONARY[slug] || CORE_CANON_DICTIONARY[cleanTerm.toLowerCase()];
+  if (coreEntry) {
+    return {
+      term: coreEntry.term,
+      slug: coreEntry.slug,
+      category: coreEntry.category || "Equities & Market Mechanics",
+      definition: coreEntry.investopedia_definition || "Core financial market principle.",
+      translation: coreEntry.panel_profits_translation || "Sequential art underwriting application.",
+      type: "lexicon",
+      comicExample: coreEntry.comic_example || undefined,
+      canonicalFormula: coreEntry.canonical_formula || undefined,
+      sourceDb: "core_canon_lexicon",
+      url: `/wiki/terms/${coreEntry.slug}`,
+    };
+  }
+
   const db = getDatabase("cbr");
   if (!db) return null;
 
   try {
-    const cleanTerm = term.trim();
-    const slug = cleanTerm.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-
     // Exact match by term or slug
     let stmt = db.prepare(`
       SELECT term, slug, category, investopedia_definition, panel_profits_translation, canonical_formula, comic_example
