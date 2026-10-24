@@ -6,45 +6,61 @@ import {
   Flame,
   ExternalLink,
   Calculator,
-  DollarSign,
   Receipt,
   Store,
   Layers,
-  ArrowRight,
   TrendingUp,
   AlertTriangle,
-  Clock,
   Sparkles,
   Globe,
   ShieldAlert,
+  Crown,
+  History,
 } from "lucide-react";
-import type { LotItem, EncasementFormulaKey } from "@/lib/sniper/sim/types";
+import type { LotItem, EncasementFormulaKey, GameRole } from "@/lib/sniper/sim/types";
 import { calculateExitScenarios, buildEncasementFormulas } from "@/lib/sniper/sim/encasement-math";
-import { LandedEquityCalculator } from "@/components/sniper/LandedEquityCalculator";
 
 interface SniperBreakevenCardProps {
   lot: LotItem;
   currentBid: number;
+  role?: GameRole;
 }
 
-export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProps) {
+export function SniperBreakevenCard({ lot, currentBid, role = "broker" }: SniperBreakevenCardProps) {
+  const isWhale = role === "whale";
   const [selectedFormulaKey, setSelectedFormulaKey] = useState<EncasementFormulaKey>(
     lot.activeFormulaKey || (lot.isYellowLabel ? "signature" : "standard")
   );
-  const [activeView, setActiveView] = useState<"invoice" | "liquidation" | "escalator">("invoice");
+  const [activeView, setActiveView] = useState<"invoice" | "liquidation">("invoice");
   const [includePressing, setIncludePressing] = useState<boolean>(false);
 
   const numGrade = parseFloat(lot.grade || "9.8");
-  const isHighGrade = lot.grade === "9.8" || lot.grade === "10.0" || lot.grade === "9.9" || (!isNaN(numGrade) && numGrade > 9.4);
+  const isHighGrade =
+    lot.grade === "9.8" ||
+    lot.grade === "10.0" ||
+    lot.grade === "9.9" ||
+    (!isNaN(numGrade) && numGrade > 9.4);
   const isPressingCandidate = !isHighGrade && !isNaN(numGrade) && numGrade <= 9.4;
 
-  const isVintage = (lot.era || "").includes("golden") || (lot.era || "").includes("silver") || (lot.era || "").includes("bronze") || (lot.title || "").includes("198") || (lot.title || "").includes("197");
+  const isVintage =
+    (lot.era || "").includes("golden") ||
+    (lot.era || "").includes("silver") ||
+    (lot.era || "").includes("bronze") ||
+    (lot.title || "").includes("198") ||
+    (lot.title || "").includes("197") ||
+    (lot.title || "").includes("196") ||
+    (lot.title || "").includes("195");
 
-  // Dynamically build formulas so pressing toggle and $8 online invoice fee are always live and synchronized
+  const rawBasis =
+    lot.estimatedRawBasis ||
+    lot.priceLadder?.raw ||
+    Math.max(10, Math.round(lot.fmv * 0.15));
+
+  // Build authentic formulas: $8 online invoice standard, $0 default pressing
   const { formulas } = buildEncasementFormulas({
     grader: (lot.grader as any) || "CGC",
     isVintage,
-    estimatedRawBasis: lot.estimatedRawBasis || lot.priceLadder?.raw || Math.max(10, Math.round(lot.fmv * 0.15)),
+    estimatedRawBasis: rawBasis,
     isYellowLabel: lot.isYellowLabel,
     creatorName: lot.creatorName,
     signaturesCount: 1,
@@ -53,14 +69,13 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
     includePressing: isPressingCandidate ? includePressing : false,
   });
 
-  // Active formula from fresh calculations
   const activeFormula = formulas[selectedFormulaKey] || formulas.standard;
 
-  // Canonical Buyer DIY Replacement Calculations (Make vs. Buy)
-  const buyerReplacementCost = activeFormula.buyerReplacementCost || activeFormula.sellerTotalCostBasis;
+  // Make vs Buy calculations
+  const buyerReplacementCost =
+    activeFormula.buyerReplacementCost || activeFormula.sellerTotalCostBasis;
   const wholeTomatoAdvantage = buyerReplacementCost - currentBid;
   const slabbingFloorSpread = activeFormula.slabbingCostFloor - currentBid;
-  const eightBallCushion = lot.fmv - currentBid;
 
   // Multi-Source Venues & Consensus Value
   const heritageComp = Math.round(lot.fmv * 1.22);
@@ -69,15 +84,14 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
   const priceChartingComp = lot.priceLadder?.grade98 || lot.fmv;
   const multisourceValue = Math.round((heritageComp + ebayComp + gpaComp + priceChartingComp) / 4);
 
-  // Dynamic Floating Delta Beneath the Progressing Bid:
   const bidDiffVsMultisource = Math.round((currentBid - multisourceValue) * 100) / 100;
-  const bidDiffPctVsMultisource = multisourceValue > 0 ? ((currentBid - multisourceValue) / multisourceValue) * 100 : 0;
+  const bidDiffPctVsMultisource =
+    multisourceValue > 0 ? ((currentBid - multisourceValue) / multisourceValue) * 100 : 0;
 
-  // Re-calculate the 4 real-world liquidation exit channels against the current active bid
+  // 4 real-world liquidation exit channels
   const exitScenarios = calculateExitScenarios(lot.fmv, currentBid);
 
-  // Valuation Verdict & Arbitrage Conditions
-  const lcsOfferFloor = Math.round(lot.fmv * 0.40 * 100) / 100;
+  const lcsOfferFloor = Math.round(lot.fmv * 0.4 * 100) / 100;
   const isBelowLcsFloor = currentBid <= lcsOfferFloor;
   const isBelowSlabFloor = currentBid <= activeFormula.slabbingCostFloor;
   const isOvervalued = currentBid > lot.fmv;
@@ -87,18 +101,38 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
   const submitterLoss = Math.round((activeFormula.sellerTotalCostBasis - lot.fmv) * 100) / 100;
   const isDeadLoss = isSubFloorTrap && currentBid > netEbayLiquidation;
 
-  return (
-    <div className="relative rounded-xl border-2 border-amber-400 bg-gradient-to-r from-[#1E1103] via-[#100902] to-[#1E1103] p-5 shadow-[0_0_0_1px_rgba(251,191,36,1),0_0_16px_rgba(245,158,11,0.85),0_0_28px_rgba(217,119,6,0.45),inset_0_1px_2px_rgba(255,255,255,0.35),inset_0_0_10px_rgba(251,191,36,0.25)] ring-1 ring-amber-300/60 space-y-4 font-mono text-xs">
-      {/* Top Radiant Neon Rimlight Flare */}
-      <div className="absolute inset-x-0 -top-px h-[2px] bg-gradient-to-r from-transparent via-amber-300 to-transparent shadow-[0_0_12px_rgba(251,191,36,1)]" />
+  // Stale comp detector for Whale
+  const isStaleComp = Boolean(lot.lastSoldDate && (Date.now() - new Date(lot.lastSoldDate).getTime()) > 180 * 86400000);
 
-      {/* ── Top Header: Registry Verification & Official Cert Lookup ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-amber-500/30 pb-3">
+  return (
+    <div
+      className={`relative rounded-xl border-2 p-5 font-mono text-xs space-y-4 shadow-2xl ${
+        isWhale
+          ? "border-amber-400/90 bg-gradient-to-r from-[#180E02] via-[#0E0701] to-[#180E02] shadow-[0_0_0_1px_rgba(251,191,36,0.9),0_0_20px_rgba(245,158,11,0.6),inset_0_1px_2px_rgba(255,255,255,0.25)] ring-1 ring-amber-300/40"
+          : "border-cyan-500/80 bg-gradient-to-r from-[#05131E] via-[#030A10] to-[#05131E] shadow-[0_0_0_1px_rgba(6,182,212,0.8),0_0_16px_rgba(6,182,212,0.5),inset_0_1px_2px_rgba(255,255,255,0.25)] ring-1 ring-cyan-300/40"
+      }`}
+    >
+      {/* Top Neon Flare */}
+      <div
+        className={`absolute inset-x-0 -top-px h-[2px] bg-gradient-to-r from-transparent to-transparent ${
+          isWhale ? "via-amber-300 shadow-[0_0_12px_rgba(251,191,36,1)]" : "via-cyan-300 shadow-[0_0_12px_rgba(6,182,212,1)]"
+        }`}
+      />
+
+      {/* ── Header: Role Badge, Registry Verification & Cert Lookup ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
         <div className="flex items-center gap-2.5">
-          <ShieldCheck className="h-4 w-4 text-emerald-400" />
-          <span className="text-slate-400 uppercase text-[10px] tracking-wider">
-            Verified Registry Slab
-          </span>
+          {isWhale ? (
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-amber-950/80 border border-amber-500/50 text-amber-300 font-bold text-[10px]">
+              <Crown className="h-3.5 w-3.5 text-amber-400" />
+              <span>WHALE CAPITAL COCKPIT</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-500/50 text-cyan-300 font-bold text-[10px]">
+              <ShieldCheck className="h-3.5 w-3.5 text-cyan-400" />
+              <span>FIDUCIARY R&amp;D DESK</span>
+            </div>
+          )}
           <span
             className={`rounded border px-2 py-0.5 font-bold text-[11px] ${
               lot.isYellowLabel
@@ -111,7 +145,7 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-slate-400 text-[11px]">Cert #:</span>
+          <span className="text-slate-500 text-[11px]">Cert #:</span>
           <a
             href={lot.certVerificationUrl}
             target="_blank"
@@ -125,17 +159,29 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
         </div>
       </div>
 
-      {/* ── Valuation Alert Verdict ── */}
+      {/* ── Whale Stale Comp Alert or Valuation Verdict ── */}
       {isOvervalued ? (
         <div className="rounded-lg border border-rose-500/50 bg-rose-950/30 p-3 flex items-start gap-2.5">
           <AlertTriangle className="h-4 w-4 text-rose-400 shrink-0 mt-0.5" />
           <div className="text-[11px] text-rose-200 space-y-0.5">
             <span className="font-bold text-rose-300 uppercase tracking-wider block">
-              ⚠️ OVERVALUED — DO NOT BUY AT THIS PRICE
+              ⚠️ OVERVALUED — BID EXCEEDS AUTHENTIC SECONDARY FMV
             </span>
             <span>
-              Current bid (${currentBid.toLocaleString()}) exceeds the verified fair market value (${lot.fmv.toLocaleString()}).
-              A comic does not become worth more because an investor wants a return. Never invent higher resale targets to justify an overpayment!
+              Current bid (${currentBid.toLocaleString()}) exceeds the verified fair market benchmark (${lot.fmv.toLocaleString()}).
+              Never overpay based on personal sentiment or unverified upside targets!
+            </span>
+          </div>
+        </div>
+      ) : isWhale && isStaleComp ? (
+        <div className="rounded-lg border border-amber-500/60 bg-amber-950/40 p-3 flex items-start gap-2.5">
+          <History className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+          <div className="text-[11px] text-amber-200 space-y-0.5">
+            <span className="font-bold text-amber-300 uppercase tracking-wider block">
+              ⏳ WHALE INTEL: STALE COMP DATE DETECTED ({lot.lastSoldDate || "2021 Peak"})
+            </span>
+            <span>
+              Last auction transaction occurred over 180 days ago during post-stimulus peak pricing. Exercise high-roller discipline: verify floor liquidity before deploying size.
             </span>
           </div>
         </div>
@@ -144,10 +190,10 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
           <AlertTriangle className="h-4 w-4 text-rose-400 shrink-0 mt-0.5" />
           <div className="text-[11px] text-rose-200 space-y-0.5">
             <span className="font-bold text-rose-300 uppercase tracking-wider block">
-              💀 SUB-FLOOR SUNK COST SINKHOLE · SELLER DUMP TRAP (DEAD LOSS)
+              💀 SUB-FLOOR SUNK COST SINKHOLE · SELLER DUMP TRAP
             </span>
             <span>
-              Secondary market FMV (${lot.fmv}) is far below the ${activeFormula.slabbingCostFloor.toFixed(2)} factory slabbing bill alone. The previous submitter took an estimated -${submitterLoss.toFixed(2)} (-{Math.round((submitterLoss / activeFormula.sellerTotalCostBasis) * 100)}%) loss and is dumping this slab to salvage cash. Replicating this slab for ${buyerReplacementCost.toFixed(2)} is an irrational act. Net liquidation exit yields only ~${netEbayLiquidation.toFixed(2)} on eBay (or ${lcsOfferFloor.toFixed(2)} LCS cash). Current bid (${currentBid}) exceeds net liquidation—this is a dead loss all day long!
+              Secondary market FMV (${lot.fmv}) is below the ${activeFormula.slabbingCostFloor.toFixed(2)} encapsulation bill alone. The previous submitter lost -${submitterLoss.toFixed(2)} (-{Math.round((submitterLoss / activeFormula.sellerTotalCostBasis) * 100)}%). Net eBay liquidation yields ~${netEbayLiquidation.toFixed(2)}. Current bid (${currentBid}) is a dead loss all day long!
             </span>
           </div>
         </div>
@@ -156,24 +202,11 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
           <Sparkles className="h-4 w-4 text-purple-400 shrink-0 mt-0.5" />
           <div className="text-[11px] text-purple-200 space-y-0.5">
             <span className="font-bold text-purple-300 uppercase tracking-wider block">
-              💎 LCS BULLETPROOF FLOOR ARBITRAGE
+              💎 LCS WALK-IN CASH ARBITRAGE
             </span>
             <span>
               Current bid (${currentBid.toLocaleString()}) is below the instant Local Comic Shop buy-list cash floor (${lcsOfferFloor.toLocaleString()}).
-              You can liquidate this slab for same-day walk-in cash and lock in an immediate positive spread!
-            </span>
-          </div>
-        </div>
-      ) : isSubFloorTrap ? (
-        <div className="rounded-lg border border-emerald-500/50 bg-emerald-950/30 p-3 flex items-start gap-2.5">
-          <Sparkles className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
-          <div className="text-[11px] text-emerald-200 space-y-0.5">
-            <span className="font-bold text-emerald-300 uppercase tracking-wider block">
-              ✅ CLEARANCE LIQUIDATION SPREAD CAPTURED
-            </span>
-            <span>
-              Current bid (${currentBid}) is below net eBay liquidation proceeds (${netEbayLiquidation.toFixed(2)}).
-              You acquire this slab below secondary salvage cash recovery value.
+              Locking in same-day liquidity at an instant positive margin!
             </span>
           </div>
         </div>
@@ -186,7 +219,7 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
             </span>
             <span>
               Current bid (${currentBid}) is below the factory slabbing bill alone (${activeFormula.slabbingCostFloor.toFixed(2)}).
-              On this verified asset, you acquire the comic and holder for less than physical certification costs—saving ${(activeFormula.slabbingCostFloor - currentBid).toFixed(2)} before accounting for the raw book itself!
+              Acquiring comic and physical holder for less than encapsulation costs!
             </span>
           </div>
         </div>
@@ -198,58 +231,52 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
               🛡️ BUYER MANUFACTURING ADVANTAGE (THE WHOLE TOMATO)
             </span>
             <span>
-              Bid is ${(buyerReplacementCost - currentBid).toFixed(2)} below your DIY replication cost (${buyerReplacementCost.toFixed(2)}).
-              Acquiring this certified slab avoids ${(buyerReplacementCost - currentBid).toFixed(2)} in out-of-pocket DIY replication and submission friction.
+              Current bid is ${(buyerReplacementCost - currentBid).toFixed(2)} below DIY replacement cost (${buyerReplacementCost.toFixed(2)}).
+              Avoids raw procurement hunting, $8 online invoice handling, round-trip shipping, and wait delays.
             </span>
           </div>
         </div>
       ) : null}
 
-      {/* ── Formula Selection Bar (Auction Reality vs Hypothetical Exercises) ── */}
+      {/* ── Encasement Submission Formula Selector ── */}
       <div className="space-y-2">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[10px] text-slate-400 uppercase tracking-wider">
           <span className="flex items-center gap-1.5">
             <Calculator className="h-3.5 w-3.5 text-cyan-400" />
-            <span>Submission Encasement Formula (Select To Inspect)</span>
+            <span>Encasement Submission Formula</span>
           </span>
           <span className="text-amber-300 font-semibold text-[9px]">
-            Standard = Auction Baseline · Signed = Separate Math · CPR &amp; Reholder = Hypothetical
+            Standard ($0 Press) · Signed (Witnessed) · CPR (&le;9.4 Only) · Re-holder (Re-case)
           </span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-          {(
-            [
-              {
-                key: "standard",
-                label: "Standard Grade",
-                sub: "Blue Label ($62) · As Listed",
-                icon: "📘",
-                isHypothetical: false,
-              },
-              {
-                key: "signature",
-                label: "Signature Series",
-                sub: "Yellow Label ($141) · Witnessed",
-                icon: "✍️",
-                isHypothetical: false,
-              },
-              {
-                key: "pressed",
-                label: "Clean & Press (CPR)",
-                sub: "Hypothetical CPR ($89) · 8.5/9.2",
-                icon: "🧼",
-                isHypothetical: true,
-              },
-              {
-                key: "reholder",
-                label: "Re-holder / Reslab",
-                sub: "Hypothetical Case ($57) · Re-case",
-                icon: "🔄",
-                isHypothetical: true,
-              },
-            ] as const
-          ).map((tier) => {
+          {[
+            {
+              key: "standard" as const,
+              label: "Standard Grade",
+              sub: "Blue Label ($0 Press)",
+              icon: "📘",
+            },
+            {
+              key: "signature" as const,
+              label: "Signature Series",
+              sub: "Yellow Label · Witnessed",
+              icon: "✍️",
+            },
+            {
+              key: "pressed" as const,
+              label: isHighGrade ? "Clean & Press (Ineligible)" : "Clean & Press (CPR)",
+              sub: isHighGrade ? "Ineligible on >9.4 ($0)" : "Optional Variable (&le;9.4)",
+              icon: "🧼",
+            },
+            {
+              key: "reholder" as const,
+              label: "Re-holder / Reslab",
+              sub: "Fresh Acrylic Casing",
+              icon: "🔄",
+            },
+          ].map((tier) => {
             const isSelected = selectedFormulaKey === tier.key;
             const formulaData = formulas[tier.key];
             const floor = formulaData?.slabbingCostFloor ?? 0;
@@ -260,7 +287,9 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
                 onClick={() => setSelectedFormulaKey(tier.key)}
                 className={`p-2 rounded-lg border text-left transition-all ${
                   isSelected
-                    ? "bg-cyan-950/80 border-cyan-400 text-white shadow-md ring-1 ring-cyan-500/50"
+                    ? isWhale
+                      ? "bg-amber-950/80 border-amber-400 text-white shadow-md ring-1 ring-amber-500/50"
+                      : "bg-cyan-950/80 border-cyan-400 text-white shadow-md ring-1 ring-cyan-500/50"
                     : "bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-900"
                 }`}
               >
@@ -269,15 +298,11 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
                     <span>{tier.icon}</span>
                     <span className="truncate">{tier.label}</span>
                   </span>
-                  {lot.activeFormulaKey === tier.key ? (
+                  {lot.activeFormulaKey === tier.key && (
                     <span className="text-[8px] bg-cyan-900 text-cyan-200 px-1 py-0.2 rounded uppercase shrink-0">
                       Active
                     </span>
-                  ) : tier.isHypothetical ? (
-                    <span className="text-[7.5px] bg-amber-950/80 text-amber-300 border border-amber-500/40 px-1 py-0.2 rounded uppercase shrink-0">
-                      Hypothetical
-                    </span>
-                  ) : null}
+                  )}
                 </div>
                 <div className="mt-1 flex items-baseline justify-between text-[11px]">
                   <span className="text-slate-500 text-[9px]">Sunk Floor:</span>
@@ -287,20 +312,18 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
             );
           })}
         </div>
-
-        <div className="text-[10px] text-slate-400 bg-black/40 px-2.5 py-1.5 rounded border border-slate-800 leading-relaxed">
-          <strong className="text-slate-200">Auctions Reality Note:</strong> Standard Universal is how secondary market auctions usually go. Signed books carry separate witness/creator mathematics. Clean &amp; Press (CPR) and Re-holder are hypothetical exercises modeling potential buyer actions (e.g. what could happen if an 8.5 or 9.2 turns in favor of the buyer, or a cracked case needs a fresh slab).
-        </div>
       </div>
 
-      {/* ── Sub-Tab Switcher: Invoice Receipt vs 4 Liquidation Channels ── */}
+      {/* ── Sub-Tab Switcher ── */}
       <div className="flex items-center gap-2 border-b border-slate-800 pt-1 pb-2">
         <button
           type="button"
           onClick={() => setActiveView("invoice")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition ${
             activeView === "invoice"
-              ? "bg-slate-800 text-cyan-300 border border-cyan-500/40"
+              ? isWhale
+                ? "bg-amber-950/80 text-amber-300 border border-amber-500/40"
+                : "bg-slate-800 text-cyan-300 border border-cyan-500/40"
               : "text-slate-400 hover:text-slate-200"
           }`}
         >
@@ -317,19 +340,7 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
           }`}
         >
           <Store className="h-3.5 w-3.5" />
-          <span>2. Liquidation (4 Channels)</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveView("escalator")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition ${
-            activeView === "escalator"
-              ? "bg-slate-800 text-amber-300 border border-amber-500/40 shadow-sm"
-              : "text-slate-400 hover:text-slate-200"
-          }`}
-        >
-          <TrendingUp className="h-3.5 w-3.5" />
-          <span>3. Hypothetical CPR Escalator (8.5/9.2 → 9.8)</span>
+          <span>2. Liquidation Exit Channels</span>
         </button>
       </div>
 
@@ -337,7 +348,7 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
       {activeView === "invoice" && (
         <div className="space-y-3 pt-1 animate-in fade-in duration-150">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Left Column: BOX 1 - Line-Item Submission Invoice Receipt (The Sunk Slabbing Floor) */}
+            {/* BOX 1: Line-Item Submission Invoice Receipt (Sunk Factory Floor) */}
             <div className="space-y-2 rounded-lg bg-slate-950/80 border border-slate-800/80 p-3.5 flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-2">
@@ -356,10 +367,11 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
                     <span className="text-white font-bold">${activeFormula.baseGradingFee.toFixed(2)}</span>
                   </div>
 
+                  {/* Clean & Press Variable Line */}
                   {isHighGrade ? (
                     <div className="flex justify-between text-slate-500 text-[10px] italic">
                       <span>Clean &amp; Press (Ineligible on &gt;9.4):</span>
-                      <span className="text-slate-400 font-mono">$0.00 (Practical Ceiling)</span>
+                      <span className="text-slate-400 font-mono">$0.00 (Top-Grade Ceiling)</span>
                     </div>
                   ) : isPressingCandidate ? (
                     <div className="flex items-center justify-between p-1.5 rounded bg-slate-900 border border-slate-800">
@@ -393,16 +405,11 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
                   {activeFormula.creatorSigningFee > 0 && (
                     <div className="space-y-0.5">
                       <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-slate-400">Creator Signing Fee ({lot.signatureDetails ? "Witnessed" : "Talent"}):</span>
-                          <span className="rounded bg-amber-950/80 px-1 py-0.2 text-[8px] font-bold text-amber-300 border border-amber-500/40">
-                            Est. Guesstimate
-                          </span>
-                        </div>
+                        <span className="text-slate-400">Creator Signing Fee (Est. Guesstimate):</span>
                         <span className="text-amber-300 font-bold">~${activeFormula.creatorSigningFee.toFixed(2)}</span>
                       </div>
                       <div className="text-[9px] text-amber-300/70 font-sans italic pl-1 leading-tight">
-                        * Creator fee is an estimated guesstimate ($25–$100+); uncertain without specific convention or venue pricing.
+                        * Guesstimate (~$25–$100+); uncertain without verified convention floor pricing.
                       </div>
                     </div>
                   )}
@@ -437,12 +444,12 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
               <div className="mt-3 rounded bg-cyan-950/30 p-2 text-[10px] text-cyan-300/80 leading-relaxed border border-cyan-800/40">
                 <span className="font-bold text-cyan-200 block mb-0.5">🔒 Flat Encasement Consideration:</span>
                 <span>
-                  This is the irreducible manufacturing cost. Even if someone gave you the raw comic for zero dollars, slabbing it yourself requires writing this ${activeFormula.slabbingCostFloor.toFixed(2)} check.
+                  Irreducible manufacturing baseline. Even if the raw comic was gifted for free, certified slabbing requires writing this ${activeFormula.slabbingCostFloor.toFixed(2)} check.
                 </span>
               </div>
             </div>
 
-            {/* Right Column: BOX 2 & BOX 3 - The Whole Tomato DIY Replication & Make vs Buy Reality */}
+            {/* Right Column: BOX 2 & BOX 3 */}
             <div className="space-y-3">
               {/* BOX 2: The Whole Tomato (DIY Buyer Replacement Cost) */}
               <div className="space-y-2 rounded-lg bg-slate-950/80 border border-slate-800/80 p-3.5">
@@ -480,7 +487,7 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
                     <span className="text-amber-200 font-extrabold">${buyerReplacementCost.toFixed(2)}</span>
                   </div>
 
-                  {/* Explicit Formula Recap */}
+                  {/* Explicit Formula Recap Pill */}
                   <div className="rounded bg-black/60 border border-amber-500/20 px-2 py-1 text-[9.5px] text-slate-300 flex items-center justify-between">
                     <span className="text-slate-400">Replacement Equation:</span>
                     <span className="font-semibold text-amber-300">
@@ -489,7 +496,7 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
                   </div>
                 </div>
 
-                {/* ── AT THE END OF BOX 2: Current Multisource Value & Floating Delta Beneath the Progressing Bid ── */}
+                {/* Multisource Value & Floating Delta */}
                 <div className="pt-2.5 border-t border-slate-800 space-y-2">
                   <div className="flex items-center justify-between text-[10px]">
                     <span className="text-amber-300 font-bold uppercase text-[9px] flex items-center gap-1">
@@ -514,13 +521,11 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
                     </div>
                   </div>
 
-                  {/* The Progressing Bid & Dynamic Floating +/- Directly Beneath It */}
                   <div className="p-2 rounded bg-black/70 border border-amber-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
                     <div>
                       <span className="text-slate-400 text-[8.5px] uppercase tracking-wider block">Live Floor Bid</span>
                       <span className="text-white font-bold text-sm">${currentBid.toFixed(2)}</span>
                     </div>
-                    {/* Floating +/- directly beneath the bid */}
                     <div className="text-left sm:text-right">
                       <span className="text-slate-400 text-[8.5px] block">vs Multisource Value:</span>
                       <span
@@ -543,7 +548,7 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
                 </div>
               </div>
 
-              {/* BOX 3: Reality Check (Sub-Floor Salvage vs. Standard Make vs. Buy) */}
+              {/* BOX 3: Reality Check */}
               {isSubFloorTrap ? (
                 <div
                   className={`space-y-2 rounded-lg border p-3.5 ${
@@ -606,25 +611,6 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
                         -${submitterLoss.toFixed(2)} (-{Math.round((submitterLoss / activeFormula.sellerTotalCostBasis) * 100)}%)
                       </span>
                     </div>
-
-                    <div className="flex justify-between text-[10px] text-slate-400">
-                      <span>LCS Walk-In Cash Floor (40%):</span>
-                      <span className="text-amber-300 font-bold">${lcsOfferFloor.toFixed(2)}</span>
-                    </div>
-
-                    <div className="pt-1 text-[10px] font-bold text-center">
-                      <span
-                        className={`inline-block px-2 py-0.5 rounded border ${
-                          isDeadLoss
-                            ? "bg-rose-950/80 border-rose-500/60 text-rose-300 shadow-[0_0_10px_rgba(244,63,94,0.4)]"
-                            : "bg-emerald-950/80 border-emerald-500/60 text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.4)]"
-                        }`}
-                      >
-                        {isDeadLoss
-                          ? "💀 DEAD LOSS ALL DAY LONG · OVERPAYING LIQUIDATION"
-                          : "✅ CLEARANCE SPREAD · BELOW SECONDARY SALVAGE VALUE"}
-                      </span>
-                    </div>
                   </div>
                 </div>
               ) : (
@@ -663,155 +649,52 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
                         {slabbingFloorSpread > 0 ? `-$${slabbingFloorSpread.toFixed(2)} BELOW floor` : `+$${Math.abs(slabbingFloorSpread).toFixed(2)} above floor`}
                       </span>
                     </div>
-
-                    <div className="flex justify-between text-[10px] text-slate-400">
-                      <span>Behind-the-8-Ball Cushion (FMV − Bid):</span>
-                      <span className={eightBallCushion >= 0 ? "text-cyan-300 font-bold" : "text-rose-400 font-bold"}>
-                        {eightBallCushion >= 0 ? `+$${eightBallCushion.toFixed(2)} (Ahead)` : `-$${Math.abs(eightBallCushion).toFixed(2)} (Behind)`}
-                      </span>
-                    </div>
                   </div>
                 </div>
               )}
             </div>
           </div>
-
-          {/* Underwriting Takeaway: The Buyer's Make-vs-Buy Decision Rule */}
-          <div className="rounded-lg bg-slate-900/90 p-3 text-[11px] text-slate-300 leading-relaxed border border-slate-800 space-y-1.5">
-            {isSubFloorTrap ? (
-              <>
-                <span className="text-rose-300 font-bold block uppercase tracking-wider text-[10px] flex items-center gap-1.5">
-                  <ShieldAlert className="h-3.5 w-3.5 text-rose-400" />
-                  <span>The Sub-Floor Reality Rule (Seller Dump Warning):</span>
-                </span>
-                <p>
-                  • <strong>Irreducible Submitter Deficit:</strong> Submitter spent ${activeFormula.slabbingCostFloor.toFixed(2)} on certification alone plus raw comic purchase (~${activeFormula.sellerTotalCostBasis.toFixed(2)} total basis). Secondary FMV (${lot.fmv.toFixed(2)}) leaves them underwater by -${submitterLoss.toFixed(2)} (-{Math.round((submitterLoss / activeFormula.sellerTotalCostBasis) * 100)}%). They are dumping this slab at auction simply to salvage cash.
-                </p>
-                <p>
-                  • <strong>DIY Replication Illusion:</strong> The Whole Tomato DIY cost (${buyerReplacementCost.toFixed(2)}) is an economic illusion here—no prudent buyer would spend ${buyerReplacementCost.toFixed(2)} to slab a book worth ${lot.fmv.toFixed(2)}. Do NOT treat manufacturing cost as an intrinsic baseline when a slab trades sub-floor.
-                </p>
-                <p>
-                  • <strong>Net Liquidation Reality:</strong> Your strict economic ceiling is Net Realizable Liquidation (${netEbayLiquidation.toFixed(2)} on eBay after fees and shipping, or ${lcsOfferFloor.toFixed(2)} at an LCS). Paying above ${netEbayLiquidation.toFixed(2)} is a dead loss all day long!
-                </p>
-              </>
-            ) : (
-              <>
-                <span className="text-amber-300 font-bold block uppercase tracking-wider text-[10px] flex items-center gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5 text-amber-400" />
-                  <span>The Buyer&apos;s Make-vs-Buy Underwriting Rule:</span>
-                </span>
-                <p>
-                  • <strong>Ignore Seller Basis:</strong> What the seller paid ($0, garage sale, attic find, or inherited) is completely irrelevant to you. Your only consideration is: <em>&ldquo;How much does it cost ME to replace this comic if I don&apos;t buy it right now?&rdquo;</em>
-                </p>
-                <p>
-                  • <strong>Box 1 Sunk Factory Floor (${activeFormula.slabbingCostFloor.toFixed(2)}):</strong> Any winning bid below this level means you acquire the comic book for <em>free</em> and buy the slab below the cost of the plastic, grading labor, Florida tax, and two-way shipping!
-                </p>
-                <p>
-                  • <strong>Box 2 The Whole Tomato (${buyerReplacementCost.toFixed(2)}):</strong> Replicating this exact slab yourself costs raw purchase + ${activeFormula.slabbingCostFloor.toFixed(2)} factory fees + turnaround wait times. Winning below this ceiling guarantees a manufacturing advantage.
-                </p>
-              </>
-            )}
-          </div>
         </div>
       )}
 
-      {/* ── VIEW 2: Real-World Liquidation Channels (4 Scenarios) ── */}
+      {/* ── VIEW 2: Real-World Liquidation Channels ── */}
       {activeView === "liquidation" && (
-        <div className="space-y-2 pt-1 animate-in fade-in duration-150">
+        <div className="space-y-3 pt-1 animate-in fade-in duration-150">
           <div className="text-[10px] text-slate-400 leading-relaxed">
-            Liquidation proceeds calculated against verified FMV (<strong>${lot.fmv.toLocaleString()}</strong>) and current bid (<strong>${currentBid.toLocaleString()}</strong>).
-            Different channels yield radically different net payouts and liquidity speeds:
+            Liquidation net proceeds calculated against verified FMV (<strong>${lot.fmv.toLocaleString()}</strong>) and current bid (<strong>${currentBid.toLocaleString()}</strong>):
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-            {Object.values(exitScenarios).map((scenario) => {
-              const isProfit = scenario.netProfit >= 0;
-              return (
-                <div
-                  key={scenario.channelKey}
-                  className={`rounded-lg border p-3 space-y-2 ${
-                    scenario.channelKey === "lcs"
-                      ? "bg-purple-950/20 border-purple-500/40"
-                      : scenario.channelKey === "collector"
-                      ? "bg-emerald-950/20 border-emerald-500/40"
-                      : scenario.channelKey === "auction"
-                      ? "bg-cyan-950/20 border-cyan-500/40"
-                      : "bg-slate-950/80 border-slate-800"
-                  }`}
-                >
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
-                    <div>
-                      <span className="text-xs font-bold text-white block">{scenario.name}</span>
-                      <span className="text-[9px] text-slate-400">{scenario.venue}</span>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-[9px] text-slate-400 block uppercase flex items-center gap-1 justify-end">
-                        <Clock className="h-2.5 w-2.5" />
-                        <span>{scenario.liquidationVelocity}</span>
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-1 text-[11px]">
-                    <div>
-                      <span className="text-[9px] text-slate-500 uppercase block">Gross Sale</span>
-                      <span className="text-slate-200 font-bold">${scenario.grossResalePrice.toFixed(0)}</span>
-                    </div>
-                    <div>
-                      <span className="text-[9px] text-slate-500 uppercase block">Net Proceeds</span>
-                      <span className="text-white font-bold">${scenario.netProceeds.toFixed(2)}</span>
-                    </div>
-                    <div>
-                      <span className="text-[9px] text-slate-500 uppercase block">Net Profit / ROI</span>
-                      <span
-                        className={`font-black ${
-                          isProfit ? "text-emerald-400" : "text-rose-400"
-                        }`}
-                      >
-                        {isProfit ? `+$${scenario.netProfit.toFixed(0)}` : `-$${Math.abs(scenario.netProfit).toFixed(0)}`}
-                        <span className="text-[9px] font-normal ml-0.5">
-                          ({scenario.roiPercent > 0 ? "+" : ""}{scenario.roiPercent}%)
-                        </span>
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="text-[10px] text-slate-400 leading-tight pt-1 border-t border-slate-800/60">
-                    {scenario.description}
-                  </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {Object.values(exitScenarios).map((scenario) => (
+              <div
+                key={scenario.channelKey}
+                className="p-3 rounded-lg border border-slate-800 bg-black/60 space-y-1.5"
+              >
+                <div className="flex items-center justify-between text-[11px] font-bold">
+                  <span className="text-slate-200">{scenario.name}</span>
+                  <span className="text-slate-400 text-[9px]">{scenario.liquidationVelocity}</span>
                 </div>
-              );
-            })}
+                <div className="flex justify-between text-[10px] text-slate-400">
+                  <span>Gross Valuation:</span>
+                  <span className="text-white">${scenario.grossResalePrice.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-[10px] text-slate-400">
+                  <span>Platform Cut / Costs:</span>
+                  <span className="text-rose-400">-${(scenario.platformFeeAmount + scenario.packagingMailerFee).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-[11px] font-bold border-t border-slate-800 pt-1 text-emerald-300">
+                  <span>Net Payout:</span>
+                  <span>${scenario.netProceeds.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-[9.5px]">
+                  <span className="text-slate-500">Net Profit vs Bid:</span>
+                  <span className={scenario.netProfit >= 0 ? "text-emerald-400 font-bold" : "text-rose-400 font-bold"}>
+                    {scenario.netProfit >= 0 ? `+$${scenario.netProfit.toLocaleString()}` : `-$${Math.abs(scenario.netProfit).toLocaleString()}`} ({scenario.roiPercent}%)
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
-      )}
-
-      {/* ── VIEW 3: Hypothetical CPR Escalator & Real-World Underwriting ── */}
-      {activeView === "escalator" && (
-        <div className="pt-1 space-y-3 animate-in fade-in duration-150">
-          <div className="rounded-lg border border-amber-500/40 bg-amber-950/30 p-3 flex items-start gap-2.5 text-xs font-mono">
-            <Sparkles className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
-            <div className="space-y-0.5 text-amber-200 text-[11px] leading-relaxed">
-              <span className="text-amber-300 uppercase block font-bold">
-                * Hypothetical Buyer Exercise (Not All Sub-9.8 Books Are CPR Candidates)
-              </span>
-              <span>
-                Not every comic below a 9.8 is a candidate for cracking, pressing, and regrading. In this exercise, it is a hypothetical model demonstrating what could happen if an 8.5 or 9.2 candidate turns in favor of the buyer upon pressing and resubmission. Standard grading is how secondary market auctions usually sell. Treat all CPR projections strictly as hypothetical upside scenarios.
-              </span>
-            </div>
-          </div>
-          <LandedEquityCalculator
-            currentListingPrice={currentBid}
-            currentListingGrade={parseFloat(lot.grade) || 9.8}
-            isBuyItNow={false}
-            benchmarkFmv98={lot.priceLadder?.grade98 ?? lot.fmv}
-            benchmarkFmv96={lot.priceLadder?.grade96 ?? undefined}
-            benchmarkFmv94={lot.priceLadder?.grade94 ?? undefined}
-            benchmarkFmv92={lot.priceLadder?.grade92 ?? undefined}
-            title={lot.title}
-            issue={lot.issueNumber}
-            isYellowLabel={lot.isYellowLabel}
-          />
         </div>
       )}
     </div>
