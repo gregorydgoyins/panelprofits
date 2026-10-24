@@ -14,6 +14,9 @@ export interface EncasementFormulaDetail {
   pressingFee: number;
   witnessFee: number;
   creatorSigningFee: number;
+  creatorSigningFeeCertainty?: "guesstimate" | "venue_confirmed";
+  creatorSigningFeeNote?: string;
+  creatorSigningFeeRange?: [number, number];
   invoiceFee: number;
   serviceTax: number;
   taxRatePercent: number;
@@ -155,11 +158,15 @@ export interface LotItem {
   };
   // Encasement Breakeven & Multi-Formula Invoicing
   isYellowLabel: boolean;
+  creatorName?: string;
   signatureDetails: string | null;
   baseGradingFee: number;
   pressingFee: number;
   witnessFee: number;
   creatorSigningFee: number;
+  creatorSigningFeeCertainty?: "guesstimate" | "venue_confirmed";
+  creatorSigningFeeNote?: string;
+  creatorSigningFeeRange?: [number, number];
   invoiceFee: number;
   serviceTax: number;
   shippingHandlingFee: number;

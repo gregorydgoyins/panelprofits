@@ -357,12 +357,17 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
                     <span className="text-white font-bold">${activeFormula.baseGradingFee.toFixed(2)}</span>
                   </div>
 
-                  {activeFormula.pressingFee > 0 && (
+                  {activeFormula.pressingFee > 0 ? (
                     <div className="flex justify-between">
                       <span className="text-slate-400">Clean &amp; Press (CCS Pressing):</span>
                       <span className="text-cyan-300 font-bold">+${activeFormula.pressingFee.toFixed(2)}</span>
                     </div>
-                  )}
+                  ) : (lot.grade === "9.8" || lot.grade === "10.0" || lot.grade === "9.9") ? (
+                    <div className="flex justify-between text-slate-500 text-[10px] italic">
+                      <span>Clean &amp; Press (Omitted on 9.8):</span>
+                      <span className="text-slate-400 font-mono">$0.00 (Practical Ceiling)</span>
+                    </div>
+                  ) : null}
 
                   {activeFormula.witnessFee > 0 && (
                     <div className="flex justify-between">
@@ -372,9 +377,19 @@ export function SniperBreakevenCard({ lot, currentBid }: SniperBreakevenCardProp
                   )}
 
                   {activeFormula.creatorSigningFee > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">Creator Signing Fee ({lot.signatureDetails ? "Witnessed" : "Talent"}):</span>
-                      <span className="text-amber-300 font-bold">+${activeFormula.creatorSigningFee.toFixed(2)}</span>
+                    <div className="space-y-0.5">
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-slate-400">Creator Signing Fee ({lot.signatureDetails ? "Witnessed" : "Talent"}):</span>
+                          <span className="rounded bg-amber-950/80 px-1 py-0.2 text-[8px] font-bold text-amber-300 border border-amber-500/40">
+                            Est. Guesstimate
+                          </span>
+                        </div>
+                        <span className="text-amber-300 font-bold">~${activeFormula.creatorSigningFee.toFixed(2)}</span>
+                      </div>
+                      <div className="text-[9px] text-amber-300/70 font-sans italic pl-1 leading-tight">
+                        * Creator fee is an estimated guesstimate ($25–$100+); uncertain without specific convention or venue pricing.
+                      </div>
                     </div>
                   )}
 

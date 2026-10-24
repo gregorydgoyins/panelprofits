@@ -126,10 +126,10 @@ export function SniperReplacementCard({ lot, currentBid }: SniperReplacementCard
             <ShieldAlert className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
             <div className="space-y-1">
               <h4 className="font-bold text-amber-300 text-xs tracking-wider uppercase flex items-center gap-1.5">
-                <span>⚠️ Clean &amp; Press (CPR) Does Not Apply to a 9.8 — There is Nowhere to Go</span>
+                <span>⚠️ You Do Not Clean &amp; Press a 9.8 — Practical Grade Pinnacle</span>
               </h4>
               <p className="text-[11px] text-amber-100/90 font-sans leading-relaxed">
-                You do not clean and press a 9.8 certified comic. A 9.8 is already the practical top-grade pinnacle. CPR is exclusively reserved for sub-9.4 books (e.g. an 8.5 or 9.0) hoping to gain a half-point or point-and-a-half bump. For a 9.8, your manufacturing baseline is strictly <strong>Standard Certified Replacement</strong>.
+                You do not clean and press a 9.8 certified comic ($0 pressing fee). A 9.8 is already the practical top-grade pinnacle. CPR (Clean, Press &amp; Resubmit) is exclusively reserved for sub-9.4 books (e.g. an 8.5 or 9.0) hoping to gain a half-point or point-and-a-half bump. On a 9.8, pressing introduces uncompensated damage risk with nowhere to go.
               </p>
             </div>
           </div>
@@ -248,6 +248,25 @@ export function SniperReplacementCard({ lot, currentBid }: SniperReplacementCard
             <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-purple-950/40 border border-purple-500/40 text-purple-200 text-[11px]">
               <span>+ Clean &amp; Press (CPR) Preparation Fee:</span>
               <span className="font-bold text-white">${cpr.prepFee.toFixed(2)}</span>
+            </div>
+          )}
+
+          {/* Signature Series Creator Signing Fee Row (Estimated Guesstimate) */}
+          {lot.isYellowLabel && (
+            <div className="space-y-1 rounded-lg bg-amber-950/30 border border-amber-500/40 p-2 text-amber-200 text-[11px]">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-bold">+ Creator Signing Fee ({lot.creatorName || "Witnessed"}):</span>
+                  <span className="rounded bg-amber-900/80 px-1 py-0.2 text-[8px] font-bold text-amber-300 border border-amber-500/50">
+                    Est. Guesstimate
+                  </span>
+                </div>
+                <span className="font-bold text-amber-200 font-mono">~${(lot.creatorSigningFee || 35).toFixed(2)}</span>
+              </div>
+              <div className="text-[9px] text-amber-300/80 italic font-sans flex items-start gap-1">
+                <span>⚠️</span>
+                <span>You don&apos;t know the creator fee for sure—it is an estimated guesstimate (~$25–$100+) that remains uncertain unless specific convention or private signing venue pricing is confirmed.</span>
+              </div>
             </div>
           )}
 

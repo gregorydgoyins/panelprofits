@@ -715,13 +715,18 @@ export function generateRichInvestmentThesis(params: {
     const estimatedRaw = Math.max(5, Math.round(fmv * 0.22));
     const submitterLoss = Math.round((slabbingCostFloor + estimatedRaw + 5 - fmv) * 100) / 100;
 
+    const is98 = grade === "9.8" || grade === "10.0" || grade === "9.9";
+    const overheadBreakdown = is98
+      ? `$${isVintage ? 55 : 35} grading + $43 two-way shipping + $5 invoice + 6% FL sales tax ($0 pressing — clean & press is omitted on 9.8s as pressing risk exceeds any upside at the top grade)`
+      : `$${isVintage ? 55 : 35} grading + $30 pressing + $43 two-way shipping + $5 invoice + 6% FL sales tax`;
+
     if (fmv < slabbingCostFloor) {
       paragraphs.push(
         `💀 SUB-FLOOR SUNK COST SINKHOLE: Secondary market FMV ($${fmv.toLocaleString()}) is below the irreducible $${slabbingCostFloor.toFixed(2)} encapsulation overhead bill. The submitter spent ~$${(slabbingCostFloor + estimatedRaw + 5).toFixed(2)} all-in and is dumping this slab to salvage cash, eating a -$${submitterLoss.toFixed(2)} (-${Math.round((submitterLoss / (slabbingCostFloor + estimatedRaw + 5)) * 100)}%) loss. DIY replacement ($${(slabbingCostFloor + estimatedRaw + 5).toFixed(2)}) is an economic mirage—no rational buyer replicates a $${fmv} comic for $97+. Net realizable liquidation is only ~$${netEbay.toFixed(2)} on eBay (after 13.25% fee and mailer) or $${lcsCash.toFixed(2)} in LCS walk-in cash. Any bid above $${netEbay.toFixed(2)} is a dead loss all day long!`
       );
     } else {
       paragraphs.push(
-        `FACTORY SLABBING FLOOR ARBITRAGE: The previous submitter incurred a minimum of $${slabbingCostFloor.toFixed(2)} in hard encapsulation overhead ($35 grading + $30 pressing + $43 two-way shipping + $5 invoice + 6% FL sales tax). Opening bidding at $${openingBid.toLocaleString()} captures an authentic buyer manufacturing advantage of $${buyerManufacturingAdvantage.toLocaleString()} below replacement cost on a liquid asset with verified secondary value.`
+        `FACTORY SLABBING FLOOR ARBITRAGE: The previous submitter incurred a minimum of $${slabbingCostFloor.toFixed(2)} in hard encapsulation overhead (${overheadBreakdown}). Opening bidding at $${openingBid.toLocaleString()} captures an authentic buyer manufacturing advantage of $${buyerManufacturingAdvantage.toLocaleString()} below replacement cost on a liquid asset with verified secondary value.`
       );
     }
 
@@ -880,6 +885,8 @@ export function transformRowToLot(
     isYellowLabel,
     creatorName,
     signaturesCount: 1,
+    grade: targetGradeKey,
+    isLot98: targetGradeKey === "9.8" || targetGradeKey === "10.0",
   });
 
   const activeFormula = formulas[activeKey];
@@ -1158,11 +1165,15 @@ export function transformRowToLot(
     marketCycles: marketHistory.marketCycles,
     multiGradeSales,
     isYellowLabel,
+    creatorName,
     signatureDetails,
     baseGradingFee: activeFormula.baseGradingFee,
     pressingFee: activeFormula.pressingFee,
     witnessFee: activeFormula.witnessFee,
     creatorSigningFee: activeFormula.creatorSigningFee,
+    creatorSigningFeeCertainty: activeFormula.creatorSigningFeeCertainty,
+    creatorSigningFeeNote: activeFormula.creatorSigningFeeNote,
+    creatorSigningFeeRange: activeFormula.creatorSigningFeeRange,
     invoiceFee: activeFormula.invoiceFee,
     serviceTax: activeFormula.serviceTax,
     shippingHandlingFee: activeFormula.shippingHandlingFee,
@@ -1347,6 +1358,8 @@ export function transformListingToLot(
     isYellowLabel,
     creatorName: isYellowLabel ? "Creator" : undefined,
     signaturesCount: 1,
+    grade: String(numGrade),
+    isLot98: numGrade === 9.8 || numGrade >= 9.9,
   });
 
   const activeFormula = formulas[activeKey];
@@ -1543,11 +1556,15 @@ export function transformListingToLot(
     marketCycles: marketHistory.marketCycles,
     multiGradeSales,
     isYellowLabel,
+    creatorName: isYellowLabel ? "Creator" : undefined,
     signatureDetails,
     baseGradingFee: activeFormula.baseGradingFee,
     pressingFee: activeFormula.pressingFee,
     witnessFee: activeFormula.witnessFee,
     creatorSigningFee: activeFormula.creatorSigningFee,
+    creatorSigningFeeCertainty: activeFormula.creatorSigningFeeCertainty,
+    creatorSigningFeeNote: activeFormula.creatorSigningFeeNote,
+    creatorSigningFeeRange: activeFormula.creatorSigningFeeRange,
     invoiceFee: activeFormula.invoiceFee,
     serviceTax: activeFormula.serviceTax,
     shippingHandlingFee: activeFormula.shippingHandlingFee,

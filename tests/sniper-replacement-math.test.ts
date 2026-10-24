@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { calculateReplacementAnalysis } from "@/lib/sniper/sim/encasement-math";
+import { calculateReplacementAnalysis, buildEncasementFormulas } from "@/lib/sniper/sim/encasement-math";
 import { buildLotMacroAndVelocity } from "@/lib/sniper/sim/lot-service";
 
 describe("Sniper Replacement Cost & Bidding Frenzy Driver", () => {
@@ -195,5 +195,42 @@ describe("Sniper Replacement Cost & Bidding Frenzy Driver", () => {
     });
     expect(behind.wholeTomato.eightBallSpread).toBe(-124.6);
     expect(behind.wholeTomato.isAheadOfEightBall).toBe(false);
+  });
+
+  it("strictly enforces zero pressing fee on 9.8 certified comics across all formulas", () => {
+    const { formulas } = buildEncasementFormulas({
+      grader: "CGC",
+      isVintage: false,
+      estimatedRawBasis: 100.0,
+      isYellowLabel: false,
+      grade: "9.8",
+      isLot98: true,
+    });
+
+    expect(formulas.standard.pressingFee).toBe(0.0);
+    expect(formulas.pressed.pressingFee).toBe(0.0);
+    expect(formulas.pressed.description).toContain("You do not clean and press a 9.8");
+    // Standard slabbing floor for 9.8: 35 grading + 5 invoice + 2.40 FL tax + 43 shipping = 85.40
+    expect(formulas.standard.slabbingCostFloor).toBe(85.4);
+  });
+
+  it("treats creator signing fees as estimated guesstimates uncertain without convention/venue pricing", () => {
+    const { formulas } = buildEncasementFormulas({
+      grader: "CGC",
+      isVintage: false,
+      estimatedRawBasis: 120.0,
+      isYellowLabel: true,
+      creatorName: "Todd McFarlane",
+      grade: "9.8",
+      isLot98: true,
+    });
+
+    const sig = formulas.signature;
+    expect(sig.pressingFee).toBe(0.0); // 9.8 never pressed
+    expect(sig.creatorSigningFeeCertainty).toBe("guesstimate");
+    expect(sig.creatorSigningFeeNote).toContain("without verified convention floor or private signing venue pricing");
+    expect(sig.creatorSigningFeeRange).toEqual([25, 100]);
+    expect(sig.description).toContain("creator signing fee guesstimate");
+    expect(sig.description).toContain("Clean & press omitted ($0)");
   });
 });

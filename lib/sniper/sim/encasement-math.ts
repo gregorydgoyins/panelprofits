@@ -7,13 +7,15 @@ export interface BuildEncasementParams {
   isYellowLabel: boolean;
   creatorName?: string;
   signaturesCount?: number;
+  grade?: string;
+  isLot98?: boolean;
 }
 
 /**
  * Builds the 4 authentic encasement submission invoice tiers:
- * 1. Clean & Press (Grade + CCS Pressing) - Industry 9.8 standard ($30 grade + $25 press + $25 ship + $5 invoice + 7% tax = $89.20 floor)
- * 2. Standard Universal (Grade Only) - Blue label raw submission ($30 grade + $25 ship + $5 invoice + 7% tax = $62.45 floor)
- * 3. Signature Series - Yellow label with witnessed authentication + creator fee ($140.95+ floor)
+ * 1. Clean & Press (Grade + CCS Pressing) - Only applicable to sub-9.4 candidates. (You do NOT clean & press a 9.8!)
+ * 2. Standard Universal (Grade Only) - Blue label raw submission ($35 grade + $43 ship + $5 invoice + 6% FL tax = $85.40 floor)
+ * 3. Signature Series - Yellow label with witnessed authentication + creator fee guesstimate (uncertain without convention/venue pricing)
  * 4. Re-holder / Reslab - Fresh casing for cracked/scuffed slabs ($57.10 floor)
  */
 export function buildEncasementFormulas({
@@ -23,10 +25,13 @@ export function buildEncasementFormulas({
   isYellowLabel,
   creatorName,
   signaturesCount = 1,
+  grade,
+  isLot98,
 }: BuildEncasementParams): {
   formulas: Record<EncasementFormulaKey, EncasementFormulaDetail>;
   activeKey: EncasementFormulaKey;
 } {
+  const is98 = isLot98 ?? (grade === "9.8" || grade === "10.0" || grade === "9.9");
   const mailerBoxFee = 5.0;
   const venueFeeDragPercent = 13.25; // 13.25% eBay / marketplace platform fee + payment processing
   const taxRatePercent = 6.0; // 6.0% Straight Florida sales tax (Sarasota, FL) on taxable grading & invoice fees
@@ -36,10 +41,12 @@ export function buildEncasementFormulas({
 
   // ──────────────────────────────────────────────────────────────────────────
   // TIER 1: Clean & Press + Grade (CCS)
-  // "35 to grade + 30 pressing + 43 two-way shipping + 5 invoice + 6% FL tax on services"
+  // "You do not clean and press a 9.8 — nowhere to go"
+  // For sub-9.4: "35 to grade + 30 pressing + 43 two-way shipping + 5 invoice + 6% FL tax on services"
   // ──────────────────────────────────────────────────────────────────────────
   const ccsBase = grader === "CGC" ? (isVintage ? 55.0 : 35.0) : grader === "CBCS" ? (isVintage ? 45.0 : 30.0) : (isVintage ? 40.0 : 30.0);
-  const ccsPressing = grader === "PSA" ? 0.0 : isVintage ? 40.0 : 30.0;
+  // Strictly $0 pressing if 9.8 — you never clean and press a 9.8!
+  const ccsPressing = is98 ? 0.0 : grader === "PSA" ? 0.0 : isVintage ? 40.0 : 30.0;
   const ccsInvoice = grader === "PSA" ? 10.0 : 5.0;
   const ccsTaxable = ccsBase + ccsPressing + ccsInvoice;
   const ccsTax = Math.round(ccsTaxable * (taxRatePercent / 100) * 100) / 100;
@@ -49,9 +56,11 @@ export function buildEncasementFormulas({
 
   const pressedFormula: EncasementFormulaDetail = {
     key: "pressed",
-    name: "Clean & Press (Hypothetical CPR Upside)",
-    badgeLabel: `${grader} Universal + CCS Pressing (Hypothetical CPR)`,
-    description: "Hypothetical buyer model. Not every comic below 9.8 is a CPR candidate—this exercise models what could happen if an 8.5 or 9.2 turns in favor of the buyer upon pressing and regrading.",
+    name: is98 ? "Clean & Press (Ineligible for 9.8)" : "Clean & Press (Hypothetical CPR Upside)",
+    badgeLabel: is98 ? `${grader} Universal (No Pressing on 9.8)` : `${grader} Universal + CCS Pressing (Hypothetical CPR)`,
+    description: is98
+      ? "You do not clean and press a 9.8 certified comic ($0 pressing). A 9.8 is already at the practical top-grade ceiling—pressing introduces uncompensated damage risk with nowhere to go."
+      : "Hypothetical buyer model. Not every comic below 9.8 is a CPR candidate—this exercise models what could happen if an 8.5 or 9.2 turns in favor of the buyer upon pressing and regrading.",
     isYellowLabel: false,
     baseGradingFee: ccsBase,
     pressingFee: ccsPressing,
@@ -86,7 +95,9 @@ export function buildEncasementFormulas({
     key: "standard",
     name: "Standard Universal (Auction Baseline)",
     badgeLabel: `${grader} Universal Blue Label (Auction Standard)`,
-    description: "Standard secondary market auction reality. Encapsulated as-is without pressing. Graded strictly in raw submission condition as-received from collection.",
+    description: is98
+      ? "Standard secondary market auction reality for 9.8 certified slabs. Encapsulated without pressing ($0 pressing fee) to preserve top-grade mint factory status."
+      : "Standard secondary market auction reality. Encapsulated as-is without pressing. Graded strictly in raw submission condition as-received from collection.",
     isYellowLabel: false,
     baseGradingFee: stdBase,
     pressingFee: 0,
@@ -107,12 +118,15 @@ export function buildEncasementFormulas({
 
   // ──────────────────────────────────────────────────────────────────────────
   // TIER 3: Signature Series (Yellow Label - Witnessed Signature + Signing Fee)
-  // "signed has different mathematics"
+  // "you dont know creator fee so you can guesstimate but it isnt certain unless you know venue pricing or convention"
+  // "you donyt vlean and press 9.8"
   // ──────────────────────────────────────────────────────────────────────────
   const sigBase = ccsBase;
-  const sigPressing = grader === "PSA" ? 0.0 : 30.0; // High-grade signings are almost universally pressed
+  // If 9.8, you NEVER clean and press!
+  const sigPressing = is98 ? 0.0 : grader === "PSA" ? 0.0 : 30.0;
   const sigWitness = grader === "CGC" ? 25.0 * signaturesCount : grader === "CBCS" ? 20.0 * signaturesCount : 25.0 * signaturesCount;
-  const sigCreator = 25.0 * signaturesCount; // Standard signing fee (e.g. McFarlane, Miller, Lee)
+  // Guesstimate creator fee: ~$35.00/sig baseline; uncertain without specific convention or venue pricing
+  const sigCreator = 35.0 * signaturesCount;
   const sigInvoice = ccsInvoice;
   const sigTaxable = sigBase + sigPressing + sigWitness + sigInvoice;
   const sigTax = Math.round(sigTaxable * (taxRatePercent / 100) * 100) / 100;
@@ -124,12 +138,15 @@ export function buildEncasementFormulas({
     key: "signature",
     name: `Signature Series (${signaturesCount}x Signed Mathematics)`,
     badgeLabel: `${grader} Signature Series (Witnessed Signed)`,
-    description: `Signed mathematics: Official authorized witness authentication (${sigWitness.toFixed(0)}) + creator signing fee (${sigCreator.toFixed(0)}) for ${creatorName || "headline creator"}. Carries distinct secondary valuation and authentication premiums.`,
+    description: `Signed mathematics: Official authorized witness authentication ($${sigWitness.toFixed(0)}) + creator signing fee guesstimate (~$${sigCreator.toFixed(0)}) for ${creatorName || "headline creator"}. (Creator fee is a guesstimate—uncertain without confirmed convention or private signing venue pricing).${is98 ? " Clean & press omitted ($0) because you do not press a 9.8." : ""}`,
     isYellowLabel: true,
     baseGradingFee: sigBase,
     pressingFee: sigPressing,
     witnessFee: sigWitness,
     creatorSigningFee: sigCreator,
+    creatorSigningFeeCertainty: "guesstimate",
+    creatorSigningFeeRange: [25, 100],
+    creatorSigningFeeNote: "Creator signing fee is an estimated guesstimate (~$25–$100+). Exact fees cannot be determined with certainty without verified convention floor or private signing venue pricing.",
     invoiceFee: sigInvoice,
     serviceTax: sigTax,
     taxRatePercent,
@@ -314,6 +331,8 @@ export interface ReplacementCostBreakdown {
   targetBumpGrade?: string;
   targetBumpFmv?: number;
   cprNetBenefit?: number;
+  creatorFeeIsGuesstimate?: boolean;
+  creatorFeeNote?: string;
 }
 
 export interface HopeFactorYield {
@@ -428,10 +447,10 @@ export function calculateReplacementAnalysis({
 
   const standard: ReplacementCostBreakdown = {
     pathKey: "standard",
-    pathName: isYellowLabel ? `Signature Series Replacement (${signaturesCount}x)` : "Standard Certified Replacement",
+    pathName: isYellowLabel ? `Signature Series Replacement (${signaturesCount}x)` : isLot98 ? "Standard 9.8 Replacement (No Pressing)" : "Standard Certified Replacement",
     rawPrice,
     prepFee: signingFee,
-    prepFeeName: isYellowLabel ? "Creator Signing Fee" : "No Pressing (As-Is)",
+    prepFeeName: isYellowLabel ? "Creator Signing Fee (Est. Guesstimate)" : isLot98 ? "No Pressing ($0 — 9.8 Top Grade)" : "No Pressing (As-Is)",
     gradingFee: baseGrading,
     outgoingShipping,
     returnShipping,
@@ -444,6 +463,8 @@ export function calculateReplacementAnalysis({
     allInCost: stdAllIn,
     manufacturingAdvantage: Math.round((stdAllIn - currentBid) * 100) / 100,
     isCprEligible: false,
+    creatorFeeIsGuesstimate: isYellowLabel,
+    creatorFeeNote: isYellowLabel ? "Creator signing fee is an estimated guesstimate (~$25–$100+); uncertain without specific convention or venue pricing." : undefined,
   };
 
   // ── Clean, Press & Resubmit (CPR) — Calculated for 8.5 / 9.0 / 9.2 Candidates Only ──
