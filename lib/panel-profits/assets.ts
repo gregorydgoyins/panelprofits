@@ -78,8 +78,8 @@ export async function getAssetRegistry(limit = 48): Promise<AssetRegistryRecord[
 
     // Also query comics catalog with valid cover URLs
     const { data: comicRows } = await db
-      .from("comics")
-      .select("id, series, issue_number, publisher, baseline_grade_9_8_value, pp_grade_9_8_price, cover_url, cover_storage_path")
+      .from("pp_comics")
+      .select("id, series, issue_number, pp_grade_9_8_price, cover_url")
       .not("cover_url", "is", null)
       .order("baseline_grade_9_8_value", { ascending: false, nullsFirst: false })
       .limit(limit);
@@ -115,12 +115,12 @@ export async function getAssetRegistry(limit = 48): Promise<AssetRegistryRecord[
             id: row.id,
             series: row.series || "Unknown Series",
             issue_number: row.issue_number || null,
-            publisher: row.publisher || null,
-            index_value: row.baseline_grade_9_8_value ? Number(row.baseline_grade_9_8_value) : (row.pp_grade_9_8_price ? Number(row.pp_grade_9_8_price) : null),
+            publisher: null,
+            index_value: row.pp_grade_9_8_price ? Number(row.pp_grade_9_8_price) : null,
             source: "Clean Catalog",
             cover: {
               image_url: row.cover_url || null,
-              storage_path: row.cover_storage_path || null,
+              storage_path: null,
             },
           });
         }
@@ -323,7 +323,7 @@ export async function getCleanEquityDetail(surfaceKey: string): Promise<Detailed
 
     // 2. Try finding in public.comics
     const { data: comicRow } = await db
-      .from("comics")
+      .from("pp_comics")
       .select("*")
       .eq("id", surfaceKey)
       .maybeSingle();

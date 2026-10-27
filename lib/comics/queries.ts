@@ -16,7 +16,7 @@ export async function getComics(params: ComicSearchParams): Promise<ComicQueryRe
   const limit = Math.min(Math.max(Number(params.limit) || DEFAULT_PAGE_SIZE, 1), 50);
 
   let query = supabase
-    .from("comics")
+    .from("pp_comics")
     .select("*");
 
   const hasSearch = Boolean(params.q && params.q.trim());
@@ -35,7 +35,8 @@ export async function getComics(params: ComicSearchParams): Promise<ComicQueryRe
   // Publisher filter
   if (params.publisher && params.publisher.trim()) {
     const cleanPub = params.publisher.trim().replace(/[%_]/g, "\\$&");
-    query = query.ilike("publisher", `%${cleanPub}%`);
+    // pp_comics has no publisher field; a publisher filter is ignored until one exists.
+    void cleanPub;
   }
 
   // Keyset cursor pagination
@@ -448,12 +449,12 @@ async function findStoredComic(series: string, issue: string, year?: number | nu
   if (!series || !issue) return null;
   try {
     const supabase = createAdminServerClient();
-    let q = supabase.from("comics").select("*").eq("series", series).eq("issue_number", issue);
+    let q = supabase.from("pp_comics").select("*").eq("series", series).eq("issue_number", issue);
     if (year) q = q.eq("publication_year", year);
     let { data } = await q.order("pp_grade_9_8_price", { ascending: false, nullsFirst: false }).limit(1).maybeSingle();
     if (!data && year) {
       // The stored year can disagree with the book's real year; fall back to the best-priced record for the title.
-      ({ data } = await supabase.from("comics").select("*").eq("series", series).eq("issue_number", issue)
+      ({ data } = await supabase.from("pp_comics").select("*").eq("series", series).eq("issue_number", issue)
         .order("pp_grade_9_8_price", { ascending: false, nullsFirst: false }).limit(1).maybeSingle());
     }
     if (!data) return null;
@@ -492,7 +493,7 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
   try {
     // 1. Direct record ID match (PriceCharting number like "3366977", "pp-3366977", or hex/UUID)
     const directId = cleanId.replace(/^pp-/i, "");
-    const { data: directData } = await supabase.from("comics").select("*").eq("id", directId).maybeSingle();
+    const { data: directData } = await supabase.from("pp_comics").select("*").eq("id", directId).maybeSingle();
     if (directData) {
       const fin = finalizeComic(directData as ComicRecord);
       return await overlayAuthenticPpPrices(fin);
@@ -518,9 +519,9 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
     if (ve) {
       if (ve.source_product_id) {
         const { data } = await supabase
-          .from("comics")
+          .from("pp_comics")
           .select("*")
-          .eq("pp_source_id", String(ve.source_product_id))
+          .eq("id", String(ve.source_product_id))
           .order("pp_grade_9_8_price", { ascending: false, nullsFirst: false })
           .limit(1)
           .maybeSingle();

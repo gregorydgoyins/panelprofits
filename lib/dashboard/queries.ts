@@ -105,9 +105,9 @@ export async function getMarketIntelligence(limit = 24): Promise<MarketIntellige
   try {
     const supabase = createAdminServerClient();
     const { data, error } = await supabase
-      .from("comics")
-      .select("id, series, issue_number, publisher, pp_grade_9_8_price, comicbase_price, baseline_grade_9_8_value, baseline_grade_9_8_sources, baseline_grade_9_8_observation_count, quantity, source, created_at")
-      .order("created_at", { ascending: false })
+      .from("pp_comics")
+      .select("id, series, issue_number, pp_grade_9_8_price")
+      .order("id", { ascending: false })
       .limit(Math.min(Math.max(limit, 1), 48));
 
     if (error || !data) {
@@ -120,11 +120,11 @@ export async function getMarketIntelligence(limit = 24): Promise<MarketIntellige
       id: item.id,
       series: item.series || "Unknown series",
       issueNumber: item.issue_number || "—",
-      publisher: item.publisher || null,
+      publisher: null,
       indexValue: resolveComicPricing(item).baselinePrice98,
-      quantity: item.quantity === null ? null : Number(item.quantity),
-      source: item.source || null,
-      createdAt: item.created_at || null,
+      quantity: null,
+      source: null,
+      createdAt: null,
     }));
   } catch (error) {
     console.error("Exception fetching market intelligence:", error);
@@ -140,8 +140,8 @@ async function fetchIntelligenceRailComicsRaw(limit = 12): Promise<IntelligenceR
   try {
     const cleanDb = createCleanReadOnlyServerClient();
     const { data, error } = await cleanDb
-      .from("comics")
-      .select("id,series,title,issue_number,publisher,publication_year,cover_url,cover_storage_path,cover_verified_at,updated_at,created_at")
+      .from("pp_comics")
+      .select("id,series,title,issue_number,publication_year,cover_url")
       .order("id", { ascending: true })
       .limit(Math.min(Math.max(limit * 8, 8), 96));
 
@@ -156,12 +156,12 @@ async function fetchIntelligenceRailComicsRaw(limit = 12): Promise<IntelligenceR
       series: item.series || "Unknown series",
       title: item.title || null,
       issueNumber: item.issue_number || "—",
-      publisher: item.publisher || null,
+      publisher: null,
       publicationYear: item.publication_year === null ? null : Number(item.publication_year),
       coverUrl: item.cover_url || null,
-      coverStoragePath: item.cover_storage_path || null,
-      verifiedAt: item.cover_verified_at || null,
-      updatedAt: item.updated_at || item.created_at || null,
+      coverStoragePath: null,
+      verifiedAt: null,
+      updatedAt: null,
     }));
   } catch (err) {
     console.error("Exception in Clean intelligence rail:", err);
@@ -217,10 +217,10 @@ async function fetchValuationRailComicsRaw(limit = 12): Promise<ValuationRailIte
   // records with a verified cover so the rail never shows a blank slot.
   try {
     const { data: comicRows, error: comicError } = await cleanDb
-      .from("comics")
-      .select("id, series, issue_number, publisher, publication_year, cover_url, cover_storage_path, pp_grade_9_8_price, comicbase_price, baseline_grade_9_8_value, baseline_grade_9_8_sources, panel_profits_data")
+      .from("pp_comics")
+      .select("id, series, issue_number, publication_year, cover_url, pp_grade_9_8_price")
       .not("cover_url", "is", null)
-      .order("baseline_grade_9_8_value", { ascending: false, nullsFirst: false })
+      .order("pp_grade_9_8_price", { ascending: false, nullsFirst: false })
       .limit(Math.min(Math.max(limit * 6, 24), 200));
 
     if (comicError || !comicRows) {
@@ -238,10 +238,10 @@ async function fetchValuationRailComicsRaw(limit = 12): Promise<ValuationRailIte
       id: row.id,
       series: row.series || "Unknown series",
       issueNumber: row.issue_number || "—",
-      publisher: row.publisher || null,
+      publisher: null,
       publicationYear: row.publication_year == null ? null : Number(row.publication_year),
       coverUrl: row.cover_url || null,
-      coverStoragePath: row.cover_storage_path || null,
+      coverStoragePath: null,
       priceFormatted: pricing.formatted,
       priceValue: pricing.price as number,
       sourceLabel: "CLEAN COMICS CATALOG",
@@ -300,10 +300,10 @@ async function fetchCleanAssetSurfacesRaw(limit = 24): Promise<CleanAssetSurface
   // same baseline resolver used elsewhere so the figure is never invented.
   try {
     const { data: comicRows, error: comicError } = await cleanDb
-      .from("comics")
-      .select("id, series, issue_number, publisher, publication_year, cover_url, cover_storage_path, pp_grade_9_8_price, comicbase_price, baseline_grade_9_8_value, baseline_grade_9_8_sources, panel_profits_data")
+      .from("pp_comics")
+      .select("id, series, issue_number, publication_year, cover_url, pp_grade_9_8_price")
       .not("cover_url", "is", null)
-      .order("baseline_grade_9_8_value", { ascending: false, nullsFirst: false })
+      .order("pp_grade_9_8_price", { ascending: false, nullsFirst: false })
       .limit(Math.min(Math.max(limit * 4, 24), 150));
 
     if (comicError || !comicRows) {
@@ -321,14 +321,14 @@ async function fetchCleanAssetSurfacesRaw(limit = 24): Promise<CleanAssetSurface
       id: row.id,
       series: row.series || "Unknown series",
       issueNumber: row.issue_number || "—",
-      publisher: row.publisher || null,
+      publisher: null,
       indexValue: pricing.price,
       quantity: null,
       source: "CLEAN COMICS CATALOG",
       createdAt: null,
       coverUrl: row.cover_url || null,
-      coverStoragePath: row.cover_storage_path || null,
-      assetClass: row.publisher || null,
+      coverStoragePath: null,
+      assetClass: null,
       assetSubclass: row.publication_year == null ? null : String(row.publication_year),
       constituentCount: 1,
       priceFormatted: pricing.formatted,

@@ -16,9 +16,9 @@ export async function getComicCoverEvidence(comicId: string): Promise<ComicCover
     if (!comicId) return null;
     const db = createCleanReadOnlyServerClient();
     const { data, error } = await db
-      .from("comics")
+      .from("pp_comics")
       .select(
-        "id,series,issue_number,publisher,publication_year,cover_url,cover_storage_path,cover_source,cover_sha256,cover_verified_at,cover_original_url,cover_retrieval_url,gcd_source_id,comicbase_data,gcd_data"
+        "id,series,issue_number,publication_year,cover_url,gcd_source_id"
       )
       .eq("id", comicId)
       .limit(1)
@@ -29,9 +29,9 @@ export async function getComicCoverEvidence(comicId: string): Promise<ComicCover
     const resolved = resolveComicCover(data);
     return {
       image_url: resolved.url,
-      storage_path: data.cover_storage_path || null,
-      image_source: data.cover_source || resolved.sourceTier,
-      checksum: data.cover_sha256 || null,
+      storage_path: null,
+      image_source: resolved.sourceTier,
+      checksum: null,
       quality_tier: resolved.qualityTier,
       source_tier: resolved.sourceTier,
       is_fallback: resolved.isFallback,
@@ -49,9 +49,9 @@ export async function getComicCoverEvidenceByIds(comicIds: string[]) {
 
     const db = createCleanReadOnlyServerClient();
     const { data, error } = await db
-      .from("comics")
+      .from("pp_comics")
       .select(
-        "id,series,issue_number,publisher,publication_year,cover_url,cover_storage_path,cover_source,cover_sha256,cover_verified_at,cover_original_url,cover_retrieval_url,gcd_source_id,comicbase_data,gcd_data"
+        "id,series,issue_number,publication_year,cover_url,gcd_source_id"
       )
       .in("id", ids);
 
@@ -66,9 +66,9 @@ export async function getComicCoverEvidenceByIds(comicIds: string[]) {
         const resolved = resolveComicCover(row);
         covers.set(row.id, {
           image_url: resolved.url,
-          storage_path: row.cover_storage_path || null,
-          image_source: row.cover_source || resolved.sourceTier,
-          checksum: row.cover_sha256 || null,
+          storage_path: null,
+          image_source: resolved.sourceTier,
+          checksum: null,
           quality_tier: resolved.qualityTier,
           source_tier: resolved.sourceTier,
           is_fallback: resolved.isFallback,

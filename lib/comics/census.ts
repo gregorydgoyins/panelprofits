@@ -116,7 +116,7 @@ export async function getComicCensusDossier(
       db.from("graded_certifications").select("certification_number,native_grade_text,grade_numeric,native_designation,edition_name,variant_name,page_quality,has_restoration,has_conservation,has_signature,pedigree_name,last_verified_at,grading_company_id").ilike("title_name", series).eq("issue_number_raw", issueNumber).order("last_verified_at", { ascending: false }).limit(80),
       db.from("graded_sales_observations").select("sale_date,sale_price,currency,native_grade_text,grade_numeric,native_designation,venue,sale_type,grading_company_id").ilike("title_name", series).eq("issue_number_raw", issueNumber).order("sale_date", { ascending: false }).limit(80),
       db.from("graded_providers").select("id,name").in("id", [snapshot.provider_id]),
-      db.from("comics").select("gcd_source_id").ilike("series", series).eq("issue_number", issueNumber).limit(1).maybeSingle(),
+      db.from("pp_comics").select("gcd_source_id").ilike("series", series).eq("issue_number", issueNumber).limit(1).maybeSingle(),
     ]);
 
     const censusRows = (rows || []) as RawCensusRow[];

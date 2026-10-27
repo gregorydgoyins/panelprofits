@@ -1,0 +1,48 @@
+-- App-facing read view over pp_series_rows_full (the clean Panel Profits table). One row per pp comic.
+-- Exposes pp fields under the names the app already queries. Fields with no pp source (publisher, baseline value,
+-- ComicBase blobs, etc.) are deliberately NOT included; nothing is invented or defaulted.
+create or replace view public.pp_comics as
+select
+  pp_id                    as id,
+  pp_series                as series,
+  pp_raw_product_name      as title,
+  pp_issue                 as issue_number,
+  pp_volume                as volume,
+  pp_publication_year      as publication_year,
+  pp_publication_date      as release_date,
+  pp_direct                as direct,
+  pp_variant               as variant,
+  pp_variant_kind          as variant_type,
+  pp_edition               as edition,
+  pp_genre                 as genre,
+  pp_upc                   as upc,
+  pp_sales_volume          as sales_volume,
+  pp_cover_url             as cover_url,
+  gcd_issue_id,
+  gcd_series_id,
+  gcd_issue_id::text       as gcd_source_id,
+  pp_price_raw             as raw,
+  pp_price_2_0             as "2.0",
+  pp_price_3_0             as "3.0",
+  pp_price_4_0             as "4.0",
+  pp_price_5_0             as "5.0",
+  pp_price_6_0             as "6.0",
+  pp_price_7_0             as "7.0",
+  pp_price_8_0             as "8.0",
+  pp_price_9_0             as "9.0",
+  pp_price_9_2             as "9.2",
+  pp_price_9_4             as "9.4",
+  pp_price_9_6             as "9.6",
+  pp_price_9_8             as "9.8",
+  pp_price_9_8             as pp_grade_9_8_price,
+  pp_price_9_8_sell        as "9.8_sell",
+  pp_price_10_0            as "10.0",
+  pp_retail_raw_buy        as retail_raw_buy,
+  pp_retail_raw_sell       as retail_raw_sell,
+  pp_retail_4_0_buy        as "retail_4.0_buy",
+  pp_retail_4_0_sell       as "retail_4.0_sell",
+  pp_retail_6_0_buy        as "retail_6.0_buy",
+  pp_retail_6_0_sell       as "retail_6.0_sell"
+from public.pp_series_rows_full;
+grant select on public.pp_comics to anon, authenticated;
+grant all on public.pp_comics to service_role;

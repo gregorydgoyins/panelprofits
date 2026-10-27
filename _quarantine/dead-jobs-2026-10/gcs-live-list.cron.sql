@@ -1,0 +1,4 @@
+-- REMOVED 2026-10-26: pg_cron job 'gcs-live-list' (every 10 seconds). Ran select public.gcs_live_step(), a one-off
+-- listing of the cover bucket panel-profits-covers-all/Pictures/. Its state table public.gcs_live_state no longer
+-- exists, so every run failed (~8,600 failures/day). Function public.gcs_live_step() was left in place.
+-- select cron.schedule('gcs-live-list', '10 seconds', 'select public.gcs_live_step()');

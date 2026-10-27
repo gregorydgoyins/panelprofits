@@ -17,9 +17,9 @@ export async function GET(
   const db = createCleanReadOnlyServerClient();
 
   const { data: comic, error } = await db
-    .from("comics")
+    .from("pp_comics")
     .select(
-      "id, series, issue_number, publisher, publication_year, cover_url, cover_storage_path, cover_source, cover_sha256, cover_verified_at, cover_original_url, cover_retrieval_url, gcd_source_id, comicbase_data, gcd_data"
+      "id,series,issue_number,publication_year,cover_url,gcd_source_id"
     )
     .eq("id", cleanId)
     .maybeSingle();

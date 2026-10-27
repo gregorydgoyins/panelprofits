@@ -169,7 +169,7 @@ async function fetchRelationalFromSupabase(
     // Map comics catalog records to variants for direct catalog links and authentic covers
     const { data: comicsList } = dedupedVars.length > 0
       ? await supabase
-          .from("comics")
+          .from("pp_comics")
           .select("id, gcd_source_id, cover_url")
           .in("gcd_source_id", dedupedVars.map((v) => String(v.gcd_issue_id)))
       : { data: [] };
@@ -523,7 +523,7 @@ export async function getGcdRelationalData(
       const supabase = createAdminServerClient();
       const varIdsStr = variantsRaw.map((v) => String(v.id));
       const { data: cList } = await supabase
-        .from("comics")
+        .from("pp_comics")
         .select("id, gcd_source_id, cover_url")
         .in("gcd_source_id", varIdsStr);
       cList?.forEach((c) => catalogVariantsMap.set(c.gcd_source_id, c));
@@ -593,7 +593,7 @@ export async function getGcdRelationalData(
       try {
         const supabase = createAdminServerClient();
         const { data: matchedComics } = await supabase
-          .from("comics")
+          .from("pp_comics")
           .select("id, gcd_source_id, cover_url")
           .in("gcd_source_id", foreignGcdIds);
         matchedComics?.forEach((c: any) => foreignCatalogMap.set(c.gcd_source_id, c));

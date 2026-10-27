@@ -58,8 +58,8 @@ export async function findComicMatches(
 
   // Search by series/title AND issue_number
   let query = supabase
-    .from('comics')
-    .select('id, series, title, issue_number, publication_year, publisher')
+    .from('pp_comics')
+    .select('id, series, title, issue_number, publication_year')
     .eq('issue_number', normIssue);
 
   // Extract core keywords from title (e.g. "Amazing Spider-Man" -> "Spider-Man" or "Amazing")
