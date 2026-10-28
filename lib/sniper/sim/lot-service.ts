@@ -1801,7 +1801,7 @@ async function batchFetchCatalogLadders(
         .replace(/^(the|a)\s+/i, "")
         .trim();
       const { data } = await supabase
-        .from("comics")
+        .from("pp_comics")
         .select("title, series, issue_number, raw, \"4.0\", \"6.0\", \"8.0\", \"9.2\", \"9.4\", \"9.6\", \"9.8\", \"10.0\"")
         .ilike("series", `%${cleanS}%`)
         .eq("issue_number", item.issue)
