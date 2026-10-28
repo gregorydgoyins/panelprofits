@@ -1,0 +1,58 @@
+[
+  {
+    "symbol": "REIT-GOTH",
+    "name": "Gotham Commercial & Fortress Real Estate Trust",
+    "city": "Gotham City",
+    "universe": "DC",
+    "enterpriseValueUsd": 18200000000,
+    "netOperatingIncomeUsd": 2400000000,
+    "debtUsd": 14000000000,
+    "capRate": 0.06,
+    "units": 50000000,
+    "distributionYield": 0.058,
+    "flagshipHoldings": "Wayne Tower, GCPD Central Precinct, Diamond District Office Center",
+    "type": "REIT"
+  },
+  {
+    "symbol": "REIT-METR",
+    "name": "Metropolis Clean Grid Commercial REIT",
+    "city": "Metropolis",
+    "universe": "DC",
+    "enterpriseValueUsd": 22400000000,
+    "netOperatingIncomeUsd": 3100000000,
+    "debtUsd": 16000000000,
+    "capRate": 0.05,
+    "units": 50000000,
+    "distributionYield": 0.052,
+    "flagshipHoldings": "Daily Planet Plaza, LexCorp Center, Centennial Park Commercial Complex",
+    "type": "REIT"
+  },
+  {
+    "symbol": "REIT-NYC",
+    "name": "Midtown Manhattan Heroic Reconstruction REIT",
+    "city": "New York City (Marvel)",
+    "universe": "Marvel",
+    "enterpriseValueUsd": 31500000000,
+    "netOperatingIncomeUsd": 4000000000,
+    "debtUsd": 20000000000,
+    "capRate": 0.055,
+    "units": 50000000,
+    "distributionYield": 0.061,
+    "flagshipHoldings": "Damage Control Plaza, Grand Central Commercial Concourse, Flatiron Tower",
+    "type": "REIT"
+  },
+  {
+    "symbol": "REIT-WAK",
+    "name": "Wakanda Golden City Technology & Habitats Trust",
+    "city": "Wakanda",
+    "universe": "Marvel",
+    "enterpriseValueUsd": 42000000000,
+    "netOperatingIncomeUsd": 5000000000,
+    "debtUsd": 6000000000,
+    "capRate": 0.045,
+    "units": 50000000,
+    "distributionYield": 0.048,
+    "flagshipHoldings": "Great Mound Research Complex, Royal Palace Perimeter, Birnin Zana Maglev Terminals",
+    "type": "REIT"
+  }
+]

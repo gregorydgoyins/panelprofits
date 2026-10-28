@@ -1,0 +1,46 @@
+[
+  {
+    "symbol": "SWP-GOTH-IRS",
+    "name": "Gotham Infrastructure Interest Rate Swap (10Y)",
+    "notionalUsd": 250000000,
+    "fixedRate": 0.0465,
+    "floatingSpread": "SOFR + 115 bps",
+    "tenorYears": 10,
+    "counterparty": "Calderton Prime Liquidity Desk",
+    "purpose": "Hedge Gotham City transit bond variable interest rate exposure",
+    "type": "TOTAL_RETURN_SWAP"
+  },
+  {
+    "symbol": "SWP-METR-TRS",
+    "name": "Metropolis Power Grid Total Return Swap (5Y)",
+    "notionalUsd": 180000000,
+    "fixedRate": 0.051,
+    "floatingSpread": "Metropolis Energy Asset Returns",
+    "tenorYears": 5,
+    "counterparty": "Sestri\u00e8re Global Wealth Desk",
+    "purpose": "Synthetic economic exposure to Metropolis clean grid expansion",
+    "type": "TOTAL_RETURN_SWAP"
+  },
+  {
+    "symbol": "CDS-GOTH-5Y",
+    "name": "Gotham Municipal Disaster CDS (5Y)",
+    "notionalUsd": 100000000,
+    "spreadBps": 220,
+    "recoveryRate": 0.7,
+    "tenorYears": 5,
+    "hazardRate": 0.022,
+    "purpose": "Protection against Gotham catastrophe or sovereign default",
+    "type": "CREDIT"
+  },
+  {
+    "symbol": "CDS-WAK-5Y",
+    "name": "Wakanda Sovereign Stability CDS (5Y)",
+    "notionalUsd": 500000000,
+    "spreadBps": 35,
+    "recoveryRate": 0.65,
+    "tenorYears": 5,
+    "hazardRate": 0.003,
+    "purpose": "Global sovereign wealth portfolio protection",
+    "type": "CREDIT"
+  }
+]

@@ -418,10 +418,217 @@ export function issueInstruments(unders: Underlying[], shocks: ShockMap = new Ma
     console.warn("Could not load curated funds:", err);
   }
 
+  // ── MULTI-BILLION DOLLAR FRANCHISE IP ESTATES ──
+  try {
+    const franchiseData = JSON.parse(readFileSync(join(process.cwd(), "data/universe/curated-franchises.json"), "utf8"));
+    let fji = 0;
+    for (const fr of franchiseData) {
+      const ev = Number(fr.valuationUsd);
+      const floatCap = Number(fr.equityFloatCap);
+      out.push(
+        item(
+          "PUBLISHER_STOCK",
+          fji++,
+          fr.symbol,
+          fr.name,
+          `${fr.conglomerate} · Multi-Billion IP Estate · Catalyst: ${fr.keyCatalyst}`,
+          ev,
+          {
+            formula: "Enterprise_Value = Box_Office + Merchandising + Gaming + Publishing_Royalty_Cashflows",
+            inputs: {
+              valuationUsd: ev,
+              equityFloatCap: floatCap,
+              annualRoyaltyFlow: fr.annualRoyaltyFlow,
+              mediaReleases: fr.mediaReleases,
+              debtLoad: fr.debtLoad,
+              conglomerate: fr.conglomerate,
+              keyCatalyst: fr.keyCatalyst,
+              universe: fr.universe,
+            },
+          }
+        )
+      );
+    }
+  } catch (err) {
+    console.warn("Could not load curated franchises:", err);
+  }
+
+  // ── CORPORATE CREDIT & CONVERTIBLES ──
+  try {
+    const corpCreditData = JSON.parse(readFileSync(join(process.cwd(), "data/universe/curated-corporate-credit.json"), "utf8"));
+    let cci = 0;
+    for (const cc of corpCreditData) {
+      const issueSize = Number(cc.issueSizeUsd);
+      const rf = treasuryYield(cc.years);
+      const sLiq = bondLiquiditySpreadFor("OPEN", cc.years);
+      const spread = cc.rating === "AAA" ? 0.004 : cc.rating.startsWith("AA") ? 0.007 : cc.rating.startsWith("A") ? 0.012 : 0.024;
+      const yReq = requiredYield(cc.years, spread, sLiq);
+      const coupon = Number(cc.couponRate);
+      const px = bondPrice(cc.face, coupon, yReq, cc.years);
+      const sType: SurfaceKey = cc.type === "CONVERTIBLE" ? "CONVERTIBLE" : "CREDIT";
+      out.push(
+        item(
+          sType,
+          cci++,
+          cc.symbol,
+          cc.name,
+          `Rated ${cc.rating} · ${(coupon * 100).toFixed(2)}% · Issue: $${(issueSize / 1e6).toFixed(0)}M · ${cc.purpose}`,
+          r2(px),
+          {
+            formula: "Corporate_Debt_Pricing = Σ cP/(1+y)^k + P/(1+y)^T",
+            inputs: {
+              issuer: cc.issuer,
+              rating: cc.rating,
+              issueSizeUsd: issueSize,
+              purpose: cc.purpose,
+              coupon,
+              yReq,
+              years: cc.years,
+            },
+          }
+        )
+      );
+    }
+  } catch (err) {
+    console.warn("Could not load curated corporate credit:", err);
+  }
+
+  // ── MULTI-BILLION DOLLAR REAL ESTATE INVESTMENT TRUSTS (REITS) ──
+  try {
+    const reitData = JSON.parse(readFileSync(join(process.cwd(), "data/universe/curated-reits.json"), "utf8"));
+    let ri = 0;
+    for (const r of reitData) {
+      const ev = Number(r.enterpriseValueUsd);
+      const noi = Number(r.netOperatingIncomeUsd);
+      const debt = Number(r.debtUsd);
+      const units = Number(r.units);
+      const capRate = Number(r.capRate);
+      const unitNav = Math.max(10, r2((noi / capRate - debt) / units));
+      out.push(
+        item(
+          "REIT",
+          ri++,
+          r.symbol,
+          r.name,
+          `${r.city} Commercial Estate · NOI $${(noi / 1e9).toFixed(1)}B · Cap ${(capRate * 100).toFixed(1)}% · Yield ${(r.distributionYield * 100).toFixed(1)}%`,
+          unitNav,
+          {
+            formula: "REIT_NAV_Unit = (NOI ÷ Cap_Rate − Debt) ÷ Units",
+            inputs: {
+              enterpriseValueUsd: ev,
+              netOperatingIncomeUsd: noi,
+              debtUsd: debt,
+              capRate,
+              units,
+              distributionYield: r.distributionYield,
+              flagshipHoldings: r.flagshipHoldings,
+            },
+          }
+        )
+      );
+    }
+  } catch (err) {
+    console.warn("Could not load curated reits:", err);
+  }
+
+  // ── MULTI-BILLION DOLLAR PRIVATE CAPITAL VEHICLES ──
+  try {
+    const benData = JSON.parse(readFileSync(join(process.cwd(), "data/universe/curated-benefactors.json"), "utf8"));
+    let bpi = 0;
+    for (const b of benData) {
+      const aum = Number(b.aumUsd);
+      const unitPrice = Number(b.unitPrice);
+      out.push(
+        item(
+          "PRIVATE",
+          bpi++,
+          `$${b.symbol}`,
+          b.name,
+          `${b.benefactor} Family Office · AUM $${(aum / 1e9).toFixed(1)}B · ${b.mandate}`,
+          unitPrice,
+          {
+            formula: "Private_Capital_NAV = Liquid_Capital ÷ Outstanding_Units",
+            inputs: {
+              benefactor: b.benefactor,
+              aumUsd: aum,
+              liquidCapitalUsd: b.liquidCapitalUsd,
+              units: b.units,
+              mandate: b.mandate,
+              universe: b.universe,
+            },
+          }
+        )
+      );
+    }
+  } catch (err) {
+    console.warn("Could not load curated benefactors:", err);
+  }
+
+  // ── INSTITUTIONAL COMIC LORE COMMODITIES ──
+  try {
+    const cmdData = JSON.parse(readFileSync(join(process.cwd(), "data/universe/curated-commodities.json"), "utf8"));
+    let cmi = 0;
+    for (const cm of cmdData) {
+      out.push(
+        item(
+          "COMMODITY",
+          cmi++,
+          `$${cm.symbol}`,
+          cm.name,
+          `${cm.universe} Sovereign Reserve Commodity · Custodian: ${cm.sovereignCustodian}`,
+          cm.priceUsd,
+          {
+            formula: "Commodity_Sovereign_Spot = Base_Price × (Demand ÷ Supply)^ε",
+            inputs: {
+              sovereignCustodian: cm.sovereignCustodian,
+              annualSupplyKg: cm.annualSupplyKg,
+              globalDemandKg: cm.globalDemandKg,
+              universe: cm.universe,
+            },
+          }
+        )
+      );
+    }
+  } catch (err) {
+    console.warn("Could not load curated commodities:", err);
+  }
+
+  // ── TOTAL RETURN SWAPS & DISASTER CDS ──
+  try {
+    const swapData = JSON.parse(readFileSync(join(process.cwd(), "data/universe/curated-macro-swaps.json"), "utf8"));
+    let swi = 0;
+    for (const sw of swapData) {
+      const notional = Number(sw.notionalUsd);
+      const sType: SurfaceKey = sw.type === "TOTAL_RETURN_SWAP" ? "SWAPS" : "CREDIT";
+      out.push(
+        item(
+          sType,
+          swi++,
+          sw.symbol,
+          sw.name,
+          `${sw.purpose} · Notional: $${(notional / 1e6).toFixed(0)}M · Tenor: ${sw.tenorYears}Y`,
+          notional,
+          {
+            formula: "Swap_Mark_to_Market = Notional × Spread_Duration",
+            inputs: {
+              notionalUsd: notional,
+              tenorYears: sw.tenorYears,
+              purpose: sw.purpose,
+              counterparty: sw.counterparty,
+              spreadBps: sw.spreadBps,
+            },
+          }
+        )
+      );
+    }
+  } catch (err) {
+    console.warn("Could not load curated macro swaps:", err);
+  }
+
   out.push(...issueInstitutional(shocks, now));
   out.push(...issueCharacters(unders, shocks, now, census, roster, footprints, universe));
   out.push(...issuePredictions(outcomes, shocks, now));
 
-  // Strict quality threshold filter across all issued instruments: price must be >= $17.00
-  return out.filter((it) => (it.pricing?.fmv_usd ?? it.pricing?.price ?? 0) >= 17.00);
+  // Genuine non-zero valuation filter (no synthetic clipping or arbitrary caps)
+  return out.filter((it) => (it.pricing?.fmv_usd ?? it.pricing?.price ?? 0) > 0);
 }

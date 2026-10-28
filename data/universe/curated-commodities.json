@@ -1,0 +1,62 @@
+[
+  {
+    "symbol": "VIBR",
+    "name": "Refined Vibranium Reserve (per kg)",
+    "universe": "Marvel",
+    "priceUsd": 10000000,
+    "annualSupplyKg": 500,
+    "globalDemandKg": 800,
+    "sovereignCustodian": "Wakanda Royal Treasury Vault",
+    "type": "COMMODITY"
+  },
+  {
+    "symbol": "ADAM",
+    "name": "True Adamantium Ingot (per kg)",
+    "universe": "Marvel",
+    "priceUsd": 2500000,
+    "annualSupplyKg": 200,
+    "globalDemandKg": 350,
+    "sovereignCustodian": "Weapon Plus / Department H Syndicate",
+    "type": "COMMODITY"
+  },
+  {
+    "symbol": "URU",
+    "name": "Enchanted Uru Ingot (per kg)",
+    "universe": "Marvel",
+    "priceUsd": 4000000,
+    "annualSupplyKg": 100,
+    "globalDemandKg": 250,
+    "sovereignCustodian": "Nidavellir Star Forge Consortium",
+    "type": "COMMODITY"
+  },
+  {
+    "symbol": "KRYP",
+    "name": "Refined Green Kryptonite (per kg)",
+    "universe": "DC",
+    "priceUsd": 1800000,
+    "annualSupplyKg": 300,
+    "globalDemandKg": 450,
+    "sovereignCustodian": "LexCorp Research Containment",
+    "type": "COMMODITY"
+  },
+  {
+    "symbol": "NTH",
+    "name": "Thanagarian Nth Metal (per kg)",
+    "universe": "DC",
+    "priceUsd": 3200000,
+    "annualSupplyKg": 250,
+    "globalDemandKg": 400,
+    "sovereignCustodian": "Thanagar Sovereign Fleet Reserve",
+    "type": "COMMODITY"
+  },
+  {
+    "symbol": "EL-X",
+    "name": "Tenth Metal / Element X (per gram)",
+    "universe": "DC",
+    "priceUsd": 900000,
+    "annualSupplyKg": 50,
+    "globalDemandKg": 150,
+    "sovereignCustodian": "Forge of Worlds / World Forger Escrow",
+    "type": "COMMODITY"
+  }
+]

@@ -876,11 +876,51 @@ export function getAnchorMetric(item: AssetItem, assetType: string): { label: st
   const g = <T>(k: string): T => (p[k] ?? q[k]) as T;
 
   switch (assetType) {
+    case 'BOND': case 'MUNI_REVENUE': case 'MUNI_INFRASTRUCTURE': {
+      const floatCap = g<number>('floatCapUsd') ?? g<number>('issuanceCap') ?? 0;
+      if (floatCap >= 1_000_000_000) return { label: 'Issue Cap', value: `$${(floatCap / 1e9).toFixed(2)}B`, color: colors.primary };
+      if (floatCap >= 1_000_000) return { label: 'Issue Cap', value: `$${(floatCap / 1e6).toFixed(0)}M`, color: colors.primary };
+      return { label: 'Par Price', value: `$${formatNumber(p.fmv_usd ?? p.fmv ?? p.price ?? 1000)}`, color: colors.primary };
+    }
+    case 'TREASURY': case 'SOVEREIGN_NOTE': case 'WAR_BOND': {
+      const floatCap = g<number>('floatCapUsd') ?? 0;
+      if (floatCap >= 1_000_000_000) return { label: 'Realm Debt', value: `$${(floatCap / 1e9).toFixed(1)}B`, color: colors.primary };
+      return { label: 'Par Price', value: `$${formatNumber(p.fmv_usd ?? p.fmv ?? p.price ?? 1000)}`, color: colors.primary };
+    }
+    case 'FRANCHISE_ESTATE': case 'PUBLISHER_STOCK': {
+      const ev = g<number>('valuationUsd') ?? g<number>('enterpriseValueUsd') ?? p.fmv_usd ?? p.price ?? 0;
+      if (ev >= 1_000_000_000) return { label: 'IP Value', value: `$${(ev / 1e9).toFixed(1)}B`, color: colors.primary };
+      if (ev >= 1_000_000) return { label: 'Float Cap', value: `$${(ev / 1e6).toFixed(1)}M`, color: colors.primary };
+      return { label: 'FMV', value: `$${formatNumber(ev)}`, color: colors.primary };
+    }
+    case 'REIT': case 'CITADEL_REIT': {
+      const ev = g<number>('enterpriseValueUsd') ?? 0;
+      if (ev >= 1_000_000_000) return { label: 'Portfolio', value: `$${(ev / 1e9).toFixed(1)}B`, color: colors.primary };
+      const noi = g<number>('netOperatingIncomeUsd') ?? g<number>('noi') ?? 0;
+      if (noi >= 1_000_000_000) return { label: 'NOI', value: `$${(noi / 1e9).toFixed(2)}B`, color: colors.primary };
+      return { label: 'Unit NAV', value: `$${formatNumber(p.fmv_usd ?? p.fmv ?? p.price ?? 0)}`, color: colors.primary };
+    }
+    case 'PRIVATE': case 'CONGLOMERATE': {
+      const aum = g<number>('aumUsd') ?? g<number>('netWorth') ?? 0;
+      if (aum >= 1_000_000_000) return { label: 'AUM', value: `$${(aum / 1e9).toFixed(1)}B`, color: colors.primary };
+      if (aum >= 1_000_000) return { label: 'AUM', value: `$${(aum / 1e6).toFixed(0)}M`, color: colors.primary };
+      return { label: 'NAV', value: `$${formatNumber(p.fmv_usd ?? p.fmv ?? p.price ?? 0)}`, color: colors.primary };
+    }
+    case 'COMMODITY': {
+      const price = p.fmv_usd ?? p.fmv ?? p.price ?? 0;
+      if (price >= 1_000_000) return { label: 'Per Kg', value: `$${(price / 1e6).toFixed(1)}M`, color: colors.primary };
+      if (price >= 1_000) return { label: 'Spot', value: `$${(price / 1e3).toFixed(1)}k`, color: colors.primary };
+      return { label: 'Spot', value: `$${formatNumber(price)}`, color: colors.primary };
+    }
     case 'INDEX':      return { label: 'Level',   value: formatNumber(p.level ?? p.fmv ?? p.price ?? 0), color: '#fff' };
     case 'OPTIONS':    return { label: 'Premium',  value: `$${((p.premium_cents ?? (p.price ? p.price * 100 : 0)) / 100).toFixed(2)}`, color: colors.primary };
     case 'CREDIT':     return { label: 'Yield',    value: `${(p.yield ?? 5.25).toFixed(2)}%`, color: colors.primary };
     case 'VOLATILITY': return { label: 'Level',    value: formatNumber((p.level ?? 2200) / 100), color: '#fff' };
-    case 'SWAPS':      return { label: 'Notional', value: formatUSD(p.notional_cents ?? (p.price ? p.price * 100 : 50000000)), color: '#fff' };
+    case 'SWAPS': case 'TOTAL_RETURN_SWAP': {
+      const notional = g<number>('notionalUsd') ?? (p.notional_cents ? p.notional_cents / 100 : 0);
+      if (notional >= 1_000_000) return { label: 'Notional', value: `$${(notional / 1e6).toFixed(0)}M`, color: '#fff' };
+      return { label: 'Notional', value: formatUSD(p.notional_cents ?? 50000000), color: '#fff' };
+    }
     case 'CHARACTER': case 'GADGET': case 'LOCATION': case 'TEAM': case 'VILLAIN':
     case 'ALIAS': case 'CREATOR': case 'REALITY': case 'DC_CHARACTER': case 'DC_TEAM':
       return { label: 'FMV', value: `$${formatNumber(p.fmv_usd ?? p.fmv ?? p.price ?? 0)}`, color: colors.primary };
@@ -890,7 +930,7 @@ export function getAnchorMetric(item: AssetItem, assetType: string): { label: st
       return { label: 'FMV', value: `$${formatNumber(p.fmv_usd ?? p.fmv ?? p.price ?? 0)}`, color: colors.primary };
     case 'EVENT': case 'CROSSOVER': case 'STORY_ARC': case 'ORIGIN_STORY':
       return { label: 'FMV', value: `$${formatNumber(p.fmv_usd ?? p.fmv ?? p.price ?? 0)}`, color: colors.primary };
-    case 'VILLAIN_TEAM': case 'COSMIC': case 'WEAPON': case 'SECRET_IDENTITY': case 'PUBLISHER_STOCK':
+    case 'VILLAIN_TEAM': case 'COSMIC': case 'WEAPON': case 'SECRET_IDENTITY':
       return { label: 'FMV', value: `$${formatNumber(p.fmv_usd ?? p.fmv ?? p.price ?? 0)}`, color: colors.primary };
     case 'WARRANT': return { label: 'Strike', value: `$${formatNumber(g<number>('strike') ?? p.price ?? 0)}`, color: colors.primary };
     case 'CONVERTIBLE': return { label: 'Coupon', value: `${((g<number>('coupon') ?? 0.065) * 100).toFixed(2)}%`, color: colors.primary };

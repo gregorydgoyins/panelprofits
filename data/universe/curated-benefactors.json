@@ -1,0 +1,80 @@
+[
+  {
+    "symbol": "WAYN-CAP",
+    "name": "Wayne Capital Partners",
+    "benefactor": "Bruce Wayne",
+    "universe": "DC",
+    "aumUsd": 18500000000,
+    "operatingFraction": 0.45,
+    "liquidCapitalUsd": 10175000000,
+    "unitPrice": 10175.0,
+    "units": 1000000,
+    "mandate": "Urban stability, technological defense, infrastructure resilience",
+    "type": "PRIVATE"
+  },
+  {
+    "symbol": "STRK-CAP",
+    "name": "Stark Capital Global Asset Management",
+    "benefactor": "Tony Stark",
+    "universe": "Marvel",
+    "aumUsd": 24800000000,
+    "operatingFraction": 0.5,
+    "liquidCapitalUsd": 12400000000,
+    "unitPrice": 12400.0,
+    "units": 1000000,
+    "mandate": "Clean arc fusion, automated planetary defense, AI venture capital",
+    "type": "PRIVATE"
+  },
+  {
+    "symbol": "LEX-HLD",
+    "name": "LexCorp Global Asset Holdings",
+    "benefactor": "Lex Luthor",
+    "universe": "DC",
+    "aumUsd": 22000000000,
+    "operatingFraction": 0.5,
+    "liquidCapitalUsd": 11000000000,
+    "unitPrice": 11000.0,
+    "units": 1000000,
+    "mandate": "Telecommunications, aerospace defense, hostile conglomerate M&A",
+    "type": "PRIVATE"
+  },
+  {
+    "symbol": "DOOM-TRST",
+    "name": "Latverian Sovereign Wealth Trust",
+    "benefactor": "Victor von Doom",
+    "universe": "Marvel",
+    "aumUsd": 35000000000,
+    "operatingFraction": 0.6,
+    "liquidCapitalUsd": 14000000000,
+    "unitPrice": 14000.0,
+    "units": 1000000,
+    "mandate": "State automation, sovereign border defense, arcane sciences",
+    "type": "PRIVATE"
+  },
+  {
+    "symbol": "FISK-HLD",
+    "name": "Fisk Holdings Syndicate",
+    "benefactor": "Wilson Fisk",
+    "universe": "Marvel",
+    "aumUsd": 7200000000,
+    "operatingFraction": 0.35,
+    "liquidCapitalUsd": 4680000000,
+    "unitPrice": 4680.0,
+    "units": 1000000,
+    "mandate": "Commercial real estate, port logistics, municipal shadow contracts",
+    "type": "PRIVATE"
+  },
+  {
+    "symbol": "QUEEN-CON",
+    "name": "Queen Consolidated Family Office",
+    "benefactor": "Oliver Queen",
+    "universe": "DC",
+    "aumUsd": 4800000000,
+    "operatingFraction": 0.4,
+    "liquidCapitalUsd": 2880000000,
+    "unitPrice": 2880.0,
+    "units": 1000000,
+    "mandate": "Clean tech venture, civic infrastructure, social impact capital",
+    "type": "PRIVATE"
+  }
+]

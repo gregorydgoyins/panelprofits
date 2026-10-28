@@ -194,7 +194,7 @@ describe("Canonical Equities Symbology & 16 Asset Families Canon", () => {
     expect(html).toContain("equities-marquee-track");
   });
 
-  it("renders AssetsRail with canonical non-equity asset surfaces across 16 families and 56 surfaces", async () => {
+  it("renders AssetsRail with canonical non-equity asset surfaces across 16 families and 65 surfaces", async () => {
     const { AssetsRail } = await import("@/components/shell/assets-rail");
     const { renderToString } = await import("react-dom/server");
     const React = await import("react");
@@ -202,7 +202,7 @@ describe("Canonical Equities Symbology & 16 Asset Families Canon", () => {
     const html = renderToString(React.createElement(AssetsRail));
 
     expect(html).toContain("ASSETS");
-    expect(html).toContain("16 FAMILIES · 56 SURFACES");
+    expect(html).toContain("16 FAMILIES · 65 SURFACES");
     expect(html).toContain("DERIVATIVES · FUNDS · INDICES · MUNI BONDS · ALTER EGOS");
     expect(html).toContain("Certified Asset Surfaces Ticker");
   });

@@ -1,0 +1,80 @@
+[
+  {
+    "symbol": "DIS-SR10",
+    "name": "Walt Disney Co. Senior 10Y Media Bond",
+    "issuer": "The Walt Disney Company (Marvel/Lucasfilm)",
+    "universe": "Marvel",
+    "issueSizeUsd": 2500000000,
+    "couponRate": 0.0485,
+    "rating": "A+",
+    "years": 10,
+    "purpose": "Streaming Infrastructure & Studio Production Pipeline",
+    "face": 1000,
+    "type": "CORP_SENIOR"
+  },
+  {
+    "symbol": "WBD-SR7",
+    "name": "Warner Bros. Discovery 7Y Studio Note",
+    "issuer": "Warner Bros. Discovery (DC Studios)",
+    "universe": "DC",
+    "issueSizeUsd": 1800000000,
+    "couponRate": 0.0595,
+    "rating": "BBB",
+    "years": 7,
+    "purpose": "DC Studios Slate Production & Debt Refinancing",
+    "face": 1000,
+    "type": "CORP_SENIOR"
+  },
+  {
+    "symbol": "WAYN-CONV5",
+    "name": "Wayne Enterprises 5Y Convertible Debenture",
+    "issuer": "Wayne Enterprises",
+    "universe": "DC",
+    "issueSizeUsd": 750000000,
+    "couponRate": 0.0325,
+    "rating": "AAA",
+    "years": 5,
+    "purpose": "Clean Fusion Grid & Advanced Defense Systems",
+    "face": 1000,
+    "type": "CONVERTIBLE"
+  },
+  {
+    "symbol": "STRK-SR5",
+    "name": "Stark Industries 5Y Advanced Tech Note",
+    "issuer": "Stark Industries",
+    "universe": "Marvel",
+    "issueSizeUsd": 1200000000,
+    "couponRate": 0.0415,
+    "rating": "AA+",
+    "years": 5,
+    "purpose": "Arc Reactor Clean Power & Global Defense Grid",
+    "face": 1000,
+    "type": "CORP_SENIOR"
+  },
+  {
+    "symbol": "LEX-CP360",
+    "name": "LexCorp Commercial Paper (360-Day)",
+    "issuer": "LexCorp Industries",
+    "universe": "DC",
+    "issueSizeUsd": 450000000,
+    "couponRate": 0.054,
+    "rating": "A-",
+    "years": 1,
+    "purpose": "Metropolis Telecommunications & Aerospace Working Capital",
+    "face": 1000,
+    "type": "COMMERCIAL_PAPER"
+  },
+  {
+    "symbol": "OSC-CONV3",
+    "name": "Oscorp Bio-Genetics 3Y Convertible",
+    "issuer": "Oscorp Technologies",
+    "universe": "Marvel",
+    "issueSizeUsd": 350000000,
+    "couponRate": 0.062,
+    "rating": "BBB-",
+    "years": 3,
+    "purpose": "Cross-Species Genetics & Advanced Exoskeleton Testing",
+    "face": 1000,
+    "type": "CONVERTIBLE"
+  }
+]

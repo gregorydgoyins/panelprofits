@@ -1,0 +1,80 @@
+[
+  {
+    "symbol": "IP-SPIDER",
+    "name": "Spider-Man Global IP Estate",
+    "universe": "Marvel",
+    "valuationUsd": 32500000000,
+    "annualRoyaltyFlow": 1450000000,
+    "mediaReleases": 14,
+    "conglomerate": "Sony Pictures / The Walt Disney Company",
+    "keyCatalyst": "Beyond the Spider-Verse & MCU Spider-Man 4 Multi-Tier Windows",
+    "debtLoad": 4200000000,
+    "equityFloatCap": 28300000000,
+    "type": "FRANCHISE_IP"
+  },
+  {
+    "symbol": "IP-BATMAN",
+    "name": "Batman Dark Knight IP Estate",
+    "universe": "DC",
+    "valuationUsd": 29800000000,
+    "annualRoyaltyFlow": 1280000000,
+    "mediaReleases": 18,
+    "conglomerate": "Warner Bros. Discovery / DC Studios",
+    "keyCatalyst": "The Batman Part II & The Brave and the Bold DCU Milestone",
+    "debtLoad": 3900000000,
+    "equityFloatCap": 25900000000,
+    "type": "FRANCHISE_IP"
+  },
+  {
+    "symbol": "IP-AVENGERS",
+    "name": "Avengers Multiverse IP Estate",
+    "universe": "Marvel",
+    "valuationUsd": 38400000000,
+    "annualRoyaltyFlow": 1850000000,
+    "mediaReleases": 8,
+    "conglomerate": "The Walt Disney Company / Marvel Studios",
+    "keyCatalyst": "Avengers: Doomsday & Secret Wars Global Release Event",
+    "debtLoad": 5100000000,
+    "equityFloatCap": 33300000000,
+    "type": "FRANCHISE_IP"
+  },
+  {
+    "symbol": "IP-SUPERMAN",
+    "name": "Superman Man of Steel IP Estate",
+    "universe": "DC",
+    "valuationUsd": 21500000000,
+    "annualRoyaltyFlow": 890000000,
+    "mediaReleases": 11,
+    "conglomerate": "Warner Bros. Discovery / DC Studios",
+    "keyCatalyst": "James Gunn Superman (2025) DCU Universe Foundation",
+    "debtLoad": 2800000000,
+    "equityFloatCap": 18700000000,
+    "type": "FRANCHISE_IP"
+  },
+  {
+    "symbol": "IP-XMEN",
+    "name": "X-Men Mutant Saga IP Estate",
+    "universe": "Marvel",
+    "valuationUsd": 24200000000,
+    "annualRoyaltyFlow": 1120000000,
+    "mediaReleases": 15,
+    "conglomerate": "The Walt Disney Company / Marvel Studios",
+    "keyCatalyst": "MCU Mutant Saga Full Integration & Feature Film Reboot",
+    "debtLoad": 3100000000,
+    "equityFloatCap": 21100000000,
+    "type": "FRANCHISE_IP"
+  },
+  {
+    "symbol": "IP-STARWARS",
+    "name": "Star Wars Expanded Universe IP Estate",
+    "universe": "Lucasfilm / Marvel",
+    "valuationUsd": 46700000000,
+    "annualRoyaltyFlow": 2400000000,
+    "mediaReleases": 22,
+    "conglomerate": "The Walt Disney Company / Lucasfilm",
+    "keyCatalyst": "Mandalorian & Grogu Feature Film & New Jedi Order Saga",
+    "debtLoad": 6200000000,
+    "equityFloatCap": 40500000000,
+    "type": "FRANCHISE_IP"
+  }
+]
