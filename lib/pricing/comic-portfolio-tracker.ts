@@ -1,0 +1,305 @@
+/**
+ * lib/pricing/comic-portfolio-tracker.ts
+ *
+ * Institutional Multi-Era Comic Portfolio Tracking & Asset Ledger Engine.
+ *
+ * Implements the 7 Historical Comic Eras:
+ * 1. Platinum (1897-1937) - Physical survival trumps numerical grade
+ * 2. Golden (1938-1955) - High baseline demand across all grades
+ * 3. Silver (1956-1969) - Extreme high-grade multipliers (9.0+)
+ * 4. Bronze (1970-1983) - 9.2 to 9.8 spread dictates volatility
+ * 5. Copper (1984-1991) - High print runs, direct market expansion
+ * 6. Modern (1992-1999) - Overproduction, 9.8 mandatory liquidity anchor
+ * 7. Post-Modern (2000-Present) - Incentive variants, movie option catalysts
+ *
+ * Incorporates full transaction lifecycle:
+ * Total Replacement Cost, Platform Friction Drag, Break-Even Threshold, and Net Realized ROI.
+ */
+
+export type ComicEra =
+  | "Platinum"
+  | "Golden"
+  | "Silver"
+  | "Bronze"
+  | "Copper"
+  | "Modern"
+  | "Post-Modern";
+
+export interface EraProfile {
+  era: ComicEra;
+  startYear: number;
+  endYear: number;
+  valuationDynamic: string;
+  liquidityGradeAnchor: string;
+}
+
+export const COMIC_ERA_PROFILES: Record<ComicEra, EraProfile> = {
+  Platinum: {
+    era: "Platinum",
+    startYear: 1897,
+    endYear: 1937,
+    valuationDynamic: "Physical survival trumps numerical grading condition. Baseline rarity driven.",
+    liquidityGradeAnchor: "RAW",
+  },
+  Golden: {
+    era: "Golden",
+    startYear: 1938,
+    endYear: 1955,
+    valuationDynamic: "Universal archetype demand. Low-grade incomplete books hold strong baseline value.",
+    liquidityGradeAnchor: "4.0",
+  },
+  Silver: {
+    era: "Silver",
+    startYear: 1956,
+    endYear: 1969,
+    valuationDynamic: "Marvel silver boom. Extreme grade multipliers above 9.0.",
+    liquidityGradeAnchor: "8.0",
+  },
+  Bronze: {
+    era: "Bronze",
+    startYear: 1970,
+    endYear: 1983,
+    valuationDynamic: "High census population volume. The 9.2 to 9.8 spread dictates volatility.",
+    liquidityGradeAnchor: "9.2",
+  },
+  Copper: {
+    era: "Copper",
+    startYear: 1984,
+    endYear: 1991,
+    valuationDynamic: "Rise of direct-market shops and high print runs. High-grade condition sensitive.",
+    liquidityGradeAnchor: "9.6",
+  },
+  Modern: {
+    era: "Modern",
+    startYear: 1992,
+    endYear: 1999,
+    valuationDynamic: "Speculation era. High supply; 9.8 is mandatory benchmark for raw asset liquidity.",
+    liquidityGradeAnchor: "9.8",
+  },
+  "Post-Modern": {
+    era: "Post-Modern",
+    startYear: 2000,
+    endYear: 2026,
+    valuationDynamic: "Retailer incentives and short print runs. Catalyzed by entertainment announcements.",
+    liquidityGradeAnchor: "9.8",
+  },
+};
+
+/**
+ * Resolves the canonical comic era from publication year.
+ */
+export function resolveComicEra(year: number | null | undefined): ComicEra {
+  if (!year || !Number.isFinite(year)) return "Bronze";
+  if (year <= 1937) return "Platinum";
+  if (year <= 1955) return "Golden";
+  if (year <= 1969) return "Silver";
+  if (year <= 1983) return "Bronze";
+  if (year <= 1991) return "Copper";
+  if (year <= 1999) return "Modern";
+  return "Post-Modern";
+}
+
+export interface PortfolioPositionInput {
+  comicId: string;
+  title: string;
+  issue: string;
+  publicationYear?: number;
+  targetGrade: string; // e.g. "9.8", "9.2", "4.0", "RAW"
+  certificationCompany?: "CGC" | "CBCS" | "RAW";
+  isSignatureSeries?: boolean; // CGC Yellow Label
+
+  // Acquisition Layer
+  rawPurchaseCost: number;
+  salesTax: number;
+  inboundShipping: number;
+
+  // Capitalization Load
+  pressingFee: number;
+  gradingFee: number;
+  gradingShippingAndInsurance: number;
+  signatureWitnessFee?: number;
+
+  // Liquidation / Target FMV Layer
+  expectedGrossSaleFmv: number;
+  platformFeePct?: number; // default 13.25% (eBay) or 10-20% (Heritage)
+  processingFeePct?: number; // default 2.9% or 0%
+  fixedFeePerSale?: number; // default $0.30
+  outboundInsuredShipping?: number;
+
+  // Temporal Tracking
+  acquisitionDate: string; // YYYY-MM-DD
+  targetLiquidationDate?: string; // YYYY-MM-DD
+}
+
+export interface PortfolioPositionEvaluation {
+  comicId: string;
+  title: string;
+  issue: string;
+  era: ComicEra;
+  eraProfile: EraProfile;
+  targetGrade: string;
+
+  // Capitalized Cost
+  rawCostBasis: number;
+  processingLoad: number;
+  totalReplacementCost: number; // Break-even before friction
+
+  // Friction Drag
+  estimatedPlatformFriction: number;
+  netRealizedProceeds: number;
+
+  // Returns
+  netRealizedProfit: number;
+  estimatedRoiPct: number;
+  holdingDays: number;
+  annualizedCagrPct: number;
+  breakevenGrossSaleUsd: number;
+  marginOfSafetyPct: number;
+  status: "DEEP_PROFIT" | "MODERATE_GAIN" | "UNDERWATER" | "BREAK_EVEN";
+}
+
+/**
+ * Evaluates an individual position with complete friction tracking.
+ */
+export function evaluatePortfolioPosition(
+  pos: PortfolioPositionInput
+): PortfolioPositionEvaluation {
+  const era = resolveComicEra(pos.publicationYear);
+  const eraProfile = COMIC_ERA_PROFILES[era];
+
+  // 1. Raw Cost Basis
+  const rawCostBasis = Number(
+    (pos.rawPurchaseCost + pos.salesTax + pos.inboundShipping).toFixed(2)
+  );
+
+  // 2. Processing Load
+  const sigFee = pos.isSignatureSeries ? (pos.signatureWitnessFee ?? 25) : 0;
+  const processingLoad = Number(
+    (pos.pressingFee + pos.gradingFee + pos.gradingShippingAndInsurance + sigFee).toFixed(2)
+  );
+
+  // 3. Total Replacement Cost (True Cost Basis)
+  const totalReplacementCost = Number((rawCostBasis + processingLoad).toFixed(2));
+
+  // 4. Platform Friction
+  const gross = Math.max(0, pos.expectedGrossSaleFmv);
+  const pFeePct = (pos.platformFeePct ?? 13.25) / 100;
+  const procPct = (pos.processingFeePct ?? 0) / 100;
+  const fixed = pos.fixedFeePerSale ?? 0.3;
+  const outboundShip = pos.outboundInsuredShipping ?? 0;
+
+  const estimatedPlatformFriction = Number(
+    (gross * pFeePct + gross * procPct + fixed + outboundShip).toFixed(2)
+  );
+
+  // 5. Net Proceeds & Net Profit
+  const netRealizedProceeds = Number(Math.max(0, gross - estimatedPlatformFriction).toFixed(2));
+  const netRealizedProfit = Number((netRealizedProceeds - totalReplacementCost).toFixed(2));
+
+  // 6. ROI %
+  const estimatedRoiPct =
+    totalReplacementCost > 0
+      ? Number(((netRealizedProfit / totalReplacementCost) * 100).toFixed(2))
+      : 0;
+
+  // 7. Holding Days & CAGR
+  const acqTime = Date.parse(pos.acquisitionDate) || Date.now();
+  const liqTime = pos.targetLiquidationDate ? Date.parse(pos.targetLiquidationDate) : Date.now();
+  const holdingDays = Math.max(1, Math.round((liqTime - acqTime) / 86_400_000));
+  const holdingYears = holdingDays / 365.25;
+
+  let annualizedCagrPct = estimatedRoiPct;
+  if (holdingYears > 0.05 && totalReplacementCost > 0 && netRealizedProceeds > 0) {
+    annualizedCagrPct = Number(
+      ((Math.pow(netRealizedProceeds / totalReplacementCost, 1 / holdingYears) - 1) * 100).toFixed(2)
+    );
+  }
+
+  // 8. Breakeven Gross Sale Price
+  const frictionRate = pFeePct + procPct;
+  const breakevenGrossSaleUsd =
+    frictionRate < 1
+      ? Number(((totalReplacementCost + fixed + outboundShip) / (1 - frictionRate)).toFixed(2))
+      : totalReplacementCost;
+
+  // 9. Margin of Safety %
+  const marginOfSafetyPct =
+    gross > 0
+      ? Number(((1 - totalReplacementCost / gross) * 100).toFixed(2))
+      : 0;
+
+  let status: PortfolioPositionEvaluation["status"] = "BREAK_EVEN";
+  if (estimatedRoiPct >= 35) status = "DEEP_PROFIT";
+  else if (estimatedRoiPct > 0) status = "MODERATE_GAIN";
+  else if (estimatedRoiPct < 0) status = "UNDERWATER";
+
+  return {
+    comicId: pos.comicId,
+    title: pos.title,
+    issue: pos.issue,
+    era,
+    eraProfile,
+    targetGrade: pos.targetGrade,
+    rawCostBasis,
+    processingLoad,
+    totalReplacementCost,
+    estimatedPlatformFriction,
+    netRealizedProceeds,
+    netRealizedProfit,
+    estimatedRoiPct,
+    holdingDays,
+    annualizedCagrPct,
+    breakevenGrossSaleUsd,
+    marginOfSafetyPct,
+    status,
+  };
+}
+
+/**
+ * Generates an institutional CSV data export matching the user's template specification.
+ */
+export function generatePortfolioTemplateCsv(positions: PortfolioPositionEvaluation[]): string {
+  const headers = [
+    "Comic_ID",
+    "Title",
+    "Issue",
+    "Age_Era",
+    "Target_Grade",
+    "Raw_Cost_Basis",
+    "Processing_Load",
+    "Total_Replacement_Cost",
+    "Expected_Gross_Sale",
+    "Estimated_Platform_Friction",
+    "Net_Realized_Proceeds",
+    "Net_Realized_Profit",
+    "Estimated_ROI_Pct",
+    "Holding_Days",
+    "Annualized_CAGR_Pct",
+    "Breakeven_Gross_Sale",
+    "Margin_Of_Safety_Pct",
+    "Status",
+  ];
+
+  const rows = positions.map((p) => [
+    p.comicId,
+    `"${p.title.replace(/"/g, '""')}"`,
+    p.issue,
+    p.era,
+    p.targetGrade,
+    p.rawCostBasis.toFixed(2),
+    p.processingLoad.toFixed(2),
+    p.totalReplacementCost.toFixed(2),
+    (p.netRealizedProceeds + p.estimatedPlatformFriction).toFixed(2),
+    p.estimatedPlatformFriction.toFixed(2),
+    p.netRealizedProceeds.toFixed(2),
+    p.netRealizedProfit.toFixed(2),
+    p.estimatedRoiPct.toFixed(2),
+    p.holdingDays,
+    p.annualizedCagrPct.toFixed(2),
+    p.breakevenGrossSaleUsd.toFixed(2),
+    p.marginOfSafetyPct.toFixed(2),
+    p.status,
+  ]);
+
+  return [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+}
