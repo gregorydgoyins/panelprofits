@@ -42,7 +42,7 @@ export function TickerHeader({
         display: "flex",
         alignItems: "center",
         gap: "6px",
-        padding: "5px 14px",
+        padding: "5px 16px",
         overflowX: "auto",
         scrollbarWidth: "none",
         borderBottom: "1px solid rgba(255,255,255,0.07)",

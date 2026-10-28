@@ -39,8 +39,8 @@ export function NewsRail({ initialStories }: NewsRailProps) {
   if (!stories.length) return null;
 
   return (
-    <aside aria-label="National and international news ticker" className="border-b border-slate-800/80 bg-[#090B10] px-4 py-1.5 text-xs text-slate-300 sm:px-6 lg:px-8">
-      <div className="mx-auto flex max-w-7xl items-center gap-3">
+    <aside aria-label="National and international news ticker" className="border-b border-slate-800/80 bg-[#090B10] py-1.5 text-xs text-slate-300">
+      <div className="pp-shell-frame flex items-center gap-3">
         <div className="flex min-w-max shrink-0 items-center gap-1.5 whitespace-nowrap border-r border-slate-800 pr-4 text-[11px] text-cyan-400">
           <Newspaper className="h-3.5 w-3.5" />
           <span className="uppercase tracking-wider">NEWS TICKER</span>

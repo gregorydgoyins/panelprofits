@@ -532,6 +532,7 @@ export async function getComicById(id: string): Promise<ComicRecord | null> {
       }
       return await findStoredComic(ve.series, ve.issue_number, ve.publication_year);
     }
+
   } catch (err) {
     console.warn("getComicById lookup failed:", err);
   }

@@ -1,28 +1,28 @@
 import Link from "next/link";
+import Image from "next/image";
 import { User as UserIcon } from "lucide-react";
 import { getCurrentUser, getUserProfile } from "@/lib/account/queries";
+import { getPlayerFirmContext } from "@/lib/game/player-state";
 import { SystemClock } from "./system-clock";
 import { SignOutButton } from "./sign-out-button";
 import { PrimaryNav } from "./primary-nav";
 import { PlayerSettings } from "./player-settings";
 import { MarketClocks } from "./market-clocks";
-import { TooltipToggle } from "./tooltip-toggle";
 
 export async function Header() {
   const user = await getCurrentUser();
   const profile = user ? await getUserProfile() : null;
+  const playerContext = user ? await getPlayerFirmContext(user.id) : null;
 
   const displayName = profile?.display_name || user?.email?.split("@")[0] || "Account";
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-800/80 bg-[#090A0E]/95 backdrop-blur-md">
       {/* Top Compact Identity Row */}
-      <div className="border-b border-slate-800/50 px-4 py-1.5 bg-[#06070A] sm:px-6 lg:px-8">
+      <div className="border-b border-slate-800/50 px-4 py-1.5 bg-[#06070A]">
         <div className="flex w-full items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <span className="flex h-5 w-5 items-center justify-center rounded bg-purple-600 text-white text-[10px] tracking-wider font-light">
-              PP
-            </span>
+            <Image src="/brand/panel-profits-mark.svg" alt="Panel Profits" width={28} height={28} className="h-7 w-7 shrink-0" priority />
             <div className="flex items-center gap-1.5 text-[11px] tracking-wider">
               <span className="text-slate-100 uppercase">PANEL PROFITS</span>
               <span className="text-slate-600">·</span>
@@ -54,15 +54,14 @@ export async function Header() {
         </div>
       </div>
 
-      <MarketClocks />
+      <MarketClocks playerName={user ? displayName : undefined} firmName={playerContext?.firmName} roleTitle={playerContext?.roleTitle} />
 
-      <div className="px-4 sm:px-6 lg:px-8">
+      <div className="px-4">
         <div className="flex min-h-12 w-full items-center justify-between gap-4">
         <PrimaryNav />
 
-        {/* Right Action: Tooltip Toggle under DEAL RADAR + Account/Sign In */}
-        <div className="flex items-center gap-2.5">
-          <TooltipToggle />
+        {/* Right Action: Account or Sign In */}
+        <div className="flex items-center gap-2">
           {user ? (
             <div className="flex items-center gap-2">
               <Link

@@ -168,7 +168,7 @@ export function AssetsRail({ items }: AssetsRailProps = {}) {
             <Boxes className="h-3.5 w-3.5 text-cyan-400" />
             <span className="hidden sm:inline">NON-EQUITY ASSETS</span>
             <span className="rounded bg-cyan-950/70 border border-cyan-500/40 px-1.5 py-0.2 text-[9px] text-cyan-300 font-bold">
-              16 FAMILIES · 65 SURFACES
+              16 FAMILIES · 56 SURFACES
             </span>
           </Link>
 

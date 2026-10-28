@@ -16,7 +16,7 @@ import { EquityCard } from "@/components/tickers/equity-card";
 
 const CARD_W = 227; // 215px card + 12px gap
 const SCROLL_SPEED = 55; // px/s (steady, readable, easily clickable live trading pace)
-const RAIL_TOTAL = 485_291; // rows in rail_books: every comic with a cover and a price, no floor
+const RAIL_TOTAL = 115_712; // verified equity queue; covers are already public and renderable
 const RAIL_STEP = 80;
 
 interface EquitiesRailProps {
@@ -195,7 +195,11 @@ export function EquitiesRail({ items: initialItems = [], seedItems, indices = []
       const targetEra = overrideEra !== undefined ? overrideEra : selectedEra;
       const offset = overrideOffset !== undefined ? overrideOffset : nextOffset.current;
       void targetEra; // era is applied client-side on the loaded batch
-      const url = `/api/equity/covered?limit=${RAIL_STEP}&offset=${offset}`;
+      // Use the verified equity queue for live batches. The covered-books
+      // endpoint must reconcile a large legacy cover table at request time;
+      // this queue is the same catalog contract with renderable Supabase/CDN
+      // covers and keeps interaction under a second on a warm deployment.
+      const url = `/api/equity/ticker?limit=${RAIL_STEP}&offset=${offset}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json: EquityResponse = await res.json();
@@ -240,23 +244,20 @@ export function EquitiesRail({ items: initialItems = [], seedItems, indices = []
   }, [fetchBatch]);
 
   React.useEffect(() => {
-    // Always pick a completely fresh random non-repeating queue window on load/restart
+    // Check if user has an existing queue offset in sessionStorage
     try {
       const stored = sessionStorage.getItem("pp_rail_offset");
-      const randomJump = Math.floor(Math.random() * 50000) + 500;
-      const nextReloadOffset = stored !== null
-        ? (parseInt(stored, 10) + randomJump) % RAIL_TOTAL
-        : (seedOffset || Math.floor(Math.random() * RAIL_TOTAL));
-
-      nextOffset.current = nextReloadOffset;
-      sessionStorage.setItem("pp_rail_offset", String(nextReloadOffset));
-      if (stored !== null || initialEquityItems.length === 0) {
+      if (stored !== null) {
+        // Advance by 260 comics on page reload so user gets a piece of the next batch!
+        const nextReloadOffset = (parseInt(stored, 10) + 260) % RAIL_TOTAL;
+        nextOffset.current = nextReloadOffset;
+        sessionStorage.setItem("pp_rail_offset", String(nextReloadOffset));
         fetchBatch(nextReloadOffset);
         return;
       }
     } catch {}
 
-    // First visit in session: seed with the SSR offset and stage the next chunk
+    // First visit in session: seed with the SSR offset and stage the next 260 chunk
     const nextStep = (seedOffset + RAIL_STEP) % RAIL_TOTAL;
     nextOffset.current = nextStep;
     try {
