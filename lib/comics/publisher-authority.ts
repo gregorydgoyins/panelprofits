@@ -109,6 +109,7 @@ const DC_PATTERNS = [
 ];
 
 const MARVEL_PATTERNS = [
+  /\bnightcrawler\b/i,
   /\bspider-man\b/i,
   /\bspiderman\b/i,
   /\bamazing spider-man\b/i,

@@ -220,7 +220,12 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
   const gcdData = (comic.gcd_data as Record<string, any>) || {};
   const gcdBadges = (gcdData.key_badges as string[]) || [];
 
-  const authoritativePublisher = resolveAuthoritativePublisher(comic.series, comic.publisher, comic.publication_year);
+  const gcdPublisher =
+    (gcdData as any)["GCD - gcd_publisher"] ||
+    (gcdData as any)["GCD - series.publisher"] ||
+    (gcdData as any).publisher ||
+    null;
+  const authoritativePublisher = resolveAuthoritativePublisher(comic.series, gcdPublisher || comic.publisher, comic.publication_year);
 
   const sanitizeCreator = (val: any): string => {
     if (!val || typeof val !== "string") return "";
@@ -405,6 +410,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
           grade: String(b.grade_numeric ?? b.native_grade_text),
           count: Number(b.count_at_grade || 0),
         }))
+        .filter((b) => b.count > 0)
       : [],
   };
 
@@ -826,6 +832,21 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
                 firstAppearances: (comic as any).fandom_first_appearances || null,
                 characters: (comic as any).fandom_characters || null,
                 credits: (comic as any).fandom_credits || null,
+              }}
+              authoritativeData={{
+                synopsis: gcdStoryDossier?.leadSynopsis || enrichedGcdData.synopsis || null,
+                characters: gcdStoryDossier?.leadCharacters || enrichedGcdData.characters || null,
+                credits: {
+                  writer: gcdStoryDossier?.writers?.length ? gcdStoryDossier.writers : cleanGcdWriter ? [cleanGcdWriter] : [],
+                  penciler: gcdStoryDossier?.pencilers?.length ? gcdStoryDossier.pencilers : cleanGcdPenciler ? [cleanGcdPenciler] : [],
+                  inker: gcdStoryDossier?.inkers || [],
+                  colorist: gcdStoryDossier?.colorists || [],
+                  letterer: gcdStoryDossier?.letterers || [],
+                  editor: gcdStoryDossier?.editors || [],
+                },
+                source: "Grand Comics Database",
+                sourceUrl: comic.gcd_source_id ? `https://www.comics.org/issue/${comic.gcd_source_id}/` : "https://www.comics.org/",
+                license: null,
               }}
             />
           </Suspense>

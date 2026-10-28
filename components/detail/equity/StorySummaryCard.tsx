@@ -16,6 +16,21 @@ interface StorySummaryCardProps {
     characters?: string[] | null;
     credits?: Record<string, string[]> | null;
   } | null;
+  authoritativeData?: {
+    synopsis?: string | null;
+    characters?: string | string[] | null;
+    credits?: {
+      writer?: string[];
+      penciler?: string[];
+      inker?: string[];
+      colorist?: string[];
+      letterer?: string[];
+      editor?: string[];
+    } | null;
+    source?: string;
+    sourceUrl?: string;
+    license?: string | null;
+  } | null;
 }
 
 function resolveInternalLoreUrl(url: string, fallbackLabel: string): string {
@@ -179,6 +194,7 @@ export default async function StorySummaryCard({
   volume,
   accent,
   fandomData,
+  authoritativeData,
 }: StorySummaryCardProps) {
   let summary = null;
   try {
@@ -191,21 +207,27 @@ export default async function StorySummaryCard({
   }
 
   // If external fetch was empty/timed out but sovereign database has fandom data:
-  if (!summary && fandomData?.synopsis) {
-    const rawFirstApps = (fandomData.firstAppearances || []).map((name) => ({
+  if (!summary && (authoritativeData?.synopsis || fandomData?.synopsis)) {
+    const synopsis = authoritativeData?.synopsis || fandomData?.synopsis || "";
+    const characterNames = Array.isArray(authoritativeData?.characters)
+      ? authoritativeData.characters
+      : typeof authoritativeData?.characters === "string"
+        ? authoritativeData.characters.split(/[;,]/).map((name) => name.trim()).filter(Boolean)
+        : [];
+    const rawFirstApps = (fandomData?.firstAppearances || []).map((name) => ({
       target: name,
       label: name,
       url: `/wiki/entry/${encodeURIComponent(name.toLowerCase().replace(/[^a-z0-9]+/g, "-"))}`,
       isFirstApp: true,
     }));
-    const rawFeatured = (fandomData.characters || []).map((name) => ({
+    const rawFeatured = [...characterNames, ...(fandomData?.characters || [])].map((name) => ({
       target: name,
       label: name,
       url: `/wiki/entry/${encodeURIComponent(name.toLowerCase().replace(/[^a-z0-9]+/g, "-"))}`,
     }));
 
     summary = {
-      text: fandomData.synopsis,
+      text: synopsis,
       storyTitle: `${series} #${issueNumber}`,
       quote: null,
       entities: {
@@ -219,17 +241,17 @@ export default async function StorySummaryCard({
         items: [],
         vehicles: [],
       },
-      credits: fandomData.credits ? {
+      credits: authoritativeData?.credits || fandomData?.credits ? {
         coverArtists: [],
-        writers: fandomData.credits.writer || [],
-        pencilers: fandomData.credits.penciler || fandomData.credits.artist || [],
-        colorists: fandomData.credits.colorist || [],
-        letterers: fandomData.credits.letterer || [],
-        editors: fandomData.credits.editor || [],
+        writers: authoritativeData?.credits?.writer || fandomData?.credits?.writer || [],
+        pencilers: authoritativeData?.credits?.penciler || fandomData?.credits?.penciler || fandomData?.credits?.artist || [],
+        colorists: authoritativeData?.credits?.colorist || fandomData?.credits?.colorist || [],
+        letterers: authoritativeData?.credits?.letterer || fandomData?.credits?.letterer || [],
+        editors: authoritativeData?.credits?.editor || fandomData?.credits?.editor || [],
       } : undefined,
-      source: "Marvel/DC Fandom Database",
-      sourceUrl: "https://fandom.com",
-      license: "CC-BY-SA 3.0",
+      source: authoritativeData?.source || "Marvel/DC Fandom Database",
+      sourceUrl: authoritativeData?.sourceUrl || "https://fandom.com",
+      license: authoritativeData?.license ?? "CC-BY-SA 3.0",
       referenceYear: year,
     };
   }

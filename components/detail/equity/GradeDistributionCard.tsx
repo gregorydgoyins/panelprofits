@@ -77,7 +77,8 @@ export default function GradeDistributionCard({
   const items: DistributionItem[] = useMemo(() => {
     if (!Array.isArray(censusSummary?.histogram)) return [];
     return censusSummary.histogram
-      .filter((h) => h && h.grade != null && typeof h.count === 'number' && !isNaN(h.count) && h.count >= 0)
+      // Empty grades are not information. Keep only verified populated buckets.
+      .filter((h) => h && h.grade != null && typeof h.count === 'number' && !isNaN(h.count) && h.count > 0)
       .map((h) => ({ grade: String(h.grade), count: h.count }));
   }, [censusSummary?.histogram]);
 
