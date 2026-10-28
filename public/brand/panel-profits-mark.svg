@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">Panel Profits mark</title>
+  <desc id="desc">A compact comic panel mark with a rising market line.</desc>
+  <defs>
+    <linearGradient id="panel" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#e879f9"/>
+      <stop offset="1" stop-color="#38bdf8"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="56" height="56" rx="14" fill="#090b12" stroke="url(#panel)" stroke-width="3"/>
+  <path d="M16 16h18c8 0 13 4 13 11s-5 11-13 11H23v10h-7V16Zm7 7v8h10c4 0 6-1 6-4s-2-4-6-4H23Z" fill="url(#panel)"/>
+  <path d="M17 49h8l5-7 6 4 10-14" fill="none" stroke="#f8fafc" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/>
+  <circle cx="46" cy="32" r="3" fill="#f8fafc"/>
+</svg>
