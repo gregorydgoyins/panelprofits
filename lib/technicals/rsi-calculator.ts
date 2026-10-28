@@ -32,7 +32,9 @@ async function loadObservations(comic: { series: string; issue_number: string; p
     } catch (_) {}
   }
 
-  const ppId = comic.pp_source_id ? String(comic.pp_source_id).replace(/^pp-/i, "").trim() : null;
+  // The live catalog uses pp_comics.id as pp_price_history.pp_id. Keep the
+  // legacy source-id fallback for older records, but never drop the real id.
+  const ppId = String((comic as any).pp_source_id || (comic as any).id || "").replace(/^pp-/i, "").trim() || null;
   if (ppId) {
     try {
       const { data } = await db

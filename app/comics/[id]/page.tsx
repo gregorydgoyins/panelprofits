@@ -284,7 +284,9 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
   let salesObservations: SaleRow[] = [];
   try {
     const supabase = createAdminServerClient();
-    const cleanSourceId = comic.pp_source_id ? String(comic.pp_source_id).replace(/^pp-/i, "").trim() : null;
+    // Current pp_comics rows use their catalog id as the pp_price_history key.
+    // pp_source_id is a legacy field and is not present in the live schema.
+    const cleanSourceId = String((comic as any).pp_source_id || comic.id || "").replace(/^pp-/i, "").trim() || null;
 
     // Dated sales for this title and issue from sniper_sales (36,313 authentic completed auction sales) and graded_sales_observations
     const salesPromise =
