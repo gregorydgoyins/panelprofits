@@ -1,11 +1,11 @@
 'use client';
 import { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { LWLineSparkline, type LWSparklinePoint } from '@/components/ui/LWLineSparkline';
 import { Activity } from 'lucide-react';
 import { getEraColors } from '@/lib/design-system/colors';
-import type { RsiPoint } from './types';
+import type { HistoryEntry } from './types';
 import Panel from './Panel';
+import { dailyLastPoints, rsi14 } from '@/lib/comics/chart-model';
 
 const RSI_ZONES = [
   { max: 30,  label: 'OVERSOLD',   color: '#f87171', bg: '#f8717110' },
@@ -19,37 +19,30 @@ function getRsiZone(rsi: number) {
   return RSI_ZONES.find(z => rsi <= z.max) ?? RSI_ZONES[RSI_ZONES.length - 1];
 }
 
-export default function RsiPanel({ workName, assetId, eraColors }: {
+export default function RsiPanel({ workName, history, eraColors }: {
   workName: string;
-  assetId: string;
+  history: HistoryEntry[];
   eraColors: ReturnType<typeof getEraColors>;
 }) {
-  const { data: realData, refetch: refetchReal, isRefetching: isRefetchingReal } = useQuery<{ data: RsiPoint[] }>({
-    queryKey: ['rsi-real', assetId],
-    queryFn: async () => {
-      const res = await fetch(`/api/technicals/rsi-real/${assetId}`);
-      if (!res.ok) return { data: [] };
-      return res.json();
-    },
-    staleTime: 300000,
-  });
-
-  const { data: seriesData, isLoading, refetch: refetchSeries, isRefetching: isRefetchingSeries } = useQuery<{ data: RsiPoint[] }>({
-    queryKey: ['rsi-series', workName],
-    queryFn: async () => {
-      const res = await fetch(`/api/technicals/rsi-series/${encodeURIComponent(workName)}`);
-      if (!res.ok) return { data: [] };
-      return res.json();
-    },
-    staleTime: 300000,
-  });
-
-  const isRefreshing = isRefetchingReal || isRefetchingSeries;
-  const handleRefresh = () => { void refetchReal(); void refetchSeries(); };
-
-  const usingReal = (realData?.data?.length ?? 0) > 0;
-  const data = usingReal ? realData : seriesData;
-  const rsiData = data?.data || [];
+  const rsiData = useMemo(() => {
+    const byGrade = new Map<string, HistoryEntry[]>();
+    for (const entry of history) {
+      if (!(entry.priceUsd > 0) || !entry.observedAt) continue;
+      const rows = byGrade.get(entry.grade) ?? [];
+      rows.push(entry);
+      byGrade.set(entry.grade, rows);
+    }
+    const selected = [...byGrade.entries()].sort((a, b) => b[1].length - a[1].length || (a[0] === '9.8' ? -1 : b[0] === '9.8' ? 1 : 0))[0]?.[1] ?? [];
+    const points = dailyLastPoints(selected.map((entry) => [Date.parse(entry.observedAt), entry.priceUsd] as [number, number]));
+    const values = rsi14(points.map((point) => point[1]));
+    return values.flatMap((value, index) => value == null ? [] : [{
+      date: new Date(points[index][0]).toISOString().slice(0, 10),
+      rsi: Math.round(value * 10) / 10,
+      price: points[index][1],
+    }]);
+  }, [history]);
+  const isLoading = false;
+  const usingReal = true;
   const chartWindow = rsiData.slice(-30);
   const statWindow  = rsiData.slice(-10);
   const latestRsi   = statWindow.length > 0 ? statWindow[statWindow.length - 1].rsi : null;
@@ -76,31 +69,11 @@ export default function RsiPanel({ workName, assetId, eraColors }: {
   const momentumColor = !volStats ? 'rgba(255,255,255,0.25)' : volStats.momentum > 2 ? '#4ade80' : volStats.momentum < -2 ? '#f87171' : 'rgba(255,255,255,0.4)';
 
   const rsiLwData = useMemo<LWSparklinePoint[]>(() => {
-    const base = new Date('2020-01-01');
-    return chartWindow.map((d, i) => {
-      const dt = new Date(base);
-      dt.setDate(dt.getDate() + i);
-      return { time: dt.toISOString().slice(0, 10), value: d.rsi };
-    });
+    return chartWindow.map((d) => ({ time: d.date, value: d.rsi }));
   }, [chartWindow]);
 
-  const refreshAction = (
-    <button
-      onClick={handleRefresh}
-      disabled={isRefreshing}
-      title="Refresh RSI data"
-      style={{
-        background: 'none', border: 'none', cursor: isRefreshing ? 'default' : 'pointer',
-        color: 'rgba(255,255,255,0.3)', fontSize: '12px', padding: '0 2px',
-        transition: 'color 0.15s', opacity: isRefreshing ? 0.4 : 1,
-        transform: isRefreshing ? 'rotate(360deg)' : undefined,
-        animation: isRefreshing ? 'spin 1s linear infinite' : undefined,
-      }}
-    >↻</button>
-  );
-
   return (
-    <Panel title="RSI (14) — Relative Strength Index" icon={<Activity className="w-3.5 h-3.5" />} eraColors={eraColors} action={refreshAction}>
+    <Panel title="RSI (14) — Relative Strength Index" icon={<Activity className="w-3.5 h-3.5" />} eraColors={eraColors}>
       {isLoading ? (
         <div className="h-16 flex items-center justify-center" style={{ color: 'rgba(255,255,255,0.2)', fontSize: '11px' }}>Loading…</div>
       ) : latestRsi == null ? (
@@ -134,7 +107,7 @@ export default function RsiPanel({ workName, assetId, eraColors }: {
                 <span>OVERSOLD</span><span>WEAK</span><span>FLAT</span><span>FIRM</span><span>OB</span>
               </div>
               <p className="text-[8px] uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.42)' }}>
-                {usingReal ? `This issue · price history` : `All ${workName} issues · all grades`}
+                {`This issue · ${workName} · grade history`}
               </p>
             </div>
             <div className="space-y-2">

@@ -7,7 +7,7 @@ import { withAlpha } from '@/lib/colorUtils';
 import type { GradePrice, HistoryEntry } from './types';
 import { GRADE_ORDER, computeMacd, gradeColor } from './shared';
 import Panel from './Panel';
-import { monthlyCandles, rsi14, salesPerDay, dailyLastPoints } from '@/lib/comics/chart-model';
+import { monthlyCandles, rsi14, salesPerDay, dailyLastPoints, bollinger20, priceChangeByDays } from '@/lib/comics/chart-model';
 
 type ChartType = 'area' | 'line' | 'spline' | 'column' | 'candlestick' | 'ohlc';
 type SubIndicator = 'rsi' | 'macd' | 'none';
@@ -83,29 +83,12 @@ export default function TradingChartPanel({
     return out;
   }, [pricePoints]);
 
-  const bollingerData = useMemo(() => {
-    if (pricePoints.length < 5) return [];
-    const window = Math.min(20, Math.max(3, pricePoints.length));
-    const out: Array<{ date: string; price: number; upperBand: number; lowerBand: number; sma20: number }> = [];
-    for (let i = window - 1; i < pricePoints.length; i++) {
-      const slice = pricePoints.slice(i - window + 1, i + 1).map((p) => p[1]);
-      const mean = slice.reduce((a, b) => a + b, 0) / window;
-      const variance = slice.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / window;
-      const stdDev = Math.sqrt(variance);
-      out.push({
-        date: new Date(pricePoints[i][0]).toISOString(),
-        price: pricePoints[i][1],
-        sma20: Math.round(mean * 100) / 100,
-        upperBand: Math.round((mean + 2 * stdDev) * 100) / 100,
-        lowerBand: Math.max(0, Math.round((mean - 2 * stdDev) * 100) / 100),
-      });
-    }
-    return out;
-  }, [pricePoints]);
+  const bollingerData = useMemo(() => bollinger20(pricePoints), [pricePoints]);
 
   const macdData = useMemo(() => {
     const prices = pricePoints.map((p) => p[1]);
-    if (prices.length < 26) return null;
+    // MACD(12,26,9) has no signal line until 34 real observations exist.
+    if (prices.length < 34) return null;
     const { macd, signal, hist } = computeMacd(prices);
     return { macd, signal, hist, times: pricePoints.map((p) => p[0]) };
   }, [pricePoints]);
@@ -115,14 +98,9 @@ export default function TradingChartPanel({
 
   const hasSubPane = subIndicator === 'macd' ? !!macdData : subIndicator === 'rsi' ? rsiAligned.length > 0 : false;
 
-  const delta30 = useMemo(() => {
-    const cutoff = Date.now() - 30 * 86_400_000;
-    const recent = pricePoints.filter((p) => p[0] >= cutoff);
-    if (recent.length < 2) return null;
-    const from = recent[0][1], to = recent.at(-1)![1];
-    return { pct: ((to - from) / from) * 100 };
-  }, [pricePoints]);
-  const deltaColor = !delta30 ? 'rgba(255,255,255,0.3)' : delta30.pct >= 0 ? '#22c55e' : '#ef4444';
+  const windowChanges = useMemo(() => ([20, 60, 90] as const).map((days) => ({ days, pct: priceChangeByDays(pricePoints, days) })), [pricePoints]);
+  const delta30 = useMemo(() => priceChangeByDays(pricePoints, 30), [pricePoints]);
+  const deltaColor = delta30 == null ? 'rgba(255,255,255,0.3)' : delta30 >= 0 ? '#22c55e' : '#ef4444';
 
   const lastUpdated = useMemo(() => {
     const times = history.map((h) => new Date(h.observedAt).getTime()).filter((t) => !isNaN(t));
@@ -178,11 +156,16 @@ export default function TradingChartPanel({
             {salesBadge} SALE{salesBadge !== 1 ? 'S' : ''}
           </span>
         )}
-        {delta30 && (
+        {delta30 != null && (
           <span style={{ fontSize: 10, fontFamily: 'monospace', color: deltaColor, background: withAlpha(deltaColor, 0.078), padding: '2px 7px', borderRadius: 2, border: `1px solid ${withAlpha(deltaColor, 0.188)}` }}>
-            {delta30.pct >= 0 ? '+' : ''}{delta30.pct.toFixed(2)}% · 30d
+            {delta30 >= 0 ? '+' : ''}{delta30.toFixed(2)}% · 30d
           </span>
         )}
+        {windowChanges.map(({ days, pct }) => (
+          <span key={days} style={{ fontSize: 9, fontFamily: 'monospace', color: pct == null ? 'rgba(255,255,255,0.28)' : pct >= 0 ? '#86efac' : '#fca5a5', background: 'rgba(255,255,255,0.035)', padding: '2px 6px', borderRadius: 2, border: '1px solid rgba(255,255,255,0.08)' }}>
+            {pct == null ? '—' : `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`} · {days}d
+          </span>
+        ))}
         {latestRsi != null && rsiZoneNow && (
           <span style={{ fontSize: 9, fontFamily: 'monospace', color: rsiZoneNow.color, background: withAlpha(rsiZoneNow.color, 0.078), padding: '2px 7px', borderRadius: 2, border: `1px solid ${withAlpha(rsiZoneNow.color, 0.188)}`, letterSpacing: '0.06em' }}>
             RSI {latestRsi.toFixed(1)} · {rsiZoneNow.label}
@@ -202,7 +185,7 @@ export default function TradingChartPanel({
           ))}
         </div>
         <span style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.1)', display: 'inline-block' }} />
-        <Btn active={showBollinger} onClick={() => setShowBollinger((v) => !v)}>BB</Btn>
+        <Btn active={showBollinger} onClick={() => setShowBollinger((v) => !v)}>BB20</Btn>
         {salesVol.length > 0 && (
           <>
             <span style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.1)', display: 'inline-block' }} />
@@ -250,7 +233,12 @@ export default function TradingChartPanel({
       )}
       {pricePoints.length > 0 && subIndicator === 'macd' && !macdData && (
         <p style={{ fontSize: 9, fontFamily: 'monospace', color: 'rgba(255,255,255,0.3)', marginTop: 6 }}>
-          MACD needs 26 dated prices; {pricePoints.length} on file for {grade}.
+          MACD(12,26,9) needs 34 dated prices; {pricePoints.length} on file for {grade}.
+        </p>
+      )}
+      {pricePoints.length > 0 && showBollinger && bollingerData.length === 0 && (
+        <p style={{ fontSize: 9, fontFamily: 'monospace', color: 'rgba(255,255,255,0.3)', marginTop: 6 }}>
+          BB20 is waiting for 20 dated prices for {grade}; no shorter window is substituted.
         </p>
       )}
       {pricePoints.length > 0 && isOhlc && (

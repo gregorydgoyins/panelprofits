@@ -6,10 +6,20 @@
 export type PricePoint = [number, number]; // [epoch ms, USD]
 export type Candle = [number, number, number, number, number]; // [epoch ms, open, high, low, close]
 
+export interface BollingerPoint {
+  date: string;
+  price: number;
+  sma20: number;
+  upperBand: number;
+  lowerBand: number;
+}
+
 /**
- * Monthly candles built from the real observations inside each calendar month (UTC):
- * open = first observation, close = last, high = max, low = min. A month with a single
- * observation is a flat candle. Months with no observation produce no candle.
+ * Monthly candles built from the real observations and inter-month transitions:
+ * If multiple observations exist in a month, open is first observation, close is last,
+ * high is max, low is min.
+ * If a month has a single price snapshot (e.g. from an end-of-month tracking algorithm),
+ * open transitions from previous month's close to produce authentic candlestick bodies and ranges.
  */
 export function monthlyCandles(points: PricePoint[]): Candle[] {
   const buckets = new Map<string, PricePoint[]>();
@@ -20,18 +30,43 @@ export function monthlyCandles(points: PricePoint[]): Candle[] {
     if (arr) arr.push(p);
     else buckets.set(key, [p]);
   }
-  return [...buckets.entries()]
-    .sort(([a], [b]) => (a < b ? -1 : 1))
-    .map(([key, arr]) => {
-      const prices = arr.map((x) => x[1]);
-      return [
-        Date.parse(`${key}-01T00:00:00Z`),
-        arr[0][1],
-        Math.max(...prices),
-        Math.min(...prices),
-        arr[arr.length - 1][1],
-      ] as Candle;
-    });
+
+  const sortedEntries = [...buckets.entries()].sort(([a], [b]) => (a < b ? -1 : 1));
+  const candles: Candle[] = [];
+  let prevClose: number | null = null;
+
+  for (const [key, arr] of sortedEntries) {
+    const prices = arr.map((x) => x[1]);
+    const minObs = Math.min(...prices);
+    const maxObs = Math.max(...prices);
+    const close = arr[arr.length - 1][1];
+
+    let open = arr[0][1];
+    let high = maxObs;
+    let low = minObs;
+
+    // When only one observation exists in this calendar month,
+    // establish open from previous close so candles reflect real price momentum & ranges
+    if (arr.length === 1 && prevClose !== null && prevClose > 0) {
+      open = prevClose;
+      high = Math.max(open, close);
+      low = Math.min(open, close);
+    } else if (arr.length === 1) {
+      open = close;
+    }
+
+    candles.push([
+      Date.parse(`${key}-01T00:00:00Z`),
+      open,
+      high,
+      low,
+      close,
+    ]);
+
+    prevClose = close;
+  }
+
+  return candles;
 }
 
 /** Wilder RSI(14). null for every index before 15 prices exist; never filled. */
@@ -68,6 +103,38 @@ export function dailyLastPoints(points: PricePoint[]): PricePoint[] {
     if (p[1] > 0) m.set(new Date(p[0]).toISOString().slice(0, 10), p);
   }
   return [...m.values()];
+}
+
+/** Return the newest observation at least `days` calendar days before the latest one. */
+export function priceChangeByDays(points: PricePoint[], days: number): number | null {
+  if (points.length < 2) return null;
+  const sorted = dailyLastPoints(points).sort((a, b) => a[0] - b[0]);
+  const latest = sorted.at(-1);
+  if (!latest) return null;
+  const cutoff = latest[0] - days * 86_400_000;
+  const base = [...sorted].reverse().find((p) => p[0] <= cutoff);
+  return base && base[1] > 0 ? ((latest[1] - base[1]) / base[1]) * 100 : null;
+}
+
+/** Standard 20-observation Bollinger Bands. Shorter series are not silently re-windowed. */
+export function bollinger20(points: PricePoint[]): BollingerPoint[] {
+  const sorted = dailyLastPoints(points).sort((a, b) => a[0] - b[0]);
+  if (sorted.length < 20) return [];
+  const out: BollingerPoint[] = [];
+  for (let i = 19; i < sorted.length; i++) {
+    const slice = sorted.slice(i - 19, i + 1).map((p) => p[1]);
+    const mean = slice.reduce((a, b) => a + b, 0) / 20;
+    const variance = slice.reduce((sum, value) => sum + (value - mean) ** 2, 0) / 20;
+    const deviation = Math.sqrt(variance);
+    out.push({
+      date: new Date(sorted[i][0]).toISOString(),
+      price: sorted[i][1],
+      sma20: mean,
+      upperBand: mean + 2 * deviation,
+      lowerBand: Math.max(0, mean - 2 * deviation),
+    });
+  }
+  return out;
 }
 
 export interface GradeStats {

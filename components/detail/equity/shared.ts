@@ -39,9 +39,15 @@ export function computeMacd(prices: number[]): { macd: (number | null)[]; signal
   const ema12 = computeEma(prices, 12);
   const ema26 = computeEma(prices, 26);
   const macd = prices.map((_, i) => ema12[i] != null && ema26[i] != null ? ema12[i]! - ema26[i]! : null);
-  const macdNonNull = macd.map(v => v ?? 0);
-  const rawSignal = computeEma(macdNonNull, 9);
-  const signal = rawSignal.map((v, i) => macd[i] != null ? v : null);
+  // The signal EMA must start at the first real MACD value. Feeding the
+  // pre-MACD nulls in as zero creates a false early signal line.
+  const firstMacdIndex = macd.findIndex(v => v != null);
+  const macdValues = firstMacdIndex >= 0 ? macd.slice(firstMacdIndex).map(v => v as number) : [];
+  const rawSignal = computeEma(macdValues, 9);
+  const signal = prices.map((_, i) => {
+    const signalIndex = i - firstMacdIndex;
+    return signalIndex >= 0 && rawSignal[signalIndex] != null ? rawSignal[signalIndex] : null;
+  });
   const hist = macd.map((v, i) => v != null && signal[i] != null ? v - signal[i]! : null);
   return { macd, signal, hist };
 }

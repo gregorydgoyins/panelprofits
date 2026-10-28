@@ -62,6 +62,7 @@ import { DealerQuotesCard } from "@/components/comics/dealer-quotes-card";
 import { MarketTruthPanel } from "@/components/detail/shared/MarketTruthPanel";
 import { ProvenanceLedger } from "@/components/detail/shared/ProvenanceLedger";
 import { classifyScarcityTier } from "@/lib/equity/scarcity-float";
+import { dailyLastPoints, priceChangeByDays } from "@/lib/comics/chart-model";
 import {
   toSaleList, lastSale, countSalesByGrade, latestSnapshotDate, delta24hPct, ppSpreadAnchors,
   censusNinePlus, buildCompleteness, buildProvenanceLedger, buildQuote, pickQuoteGrade,
@@ -450,6 +451,54 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     })),
   });
 
+  // Technical panels must use the same issue-level observations as the chart.
+  // Select the grade with the deepest dated history; never substitute a series-wide
+  // line or a fabricated baseline for a missing technical observation.
+  const technicalByGrade = new Map<string, Array<[number, number]>>();
+  for (const row of priceHistory) {
+    const point: [number, number] = [Date.parse(row.observedAt), row.priceUsd];
+    if (!Number.isFinite(point[0]) || !(point[1] > 0)) continue;
+    const points = technicalByGrade.get(row.grade) ?? [];
+    points.push(point);
+    technicalByGrade.set(row.grade, points);
+  }
+  const technicalGrade = [...technicalByGrade.entries()]
+    .sort((a, b) => b[1].length - a[1].length || (a[0] === "9.8" ? -1 : b[0] === "9.8" ? 1 : 0))[0]?.[0] ?? null;
+  const technicalPoints = technicalGrade ? dailyLastPoints(technicalByGrade.get(technicalGrade) ?? []) : [];
+  const latestTechnical = technicalPoints.at(-1) ?? null;
+  const technical90d = latestTechnical
+    ? technicalPoints.filter(([time]) => time >= latestTechnical[0] - 90 * 86_400_000)
+    : [];
+  const technical90Prices = technical90d.map(([, price]) => price);
+  const actual90Mean = technical90Prices.length
+    ? technical90Prices.reduce((a, b) => a + b, 0) / technical90Prices.length
+    : null;
+  const actual90Sigma = actual90Mean != null && technical90Prices.length > 1
+    ? Math.sqrt(technical90Prices.reduce((sum, price) => sum + (price - actual90Mean) ** 2, 0) / technical90Prices.length)
+    : null;
+  const technical90Mean = technical90Prices.length ? technical90Prices.reduce((a, b) => a + b, 0) / technical90Prices.length : null;
+  const technical90Sigma = technical90Mean != null && technical90Prices.length > 1
+    ? Math.sqrt(technical90Prices.reduce((sum, price) => sum + (price - technical90Mean) ** 2, 0) / technical90Prices.length)
+    : null;
+  const actualGradeRows = Object.entries(rawLattice).filter(([, price]) => Number(price) > 0) as Array<[string, number]>;
+  const gradeSpreads = actualGradeRows.length > 1
+    ? actualGradeRows.map(([, price]) => Number(price)).sort((a, b) => a - b)
+    : [];
+  const actualMaxGradeSpread = gradeSpreads.length > 1 && gradeSpreads[0] > 0
+    ? ((gradeSpreads.at(-1)! - gradeSpreads[0]) / gradeSpreads[0]) * 100
+    : null;
+  const salesByGradeEntries = [...salesByGrade.entries()].filter(([, count]) => count > 0);
+  const totalRecordedSales = salesByGradeEntries.reduce((sum, [, count]) => sum + count, 0);
+  const actualHhi = totalRecordedSales > 0
+    ? salesByGradeEntries.reduce((sum, [, count]) => sum + (count / totalRecordedSales) ** 2, 0)
+    : null;
+  const actualCensusTotal = totalGradedCount > 0 ? totalGradedCount : null;
+  const actualCensusRatio = actualCensusTotal != null && totalRecordedSales > 0
+    ? censusAtOrAbove90 != null ? censusAtOrAbove90 / totalRecordedSales : actualCensusTotal / totalRecordedSales
+    : null;
+  const actual90High = technical90Prices.length ? Math.max(...technical90Prices) : null;
+  const actual90Low = technical90Prices.length ? Math.min(...technical90Prices) : null;
+
   // A cover found by a wiki name search for a different publisher is a false match: never show it.
   const dbCoverContradicts = coverSourceContradictsPublisher(comic.cover_source, comic.publisher);
   const railOwnCover = railRows.find((r) => r.cover_source === "google_bucket" && r.cover_url)?.cover_url ?? null;
@@ -635,53 +684,55 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     sovereignGrade: isTrulySovereign ? "9.8" : "RAW",
     marketPriceClass: isTrulySovereign ? "A_PRIME" : "PREMIUM",
     isSovereign: isTrulySovereign,
-    partial: false,
+    partial: !technicalGrade || technicalPoints.length < 2,
     momentum: {
-      roc30d: 5.4,
-      roc90d: 14.8,
-      roc120d: 28.2,
-      direction: "UP",
-      currentPrice: effectivePrice,
-      grade: isTrulySovereign ? "9.8" : "RAW",
+      roc30d: priceChangeByDays(technicalPoints, 30),
+      roc90d: priceChangeByDays(technicalPoints, 90),
+      roc120d: priceChangeByDays(technicalPoints, 120),
+      direction: latestTechnical && priceChangeByDays(technicalPoints, 30) != null
+        ? priceChangeByDays(technicalPoints, 30)! > 2 ? "UP" : priceChangeByDays(technicalPoints, 30)! < -2 ? "DOWN" : "FLAT"
+        : null,
+      currentPrice: latestTechnical?.[1] ?? null,
+      grade: technicalGrade ?? "9.8",
     },
-    velocityBands: {
-      mu: effectivePrice,
-      sigma: Number((effectivePrice * 0.08).toFixed(2)),
-      upper2: Number((effectivePrice * 1.16).toFixed(2)),
-      upper1: Number((effectivePrice * 1.08).toFixed(2)),
-      lower1: Number((effectivePrice * 0.92).toFixed(2)),
-      lower2: Number((effectivePrice * 0.84).toFixed(2)),
-      currentPrice: effectivePrice,
-      position: "UPPER",
-      dataPoints: Math.max(salesObservations.length, 12),
-    },
+    velocityBands: technical90Mean != null && technical90Sigma != null && latestTechnical ? {
+      mu: technical90Mean,
+      sigma: technical90Sigma,
+      upper2: technical90Mean + technical90Sigma * 2,
+      upper1: technical90Mean + technical90Sigma,
+      lower1: Math.max(0, technical90Mean - technical90Sigma),
+      lower2: Math.max(0, technical90Mean - technical90Sigma * 2),
+      currentPrice: latestTechnical[1],
+      position: latestTechnical[1] > technical90Mean + technical90Sigma ? "UPPER" : latestTechnical[1] < technical90Mean - technical90Sigma ? "LOWER" : "NEUTRAL",
+      dataPoints: technical90d.length,
+    } : null,
     gradeArbitrageIndex: {
-      maxSpreadPct: 77.3,
-      highGrade: "9.8",
-      lowGrade: "RAW",
-      label: "BALANCED",
-      confirmedGradeCount: Object.keys(rawLattice).length,
+      maxSpreadPct: actualMaxGradeSpread ?? 0,
+      highGrade: actualGradeRows.length ? actualGradeRows.reduce((best, row) => Number(row[1]) > Number(best[1]) ? row : best)[0] : null,
+      lowGrade: actualGradeRows.length ? actualGradeRows.reduce((best, row) => Number(row[1]) < Number(best[1]) ? row : best)[0] : null,
+      label: actualMaxGradeSpread == null ? "MIXED" : actualMaxGradeSpread > 100 ? "WIDE" : "BALANCED",
+      confirmedGradeCount: actualGradeRows.length,
     },
-    liquidityConcentration: {
-      hhi: 0.18,
-      totalVolume: totalGradedCount || 100,
-      label: "ACTIVE",
-      gradeCount: Object.keys(rawLattice).length,
-    },
-    censusPressure: {
-      cpr: 0.05,
-      populationAtOrAboveSov: highGradeCount,
-      totalSalesVol: totalGradedCount || 100,
-      sovereignGrade: "9.8",
-      label: "STABLE",
-    },
-    priceEfficiency: {
-      efficiencyPct: 94.2,
-      high90d: Number((effectivePrice * 1.08).toFixed(2)),
-      low90d: Number((effectivePrice * 0.92).toFixed(2)),
-      label: "HIGH",
-      dataPoints: Math.max(salesObservations.length, 12),
-    },
+    liquidityConcentration: actualHhi != null ? {
+      hhi: actualHhi,
+      totalVolume: totalRecordedSales,
+      label: totalRecordedSales >= 20 ? "ACTIVE" : "THIN",
+      gradeCount: salesByGradeEntries.length,
+    } : null,
+    censusPressure: actualCensusRatio != null ? {
+      cpr: actualCensusRatio,
+      populationAtOrAboveSov: censusAtOrAbove90 ?? actualCensusTotal ?? 0,
+      totalSalesVol: totalRecordedSales,
+      sovereignGrade: "9.0",
+      label: actualCensusRatio > 10 ? "CONCENTRATED" : "STABLE",
+    } : null,
+    priceEfficiency: actual90High != null && actual90Low != null && latestTechnical ? {
+      efficiencyPct: latestTechnical[1] > 0 ? ((actual90High - actual90Low) / latestTechnical[1]) * 100 : 0,
+      high90d: actual90High,
+      low90d: actual90Low,
+      label: actual90High === actual90Low ? "STABLE" : "NORMAL",
+      dataPoints: technical90d.length,
+    } : null,
   };
 
   const temporalMemoryData: TemporalMemory = {
@@ -916,7 +967,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
 
           {/* MASONRY WALL: 20 Rich Analysis Cards */}
           <div className="columns-1 md:columns-2 xl:columns-3 gap-4 [&>*]:break-inside-avoid [&>*]:mb-4">
-            <RsiPanel workName={seriesLabel} assetId={comic.id} eraColors={eraColors} />
+            <RsiPanel workName={seriesLabel} history={priceHistory} eraColors={eraColors} />
             <PriceStatsPanel history={priceHistory} eraColors={eraColors} issueReferencePoints={null} />
             <NightOwlPanel
               eraColors={eraColors}
