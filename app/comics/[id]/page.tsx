@@ -596,7 +596,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     marketTruth: {
       consensusFmv: effectivePrice,
       lastSalePrice: latestSale ? latestSale.priceUsd : effectivePrice,
-      lastSaleDate: latestSale ? latestSale.soldAt : snapshotLatest,
+      lastSaleDate: latestSale ? latestSale.date : snapshotLatest,
       salesVolume24h: salesObservations.length,
       marketState: effectivePrice > 0 ? "ACTIVE" : "DATA_INCOMPLETE",
       confidence: 98,
@@ -615,9 +615,9 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
       executionLiquidity: Object.keys(spreadAnchors).length > 0 ? "ORDER BOOK DEPTH ACTIVE" : "AUCTION BENCHMARK ROUTING",
     },
     brokerView: {
-      portfolioPosition: userStatus?.isHeld ? "Held in Portfolio" : "Exchange Liquid",
-      costBasis: userStatus?.isHeld ? userStatus.avgCostBasis : Number((effectivePrice * 0.88).toFixed(2)),
-      unrealizedPl: userStatus?.isHeld ? "+14.2%" : "N/A",
+      portfolioPosition: (userStatus as any)?.isHeld || userStatus?.isInCollection ? "Held in Portfolio" : "Exchange Liquid",
+      costBasis: (userStatus as any)?.avgCostBasis ?? Number((effectivePrice * 0.88).toFixed(2)),
+      unrealizedPl: (userStatus as any)?.isHeld || userStatus?.isInCollection ? "+14.2%" : "N/A",
       recommendedAction: effectivePrice > 0 ? "ACCUMULATE" : "WATCHLIST",
     },
   };
@@ -802,7 +802,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
           <CensusBanner
             censusSummary={fullCensusSummary}
             eraColors={eraColors}
-            scarcityLabel={scarcityLabel}
+            scarcityLabel={scarcityKey ?? "common"}
           />
 
           <Suspense fallback={null}>
@@ -908,7 +908,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
               eraColors={eraColors}
             />
             <PriceAnchorCard
-              keyPrices={keyPrices}
+              keyPrices={keyPrices as any}
               gradeLattice={gradeLattice}
               priceHistory={priceHistory}
               eraColors={eraColors}
@@ -956,13 +956,12 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
             />
             <GradeDistributionCard
               censusSummary={fullCensusSummary as any}
-              gradeLattice={gradeLattice}
               eraColors={eraColors}
             />
             <MarketPositionCard
               variant={fullVariant}
               series={seriesObj as any}
-              keyPrices={keyPrices}
+              keyPrices={keyPrices as any}
               censusSummary={fullCensusSummary as any}
               eraColors={eraColors}
             />
@@ -1013,8 +1012,8 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
             issueNumber={String(comic.issue_number)}
             publicationYear={comic.publication_year ?? null}
             keyStatus={gcdBadges.length > 0 ? "KEY" : "MAJOR KEY"}
-            storyTitle={gcdStoryDossier?.stories?.[0]?.title || comic.title || seriesLabel}
-            synopsis={(comic as any).fandom_synopsis || gcdStoryDossier?.stories?.[0]?.synopsis || undefined}
+            storyTitle={gcdStoryDossier?.leadStoryTitle || comic.title || seriesLabel}
+            synopsis={(comic as any).fandom_synopsis || gcdStoryDossier?.leadSynopsis || undefined}
             characters={Array.isArray((comic as any).fandom_characters) ? (comic as any).fandom_characters.slice(0, 10).join(", ") : undefined}
             writer={cleanGcdWriter}
             penciler={cleanGcdPenciler}
@@ -1022,7 +1021,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
             colorist={cleanGcdColorist}
             letterer={cleanGcdLetterer}
             editor={cleanGcdEditor}
-            genre={comic.genre || undefined}
+            genre={(comic as any).genre || undefined}
           />
 
           <AssetClassesMatrix
