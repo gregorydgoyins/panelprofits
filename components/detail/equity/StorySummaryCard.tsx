@@ -197,17 +197,8 @@ export default async function StorySummaryCard({
   authoritativeData,
 }: StorySummaryCardProps) {
   let summary = null;
-  try {
-    summary = await Promise.race([
-      getStorySummary({ series, issueNumber, year, publisher, volume }),
-      new Promise<null>((resolve) => setTimeout(() => resolve(null), 9000)),
-    ]);
-  } catch {
-    summary = null;
-  }
-
-  // If external fetch was empty/timed out but sovereign database has fandom data:
-  if (!summary && (authoritativeData?.synopsis || fandomData?.synopsis)) {
+  // If we already have authoritative synopsis or fandom synopsis in sovereign database, use it directly
+  if (authoritativeData?.synopsis || fandomData?.synopsis) {
     const synopsis = authoritativeData?.synopsis || fandomData?.synopsis || "";
     const characterNames = Array.isArray(authoritativeData?.characters)
       ? authoritativeData.characters
@@ -233,12 +224,13 @@ export default async function StorySummaryCard({
       entities: {
         firstAppearances: rawFirstApps,
         featuredCharacters: rawFeatured,
+        teams: [],
+        items: [],
+        locations: [],
         antagonists: [],
         otherCharacters: [],
         racesAndSpecies: [],
         realities: [],
-        locations: [],
-        items: [],
         vehicles: [],
       },
       credits: authoritativeData?.credits || fandomData?.credits ? {
@@ -249,11 +241,20 @@ export default async function StorySummaryCard({
         letterers: authoritativeData?.credits?.letterer || fandomData?.credits?.letterer || [],
         editors: authoritativeData?.credits?.editor || fandomData?.credits?.editor || [],
       } : undefined,
-      source: authoritativeData?.source || "Marvel/DC Fandom Database",
-      sourceUrl: authoritativeData?.sourceUrl || "https://fandom.com",
-      license: authoritativeData?.license ?? "CC-BY-SA 3.0",
+      source: authoritativeData?.source || "Grand Comics Database / Sovereign Archive",
+      sourceUrl: authoritativeData?.sourceUrl || null,
+      license: authoritativeData?.license ?? null,
       referenceYear: year,
     };
+  } else {
+    try {
+      summary = await Promise.race([
+        getStorySummary({ series, issueNumber, year, publisher, volume }),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 1500)),
+      ]);
+    } catch {
+      summary = null;
+    }
   }
 
   if (!summary) return null;
@@ -468,7 +469,11 @@ export default async function StorySummaryCard({
       <div className="mt-4 pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-500 relative z-10">
         <div>
           Source:{" "}
-          <a href={summary.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-slate-300 font-mono underline">Original text reference</a>
+          {summary.sourceUrl ? (
+            <a href={summary.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-slate-300 font-mono underline">Original text reference</a>
+          ) : (
+            <span className="text-slate-300 font-mono">{summary.source || "Historical Catalog Reference"}</span>
+          )}
           {summary.license ? ` · ${summary.license}` : ""}
         </div>
         <div className="font-mono text-cyan-400/80">
