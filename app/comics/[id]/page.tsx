@@ -30,6 +30,7 @@ import { buildComicPriceHistory, normalizeGradeLabel } from "@/lib/pricing/histo
 import { resolvePriceTier, isDirectEdition, PREMIUM_MIN_PRICE } from "@/lib/pricing/market-tiers";
 import { resolveProductionAge } from "@/lib/equity/ticker-utils";
 import StorySummaryCard from "@/components/detail/equity/StorySummaryCard";
+import GradingArbitrageTerminal from "@/components/detail/equity/GradingArbitrageTerminal";
 import { Suspense } from "react";
 import { resolveGcdStoryDossier } from "@/lib/comics/gcd-story-service";
 import { createAdminServerClient } from "@/lib/supabase/admin";
@@ -915,6 +916,14 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
           <BlendedHoldingDossier comic={comic} userStatus={userStatus} isAuthenticated={Boolean(user)} />
 
           <ComparativePriceMatrix comic={comic} inspectedGrade="9.8" ticker={tickerSymbol} />
+
+          <GradingArbitrageTerminal
+            series={comic.series}
+            issue={String(comic.issue_number)}
+            rawMarketPrice={Number(rawPrice || rawLattice["RAW"] || 100)}
+            gradeMatrixFmv={rawLattice as any}
+            accentColor={eraColors.border}
+          />
 
           <DealerQuotesCard anchors={spreadAnchors} asOf={snapshotLatest} />
 

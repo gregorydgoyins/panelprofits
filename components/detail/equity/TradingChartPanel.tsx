@@ -98,7 +98,14 @@ export default function TradingChartPanel({
 
   const hasSubPane = subIndicator === 'macd' ? !!macdData : subIndicator === 'rsi' ? rsiAligned.length > 0 : false;
 
-  const windowChanges = useMemo(() => ([20, 60, 90] as const).map((days) => ({ days, pct: priceChangeByDays(pricePoints, days) })), [pricePoints]);
+  const windowChanges = useMemo(
+    () =>
+      ([30, 60, 90, 180, 365] as const).map((days) => ({
+        days,
+        pct: priceChangeByDays(pricePoints, days),
+      })),
+    [pricePoints]
+  );
   const delta30 = useMemo(() => priceChangeByDays(pricePoints, 30), [pricePoints]);
   const deltaColor = delta30 == null ? 'rgba(255,255,255,0.3)' : delta30 >= 0 ? '#22c55e' : '#ef4444';
 
