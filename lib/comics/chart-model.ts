@@ -14,13 +14,7 @@ export interface BollingerPoint {
   lowerBand: number;
 }
 
-/**
- * Monthly candles built from the real observations and inter-month transitions:
- * If multiple observations exist in a month, open is first observation, close is last,
- * high is max, low is min.
- * If a month has a single price snapshot (e.g. from an end-of-month tracking algorithm),
- * open transitions from previous month's close to produce authentic candlestick bodies and ranges.
- */
+/** Monthly candles built only from observations inside each calendar month. */
 export function monthlyCandles(points: PricePoint[]): Candle[] {
   const buckets = new Map<string, PricePoint[]>();
   for (const p of [...points].sort((a, b) => a[0] - b[0])) {
@@ -33,7 +27,6 @@ export function monthlyCandles(points: PricePoint[]): Candle[] {
 
   const sortedEntries = [...buckets.entries()].sort(([a], [b]) => (a < b ? -1 : 1));
   const candles: Candle[] = [];
-  let prevClose: number | null = null;
 
   for (const [key, arr] of sortedEntries) {
     const prices = arr.map((x) => x[1]);
@@ -41,29 +34,13 @@ export function monthlyCandles(points: PricePoint[]): Candle[] {
     const maxObs = Math.max(...prices);
     const close = arr[arr.length - 1][1];
 
-    let open = arr[0][1];
-    let high = maxObs;
-    let low = minObs;
-
-    // When only one observation exists in this calendar month,
-    // establish open from previous close so candles reflect real price momentum & ranges
-    if (arr.length === 1 && prevClose !== null && prevClose > 0) {
-      open = prevClose;
-      high = Math.max(open, close);
-      low = Math.min(open, close);
-    } else if (arr.length === 1) {
-      open = close;
-    }
-
     candles.push([
       Date.parse(`${key}-01T00:00:00Z`),
-      open,
-      high,
-      low,
+      arr[0][1],
+      maxObs,
+      minObs,
       close,
     ]);
-
-    prevClose = close;
   }
 
   return candles;
