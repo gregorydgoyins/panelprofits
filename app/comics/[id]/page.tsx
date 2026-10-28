@@ -719,15 +719,21 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
   const provenanceClaims: ProvenanceClaim[] = [
     {
       id: "fmv-price",
-      claimTitle: "Panel Profits Sovereign Market Order Book",
+      claimTitle: "PriceCharting & Exchange Market Pricing",
       claimValue: effectivePrice > 0 ? `$${effectivePrice.toLocaleString("en-US", { minimumFractionDigits: 2 })}` : "UNPRICED",
-      whyBelieved: "Decoded sovereign continuous market order book with verified bid/ask execution depth.",
+      whyBelieved: "All prices are current market price based on historic completed sales with a buyer and seller agreeing on price. Calculated via proprietary algorithm tracking end-of-month historical sales. Unsold items are excluded.",
       confidenceScore: 98,
       freshnessLabel: snapshotLatest || "Real-time Sync",
-      canonicalAuthority: "Panel Profits Market Valuation Engine",
+      canonicalAuthority: "PriceCharting Comic Market Index & Panel Profits Sovereign Engine",
       sourceObservations: [
         {
-          provider: "Panel Profits Sovereign Exchange",
+          provider: "PriceCharting (Historical Sales Model)",
+          timestamp: snapshotLatest || "Monthly Sync",
+          rawObservation: "Prices calculated using proprietary algorithm from completed transactions only (buyer and seller agreed price; unsold listings excluded). End-of-month historic tracking across Ungraded, 2.0, 3.0, 4.0, 5.0, 6.0, 8.0, 9.0, 9.2, 9.8, and 10.0.",
+          verifiedStatus: "VERIFIED",
+        },
+        {
+          provider: "Panel Profits Sovereign Order Book",
           timestamp: snapshotLatest || "Recent",
           rawObservation: `Verified valuation anchor at $${effectivePrice.toFixed(2)} with recorded transaction history`,
           verifiedStatus: "VERIFIED",
