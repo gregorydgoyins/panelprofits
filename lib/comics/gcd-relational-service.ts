@@ -167,18 +167,21 @@ async function fetchRelationalFromSupabase(
     }
 
     // Map comics catalog records to variants for direct catalog links and authentic covers
-    const { data: comicsList } = dedupedVars.length > 0
+    const varGcdInts = dedupedVars.map((v) => Number(v.gcd_issue_id)).filter((n) => Number.isInteger(n) && n > 0);
+    const { data: comicsList } = varGcdInts.length > 0
       ? await supabase
           .from("pp_comics")
-          .select("id, gcd_source_id, cover_url")
-          .in("gcd_source_id", dedupedVars.map((v) => String(v.gcd_issue_id)))
+          .select("id, gcd_issue_id, cover_url")
+          .in("gcd_issue_id", varGcdInts)
       : { data: [] };
 
-    const comicByGcd = new Map<string, any>();
-    comicsList?.forEach((c: any) => comicByGcd.set(c.gcd_source_id, c));
+    const comicByGcd = new Map<number, any>();
+    comicsList?.forEach((c: any) => {
+      if (c.gcd_issue_id != null) comicByGcd.set(Number(c.gcd_issue_id), c);
+    });
 
     const variants: GcdVariantItem[] = dedupedVars.map((v) => {
-      const c = comicByGcd.get(String(v.gcd_issue_id));
+      const c = comicByGcd.get(Number(v.gcd_issue_id));
       const parsedArtist = parseArtistFromVariantName(v.variant_name);
       return {
         id: v.gcd_issue_id,
@@ -518,19 +521,23 @@ export async function getGcdRelationalData(
     }
 
     // Also look up comics catalog rows to bind direct catalogId and coverUrl for these variants
-    let catalogVariantsMap = new Map<string, { id: string; cover_url?: string }>();
+    let catalogVariantsMap = new Map<number, { id: string; cover_url?: string }>();
     try {
       const supabase = createAdminServerClient();
-      const varIdsStr = variantsRaw.map((v) => String(v.id));
-      const { data: cList } = await supabase
-        .from("pp_comics")
-        .select("id, gcd_source_id, cover_url")
-        .in("gcd_source_id", varIdsStr);
-      cList?.forEach((c) => catalogVariantsMap.set(c.gcd_source_id, c));
+      const varGcdInts = variantsRaw.map((v) => Number(v.id)).filter((n) => Number.isInteger(n) && n > 0);
+      if (varGcdInts.length > 0) {
+        const { data: cList } = await supabase
+          .from("pp_comics")
+          .select("id, gcd_issue_id, cover_url")
+          .in("gcd_issue_id", varGcdInts);
+        cList?.forEach((c: any) => {
+          if (c.gcd_issue_id != null) catalogVariantsMap.set(Number(c.gcd_issue_id), c);
+        });
+      }
     } catch (_) {}
 
     const variants: GcdVariantItem[] = variantsRaw.map((v) => {
-      const cat = catalogVariantsMap.get(String(v.id));
+      const cat = catalogVariantsMap.get(Number(v.id));
       const extractedArtist = parseArtistFromVariantName(v.variant_name);
       return {
         id: v.id,
@@ -587,21 +594,23 @@ export async function getGcdRelationalData(
     }
 
     // Look up target_issue_ids in Supabase comics table
-    const foreignGcdIds = deduplicatedForeign.map((f) => String(f.target_issue_id));
-    const foreignCatalogMap = new Map<string, { id: string; cover_url?: string }>();
-    if (foreignGcdIds.length > 0) {
+    const foreignGcdInts = deduplicatedForeign.map((f) => Number(f.target_issue_id)).filter((n) => Number.isInteger(n) && n > 0);
+    const foreignCatalogMap = new Map<number, { id: string; cover_url?: string }>();
+    if (foreignGcdInts.length > 0) {
       try {
         const supabase = createAdminServerClient();
         const { data: matchedComics } = await supabase
           .from("pp_comics")
-          .select("id, gcd_source_id, cover_url")
-          .in("gcd_source_id", foreignGcdIds);
-        matchedComics?.forEach((c: any) => foreignCatalogMap.set(c.gcd_source_id, c));
+          .select("id, gcd_issue_id, cover_url")
+          .in("gcd_issue_id", foreignGcdInts);
+        matchedComics?.forEach((c: any) => {
+          if (c.gcd_issue_id != null) foreignCatalogMap.set(Number(c.gcd_issue_id), c);
+        });
       } catch (_) {}
     }
 
     const foreignEditions: GcdForeignEditionItem[] = deduplicatedForeign.map((f) => {
-      const cat = foreignCatalogMap.get(String(f.target_issue_id));
+      const cat = foreignCatalogMap.get(Number(f.target_issue_id));
       const isDomestic = f.country === "United States";
       return {
         reprintId: f.reprint_id,

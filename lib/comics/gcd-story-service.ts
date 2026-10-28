@@ -231,114 +231,77 @@ export async function resolveGcdStoryDossier(
 
   if (localDb) {
     try {
-      rawStories = localDb
-        .prepare(
-          `SELECT 
-            s.id as gcd_story_id, s.issue_id as gcd_issue_id, s.title, s.synopsis, s.characters,
-            COALESCE(NULLIF(s.script, ''), (
-              SELECT GROUP_CONCAT(cnd.name, '; ')
-              FROM gcd_story_credit sc
-              JOIN gcd_credit_type ct ON sc.credit_type_id = ct.id
-              JOIN gcd_creator_name_detail cnd ON sc.creator_id = cnd.id
-              WHERE sc.story_id = s.id AND ct.name = 'script'
-            )) as script,
-            COALESCE(NULLIF(s.pencils, ''), (
-              SELECT GROUP_CONCAT(cnd.name, '; ')
-              FROM gcd_story_credit sc
-              JOIN gcd_credit_type ct ON sc.credit_type_id = ct.id
-              JOIN gcd_creator_name_detail cnd ON sc.creator_id = cnd.id
-              WHERE sc.story_id = s.id AND ct.name = 'pencils'
-            )) as pencils,
-            COALESCE(NULLIF(s.inks, ''), (
-              SELECT GROUP_CONCAT(cnd.name, '; ')
-              FROM gcd_story_credit sc
-              JOIN gcd_credit_type ct ON sc.credit_type_id = ct.id
-              JOIN gcd_creator_name_detail cnd ON sc.creator_id = cnd.id
-              WHERE sc.story_id = s.id AND ct.name = 'inks'
-            )) as inks,
-            COALESCE(NULLIF(s.colors, ''), (
-              SELECT GROUP_CONCAT(cnd.name, '; ')
-              FROM gcd_story_credit sc
-              JOIN gcd_credit_type ct ON sc.credit_type_id = ct.id
-              JOIN gcd_creator_name_detail cnd ON sc.creator_id = cnd.id
-              WHERE sc.story_id = s.id AND ct.name = 'colors'
-            )) as colors,
-            COALESCE(NULLIF(s.letters, ''), (
-              SELECT GROUP_CONCAT(cnd.name, '; ')
-              FROM gcd_story_credit sc
-              JOIN gcd_credit_type ct ON sc.credit_type_id = ct.id
-              JOIN gcd_creator_name_detail cnd ON sc.creator_id = cnd.id
-              WHERE sc.story_id = s.id AND ct.name = 'letters'
-            )) as letters,
-            COALESCE(NULLIF(s.editing, ''), (
-              SELECT GROUP_CONCAT(cnd.name, '; ')
-              FROM gcd_issue_credit ic
-              JOIN gcd_creator_name_detail cnd ON ic.creator_id = cnd.id
-              WHERE ic.issue_id = s.issue_id
-            )) as editing,
-            s.genre, s.sequence_number, s.page_count
-           FROM gcd_story s
-           WHERE s.issue_id = ? AND s.deleted = 0 
-           ORDER BY s.sequence_number ASC`
-        )
-        .all(issueId) as any[];
+      const fetchStoriesForIssue = (targetId: number) => {
+        const stories = localDb
+          .prepare(
+            `SELECT 
+              s.id as gcd_story_id, s.issue_id as gcd_issue_id, s.title, s.synopsis, s.characters,
+              s.script, s.pencils, s.inks, s.colors, s.letters, s.editing,
+              s.genre, s.sequence_number, s.page_count
+             FROM gcd_story s
+             WHERE s.issue_id = ? AND s.deleted = 0 
+             ORDER BY s.sequence_number ASC`
+          )
+          .all(targetId) as any[];
+
+        if (!stories || stories.length === 0) return [];
+
+        const storyIds = stories.map((s) => s.gcd_story_id);
+        const placeholders = storyIds.map(() => "?").join(",");
+
+        const credits = localDb
+          .prepare(
+            `SELECT sc.story_id, ct.name as credit_type, cnd.name as creator_name
+             FROM gcd_story_credit sc
+             JOIN gcd_credit_type ct ON sc.credit_type_id = ct.id
+             JOIN gcd_creator_name_detail cnd ON sc.creator_id = cnd.id
+             WHERE sc.story_id IN (${placeholders})`
+          )
+          .all(...storyIds) as any[];
+
+        const issueCredits = localDb
+          .prepare(
+            `SELECT ic.issue_id, cnd.name as creator_name
+             FROM gcd_issue_credit ic
+             JOIN gcd_creator_name_detail cnd ON ic.creator_id = cnd.id
+             WHERE ic.issue_id = ?`
+          )
+          .all(targetId) as any[];
+
+        const creditsByStory = new Map<number, Record<string, string[]>>();
+        for (const c of credits) {
+          if (!creditsByStory.has(c.story_id)) {
+            creditsByStory.set(c.story_id, {});
+          }
+          const rec = creditsByStory.get(c.story_id)!;
+          if (!rec[c.credit_type]) rec[c.credit_type] = [];
+          rec[c.credit_type].push(c.creator_name);
+        }
+
+        const editors = issueCredits.map((c: any) => c.creator_name).join("; ");
+
+        return stories.map((s) => {
+          const sc = creditsByStory.get(s.gcd_story_id) || {};
+          return {
+            ...s,
+            script: s.script || (sc["script"] ? sc["script"].join("; ") : null),
+            pencils: s.pencils || (sc["pencils"] ? sc["pencils"].join("; ") : null),
+            inks: s.inks || (sc["inks"] ? sc["inks"].join("; ") : null),
+            colors: s.colors || (sc["colors"] ? sc["colors"].join("; ") : null),
+            letters: s.letters || (sc["letters"] ? sc["letters"].join("; ") : null),
+            editing: s.editing || editors || null,
+          };
+        });
+      };
+
+      rawStories = fetchStoriesForIssue(issueId);
 
       // If variant has 0 stories, look up parent variant_of_id
       if (rawStories.length === 0) {
         const parentRow = localDb.prepare("SELECT variant_of_id FROM gcd_issue WHERE id = ?").get(issueId) as any;
         if (parentRow && parentRow.variant_of_id) {
-          issueId = parentRow.variant_of_id;
-          rawStories = localDb
-            .prepare(
-              `SELECT 
-                s.id as gcd_story_id, s.issue_id as gcd_issue_id, s.title, s.synopsis, s.characters,
-                COALESCE(NULLIF(s.script, ''), (
-                  SELECT GROUP_CONCAT(cnd.name, '; ')
-                  FROM gcd_story_credit sc
-                  JOIN gcd_credit_type ct ON sc.credit_type_id = ct.id
-                  JOIN gcd_creator_name_detail cnd ON sc.creator_id = cnd.id
-                  WHERE sc.story_id = s.id AND ct.name = 'script'
-                )) as script,
-                COALESCE(NULLIF(s.pencils, ''), (
-                  SELECT GROUP_CONCAT(cnd.name, '; ')
-                  FROM gcd_story_credit sc
-                  JOIN gcd_credit_type ct ON sc.credit_type_id = ct.id
-                  JOIN gcd_creator_name_detail cnd ON sc.creator_id = cnd.id
-                  WHERE sc.story_id = s.id AND ct.name = 'pencils'
-                )) as pencils,
-                COALESCE(NULLIF(s.inks, ''), (
-                  SELECT GROUP_CONCAT(cnd.name, '; ')
-                  FROM gcd_story_credit sc
-                  JOIN gcd_credit_type ct ON sc.credit_type_id = ct.id
-                  JOIN gcd_creator_name_detail cnd ON sc.creator_id = cnd.id
-                  WHERE sc.story_id = s.id AND ct.name = 'inks'
-                )) as inks,
-                COALESCE(NULLIF(s.colors, ''), (
-                  SELECT GROUP_CONCAT(cnd.name, '; ')
-                  FROM gcd_story_credit sc
-                  JOIN gcd_credit_type ct ON sc.credit_type_id = ct.id
-                  JOIN gcd_creator_name_detail cnd ON sc.creator_id = cnd.id
-                  WHERE sc.story_id = s.id AND ct.name = 'colors'
-                )) as colors,
-                COALESCE(NULLIF(s.letters, ''), (
-                  SELECT GROUP_CONCAT(cnd.name, '; ')
-                  FROM gcd_story_credit sc
-                  JOIN gcd_credit_type ct ON sc.credit_type_id = ct.id
-                  JOIN gcd_creator_name_detail cnd ON sc.creator_id = cnd.id
-                  WHERE sc.story_id = s.id AND ct.name = 'letters'
-                )) as letters,
-                COALESCE(NULLIF(s.editing, ''), (
-                  SELECT GROUP_CONCAT(cnd.name, '; ')
-                  FROM gcd_issue_credit ic
-                  JOIN gcd_creator_name_detail cnd ON ic.creator_id = cnd.id
-                  WHERE ic.issue_id = s.issue_id
-                )) as editing,
-                s.genre, s.sequence_number, s.page_count
-               FROM gcd_story s
-               WHERE s.issue_id = ? AND s.deleted = 0 
-               ORDER BY s.sequence_number ASC`
-            )
-            .all(issueId) as any[];
+          issueId = Number(parentRow.variant_of_id);
+          rawStories = fetchStoriesForIssue(issueId);
         }
       }
     } catch (_) {}
