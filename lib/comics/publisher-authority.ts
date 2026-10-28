@@ -367,6 +367,73 @@ export function resolveAuthoritativePublisher(
     return "Quality Comics";
   }
 
+  // Walt Disney's Comics and Stories & Classic Disney Era Publisher Breakdown:
+  // - Dell Publishing: 1940–1962 (#1–263)
+  // - Gold Key: 1962–1984 (#264–510)
+  // - Gladstone: 1986–1990 (#511–547) and 1993–1999 (#586–633)
+  // - Disney Comics: 1990–1993 (#548–585)
+  // - Gemstone: 2003–2008 (#634–698)
+  // - Boom! Studios: 2009–2011 (#699–720)
+  // - IDW Publishing: 2015–2020 (#721–756)
+  if (/walt disney|donald duck|uncle scrooge|mickey mouse/i.test(normSeries)) {
+    if (yearNum !== null && !isNaN(yearNum)) {
+      if (yearNum >= 1940 && yearNum <= 1962) return "Dell";
+      if (yearNum > 1962 && yearNum <= 1984) return "Gold Key";
+      if ((yearNum >= 1986 && yearNum <= 1989) || (yearNum >= 1993 && yearNum <= 1999)) return "Gladstone";
+      if (yearNum >= 1990 && yearNum <= 1993) return "Disney Comics";
+      if (yearNum >= 2003 && yearNum <= 2008) return "Gemstone";
+      if (yearNum >= 2009 && yearNum <= 2011) return "Boom! Studios";
+      if (yearNum >= 2015 && yearNum <= 2020) return "IDW";
+    }
+    // If year is unknown, default classic Golden/Silver Age Disney to Dell
+    if (yearNum === null || yearNum < 1963) return "Dell";
+  }
+
+  // Dell Publishing classics (Four Color, Turok, Tarzan, Roy Rogers, Gene Autry, etc.)
+  if (
+    /\bfour color\b/i.test(normSeries) ||
+    /\bturok, son of stone\b/i.test(normSeries) ||
+    /\bspace busters\b/i.test(normSeries)
+  ) {
+    if (yearNum === null || yearNum <= 1962) return "Dell";
+    if (yearNum > 1962) return "Gold Key";
+  }
+
+  // Gold Key classics
+  if (/\bgold key\b/i.test(normSeries)) {
+    return "Gold Key";
+  }
+
+  // EC Comics (Tales from the Crypt, Vault of Horror, Haunt of Fear, Weird Science, Weird Fantasy, Panic, Shock SuspenStories, Crime SuspenStories, Two-Fisted Tales, Frontline Combat, Mad)
+  if (
+    /\b(tales from the crypt|vault of horror|haunt of fear|weird science|weird fantasy|shock suspenstories|crime suspenstories|two-fisted tales|frontline combat|incredible science fiction)\b/i.test(normSeries) ||
+    (/^\bpanic\b/i.test(normSeries) && (yearNum === null || yearNum <= 1956))
+  ) {
+    return "EC";
+  }
+
+  // Harvey Comics (Richie Rich, Casper, Wendy, Hot Stuff, Baby Huey, Little Dot, Little Lotta, Sad Sack)
+  if (
+    /\b(richie rich|casper the friendly ghost|casper|wendy the good little witch|hot stuff|baby huey|little dot|little lotta|sad sack|devil kids)\b/i.test(normSeries)
+  ) {
+    return "Harvey";
+  }
+
+  // Archie Comics (Archie, Jughead, Betty and Veronica, Pep Comics post-1945, Laugh, Life with Archie, Sabrina)
+  if (
+    /\b(archie|jughead|betty and veronica|pep comics|laugh comics|life with archie|sabrina the teenage witch)\b/i.test(normSeries)
+  ) {
+    return "Archie";
+  }
+
+  // Charlton Comics (Captain Atom, Blue Beetle 1964-1968, Peacemaker, Judomaster, Peter Cannon, Fightin' 5, Ghostly Tales)
+  if (
+    /\b(captain atom|peacemaker|judomaster|peter cannon|ghostly tales|many ghosts of dr\. graves|fightin' army|fightin' 5)\b/i.test(normSeries) &&
+    (yearNum !== null && yearNum >= 1954 && yearNum <= 1986)
+  ) {
+    return "Charlton";
+  }
+
   // Blackhawk: Quality Comics (1944-1956) vs DC (1957+)
   if (/\bblackhawk\b/i.test(normSeries)) {
     if (yearNum !== null && !isNaN(yearNum) && yearNum < 1957) return "Quality Comics";

@@ -28,6 +28,7 @@ import { getEraColors, getScarcityColors, type ScarcityTier } from "@/lib/design
 import { panelProfitsGrades } from "@/lib/pricing/source-ladder";
 import { buildComicPriceHistory, normalizeGradeLabel } from "@/lib/pricing/historical-chronology";
 import { resolvePriceTier, isDirectEdition, PREMIUM_MIN_PRICE } from "@/lib/pricing/market-tiers";
+import { resolveProductionAge } from "@/lib/equity/ticker-utils";
 import StorySummaryCard from "@/components/detail/equity/StorySummaryCard";
 import { Suspense } from "react";
 import { resolveGcdStoryDossier } from "@/lib/comics/gcd-story-service";
@@ -258,7 +259,8 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
   );
 
   const ppData = (comic.panel_profits_data ?? {}) as Record<string, any>;
-  const realEra: string | null = ppData.era || (comic as any).production_age || null;
+  const calculatedEra = comic.publication_year ? resolveProductionAge(Number(comic.publication_year)) : null;
+  const realEra: string | null = (calculatedEra && calculatedEra !== 'unknown') ? calculatedEra : (ppData.era || (comic as any).production_age || null);
   const eraColors = getEraColors(String(realEra || "modern").toLowerCase());
   const consensusFmv = Number(comic.pp_grade_9_8_price || comic.baseline_grade_9_8_value || 0);
   const candidateRawPrice = Number(
