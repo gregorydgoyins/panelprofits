@@ -5,6 +5,8 @@
  */
 import type { AssetItem } from "./types";
 import type { SurfaceKey } from "./surfaceConfig";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import {
   BOND,
   CREDIT_SPREAD_INSTITUTIONAL,
@@ -253,9 +255,173 @@ export function issueInstruments(unders: Underlying[], shocks: ShockMap = new Ma
     out.push(item("COMMODITY", i++, `$${c.id.replace(/[^a-z]/g, "").toUpperCase().slice(0, 4)}`, `${c.name} (per ${c.unit})`, `${c.universe} lore commodity`, commodityPrice(c.p0, c.demand, c.supply, c.elasticity) * marketFactor(`cm:${c.id}`, now, 0.25), { formula: "P=P0·(D/S)^ε", inputs: { p0: c.p0, demand: c.demand, supply: c.supply, elasticity: c.elasticity } }));
   }
 
+  // ── WARRANTS: Long-term Black-Scholes call contracts anchored to media catalysts ──
+  try {
+    const warrantsData = JSON.parse(readFileSync(join(process.cwd(), "data/universe/curated-warrants.json"), "utf8"));
+    let wi = 0;
+    for (const w of warrantsData) {
+      const S = Number(w.underlyingPrice);
+      if (S < 100) continue; // Minimum underlying price gate
+      const T = w.expiryDays / 365.0;
+      const r = treasuryYield(Math.min(30, Math.max(1, Math.round(T))));
+      const K = S * 1.15; // 15% OTM strike
+      const sigma = 0.35; // Term volatility
+      const bs = blackScholes(S, K, T, r, sigma);
+      if (!bs || bs.call <= 0) continue;
+      // Standardized institutional warrant unit (fractionalized entitlement)
+      const wPx = Math.max(17.0, r2(bs.call * 0.1));
+      out.push(
+        item(
+          "WARRANT",
+          wi++,
+          w.symbol,
+          w.name,
+          `${w.catalyst} · Expiry ${w.expiryDays}d · Strike $${Math.round(K).toLocaleString()} · Δ ${bs.callDelta.toFixed(2)}`,
+          wPx,
+          {
+            formula: "Warrant = Black-Scholes Call(S0, K=1.15·S0, T, r, σ=0.35) × Unit_Ratio",
+            inputs: {
+              underlying: `${w.underlyingSeries} #${w.underlyingIssue} (${w.year})`,
+              underlyingPrice: S,
+              strike: K,
+              expiryDays: w.expiryDays,
+              catalyst: w.catalyst,
+              delta: bs.callDelta,
+              gamma: bs.gamma,
+              theta: bs.callTheta / 365,
+            },
+          }
+        )
+      );
+    }
+  } catch (err) {
+    console.warn("Could not load curated warrants:", err);
+  }
+
+  // ── CANON GADGETS & LOCATIONS: Capitalized from underlying certified issues ──
+  try {
+    const glData = JSON.parse(readFileSync(join(process.cwd(), "data/universe/curated-gadgets-locations.json"), "utf8"));
+    let gi = 0;
+    let li = 0;
+    for (const gl of glData) {
+      const val = Number(gl.val);
+      if (val < 100) continue; // Strict quality gate: underlying comic must be >= $100
+      const isGadget = gl.category === "GADGET";
+      const surfaceType: SurfaceKey = isGadget ? "GADGET" : "LOCATION";
+      // Unit capitalization formula: Cap = MarketCap_Underlying · Fractional_Share
+      // Price = Cap ÷ Standard_Units, floored at $17.00
+      const unitDivisor = val > 1000000 ? 50000 : val > 100000 ? 5000 : 500;
+      const basePx = val / unitDivisor;
+      const fmvPx = Math.max(17.0, r2(basePx * marketFactor(`gl:${gl.name}`, now, 0.08)));
+      const sym = `$${gl.name.replace(/[^A-Za-z0-9]/g, "").toUpperCase().slice(0, 5)}`;
+      out.push(
+        item(
+          surfaceType,
+          isGadget ? gi++ : li++,
+          sym,
+          gl.name,
+          `${gl.universe} Canon ${isGadget ? "Artifact" : "Location"} · Debut in ${gl.first_appearance}${gl.creators ? ` · ${gl.creators}` : ""}`,
+          fmvPx,
+          {
+            formula: "Unit_Price = Underlying_FMV ÷ Capitalization_Units × Market_Texture",
+            inputs: {
+              firstAppearance: gl.first_appearance,
+              matchedSeries: gl.matched_series,
+              matchedIssue: gl.issue,
+              underlyingValuation: val,
+              creators: gl.creators,
+              universe: gl.universe,
+              capitalizationUnits: unitDivisor,
+            },
+          }
+        )
+      );
+      if (gi >= 30 && li >= 30) break;
+    }
+  } catch (err) {
+    console.warn("Could not load curated gadgets and locations:", err);
+  }
+
+  // ── INSTITUTIONAL MUNICIPAL INFRASTRUCTURE & SOVEREIGN BONDS ──
+  try {
+    const muniData = JSON.parse(readFileSync(join(process.cwd(), "data/universe/curated-munibonds.json"), "utf8"));
+    let mi = 0;
+    const RECOVERY = { MUNICIPAL_MAJ_CITY: 0.70, MUNICIPAL_REGION: 0.65 };
+    for (const mb of muniData) {
+      const R = RECOVERY[mb.muniClass as keyof typeof RECOVERY] ?? 0.70;
+      const rf = treasuryYield(mb.years);
+      const sLiq = bondLiquiditySpreadFor("OPEN", mb.years);
+      const coupon = rf + mb.hazard0 * (1 - R);
+      const yReq = requiredYield(mb.years, mb.hazard0 * (1 - R), sLiq);
+      const px = bondPrice(mb.face, coupon, yReq, mb.years);
+      out.push(
+        item(
+          "BOND",
+          mi++,
+          mb.symbol,
+          `${mb.city} ${mb.years}Y Infrastructure Bond`,
+          `${(coupon * 100).toFixed(2)}% coupon · ${mb.purpose} · Backing: $${(mb.floatCapUsd / 1e6).toFixed(0)}M`,
+          r2(px),
+          {
+            formula: "Price = Σ cP/(1+y)^k + P/(1+y)^T, y = y_rf + λ·(1−R) + s_liq",
+            inputs: {
+              city: mb.city,
+              authority: mb.authority,
+              purpose: mb.purpose,
+              backingTier: mb.backingTier,
+              floatCapUsd: mb.floatCapUsd,
+              recovery: R,
+              hazard: mb.hazard0,
+              coupon,
+              yReq,
+              years: mb.years,
+            },
+          }
+        )
+      );
+    }
+  } catch (err) {
+    console.warn("Could not load curated munibonds:", err);
+  }
+
+  // ── INDEX & THEMATIC FUNDS: Cap-weighted institutional vehicles ──
+  try {
+    const fundData = JSON.parse(readFileSync(join(process.cwd(), "data/universe/curated-funds.json"), "utf8"));
+    let fdi = 0;
+    for (const f of fundData) {
+      if (!f.constituents || f.constituents.length === 0) continue;
+      const fType: SurfaceKey = f.type === "ETF" ? "ETF" : "FUND";
+      const totalCap = Number(f.aggregateMarketCap);
+      const sharePx = Math.max(17.0, r2((totalCap / 100000) * marketFactor(`fund:${f.symbol}`, now, 0.03)));
+      out.push(
+        item(
+          fType,
+          fdi++,
+          `$${f.symbol}`,
+          f.name,
+          `${f.description} · ${f.constituentsCount} constituents · ER ${(f.expenseRatio * 100).toFixed(2)}%`,
+          sharePx,
+          {
+            formula: "NAV = Σ w_i·P_i, Share_Price = NAV / Outstanding_Units",
+            inputs: {
+              universe: f.universe,
+              expenseRatio: f.expenseRatio,
+              constituentsCount: f.constituentsCount,
+              aggregateMarketCap: totalCap,
+              topConstituents: f.constituents.slice(0, 5),
+            },
+          }
+        )
+      );
+    }
+  } catch (err) {
+    console.warn("Could not load curated funds:", err);
+  }
+
   out.push(...issueInstitutional(shocks, now));
   out.push(...issueCharacters(unders, shocks, now, census, roster, footprints, universe));
   out.push(...issuePredictions(outcomes, shocks, now));
 
-  return out;
+  // Strict quality threshold filter across all issued instruments: price must be >= $17.00
+  return out.filter((it) => (it.pricing?.fmv_usd ?? it.pricing?.price ?? 0) >= 17.00);
 }

@@ -1,0 +1,8610 @@
+[
+  {
+    "key": "bruce wayne",
+    "name": "Bruce Wayne",
+    "universe": "DC",
+    "tier": "MAJOR_ICON",
+    "issues": 9910,
+    "nav": 3355904.57,
+    "firstYear": 1939,
+    "debut": [
+      1939,
+      2316710,
+      "Detective Comics Vol 1 27"
+    ],
+    "eras": [
+      341,
+      2760451.58,
+      465,
+      505030.17,
+      855,
+      65340.27,
+      6946,
+      25082.55
+    ]
+  },
+  {
+    "key": "richard grayson",
+    "name": "Richard Grayson",
+    "universe": "DC",
+    "tier": "MAJOR_ICON",
+    "issues": 4376,
+    "nav": 2459225.36,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2316822,
+      "Detective Comics Vol 1 38"
+    ],
+    "eras": [
+      358,
+      2019271.37,
+      369,
+      408869.46,
+      368,
+      25194.69,
+      2765,
+      5889.84
+    ]
+  },
+  {
+    "key": "kal-l",
+    "name": "Kal-L",
+    "universe": "DC",
+    "tier": "MAJOR_ICON",
+    "issues": 712,
+    "nav": 2234350.21,
+    "firstYear": 1938,
+    "debut": [
+      1938,
+      2313472,
+      "Action Comics Vol 1 1"
+    ],
+    "eras": [
+      309,
+      2232999.24,
+      3,
+      313.11,
+      115,
+      842.39,
+      174,
+      195.47
+    ]
+  },
+  {
+    "key": "lois lane",
+    "name": "Lois Lane",
+    "universe": "DC",
+    "tier": "MAJOR_ICON",
+    "issues": 3634,
+    "nav": 1148493.31,
+    "firstYear": 1938,
+    "debut": [
+      1938,
+      2313472,
+      "Action Comics Vol 1 1"
+    ],
+    "eras": [
+      295,
+      879880.57,
+      395,
+      255512.93,
+      392,
+      9600.81,
+      2196,
+      3498.99
+    ]
+  },
+  {
+    "key": "kal-el",
+    "name": "Kal-El",
+    "universe": "DC",
+    "tier": "MAJOR_ICON",
+    "issues": 8507,
+    "nav": 1143595.56,
+    "firstYear": 1945,
+    "debut": [
+      1945,
+      2347803,
+      "More Fun Comics Vol 1 101"
+    ],
+    "eras": [
+      213,
+      378825.16,
+      873,
+      717874.95,
+      1045,
+      33567.86,
+      5347,
+      13327.59
+    ]
+  },
+  {
+    "key": "perry white",
+    "name": "Perry White",
+    "universe": "DC",
+    "tier": "MAJOR_ICON",
+    "issues": 1724,
+    "nav": 590474.19,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2335504,
+      "Superman Vol 1 7"
+    ],
+    "eras": [
+      225,
+      479091.91,
+      338,
+      108209.65,
+      222,
+      2048.2,
+      754,
+      1124.43
+    ]
+  },
+  {
+    "key": "diana of paradise island",
+    "name": "Diana of Paradise Island",
+    "universe": "DC",
+    "tier": "MAJOR_ICON",
+    "issues": 1062,
+    "nav": 587077.32,
+    "firstYear": 1942,
+    "debut": [
+      1942,
+      2335729,
+      "All-Star Comics Vol 1 8"
+    ],
+    "eras": [
+      261,
+      382392.9,
+      186,
+      188939.97,
+      405,
+      15488.62,
+      112,
+      255.83
+    ]
+  },
+  {
+    "key": "james gordon",
+    "name": "James Gordon",
+    "universe": "DC",
+    "tier": "MAJOR_ICON",
+    "issues": 2841,
+    "nav": 574455.28,
+    "firstYear": 1939,
+    "debut": [
+      1939,
+      2316710,
+      "Detective Comics Vol 1 27"
+    ],
+    "eras": [
+      206,
+      483710.77,
+      189,
+      74055.56,
+      327,
+      12333.83,
+      1762,
+      4355.12
+    ]
+  },
+  {
+    "key": "billy batson",
+    "name": "Billy Batson",
+    "universe": "DC",
+    "tier": "MAJOR_ICON",
+    "issues": 1356,
+    "nav": 520102.21,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2347153,
+      "Whiz Comics Vol 1 2"
+    ],
+    "eras": [
+      420,
+      517387.72,
+      0,
+      0.0,
+      49,
+      1942.29,
+      728,
+      772.19
+    ]
+  },
+  {
+    "key": "samuel bradley",
+    "name": "Samuel Bradley",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 240,
+    "nav": 352135.99,
+    "firstYear": 1937,
+    "debut": [
+      1937,
+      2317265,
+      "Detective Comics Vol 1 1"
+    ],
+    "eras": [
+      152,
+      351905.52,
+      0,
+      0.0,
+      1,
+      4.41,
+      78,
+      226.05
+    ]
+  },
+  {
+    "key": "joker",
+    "name": "Joker",
+    "universe": "DC",
+    "tier": "MAJOR_ICON",
+    "issues": 2205,
+    "nav": 352077.12,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2315821,
+      "Batman Vol 1 1"
+    ],
+    "eras": [
+      62,
+      321835.17,
+      40,
+      17828.4,
+      73,
+      7758.58,
+      1714,
+      4654.98
+    ]
+  },
+  {
+    "key": "giovanni zatara",
+    "name": "Giovanni Zatara",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 384,
+    "nav": 336870.06,
+    "firstYear": 1938,
+    "debut": [
+      1938,
+      2313472,
+      "Action Comics Vol 1 1"
+    ],
+    "eras": [
+      134,
+      335810.63,
+      5,
+      683.97,
+      17,
+      222.73,
+      153,
+      152.72
+    ]
+  },
+  {
+    "key": "barry allen",
+    "name": "Barry Allen",
+    "universe": "DC",
+    "tier": "MAJOR_ICON",
+    "issues": 2369,
+    "nav": 330783.66,
+    "firstYear": 1956,
+    "debut": [
+      1956,
+      2388748,
+      "Showcase Vol 1 4"
+    ],
+    "eras": [
+      0,
+      0.0,
+      203,
+      318150.57,
+      424,
+      11000.39,
+      1507,
+      1632.7
+    ]
+  },
+  {
+    "key": "hal jordan",
+    "name": "Hal Jordan",
+    "universe": "DC",
+    "tier": "MAJOR_ICON",
+    "issues": 2555,
+    "nav": 312592.83,
+    "firstYear": 1959,
+    "debut": [
+      1959,
+      2388729,
+      "Showcase Vol 1 22"
+    ],
+    "eras": [
+      0,
+      0.0,
+      173,
+      295252.31,
+      400,
+      14290.94,
+      1725,
+      3049.58
+    ]
+  },
+  {
+    "key": "harold thompson",
+    "name": "Harold Thompson",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 98,
+    "nav": 302235.01,
+    "firstYear": 1938,
+    "debut": [
+      1938,
+      2313472,
+      "Action Comics Vol 1 1"
+    ],
+    "eras": [
+      74,
+      302215.05,
+      0,
+      0.0,
+      2,
+      1.2,
+      17,
+      18.76
+    ]
+  },
+  {
+    "key": "bartholomew regan",
+    "name": "Bartholomew Regan",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 79,
+    "nav": 297389.22,
+    "firstYear": 1937,
+    "debut": [
+      1937,
+      2317265,
+      "Detective Comics Vol 1 1"
+    ],
+    "eras": [
+      79,
+      297389.22,
+      0,
+      0.0,
+      0,
+      0.0,
+      0,
+      0.0
+    ]
+  },
+  {
+    "key": "cyril saunders",
+    "name": "Cyril Saunders",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 80,
+    "nav": 282870.17,
+    "firstYear": 1937,
+    "debut": [
+      1937,
+      2317265,
+      "Detective Comics Vol 1 1"
+    ],
+    "eras": [
+      57,
+      282861.38,
+      0,
+      0.0,
+      0,
+      0.0,
+      19,
+      8.8
+    ]
+  },
+  {
+    "key": "marco polo",
+    "name": "Marco Polo",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 33,
+    "nav": 278600.59,
+    "firstYear": 1938,
+    "debut": [
+      1938,
+      2313472,
+      "Action Comics Vol 1 1"
+    ],
+    "eras": [
+      18,
+      278169.5,
+      1,
+      344.22,
+      3,
+      55.62,
+      9,
+      31.25
+    ]
+  },
+  {
+    "key": "cosmo",
+    "name": "Cosmo",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 46,
+    "nav": 265600.52,
+    "firstYear": 1937,
+    "debut": [
+      1937,
+      2317265,
+      "Detective Comics Vol 1 1"
+    ],
+    "eras": [
+      36,
+      263760.61,
+      5,
+      1827.47,
+      1,
+      2.66,
+      4,
+      9.79
+    ]
+  },
+  {
+    "key": "bruce nelson",
+    "name": "Bruce Nelson",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 37,
+    "nav": 262678.63,
+    "firstYear": 1937,
+    "debut": [
+      1937,
+      2317265,
+      "Detective Comics Vol 1 1"
+    ],
+    "eras": [
+      36,
+      262678.41,
+      0,
+      0.0,
+      0,
+      0.0,
+      1,
+      0.22
+    ]
+  },
+  {
+    "key": "james olsen",
+    "name": "James Olsen",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 2081,
+    "nav": 255839.88,
+    "firstYear": 1938,
+    "debut": [
+      1938,
+      2313869,
+      "Action Comics Vol 1 6"
+    ],
+    "eras": [
+      56,
+      95719.03,
+      330,
+      151935.62,
+      331,
+      6335.24,
+      1196,
+      1849.99
+    ]
+  },
+  {
+    "key": "buck marshall",
+    "name": "Buck Marshall",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 28,
+    "nav": 253508.31,
+    "firstYear": 1937,
+    "debut": [
+      1937,
+      2317265,
+      "Detective Comics Vol 1 1"
+    ],
+    "eras": [
+      28,
+      253508.31,
+      0,
+      0.0,
+      0,
+      0.0,
+      0,
+      0.0
+    ]
+  },
+  {
+    "key": "monk",
+    "name": "Monk",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 41,
+    "nav": 237618.01,
+    "firstYear": 1938,
+    "debut": [
+      1952,
+      3322883,
+      "Doll Man Vol 1 39"
+    ],
+    "eras": [
+      24,
+      234758.98,
+      6,
+      2684.12,
+      4,
+      154.13,
+      6,
+      20.79
+    ]
+  },
+  {
+    "key": "pep morgan",
+    "name": "Pep Morgan",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 60,
+    "nav": 220718.43,
+    "firstYear": 1936,
+    "debut": [
+      1936,
+      2347715,
+      "More Fun Comics Vol 1 12"
+    ],
+    "eras": [
+      59,
+      220718.43,
+      0,
+      0.0,
+      0,
+      0.0,
+      0,
+      0.0
+    ]
+  },
+  {
+    "key": "alfred beagle",
+    "name": "Alfred Beagle",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 82,
+    "nav": 217991.1,
+    "firstYear": 1943,
+    "debut": [
+      1943,
+      2315885,
+      "Batman Vol 1 16"
+    ],
+    "eras": [
+      62,
+      217027.42,
+      3,
+      939.51,
+      7,
+      20.18,
+      3,
+      3.99
+    ]
+  },
+  {
+    "key": "lee travis",
+    "name": "Lee Travis",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 175,
+    "nav": 215435.9,
+    "firstYear": 1938,
+    "debut": [
+      1938,
+      2316637,
+      "Detective Comics Vol 1 20"
+    ],
+    "eras": [
+      78,
+      215180.82,
+      0,
+      0.0,
+      17,
+      143.74,
+      66,
+      111.34
+    ]
+  },
+  {
+    "key": "william glenmorgan",
+    "name": "William Glenmorgan",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 336,
+    "nav": 194532.55,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2347758,
+      "More Fun Comics Vol 1 56"
+    ],
+    "eras": [
+      193,
+      86922.68,
+      67,
+      107409.31,
+      8,
+      153.05,
+      63,
+      47.51
+    ]
+  },
+  {
+    "key": "orin",
+    "name": "Orin",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 1435,
+    "nav": 194050.96,
+    "firstYear": 1955,
+    "debut": [
+      2011,
+      2451896,
+      "Flashpoint Vol 2 1"
+    ],
+    "eras": [
+      9,
+      12312.46,
+      208,
+      175543.72,
+      217,
+      5198.43,
+      870,
+      996.35
+    ]
+  },
+  {
+    "key": "j'onn j'onzz",
+    "name": "J'onn J'onzz",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 2289,
+    "nav": 182234.96,
+    "firstYear": 1955,
+    "debut": [
+      1955,
+      2316664,
+      "Detective Comics Vol 1 225"
+    ],
+    "eras": [
+      2,
+      12276.84,
+      188,
+      167688.98,
+      59,
+      473.64,
+      1825,
+      1795.5
+    ]
+  },
+  {
+    "key": "roy raymond, sr.",
+    "name": "Roy Raymond, Sr.",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 170,
+    "nav": 180954.32,
+    "firstYear": 1949,
+    "debut": [
+      1949,
+      2316586,
+      "Detective Comics Vol 1 153"
+    ],
+    "eras": [
+      73,
+      75586.83,
+      66,
+      105268.24,
+      9,
+      63.84,
+      17,
+      35.41
+    ]
+  },
+  {
+    "key": "oswald cobblepot",
+    "name": "Oswald Cobblepot",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 1042,
+    "nav": 170444.07,
+    "firstYear": 1941,
+    "debut": [
+      1941,
+      2317826,
+      "Detective Comics Vol 1 58"
+    ],
+    "eras": [
+      34,
+      159430.12,
+      18,
+      8770.34,
+      27,
+      497.89,
+      817,
+      1745.72
+    ]
+  },
+  {
+    "key": "gotham city police department",
+    "name": "Gotham City Police Department",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 2881,
+    "nav": 170024.27,
+    "firstYear": 1940,
+    "debut": [
+      1987,
+      2422354,
+      "Booster Gold Vol 1 14"
+    ],
+    "eras": [
+      133,
+      153927.58,
+      67,
+      10576.5,
+      155,
+      2148.8,
+      2179,
+      3371.38
+    ]
+  },
+  {
+    "key": "steven trevor",
+    "name": "Steven Trevor",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 727,
+    "nav": 165360.12,
+    "firstYear": 1942,
+    "debut": [
+      1942,
+      2335729,
+      "All-Star Comics Vol 1 8"
+    ],
+    "eras": [
+      188,
+      116659.86,
+      84,
+      47688.84,
+      99,
+      711.75,
+      322,
+      299.68
+    ]
+  },
+  {
+    "key": "oliver queen",
+    "name": "Oliver Queen",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 2302,
+    "nav": 160608.29,
+    "firstYear": 1941,
+    "debut": [
+      1941,
+      2347775,
+      "More Fun Comics Vol 1 73"
+    ],
+    "eras": [
+      167,
+      61552.83,
+      123,
+      84937.85,
+      336,
+      12096.81,
+      1342,
+      2020.79
+    ]
+  },
+  {
+    "key": "nazi party",
+    "name": "Nazi Party",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 1089,
+    "nav": 158216.76,
+    "firstYear": 1939,
+    "debut": [
+      1941,
+      2455513,
+      "National Comics Vol 1 7"
+    ],
+    "eras": [
+      348,
+      102108.98,
+      118,
+      46490.55,
+      230,
+      8998.09,
+      328,
+      619.14
+    ]
+  },
+  {
+    "key": "george taylor",
+    "name": "George Taylor",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 67,
+    "nav": 146795.43,
+    "firstYear": 1938,
+    "debut": [
+      1938,
+      2313472,
+      "Action Comics Vol 1 1"
+    ],
+    "eras": [
+      31,
+      146752.61,
+      0,
+      0.0,
+      5,
+      20.5,
+      27,
+      22.32
+    ]
+  },
+  {
+    "key": "samuel morgan",
+    "name": "Samuel Morgan",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 154,
+    "nav": 140991.33,
+    "firstYear": 1937,
+    "debut": [
+      1937,
+      2317265,
+      "Detective Comics Vol 1 1"
+    ],
+    "eras": [
+      151,
+      140989.38,
+      0,
+      0.0,
+      0,
+      0.0,
+      1,
+      1.95
+    ]
+  },
+  {
+    "key": "easy company",
+    "name": "Easy Company",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 447,
+    "nav": 138109.24,
+    "firstYear": 1954,
+    "debut": null,
+    "eras": [
+      1,
+      118.48,
+      139,
+      130909.33,
+      201,
+      6890.85,
+      86,
+      190.58
+    ]
+  },
+  {
+    "key": "sheriff",
+    "name": "Sheriff",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 83,
+    "nav": 133053.49,
+    "firstYear": 1936,
+    "debut": [
+      1940,
+      2335959,
+      "Flash Comics Vol 1 1"
+    ],
+    "eras": [
+      58,
+      131993.05,
+      5,
+      803.36,
+      11,
+      232.24,
+      7,
+      24.85
+    ]
+  },
+  {
+    "key": "selina kyle",
+    "name": "Selina Kyle",
+    "universe": "DC",
+    "tier": "MAJOR_ICON",
+    "issues": 1532,
+    "nav": 129957.21,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2315821,
+      "Batman Vol 1 1"
+    ],
+    "eras": [
+      18,
+      119965.78,
+      11,
+      3483.65,
+      74,
+      1305.94,
+      1255,
+      5201.83
+    ]
+  },
+  {
+    "key": "thomas tomorrow",
+    "name": "Thomas Tomorrow",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 177,
+    "nav": 126410.58,
+    "firstYear": 1947,
+    "debut": [
+      1947,
+      3364671,
+      "Real Fact Comics Vol 1 6"
+    ],
+    "eras": [
+      87,
+      46330.37,
+      46,
+      80059.2,
+      3,
+      15.98,
+      13,
+      5.03
+    ]
+  },
+  {
+    "key": "frank",
+    "name": "Frank",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 144,
+    "nav": 124670.79,
+    "firstYear": 1937,
+    "debut": null,
+    "eras": [
+      10,
+      123476.99,
+      10,
+      641.54,
+      43,
+      453.44,
+      70,
+      98.82
+    ]
+  },
+  {
+    "key": "spike",
+    "name": "Spike",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 94,
+    "nav": 119712.43,
+    "firstYear": 1935,
+    "debut": null,
+    "eras": [
+      77,
+      119502.12,
+      1,
+      179.63,
+      1,
+      5.03,
+      12,
+      25.65
+    ]
+  },
+  {
+    "key": "smugglers",
+    "name": "Smugglers",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 28,
+    "nav": 118895.26,
+    "firstYear": 1939,
+    "debut": null,
+    "eras": [
+      8,
+      114777.09,
+      5,
+      4059.34,
+      3,
+      54.37,
+      6,
+      4.47
+    ]
+  },
+  {
+    "key": "torchy todd",
+    "name": "Torchy Todd",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 91,
+    "nav": 116338.59,
+    "firstYear": 1946,
+    "debut": [
+      1946,
+      3322896,
+      "Doll Man Vol 1 8"
+    ],
+    "eras": [
+      90,
+      116338.59,
+      0,
+      0.0,
+      0,
+      0.0,
+      0,
+      0.0
+    ]
+  },
+  {
+    "key": "tong",
+    "name": "Tong",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 31,
+    "nav": 110202.91,
+    "firstYear": 1938,
+    "debut": [
+      1938,
+      2313472,
+      "Action Comics Vol 1 1"
+    ],
+    "eras": [
+      26,
+      110089.51,
+      1,
+      112.33,
+      0,
+      0.0,
+      2,
+      1.08
+    ]
+  },
+  {
+    "key": "jason garrick",
+    "name": "Jason Garrick",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 1414,
+    "nav": 109555.77,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2335959,
+      "Flash Comics Vol 1 1"
+    ],
+    "eras": [
+      208,
+      96506.02,
+      15,
+      9415.17,
+      122,
+      2776.98,
+      955,
+      857.59
+    ]
+  },
+  {
+    "key": "chief",
+    "name": "Chief",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 57,
+    "nav": 105778.53,
+    "firstYear": 1937,
+    "debut": null,
+    "eras": [
+      29,
+      105557.69,
+      6,
+      146.28,
+      4,
+      30.67,
+      15,
+      43.9
+    ]
+  },
+  {
+    "key": "butch",
+    "name": "Butch",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 71,
+    "nav": 97186.62,
+    "firstYear": 1936,
+    "debut": [
+      1938,
+      2313472,
+      "Action Comics Vol 1 1"
+    ],
+    "eras": [
+      59,
+      97154.54,
+      1,
+      17.6,
+      3,
+      12.6,
+      4,
+      1.88
+    ]
+  },
+  {
+    "key": "alexei luthor",
+    "name": "Alexei Luthor",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 69,
+    "nav": 95159.86,
+    "firstYear": 1937,
+    "debut": [
+      1940,
+      2335447,
+      "Superman Vol 1 4"
+    ],
+    "eras": [
+      43,
+      95111.78,
+      0,
+      0.0,
+      14,
+      47.4,
+      3,
+      0.68
+    ]
+  },
+  {
+    "key": "alan scott",
+    "name": "Alan Scott",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 1400,
+    "nav": 93527.02,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2335867,
+      "All-American Comics Vol 1 16"
+    ],
+    "eras": [
+      197,
+      87597.8,
+      18,
+      3884.84,
+      130,
+      1268.37,
+      937,
+      776.01
+    ]
+  },
+  {
+    "key": "lana lang",
+    "name": "Lana Lang",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 1017,
+    "nav": 91856.73,
+    "firstYear": 1950,
+    "debut": [
+      1950,
+      2405234,
+      "Superboy Vol 1 10"
+    ],
+    "eras": [
+      65,
+      34203.79,
+      266,
+      55483.41,
+      219,
+      1521.81,
+      389,
+      647.73
+    ]
+  },
+  {
+    "key": "iris west",
+    "name": "Iris West",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 582,
+    "nav": 91784.52,
+    "firstYear": 1956,
+    "debut": [
+      1956,
+      2388748,
+      "Showcase Vol 1 4"
+    ],
+    "eras": [
+      0,
+      0.0,
+      92,
+      89090.82,
+      113,
+      2328.08,
+      338,
+      365.62
+    ]
+  },
+  {
+    "key": "justice league of america",
+    "name": "Justice League of America",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 1695,
+    "nav": 88356.96,
+    "firstYear": 1960,
+    "debut": [
+      1960,
+      5067751,
+      "The Brave and the Bold Vol 1 28"
+    ],
+    "eras": [
+      0,
+      0.0,
+      108,
+      80359.01,
+      320,
+      6808.16,
+      1106,
+      1189.79
+    ]
+  },
+  {
+    "key": "kara zor-el",
+    "name": "Kara Zor-El",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 1656,
+    "nav": 87590.05,
+    "firstYear": 1959,
+    "debut": [
+      1959,
+      2313629,
+      "Action Comics Vol 1 252"
+    ],
+    "eras": [
+      0,
+      0.0,
+      216,
+      78656.73,
+      207,
+      6936.89,
+      1102,
+      1996.43
+    ]
+  },
+  {
+    "key": "sandra knight",
+    "name": "Sandra Knight",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 176,
+    "nav": 87034.98,
+    "firstYear": 1941,
+    "debut": [
+      1941,
+      2433358,
+      "Police Comics Vol 1 1"
+    ],
+    "eras": [
+      47,
+      86795.01,
+      0,
+      0.0,
+      43,
+      216.73,
+      71,
+      23.24
+    ]
+  },
+  {
+    "key": "oswald loomis",
+    "name": "Oswald Loomis",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 118,
+    "nav": 87003.98,
+    "firstYear": 1942,
+    "debut": [
+      1942,
+      2313812,
+      "Action Comics Vol 1 51"
+    ],
+    "eras": [
+      30,
+      86895.55,
+      0,
+      0.0,
+      5,
+      27.3,
+      63,
+      81.13
+    ]
+  },
+  {
+    "key": "challengers of the unknown",
+    "name": "Challengers of the Unknown",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 249,
+    "nav": 86285.85,
+    "firstYear": 1957,
+    "debut": [
+      1957,
+      2388770,
+      "Showcase Vol 1 6"
+    ],
+    "eras": [
+      0,
+      0.0,
+      77,
+      85344.25,
+      26,
+      815.65,
+      129,
+      125.95
+    ]
+  },
+  {
+    "key": "carter hall",
+    "name": "Carter Hall",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 1166,
+    "nav": 85268.15,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2335959,
+      "Flash Comics Vol 1 1"
+    ],
+    "eras": [
+      147,
+      83010.78,
+      12,
+      895.77,
+      108,
+      706.14,
+      813,
+      655.46
+    ]
+  },
+  {
+    "key": "wing how",
+    "name": "Wing How",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 129,
+    "nav": 82746.33,
+    "firstYear": 1938,
+    "debut": [
+      1938,
+      2316637,
+      "Detective Comics Vol 1 20"
+    ],
+    "eras": [
+      72,
+      82592.07,
+      0,
+      0.0,
+      11,
+      108.18,
+      37,
+      46.08
+    ]
+  },
+  {
+    "key": "franklin rock",
+    "name": "Franklin Rock",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 518,
+    "nav": 82527.61,
+    "firstYear": 1959,
+    "debut": [
+      1959,
+      2409976,
+      "Our Army at War Vol 1 81"
+    ],
+    "eras": [
+      0,
+      0.0,
+      140,
+      73222.91,
+      215,
+      8840.25,
+      136,
+      464.46
+    ]
+  },
+  {
+    "key": "john kent",
+    "name": "John Kent",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 26,
+    "nav": 78282.67,
+    "firstYear": 1938,
+    "debut": [
+      1939,
+      2335262,
+      "Superman Vol 1 1"
+    ],
+    "eras": [
+      13,
+      78234.6,
+      1,
+      26.03,
+      3,
+      8.09,
+      6,
+      13.96
+    ]
+  },
+  {
+    "key": "lawrence steele",
+    "name": "Lawrence Steele",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 47,
+    "nav": 78269.04,
+    "firstYear": 1937,
+    "debut": [
+      1937,
+      2317270,
+      "Detective Comics Vol 1 5"
+    ],
+    "eras": [
+      47,
+      78269.04,
+      0,
+      0.0,
+      0,
+      0.0,
+      0,
+      0.0
+    ]
+  },
+  {
+    "key": "john thunder",
+    "name": "John Thunder",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 346,
+    "nav": 77995.84,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2335959,
+      "Flash Comics Vol 1 1"
+    ],
+    "eras": [
+      129,
+      76992.71,
+      5,
+      664.32,
+      47,
+      220.53,
+      138,
+      118.28
+    ]
+  },
+  {
+    "key": "carol ferris",
+    "name": "Carol Ferris",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 495,
+    "nav": 75672.9,
+    "firstYear": 1959,
+    "debut": [
+      1959,
+      2388729,
+      "Showcase Vol 1 22"
+    ],
+    "eras": [
+      0,
+      0.0,
+      51,
+      73994.14,
+      80,
+      1128.11,
+      317,
+      550.64
+    ]
+  },
+  {
+    "key": "pete",
+    "name": "Pete",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 187,
+    "nav": 75455.62,
+    "firstYear": 1936,
+    "debut": [
+      1971,
+      2317286,
+      "Detective Comics Vol 1 418"
+    ],
+    "eras": [
+      83,
+      61168.33,
+      28,
+      13855.22,
+      25,
+      402.04,
+      38,
+      30.03
+    ]
+  },
+  {
+    "key": "gregory sanders",
+    "name": "Gregory Sanders",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 262,
+    "nav": 74370.08,
+    "firstYear": 1941,
+    "debut": [
+      1941,
+      2313802,
+      "Action Comics Vol 1 42"
+    ],
+    "eras": [
+      176,
+      73976.41,
+      0,
+      0.0,
+      26,
+      369.23,
+      44,
+      24.43
+    ]
+  },
+  {
+    "key": "karen duncan",
+    "name": "Karen Duncan",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 143,
+    "nav": 72364.59,
+    "firstYear": 1949,
+    "debut": [
+      1949,
+      2316586,
+      "Detective Comics Vol 1 153"
+    ],
+    "eras": [
+      73,
+      30234.73,
+      66,
+      42107.3,
+      3,
+      20.24,
+      1,
+      2.32
+    ]
+  },
+  {
+    "key": "jonathan kent",
+    "name": "Jonathan Kent",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 1090,
+    "nav": 72055.99,
+    "firstYear": 1945,
+    "debut": [
+      1945,
+      2347803,
+      "More Fun Comics Vol 1 101"
+    ],
+    "eras": [
+      65,
+      19285.44,
+      199,
+      50971.49,
+      96,
+      963.21,
+      619,
+      835.85
+    ]
+  },
+  {
+    "key": "adam strange",
+    "name": "Adam Strange",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 466,
+    "nav": 71991.58,
+    "firstYear": 1958,
+    "debut": [
+      1958,
+      2388723,
+      "Showcase Vol 1 17"
+    ],
+    "eras": [
+      0,
+      0.0,
+      60,
+      70582.62,
+      42,
+      1072.88,
+      316,
+      336.08
+    ]
+  },
+  {
+    "key": "daniel garret",
+    "name": "Daniel Garret",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 107,
+    "nav": 71703.27,
+    "firstYear": 1939,
+    "debut": [
+      1939,
+      2520166,
+      "Mystery Men Comics Vol 1 1"
+    ],
+    "eras": [
+      105,
+      71697.74,
+      1,
+      5.53,
+      0,
+      0.0,
+      0,
+      0.0
+    ]
+  },
+  {
+    "key": "aztar",
+    "name": "Aztar",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 708,
+    "nav": 71162.49,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2347754,
+      "More Fun Comics Vol 1 52"
+    ],
+    "eras": [
+      73,
+      60262.41,
+      17,
+      8389.15,
+      53,
+      1131.48,
+      509,
+      1379.45
+    ]
+  },
+  {
+    "key": "boy commandos",
+    "name": "Boy Commandos",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 170,
+    "nav": 70223.82,
+    "firstYear": 1942,
+    "debut": [
+      1942,
+      2316989,
+      "Detective Comics Vol 1 64"
+    ],
+    "eras": [
+      124,
+      70220.51,
+      0,
+      0.0,
+      0,
+      0.0,
+      10,
+      3.32
+    ]
+  },
+  {
+    "key": "joe",
+    "name": "Joe",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 342,
+    "nav": 69931.48,
+    "firstYear": 1936,
+    "debut": [
+      1962,
+      2388747,
+      "Showcase Vol 1 39"
+    ],
+    "eras": [
+      176,
+      56432.13,
+      49,
+      12977.52,
+      22,
+      436.34,
+      70,
+      85.48
+    ]
+  },
+  {
+    "key": "thaddeus sivana",
+    "name": "Thaddeus Sivana",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 222,
+    "nav": 67777.21,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2347153,
+      "Whiz Comics Vol 1 2"
+    ],
+    "eras": [
+      126,
+      67387.2,
+      0,
+      0.0,
+      18,
+      301.77,
+      57,
+      88.25
+    ]
+  },
+  {
+    "key": "richard starr",
+    "name": "Richard Starr",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 75,
+    "nav": 67316.39,
+    "firstYear": 1958,
+    "debut": [
+      1958,
+      2388721,
+      "Showcase Vol 1 15"
+    ],
+    "eras": [
+      0,
+      0.0,
+      55,
+      67301.01,
+      3,
+      10.64,
+      13,
+      4.74
+    ]
+  },
+  {
+    "key": "martha clark",
+    "name": "Martha Clark",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 1001,
+    "nav": 67214.2,
+    "firstYear": 1945,
+    "debut": [
+      1945,
+      2347803,
+      "More Fun Comics Vol 1 101"
+    ],
+    "eras": [
+      58,
+      18085.21,
+      191,
+      47392.78,
+      88,
+      934.86,
+      557,
+      801.36
+    ]
+  },
+  {
+    "key": "hop harrigan",
+    "name": "Hop Harrigan",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 156,
+    "nav": 65054.91,
+    "firstYear": 1939,
+    "debut": [
+      1939,
+      2335852,
+      "All-American Comics Vol 1 1"
+    ],
+    "eras": [
+      144,
+      65053.2,
+      0,
+      0.0,
+      0,
+      0.0,
+      7,
+      1.71
+    ]
+  },
+  {
+    "key": "jor-l",
+    "name": "Jor-L",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 29,
+    "nav": 64886.23,
+    "firstYear": 1938,
+    "debut": null,
+    "eras": [
+      17,
+      64839.49,
+      0,
+      0.0,
+      5,
+      34.37,
+      5,
+      12.37
+    ]
+  },
+  {
+    "key": "etta candy",
+    "name": "Etta Candy",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 429,
+    "nav": 64438.94,
+    "firstYear": 1942,
+    "debut": [
+      1942,
+      2336092,
+      "Sensation Comics Vol 1 2"
+    ],
+    "eras": [
+      135,
+      62816.07,
+      6,
+      945.01,
+      57,
+      346.62,
+      216,
+      331.25
+    ]
+  },
+  {
+    "key": "alfred pennyworth",
+    "name": "Alfred Pennyworth",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 2878,
+    "nav": 63668.86,
+    "firstYear": 1955,
+    "debut": [
+      1955,
+      2316387,
+      "Batman Vol 1 92"
+    ],
+    "eras": [
+      2,
+      10416.5,
+      93,
+      39699.14,
+      290,
+      9026.88,
+      2139,
+      4526.33
+    ]
+  },
+  {
+    "key": "joe chill",
+    "name": "Joe Chill",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 30,
+    "nav": 62566.74,
+    "firstYear": 1939,
+    "debut": [
+      1939,
+      2317281,
+      "Detective Comics Vol 1 33"
+    ],
+    "eras": [
+      4,
+      62298.43,
+      1,
+      212.54,
+      2,
+      30.69,
+      17,
+      25.08
+    ]
+  },
+  {
+    "key": "betty",
+    "name": "Betty",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 65,
+    "nav": 62547.74,
+    "firstYear": 1935,
+    "debut": null,
+    "eras": [
+      41,
+      61901.0,
+      6,
+      555.67,
+      2,
+      84.66,
+      10,
+      6.41
+    ]
+  },
+  {
+    "key": "lawrence jordan",
+    "name": "Lawrence Jordan",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 104,
+    "nav": 60488.4,
+    "firstYear": 1942,
+    "debut": [
+      1942,
+      2316946,
+      "Detective Comics Vol 1 60"
+    ],
+    "eras": [
+      78,
+      60453.44,
+      0,
+      0.0,
+      7,
+      27.91,
+      16,
+      7.05
+    ]
+  },
+  {
+    "key": "hippolyta",
+    "name": "Hippolyta",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 854,
+    "nav": 60425.84,
+    "firstYear": 1942,
+    "debut": [
+      1958,
+      2347516,
+      "Wonder Woman Vol 1 98"
+    ],
+    "eras": [
+      70,
+      42161.12,
+      70,
+      16611.0,
+      87,
+      1027.49,
+      556,
+      626.23
+    ]
+  },
+  {
+    "key": "roy harper",
+    "name": "Roy Harper",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 1400,
+    "nav": 60418.49,
+    "firstYear": 1941,
+    "debut": [
+      1941,
+      2347775,
+      "More Fun Comics Vol 1 73"
+    ],
+    "eras": [
+      165,
+      27305.67,
+      62,
+      30483.4,
+      69,
+      1924.64,
+      884,
+      704.79
+    ]
+  },
+  {
+    "key": "hassan",
+    "name": "Hassan",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 33,
+    "nav": 59816.86,
+    "firstYear": 1938,
+    "debut": null,
+    "eras": [
+      21,
+      59689.72,
+      1,
+      110.74,
+      0,
+      0.0,
+      11,
+      16.4
+    ]
+  },
+  {
+    "key": "imperial japan",
+    "name": "Imperial Japan",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 443,
+    "nav": 57884.65,
+    "firstYear": 1939,
+    "debut": [
+      1942,
+      2520514,
+      "Military Comics Vol 1 9"
+    ],
+    "eras": [
+      265,
+      38778.02,
+      53,
+      14444.45,
+      89,
+      4605.27,
+      30,
+      56.91
+    ]
+  },
+  {
+    "key": "robert",
+    "name": "Robert",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 25,
+    "nav": 57591.24,
+    "firstYear": 1936,
+    "debut": [
+      1990,
+      3398973,
+      "Batman: Legends of the Dark Knight Vol 1 6"
+    ],
+    "eras": [
+      6,
+      57550.33,
+      0,
+      0.0,
+      2,
+      30.37,
+      15,
+      10.53
+    ]
+  },
+  {
+    "key": "albert pratt",
+    "name": "Albert Pratt",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 509,
+    "nav": 56776.71,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2335870,
+      "All-American Comics Vol 1 19"
+    ],
+    "eras": [
+      121,
+      54443.82,
+      11,
+      1246.84,
+      68,
+      931.51,
+      259,
+      154.54
+    ]
+  },
+  {
+    "key": "wesley dodds",
+    "name": "Wesley Dodds",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 532,
+    "nav": 55772.92,
+    "firstYear": 1939,
+    "debut": null,
+    "eras": [
+      86,
+      54770.09,
+      5,
+      337.96,
+      42,
+      325.09,
+      362,
+      339.79
+    ]
+  },
+  {
+    "key": "kent nelson",
+    "name": "Kent Nelson",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 751,
+    "nav": 55475.95,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2347757,
+      "More Fun Comics Vol 1 55"
+    ],
+    "eras": [
+      62,
+      50660.09,
+      16,
+      3660.93,
+      113,
+      847.19,
+      491,
+      307.73
+    ]
+  },
+  {
+    "key": "blackhawk squadron",
+    "name": "Blackhawk Squadron",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 422,
+    "nav": 55253.7,
+    "firstYear": 1941,
+    "debut": [
+      1941,
+      2520473,
+      "Military Comics Vol 1 1"
+    ],
+    "eras": [
+      189,
+      17496.21,
+      143,
+      37371.61,
+      37,
+      357.66,
+      43,
+      28.22
+    ]
+  },
+  {
+    "key": "frederick freeman",
+    "name": "Frederick Freeman",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 638,
+    "nav": 54776.08,
+    "firstYear": 1941,
+    "debut": [
+      1941,
+      2347276,
+      "Whiz Comics Vol 1 25"
+    ],
+    "eras": [
+      331,
+      54148.09,
+      0,
+      0.0,
+      31,
+      491.82,
+      229,
+      136.17
+    ]
+  },
+  {
+    "key": "his gang",
+    "name": "His gang",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 234,
+    "nav": 54765.15,
+    "firstYear": 1936,
+    "debut": null,
+    "eras": [
+      195,
+      52680.11,
+      26,
+      2017.99,
+      1,
+      67.05,
+      0,
+      0.0
+    ]
+  },
+  {
+    "key": "winslow schott",
+    "name": "Winslow Schott",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 166,
+    "nav": 54575.17,
+    "firstYear": 1943,
+    "debut": [
+      1943,
+      2313875,
+      "Action Comics Vol 1 64"
+    ],
+    "eras": [
+      11,
+      54106.83,
+      1,
+      153.8,
+      8,
+      126.31,
+      118,
+      188.23
+    ]
+  },
+  {
+    "key": "w:c:pdsh::green mask (i)",
+    "name": "w:c:pdsh::Green Mask (I)",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 27,
+    "nav": 54372.96,
+    "firstYear": 1939,
+    "debut": null,
+    "eras": [
+      27,
+      54372.96,
+      0,
+      0.0,
+      0,
+      0.0,
+      0,
+      0.0
+    ]
+  },
+  {
+    "key": "mademoiselle marie",
+    "name": "Mademoiselle Marie",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 33,
+    "nav": 51375.23,
+    "firstYear": 1959,
+    "debut": [
+      1959,
+      2415899,
+      "Star-Spangled War Stories Vol 1 84"
+    ],
+    "eras": [
+      0,
+      0.0,
+      18,
+      51280.97,
+      10,
+      91.53,
+      2,
+      2.74
+    ]
+  },
+  {
+    "key": "robert crane",
+    "name": "Robert Crane",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 253,
+    "nav": 51041.09,
+    "firstYear": 1942,
+    "debut": [
+      1942,
+      2421833,
+      "Star-Spangled Comics Vol 1 7"
+    ],
+    "eras": [
+      136,
+      50772.61,
+      0,
+      0.0,
+      49,
+      217.33,
+      59,
+      51.15
+    ]
+  },
+  {
+    "key": "charles mcnider",
+    "name": "Charles McNider",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 445,
+    "nav": 50541.77,
+    "firstYear": 1941,
+    "debut": [
+      1941,
+      2335876,
+      "All-American Comics Vol 1 25"
+    ],
+    "eras": [
+      129,
+      49023.73,
+      13,
+      908.75,
+      82,
+      467.39,
+      195,
+      141.89
+    ]
+  },
+  {
+    "key": "garth",
+    "name": "Garth",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 705,
+    "nav": 50375.38,
+    "firstYear": 1940,
+    "debut": [
+      2004,
+      7323510,
+      "DC: The New Frontier Vol 1 6"
+    ],
+    "eras": [
+      2,
+      56.38,
+      100,
+      48964.41,
+      53,
+      983.88,
+      479,
+      370.71
+    ]
+  },
+  {
+    "key": "carter nichols",
+    "name": "Carter Nichols",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 48,
+    "nav": 49419.05,
+    "firstYear": 1944,
+    "debut": [
+      1944,
+      2317821,
+      "Batman Vol 1 24"
+    ],
+    "eras": [
+      21,
+      44518.09,
+      9,
+      4888.74,
+      4,
+      7.12,
+      5,
+      5.09
+    ]
+  },
+  {
+    "key": "gangsters",
+    "name": "Gangsters",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 48,
+    "nav": 48868.29,
+    "firstYear": 1939,
+    "debut": null,
+    "eras": [
+      23,
+      44409.26,
+      10,
+      4113.62,
+      7,
+      336.31,
+      5,
+      9.1
+    ]
+  },
+  {
+    "key": "hugo strange",
+    "name": "Hugo Strange",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 183,
+    "nav": 48621.55,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2317284,
+      "Detective Comics Vol 1 36"
+    ],
+    "eras": [
+      3,
+      48034.79,
+      0,
+      0.0,
+      16,
+      223.04,
+      148,
+      363.71
+    ]
+  },
+  {
+    "key": "martians (generic species)",
+    "name": "Martians (generic species)",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 108,
+    "nav": 48450.26,
+    "firstYear": 1939,
+    "debut": null,
+    "eras": [
+      66,
+      39736.56,
+      35,
+      8699.26,
+      2,
+      13.49,
+      4,
+      0.95
+    ]
+  },
+  {
+    "key": "holliday girls",
+    "name": "Holliday Girls",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 141,
+    "nav": 48084.24,
+    "firstYear": 1942,
+    "debut": [
+      1960,
+      2347326,
+      "Wonder Woman Vol 1 117"
+    ],
+    "eras": [
+      115,
+      45939.27,
+      7,
+      1951.65,
+      4,
+      186.81,
+      11,
+      6.52
+    ]
+  },
+  {
+    "key": "raymond palmer",
+    "name": "Raymond Palmer",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 994,
+    "nav": 47861.24,
+    "firstYear": 1961,
+    "debut": [
+      1961,
+      2388742,
+      "Showcase Vol 1 34"
+    ],
+    "eras": [
+      0,
+      0.0,
+      122,
+      44388.66,
+      182,
+      3058.52,
+      621,
+      414.06
+    ]
+  },
+  {
+    "key": "captain harding",
+    "name": "Captain Harding",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 73,
+    "nav": 47402.11,
+    "firstYear": 1956,
+    "debut": [
+      1956,
+      2316667,
+      "Detective Comics Vol 1 228"
+    ],
+    "eras": [
+      0,
+      0.0,
+      71,
+      47398.78,
+      1,
+      3.33,
+      0,
+      0.0
+    ]
+  },
+  {
+    "key": "scribbly jibbet",
+    "name": "Scribbly Jibbet",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 88,
+    "nav": 46852.79,
+    "firstYear": 1939,
+    "debut": [
+      1939,
+      2335852,
+      "All-American Comics Vol 1 1"
+    ],
+    "eras": [
+      80,
+      46791.18,
+      2,
+      53.92,
+      0,
+      0.0,
+      3,
+      7.7
+    ]
+  },
+  {
+    "key": "alexis luthor",
+    "name": "Alexis Luthor",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 314,
+    "nav": 45760.07,
+    "firstYear": 1954,
+    "debut": [
+      1954,
+      2313573,
+      "Action Comics Vol 1 199"
+    ],
+    "eras": [
+      5,
+      5396.08,
+      123,
+      38788.91,
+      118,
+      1510.8,
+      21,
+      64.28
+    ]
+  },
+  {
+    "key": "metropolis police department",
+    "name": "Metropolis Police Department",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 797,
+    "nav": 45285.04,
+    "firstYear": 1939,
+    "debut": [
+      1987,
+      2422354,
+      "Booster Gold Vol 1 14"
+    ],
+    "eras": [
+      96,
+      35370.55,
+      87,
+      8948.93,
+      130,
+      475.68,
+      415,
+      489.87
+    ]
+  },
+  {
+    "key": "janu",
+    "name": "Janu",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 91,
+    "nav": 44079.45,
+    "firstYear": 1954,
+    "debut": [
+      1954,
+      2313565,
+      "Action Comics Vol 1 191"
+    ],
+    "eras": [
+      28,
+      10989.94,
+      56,
+      33068.33,
+      2,
+      19.01,
+      5,
+      2.17
+    ]
+  },
+  {
+    "key": "aquaman",
+    "name": "Aquaman",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 187,
+    "nav": 43811.24,
+    "firstYear": 1941,
+    "debut": [
+      1941,
+      2347775,
+      "More Fun Comics Vol 1 73"
+    ],
+    "eras": [
+      132,
+      43769.2,
+      0,
+      0.0,
+      3,
+      14.14,
+      42,
+      27.9
+    ]
+  },
+  {
+    "key": "new york city police department",
+    "name": "New York City Police Department",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 426,
+    "nav": 43739.58,
+    "firstYear": 1938,
+    "debut": [
+      1939,
+      2316710,
+      "Detective Comics Vol 1 27"
+    ],
+    "eras": [
+      38,
+      42917.7,
+      4,
+      79.88,
+      65,
+      459.55,
+      274,
+      282.45
+    ]
+  },
+  {
+    "key": "radio squad",
+    "name": "Radio Squad",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 73,
+    "nav": 43002.23,
+    "firstYear": 1936,
+    "debut": [
+      1936,
+      2347714,
+      "More Fun Comics Vol 1 11"
+    ],
+    "eras": [
+      73,
+      43002.23,
+      0,
+      0.0,
+      0,
+      0.0,
+      0,
+      0.0
+    ]
+  },
+  {
+    "key": "matthew ryan",
+    "name": "Matthew Ryan",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 190,
+    "nav": 42883.02,
+    "firstYear": 1957,
+    "debut": [
+      1957,
+      2388770,
+      "Showcase Vol 1 6"
+    ],
+    "eras": [
+      0,
+      0.0,
+      76,
+      42435.74,
+      26,
+      407.83,
+      77,
+      39.46
+    ]
+  },
+  {
+    "key": "lester davis",
+    "name": "Lester Davis",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 200,
+    "nav": 42872.14,
+    "firstYear": 1957,
+    "debut": [
+      1957,
+      2388770,
+      "Showcase Vol 1 6"
+    ],
+    "eras": [
+      0,
+      0.0,
+      77,
+      42422.23,
+      25,
+      406.48,
+      84,
+      43.43
+    ]
+  },
+  {
+    "key": "kyle morgan",
+    "name": "Kyle Morgan",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 190,
+    "nav": 42871.87,
+    "firstYear": 1957,
+    "debut": [
+      1957,
+      2388770,
+      "Showcase Vol 1 6"
+    ],
+    "eras": [
+      0,
+      0.0,
+      76,
+      42412.29,
+      25,
+      407.7,
+      76,
+      51.87
+    ]
+  },
+  {
+    "key": "walter haley",
+    "name": "Walter Haley",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 191,
+    "nav": 42859.73,
+    "firstYear": 1957,
+    "debut": [
+      1957,
+      2388770,
+      "Showcase Vol 1 6"
+    ],
+    "eras": [
+      0,
+      0.0,
+      76,
+      42412.29,
+      25,
+      406.48,
+      78,
+      40.96
+    ]
+  },
+  {
+    "key": "jon valor",
+    "name": "Jon Valor",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 102,
+    "nav": 42443.94,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2313604,
+      "Action Comics Vol 1 23"
+    ],
+    "eras": [
+      78,
+      42420.78,
+      0,
+      0.0,
+      3,
+      15.64,
+      18,
+      7.52
+    ]
+  },
+  {
+    "key": "victoria vale",
+    "name": "Victoria Vale",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 226,
+    "nav": 42181.07,
+    "firstYear": 1948,
+    "debut": [
+      1948,
+      2316117,
+      "Batman Vol 1 49"
+    ],
+    "eras": [
+      20,
+      36007.07,
+      11,
+      5641.67,
+      59,
+      357.65,
+      123,
+      174.69
+    ]
+  },
+  {
+    "key": "dinosaurs",
+    "name": "Dinosaurs",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 567,
+    "nav": 40885.2,
+    "firstYear": 1935,
+    "debut": null,
+    "eras": [
+      35,
+      12640.13,
+      90,
+      27523.66,
+      41,
+      516.4,
+      354,
+      205.01
+    ]
+  },
+  {
+    "key": "mike",
+    "name": "Mike",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 192,
+    "nav": 40337.92,
+    "firstYear": 1936,
+    "debut": [
+      1989,
+      14108425,
+      "Haywire Vol 1 10"
+    ],
+    "eras": [
+      72,
+      29720.01,
+      27,
+      9680.46,
+      20,
+      876.11,
+      53,
+      61.33
+    ]
+  },
+  {
+    "key": "red, white and blue",
+    "name": "Red, White and Blue",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 90,
+    "nav": 40072.5,
+    "firstYear": 1939,
+    "debut": [
+      1939,
+      2335852,
+      "All-American Comics Vol 1 1"
+    ],
+    "eras": [
+      77,
+      40065.94,
+      0,
+      0.0,
+      0,
+      0.0,
+      6,
+      6.55
+    ]
+  },
+  {
+    "key": "katar hol",
+    "name": "Katar Hol",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 775,
+    "nav": 40072.08,
+    "firstYear": 1961,
+    "debut": [
+      1961,
+      2392123,
+      "The Brave and the Bold Vol 1 34"
+    ],
+    "eras": [
+      0,
+      0.0,
+      100,
+      36226.34,
+      212,
+      3476.3,
+      362,
+      369.44
+    ]
+  },
+  {
+    "key": "ohiyesa smith",
+    "name": "Ohiyesa Smith",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 102,
+    "nav": 39908.11,
+    "firstYear": 1949,
+    "debut": [
+      1949,
+      2316584,
+      "Detective Comics Vol 1 151"
+    ],
+    "eras": [
+      64,
+      38690.32,
+      31,
+      1164.45,
+      2,
+      48.97,
+      4,
+      4.37
+    ]
+  },
+  {
+    "key": "unknown",
+    "name": "Unknown",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 112,
+    "nav": 38728.43,
+    "firstYear": 1941,
+    "debut": [
+      1942,
+      2455462,
+      "National Comics Vol 1 23"
+    ],
+    "eras": [
+      39,
+      5665.08,
+      32,
+      30918.1,
+      12,
+      2097.27,
+      24,
+      47.97
+    ]
+  },
+  {
+    "key": "theodore knight",
+    "name": "Theodore Knight",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 396,
+    "nav": 38264.47,
+    "firstYear": 1941,
+    "debut": [
+      1941,
+      2314673,
+      "Adventure Comics Vol 1 61"
+    ],
+    "eras": [
+      58,
+      36369.79,
+      10,
+      1453.77,
+      65,
+      283.32,
+      224,
+      157.59
+    ]
+  },
+  {
+    "key": "united states army",
+    "name": "United States Army",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 864,
+    "nav": 37599.09,
+    "firstYear": 1939,
+    "debut": [
+      1986,
+      2402838,
+      "Watchmen Vol 1 1"
+    ],
+    "eras": [
+      64,
+      17425.48,
+      89,
+      18041.21,
+      112,
+      1727.27,
+      526,
+      405.14
+    ]
+  },
+  {
+    "key": "yz",
+    "name": "Yz",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 234,
+    "nav": 37389.97,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2335959,
+      "Flash Comics Vol 1 1"
+    ],
+    "eras": [
+      111,
+      37079.56,
+      2,
+      157.0,
+      19,
+      96.93,
+      79,
+      56.49
+    ]
+  },
+  {
+    "key": "jonathan chambers",
+    "name": "Jonathan Chambers",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 328,
+    "nav": 37188.77,
+    "firstYear": 1941,
+    "debut": [
+      1941,
+      2347773,
+      "More Fun Comics Vol 1 71"
+    ],
+    "eras": [
+      141,
+      36832.24,
+      0,
+      0.0,
+      52,
+      182.43,
+      124,
+      174.1
+    ]
+  },
+  {
+    "key": "krypto",
+    "name": "Krypto",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 579,
+    "nav": 36898.03,
+    "firstYear": 1955,
+    "debut": [
+      1955,
+      2314457,
+      "Adventure Comics Vol 1 210"
+    ],
+    "eras": [
+      2,
+      2995.27,
+      171,
+      33218.84,
+      34,
+      330.99,
+      317,
+      352.94
+    ]
+  },
+  {
+    "key": "wally west",
+    "name": "Wally West",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 2358,
+    "nav": 36724.67,
+    "firstYear": 1960,
+    "debut": [
+      1960,
+      2390599,
+      "The Flash Vol 1 110"
+    ],
+    "eras": [
+      0,
+      0.0,
+      56,
+      30782.06,
+      131,
+      2672.56,
+      1941,
+      3270.05
+    ]
+  },
+  {
+    "key": "paula von gunther",
+    "name": "Paula von Gunther",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 89,
+    "nav": 36720.34,
+    "firstYear": 1942,
+    "debut": [
+      1942,
+      2336094,
+      "Sensation Comics Vol 1 4"
+    ],
+    "eras": [
+      62,
+      36041.5,
+      5,
+      637.99,
+      1,
+      8.54,
+      18,
+      32.31
+    ]
+  },
+  {
+    "key": "mary batson",
+    "name": "Mary Batson",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 471,
+    "nav": 36473.04,
+    "firstYear": 1942,
+    "debut": [
+      1942,
+      2386021,
+      "Captain Marvel Adventures Vol 1 18"
+    ],
+    "eras": [
+      169,
+      35812.54,
+      0,
+      0.0,
+      29,
+      500.58,
+      229,
+      159.93
+    ]
+  },
+  {
+    "key": "justice society of america",
+    "name": "Justice Society of America",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 982,
+    "nav": 35906.36,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2335724,
+      "All-Star Comics Vol 1 3"
+    ],
+    "eras": [
+      56,
+      31009.31,
+      16,
+      2239.34,
+      137,
+      1923.44,
+      689,
+      734.26
+    ]
+  },
+  {
+    "key": "rex tyler",
+    "name": "Rex Tyler",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 410,
+    "nav": 35656.99,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2314743,
+      "Adventure Comics Vol 1 48"
+    ],
+    "eras": [
+      43,
+      31758.68,
+      9,
+      3292.73,
+      65,
+      440.0,
+      259,
+      165.57
+    ]
+  },
+  {
+    "key": "steve carson",
+    "name": "Steve Carson",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 67,
+    "nav": 35450.54,
+    "firstYear": 1936,
+    "debut": [
+      1936,
+      2385289,
+      "New Comics Vol 1 2"
+    ],
+    "eras": [
+      66,
+      35450.47,
+      0,
+      0.0,
+      0,
+      0.0,
+      1,
+      0.07
+    ]
+  },
+  {
+    "key": "daniel turpin",
+    "name": "Daniel Turpin",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 313,
+    "nav": 35332.05,
+    "firstYear": 1942,
+    "debut": [
+      1942,
+      2316989,
+      "Detective Comics Vol 1 64"
+    ],
+    "eras": [
+      124,
+      35127.02,
+      0,
+      0.0,
+      3,
+      28.66,
+      138,
+      176.37
+    ]
+  },
+  {
+    "key": "congorilla",
+    "name": "Congorilla",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 61,
+    "nav": 35042.4,
+    "firstYear": 1953,
+    "debut": [
+      1959,
+      2313624,
+      "Action Comics Vol 1 248"
+    ],
+    "eras": [
+      2,
+      44.17,
+      29,
+      34924.35,
+      6,
+      48.55,
+      23,
+      25.33
+    ]
+  },
+  {
+    "key": "joan williams",
+    "name": "Joan Williams",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 283,
+    "nav": 35029.5,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2335959,
+      "Flash Comics Vol 1 1"
+    ],
+    "eras": [
+      128,
+      28842.36,
+      5,
+      5133.64,
+      17,
+      926.41,
+      119,
+      127.1
+    ]
+  },
+  {
+    "key": "andre chavard",
+    "name": "Andre Chavard",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 155,
+    "nav": 34665.34,
+    "firstYear": 1942,
+    "debut": [
+      1942,
+      2316989,
+      "Detective Comics Vol 1 64"
+    ],
+    "eras": [
+      112,
+      34660.11,
+      0,
+      0.0,
+      0,
+      0.0,
+      8,
+      5.23
+    ]
+  },
+  {
+    "key": "amazons of paradise island",
+    "name": "Amazons of Paradise Island",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 904,
+    "nav": 34664.64,
+    "firstYear": 1942,
+    "debut": [
+      1942,
+      2335729,
+      "All-Star Comics Vol 1 8"
+    ],
+    "eras": [
+      43,
+      15549.98,
+      47,
+      16494.26,
+      87,
+      1920.46,
+      647,
+      699.95
+    ]
+  },
+  {
+    "key": "sergeant casey",
+    "name": "Sergeant Casey",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 35,
+    "nav": 34596.71,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2335493,
+      "Superman Vol 1 6"
+    ],
+    "eras": [
+      28,
+      34593.97,
+      0,
+      0.0,
+      2,
+      1.16,
+      2,
+      1.58
+    ]
+  },
+  {
+    "key": "mark compass",
+    "name": "Mark Compass",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 75,
+    "nav": 34480.4,
+    "firstYear": 1948,
+    "debut": [
+      1948,
+      2421848,
+      "Star-Spangled Comics Vol 1 83"
+    ],
+    "eras": [
+      68,
+      34477.64,
+      0,
+      0.0,
+      1,
+      1.77,
+      4,
+      1.0
+    ]
+  },
+  {
+    "key": "justin arthur",
+    "name": "Justin Arthur",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 222,
+    "nav": 33934.09,
+    "firstYear": 1941,
+    "debut": [
+      1941,
+      2314678,
+      "Adventure Comics Vol 1 66"
+    ],
+    "eras": [
+      95,
+      33669.16,
+      0,
+      0.0,
+      38,
+      207.13,
+      78,
+      57.8
+    ]
+  },
+  {
+    "key": "leonard snart",
+    "name": "Leonard Snart",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 509,
+    "nav": 33722.31,
+    "firstYear": 1957,
+    "debut": [
+      1957,
+      2388792,
+      "Showcase Vol 1 8"
+    ],
+    "eras": [
+      0,
+      0.0,
+      15,
+      32867.51,
+      40,
+      442.23,
+      403,
+      412.57
+    ]
+  },
+  {
+    "key": "ghost patrol",
+    "name": "Ghost Patrol",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 86,
+    "nav": 33263.02,
+    "firstYear": 1942,
+    "debut": [
+      1942,
+      2335986,
+      "Flash Comics Vol 1 29"
+    ],
+    "eras": [
+      75,
+      33261.01,
+      0,
+      0.0,
+      0,
+      0.0,
+      6,
+      2.0
+    ]
+  },
+  {
+    "key": "steven malone",
+    "name": "Steven Malone",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 31,
+    "nav": 33140.86,
+    "firstYear": 1938,
+    "debut": [
+      1938,
+      2316615,
+      "Detective Comics Vol 1 18"
+    ],
+    "eras": [
+      31,
+      33140.86,
+      0,
+      0.0,
+      0,
+      0.0,
+      0,
+      0.0
+    ]
+  },
+  {
+    "key": "monster men",
+    "name": "Monster Men",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 44,
+    "nav": 33032.51,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2315821,
+      "Batman Vol 1 1"
+    ],
+    "eras": [
+      1,
+      32916.15,
+      0,
+      0.0,
+      5,
+      79.08,
+      35,
+      37.29
+    ]
+  },
+  {
+    "key": "clip carson",
+    "name": "Clip Carson",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 34,
+    "nav": 32899.72,
+    "firstYear": 1939,
+    "debut": [
+      1939,
+      2314179,
+      "Action Comics Vol 1 14"
+    ],
+    "eras": [
+      32,
+      32363.25,
+      1,
+      536.47,
+      0,
+      0.0,
+      0,
+      0.0
+    ]
+  },
+  {
+    "key": "legion of super-heroes",
+    "name": "Legion of Super-Heroes",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 1142,
+    "nav": 32524.14,
+    "firstYear": 1958,
+    "debut": [
+      1958,
+      2314494,
+      "Adventure Comics Vol 1 247"
+    ],
+    "eras": [
+      0,
+      0.0,
+      135,
+      28558.13,
+      189,
+      2862.62,
+      715,
+      1103.39
+    ]
+  },
+  {
+    "key": "robert daley",
+    "name": "Robert Daley",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 52,
+    "nav": 32177.87,
+    "firstYear": 1938,
+    "debut": [
+      1938,
+      2313574,
+      "Action Comics Vol 1 2"
+    ],
+    "eras": [
+      49,
+      32173.8,
+      0,
+      0.0,
+      0,
+      0.0,
+      2,
+      4.07
+    ]
+  },
+  {
+    "key": "robin hood",
+    "name": "Robin Hood",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 123,
+    "nav": 32150.31,
+    "firstYear": 1935,
+    "debut": null,
+    "eras": [
+      36,
+      14666.03,
+      30,
+      17453.92,
+      2,
+      10.31,
+      40,
+      20.06
+    ]
+  },
+  {
+    "key": "vril dox",
+    "name": "Vril Dox",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 465,
+    "nav": 32031.45,
+    "firstYear": 1958,
+    "debut": [
+      1958,
+      2313618,
+      "Action Comics Vol 1 242"
+    ],
+    "eras": [
+      0,
+      0.0,
+      50,
+      31140.38,
+      64,
+      658.44,
+      280,
+      232.63
+    ]
+  },
+  {
+    "key": "shiera sanders",
+    "name": "Shiera Sanders",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 317,
+    "nav": 31881.11,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2335959,
+      "Flash Comics Vol 1 1"
+    ],
+    "eras": [
+      87,
+      31605.53,
+      0,
+      0.0,
+      30,
+      110.05,
+      170,
+      165.52
+    ]
+  },
+  {
+    "key": "rodney gaynor",
+    "name": "Rodney Gaynor",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 68,
+    "nav": 31645.68,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2335959,
+      "Flash Comics Vol 1 1"
+    ],
+    "eras": [
+      50,
+      31628.85,
+      0,
+      0.0,
+      1,
+      0.61,
+      12,
+      16.21
+    ]
+  },
+  {
+    "key": "captain desmo",
+    "name": "Captain Desmo",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 43,
+    "nav": 31644.43,
+    "firstYear": 1938,
+    "debut": [
+      1938,
+      3326713,
+      "New Adventure Comics Vol 1 26"
+    ],
+    "eras": [
+      42,
+      31644.34,
+      0,
+      0.0,
+      0,
+      0.0,
+      1,
+      0.1
+    ]
+  },
+  {
+    "key": "trigger",
+    "name": "Trigger",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 30,
+    "nav": 31338.38,
+    "firstYear": 1938,
+    "debut": [
+      2011,
+      2519588,
+      "Batman: Odyssey Vol 1 6"
+    ],
+    "eras": [
+      23,
+      31216.94,
+      1,
+      113.05,
+      0,
+      0.0,
+      4,
+      8.39
+    ]
+  },
+  {
+    "key": "space cabbie",
+    "name": "Space Cabbie",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 37,
+    "nav": 30920.7,
+    "firstYear": 1954,
+    "debut": [
+      1954,
+      2413826,
+      "Mystery in Space Vol 1 21"
+    ],
+    "eras": [
+      6,
+      5315.12,
+      18,
+      25580.99,
+      1,
+      1.1,
+      10,
+      23.48
+    ]
+  },
+  {
+    "key": "haunted tank unit",
+    "name": "Haunted Tank Unit",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 226,
+    "nav": 30779.2,
+    "firstYear": 1961,
+    "debut": [
+      1961,
+      2414871,
+      "G.I. Combat Vol 1 87"
+    ],
+    "eras": [
+      0,
+      0.0,
+      53,
+      23637.92,
+      149,
+      7025.17,
+      18,
+      116.1
+    ]
+  },
+  {
+    "key": "alfred twidgett",
+    "name": "Alfred Twidgett",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 128,
+    "nav": 30421.39,
+    "firstYear": 1942,
+    "debut": [
+      1942,
+      2316989,
+      "Detective Comics Vol 1 64"
+    ],
+    "eras": [
+      87,
+      30418.93,
+      0,
+      0.0,
+      0,
+      0.0,
+      8,
+      2.47
+    ]
+  },
+  {
+    "key": "ace the bat-hound",
+    "name": "Ace the Bat-Hound",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 137,
+    "nav": 30240.7,
+    "firstYear": 1955,
+    "debut": [
+      1955,
+      2316387,
+      "Batman Vol 1 92"
+    ],
+    "eras": [
+      1,
+      16262.56,
+      20,
+      13844.78,
+      1,
+      2.38,
+      86,
+      130.98
+    ]
+  },
+  {
+    "key": "brent wood",
+    "name": "Brent Wood",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 78,
+    "nav": 30205.19,
+    "firstYear": 1950,
+    "debut": [
+      1950,
+      2313516,
+      "Action Comics Vol 1 142"
+    ],
+    "eras": [
+      48,
+      9152.08,
+      24,
+      21048.15,
+      1,
+      4.81,
+      2,
+      0.15
+    ]
+  },
+  {
+    "key": "lucas carr",
+    "name": "Lucas Carr",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 188,
+    "nav": 30006.24,
+    "firstYear": 1960,
+    "debut": [
+      1960,
+      5067751,
+      "The Brave and the Bold Vol 1 28"
+    ],
+    "eras": [
+      0,
+      0.0,
+      58,
+      29818.27,
+      14,
+      142.49,
+      98,
+      45.49
+    ]
+  },
+  {
+    "key": "alanna",
+    "name": "Alanna",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 176,
+    "nav": 29732.27,
+    "firstYear": 1958,
+    "debut": [
+      1958,
+      2388723,
+      "Showcase Vol 1 17"
+    ],
+    "eras": [
+      0,
+      0.0,
+      52,
+      29337.39,
+      30,
+      350.0,
+      80,
+      44.89
+    ]
+  },
+  {
+    "key": "lefty",
+    "name": "Lefty",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 98,
+    "nav": 29563.56,
+    "firstYear": 1936,
+    "debut": [
+      1992,
+      7310049,
+      "Hawkworld Vol 2 28"
+    ],
+    "eras": [
+      65,
+      28979.44,
+      5,
+      551.14,
+      1,
+      7.78,
+      25,
+      25.19
+    ]
+  },
+  {
+    "key": "ted grant",
+    "name": "Ted Grant",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 779,
+    "nav": 29519.72,
+    "firstYear": 1942,
+    "debut": [
+      1942,
+      2336088,
+      "Sensation Comics Vol 1 1"
+    ],
+    "eras": [
+      94,
+      27461.09,
+      6,
+      803.45,
+      60,
+      859.14,
+      547,
+      396.04
+    ]
+  },
+  {
+    "key": "shayera thal",
+    "name": "Shayera Thal",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 383,
+    "nav": 29479.68,
+    "firstYear": 1961,
+    "debut": [
+      1961,
+      2392123,
+      "The Brave and the Bold Vol 1 34"
+    ],
+    "eras": [
+      0,
+      0.0,
+      60,
+      28547.29,
+      85,
+      744.16,
+      190,
+      188.24
+    ]
+  },
+  {
+    "key": "detective sergeant carey",
+    "name": "Detective Sergeant Carey",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 49,
+    "nav": 29445.59,
+    "firstYear": 1937,
+    "debut": [
+      1937,
+      3326718,
+      "New Adventure Comics Vol 1 14"
+    ],
+    "eras": [
+      49,
+      29445.59,
+      0,
+      0.0,
+      0,
+      0.0,
+      0,
+      0.0
+    ]
+  },
+  {
+    "key": "the presence",
+    "name": "The Presence",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 2097,
+    "nav": 29221.74,
+    "firstYear": 1938,
+    "debut": [
+      1940,
+      2347754,
+      "More Fun Comics Vol 1 52"
+    ],
+    "eras": [
+      14,
+      27936.4,
+      3,
+      230.44,
+      33,
+      161.99,
+      1909,
+      892.91
+    ]
+  },
+  {
+    "key": "tom",
+    "name": "Tom",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 99,
+    "nav": 29042.57,
+    "firstYear": 1937,
+    "debut": [
+      2018,
+      5441792,
+      "Damage Vol 2 7"
+    ],
+    "eras": [
+      27,
+      27316.6,
+      9,
+      1159.06,
+      18,
+      550.64,
+      31,
+      16.27
+    ]
+  },
+  {
+    "key": "andre",
+    "name": "Andre",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 401,
+    "nav": 28807.99,
+    "firstYear": 1941,
+    "debut": [
+      1941,
+      2520483,
+      "Military Comics Vol 1 2"
+    ],
+    "eras": [
+      185,
+      8450.03,
+      148,
+      20169.76,
+      42,
+      175.54,
+      21,
+      12.66
+    ]
+  },
+  {
+    "key": "captain kid",
+    "name": "Captain Kid",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 92,
+    "nav": 27930.43,
+    "firstYear": 1941,
+    "debut": [
+      1941,
+      2385914,
+      "Captain Marvel Adventures Vol 1 5"
+    ],
+    "eras": [
+      92,
+      27930.43,
+      0,
+      0.0,
+      0,
+      0.0,
+      0,
+      0.0
+    ]
+  },
+  {
+    "key": "crooks",
+    "name": "Crooks",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 28,
+    "nav": 27450.16,
+    "firstYear": 1941,
+    "debut": null,
+    "eras": [
+      12,
+      20985.91,
+      12,
+      6458.37,
+      1,
+      5.73,
+      1,
+      0.15
+    ]
+  },
+  {
+    "key": "steve conrad",
+    "name": "Steve Conrad",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 50,
+    "nav": 27368.4,
+    "firstYear": 1936,
+    "debut": [
+      1936,
+      2385292,
+      "New Comics Vol 1 5"
+    ],
+    "eras": [
+      49,
+      27368.4,
+      0,
+      0.0,
+      0,
+      0.0,
+      0,
+      0.0
+    ]
+  },
+  {
+    "key": "federal bureau of investigation",
+    "name": "Federal Bureau of Investigation",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 461,
+    "nav": 27169.99,
+    "firstYear": 1936,
+    "debut": [
+      1936,
+      2385289,
+      "New Comics Vol 1 2"
+    ],
+    "eras": [
+      82,
+      24728.96,
+      34,
+      1915.19,
+      33,
+      237.38,
+      282,
+      288.47
+    ]
+  },
+  {
+    "key": "flying cloud",
+    "name": "Flying Cloud",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 119,
+    "nav": 27156.85,
+    "firstYear": 1951,
+    "debut": [
+      1960,
+      2433582,
+      "All-American Men of War Vol 1 82"
+    ],
+    "eras": [
+      1,
+      1592.16,
+      41,
+      23886.85,
+      65,
+      1669.75,
+      7,
+      8.09
+    ]
+  },
+  {
+    "key": "rip carter",
+    "name": "Rip Carter",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 150,
+    "nav": 27144.46,
+    "firstYear": 1942,
+    "debut": [
+      1942,
+      2316989,
+      "Detective Comics Vol 1 64"
+    ],
+    "eras": [
+      108,
+      27143.68,
+      0,
+      0.0,
+      0,
+      0.0,
+      7,
+      0.77
+    ]
+  },
+  {
+    "key": "myra mason",
+    "name": "Myra Mason",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 102,
+    "nav": 27045.02,
+    "firstYear": 1941,
+    "debut": [
+      1941,
+      2335876,
+      "All-American Comics Vol 1 25"
+    ],
+    "eras": [
+      53,
+      8900.89,
+      40,
+      18126.66,
+      3,
+      9.4,
+      6,
+      8.06
+    ]
+  },
+  {
+    "key": "stanislaus",
+    "name": "Stanislaus",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 373,
+    "nav": 27041.46,
+    "firstYear": 1941,
+    "debut": [
+      1941,
+      2520483,
+      "Military Comics Vol 1 2"
+    ],
+    "eras": [
+      185,
+      8345.62,
+      142,
+      18549.4,
+      35,
+      141.09,
+      9,
+      5.35
+    ]
+  },
+  {
+    "key": "hans hendrickson",
+    "name": "Hans Hendrickson",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 366,
+    "nav": 27020.96,
+    "firstYear": 1941,
+    "debut": [
+      1941,
+      2520483,
+      "Military Comics Vol 1 2"
+    ],
+    "eras": [
+      187,
+      8375.94,
+      141,
+      18529.99,
+      27,
+      112.73,
+      11,
+      2.3
+    ]
+  },
+  {
+    "key": "napoleon",
+    "name": "Napoleon",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 37,
+    "nav": 26983.02,
+    "firstYear": 1939,
+    "debut": null,
+    "eras": [
+      14,
+      26245.47,
+      8,
+      462.56,
+      9,
+      274.38,
+      3,
+      0.6
+    ]
+  },
+  {
+    "key": "charles wilson",
+    "name": "Charles Wilson",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 361,
+    "nav": 26969.77,
+    "firstYear": 1942,
+    "debut": [
+      1942,
+      2520472,
+      "Military Comics Vol 1 10"
+    ],
+    "eras": [
+      179,
+      8234.87,
+      141,
+      18631.05,
+      28,
+      97.68,
+      13,
+      6.17
+    ]
+  },
+  {
+    "key": "wayne family",
+    "name": "Wayne Family",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 160,
+    "nav": 26902.29,
+    "firstYear": 1940,
+    "debut": null,
+    "eras": [
+      2,
+      25182.28,
+      2,
+      1591.75,
+      4,
+      46.59,
+      126,
+      81.67
+    ]
+  },
+  {
+    "key": "harry",
+    "name": "Harry",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 142,
+    "nav": 26846.98,
+    "firstYear": 1937,
+    "debut": [
+      1990,
+      2365852,
+      "Superman Vol 2 49"
+    ],
+    "eras": [
+      34,
+      21152.97,
+      21,
+      4929.09,
+      37,
+      707.79,
+      41,
+      57.13
+    ]
+  },
+  {
+    "key": "daniel leong",
+    "name": "Daniel Leong",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 153,
+    "nav": 26596.74,
+    "firstYear": 1942,
+    "debut": [
+      1942,
+      2313805,
+      "Action Comics Vol 1 45"
+    ],
+    "eras": [
+      149,
+      26591.43,
+      0,
+      0.0,
+      1,
+      4.82,
+      3,
+      0.49
+    ]
+  },
+  {
+    "key": "thomas wayne",
+    "name": "Thomas Wayne",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 864,
+    "nav": 25806.45,
+    "firstYear": 1939,
+    "debut": [
+      1939,
+      2317281,
+      "Detective Comics Vol 1 33"
+    ],
+    "eras": [
+      4,
+      23059.62,
+      6,
+      1479.07,
+      33,
+      517.45,
+      722,
+      750.31
+    ]
+  },
+  {
+    "key": "tom hawk",
+    "name": "Tom Hawk",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 255,
+    "nav": 25695.53,
+    "firstYear": 1947,
+    "debut": [
+      1947,
+      2421832,
+      "Star-Spangled Comics Vol 1 69"
+    ],
+    "eras": [
+      99,
+      13986.05,
+      89,
+      10294.94,
+      21,
+      1413.76,
+      2,
+      0.79
+    ]
+  },
+  {
+    "key": "alan armstrong",
+    "name": "Alan Armstrong",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 111,
+    "nav": 25084.05,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2347153,
+      "Whiz Comics Vol 1 2"
+    ],
+    "eras": [
+      94,
+      25055.12,
+      0,
+      0.0,
+      4,
+      24.04,
+      9,
+      4.9
+    ]
+  },
+  {
+    "key": "ralph dibny",
+    "name": "Ralph Dibny",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 727,
+    "nav": 25003.6,
+    "firstYear": 1960,
+    "debut": [
+      1960,
+      2390602,
+      "The Flash Vol 1 112"
+    ],
+    "eras": [
+      0,
+      0.0,
+      67,
+      21886.34,
+      172,
+      2728.56,
+      439,
+      388.69
+    ]
+  },
+  {
+    "key": "martha wayne",
+    "name": "Martha Wayne",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 161,
+    "nav": 24999.68,
+    "firstYear": 1939,
+    "debut": [
+      1939,
+      2317281,
+      "Detective Comics Vol 1 33"
+    ],
+    "eras": [
+      4,
+      23059.62,
+      4,
+      1329.17,
+      33,
+      515.54,
+      90,
+      95.35
+    ]
+  },
+  {
+    "key": "united states coast guard",
+    "name": "United States Coast Guard",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 59,
+    "nav": 24848.99,
+    "firstYear": 1939,
+    "debut": null,
+    "eras": [
+      9,
+      23975.45,
+      9,
+      794.99,
+      13,
+      53.82,
+      24,
+      24.74
+    ]
+  },
+  {
+    "key": "phillip darnell",
+    "name": "Phillip Darnell",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 159,
+    "nav": 24797.26,
+    "firstYear": 1942,
+    "debut": [
+      1942,
+      2335729,
+      "All-Star Comics Vol 1 8"
+    ],
+    "eras": [
+      105,
+      18028.37,
+      17,
+      6683.12,
+      32,
+      85.51,
+      2,
+      0.25
+    ]
+  },
+  {
+    "key": "star conquerors",
+    "name": "Star Conquerors",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 102,
+    "nav": 24692.2,
+    "firstYear": 1960,
+    "debut": [
+      1960,
+      5067751,
+      "The Brave and the Bold Vol 1 28"
+    ],
+    "eras": [
+      0,
+      0.0,
+      1,
+      24588.95,
+      6,
+      50.23,
+      83,
+      53.02
+    ]
+  },
+  {
+    "key": "ricky",
+    "name": "Ricky",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 27,
+    "nav": 24589.89,
+    "firstYear": 1939,
+    "debut": [
+      1940,
+      2347754,
+      "More Fun Comics Vol 1 52"
+    ],
+    "eras": [
+      5,
+      24463.34,
+      0,
+      0.0,
+      3,
+      109.5,
+      19,
+      17.05
+    ]
+  },
+  {
+    "key": "topo",
+    "name": "Topo",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 87,
+    "nav": 24568.27,
+    "firstYear": 1956,
+    "debut": [
+      1956,
+      2314476,
+      "Adventure Comics Vol 1 229"
+    ],
+    "eras": [
+      0,
+      0.0,
+      47,
+      24468.49,
+      15,
+      90.96,
+      19,
+      8.82
+    ]
+  },
+  {
+    "key": "john o'malley",
+    "name": "John O'Malley",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 35,
+    "nav": 24512.46,
+    "firstYear": 1939,
+    "debut": [
+      1939,
+      2347741,
+      "More Fun Comics Vol 1 39"
+    ],
+    "eras": [
+      35,
+      24512.46,
+      0,
+      0.0,
+      0,
+      0.0,
+      0,
+      0.0
+    ]
+  },
+  {
+    "key": "michael mannigan",
+    "name": "Michael Mannigan",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 42,
+    "nav": 24237.07,
+    "firstYear": 1939,
+    "debut": [
+      1939,
+      2520166,
+      "Mystery Men Comics Vol 1 1"
+    ],
+    "eras": [
+      41,
+      24234.85,
+      1,
+      2.21,
+      0,
+      0.0,
+      0,
+      0.0
+    ]
+  },
+  {
+    "key": "dinah drake",
+    "name": "Dinah Drake",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 706,
+    "nav": 24091.86,
+    "firstYear": 1947,
+    "debut": [
+      1947,
+      2335945,
+      "Flash Comics Vol 1 86"
+    ],
+    "eras": [
+      39,
+      21617.27,
+      14,
+      1880.06,
+      16,
+      179.55,
+      587,
+      414.98
+    ]
+  },
+  {
+    "key": "adolf hitler",
+    "name": "Adolf Hitler",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 443,
+    "nav": 24071.98,
+    "firstYear": 1940,
+    "debut": [
+      1986,
+      9277571,
+      "Last Days of the Justice Society Special Vol 1 1"
+    ],
+    "eras": [
+      105,
+      20773.75,
+      13,
+      1391.36,
+      129,
+      1751.64,
+      160,
+      155.23
+    ]
+  },
+  {
+    "key": "clifford crosby",
+    "name": "Clifford Crosby",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 27,
+    "nav": 23875.79,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2317285,
+      "Detective Comics Vol 1 37"
+    ],
+    "eras": [
+      27,
+      23875.79,
+      0,
+      0.0,
+      0,
+      0.0,
+      0,
+      0.0
+    ]
+  },
+  {
+    "key": "columbia screen gems",
+    "name": "Columbia Screen Gems",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 71,
+    "nav": 23537.16,
+    "firstYear": 1945,
+    "debut": null,
+    "eras": [
+      27,
+      23076.03,
+      40,
+      458.49,
+      0,
+      0.0,
+      3,
+      2.64
+    ]
+  },
+  {
+    "key": "united states government",
+    "name": "United States Government",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 431,
+    "nav": 23390.44,
+    "firstYear": 1938,
+    "debut": [
+      1987,
+      2422354,
+      "Booster Gold Vol 1 14"
+    ],
+    "eras": [
+      3,
+      22210.99,
+      5,
+      881.22,
+      8,
+      48.34,
+      383,
+      249.89
+    ]
+  },
+  {
+    "key": "jeff",
+    "name": "Jeff",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 88,
+    "nav": 23321.87,
+    "firstYear": 1939,
+    "debut": [
+      2023,
+      4557966,
+      "Batman Vol 3 131"
+    ],
+    "eras": [
+      49,
+      22527.99,
+      4,
+      585.56,
+      5,
+      169.42,
+      22,
+      38.89
+    ]
+  },
+  {
+    "key": "sterling morris",
+    "name": "Sterling Morris",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 153,
+    "nav": 22526.8,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2347153,
+      "Whiz Comics Vol 1 2"
+    ],
+    "eras": [
+      116,
+      22378.46,
+      0,
+      0.0,
+      15,
+      124.65,
+      14,
+      23.69
+    ]
+  },
+  {
+    "key": "venusians",
+    "name": "Venusians",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 63,
+    "nav": 22421.49,
+    "firstYear": 1940,
+    "debut": null,
+    "eras": [
+      26,
+      13841.21,
+      24,
+      8541.87,
+      4,
+      36.69,
+      7,
+      1.72
+    ]
+  },
+  {
+    "key": "aliens",
+    "name": "Aliens",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 134,
+    "nav": 22356.89,
+    "firstYear": 1950,
+    "debut": null,
+    "eras": [
+      11,
+      4455.21,
+      51,
+      17502.06,
+      22,
+      366.4,
+      35,
+      33.22
+    ]
+  },
+  {
+    "key": "santa claus",
+    "name": "Santa Claus",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 149,
+    "nav": 22297.05,
+    "firstYear": 1940,
+    "debut": null,
+    "eras": [
+      10,
+      21719.52,
+      9,
+      155.78,
+      13,
+      323.13,
+      88,
+      98.63
+    ]
+  },
+  {
+    "key": "thomas kalmaku",
+    "name": "Thomas Kalmaku",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 187,
+    "nav": 22241.29,
+    "firstYear": 1960,
+    "debut": [
+      1960,
+      2355408,
+      "Green Lantern Vol 2 2"
+    ],
+    "eras": [
+      0,
+      0.0,
+      47,
+      21805.75,
+      47,
+      343.56,
+      83,
+      91.98
+    ]
+  },
+  {
+    "key": "jor-el ii",
+    "name": "Jor-El II",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 196,
+    "nav": 22103.06,
+    "firstYear": 1945,
+    "debut": [
+      1945,
+      2347803,
+      "More Fun Comics Vol 1 101"
+    ],
+    "eras": [
+      6,
+      3466.2,
+      103,
+      17537.17,
+      60,
+      1092.43,
+      9,
+      7.25
+    ]
+  },
+  {
+    "key": "amentep",
+    "name": "Amentep",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 191,
+    "nav": 21993.48,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2347153,
+      "Whiz Comics Vol 1 2"
+    ],
+    "eras": [
+      152,
+      21959.1,
+      0,
+      0.0,
+      3,
+      19.79,
+      22,
+      14.59
+    ]
+  },
+  {
+    "key": "terrence sloane",
+    "name": "Terrence Sloane",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 189,
+    "nav": 21788.43,
+    "firstYear": 1942,
+    "debut": [
+      1942,
+      2336088,
+      "Sensation Comics Vol 1 1"
+    ],
+    "eras": [
+      63,
+      21308.22,
+      6,
+      350.32,
+      15,
+      92.37,
+      88,
+      37.51
+    ]
+  },
+  {
+    "key": "police officers",
+    "name": "Police officers",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 26,
+    "nav": 21763.8,
+    "firstYear": 1937,
+    "debut": null,
+    "eras": [
+      9,
+      21629.68,
+      6,
+      89.76,
+      4,
+      41.85,
+      6,
+      2.52
+    ]
+  },
+  {
+    "key": "monocles",
+    "name": "Monocles",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 74,
+    "nav": 21677.77,
+    "firstYear": 1937,
+    "debut": [
+      1937,
+      3326718,
+      "New Adventure Comics Vol 1 14"
+    ],
+    "eras": [
+      70,
+      21499.89,
+      2,
+      134.06,
+      1,
+      43.82,
+      0,
+      0.0
+    ]
+  },
+  {
+    "key": "carl ferris",
+    "name": "Carl Ferris",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 40,
+    "nav": 21658.16,
+    "firstYear": 1959,
+    "debut": [
+      1959,
+      2388729,
+      "Showcase Vol 1 22"
+    ],
+    "eras": [
+      0,
+      0.0,
+      3,
+      21574.97,
+      22,
+      66.71,
+      13,
+      16.48
+    ]
+  },
+  {
+    "key": "sandy kean",
+    "name": "Sandy Kean",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 73,
+    "nav": 21608.61,
+    "firstYear": 1936,
+    "debut": [
+      1936,
+      2347714,
+      "More Fun Comics Vol 1 11"
+    ],
+    "eras": [
+      73,
+      21608.61,
+      0,
+      0.0,
+      0,
+      0.0,
+      0,
+      0.0
+    ]
+  },
+  {
+    "key": "roger parsons",
+    "name": "Roger Parsons",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 149,
+    "nav": 21555.23,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2347153,
+      "Whiz Comics Vol 1 2"
+    ],
+    "eras": [
+      144,
+      21555.13,
+      0,
+      0.0,
+      0,
+      0.0,
+      1,
+      0.1
+    ]
+  },
+  {
+    "key": "sea devils",
+    "name": "Sea Devils",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 98,
+    "nav": 21538.35,
+    "firstYear": 1960,
+    "debut": [
+      1960,
+      2388734,
+      "Showcase Vol 1 27"
+    ],
+    "eras": [
+      0,
+      0.0,
+      40,
+      21504.52,
+      6,
+      12.3,
+      46,
+      21.52
+    ]
+  },
+  {
+    "key": "rudolph",
+    "name": "Rudolph",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 26,
+    "nav": 21508.06,
+    "firstYear": 1942,
+    "debut": null,
+    "eras": [
+      7,
+      21447.19,
+      4,
+      33.68,
+      2,
+      20.11,
+      3,
+      7.08
+    ]
+  },
+  {
+    "key": "jon, the viking prince",
+    "name": "Jon, the Viking Prince",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 74,
+    "nav": 21456.59,
+    "firstYear": 1955,
+    "debut": [
+      1955,
+      2392096,
+      "The Brave and the Bold Vol 1 1"
+    ],
+    "eras": [
+      2,
+      40.58,
+      23,
+      21394.7,
+      6,
+      9.99,
+      25,
+      11.31
+    ]
+  },
+  {
+    "key": "tank tinker",
+    "name": "Tank Tinker",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 127,
+    "nav": 21403.61,
+    "firstYear": 1939,
+    "debut": [
+      1939,
+      2335852,
+      "All-American Comics Vol 1 1"
+    ],
+    "eras": [
+      123,
+      21403.32,
+      0,
+      0.0,
+      0,
+      0.0,
+      2,
+      0.3
+    ]
+  },
+  {
+    "key": "bob neal",
+    "name": "Bob Neal",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 28,
+    "nav": 21399.03,
+    "firstYear": 1938,
+    "debut": [
+      1938,
+      2347738,
+      "More Fun Comics Vol 1 36"
+    ],
+    "eras": [
+      28,
+      21399.03,
+      0,
+      0.0,
+      0,
+      0.0,
+      0,
+      0.0
+    ]
+  },
+  {
+    "key": "cryll",
+    "name": "Cryll",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 67,
+    "nav": 21376.34,
+    "firstYear": 1958,
+    "debut": [
+      1958,
+      2388721,
+      "Showcase Vol 1 15"
+    ],
+    "eras": [
+      0,
+      0.0,
+      49,
+      21362.39,
+      4,
+      11.31,
+      8,
+      2.64
+    ]
+  },
+  {
+    "key": "doom patrol",
+    "name": "Doom Patrol",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 438,
+    "nav": 21290.06,
+    "firstYear": 1963,
+    "debut": [
+      1963,
+      2426165,
+      "My Greatest Adventure Vol 1 80"
+    ],
+    "eras": [
+      0,
+      0.0,
+      47,
+      20317.23,
+      16,
+      153.14,
+      341,
+      819.68
+    ]
+  },
+  {
+    "key": "samuel scudder",
+    "name": "Samuel Scudder",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 214,
+    "nav": 21216.72,
+    "firstYear": 1959,
+    "debut": [
+      1959,
+      2390595,
+      "The Flash Vol 1 105"
+    ],
+    "eras": [
+      0,
+      0.0,
+      14,
+      20700.56,
+      43,
+      421.61,
+      128,
+      94.55
+    ]
+  },
+  {
+    "key": "suicide squad",
+    "name": "Suicide Squad",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 567,
+    "nav": 21109.35,
+    "firstYear": 1959,
+    "debut": [
+      1959,
+      2392113,
+      "The Brave and the Bold Vol 1 25"
+    ],
+    "eras": [
+      0,
+      0.0,
+      6,
+      20438.56,
+      2,
+      1.39,
+      508,
+      669.4
+    ]
+  },
+  {
+    "key": "william polk",
+    "name": "William Polk",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 107,
+    "nav": 21093.33,
+    "firstYear": 1948,
+    "debut": [
+      1948,
+      3345962,
+      "Western Comics Vol 1 1"
+    ],
+    "eras": [
+      54,
+      19940.54,
+      30,
+      1152.78,
+      0,
+      0.0,
+      1,
+      0.01
+    ]
+  },
+  {
+    "key": "larry trent",
+    "name": "Larry Trent",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 59,
+    "nav": 20994.61,
+    "firstYear": 1937,
+    "debut": null,
+    "eras": [
+      59,
+      20994.61,
+      0,
+      0.0,
+      0,
+      0.0,
+      0,
+      0.0
+    ]
+  },
+  {
+    "key": "barbara gordon",
+    "name": "Barbara Gordon",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 2301,
+    "nav": 20846.36,
+    "firstYear": 1951,
+    "debut": null,
+    "eras": [
+      1,
+      495.63,
+      17,
+      4956.73,
+      114,
+      11318.09,
+      1934,
+      4075.91
+    ]
+  },
+  {
+    "key": "rodeo rick",
+    "name": "Rodeo Rick",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 64,
+    "nav": 20839.21,
+    "firstYear": 1948,
+    "debut": [
+      1948,
+      3345962,
+      "Western Comics Vol 1 1"
+    ],
+    "eras": [
+      50,
+      19859.41,
+      14,
+      979.8,
+      0,
+      0.0,
+      0,
+      0.0
+    ]
+  },
+  {
+    "key": "static the parrot",
+    "name": "Static the Parrot",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 62,
+    "nav": 20400.62,
+    "firstYear": 1942,
+    "debut": [
+      1942,
+      2316989,
+      "Detective Comics Vol 1 64"
+    ],
+    "eras": [
+      61,
+      20400.62,
+      0,
+      0.0,
+      0,
+      0.0,
+      0,
+      0.0
+    ]
+  },
+  {
+    "key": "hopalong cassidy",
+    "name": "Hopalong Cassidy",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 161,
+    "nav": 20225.63,
+    "firstYear": 1942,
+    "debut": null,
+    "eras": [
+      134,
+      19997.48,
+      27,
+      228.16,
+      0,
+      0.0,
+      0,
+      0.0
+    ]
+  },
+  {
+    "key": "hank",
+    "name": "Hank",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 141,
+    "nav": 20180.88,
+    "firstYear": 1935,
+    "debut": null,
+    "eras": [
+      62,
+      14602.0,
+      17,
+      4627.22,
+      23,
+      914.16,
+      31,
+      37.5
+    ]
+  },
+  {
+    "key": "three aces",
+    "name": "Three Aces",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 47,
+    "nav": 20134.68,
+    "firstYear": 1939,
+    "debut": [
+      1939,
+      2314183,
+      "Action Comics Vol 1 18"
+    ],
+    "eras": [
+      46,
+      20134.68,
+      0,
+      0.0,
+      0,
+      0.0,
+      0,
+      0.0
+    ]
+  },
+  {
+    "key": "red dugan",
+    "name": "Red Dugan",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 85,
+    "nav": 20042.24,
+    "firstYear": 1939,
+    "debut": [
+      1939,
+      2335852,
+      "All-American Comics Vol 1 1"
+    ],
+    "eras": [
+      78,
+      20042.24,
+      0,
+      0.0,
+      0,
+      0.0,
+      0,
+      0.0
+    ]
+  },
+  {
+    "key": "blooey blue",
+    "name": "Blooey Blue",
+    "universe": "DC",
+    "tier": "MINOR_CULT",
+    "issues": 84,
+    "nav": 20032.97,
+    "firstYear": 1939,
+    "debut": [
+      1939,
+      2335852,
+      "All-American Comics Vol 1 1"
+    ],
+    "eras": [
+      77,
+      20032.97,
+      0,
+      0.0,
+      0,
+      0.0,
+      0,
+      0.0
+    ]
+  },
+  {
+    "key": "harvey dent",
+    "name": "Harvey Dent",
+    "universe": "DC",
+    "tier": "MAJOR_ICON",
+    "issues": 912,
+    "nav": 12203.76,
+    "firstYear": 1954,
+    "debut": [
+      1954,
+      2316375,
+      "Batman Vol 1 81"
+    ],
+    "eras": [
+      1,
+      8716.06,
+      0,
+      0.0,
+      32,
+      1586.49,
+      732,
+      1901.22
+    ]
+  },
+  {
+    "key": "victor von doom",
+    "name": "Victor von Doom",
+    "universe": "DC",
+    "tier": "MAJOR_ICON",
+    "issues": 3,
+    "nav": 0.47,
+    "firstYear": 1996,
+    "debut": null,
+    "eras": [
+      0,
+      0.0,
+      0,
+      0.0,
+      0,
+      0.0,
+      3,
+      0.47
+    ]
+  },
+  {
+    "key": "bruce banner",
+    "name": "Bruce Banner",
+    "universe": "DC",
+    "tier": "MAJOR_ICON",
+    "issues": 3,
+    "nav": 0.16,
+    "firstYear": 1996,
+    "debut": null,
+    "eras": [
+      0,
+      0.0,
+      0,
+      0.0,
+      0,
+      0.0,
+      1,
+      0.16
+    ]
+  },
+  {
+    "key": "peter parker",
+    "name": "Peter Parker",
+    "universe": "DC",
+    "tier": "MAJOR_ICON",
+    "issues": 3,
+    "nav": 0.12,
+    "firstYear": 1985,
+    "debut": null,
+    "eras": [
+      0,
+      0.0,
+      0,
+      0.0,
+      1,
+      0.09,
+      1,
+      0.03
+    ]
+  },
+  {
+    "key": "anthony stark",
+    "name": "Anthony Stark",
+    "universe": "DC",
+    "tier": "MAJOR_ICON",
+    "issues": 1,
+    "nav": 0.05,
+    "firstYear": 1996,
+    "debut": null,
+    "eras": [
+      0,
+      0.0,
+      0,
+      0.0,
+      0,
+      0.0,
+      1,
+      0.05
+    ]
+  },
+  {
+    "key": "peter parker",
+    "name": "Peter Parker",
+    "universe": "MARVEL",
+    "tier": "MAJOR_ICON",
+    "issues": 9649,
+    "nav": 527382.91,
+    "firstYear": 1962,
+    "debut": [
+      1962,
+      2387462,
+      "Amazing Fantasy Vol 1 15"
+    ],
+    "eras": [
+      0,
+      0.0,
+      136,
+      442291.49,
+      766,
+      59774.2,
+      6711,
+      25317.22
+    ]
+  },
+  {
+    "key": "fantastic four",
+    "name": "Fantastic Four",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 3975,
+    "nav": 384455.56,
+    "firstYear": 1961,
+    "debut": [
+      1961,
+      2362951,
+      "Fantastic Four Vol 1 1"
+    ],
+    "eras": [
+      0,
+      0.0,
+      188,
+      363135.95,
+      609,
+      15851.81,
+      2737,
+      5467.8
+    ]
+  },
+  {
+    "key": "steven rogers",
+    "name": "Steven Rogers",
+    "universe": "MARVEL",
+    "tier": "MAJOR_ICON",
+    "issues": 7491,
+    "nav": 373602.06,
+    "firstYear": 1941,
+    "debut": null,
+    "eras": [
+      109,
+      308185.57,
+      167,
+      41043.58,
+      781,
+      16020.84,
+      5488,
+      8352.09
+    ]
+  },
+  {
+    "key": "national socialist german workers party",
+    "name": "National Socialist German Workers Party",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 1224,
+    "nav": 281164.12,
+    "firstYear": 1939,
+    "debut": [
+      1939,
+      2385547,
+      "Marvel Mystery Comics Vol 1 2"
+    ],
+    "eras": [
+      273,
+      265510.45,
+      88,
+      13100.35,
+      126,
+      1652.26,
+      666,
+      901.06
+    ]
+  },
+  {
+    "key": "jonathan storm",
+    "name": "Jonathan Storm",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 3767,
+    "nav": 245034.87,
+    "firstYear": 1961,
+    "debut": [
+      1961,
+      2362951,
+      "Fantastic Four Vol 1 1"
+    ],
+    "eras": [
+      0,
+      0.0,
+      197,
+      231577.2,
+      518,
+      10136.33,
+      2601,
+      3321.35
+    ]
+  },
+  {
+    "key": "namor mckenzie",
+    "name": "Namor McKenzie",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 2565,
+    "nav": 229216.51,
+    "firstYear": 1939,
+    "debut": null,
+    "eras": [
+      221,
+      159564.3,
+      105,
+      55705.25,
+      361,
+      11413.41,
+      1654,
+      2533.55
+    ]
+  },
+  {
+    "key": "jim hammond",
+    "name": "Jim Hammond",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 781,
+    "nav": 226257.29,
+    "firstYear": 1939,
+    "debut": [
+      1939,
+      2335686,
+      "Marvel Comics Vol 1 1"
+    ],
+    "eras": [
+      239,
+      224668.72,
+      6,
+      541.16,
+      85,
+      731.19,
+      395,
+      316.22
+    ]
+  },
+  {
+    "key": "reed richards",
+    "name": "Reed Richards",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 4681,
+    "nav": 199253.9,
+    "firstYear": 1961,
+    "debut": [
+      1961,
+      2435074,
+      "Amazing Adult Fantasy Vol 1 7"
+    ],
+    "eras": [
+      0,
+      0.0,
+      184,
+      186166.53,
+      562,
+      8795.66,
+      3413,
+      4291.71
+    ]
+  },
+  {
+    "key": "thor odinson",
+    "name": "Thor Odinson",
+    "universe": "MARVEL",
+    "tier": "MAJOR_ICON",
+    "issues": 5172,
+    "nav": 198099.51,
+    "firstYear": 1941,
+    "debut": [
+      1950,
+      2515126,
+      "Venus Vol 1 11"
+    ],
+    "eras": [
+      8,
+      3999.6,
+      179,
+      173359.15,
+      665,
+      14937.29,
+      3642,
+      5803.47
+    ]
+  },
+  {
+    "key": "benjamin grimm",
+    "name": "Benjamin Grimm",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 4259,
+    "nav": 198027.05,
+    "firstYear": 1961,
+    "debut": [
+      1961,
+      2362951,
+      "Fantastic Four Vol 1 1"
+    ],
+    "eras": [
+      0,
+      0.0,
+      175,
+      182622.97,
+      603,
+      11513.22,
+      2983,
+      3890.85
+    ]
+  },
+  {
+    "key": "james buchanan barnes",
+    "name": "James Buchanan Barnes",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 1260,
+    "nav": 194705.58,
+    "firstYear": 1941,
+    "debut": null,
+    "eras": [
+      113,
+      187376.9,
+      36,
+      5483.54,
+      76,
+      665.01,
+      920,
+      1180.13
+    ]
+  },
+  {
+    "key": "anthony stark",
+    "name": "Anthony Stark",
+    "universe": "MARVEL",
+    "tier": "MAJOR_ICON",
+    "issues": 7029,
+    "nav": 193065.5,
+    "firstYear": 1963,
+    "debut": [
+      1963,
+      2387497,
+      "Tales of Suspense Vol 1 39"
+    ],
+    "eras": [
+      0,
+      0.0,
+      204,
+      165060.89,
+      726,
+      19951.17,
+      5136,
+      8053.44
+    ]
+  },
+  {
+    "key": "susan storm",
+    "name": "Susan Storm",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 3291,
+    "nav": 184387.36,
+    "firstYear": 1961,
+    "debut": [
+      1961,
+      2362951,
+      "Fantastic Four Vol 1 1"
+    ],
+    "eras": [
+      0,
+      0.0,
+      159,
+      174847.78,
+      412,
+      6570.77,
+      2339,
+      2968.8
+    ]
+  },
+  {
+    "key": "bruce banner",
+    "name": "Bruce Banner",
+    "universe": "MARVEL",
+    "tier": "MAJOR_ICON",
+    "issues": 5043,
+    "nav": 173041.53,
+    "firstYear": 1962,
+    "debut": [
+      1962,
+      2387430,
+      "Incredible Hulk Vol 1 1"
+    ],
+    "eras": [
+      0,
+      0.0,
+      138,
+      127587.23,
+      702,
+      36609.34,
+      3454,
+      8844.97
+    ]
+  },
+  {
+    "key": "x-men",
+    "name": "X-Men",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 6226,
+    "nav": 164593.61,
+    "firstYear": 1963,
+    "debut": [
+      1963,
+      2395275,
+      "X-Men Vol 1 1"
+    ],
+    "eras": [
+      0,
+      0.0,
+      89,
+      142100.58,
+      374,
+      11724.93,
+      5207,
+      10768.09
+    ]
+  },
+  {
+    "key": "thomas raymond",
+    "name": "Thomas Raymond",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 450,
+    "nav": 152546.5,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2385732,
+      "Human Torch Vol 1 2"
+    ],
+    "eras": [
+      233,
+      151913.94,
+      2,
+      119.89,
+      46,
+      435.75,
+      147,
+      76.92
+    ]
+  },
+  {
+    "key": "united states army",
+    "name": "United States Army",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 1765,
+    "nav": 152075.63,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2385713,
+      "Daring Mystery Comics Vol 1 1"
+    ],
+    "eras": [
+      199,
+      56345.92,
+      255,
+      89961.8,
+      251,
+      4461.5,
+      912,
+      1306.41
+    ]
+  },
+  {
+    "key": "new york city police department",
+    "name": "New York City Police Department",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 4525,
+    "nav": 147341.04,
+    "firstYear": 1939,
+    "debut": [
+      1968,
+      2404463,
+      "Avengers Annual Vol 1 2"
+    ],
+    "eras": [
+      156,
+      37993.87,
+      313,
+      98224.91,
+      648,
+      7646.23,
+      2968,
+      3476.03
+    ]
+  },
+  {
+    "key": "maybelle parker",
+    "name": "Maybelle Parker",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 2185,
+    "nav": 145581.27,
+    "firstYear": 1962,
+    "debut": [
+      1962,
+      2387462,
+      "Amazing Fantasy Vol 1 15"
+    ],
+    "eras": [
+      0,
+      0.0,
+      80,
+      136318.46,
+      185,
+      6090.8,
+      1514,
+      3172.01
+    ]
+  },
+  {
+    "key": "charles xavier",
+    "name": "Charles Xavier",
+    "universe": "MARVEL",
+    "tier": "MAJOR_ICON",
+    "issues": 3563,
+    "nav": 129073.28,
+    "firstYear": 1963,
+    "debut": [
+      1963,
+      2395275,
+      "X-Men Vol 1 1"
+    ],
+    "eras": [
+      0,
+      0.0,
+      69,
+      121097.73,
+      272,
+      4831.79,
+      2948,
+      3143.75
+    ]
+  },
+  {
+    "key": "daily bugle (the db!)",
+    "name": "Daily Bugle (The DB!)",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 1391,
+    "nav": 126714.98,
+    "firstYear": 1941,
+    "debut": [
+      2014,
+      2422926,
+      "Giant-Size Spider-Man Vol 2 1"
+    ],
+    "eras": [
+      6,
+      314.08,
+      93,
+      109690.54,
+      265,
+      15222.47,
+      903,
+      1487.89
+    ]
+  },
+  {
+    "key": "donald blake",
+    "name": "Donald Blake",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 189,
+    "nav": 115731.07,
+    "firstYear": 1962,
+    "debut": [
+      1962,
+      2388099,
+      "Journey Into Mystery Vol 1 83"
+    ],
+    "eras": [
+      0,
+      0.0,
+      40,
+      113870.01,
+      61,
+      1717.92,
+      80,
+      143.14
+    ]
+  },
+  {
+    "key": "henry pym",
+    "name": "Henry Pym",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 2167,
+    "nav": 115595.46,
+    "firstYear": 1960,
+    "debut": [
+      1960,
+      2388962,
+      "Strange Tales Vol 1 75"
+    ],
+    "eras": [
+      0,
+      0.0,
+      158,
+      111381.5,
+      244,
+      2896.07,
+      1577,
+      1317.89
+    ]
+  },
+  {
+    "key": "avengers",
+    "name": "Avengers",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 7030,
+    "nav": 105847.55,
+    "firstYear": 1963,
+    "debut": [
+      1963,
+      2387572,
+      "Avengers Vol 1 1"
+    ],
+    "eras": [
+      0,
+      0.0,
+      178,
+      86580.9,
+      757,
+      12656.19,
+      5252,
+      6610.46
+    ]
+  },
+  {
+    "key": "matthew murdock",
+    "name": "Matthew Murdock",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 2780,
+    "nav": 104326.64,
+    "firstYear": 1964,
+    "debut": [
+      1964,
+      2389318,
+      "Daredevil Vol 1 1"
+    ],
+    "eras": [
+      0,
+      0.0,
+      87,
+      83058.86,
+      357,
+      14585.34,
+      2065,
+      6682.44
+    ]
+  },
+  {
+    "key": "thomas halloway",
+    "name": "Thomas Halloway",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 157,
+    "nav": 93421.77,
+    "firstYear": 1939,
+    "debut": [
+      1939,
+      2335686,
+      "Marvel Comics Vol 1 1"
+    ],
+    "eras": [
+      103,
+      93385.6,
+      0,
+      0.0,
+      1,
+      5.82,
+      38,
+      30.35
+    ]
+  },
+  {
+    "key": "victor von doom",
+    "name": "Victor von Doom",
+    "universe": "MARVEL",
+    "tier": "MAJOR_ICON",
+    "issues": 3054,
+    "nav": 89044.67,
+    "firstYear": 1962,
+    "debut": [
+      1962,
+      2363308,
+      "Fantastic Four Vol 1 5"
+    ],
+    "eras": [
+      0,
+      0.0,
+      76,
+      78866.18,
+      255,
+      6146.6,
+      2352,
+      4031.89
+    ]
+  },
+  {
+    "key": "eugene thompson",
+    "name": "Eugene Thompson",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 1097,
+    "nav": 88882.54,
+    "firstYear": 1962,
+    "debut": [
+      1962,
+      2387462,
+      "Amazing Fantasy Vol 1 15"
+    ],
+    "eras": [
+      0,
+      0.0,
+      51,
+      82937.97,
+      73,
+      4198.32,
+      803,
+      1746.25
+    ]
+  },
+  {
+    "key": "dmitri smerdyakov",
+    "name": "Dmitri Smerdyakov",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 338,
+    "nav": 87449.76,
+    "firstYear": 1963,
+    "debut": [
+      1963,
+      2314818,
+      "Amazing Spider-Man Vol 1 1"
+    ],
+    "eras": [
+      0,
+      0.0,
+      12,
+      86063.02,
+      14,
+      720.39,
+      275,
+      666.35
+    ]
+  },
+  {
+    "key": "scott summers",
+    "name": "Scott Summers",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 4025,
+    "nav": 81318.21,
+    "firstYear": 1963,
+    "debut": [
+      1963,
+      2395275,
+      "X-Men Vol 1 1"
+    ],
+    "eras": [
+      0,
+      0.0,
+      80,
+      71858.11,
+      207,
+      5422.12,
+      3374,
+      4037.97
+    ]
+  },
+  {
+    "key": "elizabeth allan",
+    "name": "Elizabeth Allan",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 611,
+    "nav": 80140.78,
+    "firstYear": 1962,
+    "debut": [
+      1984,
+      2411484,
+      "What If? Vol 1 46"
+    ],
+    "eras": [
+      0,
+      0.0,
+      26,
+      78490.41,
+      47,
+      988.0,
+      462,
+      662.37
+    ]
+  },
+  {
+    "key": "henry mccoy",
+    "name": "Henry McCoy",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 3362,
+    "nav": 79869.96,
+    "firstYear": 1963,
+    "debut": [
+      1963,
+      2395275,
+      "X-Men Vol 1 1"
+    ],
+    "eras": [
+      0,
+      0.0,
+      80,
+      71659.51,
+      292,
+      5070.07,
+      2731,
+      3140.37
+    ]
+  },
+  {
+    "key": "john jonah jameson",
+    "name": "John Jonah Jameson",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 2271,
+    "nav": 78088.22,
+    "firstYear": 1963,
+    "debut": [
+      1963,
+      2314818,
+      "Amazing Spider-Man Vol 1 1"
+    ],
+    "eras": [
+      0,
+      0.0,
+      88,
+      68208.19,
+      320,
+      7797.82,
+      1451,
+      2082.2
+    ]
+  },
+  {
+    "key": "warren worthington iii",
+    "name": "Warren Worthington III",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 2146,
+    "nav": 77961.88,
+    "firstYear": 1963,
+    "debut": [
+      1963,
+      2395275,
+      "X-Men Vol 1 1"
+    ],
+    "eras": [
+      0,
+      0.0,
+      79,
+      71766.71,
+      171,
+      4158.06,
+      1732,
+      2037.12
+    ]
+  },
+  {
+    "key": "robert drake",
+    "name": "Robert Drake",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 2340,
+    "nav": 77555.28,
+    "firstYear": 1963,
+    "debut": [
+      1963,
+      2395275,
+      "X-Men Vol 1 1"
+    ],
+    "eras": [
+      0,
+      0.0,
+      81,
+      71455.97,
+      128,
+      3857.55,
+      1924,
+      2241.76
+    ]
+  },
+  {
+    "key": "jean grey",
+    "name": "Jean Grey",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 2819,
+    "nav": 76201.89,
+    "firstYear": 1963,
+    "debut": [
+      1963,
+      2395275,
+      "X-Men Vol 1 1"
+    ],
+    "eras": [
+      0,
+      0.0,
+      77,
+      69506.12,
+      106,
+      3695.44,
+      2385,
+      3000.33
+    ]
+  },
+  {
+    "key": "max eisenhardt",
+    "name": "Max Eisenhardt",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 2165,
+    "nav": 73533.96,
+    "firstYear": 1963,
+    "debut": [
+      1963,
+      2395275,
+      "X-Men Vol 1 1"
+    ],
+    "eras": [
+      0,
+      0.0,
+      49,
+      69779.51,
+      127,
+      1452.48,
+      1809,
+      2301.96
+    ]
+  },
+  {
+    "key": "eve",
+    "name": "Eve",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 40,
+    "nav": 71832.06,
+    "firstYear": 1949,
+    "debut": [
+      1953,
+      8087166,
+      "Bible Tales for Young Folk Vol 1 1"
+    ],
+    "eras": [
+      3,
+      8.45,
+      6,
+      71764.67,
+      6,
+      43.67,
+      22,
+      15.26
+    ]
+  },
+  {
+    "key": "carradine",
+    "name": "Carradine",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 260,
+    "nav": 66797.3,
+    "firstYear": 1962,
+    "debut": [
+      1962,
+      2387462,
+      "Amazing Fantasy Vol 1 15"
+    ],
+    "eras": [
+      0,
+      0.0,
+      5,
+      66041.51,
+      23,
+      430.7,
+      182,
+      325.09
+    ]
+  },
+  {
+    "key": "numerous unnamed members",
+    "name": "Numerous unnamed members",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 565,
+    "nav": 65842.7,
+    "firstYear": 1939,
+    "debut": null,
+    "eras": [
+      131,
+      49447.38,
+      115,
+      14782.68,
+      80,
+      1314.16,
+      217,
+      298.49
+    ]
+  },
+  {
+    "key": "federal bureau of investigation",
+    "name": "Federal Bureau of Investigation",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 904,
+    "nav": 65428.77,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2385782,
+      "Mystic Comics Vol 1 1"
+    ],
+    "eras": [
+      119,
+      32756.52,
+      51,
+      31513.34,
+      63,
+      464.69,
+      617,
+      694.22
+    ]
+  },
+  {
+    "key": "loki laufeyson",
+    "name": "Loki Laufeyson",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 1123,
+    "nav": 60693.24,
+    "firstYear": 1949,
+    "debut": [
+      1949,
+      2515139,
+      "Venus Vol 1 6"
+    ],
+    "eras": [
+      6,
+      781.48,
+      59,
+      55165.91,
+      132,
+      3486.45,
+      719,
+      1259.4
+    ]
+  },
+  {
+    "key": "janet van dyne",
+    "name": "Janet Van Dyne",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 2078,
+    "nav": 59508.41,
+    "firstYear": 1963,
+    "debut": [
+      1963,
+      2388640,
+      "Tales to Astonish Vol 1 44"
+    ],
+    "eras": [
+      0,
+      0.0,
+      131,
+      56242.05,
+      306,
+      2092.39,
+      1430,
+      1173.98
+    ]
+  },
+  {
+    "key": "johnathon blaze",
+    "name": "Johnathon Blaze",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 731,
+    "nav": 56797.44,
+    "firstYear": 1972,
+    "debut": [
+      1972,
+      2399602,
+      "Marvel Spotlight Vol 1 5"
+    ],
+    "eras": [
+      0,
+      0.0,
+      0,
+      0.0,
+      146,
+      55377.52,
+      502,
+      1419.92
+    ]
+  },
+  {
+    "key": "stephen strange",
+    "name": "Stephen Strange",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 3129,
+    "nav": 55479.4,
+    "firstYear": 1963,
+    "debut": [
+      1963,
+      2388834,
+      "Strange Tales Vol 1 110"
+    ],
+    "eras": [
+      0,
+      0.0,
+      87,
+      43570.02,
+      394,
+      7838.36,
+      2296,
+      4071.02
+    ]
+  },
+  {
+    "key": "numerous unnamed soldiers",
+    "name": "Numerous unnamed soldiers",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 452,
+    "nav": 55397.67,
+    "firstYear": 1939,
+    "debut": [
+      1978,
+      2411490,
+      "What If? Vol 1 9"
+    ],
+    "eras": [
+      164,
+      35946.13,
+      94,
+      18333.98,
+      54,
+      994.49,
+      128,
+      123.07
+    ]
+  },
+  {
+    "key": "harvey elder",
+    "name": "Harvey Elder",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 437,
+    "nav": 54220.82,
+    "firstYear": 1961,
+    "debut": [
+      1968,
+      2404463,
+      "Avengers Annual Vol 1 2"
+    ],
+    "eras": [
+      0,
+      0.0,
+      25,
+      52729.18,
+      43,
+      1063.63,
+      307,
+      428.01
+    ]
+  },
+  {
+    "key": "doombot",
+    "name": "Doombot",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 348,
+    "nav": 52984.39,
+    "firstYear": 1962,
+    "debut": [
+      1962,
+      2363308,
+      "Fantastic Four Vol 1 5"
+    ],
+    "eras": [
+      0,
+      0.0,
+      5,
+      52140.87,
+      12,
+      290.38,
+      280,
+      553.14
+    ]
+  },
+  {
+    "key": "richard jones",
+    "name": "Richard Jones",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 959,
+    "nav": 52206.13,
+    "firstYear": 1962,
+    "debut": [
+      1962,
+      2387430,
+      "Incredible Hulk Vol 1 1"
+    ],
+    "eras": [
+      0,
+      0.0,
+      74,
+      48243.01,
+      174,
+      2716.19,
+      663,
+      1246.93
+    ]
+  },
+  {
+    "key": "odin borson",
+    "name": "Odin Borson",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 1463,
+    "nav": 51528.9,
+    "firstYear": 1955,
+    "debut": [
+      1962,
+      2388101,
+      "Journey Into Mystery Vol 1 85"
+    ],
+    "eras": [
+      1,
+      1.0,
+      112,
+      47103.5,
+      299,
+      3537.24,
+      913,
+      887.15
+    ]
+  },
+  {
+    "key": "wong-chu",
+    "name": "Wong-Chu",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 31,
+    "nav": 50855.54,
+    "firstYear": 1963,
+    "debut": [
+      1963,
+      2387497,
+      "Tales of Suspense Vol 1 39"
+    ],
+    "eras": [
+      0,
+      0.0,
+      2,
+      50735.63,
+      4,
+      93.18,
+      22,
+      26.72
+    ]
+  },
+  {
+    "key": "mephisto",
+    "name": "Mephisto",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 904,
+    "nav": 50208.49,
+    "firstYear": 1953,
+    "debut": [
+      1953,
+      8087166,
+      "Bible Tales for Young Folk Vol 1 1"
+    ],
+    "eras": [
+      1,
+      3.84,
+      5,
+      10578.14,
+      86,
+      38007.71,
+      742,
+      1618.81
+    ]
+  },
+  {
+    "key": "viet cong",
+    "name": "Viet Cong",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 47,
+    "nav": 49351.55,
+    "firstYear": 1963,
+    "debut": [
+      1963,
+      2387497,
+      "Tales of Suspense Vol 1 39"
+    ],
+    "eras": [
+      0,
+      0.0,
+      4,
+      49027.01,
+      11,
+      219.89,
+      30,
+      104.65
+    ]
+  },
+  {
+    "key": "otto octavius",
+    "name": "Otto Octavius",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 1660,
+    "nav": 48470.11,
+    "firstYear": 1963,
+    "debut": [
+      1963,
+      2315039,
+      "Amazing Spider-Man Vol 1 3"
+    ],
+    "eras": [
+      0,
+      0.0,
+      30,
+      40968.18,
+      104,
+      5258.52,
+      1199,
+      2243.41
+    ]
+  },
+  {
+    "key": "imperial japan",
+    "name": "Imperial Japan",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 208,
+    "nav": 47811.87,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2385785,
+      "Mystic Comics Vol 1 4"
+    ],
+    "eras": [
+      136,
+      46847.54,
+      27,
+      709.31,
+      12,
+      233.09,
+      31,
+      21.93
+    ]
+  },
+  {
+    "key": "adolf hitler",
+    "name": "Adolf Hitler",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 798,
+    "nav": 47713.35,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2385718,
+      "Daring Mystery Comics Vol 1 6"
+    ],
+    "eras": [
+      163,
+      45373.4,
+      58,
+      1371.55,
+      97,
+      649.15,
+      425,
+      319.24
+    ]
+  },
+  {
+    "key": "david rand",
+    "name": "David Rand",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 34,
+    "nav": 46815.95,
+    "firstYear": 1936,
+    "debut": null,
+    "eras": [
+      31,
+      46815.9,
+      0,
+      0.0,
+      0,
+      0.0,
+      1,
+      0.04
+    ]
+  },
+  {
+    "key": "jeffrey mace",
+    "name": "Jeffrey Mace",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 149,
+    "nav": 46032.06,
+    "firstYear": 1941,
+    "debut": [
+      1941,
+      2385751,
+      "Human Torch Vol 1 4"
+    ],
+    "eras": [
+      82,
+      45918.87,
+      0,
+      0.0,
+      18,
+      86.93,
+      40,
+      26.26
+    ]
+  },
+  {
+    "key": "yahweh",
+    "name": "Yahweh",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 5831,
+    "nav": 45613.49,
+    "firstYear": 1936,
+    "debut": [
+      1953,
+      8087166,
+      "Bible Tales for Young Folk Vol 1 1"
+    ],
+    "eras": [
+      83,
+      23619.72,
+      47,
+      5031.96,
+      679,
+      13727.51,
+      4723,
+      3234.29
+    ]
+  },
+  {
+    "key": "kronans",
+    "name": "Kronans",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 25,
+    "nav": 45264.58,
+    "firstYear": 1962,
+    "debut": [
+      1962,
+      2388099,
+      "Journey Into Mystery Vol 1 83"
+    ],
+    "eras": [
+      0,
+      0.0,
+      3,
+      45167.08,
+      5,
+      59.24,
+      13,
+      38.26
+    ]
+  },
+  {
+    "key": "norrin radd",
+    "name": "Norrin Radd",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 1355,
+    "nav": 42937.13,
+    "firstYear": 1966,
+    "debut": [
+      1966,
+      2363306,
+      "Fantastic Four Vol 1 48"
+    ],
+    "eras": [
+      0,
+      0.0,
+      36,
+      31516.23,
+      133,
+      7037.98,
+      1030,
+      4382.93
+    ]
+  },
+  {
+    "key": "jonathan clay",
+    "name": "Jonathan Clay",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 176,
+    "nav": 42415.17,
+    "firstYear": 1960,
+    "debut": [
+      1960,
+      2427709,
+      "Rawhide Kid Vol 1 17"
+    ],
+    "eras": [
+      0,
+      0.0,
+      61,
+      40007.22,
+      51,
+      2339.24,
+      58,
+      68.72
+    ]
+  },
+  {
+    "key": "norman osborn",
+    "name": "Norman Osborn",
+    "universe": "MARVEL",
+    "tier": "MAJOR_ICON",
+    "issues": 1988,
+    "nav": 41698.58,
+    "firstYear": 1964,
+    "debut": [
+      1964,
+      2317806,
+      "Amazing Spider-Man Vol 1 14"
+    ],
+    "eras": [
+      0,
+      0.0,
+      27,
+      35214.71,
+      62,
+      3976.63,
+      1623,
+      2507.25
+    ]
+  },
+  {
+    "key": "elizabeth brant",
+    "name": "Elizabeth Brant",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 751,
+    "nav": 40752.72,
+    "firstYear": 1963,
+    "debut": [
+      1963,
+      2315147,
+      "Amazing Spider-Man Vol 1 4"
+    ],
+    "eras": [
+      0,
+      0.0,
+      59,
+      38036.36,
+      78,
+      2027.59,
+      517,
+      688.77
+    ]
+  },
+  {
+    "key": "ant-man's ants",
+    "name": "Ant-Man's Ants",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 187,
+    "nav": 36617.8,
+    "firstYear": 1962,
+    "debut": [
+      1962,
+      2388621,
+      "Tales to Astonish Vol 1 27"
+    ],
+    "eras": [
+      0,
+      0.0,
+      47,
+      36074.48,
+      29,
+      479.22,
+      89,
+      64.11
+    ]
+  },
+  {
+    "key": "cindy smith",
+    "name": "Cindy Smith",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 80,
+    "nav": 35306.71,
+    "firstYear": 1947,
+    "debut": [
+      1947,
+      3365623,
+      "Junior Miss Vol 2 24"
+    ],
+    "eras": [
+      42,
+      35306.12,
+      0,
+      0.0,
+      0,
+      0.0,
+      3,
+      0.58
+    ]
+  },
+  {
+    "key": "millicent collins",
+    "name": "Millicent Collins",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 428,
+    "nav": 34747.77,
+    "firstYear": 1945,
+    "debut": null,
+    "eras": [
+      137,
+      20702.41,
+      192,
+      13780.26,
+      29,
+      200.24,
+      32,
+      64.86
+    ]
+  },
+  {
+    "key": "makkari",
+    "name": "Makkari",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 178,
+    "nav": 34602.86,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2385793,
+      "Red Raven Comics Vol 1 1"
+    ],
+    "eras": [
+      13,
+      32833.68,
+      1,
+      1440.39,
+      32,
+      155.8,
+      125,
+      172.98
+    ]
+  },
+  {
+    "key": "thaddeus ross",
+    "name": "Thaddeus Ross",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 890,
+    "nav": 34457.47,
+    "firstYear": 1962,
+    "debut": [
+      1962,
+      2387430,
+      "Incredible Hulk Vol 1 1"
+    ],
+    "eras": [
+      0,
+      0.0,
+      58,
+      28899.96,
+      149,
+      4325.67,
+      615,
+      1231.85
+    ]
+  },
+  {
+    "key": "atlantis (homo mermanus)",
+    "name": "Atlantis (Homo mermanus)",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 149,
+    "nav": 33204.98,
+    "firstYear": 1939,
+    "debut": [
+      2019,
+      2412857,
+      "Invaders Vol 3 1"
+    ],
+    "eras": [
+      32,
+      16053.13,
+      52,
+      15500.33,
+      41,
+      1620.73,
+      23,
+      30.79
+    ]
+  },
+  {
+    "key": "glossary:fifth column",
+    "name": "Glossary:Fifth Column",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 57,
+    "nav": 32942.43,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2385718,
+      "Daring Mystery Comics Vol 1 6"
+    ],
+    "eras": [
+      50,
+      32740.82,
+      2,
+      194.26,
+      2,
+      5.7,
+      3,
+      1.66
+    ]
+  },
+  {
+    "key": "jane foster",
+    "name": "Jane Foster",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 729,
+    "nav": 32224.43,
+    "firstYear": 1962,
+    "debut": [
+      1962,
+      2388100,
+      "Journey Into Mystery Vol 1 84"
+    ],
+    "eras": [
+      0,
+      0.0,
+      55,
+      31163.8,
+      36,
+      387.5,
+      593,
+      673.12
+    ]
+  },
+  {
+    "key": "ziggy pig",
+    "name": "Ziggy Pig",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 77,
+    "nav": 31912.36,
+    "firstYear": 1942,
+    "debut": [
+      1942,
+      3394909,
+      "Krazy Komics Vol 1 1"
+    ],
+    "eras": [
+      47,
+      31904.2,
+      0,
+      0.0,
+      1,
+      0.44,
+      14,
+      7.72
+    ]
+  },
+  {
+    "key": "silly seal",
+    "name": "Silly Seal",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 69,
+    "nav": 31846.22,
+    "firstYear": 1942,
+    "debut": [
+      1942,
+      3394909,
+      "Krazy Komics Vol 1 1"
+    ],
+    "eras": [
+      47,
+      31842.6,
+      0,
+      0.0,
+      0,
+      0.0,
+      8,
+      3.62
+    ]
+  },
+  {
+    "key": "mike trapp",
+    "name": "Mike Trapp",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 32,
+    "nav": 31136.16,
+    "firstYear": 1943,
+    "debut": null,
+    "eras": [
+      32,
+      31136.16,
+      0,
+      0.0,
+      0,
+      0.0,
+      0,
+      0.0
+    ]
+  },
+  {
+    "key": "character index/c#charlie",
+    "name": "Character Index/C#Charlie",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 127,
+    "nav": 30839.13,
+    "firstYear": 1942,
+    "debut": [
+      1942,
+      2385555,
+      "Marvel Mystery Comics Vol 1 27"
+    ],
+    "eras": [
+      5,
+      194.89,
+      40,
+      29984.27,
+      23,
+      585.48,
+      51,
+      74.49
+    ]
+  },
+  {
+    "key": "gwendolyne stacy",
+    "name": "Gwendolyne Stacy",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 869,
+    "nav": 30751.72,
+    "firstYear": 1965,
+    "debut": [
+      1965,
+      2315050,
+      "Amazing Spider-Man Vol 1 31"
+    ],
+    "eras": [
+      0,
+      0.0,
+      48,
+      20375.02,
+      91,
+      9454.63,
+      614,
+      922.07
+    ]
+  },
+  {
+    "key": "united states air force",
+    "name": "United States Air Force",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 464,
+    "nav": 30582.56,
+    "firstYear": 1940,
+    "debut": [
+      1953,
+      25214,
+      "Menace Vol 1 8"
+    ],
+    "eras": [
+      12,
+      185.76,
+      98,
+      27020.6,
+      105,
+      3126.14,
+      226,
+      250.06
+    ]
+  },
+  {
+    "key": "uatu",
+    "name": "Uatu",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 747,
+    "nav": 30369.22,
+    "firstYear": 1963,
+    "debut": [
+      1963,
+      2362985,
+      "Fantastic Four Vol 1 13"
+    ],
+    "eras": [
+      0,
+      0.0,
+      36,
+      28535.6,
+      108,
+      1137.46,
+      543,
+      696.16
+    ]
+  },
+  {
+    "key": "martians",
+    "name": "Martians",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 54,
+    "nav": 30265.54,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2385558,
+      "Marvel Mystery Comics Vol 1 3"
+    ],
+    "eras": [
+      23,
+      4836.85,
+      25,
+      25389.07,
+      2,
+      31.44,
+      3,
+      8.18
+    ]
+  },
+  {
+    "key": "united states government",
+    "name": "United States Government",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 566,
+    "nav": 30163.62,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2385783,
+      "Mystic Comics Vol 1 2"
+    ],
+    "eras": [
+      75,
+      10515.43,
+      64,
+      18549.65,
+      60,
+      832.47,
+      336,
+      266.07
+    ]
+  },
+  {
+    "key": "nelson and murdock",
+    "name": "Nelson and Murdock",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 263,
+    "nav": 28535.71,
+    "firstYear": 1964,
+    "debut": [
+      1964,
+      2389318,
+      "Daredevil Vol 1 1"
+    ],
+    "eras": [
+      0,
+      0.0,
+      51,
+      27374.62,
+      43,
+      760.71,
+      161,
+      400.38
+    ]
+  },
+  {
+    "key": "blaine colt",
+    "name": "Blaine Colt",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 326,
+    "nav": 28237.91,
+    "firstYear": 1948,
+    "debut": [
+      1948,
+      4400854,
+      "Kid Colt Vol 1 1"
+    ],
+    "eras": [
+      113,
+      6784.88,
+      147,
+      20584.47,
+      14,
+      849.24,
+      36,
+      19.32
+    ]
+  },
+  {
+    "key": "william baker",
+    "name": "William Baker",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 660,
+    "nav": 27833.65,
+    "firstYear": 1963,
+    "debut": [
+      1963,
+      2315147,
+      "Amazing Spider-Man Vol 1 4"
+    ],
+    "eras": [
+      0,
+      0.0,
+      25,
+      25659.16,
+      48,
+      1344.08,
+      474,
+      830.4
+    ]
+  },
+  {
+    "key": "elizabeth ross",
+    "name": "Elizabeth Ross",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 701,
+    "nav": 27551.0,
+    "firstYear": 1962,
+    "debut": [
+      1962,
+      2387430,
+      "Incredible Hulk Vol 1 1"
+    ],
+    "eras": [
+      0,
+      0.0,
+      51,
+      21612.16,
+      136,
+      4489.17,
+      476,
+      1449.68
+    ]
+  },
+  {
+    "key": "quentin beck",
+    "name": "Quentin Beck",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 541,
+    "nav": 27488.69,
+    "firstYear": 1963,
+    "debut": [
+      1963,
+      2314929,
+      "Amazing Spider-Man Vol 1 2"
+    ],
+    "eras": [
+      0,
+      0.0,
+      11,
+      26144.3,
+      19,
+      581.02,
+      398,
+      763.38
+    ]
+  },
+  {
+    "key": "robert frank",
+    "name": "Robert Frank",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 140,
+    "nav": 27293.86,
+    "firstYear": 1941,
+    "debut": null,
+    "eras": [
+      35,
+      27021.98,
+      0,
+      0.0,
+      41,
+      226.67,
+      60,
+      45.21
+    ]
+  },
+  {
+    "key": "elisabeth ross",
+    "name": "Elisabeth Ross",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 69,
+    "nav": 26906.88,
+    "firstYear": 1941,
+    "debut": null,
+    "eras": [
+      33,
+      26669.48,
+      3,
+      213.66,
+      6,
+      17.18,
+      23,
+      6.56
+    ]
+  },
+  {
+    "key": "william watson",
+    "name": "William Watson",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 60,
+    "nav": 26783.15,
+    "firstYear": 1946,
+    "debut": [
+      1946,
+      3364560,
+      "Gay Comics Vol 1 24"
+    ],
+    "eras": [
+      37,
+      26783.15,
+      0,
+      0.0,
+      0,
+      0.0,
+      0,
+      0.0
+    ]
+  },
+  {
+    "key": "harold osborn",
+    "name": "Harold Osborn",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 807,
+    "nav": 26499.24,
+    "firstYear": 1965,
+    "debut": [
+      1965,
+      2315050,
+      "Amazing Spider-Man Vol 1 31"
+    ],
+    "eras": [
+      0,
+      0.0,
+      44,
+      17638.98,
+      113,
+      7685.59,
+      522,
+      1174.67
+    ]
+  },
+  {
+    "key": "james howlett",
+    "name": "James Howlett",
+    "universe": "MARVEL",
+    "tier": "MAJOR_ICON",
+    "issues": 6564,
+    "nav": 26490.51,
+    "firstYear": 1974,
+    "debut": [
+      1974,
+      2386993,
+      "Incredible Hulk Vol 1 180"
+    ],
+    "eras": [
+      0,
+      0.0,
+      0,
+      0.0,
+      224,
+      12985.67,
+      5687,
+      13504.85
+    ]
+  },
+  {
+    "key": "adrian toomes",
+    "name": "Adrian Toomes",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 724,
+    "nav": 25537.2,
+    "firstYear": 1963,
+    "debut": [
+      1963,
+      2314929,
+      "Amazing Spider-Man Vol 1 2"
+    ],
+    "eras": [
+      0,
+      0.0,
+      14,
+      23669.85,
+      33,
+      991.31,
+      535,
+      876.04
+    ]
+  },
+  {
+    "key": "mary jane watson",
+    "name": "Mary Jane Watson",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 2550,
+    "nav": 25462.44,
+    "firstYear": 1964,
+    "debut": [
+      1965,
+      2314984,
+      "Amazing Spider-Man Vol 1 25"
+    ],
+    "eras": [
+      0,
+      0.0,
+      44,
+      12768.35,
+      168,
+      7267.48,
+      1968,
+      5426.62
+    ]
+  },
+  {
+    "key": "john jonah jameson iii",
+    "name": "John Jonah Jameson III",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 353,
+    "nav": 24792.96,
+    "firstYear": 1963,
+    "debut": [
+      1963,
+      2314818,
+      "Amazing Spider-Man Vol 1 1"
+    ],
+    "eras": [
+      0,
+      0.0,
+      11,
+      22393.09,
+      39,
+      1915.42,
+      276,
+      484.45
+    ]
+  },
+  {
+    "key": "geheime staatspolizei",
+    "name": "Geheime Staatspolizei",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 95,
+    "nav": 24760.03,
+    "firstYear": 1941,
+    "debut": null,
+    "eras": [
+      49,
+      23827.23,
+      11,
+      862.98,
+      13,
+      63.4,
+      19,
+      6.42
+    ]
+  },
+  {
+    "key": "aphrodite ourania",
+    "name": "Aphrodite Ourania",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 73,
+    "nav": 24001.77,
+    "firstYear": 1942,
+    "debut": [
+      1942,
+      3347144,
+      "Comedy Comics Vol 1 12"
+    ],
+    "eras": [
+      23,
+      23830.95,
+      1,
+      80.26,
+      7,
+      73.96,
+      35,
+      16.6
+    ]
+  },
+  {
+    "key": "giganto (deviant mutate)",
+    "name": "Giganto (Deviant Mutate)",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 81,
+    "nav": 23916.81,
+    "firstYear": 1961,
+    "debut": [
+      1990,
+      3305334,
+      "What If...? Vol 1 11"
+    ],
+    "eras": [
+      0,
+      0.0,
+      1,
+      23849.97,
+      3,
+      20.96,
+      64,
+      45.88
+    ]
+  },
+  {
+    "key": "tricephalous",
+    "name": "Tricephalous",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 31,
+    "nav": 23892.13,
+    "firstYear": 1961,
+    "debut": null,
+    "eras": [
+      0,
+      0.0,
+      1,
+      23849.97,
+      0,
+      0.0,
+      25,
+      42.16
+    ]
+  },
+  {
+    "key": "benjamin parker",
+    "name": "Benjamin Parker",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 1008,
+    "nav": 23713.77,
+    "firstYear": 1962,
+    "debut": [
+      1962,
+      2387462,
+      "Amazing Fantasy Vol 1 15"
+    ],
+    "eras": [
+      0,
+      0.0,
+      11,
+      22185.0,
+      46,
+      584.4,
+      786,
+      944.36
+    ]
+  },
+  {
+    "key": "numerous unnamed police officers",
+    "name": "Numerous unnamed police officers",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 208,
+    "nav": 23017.23,
+    "firstYear": 1939,
+    "debut": null,
+    "eras": [
+      90,
+      12930.87,
+      55,
+      9526.55,
+      50,
+      557.14,
+      9,
+      2.66
+    ]
+  },
+  {
+    "key": "terry vance",
+    "name": "Terry Vance",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 50,
+    "nav": 22870.22,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2385537,
+      "Marvel Mystery Comics Vol 1 10"
+    ],
+    "eras": [
+      50,
+      22870.22,
+      0,
+      0.0,
+      0,
+      0.0,
+      0,
+      0.0
+    ]
+  },
+  {
+    "key": "korg",
+    "name": "Korg",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 111,
+    "nav": 22720.64,
+    "firstYear": 1962,
+    "debut": [
+      1962,
+      2388099,
+      "Journey Into Mystery Vol 1 83"
+    ],
+    "eras": [
+      0,
+      0.0,
+      3,
+      22583.54,
+      2,
+      9.33,
+      99,
+      127.78
+    ]
+  },
+  {
+    "key": "slade",
+    "name": "Slade",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 26,
+    "nav": 22652.99,
+    "firstYear": 1940,
+    "debut": [
+      1964,
+      2389318,
+      "Daredevil Vol 1 1"
+    ],
+    "eras": [
+      4,
+      16.49,
+      2,
+      22528.5,
+      3,
+      45.09,
+      15,
+      62.9
+    ]
+  },
+  {
+    "key": "clinton barton",
+    "name": "Clinton Barton",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 2679,
+    "nav": 22599.36,
+    "firstYear": 1964,
+    "debut": [
+      1964,
+      2387517,
+      "Tales of Suspense Vol 1 57"
+    ],
+    "eras": [
+      0,
+      0.0,
+      85,
+      16416.63,
+      268,
+      3978.43,
+      1981,
+      2204.3
+    ]
+  },
+  {
+    "key": "deutsche marine",
+    "name": "Deutsche Marine",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 97,
+    "nav": 22399.83,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2385558,
+      "Marvel Mystery Comics Vol 1 3"
+    ],
+    "eras": [
+      86,
+      22112.32,
+      6,
+      286.47,
+      0,
+      0.0,
+      2,
+      1.04
+    ]
+  },
+  {
+    "key": "character index/m#mike",
+    "name": "Character Index/M#Mike",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 26,
+    "nav": 21993.81,
+    "firstYear": 1939,
+    "debut": [
+      1942,
+      2385555,
+      "Marvel Mystery Comics Vol 1 27"
+    ],
+    "eras": [
+      3,
+      20937.88,
+      3,
+      1021.26,
+      3,
+      17.16,
+      16,
+      17.51
+    ]
+  },
+  {
+    "key": "alicia masters",
+    "name": "Alicia Masters",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 631,
+    "nav": 21961.04,
+    "firstYear": 1962,
+    "debut": [
+      1962,
+      2363341,
+      "Fantastic Four Vol 1 8"
+    ],
+    "eras": [
+      0,
+      0.0,
+      58,
+      19367.78,
+      175,
+      2047.96,
+      350,
+      545.31
+    ]
+  },
+  {
+    "key": "young allies (wwii)",
+    "name": "Young Allies (WWII)",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 55,
+    "nav": 21802.22,
+    "firstYear": 1941,
+    "debut": [
+      1941,
+      2451000,
+      "Young Allies Vol 1 1"
+    ],
+    "eras": [
+      46,
+      21801.05,
+      0,
+      0.0,
+      0,
+      0.0,
+      7,
+      1.18
+    ]
+  },
+  {
+    "key": "fred davis jr.",
+    "name": "Fred Davis Jr.",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 88,
+    "nav": 21549.77,
+    "firstYear": 1945,
+    "debut": null,
+    "eras": [
+      45,
+      21515.84,
+      0,
+      0.0,
+      6,
+      20.53,
+      36,
+      13.4
+    ]
+  },
+  {
+    "key": "unidentified police department",
+    "name": "Unidentified Police Department",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 318,
+    "nav": 21495.01,
+    "firstYear": 1940,
+    "debut": [
+      1953,
+      25214,
+      "Menace Vol 1 8"
+    ],
+    "eras": [
+      208,
+      10293.2,
+      84,
+      10878.7,
+      14,
+      318.61,
+      7,
+      4.5
+    ]
+  },
+  {
+    "key": "galan",
+    "name": "Galan",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 1574,
+    "nav": 21339.64,
+    "firstYear": 1966,
+    "debut": [
+      1966,
+      2363306,
+      "Fantastic Four Vol 1 48"
+    ],
+    "eras": [
+      0,
+      0.0,
+      36,
+      17073.95,
+      154,
+      2409.06,
+      1246,
+      1856.63
+    ]
+  },
+  {
+    "key": "jason ionello",
+    "name": "Jason Ionello",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 38,
+    "nav": 21129.55,
+    "firstYear": 1962,
+    "debut": [
+      1999,
+      2515047,
+      "Spider-Girl Vol 1 10"
+    ],
+    "eras": [
+      0,
+      0.0,
+      5,
+      21108.34,
+      0,
+      0.0,
+      31,
+      21.22
+    ]
+  },
+  {
+    "key": "teen brigade",
+    "name": "Teen Brigade",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 68,
+    "nav": 20983.54,
+    "firstYear": 1963,
+    "debut": [
+      1963,
+      2387435,
+      "Incredible Hulk Vol 1 6"
+    ],
+    "eras": [
+      0,
+      0.0,
+      22,
+      20850.47,
+      13,
+      43.63,
+      30,
+      89.44
+    ]
+  },
+  {
+    "key": "quentin carnival",
+    "name": "Quentin Carnival",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 71,
+    "nav": 20550.06,
+    "firstYear": 1972,
+    "debut": [
+      1972,
+      2399602,
+      "Marvel Spotlight Vol 1 5"
+    ],
+    "eras": [
+      0,
+      0.0,
+      0,
+      0.0,
+      29,
+      20477.04,
+      42,
+      73.02
+    ]
+  },
+  {
+    "key": "franklin nelson",
+    "name": "Franklin Nelson",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 743,
+    "nav": 20405.45,
+    "firstYear": 1964,
+    "debut": [
+      1964,
+      2389318,
+      "Daredevil Vol 1 1"
+    ],
+    "eras": [
+      0,
+      0.0,
+      64,
+      16180.98,
+      149,
+      3119.64,
+      507,
+      1104.83
+    ]
+  },
+  {
+    "key": "heer",
+    "name": "Heer",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 102,
+    "nav": 20210.24,
+    "firstYear": 1940,
+    "debut": [
+      1940,
+      2385714,
+      "Daring Mystery Comics Vol 1 2"
+    ],
+    "eras": [
+      64,
+      19718.32,
+      13,
+      325.8,
+      8,
+      156.13,
+      13,
+      9.99
+    ]
+  },
+  {
+    "key": "rock trolls",
+    "name": "Rock Trolls",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 164,
+    "nav": 20104.26,
+    "firstYear": 1963,
+    "debut": null,
+    "eras": [
+      0,
+      0.0,
+      14,
+      18690.45,
+      32,
+      1222.19,
+      106,
+      191.62
+    ]
+  },
+  {
+    "key": "wanda maximoff",
+    "name": "Wanda Maximoff",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 2368,
+    "nav": 19928.26,
+    "firstYear": 1964,
+    "debut": [
+      1964,
+      2395350,
+      "X-Men Vol 1 4"
+    ],
+    "eras": [
+      0,
+      0.0,
+      62,
+      13878.89,
+      330,
+      4231.98,
+      1700,
+      1817.39
+    ]
+  },
+  {
+    "key": "pietro maximoff",
+    "name": "Pietro Maximoff",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 1319,
+    "nav": 17057.12,
+    "firstYear": 1964,
+    "debut": [
+      1964,
+      2395350,
+      "X-Men Vol 1 4"
+    ],
+    "eras": [
+      0,
+      0.0,
+      65,
+      13907.09,
+      154,
+      2241.06,
+      983,
+      908.97
+    ]
+  },
+  {
+    "key": "marc spector",
+    "name": "Marc Spector",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 793,
+    "nav": 7088.65,
+    "firstYear": 1975,
+    "debut": [
+      1975,
+      2403829,
+      "Werewolf by Night Vol 1 32"
+    ],
+    "eras": [
+      0,
+      0.0,
+      0,
+      0.0,
+      83,
+      4478.16,
+      647,
+      2610.49
+    ]
+  },
+  {
+    "key": "kurt wagner",
+    "name": "Kurt Wagner",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 2135,
+    "nav": 6944.37,
+    "firstYear": 1975,
+    "debut": [
+      1975,
+      2402858,
+      "Giant-Size X-Men Vol 1 1"
+    ],
+    "eras": [
+      0,
+      0.0,
+      0,
+      0.0,
+      197,
+      4671.35,
+      1763,
+      2273.01
+    ]
+  },
+  {
+    "key": "eric brooks",
+    "name": "Eric Brooks",
+    "universe": "MARVEL",
+    "tier": "MINOR_CULT",
+    "issues": 518,
+    "nav": 4620.4,
+    "firstYear": 1973,
+    "debut": [
+      1973,
+      2401551,
+      "Tomb of Dracula Vol 1 10"
+    ],
+    "eras": [
+      0,
+      0.0,
+      0,
+      0.0,
+      41,
+      3621.66,
+      407,
+      998.73
+    ]
+  },
+  {
+    "key": "bruce wayne",
+    "name": "Bruce Wayne",
+    "universe": "MARVEL",
+    "tier": "MAJOR_ICON",
+    "issues": 13,
+    "nav": 11.64,
+    "firstYear": 1977,
+    "debut": null,
+    "eras": [
+      0,
+      0.0,
+      0,
+      0.0,
+      1,
+      1.61,
+      11,
+      10.03
+    ]
+  },
+  {
+    "key": "kal-el",
+    "name": "Kal-El",
+    "universe": "MARVEL",
+    "tier": "MAJOR_ICON",
+    "issues": 3,
+    "nav": 5.21,
+    "firstYear": 1977,
+    "debut": null,
+    "eras": [
+      0,
+      0.0,
+      0,
+      0.0,
+      1,
+      1.61,
+      2,
+      3.6
+    ]
+  },
+  {
+    "key": "joker",
+    "name": "Joker",
+    "universe": "MARVEL",
+    "tier": "MAJOR_ICON",
+    "issues": 1,
+    "nav": 0.77,
+    "firstYear": 1994,
+    "debut": null,
+    "eras": [
+      0,
+      0.0,
+      0,
+      0.0,
+      0,
+      0.0,
+      1,
+      0.77
+    ]
+  }
+]

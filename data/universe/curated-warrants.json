@@ -1,0 +1,132 @@
+[
+  {
+    "symbol": "WRN-ASM300",
+    "name": "Venom Origin 1Y Warrant",
+    "catalyst": "Symbiote Arc / Sony Spider-Verse Film",
+    "expiryDays": 365,
+    "underlyingSeries": "amazing spider-man, the",
+    "underlyingIssue": "300",
+    "year": 1988,
+    "underlyingPrice": 330.0
+  },
+  {
+    "symbol": "WRN-HULK181",
+    "name": "Wolverine Debut 2Y Warrant",
+    "catalyst": "MCU Mutant Saga Integration",
+    "expiryDays": 730,
+    "underlyingSeries": "incredible hulk, the",
+    "underlyingIssue": "181",
+    "year": 1974,
+    "underlyingPrice": 9900.0
+  },
+  {
+    "symbol": "WRN-FF48",
+    "name": "Galactus & Silver Surfer 18M Warrant",
+    "catalyst": "First Steps Fantastic Four Film",
+    "expiryDays": 540,
+    "underlyingSeries": "fantastic four",
+    "underlyingIssue": "48",
+    "year": 1966,
+    "underlyingPrice": 10300.0
+  },
+  {
+    "symbol": "WRN-AF15",
+    "name": "Spider-Man Sovereign 3Y Warrant",
+    "catalyst": "Spider-Man 4 Production Milestone",
+    "expiryDays": 1095,
+    "underlyingSeries": "amazing fantasy",
+    "underlyingIssue": "15",
+    "year": 1962,
+    "underlyingPrice": 172400.0
+  },
+  {
+    "symbol": "WRN-ACT1",
+    "name": "Superman Sovereign 1Y Warrant",
+    "catalyst": "DCU Gods and Monsters Launch",
+    "expiryDays": 365,
+    "underlyingSeries": "action comics",
+    "underlyingIssue": "1",
+    "year": 1938,
+    "underlyingPrice": 5454500.0
+  },
+  {
+    "symbol": "WRN-BAT27",
+    "name": "Dark Knight 2Y Warrant",
+    "catalyst": "Brave and the Bold DCU Film",
+    "expiryDays": 730,
+    "underlyingSeries": "detective comics",
+    "underlyingIssue": "27",
+    "year": 1939,
+    "underlyingPrice": 5000000.0
+  },
+  {
+    "symbol": "WRN-XMEN1",
+    "name": "X-Men Core 2Y Warrant",
+    "catalyst": "MCU X-Men Reboot Title Debut",
+    "expiryDays": 730,
+    "underlyingSeries": "x-men",
+    "underlyingIssue": "1",
+    "year": 1963,
+    "underlyingPrice": 51600.0
+  },
+  {
+    "symbol": "WRN-TOS39",
+    "name": "Iron Man Armor 1Y Warrant",
+    "catalyst": "Armor Wars Franchise Feature",
+    "expiryDays": 365,
+    "underlyingSeries": "tales of suspense",
+    "underlyingIssue": "39",
+    "year": 1963,
+    "underlyingPrice": 43300.0
+  },
+  {
+    "symbol": "WRN-JIM83",
+    "name": "Mjolnir Awakening 18M Warrant",
+    "catalyst": "Asgardian Multiverse Event",
+    "expiryDays": 540,
+    "underlyingSeries": "journey into mystery",
+    "underlyingIssue": "83",
+    "year": 1962,
+    "underlyingPrice": 40300.0
+  },
+  {
+    "symbol": "WRN-BAT181",
+    "name": "Poison Ivy Debut 1Y Warrant",
+    "catalyst": "Gotham City Sirens Adaptation",
+    "expiryDays": 365,
+    "underlyingSeries": "batman",
+    "underlyingIssue": "181",
+    "year": 1966,
+    "underlyingPrice": 2525.0
+  },
+  {
+    "symbol": "WRN-ASM129",
+    "name": "Punisher Arsenal 1Y Warrant",
+    "catalyst": "Daredevil Born Again Season 2",
+    "expiryDays": 365,
+    "underlyingSeries": "amazing spider-man, the",
+    "underlyingIssue": "129",
+    "year": 1974,
+    "underlyingPrice": 3200.0
+  },
+  {
+    "symbol": "WRN-GSX1",
+    "name": "Second Genesis 2Y Warrant",
+    "catalyst": "Krakoan Dynasty Global Media Arc",
+    "expiryDays": 730,
+    "underlyingSeries": "giant-size x-men",
+    "underlyingIssue": "1",
+    "year": 1975,
+    "underlyingPrice": 2625.0
+  },
+  {
+    "symbol": "WRN-NM98",
+    "name": "Deadpool Genesis 1Y Warrant",
+    "catalyst": "Deadpool & Wolverine Franchise Arc",
+    "expiryDays": 365,
+    "underlyingSeries": "new mutants, the",
+    "underlyingIssue": "98",
+    "year": 1991,
+    "underlyingPrice": 560.0
+  }
+]

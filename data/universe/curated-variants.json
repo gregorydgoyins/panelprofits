@@ -1,0 +1,119 @@
+[
+  {
+    "variantId": "2450951",
+    "series": "Three Stooges",
+    "issue": "1",
+    "variantName": "Cover A - Roberto Meli",
+    "baseFmv": 51.01,
+    "variantFmv": 76.52,
+    "coverUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/3b/3b95a6648f6ff1ee6d3c8505da5b9056b16c2e44f00c0f3bd0f38ae4ce374243.jpg"
+  },
+  {
+    "variantId": "2422732",
+    "series": "Nightwing",
+    "issue": "1",
+    "variantName": "Peter Bergting Cover",
+    "baseFmv": 56.13,
+    "variantFmv": 84.2,
+    "coverUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/98/980eb72fbac45986e7372bde7537e84a92427b335de20997ca1b6d632038884a.jpg"
+  },
+  {
+    "variantId": "2388825",
+    "series": "Strange Tales",
+    "issue": "3",
+    "variantName": "Cliff Chiang Cover",
+    "baseFmv": 63.33,
+    "variantFmv": 95.0,
+    "coverUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/b9/b9fbccb3ba0b46d74deb320ae46f38fc58f72162f53a0f425a9d5ce21d36f231.jpg"
+  },
+  {
+    "variantId": "2425912",
+    "series": "Birds of Prey",
+    "issue": "1",
+    "variantName": "Cover A - S. Morian",
+    "baseFmv": 67.87,
+    "variantFmv": 101.81,
+    "coverUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/ec/ecd52147d727d009d3329d127d644cd549008b46f83100c73957e24e91b69f73.webp"
+  },
+  {
+    "variantId": "2428668",
+    "series": "Punisher: War Zone",
+    "issue": "1",
+    "variantName": "Kaare Andrews Cover",
+    "baseFmv": 75.0,
+    "variantFmv": 112.5,
+    "coverUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/89/89e91d65f302660302edeac7e09fc01678a6ca67e749e34c8e3f016d40696591.jpg"
+  },
+  {
+    "variantId": "2423262",
+    "series": "V for Vendetta",
+    "issue": "12",
+    "variantName": "Christian Duce Cover",
+    "baseFmv": 76.11,
+    "variantFmv": 114.16,
+    "coverUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/ae/ae07f69cd376041115273c5667eabe13ffda20459a07b9e32f61158a58b1e1ce.webp"
+  },
+  {
+    "variantId": "2451734",
+    "series": "Captain Atom",
+    "issue": "3",
+    "variantName": "Peter Bergting Cover",
+    "baseFmv": 93.54,
+    "variantFmv": 140.31,
+    "coverUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/e7/e7faec63a2ecac5f3e565a01a967db998fa4be881fd9787faff79eb11bf869b7.webp"
+  },
+  {
+    "variantId": "2422024",
+    "series": "Thundercats",
+    "issue": "1",
+    "variantName": "Evan \"Doc\" Shaner Cover",
+    "baseFmv": 100.66,
+    "variantFmv": 150.99,
+    "coverUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/f1/f1aaefc08279c94cdf32f0c4cd7a13d7f80832a1a3d9b9e4fdc53df6ff6a249b.jpg"
+  },
+  {
+    "variantId": "2422023",
+    "series": "Thundercats",
+    "issue": "2",
+    "variantName": "Christian Ward Cover",
+    "baseFmv": 103.6,
+    "variantFmv": 155.4,
+    "coverUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/2f/2f9a2764d7a1cda7d7d7519813a58577ef88e8f9d8260a2d6a4f0a4850e30790.jpg"
+  },
+  {
+    "variantId": "2385378",
+    "series": "Jumbo Comics",
+    "issue": "2",
+    "variantName": "Aaron Campbell Cover",
+    "baseFmv": 435.0,
+    "variantFmv": 652.5,
+    "coverUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/de/deca0ca54235b79d28f7ec10622ce7121a9dd1127102adb5d28e96e892314545.jpg"
+  },
+  {
+    "variantId": "2428913",
+    "series": "Zatanna",
+    "issue": "2",
+    "variantName": "Nikola \u010ci\u017eme\u0161ija Cover",
+    "baseFmv": 529.0,
+    "variantFmv": 793.5,
+    "coverUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/b1/b1dfecaf1e9183fdec6450307b4b7a583f4ef569fd6367a4915d620c104e4158.webp"
+  },
+  {
+    "variantId": "2524785",
+    "series": "RoboCop",
+    "issue": "1",
+    "variantName": "Cover A",
+    "baseFmv": 599.0,
+    "variantFmv": 898.5,
+    "coverUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/7a/7a59370dafc0a2ba5af28e8b3ec1a28cd33946e5841b1f31e1c157f68b64e44d.jpg"
+  },
+  {
+    "variantId": "2450006",
+    "series": "Marvel Family",
+    "issue": "9",
+    "variantName": "Dan Mora Cover",
+    "baseFmv": 1717.07,
+    "variantFmv": 2575.61,
+    "coverUrl": "https://vbcmjmakluyjnsmisoth.supabase.co/storage/v1/object/public/comic-covers/pp/d7/d798914e5224025bf69cc8c19a183b696afb16a410344230920985af3fe3bfb0.webp"
+  }
+]

@@ -1,0 +1,608 @@
+[
+  {
+    "symbol": "GLD70",
+    "name": "Golden Age Sovereign 10 Fund",
+    "type": "ETF",
+    "er": 0.0035,
+    "universe": "PAN-HISTORICAL",
+    "description": "Cap-weighted benchmark tracking the top 10 foundational Golden Age master equities",
+    "constituents": [
+      {
+        "series": "action comics",
+        "issue": "1",
+        "year": 1938,
+        "price": 5454500.0
+      },
+      {
+        "series": "superman",
+        "issue": "1",
+        "year": 1939,
+        "price": 4588800.0
+      },
+      {
+        "series": "marvel comics",
+        "issue": "1",
+        "year": 1939,
+        "price": 1319100.0
+      },
+      {
+        "series": "batman",
+        "issue": "1",
+        "year": 1940,
+        "price": 1155200.0
+      },
+      {
+        "series": "captain america comics",
+        "issue": "1",
+        "year": 1941,
+        "price": 845200.0
+      },
+      {
+        "series": "whiz comics",
+        "issue": "1",
+        "year": 1940,
+        "price": 574400.0
+      },
+      {
+        "series": "flash comics",
+        "issue": "1",
+        "year": 1940,
+        "price": 388200.0
+      },
+      {
+        "series": "detective comics",
+        "issue": "1",
+        "year": 1937,
+        "price": 375200.0
+      },
+      {
+        "series": "all-american comics",
+        "issue": "16",
+        "year": 1940,
+        "price": 364000.0
+      },
+      {
+        "series": "suspense comics",
+        "issue": "3",
+        "year": 1944,
+        "price": 227800.0
+      }
+    ],
+    "constituentsCount": 10,
+    "aggregateMarketCap": 15292400.0,
+    "initialNav": 15292400.0
+  },
+  {
+    "symbol": "SLV50",
+    "name": "Silver Age Benchmark ETF",
+    "type": "ETF",
+    "er": 0.0045,
+    "universe": "PAN-HISTORICAL",
+    "description": "Value-weighted index tracking the top Silver Age superhero debuts (1956-1969)",
+    "constituents": [
+      {
+        "series": "amazing fantasy",
+        "issue": "15",
+        "year": 1962,
+        "price": 172400.0
+      },
+      {
+        "series": "incredible hulk, the",
+        "issue": "1",
+        "year": 1962,
+        "price": 82600.0
+      },
+      {
+        "series": "fantastic four",
+        "issue": "1",
+        "year": 1961,
+        "price": 57400.0
+      },
+      {
+        "series": "x-men",
+        "issue": "1",
+        "year": 1963,
+        "price": 51600.0
+      },
+      {
+        "series": "amazing spider-man, the",
+        "issue": "1",
+        "year": 1963,
+        "price": 43700.0
+      },
+      {
+        "series": "journey into mystery",
+        "issue": "83",
+        "year": 1962,
+        "price": 40300.0
+      },
+      {
+        "series": "our army at war",
+        "issue": "83",
+        "year": 1959,
+        "price": 20200.0
+      },
+      {
+        "series": "fightin\u2019 army",
+        "issue": "41",
+        "year": 1961,
+        "price": 15600.0
+      },
+      {
+        "series": "avengers, the",
+        "issue": "1",
+        "year": 1963,
+        "price": 15500.0
+      },
+      {
+        "series": "brave and the bold, the",
+        "issue": "28",
+        "year": 1960,
+        "price": 12900.0
+      },
+      {
+        "series": "daredevil",
+        "issue": "1",
+        "year": 1964,
+        "price": 12100.0
+      },
+      {
+        "series": "batman",
+        "issue": "121",
+        "year": 1959,
+        "price": 11200.0
+      },
+      {
+        "series": "justice league of america",
+        "issue": "1",
+        "year": 1960,
+        "price": 11100.0
+      },
+      {
+        "series": "action comics",
+        "issue": "242",
+        "year": 1958,
+        "price": 9700.0
+      },
+      {
+        "series": "strange tales",
+        "issue": "110",
+        "year": 1963,
+        "price": 8500.0
+      }
+    ],
+    "constituentsCount": 15,
+    "aggregateMarketCap": 564800.0,
+    "initialNav": 564800.0
+  },
+  {
+    "symbol": "MRV-CORE",
+    "name": "Marvel Universe Core ETF",
+    "type": "ETF",
+    "er": 0.005,
+    "universe": "Marvel",
+    "description": "Institutional portfolio of prime Marvel cornerstone titles (Spider-Man, X-Men, Avengers, FF)",
+    "constituents": [
+      {
+        "series": "captain america comics",
+        "issue": "1",
+        "year": 1941,
+        "price": 845200.0
+      },
+      {
+        "series": "marvel mystery comics",
+        "issue": "4",
+        "year": 1940,
+        "price": 119100.0
+      },
+      {
+        "series": "sub-mariner, the",
+        "issue": "1",
+        "year": 1941,
+        "price": 105800.0
+      },
+      {
+        "series": "incredible hulk, the",
+        "issue": "1",
+        "year": 1962,
+        "price": 82600.0
+      },
+      {
+        "series": "fantastic four",
+        "issue": "1",
+        "year": 1961,
+        "price": 74400.0
+      },
+      {
+        "series": "x-men",
+        "issue": "1",
+        "year": 1963,
+        "price": 51600.0
+      },
+      {
+        "series": "amazing spider-man, the",
+        "issue": "1",
+        "year": 1963,
+        "price": 43700.0
+      },
+      {
+        "series": "tales of suspense",
+        "issue": "39",
+        "year": 1963,
+        "price": 43300.0
+      },
+      {
+        "series": "daredevil",
+        "issue": "1",
+        "year": 1941,
+        "price": 43200.0
+      },
+      {
+        "series": "journey into mystery",
+        "issue": "83",
+        "year": 1962,
+        "price": 40300.0
+      },
+      {
+        "series": "tales to astonish",
+        "issue": "27",
+        "year": null,
+        "price": 18200.0
+      },
+      {
+        "series": "avengers, the",
+        "issue": "1",
+        "year": 1963,
+        "price": 15500.0
+      },
+      {
+        "series": "iron man",
+        "issue": "55",
+        "year": 1973,
+        "price": 1975.0
+      },
+      {
+        "series": "silver surfer, the",
+        "issue": "1",
+        "year": 1968,
+        "price": 1925.0
+      },
+      {
+        "series": "captain america",
+        "issue": "117",
+        "year": 1969,
+        "price": 1075.0
+      },
+      {
+        "series": "doctor strange",
+        "issue": "169",
+        "year": 1968,
+        "price": 900.0
+      },
+      {
+        "series": "thor",
+        "issue": "165",
+        "year": 1969,
+        "price": 875.0
+      },
+      {
+        "series": "uncanny x-men, the",
+        "issue": "Anl 1",
+        "year": 1970,
+        "price": 850.0
+      }
+    ],
+    "constituentsCount": 18,
+    "aggregateMarketCap": 1490500.0,
+    "initialNav": 1490500.0
+  },
+  {
+    "symbol": "DC-MULTI",
+    "name": "DC Multiverse Sovereign Fund",
+    "type": "ETF",
+    "er": 0.005,
+    "universe": "DC",
+    "description": "Comprehensive DC Universe portfolio tracking Batman, Superman, Wonder Woman, and Flash landmarks",
+    "constituents": [
+      {
+        "series": "action comics",
+        "issue": "1",
+        "year": 1938,
+        "price": 5454500.0
+      },
+      {
+        "series": "detective comics",
+        "issue": "27",
+        "year": 1939,
+        "price": 5000000.0
+      },
+      {
+        "series": "superman",
+        "issue": "1",
+        "year": 1939,
+        "price": 4588800.0
+      },
+      {
+        "series": "batman",
+        "issue": "1",
+        "year": 1940,
+        "price": 1155200.0
+      },
+      {
+        "series": "flash comics",
+        "issue": "1",
+        "year": 1940,
+        "price": 388200.0
+      },
+      {
+        "series": "all-american comics",
+        "issue": "16",
+        "year": 1940,
+        "price": 364000.0
+      },
+      {
+        "series": "more fun comics",
+        "issue": "73",
+        "year": 1941,
+        "price": 326100.0
+      },
+      {
+        "series": "all-star comics",
+        "issue": "8",
+        "year": 1942,
+        "price": 250000.0
+      },
+      {
+        "series": "wonder woman",
+        "issue": "1",
+        "year": 1942,
+        "price": 202900.0
+      },
+      {
+        "series": "adventure comics",
+        "issue": "40",
+        "year": 1939,
+        "price": 187100.0
+      },
+      {
+        "series": "sensation comics",
+        "issue": "1",
+        "year": 1942,
+        "price": 181100.0
+      },
+      {
+        "series": "showcase",
+        "issue": "4",
+        "year": 1956,
+        "price": 93800.0
+      },
+      {
+        "series": "green lantern",
+        "issue": "1",
+        "year": 1941,
+        "price": 47900.0
+      },
+      {
+        "series": "brave and the bold, the",
+        "issue": "28",
+        "year": 1960,
+        "price": 12900.0
+      },
+      {
+        "series": "justice league of america",
+        "issue": "1",
+        "year": 1960,
+        "price": 11100.0
+      },
+      {
+        "series": "flash, the",
+        "issue": "105",
+        "year": 1959,
+        "price": 7000.0
+      }
+    ],
+    "constituentsCount": 16,
+    "aggregateMarketCap": 18270600.0,
+    "initialNav": 18270600.0
+  },
+  {
+    "symbol": "VENOM-ARC",
+    "name": "Venomverse Symbiote Fund",
+    "type": "FUND",
+    "er": 0.0075,
+    "universe": "Marvel",
+    "description": "Thematic high-beta fund tracking Symbiote milestone printings (ASM 252, ASM 300, ASM 361, Secret Wars 8)",
+    "constituents": [
+      {
+        "series": "amazing spider-man, the",
+        "issue": "1",
+        "year": 1963,
+        "price": 43700.0
+      },
+      {
+        "series": "amazing spider-man, the",
+        "issue": "1",
+        "year": 1963,
+        "price": 16200.0
+      },
+      {
+        "series": "amazing spider-man, the",
+        "issue": "3",
+        "year": 1963,
+        "price": 13900.0
+      },
+      {
+        "series": "amazing spider-man, the",
+        "issue": "3",
+        "year": 1963,
+        "price": 11700.0
+      },
+      {
+        "series": "amazing spider-man, the",
+        "issue": "2",
+        "year": 1963,
+        "price": 10900.0
+      },
+      {
+        "series": "amazing spider-man, the",
+        "issue": "14",
+        "year": 1964,
+        "price": 10800.0
+      },
+      {
+        "series": "amazing spider-man, the",
+        "issue": "4",
+        "year": 1963,
+        "price": 8700.0
+      },
+      {
+        "series": "amazing spider-man, the",
+        "issue": "4",
+        "year": 1963,
+        "price": 8000.0
+      },
+      {
+        "series": "amazing spider-man, the",
+        "issue": "9",
+        "year": 1964,
+        "price": 7000.0
+      },
+      {
+        "series": "amazing spider-man, the",
+        "issue": "14",
+        "year": 1964,
+        "price": 6300.0
+      },
+      {
+        "series": "amazing spider-man, the",
+        "issue": "Anl 1",
+        "year": 1964,
+        "price": 6100.0
+      },
+      {
+        "series": "amazing spider-man, the",
+        "issue": "6",
+        "year": 1963,
+        "price": 6000.0
+      },
+      {
+        "series": "amazing spider-man, the",
+        "issue": "5",
+        "year": 1963,
+        "price": 5100.0
+      },
+      {
+        "series": "amazing spider-man, the",
+        "issue": "15",
+        "year": 1964,
+        "price": 4900.0
+      },
+      {
+        "series": "venom: lethal protector",
+        "issue": "1",
+        "year": 1993,
+        "price": 4900.0
+      }
+    ],
+    "constituentsCount": 15,
+    "aggregateMarketCap": 164200.0,
+    "initialNav": 164200.0
+  },
+  {
+    "symbol": "INDIE-ALTS",
+    "name": "Independent High-Alpha Fund",
+    "type": "FUND",
+    "er": 0.0085,
+    "universe": "INDEPENDENT",
+    "description": "Curated alternative equity fund tracking pioneer creator-owned releases (TMNT 1, Spawn 1, Bone, Cerebus)",
+    "constituents": [
+      {
+        "series": "teenage mutant ninja turtles",
+        "issue": "1",
+        "year": 1984,
+        "price": 19900.0
+      },
+      {
+        "series": "bone",
+        "issue": "1",
+        "year": null,
+        "price": 2025.0
+      },
+      {
+        "series": "spawn",
+        "issue": "150",
+        "year": 2005,
+        "price": 530.0
+      },
+      {
+        "series": "invincible",
+        "issue": "1",
+        "year": 2018,
+        "price": 500.0
+      },
+      {
+        "series": "saga",
+        "issue": "1",
+        "year": 2012,
+        "price": 450.0
+      },
+      {
+        "series": "witchblade",
+        "issue": "117",
+        "year": 2008,
+        "price": 375.0
+      },
+      {
+        "series": "walking dead, the",
+        "issue": "1",
+        "year": 2003,
+        "price": 350.0
+      },
+      {
+        "series": "savage dragon, the",
+        "issue": "137",
+        "year": 2008,
+        "price": 210.0
+      },
+      {
+        "series": "chew",
+        "issue": "CS 1",
+        "year": 2013,
+        "price": 150.0
+      },
+      {
+        "series": "monstress",
+        "issue": "Dlx 2",
+        "year": 2024,
+        "price": 150.0
+      },
+      {
+        "series": "darkness, the",
+        "issue": "10",
+        "year": 1997,
+        "price": 140.0
+      },
+      {
+        "series": "strangers in paradise",
+        "issue": "2",
+        "year": 1993,
+        "price": 135.0
+      },
+      {
+        "series": "sin city",
+        "issue": "1",
+        "year": 1993,
+        "price": 117.0
+      },
+      {
+        "series": "hellboy: seed of destruction",
+        "issue": "Bk 1",
+        "year": null,
+        "price": 100.0
+      }
+    ],
+    "constituentsCount": 14,
+    "aggregateMarketCap": 25132.0,
+    "initialNav": 25132.0
+  }
+]
