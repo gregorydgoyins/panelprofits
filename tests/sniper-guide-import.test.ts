@@ -5,3 +5,10 @@ const html=`VGPC.product = { id: 2403828, };\nVGPC.chart_data = {"manualonly":[[
 it('imports published historical points at the exact grades in the legend and converts cents',()=>{
  const rows=parsePriceChartingGuide(html,'2403828',url);expect(rows).toHaveLength(2);expect(rows[0]).toMatchObject({pp_id:'2403828',snapshot_date:'2022-02-01',pp_price_9_8:994.54,pp_price_9_2:187.42,pp_price_raw:31.38});expect(rows[1]).toMatchObject({snapshot_date:'2026-10-01',pp_price_9_8:761.19});expect(rows[0].pp_price_9_4).toBeUndefined();expect(parsePriceChartingGuide(html,'3374611',url)).toEqual([]);expect(rows[0].id).toBe(parsePriceChartingGuide(html,'2403828',url)[0].id);
 });
+
+it('keeps the current month when the publisher timestamps it near month end',()=>{
+ const html=`VGPC.product = { id: 2403828, };\nVGPC.chart_data = {"manualonly":[[1793397600000,76119]]};\n<option value="completed-auctions-manual-only">9.8 (3)</option>`;
+ const rows=parsePriceChartingGuide(html,'2403828',url);
+ expect(rows).toHaveLength(1);
+ expect(rows[0]).toMatchObject({snapshot_date:'2026-10-30',pp_price_9_8:761.19});
+});

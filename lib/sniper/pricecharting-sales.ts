@@ -40,7 +40,13 @@ export function parsePriceChartingGuide(html:string,sourceId:string,url:string) 
   for(const [key,points] of Object.entries(chart)){
     const grade=labels.get(key);if(!grade || !allowed.has(grade) || !Array.isArray(points))continue;
     for(const point of points){
-      if(!Array.isArray(point) || point.length!==2 || !Number.isFinite(point[0]) || !Number.isInteger(point[1]) || point[1]<=0 || point[0]>Date.now())continue;
+      if(!Array.isArray(point) || point.length!==2 || !Number.isFinite(point[0]) || !Number.isInteger(point[1]) || point[1]<=0)continue;
+      // PriceCharting timestamps its monthly points near the end of the month.
+      // Keep the current calendar month even when that timestamp is a few days
+      // ahead of the runtime clock; reject genuinely future months only.
+      const pointMonth = new Date(point[0]).toISOString().slice(0, 7);
+      const currentMonth = new Date().toISOString().slice(0, 7);
+      if (pointMonth > currentMonth) continue;
       const date=new Date(point[0]).toISOString().slice(0,10);
       const row=rows.get(date) || {id:-parseInt(createHash('sha256').update(`pc-chart:${sourceId}:${date}`).digest('hex').slice(0,13),16),pp_id:sourceId,snapshot_date:date,snapshot_label:`PriceCharting published guide history · ${url}`};
       row[`pp_price_${grade}`]=point[1]/100;rows.set(date,row);
