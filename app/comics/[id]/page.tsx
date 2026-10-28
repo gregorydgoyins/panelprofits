@@ -31,6 +31,7 @@ import { resolvePriceTier, isDirectEdition, PREMIUM_MIN_PRICE } from "@/lib/pric
 import { resolveProductionAge } from "@/lib/equity/ticker-utils";
 import StorySummaryCard from "@/components/detail/equity/StorySummaryCard";
 import GradingArbitrageTerminal from "@/components/detail/equity/GradingArbitrageTerminal";
+import PortfolioAssetReplicationDesk from "@/components/detail/equity/PortfolioAssetReplicationDesk";
 import { Suspense } from "react";
 import { resolveGcdStoryDossier } from "@/lib/comics/gcd-story-service";
 import { createAdminServerClient } from "@/lib/supabase/admin";
@@ -922,6 +923,16 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
             issue={String(comic.issue_number)}
             rawMarketPrice={Number(rawPrice || rawLattice["RAW"] || 100)}
             gradeMatrixFmv={rawLattice as any}
+            accentColor={eraColors.border}
+          />
+
+          <PortfolioAssetReplicationDesk
+            comicId={comic.id}
+            series={comic.series}
+            issue={String(comic.issue_number)}
+            year={comic.publication_year ?? 1974}
+            rawPrice={Number(rawPrice || rawLattice["RAW"] || 100)}
+            targetFmv98={Number(consensusFmv || rawLattice["9.8"] || 1200)}
             accentColor={eraColors.border}
           />
 
