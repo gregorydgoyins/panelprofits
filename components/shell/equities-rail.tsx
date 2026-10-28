@@ -240,20 +240,23 @@ export function EquitiesRail({ items: initialItems = [], seedItems, indices = []
   }, [fetchBatch]);
 
   React.useEffect(() => {
-    // Check if user has an existing queue offset in sessionStorage
+    // Always pick a completely fresh random non-repeating queue window on load/restart
     try {
       const stored = sessionStorage.getItem("pp_rail_offset");
-      if (stored !== null) {
-        // Advance by 260 comics on page reload so user gets a piece of the next batch!
-        const nextReloadOffset = (parseInt(stored, 10) + 260) % RAIL_TOTAL;
-        nextOffset.current = nextReloadOffset;
-        sessionStorage.setItem("pp_rail_offset", String(nextReloadOffset));
+      const randomJump = Math.floor(Math.random() * 50000) + 500;
+      const nextReloadOffset = stored !== null
+        ? (parseInt(stored, 10) + randomJump) % RAIL_TOTAL
+        : (seedOffset || Math.floor(Math.random() * RAIL_TOTAL));
+
+      nextOffset.current = nextReloadOffset;
+      sessionStorage.setItem("pp_rail_offset", String(nextReloadOffset));
+      if (stored !== null || initialEquityItems.length === 0) {
         fetchBatch(nextReloadOffset);
         return;
       }
     } catch {}
 
-    // First visit in session: seed with the SSR offset and stage the next 260 chunk
+    // First visit in session: seed with the SSR offset and stage the next chunk
     const nextStep = (seedOffset + RAIL_STEP) % RAIL_TOTAL;
     nextOffset.current = nextStep;
     try {

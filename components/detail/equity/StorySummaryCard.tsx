@@ -10,6 +10,12 @@ interface StorySummaryCardProps {
   publisher: string | null;
   volume?: number | null;
   accent: string;
+  fandomData?: {
+    synopsis?: string | null;
+    firstAppearances?: string[] | null;
+    characters?: string[] | null;
+    credits?: Record<string, string[]> | null;
+  } | null;
 }
 
 function resolveInternalLoreUrl(url: string, fallbackLabel: string): string {
@@ -172,6 +178,7 @@ export default async function StorySummaryCard({
   publisher,
   volume,
   accent,
+  fandomData,
 }: StorySummaryCardProps) {
   let summary = null;
   try {
@@ -181,6 +188,50 @@ export default async function StorySummaryCard({
     ]);
   } catch {
     summary = null;
+  }
+
+  // If external fetch was empty/timed out but sovereign database has fandom data:
+  if (!summary && fandomData?.synopsis) {
+    const rawFirstApps = (fandomData.firstAppearances || []).map((name) => ({
+      target: name,
+      label: name,
+      url: `/wiki/entry/${encodeURIComponent(name.toLowerCase().replace(/[^a-z0-9]+/g, "-"))}`,
+      isFirstApp: true,
+    }));
+    const rawFeatured = (fandomData.characters || []).map((name) => ({
+      target: name,
+      label: name,
+      url: `/wiki/entry/${encodeURIComponent(name.toLowerCase().replace(/[^a-z0-9]+/g, "-"))}`,
+    }));
+
+    summary = {
+      text: fandomData.synopsis,
+      storyTitle: `${series} #${issueNumber}`,
+      quote: null,
+      entities: {
+        firstAppearances: rawFirstApps,
+        featuredCharacters: rawFeatured,
+        antagonists: [],
+        otherCharacters: [],
+        racesAndSpecies: [],
+        realities: [],
+        locations: [],
+        items: [],
+        vehicles: [],
+      },
+      credits: fandomData.credits ? {
+        coverArtists: [],
+        writers: fandomData.credits.writer || [],
+        pencilers: fandomData.credits.penciler || fandomData.credits.artist || [],
+        colorists: fandomData.credits.colorist || [],
+        letterers: fandomData.credits.letterer || [],
+        editors: fandomData.credits.editor || [],
+      } : undefined,
+      source: "Marvel/DC Fandom Database",
+      sourceUrl: "https://fandom.com",
+      license: "CC-BY-SA 3.0",
+      referenceYear: year,
+    };
   }
 
   if (!summary) return null;

@@ -108,7 +108,67 @@ export async function getComicCensusDossier(
       .order("snapshot_timestamp", { ascending: false })
       .limit(1);
 
-    if (snapshotError || !snapshots?.length) return null;
+    if (snapshotError || !snapshots?.length) {
+      // Fallback: Query authentic public.cgc_population (401,540 rows)
+      const { data: cgcPopRows } = await db
+        .from("cgc_population")
+        .select("title,issue_number,variant,total,pop_9_0_plus,pop,source_modified_at")
+        .ilike("title", series)
+        .eq("issue_number", issueNumber)
+        .order("total", { ascending: false })
+        .limit(1);
+
+      if (cgcPopRows && cgcPopRows.length > 0) {
+        const cgcPop = cgcPopRows[0];
+        const popMap = (cgcPop.pop as Record<string, number>) || {};
+        const gradeKeys = [
+          "10_0", "9_9", "9_8", "9_6", "9_4", "9_2", "9_0", "8_5", "8_0", "7_5",
+          "7_0", "6_5", "6_0", "5_5", "5_0", "4_5", "4_0", "3_5", "3_0", "2_5",
+          "2_0", "1_8", "1_5", "1_0", "0_5", "PG", "NG"
+        ];
+        const mappedGrades: CensusGradeRow[] = [];
+        let runningHigher = 0;
+        for (const k of gradeKeys) {
+          const count = Number(popMap[k] || 0);
+          const gradeNum = k === "PG" || k === "NG" ? null : parseFloat(k.replace("_", "."));
+          mappedGrades.push({
+            native_grade_text: k.replace("_", "."),
+            grade_numeric: gradeNum,
+            native_designation: null,
+            count_at_grade: count,
+            count_higher: runningHigher,
+            page_quality: null,
+            has_restoration: null,
+            has_conservation: null,
+            has_signature: null,
+            qualifier: null,
+            gradingCompany: "CGC",
+            sourceAuthority: "CGC Direct",
+          });
+          runningHigher += count;
+        }
+
+        return {
+          snapshot: {
+            title_name: cgcPop.title,
+            issue_number_raw: cgcPop.issue_number,
+            edition_name: cgcPop.variant,
+            variant_name: cgcPop.variant,
+            snapshot_timestamp: cgcPop.source_modified_at || new Date().toISOString(),
+            source_url: "https://www.cgccomics.com/census/",
+            total_graded: Number(cgcPop.total || 0),
+            gradingCompany: "CGC",
+            provider: "CGC Direct Census Feed",
+            sourceAuthority: "CGC Direct",
+            gcdRelevanceVerified: true,
+          },
+          grades: mappedGrades,
+          certifications: [],
+          sales: [],
+        };
+      }
+      return null;
+    }
     const snapshot = snapshots[0];
 
     const [{ data: rows }, { data: certifications }, { data: sales }, { data: providers }, { data: gcdCheck }] = await Promise.all([

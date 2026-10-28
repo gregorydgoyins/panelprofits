@@ -48,6 +48,7 @@ export default function TradingChartPanel({
   const [chartType, setChartType] = useState<ChartType>('area');
   const [subIndicator, setSub] = useState<SubIndicator>('rsi');
   const [showVolume, setShowVol] = useState(false);
+  const [showBollinger, setShowBollinger] = useState(true);
 
   useEffect(() => {
     if (availableGrades.length > 0 && !availableGrades.includes(grade)) {
@@ -79,6 +80,26 @@ export default function TradingChartPanel({
     const vals = rsi14(pricePoints.map((p) => p[1]));
     const out: [number, number][] = [];
     vals.forEach((v, i) => { if (v != null) out.push([pricePoints[i][0], Math.round(v * 10) / 10]); });
+    return out;
+  }, [pricePoints]);
+
+  const bollingerData = useMemo(() => {
+    if (pricePoints.length < 5) return [];
+    const window = Math.min(20, Math.max(3, pricePoints.length));
+    const out: Array<{ date: string; price: number; upperBand: number; lowerBand: number; sma20: number }> = [];
+    for (let i = window - 1; i < pricePoints.length; i++) {
+      const slice = pricePoints.slice(i - window + 1, i + 1).map((p) => p[1]);
+      const mean = slice.reduce((a, b) => a + b, 0) / window;
+      const variance = slice.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / window;
+      const stdDev = Math.sqrt(variance);
+      out.push({
+        date: new Date(pricePoints[i][0]).toISOString(),
+        price: pricePoints[i][1],
+        sma20: Math.round(mean * 100) / 100,
+        upperBand: Math.round((mean + 2 * stdDev) * 100) / 100,
+        lowerBand: Math.max(0, Math.round((mean - 2 * stdDev) * 100) / 100),
+      });
+    }
     return out;
   }, [pricePoints]);
 
@@ -180,6 +201,8 @@ export default function TradingChartPanel({
             <Btn key={ct} active={chartType === ct} onClick={() => setChartType(ct)}>{lbl}</Btn>
           ))}
         </div>
+        <span style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.1)', display: 'inline-block' }} />
+        <Btn active={showBollinger} onClick={() => setShowBollinger((v) => !v)}>BB</Btn>
         {salesVol.length > 0 && (
           <>
             <span style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.1)', display: 'inline-block' }} />
@@ -203,8 +226,8 @@ export default function TradingChartPanel({
           chartType={chartType}
           trendColor={trendColor}
           eraColor={eraColors.border}
-          showBollinger={false}
-          bollingerData={[]}
+          showBollinger={showBollinger}
+          bollingerData={bollingerData}
           heritageData={gradeSales}
           showVolume={showVolume}
           volPoints={[]}

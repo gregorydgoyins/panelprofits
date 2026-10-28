@@ -9,6 +9,15 @@ interface MarketTruthPanelProps {
   salesCount: number;
   census: { total: number; ninePlus: number | null; snapshotDate: string | null } | null;
   accentColor?: string;
+  institutionalData?: {
+    tier?: string | null;
+    intrinsicFloor?: number | null;
+    timeValue?: number | null;
+    bidAskSpreadPct?: number | null;
+    liquidityScore?: number | null;
+    volatilityScore?: number | null;
+    marketSignal?: string | null;
+  } | null;
 }
 
 const usd = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -18,10 +27,45 @@ const day = (s: string | null) => (s ? s.slice(0, 10) : null);
  * What the database actually knows about this book: the stored 9.8 price, the most recent recorded
  * sale, how many sales are on file, and the CGC census. Each line appears only if its data exists.
  */
-export function MarketTruthPanel({ price98, price98AsOf, lastSale, salesCount, census, accentColor = "#60a5fa" }: MarketTruthPanelProps) {
+export function MarketTruthPanel({ price98, price98AsOf, lastSale, salesCount, census, accentColor = "#60a5fa", institutionalData }: MarketTruthPanelProps) {
   const rows: Array<{ label: string; value: string; note?: string }> = [];
   if (price98 != null && price98 > 0) {
     rows.push({ label: "9.8 price", value: usd(price98), note: price98AsOf ? `PriceCharting, ${day(price98AsOf)}` : "PriceCharting, undated" });
+  }
+  if (institutionalData?.marketSignal) {
+    rows.push({
+      label: "Institutional Signal",
+      value: institutionalData.marketSignal.replace(/_/g, " "),
+      note: institutionalData.tier ? institutionalData.tier.replace(/_/g, " ") : undefined,
+    });
+  }
+  if (institutionalData?.intrinsicFloor != null && institutionalData.intrinsicFloor > 0) {
+    rows.push({
+      label: "Intrinsic Floor (Cash)",
+      value: usd(institutionalData.intrinsicFloor),
+      note: "Cash liquidation benchmark floor",
+    });
+  }
+  if (institutionalData?.timeValue != null && institutionalData.timeValue > 0) {
+    rows.push({
+      label: "Time Value (Option Premium)",
+      value: usd(institutionalData.timeValue),
+      note: "Scarcity & forward optionality",
+    });
+  }
+  if (institutionalData?.bidAskSpreadPct != null && institutionalData.bidAskSpreadPct > 0) {
+    rows.push({
+      label: "Bid-Ask Spread",
+      value: `${institutionalData.bidAskSpreadPct.toFixed(1)}%`,
+      note: "Dealer acquisition friction",
+    });
+  }
+  if (institutionalData?.volatilityScore != null && institutionalData.volatilityScore > 0) {
+    rows.push({
+      label: "Dual-Price Volatility",
+      value: `${institutionalData.volatilityScore.toFixed(1)}σ`,
+      note: "Raw-to-9.8 expansion index",
+    });
   }
   if (lastSale) {
     rows.push({

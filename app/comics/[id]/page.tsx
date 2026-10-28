@@ -205,12 +205,14 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     return trimmed;
   };
 
-  const cleanGcdWriter = sanitizeCreator(gcdStoryDossier?.leadWriter) || sanitizeCreator(gcdData.writer) || sanitizeCreator(gcdData["GCD - story.writer"]) || sanitizeCreator((comic.comicbase_data as any)?.["CB - Writer"]) || (debut?.creators?.[0] ?? "");
-  const cleanGcdPenciler = sanitizeCreator(gcdStoryDossier?.leadPenciler) || sanitizeCreator(gcdData.penciler) || sanitizeCreator(gcdData["GCD - story.penciler"]) || sanitizeCreator((comic.comicbase_data as any)?.["CB - Artist"]) || (debut?.creators?.[1] ?? "");
-  const cleanGcdInker = sanitizeCreator(gcdStoryDossier?.leadInker) || sanitizeCreator(gcdData.inker) || sanitizeCreator(gcdData["GCD - story.inker"]);
-  const cleanGcdColorist = sanitizeCreator(gcdStoryDossier?.leadColorist) || sanitizeCreator(gcdData.colorist) || sanitizeCreator(gcdData["GCD - story.colorist"]);
-  const cleanGcdLetterer = sanitizeCreator(gcdStoryDossier?.leadLetterer) || sanitizeCreator(gcdData.letterer) || sanitizeCreator(gcdData["GCD - story.letterer"]);
-  const cleanGcdEditor = sanitizeCreator(gcdStoryDossier?.leadEditor) || sanitizeCreator(gcdData.editor) || sanitizeCreator(gcdData["GCD - story.editor"]);
+  const fandomCredits = (comic as any).fandom_credits || (comic.panel_profits_data as any)?.fandom_credits || null;
+
+  const cleanGcdWriter = sanitizeCreator(gcdStoryDossier?.leadWriter) || sanitizeCreator(fandomCredits?.writer?.[0]) || sanitizeCreator(gcdData.writer) || sanitizeCreator(gcdData["GCD - story.writer"]) || sanitizeCreator((comic.comicbase_data as any)?.["CB - Writer"]) || (debut?.creators?.[0] ?? "");
+  const cleanGcdPenciler = sanitizeCreator(gcdStoryDossier?.leadPenciler) || sanitizeCreator(fandomCredits?.penciler?.[0]) || sanitizeCreator(fandomCredits?.artist?.[0]) || sanitizeCreator(gcdData.penciler) || sanitizeCreator(gcdData["GCD - story.penciler"]) || sanitizeCreator((comic.comicbase_data as any)?.["CB - Artist"]) || (debut?.creators?.[1] ?? "");
+  const cleanGcdInker = sanitizeCreator(gcdStoryDossier?.leadInker) || sanitizeCreator(fandomCredits?.inker?.[0]) || sanitizeCreator(gcdData.inker) || sanitizeCreator(gcdData["GCD - story.inker"]);
+  const cleanGcdColorist = sanitizeCreator(gcdStoryDossier?.leadColorist) || sanitizeCreator(fandomCredits?.colorist?.[0]) || sanitizeCreator(gcdData.colorist) || sanitizeCreator(gcdData["GCD - story.colorist"]);
+  const cleanGcdLetterer = sanitizeCreator(gcdStoryDossier?.leadLetterer) || sanitizeCreator(fandomCredits?.letterer?.[0]) || sanitizeCreator(gcdData.letterer) || sanitizeCreator(gcdData["GCD - story.letterer"]);
+  const cleanGcdEditor = sanitizeCreator(gcdStoryDossier?.leadEditor) || sanitizeCreator(fandomCredits?.editor?.[0]) || sanitizeCreator(gcdData.editor) || sanitizeCreator(gcdData["GCD - story.editor"]);
 
   const enrichedGcdData = {
     ...gcdData,
@@ -252,18 +254,41 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     const supabase = createAdminServerClient();
     const cleanSourceId = comic.pp_source_id ? String(comic.pp_source_id).replace(/^pp-/i, "").trim() : null;
 
-    // Dated sales for this title and issue. Restored and signed copies are different products, so they are left out.
+    // Dated sales for this title and issue from sniper_sales (36,313 authentic completed auction sales) and graded_sales_observations
     const salesPromise =
       comic.series && comic.issue_number
-        ? supabase
-            .from("graded_sales_observations")
-            .select("sale_price, sale_date, native_grade_text, venue, native_designation, has_restoration, has_signature")
-            .ilike("title_name", comic.series.replace(/[\\%_]/g, (m: string) => `\\${m}`))
-            .eq("issue_number_raw", comic.issue_number)
-            .not("has_restoration", "is", true)
-            .not("has_signature", "is", true)
-            .order("sale_date", { ascending: true })
-            .limit(100)
+        ? Promise.all([
+            supabase
+              .from("graded_sales_observations")
+              .select("sale_price, sale_date, native_grade_text, venue, native_designation, has_restoration, has_signature")
+              .ilike("title_name", comic.series.replace(/[\\%_]/g, (m: string) => `\\${m}`))
+              .eq("issue_number_raw", comic.issue_number)
+              .not("has_restoration", "is", true)
+              .not("has_signature", "is", true)
+              .order("sale_date", { ascending: true })
+              .limit(100),
+            supabase
+              .from("sniper_sales")
+              .select("price_usd, sold_at, grade, venue")
+              .ilike("series", comic.series.replace(/[\\%_]/g, (m: string) => `\\${m}`))
+              .eq("issue", comic.issue_number)
+              .order("sold_at", { ascending: true })
+              .limit(100),
+          ]).then(([gsoRes, ssRes]) => {
+            const list: SaleRow[] = [];
+            for (const r of gsoRes.data ?? []) {
+              list.push(r as SaleRow);
+            }
+            for (const s of ssRes.data ?? []) {
+              list.push({
+                sale_price: s.price_usd,
+                sale_date: s.sold_at,
+                native_grade_text: String(s.grade),
+                venue: s.venue,
+              });
+            }
+            return { data: list };
+          })
         : Promise.resolve({ data: [] as SaleRow[] });
 
     const histPromise = cleanSourceId
@@ -514,6 +539,17 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     add(cleanGcdInker, "Inker");
     add(cleanGcdColorist, "Colorist");
     add(cleanGcdLetterer, "Letterer");
+    add(cleanGcdEditor, "Editor");
+    if (fandomCredits && typeof fandomCredits === "object") {
+      for (const [roleKey, names] of Object.entries(fandomCredits)) {
+        if (Array.isArray(names)) {
+          const capitalizedRole = roleKey.charAt(0).toUpperCase() + roleKey.slice(1);
+          for (const n of names) {
+            add(sanitizeCreator(n), capitalizedRole);
+          }
+        }
+      }
+    }
     if (list.length === 0 && debut?.creators?.length) {
       for (const c of debut.creators) add(sanitizeCreator(c), "Creator");
     }
@@ -573,6 +609,12 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
               publisher={authoritativePublisher}
               volume={railVolume}
               accent={eraColors.border}
+              fandomData={{
+                synopsis: (comic as any).fandom_synopsis || null,
+                firstAppearances: (comic as any).fandom_first_appearances || null,
+                characters: (comic as any).fandom_characters || null,
+                credits: (comic as any).fandom_credits || null,
+              }}
             />
           </Suspense>
         </section>
@@ -600,6 +642,15 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
               salesCount={salesObservations.length}
               census={totalGradedCount > 0 ? { total: totalGradedCount, ninePlus: censusAtOrAbove90, snapshotDate: censusSnapshotDate } : null}
               accentColor={eraColors.border}
+              institutionalData={{
+                tier: (comic as any).institutional_tier || (comic.panel_profits_data as any)?.institutional_tier || null,
+                intrinsicFloor: Number((comic as any).intrinsic_floor || (comic.panel_profits_data as any)?.intrinsic_floor || 0) || null,
+                timeValue: Number((comic as any).time_value || (comic.panel_profits_data as any)?.time_value || 0) || null,
+                bidAskSpreadPct: Number((comic as any).bid_ask_spread_pct || (comic.panel_profits_data as any)?.bid_ask_spread_pct || 0) || null,
+                liquidityScore: Number((comic as any).liquidity_score || (comic.panel_profits_data as any)?.liquidity_score || 0) || null,
+                volatilityScore: Number((comic as any).volatility_score || (comic.panel_profits_data as any)?.volatility_score || 0) || null,
+                marketSignal: (comic as any).market_signal || (comic.panel_profits_data as any)?.market_signal || null,
+              }}
             />
           </div>
         </section>

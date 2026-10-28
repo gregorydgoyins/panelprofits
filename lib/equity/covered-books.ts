@@ -128,6 +128,9 @@ export function mapCoveredBook(row: RailBookRow): EquityItem | null {
     ? rawCover
     : (getAuthoritativeCoverStrict(series, issue, authPub, row.year) || "");
 
+  // Link to canonical comic detail page by pp_id if present, otherwise by ticker or comics_id
+  const detailTarget = row.pp_id ? row.pp_id : ticker ? ticker : row.comics_id;
+
   return {
     entryId: `cb-${row.rail_seq}`,
     coverImageUrl: optimizedCoverUrl(validCover),
@@ -152,7 +155,7 @@ export function mapCoveredBook(row: RailBookRow): EquityItem | null {
       originEra: row.origin_era,
       originYear: row.origin_year,
       scarcityTier: tier,
-      detailUrl: hasComicsRow ? `/comics/${encodeURIComponent(row.comics_id)}` : row.pp_id ? `/comics/${encodeURIComponent(row.pp_id)}` : `/comics/${encodeURIComponent(ticker)}`,
+      detailUrl: `/comics/${encodeURIComponent(detailTarget)}`,
       assetClass: marketClass as EquityItem["identity"]["assetClass"],
       marketPriceClass: marketClass,
       isSovereign: false,
