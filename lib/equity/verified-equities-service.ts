@@ -175,9 +175,14 @@ export function getVerifiedRealEquities(
       const seen = new Set<string>();
       const combined: SovereignEquityItem[] = [];
       for (const r of dbRows) {
+        const item = recordToItem(r, combined.length);
+        // Canonical era filter check: ensure the item's canonical resolved age matches the requested era
+        if (cleanEra && item.productionAge !== cleanEra) {
+          continue;
+        }
         const key = `${r.series} #${r.issue_number}`.toLowerCase();
         if (!seen.has(key)) {
-          combined.push(recordToItem(r, combined.length));
+          combined.push(item);
           seen.add(key);
         }
       }
@@ -212,9 +217,14 @@ export function getVerifiedRealEquities(
         const seen = new Set<string>();
         const combined: SovereignEquityItem[] = [];
         for (const r of dbRows) {
+          const item = recordToItem(r, combined.length);
+          // Canonical era filter check: ensure the item's canonical resolved age matches the era pool
+          if (item.productionAge !== e) {
+            continue;
+          }
           const key = `${r.series} #${r.issue_number}`.toLowerCase();
           if (!seen.has(key)) {
-            combined.push(recordToItem(r, combined.length));
+            combined.push(item);
             seen.add(key);
           }
         }
