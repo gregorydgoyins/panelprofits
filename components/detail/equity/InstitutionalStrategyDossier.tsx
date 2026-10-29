@@ -103,12 +103,18 @@ export default function InstitutionalStrategyDossier({
           <div className="flex items-center gap-2">
             <span
               className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold border ${
-                gradeRecord.provenanceTag === "OBSERVED_PRICE_POINT"
+                gradeRecord.provenanceTag === "OBSERVED_AUCTION_SALE"
                   ? "bg-emerald-950/60 border-emerald-500/40 text-emerald-300"
-                  : "bg-blue-950/60 border-blue-500/40 text-blue-300"
+                  : gradeRecord.provenanceTag === "VALUATION_SNAPSHOT"
+                    ? "bg-cyan-950/60 border-cyan-500/40 text-cyan-300"
+                    : "bg-blue-950/60 border-blue-500/40 text-blue-300"
               }`}
             >
-              {gradeRecord.provenanceTag === "OBSERVED_PRICE_POINT" ? "● OBSERVED PRICE POINT" : "◐ ELASTIC COHORT ESTIMATE"}
+              {gradeRecord.provenanceTag === "OBSERVED_AUCTION_SALE"
+                ? "● OBSERVED AUCTION SALE"
+                : gradeRecord.provenanceTag === "VALUATION_SNAPSHOT"
+                  ? "◆ VALUATION SNAPSHOT"
+                  : "◐ ELASTIC COHORT ESTIMATE"}
             </span>
             <span className="px-2 py-0.5 rounded text-[9px] font-mono bg-slate-900 border border-slate-700 text-slate-300">
               {decomp.evidenceTier} (Conf: {decomp.confidenceScore}%)
@@ -141,7 +147,9 @@ export default function InstitutionalStrategyDossier({
               ${decomp.narrativeSpeculativePremium.toLocaleString()}
             </div>
             <p className="text-[10px] text-slate-500 font-mono mt-1">
-              80% Interval: [${decomp.predictionInterval80.lower.toLocaleString()} – ${decomp.predictionInterval80.upper.toLocaleString()}]
+              {decomp.predictionInterval80 != null
+                ? `80% Interval: [$${decomp.predictionInterval80.lower.toLocaleString()} – $${decomp.predictionInterval80.upper.toLocaleString()}]`
+                : "80% Interval: Unmeasured (Insufficient Volatility Sample)"}
             </p>
           </div>
 

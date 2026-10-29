@@ -538,6 +538,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     publicationYear: comic.publication_year ?? undefined,
     publisher: authoritativePublisher,
     monthlySnapshots: Array.from(monthlySnapshotsMap.values()),
+    completedSalesCount: salesObservations.length,
     rawPurchaseCost: rawPrice != null ? Number(rawPrice) : undefined,
     censusPopByGrade: {
       "9.8": highGradeCount || undefined,

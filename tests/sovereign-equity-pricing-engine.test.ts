@@ -148,4 +148,36 @@ describe("Sovereign Canonical Equity Pricing Engine Verification Suite", () => {
     expect(output.era).toBe("Independent");
     expect(output.portfolioRiskSummary.scarcityTier).toBe("UNINDEXED");
   });
+
+  it("strictly enforces Zero Fake Data Covenant on unmeasured volatility and zero completed trades", () => {
+    const input: SovereignPricingEngineInput = {
+      comicId: "zero-data-check",
+      series: "Amazing Spider-Man",
+      issue: "300",
+      publicationYear: 1988,
+      publisher: "Marvel Comics",
+      completedSalesCount: 0, // Zero observed auction transactions
+      monthlySnapshots: [
+        {
+          date: "2026-10-01",
+          epochMs: Date.parse("2026-10-01T00:00:00Z"),
+          pricesByGrade: { RAW: 200, "9.8": 2800 },
+        },
+      ],
+      censusPopByGrade: { "9.8": 1500 },
+    };
+
+    const output = executeSovereignPricingEngine(input);
+
+    // 1. Prediction interval must be null when volatility cannot be measured (only 1 snapshot)
+    expect(output.gradeMatrix["9.8"].annualizedVolatility).toBeNull();
+    expect(output.gradeMatrix["9.8"].valuationDecomposition.predictionInterval80).toBeNull();
+
+    // 2. Provenance tag must be VALUATION_SNAPSHOT when completed trades = 0
+    expect(output.gradeMatrix["9.8"].provenanceTag).toBe("VALUATION_SNAPSHOT");
+
+    // 3. CTR must be null and tier must be NO_OBSERVED_TRADES when trades = 0, NOT fabricated 1
+    expect(output.contrarianStrategies.censusTurnoverRatio).toBeNull();
+    expect(output.contrarianStrategies.turnoverVelocityTier).toBe("NO_OBSERVED_TRADES");
+  });
 });

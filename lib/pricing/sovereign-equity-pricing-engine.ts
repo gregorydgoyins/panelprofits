@@ -51,6 +51,7 @@ export interface SovereignPricingEngineInput {
   publicationYear?: number;
   publisher?: string;
   monthlySnapshots: SovereignMonthlySnapshot[];
+  completedSalesCount?: number; // Verified completed auction transactions from sales_observations
   rawPurchaseCost?: number;
   censusPopByGrade?: Partial<Record<CanonicalGrade, number>>;
   annualCostOfCapitalRate?: number; // e.g. 0.075 (7.5%)
@@ -69,7 +70,7 @@ export interface ThreeTierValuationDecomposition {
   structuralCollectorValue: number; // Hedonic fundamental asset floor
   narrativeSpeculativePremium: number; // Speculative extrinsic component (media options, adaptation hype, news velocity)
   marketExecutionFloor: number; // Liquidity-calibrated dealer wholesale realization
-  predictionInterval80: { lower: number; upper: number }; // Formal lognormal 80% forecast interval: P_0 * exp(-sigma^2/2 +/- 1.2816*sigma*sqrt(T))
+  predictionInterval80: { lower: number; upper: number } | null; // Formal lognormal 80% forecast interval; null if volatility is unmeasured
   confidenceScore: number; // 0-100 evidence-density calibrated score
   evidenceTier: "DENSE_VERIFIED_HISTORY" | "MODERATE_OBSERVATION" | "SPARSE_ESTIMATED_COHORT" | "UNPRICED";
   valuationState: "EMPIRICAL_CANON" | "SPECULATIVE_EXTENDED" | "CAPITULATION_FLOOR" | "THIN_MARKET";
@@ -92,8 +93,8 @@ export interface ContrarianStrategyDossier {
   bollingerSigma90d: number | null;
   zScore: number | null;
   isCapitulationDislocation: boolean;
-  censusTurnoverRatio: number | null; // Census Population to Trailing Volume Turnover
-  turnoverVelocityTier: "HIGH_VELOCITY_FLOAT" | "BALANCED_TURNOVER" | "LOW_TURNOVER_DORMANT" | "UNINDEXED";
+  censusTurnoverRatio: number | null; // Census Population to Trailing Completed Sales Volume Turnover
+  turnoverVelocityTier: "HIGH_VELOCITY_FLOAT" | "BALANCED_TURNOVER" | "LOW_TURNOVER_DORMANT" | "NO_OBSERVED_TRADES" | "UNINDEXED";
   markovGradingExpectedProfit: number;
   markovRecommendedAction: "SUBMIT_RAW_TO_SLAB" | "HOLD_RAW" | "BUY_ESTABLISHED_SLAB";
   contrarianRegime: "CONTRARIAN_ACCUMULATE" | "NEUTRAL" | "FADE_EUPHORIA";
@@ -112,7 +113,7 @@ export interface GradeValuationRecord {
   contrarianSentimentScore: number | null; // 0-100
   marketRegime: "CONTRARIAN_OPPORTUNITY" | "ACCUMULATION" | "EXPANSION" | "DISTRIBUTION" | "NEUTRAL";
   isDirectObservation: boolean;
-  provenanceTag: "OBSERVED_PRICE_POINT" | "ELASTIC_COHORT_ESTIMATE" | "DEALER_EXECUTION_QUOTE";
+  provenanceTag: "OBSERVED_AUCTION_SALE" | "VALUATION_SNAPSHOT" | "ELASTIC_COHORT_ESTIMATE";
   valuationDecomposition: ThreeTierValuationDecomposition;
 }
 
@@ -496,34 +497,52 @@ export function executeSovereignPricingEngine(
     const narrativeSpecPremium = Number((currentFmv * (1 - effectiveStructuralRatio)).toFixed(2));
 
     // Liquidity Haircut Model based on trading frequency & issue volume:
-    // Issues with frequent dated observations (obsCount >= 10) have tighter dealer spreads (15-20%);
-    // thin or dormant assets require wider haircuts (35-45%).
+    // When completed sales are available, haircuts are calibrated to trading velocity;
+    // otherwise calibrated to longitudinal snapshot frequency.
+    const trades = input.completedSalesCount;
     const obsCount = series.length;
-    const liquidityHaircut = obsCount >= 20 ? 0.15 : obsCount >= 8 ? 0.22 : obsCount >= 3 ? 0.30 : 0.45;
+    const liquidityHaircut =
+      trades !== undefined
+        ? trades >= 15
+          ? 0.15
+          : trades >= 6
+            ? 0.22
+            : trades >= 1
+              ? 0.30
+              : 0.45
+        : obsCount >= 20
+          ? 0.15
+          : obsCount >= 8
+            ? 0.22
+            : obsCount >= 3
+              ? 0.30
+              : 0.45;
     const marketExecutionFlr = Number((currentFmv * (1 - liquidityHaircut)).toFixed(2));
 
-    // Provenance classification: Distinguish direct empirical points from cohort estimations
+    // Provenance classification: Distinguish direct sales / snapshots from cohort interpolations
     const isDirect = series.some((s) => s.isDirect);
     const provenanceTag: GradeValuationRecord["provenanceTag"] = isDirect
-      ? "OBSERVED_PRICE_POINT"
+      ? (input.completedSalesCount !== undefined && input.completedSalesCount > 0 ? "OBSERVED_AUCTION_SALE" : "VALUATION_SNAPSHOT")
       : "ELASTIC_COHORT_ESTIMATE";
 
     // Rigorous Lognormal 80% Prediction Interval:
     // P_T in [ P_0 * exp( (mu - sigma^2 / 2)*T - 1.2816 * sigma * sqrt(T) ),
     //         P_0 * exp( (mu - sigma^2 / 2)*T + 1.2816 * sigma * sqrt(T) ) ]
     // Evaluated for 6-month horizon (T = 0.5) with drift mu approximated by risk-free rate r = 4.5%
-    const sigmaVal = Math.max(0.10, vol ?? 0.28);
-    const horizonT = 0.5;
-    const driftMu = 0.045;
-    const lognormalDrift = (driftMu - 0.5 * sigmaVal * sigmaVal) * horizonT;
-    const lognormalDispersion = 1.2816 * sigmaVal * Math.sqrt(horizonT);
+    // ZERO FAKE DATA MANDATE: If volatility is unmeasured (null or <= 0), do NOT fabricate 0.28!
+    let predictionInterval80: { lower: number; upper: number } | null = null;
+    if (vol !== null && vol > 0 && currentFmv > 0) {
+      const sigmaVal = Math.max(0.05, vol);
+      const horizonT = 0.5;
+      const driftMu = 0.045;
+      const lognormalDrift = (driftMu - 0.5 * sigmaVal * sigmaVal) * horizonT;
+      const lognormalDispersion = 1.2816 * sigmaVal * Math.sqrt(horizonT);
 
-    const predLower = currentFmv > 0
-      ? Number((currentFmv * Math.exp(lognormalDrift - lognormalDispersion)).toFixed(2))
-      : 0;
-    const predUpper = currentFmv > 0
-      ? Number((currentFmv * Math.exp(lognormalDrift + lognormalDispersion)).toFixed(2))
-      : 0;
+      predictionInterval80 = {
+        lower: Number((currentFmv * Math.exp(lognormalDrift - lognormalDispersion)).toFixed(2)),
+        upper: Number((currentFmv * Math.exp(lognormalDrift + lognormalDispersion)).toFixed(2)),
+      };
+    }
 
     // Evidence Tier & Confidence Score based on independent observation density
     const evidenceTier: ThreeTierValuationDecomposition["evidenceTier"] =
@@ -560,7 +579,7 @@ export function executeSovereignPricingEngine(
         structuralCollectorValue: structuralCollectorVal,
         narrativeSpeculativePremium: narrativeSpecPremium,
         marketExecutionFloor: marketExecutionFlr,
-        predictionInterval80: { lower: predLower, upper: predUpper },
+        predictionInterval80,
         confidenceScore: calibratedConfidenceScore,
         evidenceTier,
         valuationState:
@@ -682,15 +701,29 @@ export function executeSovereignPricingEngine(
   const isCapitulation = Boolean(zScore != null && zScore < -1.8 && (gradeMatrix["9.8"].rsi14 ?? 50) < 35);
 
   // Census Turnover Ratio (9.0+ population relative to annual trading volume)
-  const trailing12mSales = Math.max(1, input.monthlySnapshots.length);
-  const total90PlusPop = (input.censusPopByGrade?.["9.8"] ?? 0) + (input.censusPopByGrade?.["9.2"] ?? 0);
-  const ctr = total90PlusPop > 0 ? Number((total90PlusPop / trailing12mSales).toFixed(2)) : null;
+  // ZERO FAKE DATA MANDATE:
+  // If completed sales are measured and equal 0, turnover is strictly NO_OBSERVED_TRADES (ctr = null).
+  // We NEVER substitute 1 or snapshot count to fabricate a fake non-zero turnover!
+  const hasCompletedSalesMeasure = input.completedSalesCount !== undefined;
+  const trailing12mSales = hasCompletedSalesMeasure
+    ? input.completedSalesCount!
+    : input.monthlySnapshots.length;
 
+  const total90PlusPop = (input.censusPopByGrade?.["9.8"] ?? 0) + (input.censusPopByGrade?.["9.2"] ?? 0);
+
+  let ctr: number | null = null;
   let turnoverTier: ContrarianStrategyDossier["turnoverVelocityTier"] = "UNINDEXED";
-  if (ctr !== null) {
-    if (ctr < 2.0) turnoverTier = "HIGH_VELOCITY_FLOAT";
-    else if (ctr <= 10.0) turnoverTier = "BALANCED_TURNOVER";
-    else turnoverTier = "LOW_TURNOVER_DORMANT";
+
+  if (total90PlusPop > 0) {
+    if (hasCompletedSalesMeasure && trailing12mSales === 0) {
+      ctr = null;
+      turnoverTier = "NO_OBSERVED_TRADES";
+    } else if (trailing12mSales > 0) {
+      ctr = Number((total90PlusPop / trailing12mSales).toFixed(2));
+      if (ctr < 2.0) turnoverTier = "HIGH_VELOCITY_FLOAT";
+      else if (ctr <= 10.0) turnoverTier = "BALANCED_TURNOVER";
+      else turnoverTier = "LOW_TURNOVER_DORMANT";
+    }
   }
 
   const markov98Opt = gradingArbitrageLadder.find((opt) => opt.targetGrade === "9.8");
