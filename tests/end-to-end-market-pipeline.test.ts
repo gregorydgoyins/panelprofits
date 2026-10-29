@@ -17,7 +17,12 @@ import { describe, it, expect } from "vitest";
 import { executeSovereignPricingEngine } from "../lib/pricing/sovereign-equity-pricing-engine";
 import { executeCrossAssetTransmissionEngine } from "../lib/pricing/cross-asset-transmission-engine";
 import { fundNav } from "../lib/assets/canon-formulas";
-import { executeClearedTrade, type MarketParticipantAccount, type TradeOrderRequest } from "../lib/trading/clearing-execution-engine";
+import {
+  executeClearedTrade,
+  persistSettledTradeToLedger,
+  type MarketParticipantAccount,
+  type TradeOrderRequest,
+} from "../lib/trading/clearing-execution-engine";
 
 describe("Institutional End-to-End Economy Pipeline Verification (Target: 98/100)", () => {
   it("executes complete pipeline from database comic through sovereign pricing, float, and strategy signals", () => {
@@ -73,6 +78,7 @@ describe("Institutional End-to-End Economy Pipeline Verification (Target: 98/100
     // Verify Phase 3 (Era-Specific Valuation): Bronze Age non-linearity
     expect(output.eraValuationProfile.era).toBe("Bronze");
     expect(output.eraValuationProfile.primaryValueDriver).toBe("CANONICAL_HISTORICAL_TENURE");
+    expect(output.eraValuationProfile.dataProvenance.coefficientsProvenance).toBe("MODEL_PARAMETRIC_ASSUMPTION");
 
     // Verify Phase 5 (Contrarian Divergence & Knife Guard):
     expect(output.contrarianDivergenceSignal.dataProvenance.priceZScore).toBeDefined();
@@ -219,5 +225,50 @@ describe("Institutional End-to-End Economy Pipeline Verification (Target: 98/100
     expect(settlement.isCleared).toBe(false);
     expect(settlement.rejectReason).toContain("INSUFFICIENT_BUYER_FUNDS");
     expect(settlement.reconciledAccounts.buyerPostBalance).toBe(1000); // Unmutated
+  });
+
+  it("handles persistence failure safely with rejection feedback and without ledger corruption", async () => {
+    const uncommittedOrder: TradeOrderRequest = {
+      orderId: "ord-persistence-test",
+      comicId: "test-equity-1",
+      orderType: "BUY",
+      buyerId: "test-buyer",
+      sellerId: "test-seller",
+      shares: 1,
+      executionPriceUsd: 100,
+    };
+
+    const failedSettlement = {
+      settlementId: "SETTLE-FAIL-001",
+      timestamp: new Date().toISOString(),
+      isCleared: false,
+      rejectReason: "TRADE_REJECTED_BY_CIRCUIT_BREAKER",
+      tradeDetails: {
+        comicId: "test-equity-1",
+        shares: 1,
+        pricePerShare: 100,
+        grossConsiderationUsd: 100,
+        takerFeeUsd: 2.5,
+        makerFeeUsd: 1.5,
+        totalBuyerOutlayUsd: 102.5,
+        totalSellerProceedsUsd: 98.5,
+        platformNetRevenueUsd: 4.0,
+      },
+      reconciledAccounts: {
+        buyerPostBalance: 1000,
+        sellerPostBalance: 500,
+        buyerSharesPost: 0,
+        sellerSharesPost: 1,
+      },
+      conservationAudit: {
+        cashConservationZeroDelta: false,
+        shareConservationZeroDelta: false,
+        auditStatus: "DISCREPANCY_DETECTED" as const,
+      },
+    };
+
+    const result = await persistSettledTradeToLedger(failedSettlement, uncommittedOrder);
+    expect(result.persisted).toBe(false);
+    expect(result.error).toBe("TRADE_REJECTED_BY_CIRCUIT_BREAKER");
   });
 });

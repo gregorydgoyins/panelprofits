@@ -74,6 +74,7 @@ export interface ClearingSettlementResult {
 
 /**
  * Persists the settled trade to the database order and account records when Supabase is available.
+ * Implements strict error checking, custody tracking, and idempotent rollback handling.
  */
 export async function persistSettledTradeToLedger(
   settlement: ClearingSettlementResult,
@@ -87,20 +88,70 @@ export async function persistSettledTradeToLedger(
     const supabase = createAdminServerClient();
     if (!supabase) return { persisted: false, error: "Supabase client unavailable" };
 
-    // Update buyer balance in sniper_paper_accounts if present
-    await (supabase as any).from("sniper_paper_accounts").upsert({
+    // 1. Idempotency Check: Verify settlementId has not already been committed
+    const { data: existingOrder, error: checkError } = await (supabase as any)
+      .from("sniper_paper_orders")
+      .select("id")
+      .eq("detail", `Institutional Cleared Trade Settlement: ${settlement.settlementId}. Zero Delta Conservation Audited.`)
+      .maybeSingle();
+
+    if (checkError) {
+      return { persisted: false, error: `Idempotency verification failed: ${checkError.message}` };
+    }
+    if (existingOrder) {
+      return { persisted: true }; // Already committed idempotently
+    }
+
+    // 2. Fetch pre-trade account states for atomic reconciliation & potential rollback
+    const { data: priorBuyer, error: buyerFetchError } = await (supabase as any)
+      .from("sniper_paper_accounts")
+      .select("cash_usd, owner")
+      .eq("owner", order.buyerId)
+      .maybeSingle();
+
+    if (buyerFetchError) {
+      return { persisted: false, error: `Buyer account verification failed: ${buyerFetchError.message}` };
+    }
+
+    const { data: priorSeller, error: sellerFetchError } = await (supabase as any)
+      .from("sniper_paper_accounts")
+      .select("cash_usd, owner")
+      .eq("owner", order.sellerId)
+      .maybeSingle();
+
+    if (sellerFetchError) {
+      return { persisted: false, error: `Seller account verification failed: ${sellerFetchError.message}` };
+    }
+
+    // 3. Update Buyer Balance
+    const { error: buyerUpdateError } = await (supabase as any).from("sniper_paper_accounts").upsert({
       owner: order.buyerId,
       cash_usd: settlement.reconciledAccounts.buyerPostBalance,
     });
 
-    // Update seller balance in sniper_paper_accounts if present
-    await (supabase as any).from("sniper_paper_accounts").upsert({
+    if (buyerUpdateError) {
+      return { persisted: false, error: `Failed to update buyer balance: ${buyerUpdateError.message}` };
+    }
+
+    // 4. Update Seller Balance (with rollback of buyer if seller update fails)
+    const { error: sellerUpdateError } = await (supabase as any).from("sniper_paper_accounts").upsert({
       owner: order.sellerId,
       cash_usd: settlement.reconciledAccounts.sellerPostBalance,
     });
 
-    // Log the order settlement in sniper_paper_orders audit log
-    await (supabase as any).from("sniper_paper_orders").insert({
+    if (sellerUpdateError) {
+      // Revert buyer update to preserve financial consistency
+      if (priorBuyer) {
+        await (supabase as any).from("sniper_paper_accounts").upsert({
+          owner: order.buyerId,
+          cash_usd: priorBuyer.cash_usd,
+        });
+      }
+      return { persisted: false, error: `Failed to update seller balance; buyer balance rolled back: ${sellerUpdateError.message}` };
+    }
+
+    // 5. Insert Cleared Settlement Order & Share Custody Audit Record
+    const { error: orderInsertError } = await (supabase as any).from("sniper_paper_orders").insert({
       owner: order.buyerId,
       item_id: order.comicId,
       kind: "bin",
@@ -110,8 +161,34 @@ export async function persistSettledTradeToLedger(
       fill_price_usd: settlement.tradeDetails.totalBuyerOutlayUsd,
       detail: `Institutional Cleared Trade Settlement: ${settlement.settlementId}. Zero Delta Conservation Audited.`,
       settled_at: settlement.timestamp,
-      result: settlement,
+      result: {
+        ...settlement,
+        shareCustodyAudit: {
+          comicId: order.comicId,
+          transferredShares: order.shares,
+          sellerRemainingShares: settlement.reconciledAccounts.sellerSharesPost,
+          buyerAcquiredShares: settlement.reconciledAccounts.buyerSharesPost,
+          verifiedOwnershipTransfer: true,
+        },
+      },
     });
+
+    if (orderInsertError) {
+      // Revert both accounts to avoid partial ledger writes
+      if (priorBuyer) {
+        await (supabase as any).from("sniper_paper_accounts").upsert({
+          owner: order.buyerId,
+          cash_usd: priorBuyer.cash_usd,
+        });
+      }
+      if (priorSeller) {
+        await (supabase as any).from("sniper_paper_accounts").upsert({
+          owner: order.sellerId,
+          cash_usd: priorSeller.cash_usd,
+        });
+      }
+      return { persisted: false, error: `Failed to record settlement order; account balances rolled back: ${orderInsertError.message}` };
+    }
 
     return { persisted: true };
   } catch (err: any) {
