@@ -51,10 +51,11 @@ export interface SovereignPricingEngineInput {
   publicationYear?: number;
   publisher?: string;
   monthlySnapshots: SovereignMonthlySnapshot[];
-  completedSalesCount?: number; // Verified completed auction transactions from sales_observations
-  completedSalesCountByGrade?: Partial<Record<CanonicalGrade, number>>; // Verified completed auction transactions per specific grade
+  completedSalesCount?: number; // Verified completed auction transactions in trailing 12-month period
+  completedSalesCountByGrade?: Partial<Record<CanonicalGrade, number>>; // Verified completed auction transactions in trailing 12-month period per specific grade
   rawPurchaseCost?: number;
   censusPopByGrade?: Partial<Record<CanonicalGrade, number>>;
+  isCensusCompleteCoverage?: boolean; // Flag verifying complete census ingestion across all grades vs partial sample
   annualCostOfCapitalRate?: number; // e.g. 0.075 (7.5%)
 }
 
@@ -70,7 +71,9 @@ export interface HorizonMomentaMatrix {
 export interface ThreeTierValuationDecomposition {
   structuralCollectorValue: number; // Hedonic fundamental asset floor
   narrativeSpeculativePremium: number; // Speculative extrinsic component (media options, adaptation hype, news velocity)
-  marketExecutionFloor: number; // Liquidity-calibrated dealer wholesale realization
+  marketExecutionFloor: number | null; // Liquidity-calibrated dealer wholesale realization; null if liquidity is unmeasured
+  liquidityDiscountPct: number | null; // Realized liquidity discount percentage; null if unmeasured
+  liquidityState: "HIGH_LIQUIDITY_DEPTH" | "MODERATE_LIQUIDITY" | "THIN_AUCTION_FLOAT" | "ILLIQUID_SPECIALTY" | "UNMEASURED";
   predictionInterval80: { lower: number; upper: number } | null; // Formal lognormal 80% forecast interval; null if volatility is unmeasured
   confidenceScore: number; // 0-100 evidence-density calibrated score
   evidenceTier: "DENSE_VERIFIED_HISTORY" | "MODERATE_OBSERVATION" | "SPARSE_ESTIMATED_COHORT" | "UNPRICED";
@@ -95,6 +98,7 @@ export interface ContrarianStrategyDossier {
   zScore: number | null;
   isCapitulationDislocation: boolean;
   censusTurnoverRatio: number | null; // Census Population to Trailing Completed Sales Volume Turnover
+  censusCoverageStatus: "COMPLETE_VERIFIED_CENSUS" | "PARTIAL_GRADE_COVERAGE" | "UNINDEXED";
   turnoverVelocityTier: "HIGH_VELOCITY_FLOAT" | "BALANCED_TURNOVER" | "LOW_TURNOVER_DORMANT" | "NO_OBSERVED_TRADES" | "UNMEASURED" | "UNINDEXED";
   markovGradingExpectedProfit: number;
   markovRecommendedAction: "SUBMIT_RAW_TO_SLAB" | "HOLD_RAW" | "BUY_ESTABLISHED_SLAB";
@@ -497,29 +501,42 @@ export function executeSovereignPricingEngine(
     const structuralCollectorVal = Number((currentFmv * effectiveStructuralRatio).toFixed(2));
     const narrativeSpecPremium = Number((currentFmv * (1 - effectiveStructuralRatio)).toFixed(2));
 
-    // Liquidity Haircut Model based on trading frequency & issue volume:
-    // When completed sales are available, haircuts are calibrated to trading velocity;
-    // otherwise calibrated to longitudinal snapshot frequency.
+    // Liquidity Haircut Model based strictly on verified transaction frequency:
+    // When completed trades are available, haircuts are calibrated to empirical transaction velocity:
+    // trades >= 15: 15% discount (HIGH_LIQUIDITY_DEPTH)
+    // trades >= 6: 22% discount (MODERATE_LIQUIDITY)
+    // trades >= 1: 30% discount (THIN_AUCTION_FLOAT)
+    // trades === 0: 45% discount (ILLIQUID_SPECIALTY)
+    // ZERO FAKE DATA MANDATE:
+    // If trades are undefined / unmeasured, we NEVER fall back to snapshot density to infer market depth.
+    // In that situation, liquidityState is UNMEASURED and haircut evaluates to null.
     const gradeSales = input.completedSalesCountByGrade?.[g];
     const trades = gradeSales !== undefined ? gradeSales : input.completedSalesCount;
     const obsCount = series.length;
-    const liquidityHaircut =
-      trades !== undefined
-        ? trades >= 15
-          ? 0.15
-          : trades >= 6
-            ? 0.22
-            : trades >= 1
-              ? 0.30
-              : 0.45
-        : obsCount >= 20
-          ? 0.15
-          : obsCount >= 8
-            ? 0.22
-            : obsCount >= 3
-              ? 0.30
-              : 0.45;
-    const marketExecutionFlr = Number((currentFmv * (1 - liquidityHaircut)).toFixed(2));
+
+    let liquidityHaircut: number | null = null;
+    let liquidityState: ThreeTierValuationDecomposition["liquidityState"] = "UNMEASURED";
+
+    if (trades !== undefined) {
+      if (trades >= 15) {
+        liquidityHaircut = 0.15;
+        liquidityState = "HIGH_LIQUIDITY_DEPTH";
+      } else if (trades >= 6) {
+        liquidityHaircut = 0.22;
+        liquidityState = "MODERATE_LIQUIDITY";
+      } else if (trades >= 1) {
+        liquidityHaircut = 0.30;
+        liquidityState = "THIN_AUCTION_FLOAT";
+      } else {
+        liquidityHaircut = 0.45;
+        liquidityState = "ILLIQUID_SPECIALTY";
+      }
+    }
+
+    const marketExecutionFlr =
+      liquidityHaircut !== null && currentFmv > 0
+        ? Number((currentFmv * (1 - liquidityHaircut)).toFixed(2))
+        : null;
 
     // Provenance classification: Distinguish direct sales / snapshots from cohort interpolations
     // GRADE-LEVEL INTEGRITY: A grade is ONLY marked OBSERVED_AUCTION_SALE if that specific grade
@@ -586,6 +603,8 @@ export function executeSovereignPricingEngine(
         structuralCollectorValue: structuralCollectorVal,
         narrativeSpeculativePremium: narrativeSpecPremium,
         marketExecutionFloor: marketExecutionFlr,
+        liquidityDiscountPct: liquidityHaircut !== null ? Number((liquidityHaircut * 100).toFixed(1)) : null,
+        liquidityState,
         predictionInterval80,
         confidenceScore: calibratedConfidenceScore,
         evidenceTier,
@@ -710,7 +729,8 @@ export function executeSovereignPricingEngine(
   // Census Turnover Ratio (9.0+ population relative to annual trading volume)
   // ZERO FAKE DATA MANDATE:
   // 1. Numerator: Comprehensive CGC/PSA census population for all tiers >= 9.0 (10.0, 9.8, 9.6, 9.4, 9.2, 9.0).
-  // 2. Denominator: Strictly verified completed auction transactions (completedSalesCount).
+  //    Must distinguish complete census ingestion from partial grade coverage.
+  // 2. Denominator: Strictly verified completed auction transactions in trailing 12 months (completedSalesCount).
   //    If completedSalesCount is omitted/undefined, do NOT fall back to snapshot count; return UNMEASURED (ctr = null).
   // 3. If completedSalesCount is measured and equals 0, return NO_OBSERVED_TRADES (ctr = null).
   const hasCompletedSalesMeasure = input.completedSalesCount !== undefined;
@@ -718,22 +738,33 @@ export function executeSovereignPricingEngine(
   // Calculate comprehensive 9.0+ census population across all qualifying grades
   const qualifying90PlusGrades: CanonicalGrade[] = ["9.0", "9.2", "9.4", "9.6", "9.8", "10.0"];
   let total90PlusPop = 0;
-  let hasCensusData = false;
+  let recordedGradesCount = 0;
 
   if (input.censusPopByGrade) {
     for (const g of qualifying90PlusGrades) {
       const pop = input.censusPopByGrade[g];
       if (pop !== undefined && pop !== null) {
         total90PlusPop += pop;
-        hasCensusData = true;
+        recordedGradesCount++;
       }
     }
   }
 
+  const isCompleteCoverage =
+    input.isCensusCompleteCoverage ??
+    (recordedGradesCount >= qualifying90PlusGrades.length);
+
+  const censusCoverageStatus: ContrarianStrategyDossier["censusCoverageStatus"] =
+    recordedGradesCount === 0
+      ? "UNINDEXED"
+      : isCompleteCoverage
+        ? "COMPLETE_VERIFIED_CENSUS"
+        : "PARTIAL_GRADE_COVERAGE";
+
   let ctr: number | null = null;
   let turnoverTier: ContrarianStrategyDossier["turnoverVelocityTier"] = "UNINDEXED";
 
-  if (hasCensusData && total90PlusPop > 0) {
+  if (recordedGradesCount > 0 && total90PlusPop > 0) {
     if (!hasCompletedSalesMeasure) {
       // Completed sales count not provided: NEVER fall back to monthly snapshots!
       ctr = null;
@@ -771,6 +802,7 @@ export function executeSovereignPricingEngine(
     zScore,
     isCapitulationDislocation: isCapitulation,
     censusTurnoverRatio: ctr,
+    censusCoverageStatus,
     turnoverVelocityTier: turnoverTier,
     markovGradingExpectedProfit: markovExpectedProfit,
     markovRecommendedAction: markovAction,

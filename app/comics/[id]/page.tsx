@@ -531,8 +531,26 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     });
   }
 
+  // Calculate verified trailing 12-month completed sales count (and by-grade)
+  const oneYearAgoMs = Date.now() - 365.25 * 86_400_000;
+  const t12mSales = salesObservations.filter((s) => {
+    if (!s.sale_date) return false;
+    const t = Date.parse(s.sale_date);
+    return Number.isFinite(t) && t >= oneYearAgoMs;
+  });
+  const completedSalesCountT12m = t12mSales.length;
+
+  const completedSalesCountByGradeT12m: Partial<Record<CanonicalGrade, number>> = {};
+  for (const s of t12mSales) {
+    const g = normalizeGradeLabel(s.native_grade_text);
+    if (g) {
+      completedSalesCountByGradeT12m[g as CanonicalGrade] = (completedSalesCountByGradeT12m[g as CanonicalGrade] ?? 0) + 1;
+    }
+  }
+
   // Extract comprehensive census population by canonical grade for sovereign engine
   const censusPopMap: Partial<Record<CanonicalGrade, number>> = {};
+  const isCompleteCoverage = Boolean(censusDossier?.grades && censusDossier.grades.length >= 6);
   if (censusDossier?.grades && censusDossier.grades.length > 0) {
     for (const gRow of censusDossier.grades) {
       const gLabel = String(gRow.grade_numeric ?? gRow.native_grade_text);
@@ -544,12 +562,6 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     censusPopMap["9.8"] = highGradeCount;
   }
 
-  // Extract completed auction sales count per specific grade
-  const completedSalesCountByGrade: Partial<Record<CanonicalGrade, number>> = {};
-  for (const [gLabel, count] of salesByGrade.entries()) {
-    completedSalesCountByGrade[gLabel as CanonicalGrade] = count;
-  }
-
   const sovereignEngineOutput = executeSovereignPricingEngine({
     comicId: comic.id,
     series: comic.series,
@@ -557,10 +569,11 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     publicationYear: comic.publication_year ?? undefined,
     publisher: authoritativePublisher,
     monthlySnapshots: Array.from(monthlySnapshotsMap.values()),
-    completedSalesCount: salesObservations.length,
-    completedSalesCountByGrade,
+    completedSalesCount: completedSalesCountT12m,
+    completedSalesCountByGrade: completedSalesCountByGradeT12m,
     rawPurchaseCost: rawPrice != null ? Number(rawPrice) : undefined,
     censusPopByGrade: censusPopMap,
+    isCensusCompleteCoverage: isCompleteCoverage,
   });
 
   // A cover found by a wiki name search for a different publisher is a false match: never show it.

@@ -160,10 +160,14 @@ export default function InstitutionalStrategyDossier({
               <DollarSign className="h-3 w-3 text-emerald-400" />
             </div>
             <div className="mt-1 text-xl font-bold text-emerald-400 font-mono">
-              ${decomp.marketExecutionFloor.toLocaleString()}
+              {decomp.marketExecutionFloor !== null
+                ? `$${decomp.marketExecutionFloor.toLocaleString()}`
+                : "Unmeasured"}
             </div>
             <p className="text-[10px] text-slate-500 font-mono mt-1">
-              Estimated wholesale liquidation realization (calibrated liquidity haircut).
+              {decomp.liquidityDiscountPct !== null
+                ? `Wholesale realization (${decomp.liquidityDiscountPct}% haircut · ${decomp.liquidityState})`
+                : "Liquidity Unmeasured (No recorded trades to infer depth)"}
             </p>
           </div>
         </div>
@@ -256,10 +260,10 @@ export default function InstitutionalStrategyDossier({
                 Census Turnover Ratio (CTR)
               </div>
               <div className="mt-1 text-lg font-bold font-mono text-purple-300">
-                {contra.censusTurnoverRatio != null ? contra.censusTurnoverRatio : "UNINDEXED"}
+                {contra.censusTurnoverRatio != null ? contra.censusTurnoverRatio : contra.turnoverVelocityTier}
               </div>
               <div className="text-[10px] text-slate-500 font-mono mt-0.5">
-                {contra.turnoverVelocityTier} (CGC Pop 9.0+ / 12M Volume)
+                {contra.turnoverVelocityTier} · {contra.censusCoverageStatus === "COMPLETE_VERIFIED_CENSUS" ? "Complete Census" : contra.censusCoverageStatus === "PARTIAL_GRADE_COVERAGE" ? "Partial Census" : "Unindexed"}
               </div>
             </div>
 

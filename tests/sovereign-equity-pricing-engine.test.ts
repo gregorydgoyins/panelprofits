@@ -259,14 +259,44 @@ describe("Sovereign Canonical Equity Pricing Engine Verification Suite", () => {
     // Trailing sales = 4 -> CTR = 492 / 4 = 123.0
     expect(output.contrarianStrategies.censusTurnoverRatio).toBe(123.0);
     expect(output.contrarianStrategies.turnoverVelocityTier).toBe("LOW_TURNOVER_DORMANT");
+    expect(output.contrarianStrategies.censusCoverageStatus).toBe("COMPLETE_VERIFIED_CENSUS");
 
     // When completedSalesCount is omitted, CTR must return UNMEASURED, never falling back to snapshot count
     const omittedInput: SovereignPricingEngineInput = {
       ...input,
       completedSalesCount: undefined,
+      completedSalesCountByGrade: undefined,
     };
     const omittedOutput = executeSovereignPricingEngine(omittedInput);
     expect(omittedOutput.contrarianStrategies.censusTurnoverRatio).toBeNull();
     expect(omittedOutput.contrarianStrategies.turnoverVelocityTier).toBe("UNMEASURED");
+
+    // Zero-fallback liquidity: when trades are omitted, liquidityState is UNMEASURED and floor is null!
+    expect(omittedOutput.gradeMatrix["9.8"].valuationDecomposition.liquidityState).toBe("UNMEASURED");
+    expect(omittedOutput.gradeMatrix["9.8"].valuationDecomposition.marketExecutionFloor).toBeNull();
+    expect(omittedOutput.gradeMatrix["9.8"].valuationDecomposition.liquidityDiscountPct).toBeNull();
+  });
+
+  it("verifies partial vs complete census coverage classification", () => {
+    // Only 9.8 is provided (partial coverage)
+    const partialInput: SovereignPricingEngineInput = {
+      comicId: "partial-census-check",
+      series: "Spawn",
+      issue: "1",
+      publicationYear: 1992,
+      completedSalesCount: 10,
+      monthlySnapshots: [
+        {
+          date: "2026-10-01",
+          epochMs: Date.parse("2026-10-01T00:00:00Z"),
+          pricesByGrade: { RAW: 25, "9.8": 150 },
+        },
+      ],
+      censusPopByGrade: { "9.8": 5000 },
+    };
+
+    const partialOutput = executeSovereignPricingEngine(partialInput);
+    expect(partialOutput.contrarianStrategies.censusCoverageStatus).toBe("PARTIAL_GRADE_COVERAGE");
+    expect(partialOutput.contrarianStrategies.censusTurnoverRatio).toBe(500.0);
   });
 });
