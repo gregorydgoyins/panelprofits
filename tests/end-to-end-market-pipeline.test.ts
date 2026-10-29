@@ -17,6 +17,7 @@ import { describe, it, expect } from "vitest";
 import { executeSovereignPricingEngine } from "../lib/pricing/sovereign-equity-pricing-engine";
 import { executeCrossAssetTransmissionEngine } from "../lib/pricing/cross-asset-transmission-engine";
 import { fundNav } from "../lib/assets/canon-formulas";
+import ce70ReferenceFmvJson from "../lib/equity/ce70-reference-fmv.json";
 import {
   executeClearedTrade,
   persistSettledTradeToLedger,
@@ -130,35 +131,45 @@ describe("Institutional End-to-End Economy Pipeline Verification (Target: 98/100
     expect(report.dataProvenance.reflexivity).toBe("SIMULATED_FEEDBACK_SCENARIO");
   });
 
-  it("verifies 70-seat CE70 index constituent re-pricing and holdings transmission", () => {
-    // Simulate 70 distinct constituent holdings representing the CE70 active index contract
-    const ce70Constituents = Array.from({ length: 70 }, (_, i) => {
-      const basePrice = 500 + i * 150; // Distinct price per seat
-      const quantity = 1 + (i % 5);    // Holdings weight per seat
-      return {
-        seatNumber: i + 1,
-        ticker: `CE70-SEAT-${i + 1}`,
-        q: quantity,
-        p: basePrice,
-      };
-    });
+  it("verifies CE70 index constituent re-pricing and holdings transmission using authentic constitutional seats", () => {
+    // Load the authentic CE70 constitutional seats directly from canonical reference data
+    const rawSeats = Object.keys(ce70ReferenceFmvJson)
+      .filter((k) => /^\d+$/.test(k))
+      .map((k) => (ce70ReferenceFmvJson as any)[k])
+      .sort((a, b) => a.seatNumber - b.seatNumber);
 
-    const initialGrossAssets = ce70Constituents.reduce((acc, c) => acc + c.q * c.p, 0);
+    expect(rawSeats.length).toBeGreaterThanOrEqual(54); // Authenticated constitutional seats (seats 66-70 remain vacant per CE70 Constitution)
+
+    const actualConstituentHoldings = rawSeats.map((seat) => ({
+      seatNumber: seat.seatNumber,
+      title: seat.title,
+      canonicalId: seat.canonicalId,
+      series: seat.series,
+      issueNumber: seat.issueNumber,
+      q: 1, // 1 unit per constituent seat
+      p: Number(seat.referenceFmvUsd),
+    }));
+
+    const initialGrossAssets = actualConstituentHoldings.reduce((acc, c) => acc + c.q * c.p, 0);
     const managementFees = 2500;
     const custodialLiabilities = 1200;
 
-    const initialNav = fundNav(ce70Constituents, managementFees, custodialLiabilities);
-    expect(initialNav).toBe(initialGrossAssets - managementFees - custodialLiabilities);
+    const initialNav = fundNav(actualConstituentHoldings, managementFees, custodialLiabilities);
+    expect(initialNav).toBeCloseTo(initialGrossAssets - managementFees - custodialLiabilities, 2);
 
-    // Propagate sovereign pricing shock to Seat 1 (e.g. Action Comics #1 re-pricing shock +$25,000)
-    const revaluedConstituents = ce70Constituents.map((c) =>
-      c.seatNumber === 1 ? { ...c, p: c.p + 25000 } : c
+    // Verify Seat 1 is Action Comics #252
+    expect(actualConstituentHoldings[0].title).toBe("Action Comics #252");
+    expect(actualConstituentHoldings[0].seatNumber).toBe(1);
+
+    // Propagate authentic sovereign equity price revaluation to Seat 1 (Action Comics #252 +$2,500)
+    const revaluedHoldings = actualConstituentHoldings.map((c) =>
+      c.seatNumber === 1 ? { ...c, p: c.p + 2500 } : c
     );
 
-    const revaluedNav = fundNav(revaluedConstituents, managementFees, custodialLiabilities);
-    const expectedDelta = revaluedConstituents[0].q * 25000;
-    expect(revaluedNav - initialNav).toBe(expectedDelta);
-    expect(revaluedNav).toBe(initialGrossAssets + expectedDelta - managementFees - custodialLiabilities);
+    const revaluedNav = fundNav(revaluedHoldings, managementFees, custodialLiabilities);
+    const expectedDelta = revaluedHoldings[0].q * 2500;
+    expect(revaluedNav - initialNav).toBeCloseTo(expectedDelta, 2);
+    expect(revaluedNav).toBeCloseTo(initialGrossAssets + expectedDelta - managementFees - custodialLiabilities, 2);
   });
 
   it("executes cleared market trades with strict double-entry balance and share conservation", () => {

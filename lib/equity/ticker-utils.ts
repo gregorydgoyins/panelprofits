@@ -1,14 +1,13 @@
-export function resolveProductionAge(year: number | null | undefined): string {
-  if (!year) return 'unknown';
-  if (year < 1938)  return 'platinum';
-  if (year <= 1945) return 'golden';
-  if (year <= 1955) return 'atomic';
-  if (year <= 1969) return 'silver';
-  if (year <= 1983) return 'bronze';
-  if (year <= 1991) return 'copper';
-  if (year <= 2003) return 'modern';
-  if (year <= 2016) return 'independent';
-  return 'postmodern';
+import { resolveComicEra, type ResolveComicEraOptions } from "../pricing/comic-portfolio-tracker";
+
+export function resolveProductionAge(
+  year: number | null | undefined,
+  options?: ResolveComicEraOptions | string | null
+): string {
+  if (!year && typeof options !== "object") return 'unknown';
+  const canonicalEra = resolveComicEra(year, options);
+  // Map "Post-Modern" to "postmodern" to keep standard slug format
+  return canonicalEra === "Post-Modern" ? "postmodern" : canonicalEra.toLowerCase();
 }
 
 export function formatEraLabel(era: string): string {
