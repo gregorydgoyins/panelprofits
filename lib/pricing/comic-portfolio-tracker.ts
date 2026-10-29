@@ -19,10 +19,12 @@
 export type ComicEra =
   | "Platinum"
   | "Golden"
+  | "Atomic"
   | "Silver"
   | "Bronze"
   | "Copper"
   | "Modern"
+  | "Independent"
   | "Post-Modern";
 
 export interface EraProfile {
@@ -44,9 +46,16 @@ export const COMIC_ERA_PROFILES: Record<ComicEra, EraProfile> = {
   Golden: {
     era: "Golden",
     startYear: 1938,
-    endYear: 1955,
+    endYear: 1945,
     valuationDynamic: "Universal archetype demand. Low-grade incomplete books hold strong baseline value.",
     liquidityGradeAnchor: "4.0",
+  },
+  Atomic: {
+    era: "Atomic",
+    startYear: 1946,
+    endYear: 1955,
+    valuationDynamic: "Post-war genres (Horror, Crime, Sci-Fi) & EC pre-code scarcity. Mid-grades drive volume.",
+    liquidityGradeAnchor: "6.0",
   },
   Silver: {
     era: "Silver",
@@ -72,30 +81,39 @@ export const COMIC_ERA_PROFILES: Record<ComicEra, EraProfile> = {
   Modern: {
     era: "Modern",
     startYear: 1992,
-    endYear: 1999,
+    endYear: 2003,
     valuationDynamic: "Speculation era. High supply; 9.8 is mandatory benchmark for raw asset liquidity.",
+    liquidityGradeAnchor: "9.8",
+  },
+  Independent: {
+    era: "Independent",
+    startYear: 2004,
+    endYear: 2016,
+    valuationDynamic: "Creator-owned & indie publisher expansion (Image, Dark Horse, IDW). Short print runs.",
     liquidityGradeAnchor: "9.8",
   },
   "Post-Modern": {
     era: "Post-Modern",
-    startYear: 2000,
+    startYear: 2017,
     endYear: 2026,
-    valuationDynamic: "Retailer incentives and short print runs. Catalyzed by entertainment announcements.",
+    valuationDynamic: "Retailer ratio incentives and variant covers. Catalyzed by cinematic options.",
     liquidityGradeAnchor: "9.8",
   },
 };
 
 /**
- * Resolves the canonical comic era from publication year.
+ * Resolves the canonical comic era from publication year matching Panel Profits canon.
  */
 export function resolveComicEra(year: number | null | undefined): ComicEra {
   if (!year || !Number.isFinite(year)) return "Bronze";
-  if (year <= 1937) return "Platinum";
-  if (year <= 1955) return "Golden";
+  if (year < 1938) return "Platinum";
+  if (year <= 1945) return "Golden";
+  if (year <= 1955) return "Atomic";
   if (year <= 1969) return "Silver";
   if (year <= 1983) return "Bronze";
   if (year <= 1991) return "Copper";
-  if (year <= 1999) return "Modern";
+  if (year <= 2003) return "Modern";
+  if (year <= 2016) return "Independent";
   return "Post-Modern";
 }
 

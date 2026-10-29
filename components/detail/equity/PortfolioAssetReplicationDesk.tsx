@@ -18,15 +18,16 @@ import {
   ArrowRight,
   CheckCircle2,
   Lock,
+  Layers,
 } from "lucide-react";
 
 interface PortfolioAssetReplicationDeskProps {
   comicId: string;
   series: string;
   issue: string;
-  year?: number;
-  rawPrice: number;
-  targetFmv98: number;
+  year?: number | null;
+  rawPrice: number | null;
+  targetFmv98: number | null;
   accentColor?: string;
 }
 
@@ -34,28 +35,53 @@ export default function PortfolioAssetReplicationDesk({
   comicId,
   series,
   issue,
-  year = 1974,
+  year = null,
   rawPrice,
   targetFmv98,
   accentColor = "#38bdf8",
 }: PortfolioAssetReplicationDeskProps) {
   const [holdingDays, setHoldingDays] = useState<number>(180); // 6 months default
   const [targetGrade, setTargetGrade] = useState<string>("9.8");
-  const [rawCost, setRawCost] = useState<number>(rawPrice || 250);
+  const [rawCost, setRawCost] = useState<number>(rawPrice ?? 0);
   const [salesTaxPct, setSalesTaxPct] = useState<number>(7.0);
   const [inboundShipping, setInboundShipping] = useState<number>(25);
   const [pressingFee, setPressingFee] = useState<number>(30);
   const [gradingFee, setGradingFee] = useState<number>(55);
   const [gradingShipping, setGradingShipping] = useState<number>(35);
-  const [targetGrossSale, setTargetGrossSale] = useState<number>(targetFmv98 || 1200);
+  const [targetGrossSale, setTargetGrossSale] = useState<number>(targetFmv98 ?? 0);
   const [platformCommissionPct, setPlatformCommissionPct] = useState<number>(13.25);
   const [outboundShipping, setOutboundShipping] = useState<number>(30);
+
+  // If both baseline prices are completely unobserved in the market, present unpriced state without inventing values
+  if (!rawPrice && !targetFmv98) {
+    return (
+      <section
+        aria-label="3-Phase Asset Replication & Ledger Desk"
+        className="rounded-xl border border-white/10 bg-[#070C18] p-5 shadow-2xl relative overflow-hidden font-sans"
+      >
+        <div className="flex items-center justify-between border-b border-white/10 pb-3">
+          <div className="flex items-center gap-2">
+            <Layers className="h-4 w-4 text-slate-400" />
+            <h3 className="text-sm font-bold uppercase tracking-wider text-white">
+              3-Phase Asset Replication & Portfolio Ledger
+            </h3>
+          </div>
+          <span className="font-mono text-[10px] text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded bg-amber-950/20">
+            UNPRICED ASSET
+          </span>
+        </div>
+        <p className="text-xs text-slate-400 mt-3 font-mono">
+          Insufficient secondary market transactions recorded to calculate verified replacement cost basis or 9.8 liquidation arbitrage. Sovereign pricing rules prohibit synthetic price injection.
+        </p>
+      </section>
+    );
+  }
 
   const positionInput: PortfolioPositionInput = {
     comicId,
     title: series,
     issue,
-    publicationYear: year,
+    publicationYear: year ?? undefined,
     targetGrade,
     rawPurchaseCost: rawCost,
     salesTax: Number((rawCost * (salesTaxPct / 100)).toFixed(2)),

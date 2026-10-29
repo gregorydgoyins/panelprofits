@@ -12,7 +12,7 @@ import { Sparkles, ShieldCheck, TrendingUp, AlertCircle, ArrowUpRight, Calculato
 interface GradingArbitrageTerminalProps {
   series: string;
   issue: string;
-  rawMarketPrice: number;
+  rawMarketPrice: number | null;
   gradeMatrixFmv: Partial<Record<CanonicalGrade, number>>;
   volatilityByGrade?: Partial<Record<CanonicalGrade, number>>;
   accentColor?: string;
@@ -26,13 +26,37 @@ export default function GradingArbitrageTerminal({
   volatilityByGrade = {},
   accentColor = "#38bdf8",
 }: GradingArbitrageTerminalProps) {
-  const [selectedRawCost, setSelectedRawCost] = useState<number>(rawMarketPrice || 100);
+  const [selectedRawCost, setSelectedRawCost] = useState<number>(rawMarketPrice ?? 0);
   const [selectedTargetGrade, setSelectedTargetGrade] = useState<CanonicalGrade>("9.8");
   const [venueFeePct, setVenueFeePct] = useState<number>(13.25); // eBay 13.25% default
   const [includePressing, setIncludePressing] = useState<boolean>(true);
 
-  const targetFmv = gradeMatrixFmv[selectedTargetGrade] || (gradeMatrixFmv["9.8"] ?? selectedRawCost * 2.5);
+  const targetFmv = gradeMatrixFmv[selectedTargetGrade] || (gradeMatrixFmv["9.8"] ?? 0);
   const targetVol = volatilityByGrade[selectedTargetGrade] ?? 0.32;
+
+  if (!rawMarketPrice && !targetFmv) {
+    return (
+      <section
+        aria-label="Grading Arbitrage Terminal"
+        className="rounded-xl border border-white/10 bg-[#070C18] p-5 shadow-2xl relative overflow-hidden font-sans"
+      >
+        <div className="flex items-center justify-between border-b border-white/10 pb-3">
+          <div className="flex items-center gap-2">
+            <Calculator className="h-4 w-4 text-cyan-400" />
+            <h3 className="text-sm font-bold uppercase tracking-wider text-white">
+              Black-Scholes Grading Arbitrage Terminal
+            </h3>
+          </div>
+          <span className="font-mono text-[10px] text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded bg-amber-950/20">
+            AWAITING EMPIRICAL SALE
+          </span>
+        </div>
+        <p className="text-xs text-slate-400 mt-3 font-mono">
+          No observed market transactions exist to seed initial raw acquisition cost or target graded exit price. Synthetic volatility and fabricated multiplier injections are disabled.
+        </p>
+      </section>
+    );
+  }
 
   // Run the Black-Scholes & Arbitrage evaluation
   const diagnostics: GradingArbitrageDiagnostics = evaluateGradingOption(

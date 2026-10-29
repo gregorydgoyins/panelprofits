@@ -207,8 +207,12 @@ export function computeHorizonMomenta(
     return Number((((pNow - base.price) / base.price) * 100).toFixed(2));
   };
 
+  // Calculate macro 5-year return strictly when history spans at least 4.5 years (1,640 days)
   const first = snapshots[0];
-  const macro5y = first.price > 0 ? Number((((pNow - first.price) / first.price) * 100).toFixed(2)) : null;
+  const historySpanDays = (tNow - first.epochMs) / 86_400_000;
+  const macro5y = historySpanDays >= 1640 && first.price > 0
+    ? Number((((pNow - first.price) / first.price) * 100).toFixed(2))
+    : null;
 
   return {
     change30dPct: delta(30),
@@ -249,11 +253,13 @@ export function evaluateGradingOption(
   const d2 = d1 - sigma * Math.sqrt(T);
   const callOptionValue = Number((S * normalCdf(d1) - K * Math.exp(-r * T) * normalCdf(d2)).toFixed(2));
 
-  const gradingAlphaSpread = Number((targetFmv - capitalizedBasis).toFixed(2));
-  const marginOfSafetyPct = targetFmv > 0 ? Number(((1 - capitalizedBasis / targetFmv) * 100).toFixed(2)) : 0;
-
   const commissionRate = venueFeePct / 100;
-  const breakevenGrossAuctionHammer = Number(((capitalizedBasis + 20) / (1 - commissionRate)).toFixed(2));
+  // Net realized proceeds after platform commission and insured outbound shipping ($25)
+  const netRealizedProceeds = Number((targetFmv * (1 - commissionRate) - 25).toFixed(2));
+  const gradingAlphaSpread = Number((netRealizedProceeds - capitalizedBasis).toFixed(2));
+  const marginOfSafetyPct = netRealizedProceeds > 0 ? Number(((1 - capitalizedBasis / netRealizedProceeds) * 100).toFixed(2)) : 0;
+
+  const breakevenGrossAuctionHammer = Number(((capitalizedBasis + 25) / (1 - commissionRate)).toFixed(2));
   const isFavorable = gradingAlphaSpread > 0 && callOptionValue > rawPrice;
 
   return {
@@ -404,12 +410,15 @@ export function executeSovereignPricingEngine(
     }
   }
 
-  // Scarcity Tier calculation based on Census Population
-  const total98Pop = input.censusPopByGrade?.["9.8"] ?? 0;
+  // Scarcity Tier calculation based on real Census Population (never default missing to hyper-scarce)
+  const total98Pop = input.censusPopByGrade?.["9.8"] ?? null;
   let scarcityTier: SovereignEquityPricingOutput["portfolioRiskSummary"]["scarcityTier"] = "MODERATE";
-  if (total98Pop <= 10) scarcityTier = "HYPER_SCARCE";
-  else if (total98Pop <= 75) scarcityTier = "RARE";
-  else if (total98Pop > 400) scarcityTier = "HIGH_POPULATION";
+  if (total98Pop !== null) {
+    if (total98Pop <= 10) scarcityTier = "HYPER_SCARCE";
+    else if (total98Pop <= 75) scarcityTier = "RARE";
+    else if (total98Pop > 400) scarcityTier = "HIGH_POPULATION";
+    else scarcityTier = "MODERATE";
+  }
 
   const compositeVol = gradeMatrix["9.8"].annualizedVolatility ?? gradeMatrix["8.0"].annualizedVolatility;
   const macro5yComposite = gradeMatrix["9.8"].momenta.macro5yPct ?? gradeMatrix["RAW"].momenta.macro5yPct;

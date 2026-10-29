@@ -7,14 +7,16 @@ import {
 } from "@/lib/pricing/comic-portfolio-tracker";
 
 describe("Multi-Era Comic Portfolio Tracker & Asset Ledger Engine", () => {
-  it("resolves all 7 historical comic eras accurately", () => {
+  it("resolves all canonical comic eras accurately including Atomic and Independent", () => {
     expect(resolveComicEra(1910)).toBe("Platinum");
     expect(resolveComicEra(1938)).toBe("Golden");
+    expect(resolveComicEra(1950)).toBe("Atomic");
     expect(resolveComicEra(1962)).toBe("Silver");
     expect(resolveComicEra(1974)).toBe("Bronze");
     expect(resolveComicEra(1986)).toBe("Copper");
-    expect(resolveComicEra(1993)).toBe("Modern");
-    expect(resolveComicEra(2005)).toBe("Post-Modern");
+    expect(resolveComicEra(1995)).toBe("Modern");
+    expect(resolveComicEra(2008)).toBe("Independent");
+    expect(resolveComicEra(2020)).toBe("Post-Modern");
   });
 
   it("calculates multi-phase replacement cost, friction, and net ROI", () => {
@@ -65,7 +67,7 @@ describe("Multi-Era Comic Portfolio Tracker & Asset Ledger Engine", () => {
       comicId: "2523721",
       title: "Nightcrawler",
       issue: "10",
-      publicationYear: 2005,
+      publicationYear: 2020,
       targetGrade: "9.8",
       rawPurchaseCost: 15,
       salesTax: 1.05,

@@ -739,21 +739,52 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     } : null,
   };
 
+  // Empirical historical metrics from actual time-series observations
+  const allObsPrices = priceHistory.filter((h) => h.grade === "9.8" && h.priceUsd > 0).map((h) => h.priceUsd);
+  const actualAth = allObsPrices.length > 0 ? Math.max(...allObsPrices) : effectivePrice > 0 ? effectivePrice : null;
+  const actualAtl = allObsPrices.length > 0 ? Math.min(...allObsPrices) : effectivePrice > 0 ? effectivePrice : null;
+  
+  // Real max drawdown calculation across dated 9.8 points
+  let calculatedMaxDrawdown: number | null = null;
+  if (allObsPrices.length >= 2) {
+    let peak = allObsPrices[0];
+    let maxDd = 0;
+    for (const p of allObsPrices) {
+      if (p > peak) peak = p;
+      const dd = (peak - p) / peak;
+      if (dd > maxDd) maxDd = dd;
+    }
+    calculatedMaxDrawdown = Number((maxDd * 100).toFixed(1));
+  }
+
+  // Empirical coefficient of variation
+  const mean98 = allObsPrices.length > 0 ? allObsPrices.reduce((a, b) => a + b, 0) / allObsPrices.length : null;
+  const variance98 = mean98 != null && allObsPrices.length > 1
+    ? allObsPrices.reduce((sum, p) => sum + (p - mean98) ** 2, 0) / allObsPrices.length
+    : null;
+  const actualCv = mean98 != null && variance98 != null ? Number((Math.sqrt(variance98) / mean98).toFixed(2)) : null;
+
+  // Real timeline points from recorded priceHistory only (zero synthetic dates)
+  const realTimeline = priceHistory
+    .filter((h) => h.grade === "9.8" && h.priceUsd > 0)
+    .slice(-12)
+    .map((h) => ({ date: h.observedAt.slice(0, 7), priceUsd: h.priceUsd }));
+
   const temporalMemoryData: TemporalMemory = {
     anchorGrade: 9.8,
-    anchorPriceUsd: effectivePrice,
+    anchorPriceUsd: effectivePrice > 0 ? effectivePrice : 0,
     anchorSalesVolume: salesObservations.length,
-    anchorConfidence: "HIGH",
+    anchorConfidence: allObsPrices.length >= 5 ? "HIGH" : allObsPrices.length >= 2 ? "MEDIUM" : "LOW",
     lifetimeStats: {
-      allTimeHighUsd: Math.round(effectivePrice * 1.35) || 500,
-      allTimeLowUsd: Math.max(10, Math.round(effectivePrice * 0.42)) || 45,
-      maxDrawdownPct: 18.4,
-      lifetimeCv: 0.22,
-      avgRecoveryPoints: 6,
-      dataSpanDays: 1460,
-      firstObservation: comic.publication_date || `${comic.publication_year || 1936}-01-01`,
-      lastObservation: snapshotLatest || new Date().toISOString().slice(0, 10),
-      pricePoints: Math.max(salesObservations.length, 12),
+      allTimeHighUsd: actualAth ?? 0,
+      allTimeLowUsd: actualAtl ?? 0,
+      maxDrawdownPct: calculatedMaxDrawdown ?? 0,
+      lifetimeCv: actualCv ?? 0,
+      avgRecoveryPoints: allObsPrices.length >= 2 ? Math.min(6, allObsPrices.length) : 0,
+      dataSpanDays: priceHistory.length >= 2 ? Math.max(1, Math.round((Date.parse(priceHistory[priceHistory.length - 1].observedAt) - Date.parse(priceHistory[0].observedAt)) / 86400000)) : 0,
+      firstObservation: priceHistory[0]?.observedAt || snapshotLatest || "",
+      lastObservation: priceHistory[priceHistory.length - 1]?.observedAt || snapshotLatest || "",
+      pricePoints: allObsPrices.length,
     },
     principalHistory: {
       totalEvents: 0,
@@ -764,19 +795,12 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
       events: [],
     },
     scarTissue: {
-      hasScar: false,
+      hasScar: Boolean(calculatedMaxDrawdown && calculatedMaxDrawdown > 15),
       volAdjustment: 0.0,
       elasticityAdj: 0.0,
       spreadAdj: 0.0,
     },
-    timelineStrip: [
-      { date: '2023-01', priceUsd: Math.round(effectivePrice * 0.72) || 120 },
-      { date: '2023-06', priceUsd: Math.round(effectivePrice * 0.81) || 145 },
-      { date: '2023-12', priceUsd: Math.round(effectivePrice * 0.79) || 140 },
-      { date: '2024-06', priceUsd: Math.round(effectivePrice * 0.92) || 170 },
-      { date: '2024-12', priceUsd: Math.round(effectivePrice * 0.98) || 190 },
-      { date: '2025-06', priceUsd: effectivePrice || 200 },
-    ],
+    timelineStrip: realTimeline.length > 0 ? realTimeline : (effectivePrice > 0 ? [{ date: snapshotLatest ? snapshotLatest.slice(0, 7) : "Current", priceUsd: effectivePrice }] : []),
   };
 
   const provenanceClaims: ProvenanceClaim[] = [
@@ -921,7 +945,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
           <GradingArbitrageTerminal
             series={comic.series}
             issue={String(comic.issue_number)}
-            rawMarketPrice={Number(rawPrice || rawLattice["RAW"] || 100)}
+            rawMarketPrice={rawPrice != null ? Number(rawPrice) : rawLattice["RAW"] != null ? Number(rawLattice["RAW"]) : null}
             gradeMatrixFmv={rawLattice as any}
             accentColor={eraColors.border}
           />
@@ -930,9 +954,9 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
             comicId={comic.id}
             series={comic.series}
             issue={String(comic.issue_number)}
-            year={comic.publication_year ?? 1974}
-            rawPrice={Number(rawPrice || rawLattice["RAW"] || 100)}
-            targetFmv98={Number(consensusFmv || rawLattice["9.8"] || 1200)}
+            year={comic.publication_year ?? null}
+            rawPrice={rawPrice != null ? Number(rawPrice) : rawLattice["RAW"] != null ? Number(rawLattice["RAW"]) : null}
+            targetFmv98={consensusFmv > 0 ? consensusFmv : rawLattice["9.8"] != null ? Number(rawLattice["9.8"]) : null}
             accentColor={eraColors.border}
           />
 
