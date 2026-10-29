@@ -80,8 +80,8 @@ const OBSCURE_OUTLIERS_FILTER = "AND series NOT IN ('Phantom Lady', 'Mister Myst
 const PREMIER_PUBLISHERS = "'Marvel', 'DC', 'DC Comics', 'Marvel Comics', 'Image', 'Dark Horse', 'Quality Comics', 'Fawcett', 'Valiant', 'Eclipse', 'Mirage Studios', 'IDW Publishing', 'Independent'";
 
 const ERA_SQL_CONDITIONS: Record<string, string> = {
-  platinum: `publication_year < 1938 ${OBSCURE_OUTLIERS_FILTER} AND publisher IN (${PREMIER_PUBLISHERS})`,
-  golden: `publication_year >= 1938 AND publication_year <= 1945 ${OBSCURE_OUTLIERS_FILTER} AND publisher IN (${PREMIER_PUBLISHERS})`,
+  platinum: `(publication_year < 1938 OR (LOWER(series) LIKE '%detective comics%' AND CAST(issue_number AS REAL) > 0 AND CAST(issue_number AS REAL) < 27)) ${OBSCURE_OUTLIERS_FILTER} AND publisher IN (${PREMIER_PUBLISHERS})`,
+  golden: `((publication_year >= 1938 AND publication_year <= 1945) OR (LOWER(series) LIKE '%detective comics%' AND CAST(issue_number AS REAL) = 27) OR (LOWER(series) LIKE '%action comics%' AND CAST(issue_number AS REAL) = 1)) ${OBSCURE_OUTLIERS_FILTER} AND publisher IN (${PREMIER_PUBLISHERS})`,
   atomic: `publication_year >= 1946 AND publication_year <= 1955 ${OBSCURE_OUTLIERS_FILTER} AND publisher IN (${PREMIER_PUBLISHERS})`,
   silver: `publication_year >= 1956 AND publication_year <= 1969 ${OBSCURE_OUTLIERS_FILTER} AND publisher IN (${PREMIER_PUBLISHERS})`,
   bronze: `publication_year >= 1970 AND publication_year <= 1983 ${OBSCURE_OUTLIERS_FILTER} AND publisher IN (${PREMIER_PUBLISHERS})`,
@@ -236,22 +236,33 @@ export function getVerifiedRealEquities(
           const shuffled = [...combined].sort(() => Math.random() - 0.5);
           eraPools.push(shuffled.slice(0, perEraLimit));
         } else {
-          const eOffset = Math.floor(offset / eras.length) % poolLen;
+          // Slice up to perEraLimit without wrap-around duplicates when pool has fewer than perEraLimit items
+          const eOffset = Math.floor(offset / eras.length);
           const eSlice: SovereignEquityItem[] = [];
-          for (let i = 0; i < perEraLimit; i++) {
-            eSlice.push(combined[(eOffset + i) % poolLen]);
+          if (combined.length > 0) {
+            const startIdx = eOffset % combined.length;
+            const take = Math.min(perEraLimit, combined.length);
+            for (let i = 0; i < take; i++) {
+              eSlice.push(combined[(startIdx + i) % combined.length]);
+            }
           }
           eraPools.push(eSlice);
         }
       }
 
-      // Interleave round-robin across the 9 canonical eras
+      // Interleave round-robin across the 9 canonical eras, deduplicating keys globally
       const interleaved: SovereignEquityItem[] = [];
+      const globalSeen = new Set<string>();
       const maxPoolLen = Math.max(...eraPools.map((p) => p.length));
       for (let i = 0; i < maxPoolLen; i++) {
         for (const pool of eraPools) {
           if (i < pool.length) {
-            interleaved.push(pool[i]);
+            const item = pool[i];
+            const key = `${item.series} #${item.issueNumber}`.toLowerCase();
+            if (!globalSeen.has(key)) {
+              interleaved.push(item);
+              globalSeen.add(key);
+            }
           }
         }
       }
