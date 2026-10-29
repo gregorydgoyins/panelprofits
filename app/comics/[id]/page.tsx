@@ -33,6 +33,8 @@ import StorySummaryCard from "@/components/detail/equity/StorySummaryCard";
 import GradingArbitrageTerminal from "@/components/detail/equity/GradingArbitrageTerminal";
 import PortfolioAssetReplicationDesk from "@/components/detail/equity/PortfolioAssetReplicationDesk";
 import InstitutionalStrategyDossier from "@/components/detail/equity/InstitutionalStrategyDossier";
+import FinancialConstellationTerminal from "@/components/detail/equity/FinancialConstellationTerminal";
+import { resolveConstellationNode, calculateConstellationEquilibrium } from "@/lib/pricing/financial-constellation-engine";
 import { executeSovereignPricingEngine, type SovereignMonthlySnapshot, type CanonicalGrade } from "@/lib/pricing/sovereign-equity-pricing-engine";
 import { Suspense } from "react";
 import { resolveGcdStoryDossier } from "@/lib/comics/gcd-story-service";
@@ -949,6 +951,17 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     },
   ];
 
+  // Resolve Financial Constellation relative pricing coordinate
+  const constellationNode = resolveConstellationNode(
+    comic.series,
+    String(comic.issue_number),
+    comic.publication_year,
+    consensusFmv > 0 ? consensusFmv : effectivePrice
+  );
+  const constellationResult = constellationNode
+    ? calculateConstellationEquilibrium(constellationNode)
+    : null;
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#0a0f1a', fontFamily: 'Hind, sans-serif' }}>
       {/* Top Era Accent Line */}
@@ -1043,6 +1056,13 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
             engineOutput={sovereignEngineOutput}
             accentColor={eraColors.border}
           />
+
+          {constellationResult && (
+            <FinancialConstellationTerminal
+              initialResult={constellationResult}
+              accentColor={eraColors.border}
+            />
+          )}
 
           <GradingArbitrageTerminal
             series={comic.series}
