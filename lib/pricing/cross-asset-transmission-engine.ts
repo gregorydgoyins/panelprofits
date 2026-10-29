@@ -71,7 +71,7 @@ export interface SystemicTransmissionReport {
     navCalculation: "OBSERVED_HOLDINGS_SUM";
     whaleLiquidation: "EMPIRICALLY_ESTIMATED" | "UNMEASURED";
     aumCapacity: "SIMULATED_LEVERAGE_MODEL" | "UNMEASURED";
-    reflexivity: "EMPIRICALLY_ESTIMATED" | "UNMEASURED";
+    reflexivity: "SIMULATED_FEEDBACK_SCENARIO" | "UNMEASURED";
   };
 }
 
@@ -193,7 +193,7 @@ export function executeCrossAssetTransmissionEngine(equities: SystemicEquitySeat
       navCalculation: "OBSERVED_HOLDINGS_SUM",
       whaleLiquidation: "EMPIRICALLY_ESTIMATED",
       aumCapacity: "SIMULATED_LEVERAGE_MODEL",
-      reflexivity: "EMPIRICALLY_ESTIMATED",
+      reflexivity: "SIMULATED_FEEDBACK_SCENARIO",
     },
   };
 }

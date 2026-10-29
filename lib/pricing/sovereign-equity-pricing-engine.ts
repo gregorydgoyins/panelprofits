@@ -22,6 +22,7 @@ import { executeFandomCapitalEngine, type FandomCapitalProfile } from "./fandom-
 import { executeFloatLiquidityEngine, type PhysicalSupplyAndFloatProfile } from "./float-liquidity-engine";
 import { executeEraValuationEngine, type EraHedonicValuationResult } from "./era-valuation-engine";
 import { executeContrarianDivergenceEngine, type ContrarianDivergenceSignal } from "./contrarian-divergence-engine";
+import { executeNarrativeCatalystEngine, type NarrativeCatalystProfile, type NarrativeEventRecord } from "./narrative-catalyst-engine";
 
 export const CANONICAL_GRADES = [
   "RAW",
@@ -61,6 +62,7 @@ export interface SovereignPricingEngineInput {
   censusPopByGrade?: Partial<Record<CanonicalGrade, number>>;
   isCensusCompleteCoverage?: boolean; // Flag verifying complete census ingestion across all grades vs partial sample
   annualCostOfCapitalRate?: number; // e.g. 0.075 (7.5%)
+  narrativeEvents?: NarrativeEventRecord[]; // Recorded media and cultural catalysts
 }
 
 export interface HorizonMomentaMatrix {
@@ -171,6 +173,7 @@ export interface SovereignEquityPricingOutput {
   physicalFloatProfile: PhysicalSupplyAndFloatProfile;
   eraValuationProfile: EraHedonicValuationResult;
   contrarianDivergenceSignal: ContrarianDivergenceSignal;
+  narrativeCatalystProfile: NarrativeCatalystProfile;
 }
 
 /** Standard Normal CDF approximation */
@@ -417,9 +420,17 @@ export function executeSovereignPricingEngine(
       let isDirect = price != null && price > 0;
 
       if (!isDirect) {
-        // Elastic inter-grade ratio interpolation
+        // Elastic inter-grade ratio interpolation calibrated by era non-linearity:
+        // Era grade curvature (e.g. Copper/Modern 9.8 apex cliff vs Golden Age scarcity floor)
+        const eraCurvature =
+          era === "Copper" || era === "Modern" || era === "Post-Modern"
+            ? 1.15
+            : era === "Golden" || era === "Platinum"
+              ? 0.85
+              : 1.0;
+
         if (g === "2.0") {
-          price = p4 ? p4 * 0.65 : rawVal ? rawVal * 0.45 : undefined;
+          price = p4 ? p4 * (0.65 / eraCurvature) : rawVal ? rawVal * 0.45 : undefined;
         } else if (g === "3.0") {
           price = p4 ? p4 * 0.8 : rawVal ? rawVal * 0.6 : undefined;
         } else if (g === "5.0") {
@@ -433,7 +444,7 @@ export function executeSovereignPricingEngine(
         } else if (g === "9.6") {
           price = p92 && p98 ? p92 + (p98 - p92) * 0.65 : p98 ? p98 * 0.75 : undefined;
         } else if (g === "10.0") {
-          price = p98 ? p98 * 1.35 : undefined;
+          price = p98 ? p98 * (1.35 * eraCurvature) : undefined;
         }
       }
 
@@ -896,17 +907,35 @@ export function executeSovereignPricingEngine(
     observedGradePrices: observedPricesMap,
   });
 
+  // 90-day fundamental demand change: calculated from empirical sales velocity change if available; otherwise null (strictly no invented numbers)
+  const measuredDemandDelta90d: number | null = null;
+
   const contrarianDivergenceSignal = executeContrarianDivergenceEngine({
     comicId: input.comicId,
     series: input.series,
     issue: input.issue,
     currentFmvUsd: gradeMatrix["9.8"].currentFmv ?? gradeMatrix["RAW"].currentFmv,
     marketPriceDeltaPct90d: gradeMatrix["9.8"].momenta.change90dPct,
-    fundamentalDemandDeltaPct90d: fandomProfile.expectedQualifiedDemandUnits != null ? 5.0 : null,
+    fundamentalDemandDeltaPct90d: measuredDemandDelta90d,
     priceZScore90d: zScore,
     rsi14: gradeMatrix["9.8"].rsi14,
     marginOfSafetyPct: traditionalStrategies.marginOfSafetyPct,
     dealerExecutionFloor: gradeMatrix["9.8"].valuationDecomposition.marketExecutionFloor,
+  });
+
+  const priceHistoryObservations = sortedSnapshots
+    .map((s) => ({
+      date: s.date,
+      price: s.pricesByGrade["9.8"] ?? s.pricesByGrade["RAW"] ?? 0,
+    }))
+    .filter((o) => o.price > 0);
+
+  const narrativeCatalystProfile = executeNarrativeCatalystEngine({
+    comicId: input.comicId,
+    series: input.series,
+    issue: input.issue,
+    events: input.narrativeEvents ?? [],
+    priceHistory: priceHistoryObservations,
   });
 
   return {
@@ -936,5 +965,6 @@ export function executeSovereignPricingEngine(
     physicalFloatProfile,
     eraValuationProfile,
     contrarianDivergenceSignal,
+    narrativeCatalystProfile,
   };
 }

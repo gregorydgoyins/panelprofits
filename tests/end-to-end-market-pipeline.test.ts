@@ -17,6 +17,7 @@ import { describe, it, expect } from "vitest";
 import { executeSovereignPricingEngine } from "../lib/pricing/sovereign-equity-pricing-engine";
 import { executeCrossAssetTransmissionEngine } from "../lib/pricing/cross-asset-transmission-engine";
 import { fundNav } from "../lib/assets/canon-formulas";
+import { executeClearedTrade, type MarketParticipantAccount, type TradeOrderRequest } from "../lib/trading/clearing-execution-engine";
 
 describe("Institutional End-to-End Economy Pipeline Verification (Target: 98/100)", () => {
   it("executes complete pipeline from database comic through sovereign pricing, float, and strategy signals", () => {
@@ -120,5 +121,103 @@ describe("Institutional End-to-End Economy Pipeline Verification (Target: 98/100
     expect(report.basketIndices[0].compositeNavUsd).toBe(9200 + 4200);
     expect(report.dataProvenance.navCalculation).toBe("OBSERVED_HOLDINGS_SUM");
     expect(report.dataProvenance.whaleLiquidation).toBe("EMPIRICALLY_ESTIMATED");
+    expect(report.dataProvenance.reflexivity).toBe("SIMULATED_FEEDBACK_SCENARIO");
+  });
+
+  it("executes cleared market trades with strict double-entry balance and share conservation", () => {
+    // Buyer with $50,000 cash; Seller with 20 shares of Hulk 181
+    const buyer: MarketParticipantAccount = {
+      participantId: "whale-buyer-1",
+      role: "INVESTOR",
+      cashBalanceUsd: 50000,
+      shareHoldings: { "hulk-181": 5 },
+    };
+
+    const seller: MarketParticipantAccount = {
+      participantId: "dealer-seller-1",
+      role: "DEALER",
+      cashBalanceUsd: 12000,
+      shareHoldings: { "hulk-181": 20 },
+    };
+
+    const order: TradeOrderRequest = {
+      orderId: "ord-9921",
+      comicId: "hulk-181",
+      orderType: "BUY",
+      buyerId: buyer.participantId,
+      sellerId: seller.participantId,
+      shares: 4,
+      executionPriceUsd: 9200, // $36,800 gross consideration
+      venueMakerFeePct: 1.5, // $552 maker fee paid to platform
+      venueTakerFeePct: 2.5, // $920 taker fee paid to platform
+      shippingInsuranceUsd: 150, // $150 insured transit
+    };
+
+    const initialTotalCash = buyer.cashBalanceUsd + seller.cashBalanceUsd;
+    const initialTotalShares = (buyer.shareHoldings["hulk-181"] ?? 0) + (seller.shareHoldings["hulk-181"] ?? 0);
+
+    const settlement = executeClearedTrade(order, buyer, seller);
+
+    expect(settlement.isCleared).toBe(true);
+    expect(settlement.tradeDetails.grossConsiderationUsd).toBe(36800);
+    expect(settlement.tradeDetails.totalBuyerOutlayUsd).toBe(36800 + 920 + 150); // $37,870
+    expect(settlement.tradeDetails.totalSellerProceedsUsd).toBe(36800 - 552); // $36,248
+    expect(settlement.tradeDetails.platformNetRevenueUsd).toBe(920 + 552); // $1,472
+
+    // Reconciled Balances
+    expect(settlement.reconciledAccounts.buyerPostBalance).toBe(50000 - 37870); // $12,130
+    expect(settlement.reconciledAccounts.sellerPostBalance).toBe(12000 + 36248); // $48,248
+    expect(settlement.reconciledAccounts.buyerSharesPost).toBe(9); // 5 + 4
+    expect(settlement.reconciledAccounts.sellerSharesPost).toBe(16); // 20 - 4
+
+    // Conservation Audits
+    expect(settlement.conservationAudit.cashConservationZeroDelta).toBe(true);
+    expect(settlement.conservationAudit.shareConservationZeroDelta).toBe(true);
+    expect(settlement.conservationAudit.auditStatus).toBe("PERFECT_CONSERVATION_AUDITED");
+
+    // Total post cash + platform fees + shipping == initialTotalCash
+    const totalPostCash =
+      settlement.reconciledAccounts.buyerPostBalance +
+      settlement.reconciledAccounts.sellerPostBalance +
+      settlement.tradeDetails.platformNetRevenueUsd +
+      150;
+    expect(totalPostCash).toBe(initialTotalCash);
+
+    // Total post shares == initialTotalShares
+    const totalPostShares =
+      settlement.reconciledAccounts.buyerSharesPost +
+      settlement.reconciledAccounts.sellerSharesPost;
+    expect(totalPostShares).toBe(initialTotalShares);
+  });
+
+  it("strictly rejects trade if buyer has insufficient cash or seller lacks share custody", () => {
+    const insolventBuyer: MarketParticipantAccount = {
+      participantId: "poor-buyer",
+      role: "INVESTOR",
+      cashBalanceUsd: 1000, // needs > $37k
+      shareHoldings: {},
+    };
+
+    const seller: MarketParticipantAccount = {
+      participantId: "dealer-1",
+      role: "DEALER",
+      cashBalanceUsd: 5000,
+      shareHoldings: { "hulk-181": 10 },
+    };
+
+    const order: TradeOrderRequest = {
+      orderId: "ord-fail-1",
+      comicId: "hulk-181",
+      orderType: "BUY",
+      buyerId: insolventBuyer.participantId,
+      sellerId: seller.participantId,
+      shares: 4,
+      executionPriceUsd: 9200,
+    };
+
+    const settlement = executeClearedTrade(order, insolventBuyer, seller);
+    expect(settlement.isCleared).toBe(false);
+    expect(settlement.rejectReason).toContain("INSUFFICIENT_BUYER_FUNDS");
+    expect(settlement.reconciledAccounts.buyerPostBalance).toBe(1000); // Unmutated
   });
 });
