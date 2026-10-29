@@ -386,7 +386,11 @@ export function evaluateGradingOption(
 export function executeSovereignPricingEngine(
   input: SovereignPricingEngineInput
 ): SovereignEquityPricingOutput {
-  const era = resolveComicEra(input.publicationYear, input.publisher);
+  const era = resolveComicEra(input.publicationYear, {
+    publisher: input.publisher,
+    series: input.series,
+    issue: input.issue,
+  });
   const eraProfile = COMIC_ERA_PROFILES[era];
 
   // Sort snapshots chronologically

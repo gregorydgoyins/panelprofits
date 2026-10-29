@@ -114,10 +114,57 @@ export const COMIC_ERA_PROFILES: Record<ComicEra, EraProfile> = {
  * - Independent: Modern-era non-premier/independent publisher titles (e.g. Image, Dark Horse, IDW, Fantagraphics, Valiant, etc.) or 2004-2016 indie titles
  * - Post-Modern: 2004+ mainstream / 2017+ current
  */
+export interface ResolveComicEraOptions {
+  series?: string | null;
+  issue?: string | null;
+  publisher?: string | null;
+}
+
+/**
+ * Resolves the canonical 9 comic eras matching Panel Profits Product Canon:
+ * Platinum, Golden, Atomic, Silver, Bronze, Copper, Modern, Independent, Post-Modern.
+ *
+ * OWNER CANON / CANONICAL OVERRIDES:
+ * - Detective Comics #1-26 (March 1937 - April 1939): Platinum Era (Pulp anthology prior to Batman debut).
+ * - Detective Comics #27 (May 1939): Golden Age comic of the Platinum Era (Batman debut).
+ * - Action Comics #1 (June 1938): Golden Age Inception Anchor (Superman debut).
+ */
 export function resolveComicEra(
   year: number | null | undefined,
-  publisher?: string | null
+  publisherOrOptions?: string | null | ResolveComicEraOptions
 ): ComicEra {
+  let publisher: string | null | undefined = null;
+  let series: string | null | undefined = null;
+  let issue: string | null | undefined = null;
+
+  if (typeof publisherOrOptions === "object" && publisherOrOptions !== null) {
+    publisher = publisherOrOptions.publisher;
+    series = publisherOrOptions.series;
+    issue = publisherOrOptions.issue;
+  } else if (typeof publisherOrOptions === "string") {
+    publisher = publisherOrOptions;
+  }
+
+  // TIER 1: EXPLICIT PP CANONICAL ISSUE/SERIES OVERRIDES
+  if (series && /detective\s+comics/i.test(series)) {
+    const num = parseFloat(issue || "0");
+    if (num > 0 && num < 27) {
+      // Detective Comics #1-26 is Platinum Era
+      return "Platinum";
+    }
+    if (num === 27) {
+      // Detective Comics #27 is Golden Age comic of the Platinum Era
+      return "Golden";
+    }
+  }
+
+  if (series && /action\s+comics/i.test(series)) {
+    const num = parseFloat(issue || "0");
+    if (num === 1) {
+      return "Golden";
+    }
+  }
+
   if (!year || !Number.isFinite(year)) return "Bronze";
   if (year < 1938) return "Platinum";
   if (year <= 1945) return "Golden";
