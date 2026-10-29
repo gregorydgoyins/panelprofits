@@ -926,16 +926,59 @@ The defining breakthrough of Panel Profits is that **personnel decisions drive b
 2. **Workload, Cognitive Fatigue & Slippage**: Line brokers manage portfolios under strict coverage rules. When market volatility surges, broker fatigue increases. High fatigue levels degrade execution quality, widening realized bid-ask spreads and elevating execution drag for client accounts.
 3. **Ambition & Moral Hazard**: Brokers operate with individualized career ambition vectors. In high-beta market phases, ambitious brokers are incentivized to allocate client capital into speculative Post-Modern ratio variants to capture higher performance fees, increasing firm-level exposure to narrative catalyst exhaustion.
 
-### 8.3 Capital Adequacy Governance, Licensing Tiers, and Institutional Risk Limits
-Firms operate under strict **Simulation Governance Rules**:
+### 8.3 The 25 Procedural Decision Doctrines: Organizational Anatomy & Capital Execution
 
-$$\text{Capital Adequacy Ratio} = \frac{\text{Tier 1 Cash Reserves} + \sum (\text{Inventory}_k \cdot (1 - \text{Haircut}_k))}{\text{Total Margin Commitments}} \ge 15.0\%$$
+In Panel Profits, the 25 houses do not react uniformly to market shocks. Each firm possesses a discrete, codified **Procedural Decision Doctrine** (`firm_decision_doctrines.py`), governing how information enters the building, how it is validated, who holds the ultimate legal authority to act, and how client orders are prioritized:
 
-* **Haircuts**:
-  * Sovereign Golden/Silver Blue-Chip Equities: $25\%$ haircut.
-  * Bronze/Copper Key Equities: $40\%$ haircut.
-  * Modern/Post-Modern High-Beta Variants: $65\%$ haircut.
-* **Breach Protocol**: If a market contraction causes a firm's Capital Adequacy Ratio to drop below the **15.0% Regulatory Parameter**, the clearinghouse issues an automated margin call. If unhedged within two trading cycles, the firm's underwriting license is suspended, and its secondary inventory is liquidated at market clears.
+```
++-------------------------------------------------------------------------------------------------------------------------------+
+|                                    THE 25 PROCEDURAL DECISION DOCTRINE MATRIX                                                 |
++----+----------------------+-----------------------+-------------------------+-----------------------+-------------------------+
+| #  | FIRM NAME            | DETECTION LAYER       | VALIDATION METHOD       | DECISION AUTHORITY    | CLIENT TRIAGE POLICY    |
++----+----------------------+-----------------------+-------------------------+-----------------------+-------------------------+
+| 1  | Arnveld Capital      | Aladdin Surveillance  | Quantitative Audit      | Titan Decree          | Shield Institutional Core|
+| 2  | Calmonte Investment  | Mutualized Flow Mon.  | Tracking Error Metric   | Board of Trustees     | Pooled Index Rebalance  |
+| 3  | Holtercroft Advisory | PM Consortium         | Fiduciary Council       | Partner Consensus     | Family Office Outreach  |
+| 4  | Sestrière Markets    | Central Treasury Desk | Spread Verification     | Imperial Command      | Spread Arbitrage Capture|
+| 5  | Khamsin Custodial    | Settlement Recon. Eng.| Dual-Key Cryptographic  | High Custodian Council| Immediate Specimen Audit|
+| 6  | Valdris Capital      | Alpha Opportunity Rad.| Market Liquidity Trial  | Desk Tactical Autonomy| Tactical Offense Alloc. |
+| 7  | Orontea Fixed Income | Debt Structure Surv.  | Historical Spread Audit | CIO Direct Decree     | Senior Collateral Pres. |
+| 8  | Nalvera Investment   | Fundamental Research  | Long-Horizon Thesis     | Research Directorate  | Core Conviction Hold    |
+| 9  | Carantec Endowment   | Intergenerational Mod.| Asset-Liability Match   | Investment Committee  | Sovereign Perpetuity    |
+| 10 | Irodori Institutional| Real-Time Tape Scan   | Statistical Outlier Test| Lead Portfolio Mgr.   | Systematic Reallocation |
+| 11 | Vestmark Personal    | Retail Order Flow Net | Suitability Compliance  | Branch Supervisory    | Retail Client Broadcast |
+| 12 | Talua Advisory       | Regional Advisory Net | KYC Fiduciary Filter    | Senior Wealth Advisor | Individualized Rebalance|
+| 13 | Okafor Wealth        | High-Net-Worth Blotter| Collateral Ratio Check  | Managing Partner      | Private Banking Triage  |
+| 14 | Adanko Financial     | Community Broker Desk | Liquidity Depth Buffer  | Operations Director   | Mass Order Queue Routing|
+| 15 | Cavendara Private    | Merchant Banking Desk | Counterparty Audit      | Executive Committee   | Direct Account Servicing|
+| 16 | Lacoste-Ashford      | Special Situations    | Solvency Stress Model   | Senior Restructuring  | Distressed Debt Senior  |
+| 17 | Schwarzenberg Bridge | Cross-Border Flow Mon.| Currency & Transit Audit| Managing Director     | Prime Brokerage Custody |
+| 18 | Cairn Yildirim       | Asymmetric Spread Desk| Fast Volatility Filter  | Quant Desk Head       | Fast Liquidity Extraction|
+| 19 | Harborside Nascimento| Floor Specialist Net  | Auction Clearing Match  | Senior Syndicate Lead | Underwriting Block First|
+| 20 | Dundeen Visser       | Middle-Market Ledger  | Valuation Variance Test | Regional Partner      | Commercial Client Prior.|
+| 21 | Rhein Global         | Global Macro Scanner  | Systemic Exposure Model | Executive Directorate | Multi-Asset De-Risking  |
+| 22 | Seine Capital        | Systematic ETF Monitor| Index Arbitrage Bounds  | Algorithmic Governor  | Automated Liquidity Prov|
+| 23 | Penhaligon Global    | Commonwealth Syndicate| Archival Provenance     | Senior Trust Officer  | Pedigree Collection Core|
+| 24 | Vantage Alternative  | High-Frequency DOM    | Statistical Arbitrage   | Quantitative Algorithm| High-Beta Momentum Exit |
+| 25 | Cormorant Macro      | Macro Liquidity Matrix| Sovereign Credit Model  | Chief Risk Officer    | Macro Hedge Deployment  |
++----+----------------------+-----------------------+-------------------------+-----------------------+-------------------------+
+```
+
+### 8.4 The Operational Accounting Bridge: Personnel Fatigue, Licensing & Capital Outcomes
+
+The operational mechanics connecting human brokers to balance sheet capital are governed by strict mathematical formulas:
+
+1. **Broker Execution Drag & Cognitive Fatigue**:
+   When an active trading desk experiences abnormal order flow volume $V_t$, broker cognitive fatigue accumulates logarithmically:
+   $$\text{Fatigue}_{t} = \min\left( 1.0, \, \text{Fatigue}_{t-1} + \kappa \cdot \ln\left(1 + \frac{V_t}{C_{\text{broker}}}\right) - \delta_{\text{rest}} \right)$$
+   Where $C_{\text{broker}}$ is the regulatory client capacity (strictly 1 broker per 9–10 client accounts). When $\text{Fatigue}_t > 0.75$, realized execution slippage accelerates:
+   $$\text{Slippage}_{\text{realized}} = \text{Slippage}_{\text{baseline}} \cdot \left( 1 + 2.5 \cdot (\text{Fatigue}_t - 0.75)^2 \right)$$
+
+2. **The Institutional Capital Adequacy Requirement**:
+   Firms operate under strict double-entry balance sheet covenants:
+   $$\text{Capital Adequacy Ratio (CAR)} = \frac{\text{Tier 1 Cash Reserves} + \sum_{k} \left( \text{Inventory}_{k} \cdot [1 - \text{Haircut}_k] \right)}{\text{Total Pledged Margin Commitments} + \text{Unsettled Clearing Obligations}} \ge 15.0\%$$
+   * Haircut Schedule: Sovereign Golden/Silver ($25\%$), Bronze/Copper ($40\%$), Modern Variants ($65\%$).
+   * Breach Enforcement: If a firm's CAR drops below $15.0\%$, the clearinghouse revokes secondary market-making authorization, imposes an immediate freeze on new margin origination, and routes inventory through the **Settlement Default Waterfall**.
 
 ---
 
