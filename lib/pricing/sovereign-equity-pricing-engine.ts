@@ -18,6 +18,7 @@
  */
 
 import { resolveComicEra, COMIC_ERA_PROFILES, type ComicEra } from "./comic-portfolio-tracker";
+import { executeFandomCapitalEngine, type FandomCapitalProfile } from "./fandom-capital-engine";
 
 export const CANONICAL_GRADES = [
   "RAW",
@@ -163,6 +164,7 @@ export interface SovereignEquityPricingOutput {
     scarcityTier: "HYPER_SCARCE" | "RARE" | "MODERATE" | "HIGH_POPULATION" | "UNINDEXED";
     liquidityAnchorGrade: CanonicalGrade;
   };
+  fandomProfile: FandomCapitalProfile;
 }
 
 /** Standard Normal CDF approximation */
@@ -846,6 +848,16 @@ export function executeSovereignPricingEngine(
   const compositeVol = gradeMatrix["9.8"].annualizedVolatility ?? gradeMatrix["8.0"].annualizedVolatility;
   const macro5yComposite = gradeMatrix["9.8"].momenta.macro5yPct ?? gradeMatrix["RAW"].momenta.macro5yPct;
 
+  const fandomProfile = executeFandomCapitalEngine({
+    comicId: input.comicId,
+    series: input.series,
+    issue: input.issue,
+    era,
+    publicationYear: input.publicationYear,
+    trailing12mSalesCount: input.completedSalesCount ?? 0,
+    totalCensusPop: input.censusPopByGrade ? Object.values(input.censusPopByGrade).reduce((a, b) => (a ?? 0) + (b ?? 0), 0) : undefined,
+  });
+
   return {
     comicId: input.comicId,
     series: input.series,
@@ -869,5 +881,6 @@ export function executeSovereignPricingEngine(
       scarcityTier,
       liquidityAnchorGrade: eraProfile.liquidityGradeAnchor as CanonicalGrade,
     },
+    fandomProfile,
   };
 }
