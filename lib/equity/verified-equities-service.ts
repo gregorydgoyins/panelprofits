@@ -80,11 +80,15 @@ const OBSCURE_OUTLIERS_FILTER = "AND series NOT IN ('Phantom Lady', 'Mister Myst
 const PREMIER_PUBLISHERS = "'Marvel', 'DC', 'DC Comics', 'Marvel Comics', 'Image', 'Dark Horse', 'Quality Comics', 'Fawcett', 'Valiant', 'Eclipse', 'Mirage Studios', 'IDW Publishing', 'Independent'";
 
 const ERA_SQL_CONDITIONS: Record<string, string> = {
-  golden: `(publication_year <= 1955 OR LOWER(production_age) IN ('golden', 'atomic', 'platinum')) ${OBSCURE_OUTLIERS_FILTER} AND publisher IN (${PREMIER_PUBLISHERS})`,
-  silver: `((publication_year >= 1956 AND publication_year <= 1969) OR LOWER(production_age) = 'silver') ${OBSCURE_OUTLIERS_FILTER} AND publisher IN (${PREMIER_PUBLISHERS})`,
-  bronze: `((publication_year >= 1970 AND publication_year <= 1983) OR LOWER(production_age) = 'bronze') ${OBSCURE_OUTLIERS_FILTER} AND publisher IN (${PREMIER_PUBLISHERS})`,
-  copper: `((publication_year >= 1984 AND publication_year <= 1991) OR LOWER(production_age) = 'copper') ${OBSCURE_OUTLIERS_FILTER} AND publisher IN (${PREMIER_PUBLISHERS})`,
-  modern: `(publication_year >= 1992 OR LOWER(production_age) IN ('modern', 'postmodern', 'independent')) ${OBSCURE_OUTLIERS_FILTER} AND publisher IN (${PREMIER_PUBLISHERS})`,
+  platinum: `(publication_year < 1938 OR LOWER(production_age) = 'platinum' OR LOWER(origin_era) = 'platinum') ${OBSCURE_OUTLIERS_FILTER} AND publisher IN (${PREMIER_PUBLISHERS})`,
+  golden: `((publication_year >= 1938 AND publication_year <= 1945) OR LOWER(production_age) = 'golden' OR LOWER(origin_era) = 'golden') ${OBSCURE_OUTLIERS_FILTER} AND publisher IN (${PREMIER_PUBLISHERS})`,
+  atomic: `((publication_year >= 1946 AND publication_year <= 1955) OR LOWER(production_age) = 'atomic' OR LOWER(origin_era) = 'atomic') ${OBSCURE_OUTLIERS_FILTER} AND publisher IN (${PREMIER_PUBLISHERS})`,
+  silver: `((publication_year >= 1956 AND publication_year <= 1969) OR LOWER(production_age) = 'silver' OR LOWER(origin_era) = 'silver') ${OBSCURE_OUTLIERS_FILTER} AND publisher IN (${PREMIER_PUBLISHERS})`,
+  bronze: `((publication_year >= 1970 AND publication_year <= 1983) OR LOWER(production_age) = 'bronze' OR LOWER(origin_era) = 'bronze') ${OBSCURE_OUTLIERS_FILTER} AND publisher IN (${PREMIER_PUBLISHERS})`,
+  copper: `((publication_year >= 1984 AND publication_year <= 1991) OR LOWER(production_age) = 'copper' OR LOWER(origin_era) = 'copper') ${OBSCURE_OUTLIERS_FILTER} AND publisher IN (${PREMIER_PUBLISHERS})`,
+  modern: `((publication_year >= 1992 AND publication_year <= 2003) OR LOWER(production_age) = 'modern' OR LOWER(origin_era) = 'modern') ${OBSCURE_OUTLIERS_FILTER} AND publisher IN (${PREMIER_PUBLISHERS})`,
+  independent: `((publication_year >= 2004 AND publication_year <= 2016) OR LOWER(production_age) = 'independent' OR LOWER(origin_era) = 'independent') ${OBSCURE_OUTLIERS_FILTER} AND publisher IN (${PREMIER_PUBLISHERS})`,
+  postmodern: `(publication_year >= 2017 OR LOWER(production_age) IN ('postmodern', 'post-modern') OR LOWER(origin_era) IN ('postmodern', 'post-modern')) ${OBSCURE_OUTLIERS_FILTER} AND publisher IN (${PREMIER_PUBLISHERS})`,
 };
 
 function recordToItem(r: VerifiedEquityRecord, idx: number): SovereignEquityItem {
@@ -119,8 +123,8 @@ function recordToItem(r: VerifiedEquityRecord, idx: number): SovereignEquityItem
 /**
  * Retrieves authentic, verified comics with real market-cleared prices (with pennies)
  * and verified photographic cover images. Zero synthetic .00 fallbacks.
- * Interleaves across Golden, Silver, Bronze, Copper, and Modern eras, anchored by
- * landmark sovereign blue-chip keys (Action #1, Spider-Man #1, Hulk #181, TMNT #1, Spawn #1...)
+ * Interleaves across the canonical 9 publishing eras:
+ * Platinum, Golden, Atomic, Silver, Bronze, Copper, Modern, Independent, Post-Modern.
  */
 export function getVerifiedRealEquities(
   offset = 0,
@@ -138,7 +142,17 @@ export function getVerifiedRealEquities(
 
   try {
     const cleanEra = era && era !== "all" ? era.toLowerCase().trim() : null;
-    const eras = ["golden", "silver", "bronze", "copper", "modern"] as const;
+    const eras = [
+      "platinum",
+      "golden",
+      "atomic",
+      "silver",
+      "bronze",
+      "copper",
+      "modern",
+      "independent",
+      "postmodern",
+    ] as const;
 
     if (cleanEra) {
       const eraCond = ERA_SQL_CONDITIONS[cleanEra] ?? `(LOWER(production_age) = ? OR LOWER(origin_era) = ?) ${OBSCURE_OUTLIERS_FILTER}`;
@@ -177,7 +191,7 @@ export function getVerifiedRealEquities(
       }
       return { items: sliced, totalEligible };
     } else {
-      // MULTI-ERA INTERLEAVED SYNTHESIS (Golden, Silver, Bronze, Copper, Modern)
+      // MULTI-ERA INTERLEAVED SYNTHESIS (Across all 9 canonical eras)
       const perEraLimit = Math.ceil(limit / eras.length);
       const eraPools: SovereignEquityItem[][] = [];
       let grandTotal = 0;
@@ -217,7 +231,7 @@ export function getVerifiedRealEquities(
         }
       }
 
-      // Interleave round-robin: [Golden 0, Silver 0, Bronze 0, Copper 0, Modern 0, Golden 1, ...]
+      // Interleave round-robin across the 9 canonical eras
       const interleaved: SovereignEquityItem[] = [];
       const maxPoolLen = Math.max(...eraPools.map((p) => p.length));
       for (let i = 0; i < maxPoolLen; i++) {

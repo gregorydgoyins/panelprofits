@@ -130,6 +130,37 @@ describe("Institutional End-to-End Economy Pipeline Verification (Target: 98/100
     expect(report.dataProvenance.reflexivity).toBe("SIMULATED_FEEDBACK_SCENARIO");
   });
 
+  it("verifies 70-seat CE70 index constituent re-pricing and holdings transmission", () => {
+    // Simulate 70 distinct constituent holdings representing the CE70 active index contract
+    const ce70Constituents = Array.from({ length: 70 }, (_, i) => {
+      const basePrice = 500 + i * 150; // Distinct price per seat
+      const quantity = 1 + (i % 5);    // Holdings weight per seat
+      return {
+        seatNumber: i + 1,
+        ticker: `CE70-SEAT-${i + 1}`,
+        q: quantity,
+        p: basePrice,
+      };
+    });
+
+    const initialGrossAssets = ce70Constituents.reduce((acc, c) => acc + c.q * c.p, 0);
+    const managementFees = 2500;
+    const custodialLiabilities = 1200;
+
+    const initialNav = fundNav(ce70Constituents, managementFees, custodialLiabilities);
+    expect(initialNav).toBe(initialGrossAssets - managementFees - custodialLiabilities);
+
+    // Propagate sovereign pricing shock to Seat 1 (e.g. Action Comics #1 re-pricing shock +$25,000)
+    const revaluedConstituents = ce70Constituents.map((c) =>
+      c.seatNumber === 1 ? { ...c, p: c.p + 25000 } : c
+    );
+
+    const revaluedNav = fundNav(revaluedConstituents, managementFees, custodialLiabilities);
+    const expectedDelta = revaluedConstituents[0].q * 25000;
+    expect(revaluedNav - initialNav).toBe(expectedDelta);
+    expect(revaluedNav).toBe(initialGrossAssets + expectedDelta - managementFees - custodialLiabilities);
+  });
+
   it("executes cleared market trades with strict double-entry balance and share conservation", () => {
     // Buyer with $50,000 cash; Seller with 20 shares of Hulk 181
     const buyer: MarketParticipantAccount = {
