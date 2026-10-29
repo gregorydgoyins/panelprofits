@@ -180,7 +180,8 @@ export function getVerifiedRealEquities(
         if (cleanEra && item.productionAge !== cleanEra) {
           continue;
         }
-        const key = `${r.series} #${r.issue_number}`.toLowerCase();
+        // Unique instrument identity key preserving distinct editions/variants
+        const key = item.canonicalIssueId || item.id || `${r.series} #${r.issue_number}${r.variant ? ` [${r.variant}]` : ''}`.toLowerCase();
         if (!seen.has(key)) {
           combined.push(item);
           seen.add(key);
@@ -222,7 +223,8 @@ export function getVerifiedRealEquities(
           if (item.productionAge !== e) {
             continue;
           }
-          const key = `${r.series} #${r.issue_number}`.toLowerCase();
+          // Unique instrument identity key preserving distinct editions/variants
+          const key = item.canonicalIssueId || item.id || `${r.series} #${r.issue_number}${r.variant ? ` [${r.variant}]` : ''}`.toLowerCase();
           if (!seen.has(key)) {
             combined.push(item);
             seen.add(key);
@@ -250,7 +252,7 @@ export function getVerifiedRealEquities(
         }
       }
 
-      // Interleave round-robin across the 9 canonical eras, deduplicating keys globally
+      // Interleave round-robin across the 9 canonical eras, deduplicating keys globally by instrument identity
       const interleaved: SovereignEquityItem[] = [];
       const globalSeen = new Set<string>();
       const maxPoolLen = Math.max(...eraPools.map((p) => p.length));
@@ -258,7 +260,7 @@ export function getVerifiedRealEquities(
         for (const pool of eraPools) {
           if (i < pool.length) {
             const item = pool[i];
-            const key = `${item.series} #${item.issueNumber}`.toLowerCase();
+            const key = item.canonicalIssueId || item.id || `${item.series} #${item.issueNumber}${item.variant ? ` [${item.variant}]` : ''}`.toLowerCase();
             if (!globalSeen.has(key)) {
               interleaved.push(item);
               globalSeen.add(key);
