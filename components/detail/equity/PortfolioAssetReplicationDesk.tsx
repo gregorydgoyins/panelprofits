@@ -26,6 +26,7 @@ interface PortfolioAssetReplicationDeskProps {
   series: string;
   issue: string;
   year?: number | null;
+  publisher?: string | null;
   rawPrice: number | null;
   targetFmv98: number | null;
   accentColor?: string;
@@ -36,6 +37,7 @@ export default function PortfolioAssetReplicationDesk({
   series,
   issue,
   year = null,
+  publisher = null,
   rawPrice,
   targetFmv98,
   accentColor = "#38bdf8",
@@ -82,6 +84,7 @@ export default function PortfolioAssetReplicationDesk({
     title: series,
     issue,
     publicationYear: year ?? undefined,
+    publisher: publisher ?? undefined,
     targetGrade,
     rawPurchaseCost: rawCost,
     salesTax: Number((rawCost * (salesTaxPct / 100)).toFixed(2)),

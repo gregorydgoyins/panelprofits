@@ -116,12 +116,36 @@ describe("Sovereign Canonical Equity Pricing Engine Verification Suite", () => {
     expect(gMatrix["9.8"].sma20).toBeDefined();
     expect(gMatrix["9.8"].rsi14).toBeDefined();
 
-    // 4. Grading Arbitrage Ladder Verification
+    // 4. Grading Arbitrage Ladder Verification with Transition Probability
     expect(output.gradingArbitrageLadder.length).toBeGreaterThan(3);
     const opt98 = output.gradingArbitrageLadder.find((opt) => opt.targetGrade === "9.8");
     expect(opt98).toBeDefined();
     expect(opt98!.gradingAlphaSpread).toBeGreaterThan(30000);
+    expect(opt98!.targetGradeProbability).toBe(0.25);
+    expect(opt98!.expectedNetProfit).toBeGreaterThan(5000);
     expect(opt98!.marginOfSafetyPct).toBeGreaterThan(90);
     expect(opt98!.isFavorable).toBe(true);
+  });
+
+  it("verifies unindexed census defaults to UNINDEXED, not false MODERATE", () => {
+    const input: SovereignPricingEngineInput = {
+      comicId: "test-unindexed",
+      series: "Spawn",
+      issue: "1",
+      publicationYear: 1992,
+      publisher: "Image Comics",
+      monthlySnapshots: [
+        {
+          date: "2026-01-01",
+          epochMs: Date.parse("2026-01-01T00:00:00Z"),
+          pricesByGrade: { RAW: 25, "9.8": 150 },
+        },
+      ],
+      // No census population supplied
+    };
+
+    const output = executeSovereignPricingEngine(input);
+    expect(output.era).toBe("Independent");
+    expect(output.portfolioRiskSummary.scarcityTier).toBe("UNINDEXED");
   });
 });

@@ -739,20 +739,42 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     } : null,
   };
 
-  // Empirical historical metrics from actual time-series observations
-  const allObsPrices = priceHistory.filter((h) => h.grade === "9.8" && h.priceUsd > 0).map((h) => h.priceUsd);
+  // Empirical historical metrics from strictly date-sorted 9.8 observations
+  const sorted98History = [...priceHistory]
+    .filter((h) => h.grade === "9.8" && h.priceUsd > 0 && Number.isFinite(Date.parse(h.observedAt)))
+    .sort((a, b) => Date.parse(a.observedAt) - Date.parse(b.observedAt));
+
+  const allObsPrices = sorted98History.map((h) => h.priceUsd);
   const actualAth = allObsPrices.length > 0 ? Math.max(...allObsPrices) : effectivePrice > 0 ? effectivePrice : null;
   const actualAtl = allObsPrices.length > 0 ? Math.min(...allObsPrices) : effectivePrice > 0 ? effectivePrice : null;
   
-  // Real max drawdown calculation across dated 9.8 points
+  // Real chronological peak-to-trough max drawdown and true recovery events calculation
   let calculatedMaxDrawdown: number | null = null;
+  let trueRecoveryEvents = 0;
   if (allObsPrices.length >= 2) {
-    let peak = allObsPrices[0];
+    let runningPeak = allObsPrices[0];
     let maxDd = 0;
-    for (const p of allObsPrices) {
-      if (p > peak) peak = p;
-      const dd = (peak - p) / peak;
-      if (dd > maxDd) maxDd = dd;
+    let inDrawdown = false;
+
+    for (let i = 1; i < allObsPrices.length; i++) {
+      const p = allObsPrices[i];
+      if (p > runningPeak) {
+        if (inDrawdown) {
+          trueRecoveryEvents++;
+          inDrawdown = false;
+        }
+        runningPeak = p;
+      } else if (p < runningPeak) {
+        inDrawdown = true;
+        const dd = (runningPeak - p) / runningPeak;
+        if (dd > maxDd) maxDd = dd;
+      } else {
+        // Price equals previous running peak exactly
+        if (inDrawdown) {
+          trueRecoveryEvents++;
+          inDrawdown = false;
+        }
+      }
     }
     calculatedMaxDrawdown = Number((maxDd * 100).toFixed(1));
   }
@@ -765,8 +787,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
   const actualCv = mean98 != null && variance98 != null ? Number((Math.sqrt(variance98) / mean98).toFixed(2)) : null;
 
   // Real timeline points from recorded priceHistory only (zero synthetic dates)
-  const realTimeline = priceHistory
-    .filter((h) => h.grade === "9.8" && h.priceUsd > 0)
+  const realTimeline = sorted98History
     .slice(-12)
     .map((h) => ({ date: h.observedAt.slice(0, 7), priceUsd: h.priceUsd }));
 
@@ -780,10 +801,10 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
       allTimeLowUsd: actualAtl ?? 0,
       maxDrawdownPct: calculatedMaxDrawdown ?? 0,
       lifetimeCv: actualCv ?? 0,
-      avgRecoveryPoints: allObsPrices.length >= 2 ? Math.min(6, allObsPrices.length) : 0,
-      dataSpanDays: priceHistory.length >= 2 ? Math.max(1, Math.round((Date.parse(priceHistory[priceHistory.length - 1].observedAt) - Date.parse(priceHistory[0].observedAt)) / 86400000)) : 0,
-      firstObservation: priceHistory[0]?.observedAt || snapshotLatest || "",
-      lastObservation: priceHistory[priceHistory.length - 1]?.observedAt || snapshotLatest || "",
+      avgRecoveryPoints: trueRecoveryEvents,
+      dataSpanDays: sorted98History.length >= 2 ? Math.max(1, Math.round((Date.parse(sorted98History[sorted98History.length - 1].observedAt) - Date.parse(sorted98History[0].observedAt)) / 86400000)) : 0,
+      firstObservation: sorted98History[0]?.observedAt || snapshotLatest || "",
+      lastObservation: sorted98History[sorted98History.length - 1]?.observedAt || snapshotLatest || "",
       pricePoints: allObsPrices.length,
     },
     principalHistory: {
@@ -955,6 +976,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
             series={comic.series}
             issue={String(comic.issue_number)}
             year={comic.publication_year ?? null}
+            publisher={authoritativePublisher}
             rawPrice={rawPrice != null ? Number(rawPrice) : rawLattice["RAW"] != null ? Number(rawLattice["RAW"]) : null}
             targetFmv98={consensusFmv > 0 ? consensusFmv : rawLattice["9.8"] != null ? Number(rawLattice["9.8"]) : null}
             accentColor={eraColors.border}

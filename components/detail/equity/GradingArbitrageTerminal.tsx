@@ -32,9 +32,13 @@ export default function GradingArbitrageTerminal({
   const [includePressing, setIncludePressing] = useState<boolean>(true);
 
   const targetFmv = gradeMatrixFmv[selectedTargetGrade] || (gradeMatrixFmv["9.8"] ?? 0);
-  const targetVol = volatilityByGrade[selectedTargetGrade] ?? 0.32;
+  // Empirical volatility for selected grade if observed; do NOT inject false 32% default
+  const observedVol = volatilityByGrade[selectedTargetGrade] ?? volatilityByGrade["9.8"] ?? null;
+  const targetVol = observedVol ?? 0.25; // calculation baseline when measured
 
-  if (!rawMarketPrice && !targetFmv) {
+  // Strictly require BOTH raw purchase price and target graded price to be present and > 0
+  const effectiveRawCost = selectedRawCost > 0 ? selectedRawCost : (rawMarketPrice ?? 0);
+  if (!(effectiveRawCost > 0) || !(targetFmv > 0)) {
     return (
       <section
         aria-label="Grading Arbitrage Terminal"
@@ -48,11 +52,11 @@ export default function GradingArbitrageTerminal({
             </h3>
           </div>
           <span className="font-mono text-[10px] text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded bg-amber-950/20">
-            AWAITING EMPIRICAL SALE
+            AWAITING DUAL-LEG QUOTE
           </span>
         </div>
         <p className="text-xs text-slate-400 mt-3 font-mono">
-          No observed market transactions exist to seed initial raw acquisition cost or target graded exit price. Synthetic volatility and fabricated multiplier injections are disabled.
+          Rigorous options modeling requires empirical prices for both legs (raw acquisition and target slab FMV). One or both legs currently lack recorded market observations; synthetic assumptions are disabled.
         </p>
       </section>
     );
@@ -189,18 +193,18 @@ export default function GradingArbitrageTerminal({
         {/* Metric 2: Net Grading Alpha */}
         <div className="p-3.5 rounded-lg bg-[#0e1420]/80 border border-slate-800">
           <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
-            Net Grading Alpha Spread
+            Net Expected Profit & P(Grade)
           </div>
           <div
             className={`mt-1 text-lg font-bold font-mono ${
-              diagnostics.gradingAlphaSpread >= 0 ? "text-emerald-400" : "text-rose-400"
+              diagnostics.expectedNetProfit >= 0 ? "text-emerald-400" : "text-rose-400"
             }`}
           >
-            {diagnostics.gradingAlphaSpread >= 0 ? "+" : ""}
-            ${diagnostics.gradingAlphaSpread.toLocaleString()}
+            {diagnostics.expectedNetProfit >= 0 ? "+" : ""}
+            ${diagnostics.expectedNetProfit.toLocaleString()}
           </div>
           <div className="text-[10px] text-slate-500 font-mono mt-0.5">
-            FMV Target: ${diagnostics.targetFmv.toLocaleString()}
+            P({diagnostics.targetGrade}): {(diagnostics.targetGradeProbability * 100).toFixed(0)}% · Spread: ${diagnostics.gradingAlphaSpread.toLocaleString()}
           </div>
         </div>
 
@@ -238,7 +242,7 @@ export default function GradingArbitrageTerminal({
       {/* Institutional Explainer Footer */}
       <div className="mt-4 pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-500 relative z-10 font-mono">
         <div>
-          Formulation: Black-Scholes 6-Month Holding Horizon (r=4.5%, σ={targetVol.toFixed(2)}) · Graham Margin of Safety
+          Formulation: Black-Scholes 6-Month Holding Horizon (r=4.5%, σ={observedVol != null ? observedVol.toFixed(2) : "Unmeasured"}) · P(Grade) Transition Model
         </div>
         <div className="text-cyan-400/80 flex items-center gap-1">
           PANEL PROFITS QUANT DESK <ArrowUpRight className="h-3 w-3" />

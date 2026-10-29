@@ -102,9 +102,22 @@ export const COMIC_ERA_PROFILES: Record<ComicEra, EraProfile> = {
 };
 
 /**
- * Resolves the canonical comic era from publication year matching Panel Profits canon.
+ * Resolves the canonical comic era from publication year and optional publisher matching Panel Profits canon.
+ * In Panel Profits canon:
+ * - Platinum: Pre-1938
+ * - Golden: 1938-1945
+ * - Atomic: 1946-1955
+ * - Silver: 1956-1969
+ * - Bronze: 1970-1983
+ * - Copper: 1984-1991
+ * - Modern: 1992-2003
+ * - Independent: Modern-era non-premier/independent publisher titles (e.g. Image, Dark Horse, IDW, Fantagraphics, Valiant, etc.) or 2004-2016 indie titles
+ * - Post-Modern: 2004+ mainstream / 2017+ current
  */
-export function resolveComicEra(year: number | null | undefined): ComicEra {
+export function resolveComicEra(
+  year: number | null | undefined,
+  publisher?: string | null
+): ComicEra {
   if (!year || !Number.isFinite(year)) return "Bronze";
   if (year < 1938) return "Platinum";
   if (year <= 1945) return "Golden";
@@ -112,8 +125,48 @@ export function resolveComicEra(year: number | null | undefined): ComicEra {
   if (year <= 1969) return "Silver";
   if (year <= 1983) return "Bronze";
   if (year <= 1991) return "Copper";
-  if (year <= 2003) return "Modern";
-  if (year <= 2016) return "Independent";
+
+  // Post-Copper evaluation (1992+)
+  const pubNorm = (publisher || "").trim().toLowerCase();
+  const isMainstreamPremier =
+    pubNorm.includes("marvel") ||
+    pubNorm.includes("dc") ||
+    pubNorm.includes("national") ||
+    pubNorm.includes("timely") ||
+    pubNorm.includes("atlas");
+
+  const isExplicitIndie =
+    pubNorm.includes("image") ||
+    pubNorm.includes("dark horse") ||
+    pubNorm.includes("idw") ||
+    pubNorm.includes("fantagraphics") ||
+    pubNorm.includes("valiant") ||
+    pubNorm.includes("mirage") ||
+    pubNorm.includes("eclipse") ||
+    pubNorm.includes("pacific") ||
+    pubNorm.includes("dynamite") ||
+    pubNorm.includes("boom") ||
+    pubNorm.includes("2000 ad") ||
+    pubNorm.includes("crossgen") ||
+    pubNorm.includes("vertigo") ||
+    pubNorm.includes("onyx") ||
+    pubNorm.includes("oni");
+
+  if (year <= 2003) {
+    if (isExplicitIndie) return "Independent";
+    return "Modern";
+  }
+
+  if (year <= 2016) {
+    if (isExplicitIndie || (!isMainstreamPremier && pubNorm.length > 0)) {
+      return "Independent";
+    }
+    // Mainstream publishers in 2004-2016 are Post-Modern
+    return "Post-Modern";
+  }
+
+  // 2017+
+  if (isExplicitIndie) return "Independent";
   return "Post-Modern";
 }
 
@@ -122,6 +175,7 @@ export interface PortfolioPositionInput {
   title: string;
   issue: string;
   publicationYear?: number;
+  publisher?: string;
   targetGrade: string; // e.g. "9.8", "9.2", "4.0", "RAW"
   certificationCompany?: "CGC" | "CBCS" | "RAW";
   isSignatureSeries?: boolean; // CGC Yellow Label
@@ -182,7 +236,7 @@ export interface PortfolioPositionEvaluation {
 export function evaluatePortfolioPosition(
   pos: PortfolioPositionInput
 ): PortfolioPositionEvaluation {
-  const era = resolveComicEra(pos.publicationYear);
+  const era = resolveComicEra(pos.publicationYear, pos.publisher);
   const eraProfile = COMIC_ERA_PROFILES[era];
 
   // 1. Raw Cost Basis

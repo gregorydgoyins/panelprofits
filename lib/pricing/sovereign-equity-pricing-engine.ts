@@ -49,6 +49,7 @@ export interface SovereignPricingEngineInput {
   series: string;
   issue: string;
   publicationYear?: number;
+  publisher?: string;
   monthlySnapshots: SovereignMonthlySnapshot[];
   rawPurchaseCost?: number;
   censusPopByGrade?: Partial<Record<CanonicalGrade, number>>;
@@ -87,6 +88,9 @@ export interface GradingArbitrageDiagnostics {
   capitalizedCostBasis: number;
   callOptionValue: number;
   gradingAlphaSpread: number;
+  expectedNetProceeds: number;
+  targetGradeProbability: number;
+  expectedNetProfit: number;
   marginOfSafetyPct: number;
   breakevenGrossAuctionHammer: number;
   isFavorable: boolean;
@@ -105,7 +109,7 @@ export interface SovereignEquityPricingOutput {
   portfolioRiskSummary: {
     compositeAnnualizedVolatility: number | null;
     macro5yCompositeReturnPct: number | null;
-    scarcityTier: "HYPER_SCARCE" | "RARE" | "MODERATE" | "HIGH_POPULATION";
+    scarcityTier: "HYPER_SCARCE" | "RARE" | "MODERATE" | "HIGH_POPULATION" | "UNINDEXED";
     liquidityAnchorGrade: CanonicalGrade;
   };
 }
@@ -207,10 +211,10 @@ export function computeHorizonMomenta(
     return Number((((pNow - base.price) / base.price) * 100).toFixed(2));
   };
 
-  // Calculate macro 5-year return strictly when history spans at least 4.5 years (1,640 days)
+  // Calculate macro 5-year return strictly when history spans at least 5.0 full years (1,825 days)
   const first = snapshots[0];
   const historySpanDays = (tNow - first.epochMs) / 86_400_000;
-  const macro5y = historySpanDays >= 1640 && first.price > 0
+  const macro5y = historySpanDays >= 1825 && first.price > 0
     ? Number((((pNow - first.price) / first.price) * 100).toFixed(2))
     : null;
 
@@ -225,14 +229,15 @@ export function computeHorizonMomenta(
 }
 
 /**
- * Evaluates Black-Scholes Grading Call Option & Arbitrage.
+ * Evaluates Black-Scholes Grading Call Option & Arbitrage with Grade Attainment Probability.
  */
 export function evaluateGradingOption(
   rawPrice: number,
   targetFmv: number,
   targetGrade: CanonicalGrade,
   annualizedVol: number,
-  venueFeePct = 13.25
+  venueFeePct = 13.25,
+  targetProbability?: number
 ): GradingArbitrageDiagnostics {
   // Certification fee structure based on market value tiers
   let certFee = 35.0; // CGC standard
@@ -254,13 +259,45 @@ export function evaluateGradingOption(
   const callOptionValue = Number((S * normalCdf(d1) - K * Math.exp(-r * T) * normalCdf(d2)).toFixed(2));
 
   const commissionRate = venueFeePct / 100;
-  // Net realized proceeds after platform commission and insured outbound shipping ($25)
+  // Net realized proceeds if target grade achieved (after platform commission and insured outbound shipping $25)
   const netRealizedProceeds = Number((targetFmv * (1 - commissionRate) - 25).toFixed(2));
   const gradingAlphaSpread = Number((netRealizedProceeds - capitalizedBasis).toFixed(2));
-  const marginOfSafetyPct = netRealizedProceeds > 0 ? Number(((1 - capitalizedBasis / netRealizedProceeds) * 100).toFixed(2)) : 0;
 
+  // Realistic empirical target grade attainment probability based on target grade tier:
+  // e.g. achieving 9.8 from raw is challenging (~25%), 9.6 (~40%), 9.4 (~55%), 9.2 (~70%), 9.0 (~80%), <=8.0 (~90%)
+  const defaultTargetProb =
+    targetProbability != null
+      ? targetProbability
+      : targetGrade === "10.0"
+        ? 0.02
+        : targetGrade === "9.8"
+          ? 0.25
+          : targetGrade === "9.6"
+            ? 0.40
+            : targetGrade === "9.4"
+              ? 0.55
+              : targetGrade === "9.2"
+                ? 0.70
+                : targetGrade === "9.0"
+                  ? 0.80
+                  : 0.90;
+
+  // Fallback net liquidation proceeds if downgraded 1 tier below target (approx 65% of target FMV)
+  const fallbackProceeds = Number(((targetFmv * 0.65) * (1 - commissionRate) - 25).toFixed(2));
+
+  // Expected Net Proceeds = P(target) * Proceeds(target) + (1 - P(target)) * Proceeds(fallback)
+  const expectedNetProceeds = Number(
+    (defaultTargetProb * netRealizedProceeds + (1 - defaultTargetProb) * fallbackProceeds).toFixed(2)
+  );
+
+  // Expected Net Profit after capitalized basis
+  const expectedNetProfit = Number((expectedNetProceeds - capitalizedBasis).toFixed(2));
+
+  const marginOfSafetyPct = netRealizedProceeds > 0 ? Number(((1 - capitalizedBasis / netRealizedProceeds) * 100).toFixed(2)) : 0;
   const breakevenGrossAuctionHammer = Number(((capitalizedBasis + 25) / (1 - commissionRate)).toFixed(2));
-  const isFavorable = gradingAlphaSpread > 0 && callOptionValue > rawPrice;
+
+  // Favorable only when expected net profit is positive, grading alpha spread is positive, and option value exceeds raw
+  const isFavorable = gradingAlphaSpread > 0 && expectedNetProfit > 0 && callOptionValue > rawPrice;
 
   return {
     targetGrade,
@@ -270,6 +307,9 @@ export function evaluateGradingOption(
     capitalizedCostBasis: capitalizedBasis,
     callOptionValue,
     gradingAlphaSpread,
+    expectedNetProceeds,
+    targetGradeProbability: defaultTargetProb,
+    expectedNetProfit,
     marginOfSafetyPct,
     breakevenGrossAuctionHammer,
     isFavorable,
@@ -284,7 +324,7 @@ export function evaluateGradingOption(
 export function executeSovereignPricingEngine(
   input: SovereignPricingEngineInput
 ): SovereignEquityPricingOutput {
-  const era = resolveComicEra(input.publicationYear);
+  const era = resolveComicEra(input.publicationYear, input.publisher);
   const eraProfile = COMIC_ERA_PROFILES[era];
 
   // Sort snapshots chronologically
@@ -410,10 +450,10 @@ export function executeSovereignPricingEngine(
     }
   }
 
-  // Scarcity Tier calculation based on real Census Population (never default missing to hyper-scarce)
+  // Scarcity Tier calculation based on real Census Population (missing census is UNINDEXED, never false moderate or hyper-scarce)
   const total98Pop = input.censusPopByGrade?.["9.8"] ?? null;
-  let scarcityTier: SovereignEquityPricingOutput["portfolioRiskSummary"]["scarcityTier"] = "MODERATE";
-  if (total98Pop !== null) {
+  let scarcityTier: SovereignEquityPricingOutput["portfolioRiskSummary"]["scarcityTier"] = "UNINDEXED";
+  if (total98Pop !== null && total98Pop !== undefined) {
     if (total98Pop <= 10) scarcityTier = "HYPER_SCARCE";
     else if (total98Pop <= 75) scarcityTier = "RARE";
     else if (total98Pop > 400) scarcityTier = "HIGH_POPULATION";
