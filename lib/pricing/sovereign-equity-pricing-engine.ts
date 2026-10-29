@@ -66,10 +66,10 @@ export interface HorizonMomentaMatrix {
 }
 
 export interface ThreeTierValuationDecomposition {
-  structuralCollectorValue: number; // Fundamental asset floor based on physical age, census scarcity & cultural tenure
+  structuralCollectorValue: number; // Hedonic fundamental asset floor
   narrativeSpeculativePremium: number; // Speculative extrinsic component (media options, adaptation hype, news velocity)
-  marketExecutionFloor: number; // Modeled instant dealer liquidation realization (calibrated liquidity discount)
-  predictionInterval80: { lower: number; upper: number }; // Statistical 80% forecast envelope
+  marketExecutionFloor: number; // Liquidity-calibrated dealer wholesale realization
+  predictionInterval80: { lower: number; upper: number }; // Formal lognormal 80% forecast interval: P_0 * exp(-sigma^2/2 +/- 1.2816*sigma*sqrt(T))
   confidenceScore: number; // 0-100 evidence-density calibrated score
   evidenceTier: "DENSE_VERIFIED_HISTORY" | "MODERATE_OBSERVATION" | "SPARSE_ESTIMATED_COHORT" | "UNPRICED";
   valuationState: "EMPIRICAL_CANON" | "SPECULATIVE_EXTENDED" | "CAPITULATION_FLOOR" | "THIN_MARKET";
@@ -481,24 +481,26 @@ export function executeSovereignPricingEngine(
     }
 
     // Statistical 3-Tier Valuation Decomposition:
-    // Structural value is derived hedonically from asset maturity (years since publication),
-    // census scarcity factor, and historical price floor stability.
+    // Uses hedonic age maturity, census scarcity, and liquidity turnover metrics.
     const ageYears = input.publicationYear ? Math.max(1, 2026 - input.publicationYear) : 40;
-    // Age maturity weight: asymptotically approaches 0.85 for 80+ year old Golden Age, ~0.30 for 5 year old Moderns
-    const ageMaturityFactor = Math.min(0.85, Math.max(0.25, 0.20 + (ageYears / 100) * 0.70));
+    // Continuous logarithmic age maturity function: log(1 + age) / log(100)
+    const logAgeFactor = Math.min(0.85, Math.max(0.20, Math.log10(1 + ageYears) / 2.0));
     
-    // Scarcity adjustment: Low census pop increases structural permanence
-    const scarcityMultiplier = total98Pop !== null ? (total98Pop <= 25 ? 1.15 : total98Pop <= 100 ? 1.05 : 0.95) : 1.0;
-    const effectiveStructuralRatio = Math.min(0.92, Math.max(0.20, ageMaturityFactor * scarcityMultiplier));
+    // Census scarcity adjustment:
+    const scarcityMultiplier = total98Pop !== null && total98Pop > 0
+      ? Math.min(1.20, Math.max(0.80, 1.0 + (100 - Math.min(100, total98Pop)) / 500))
+      : 1.0;
 
+    const effectiveStructuralRatio = Math.min(0.92, Math.max(0.20, logAgeFactor * scarcityMultiplier));
     const structuralCollectorVal = Number((currentFmv * effectiveStructuralRatio).toFixed(2));
     const narrativeSpecPremium = Number((currentFmv * (1 - effectiveStructuralRatio)).toFixed(2));
 
-    // Dynamic Liquidity Discount Model:
-    // Higher tier liquid key issues enjoy tighter spreads (15-20% dealer discount);
-    // illiquid, sparse or lower value books experience wider haircuts (35-45%).
-    const liquidityDiscountPct = currentFmv > 10000 ? 0.15 : currentFmv > 2000 ? 0.22 : currentFmv > 500 ? 0.30 : 0.40;
-    const marketExecutionFlr = Number((currentFmv * (1 - liquidityDiscountPct)).toFixed(2));
+    // Liquidity Haircut Model based on trading frequency & issue volume:
+    // Issues with frequent dated observations (obsCount >= 10) have tighter dealer spreads (15-20%);
+    // thin or dormant assets require wider haircuts (35-45%).
+    const obsCount = series.length;
+    const liquidityHaircut = obsCount >= 20 ? 0.15 : obsCount >= 8 ? 0.22 : obsCount >= 3 ? 0.30 : 0.45;
+    const marketExecutionFlr = Number((currentFmv * (1 - liquidityHaircut)).toFixed(2));
 
     // Provenance classification: Distinguish direct empirical points from cohort estimations
     const isDirect = series.some((s) => s.isDirect);
@@ -506,13 +508,24 @@ export function executeSovereignPricingEngine(
       ? "OBSERVED_PRICE_POINT"
       : "ELASTIC_COHORT_ESTIMATE";
 
-    // Calibrated Uncertainty & Prediction Interval (80% confidence interval based on realized vol)
-    const intervalSigma = (vol ?? 0.25) * 1.28; // 1.28 standard deviations = 80% two-tailed normal coverage
-    const predLower = Number((currentFmv * Math.max(0.1, 1 - intervalSigma * 0.5)).toFixed(2));
-    const predUpper = Number((currentFmv * (1 + intervalSigma * 0.5)).toFixed(2));
+    // Rigorous Lognormal 80% Prediction Interval:
+    // P_T in [ P_0 * exp( (mu - sigma^2 / 2)*T - 1.2816 * sigma * sqrt(T) ),
+    //         P_0 * exp( (mu - sigma^2 / 2)*T + 1.2816 * sigma * sqrt(T) ) ]
+    // Evaluated for 6-month horizon (T = 0.5) with drift mu approximated by risk-free rate r = 4.5%
+    const sigmaVal = Math.max(0.10, vol ?? 0.28);
+    const horizonT = 0.5;
+    const driftMu = 0.045;
+    const lognormalDrift = (driftMu - 0.5 * sigmaVal * sigmaVal) * horizonT;
+    const lognormalDispersion = 1.2816 * sigmaVal * Math.sqrt(horizonT);
 
-    // Evidence Tier & Confidence Score based on number of independent observations
-    const obsCount = series.length;
+    const predLower = currentFmv > 0
+      ? Number((currentFmv * Math.exp(lognormalDrift - lognormalDispersion)).toFixed(2))
+      : 0;
+    const predUpper = currentFmv > 0
+      ? Number((currentFmv * Math.exp(lognormalDrift + lognormalDispersion)).toFixed(2))
+      : 0;
+
+    // Evidence Tier & Confidence Score based on independent observation density
     const evidenceTier: ThreeTierValuationDecomposition["evidenceTier"] =
       currentFmv === 0
         ? "UNPRICED"
