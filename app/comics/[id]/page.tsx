@@ -32,6 +32,8 @@ import { resolveProductionAge } from "@/lib/equity/ticker-utils";
 import StorySummaryCard from "@/components/detail/equity/StorySummaryCard";
 import GradingArbitrageTerminal from "@/components/detail/equity/GradingArbitrageTerminal";
 import PortfolioAssetReplicationDesk from "@/components/detail/equity/PortfolioAssetReplicationDesk";
+import InstitutionalStrategyDossier from "@/components/detail/equity/InstitutionalStrategyDossier";
+import { executeSovereignPricingEngine, type SovereignMonthlySnapshot, type CanonicalGrade } from "@/lib/pricing/sovereign-equity-pricing-engine";
 import { Suspense } from "react";
 import { resolveGcdStoryDossier } from "@/lib/comics/gcd-story-service";
 import { createAdminServerClient } from "@/lib/supabase/admin";
@@ -503,6 +505,45 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
   const actual90High = technical90Prices.length ? Math.max(...technical90Prices) : null;
   const actual90Low = technical90Prices.length ? Math.min(...technical90Prices) : null;
 
+  // Execute Sovereign Canonical Pricing Engine across verified monthly snapshots
+  const monthlySnapshotsMap = new Map<string, SovereignMonthlySnapshot>();
+  for (const obs of snapshotObservations) {
+    if (!obs.observed_at || !(obs.amount > 0)) continue;
+    const snapDate = obs.observed_at.slice(0, 10);
+    const existing = monthlySnapshotsMap.get(snapDate) ?? {
+      date: snapDate,
+      epochMs: Date.parse(snapDate),
+      pricesByGrade: {},
+    };
+    if (obs.grade_label) {
+      existing.pricesByGrade[obs.grade_label as CanonicalGrade] = obs.amount;
+    }
+    monthlySnapshotsMap.set(snapDate, existing);
+  }
+
+  // Populate from raw lattice if snapshot map is sparse
+  if (monthlySnapshotsMap.size === 0 && Object.keys(rawLattice).length > 0) {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    monthlySnapshotsMap.set(todayStr, {
+      date: todayStr,
+      epochMs: Date.now(),
+      pricesByGrade: rawLattice as any,
+    });
+  }
+
+  const sovereignEngineOutput = executeSovereignPricingEngine({
+    comicId: comic.id,
+    series: comic.series,
+    issue: String(comic.issue_number),
+    publicationYear: comic.publication_year ?? undefined,
+    publisher: authoritativePublisher,
+    monthlySnapshots: Array.from(monthlySnapshotsMap.values()),
+    rawPurchaseCost: rawPrice != null ? Number(rawPrice) : undefined,
+    censusPopByGrade: {
+      "9.8": highGradeCount || undefined,
+    },
+  });
+
   // A cover found by a wiki name search for a different publisher is a false match: never show it.
   const dbCoverContradicts = coverSourceContradictsPublisher(comic.cover_source, comic.publisher);
   const railOwnCover = railRows.find((r) => r.cover_source === "google_bucket" && r.cover_url)?.cover_url ?? null;
@@ -962,6 +1003,11 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
           <BlendedHoldingDossier comic={comic} userStatus={userStatus} isAuthenticated={Boolean(user)} />
 
           <ComparativePriceMatrix comic={comic} inspectedGrade="9.8" ticker={tickerSymbol} />
+
+          <InstitutionalStrategyDossier
+            engineOutput={sovereignEngineOutput}
+            accentColor={eraColors.border}
+          />
 
           <GradingArbitrageTerminal
             series={comic.series}

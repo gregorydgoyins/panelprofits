@@ -65,6 +65,38 @@ export interface HorizonMomentaMatrix {
   macro5yPct: number | null;
 }
 
+export interface ThreeTierValuationDecomposition {
+  structuralCollectorValue: number; // Cultural canon, verified CGC census floor, era permanence
+  narrativeSpeculativePremium: number; // Cultural attention, adaptation hype, character news
+  marketExecutionFloor: number; // Instant cash liquidity / dealer wholesale realization
+  confidenceScore: number; // 0-100 based on density of independent observations
+  valuationState: "EMPIRICAL_CANON" | "SPECULATIVE_EXTENDED" | "CAPITULATION_FLOOR" | "THIN_MARKET";
+}
+
+export interface TraditionalStrategyDossier {
+  grahamReplacementBasis: number;
+  netRealizedLiquidation: number;
+  marginOfSafetyPct: number;
+  isGrahamCompliant: boolean;
+  sma20Month: number | null;
+  sma50Month: number | null;
+  movingAverageSignal: "GOLDEN_CROSS" | "DEATH_CROSS" | "BULLISH_EXPANSION" | "BEARISH_CONTRACTION" | "INSUFFICIENT_HISTORY";
+  annualizedSharpeRatio: number | null;
+  cagr5yPct: number | null;
+}
+
+export interface ContrarianStrategyDossier {
+  bollingerMean90d: number | null;
+  bollingerSigma90d: number | null;
+  zScore: number | null;
+  isCapitulationDislocation: boolean;
+  censusPressureRatio: number | null;
+  floatSqueezeSeverity: "EXTREME_SQUEEZE" | "ACTIVE_DEPLETION" | "BALANCED_FLOAT" | "SUPPLY_HEAVY" | "UNINDEXED";
+  markovGradingExpectedProfit: number;
+  markovRecommendedAction: "SUBMIT_RAW_TO_SLAB" | "HOLD_RAW" | "BUY_ESTABLISHED_SLAB";
+  contrarianRegime: "CONTRARIAN_ACCUMULATE" | "NEUTRAL" | "FADE_EUPHORIA";
+}
+
 export interface GradeValuationRecord {
   grade: CanonicalGrade;
   currentFmv: number;
@@ -78,6 +110,8 @@ export interface GradeValuationRecord {
   contrarianSentimentScore: number | null; // 0-100
   marketRegime: "CONTRARIAN_OPPORTUNITY" | "ACCUMULATION" | "EXPANSION" | "DISTRIBUTION" | "NEUTRAL";
   isDirectObservation: boolean;
+  provenanceTag: "OBSERVED_AUCTION_SALE" | "ELASTIC_COHORT_ESTIMATE" | "DEALER_EXECUTION_QUOTE";
+  valuationDecomposition: ThreeTierValuationDecomposition;
 }
 
 export interface GradingArbitrageDiagnostics {
@@ -106,6 +140,13 @@ export interface SovereignEquityPricingOutput {
   timeHorizonYears: number;
   gradeMatrix: Record<CanonicalGrade, GradeValuationRecord>;
   gradingArbitrageLadder: GradingArbitrageDiagnostics[];
+  traditionalStrategies: TraditionalStrategyDossier;
+  contrarianStrategies: ContrarianStrategyDossier;
+  macroBenchmarking: {
+    peggedBenchmarkSeat: string; // e.g. "CE70-HK181"
+    cohortElasticityFactor: number;
+    genreRegime: string;
+  };
   portfolioRiskSummary: {
     compositeAnnualizedVolatility: number | null;
     macro5yCompositeReturnPct: number | null;
@@ -388,6 +429,19 @@ export function executeSovereignPricingEngine(
     }
   }
 
+  // Era elasticity ratio defines structural vs speculative baseline:
+  // Golden/Bronze carry durable structural canon; Modern/Post-Modern carry speculative narrative volatility.
+  const eraElasticityRatio =
+    era === "Platinum" || era === "Golden"
+      ? 0.88
+      : era === "Atomic" || era === "Silver"
+        ? 0.82
+        : era === "Bronze"
+          ? 0.75
+          : era === "Copper"
+            ? 0.60
+            : 0.35; // Modern / Post-Modern
+
   // Construct Grade Valuation Matrix
   const gradeMatrix = {} as Record<CanonicalGrade, GradeValuationRecord>;
   for (const g of CANONICAL_GRADES) {
@@ -421,6 +475,17 @@ export function executeSovereignPricingEngine(
       else if (contrarianScore >= 55) marketRegime = "EXPANSION";
     }
 
+    // 3-Tier Valuation Decomposition:
+    const structuralCollectorVal = Number((currentFmv * eraElasticityRatio).toFixed(2));
+    const narrativeSpecPremium = Number((currentFmv * (1 - eraElasticityRatio)).toFixed(2));
+    // Execution Floor: 70% wholesale dealer realization if liquidated immediately
+    const marketExecutionFlr = Number((currentFmv * 0.70).toFixed(2));
+
+    const isDirect = series.some((s) => s.isDirect);
+    const provenanceTag: GradeValuationRecord["provenanceTag"] = isDirect
+      ? "OBSERVED_AUCTION_SALE"
+      : "ELASTIC_COHORT_ESTIMATE";
+
     gradeMatrix[g] = {
       grade: g,
       currentFmv,
@@ -433,7 +498,22 @@ export function executeSovereignPricingEngine(
       rsi14,
       contrarianSentimentScore: contrarianScore,
       marketRegime,
-      isDirectObservation: series.some((s) => s.isDirect),
+      isDirectObservation: isDirect,
+      provenanceTag,
+      valuationDecomposition: {
+        structuralCollectorValue: structuralCollectorVal,
+        narrativeSpeculativePremium: narrativeSpecPremium,
+        marketExecutionFloor: marketExecutionFlr,
+        confidenceScore: isDirect ? 95 : 75,
+        valuationState:
+          currentFmv === 0
+            ? "THIN_MARKET"
+            : eraElasticityRatio > 0.7
+              ? "EMPIRICAL_CANON"
+              : narrativeSpecPremium > structuralCollectorVal
+                ? "SPECULATIVE_EXTENDED"
+                : "CAPITULATION_FLOOR",
+      },
     };
   }
 
@@ -460,6 +540,99 @@ export function executeSovereignPricingEngine(
     else scarcityTier = "MODERATE";
   }
 
+  // Traditional Strategy Calculations
+  const target98Fmv = gradeMatrix["9.8"].currentFmv;
+  const rawCostBasis = rawPrice > 0 ? rawPrice : target98Fmv * 0.15;
+  const totalCertFriction = 35 + 25 + 25; // standard cert + press + logistics
+  const capitalizedBasis = Number((rawCostBasis + totalCertFriction).toFixed(2));
+  const netRealizedProceeds = Number((target98Fmv * (1 - 0.1325) - 25).toFixed(2));
+  const marginOfSafety = netRealizedProceeds > 0 ? Number(((1 - capitalizedBasis / netRealizedProceeds) * 100).toFixed(2)) : 0;
+
+  // Dual-SMA Moving Average Evaluation (20-Month vs 50-Month)
+  const sma20Val = gradeMatrix["9.8"].sma20;
+  const sma50Val = gradeMatrix["9.8"].sma50;
+  let movingAvgSignal: TraditionalStrategyDossier["movingAverageSignal"] = "INSUFFICIENT_HISTORY";
+  if (sma20Val != null && sma50Val != null) {
+    if (sma20Val > sma50Val * 1.05) movingAvgSignal = "GOLDEN_CROSS";
+    else if (sma20Val < sma50Val * 0.95) movingAvgSignal = "DEATH_CROSS";
+    else if (sma20Val >= sma50Val) movingAvgSignal = "BULLISH_EXPANSION";
+    else movingAvgSignal = "BEARISH_CONTRACTION";
+  }
+
+  // Annualized Sharpe Ratio calculation (Risk-Free rate = 4.5%)
+  const cagr5yVal = gradeMatrix["9.8"].cagr5yPct ?? gradeMatrix["8.0"].cagr5yPct;
+  const annVolVal = gradeMatrix["9.8"].annualizedVolatility ?? gradeMatrix["8.0"].annualizedVolatility;
+  const sharpeRatio =
+    cagr5yVal != null && annVolVal != null && annVolVal > 0
+      ? Number(((cagr5yVal - 4.5) / (annVolVal * 100)).toFixed(2))
+      : null;
+
+  const traditionalStrategies: TraditionalStrategyDossier = {
+    grahamReplacementBasis: capitalizedBasis,
+    netRealizedLiquidation: netRealizedProceeds,
+    marginOfSafetyPct: marginOfSafety,
+    isGrahamCompliant: marginOfSafety >= 30,
+    sma20Month: sma20Val,
+    sma50Month: sma50Val,
+    movingAverageSignal: movingAvgSignal,
+    annualizedSharpeRatio: sharpeRatio,
+    cagr5yPct: cagr5yVal,
+  };
+
+  // Contrarian Strategy Calculations: Bollinger Band Z-Score & Census Pressure
+  const allPrices98 = gradeSeriesMap.get("9.8")!.map((s) => s.price);
+  const bollingerMean = allPrices98.length >= 3 ? allPrices98.reduce((a, b) => a + b, 0) / allPrices98.length : null;
+  const bollingerSigma =
+    bollingerMean != null && allPrices98.length >= 3
+      ? Math.sqrt(allPrices98.reduce((sum, p) => sum + (p - bollingerMean) ** 2, 0) / (allPrices98.length - 1))
+      : null;
+  const zScore =
+    target98Fmv > 0 && bollingerMean != null && bollingerSigma != null && bollingerSigma > 0
+      ? Number(((target98Fmv - bollingerMean) / bollingerSigma).toFixed(2))
+      : null;
+
+  const isCapitulation = Boolean(zScore != null && zScore < -1.8 && (gradeMatrix["9.8"].rsi14 ?? 50) < 35);
+
+  // Census Pressure Ratio (9.0+ population relative to annual trading velocity)
+  const trailing12mSales = Math.max(1, input.monthlySnapshots.length);
+  const total90PlusPop = (input.censusPopByGrade?.["9.8"] ?? 0) + (input.censusPopByGrade?.["9.2"] ?? 0);
+  const cpr = total90PlusPop > 0 ? Number((total90PlusPop / trailing12mSales).toFixed(2)) : null;
+
+  let floatSqueeze: ContrarianStrategyDossier["floatSqueezeSeverity"] = "UNINDEXED";
+  if (cpr !== null) {
+    if (cpr < 2.0) floatSqueeze = "EXTREME_SQUEEZE";
+    else if (cpr < 5.0) floatSqueeze = "ACTIVE_DEPLETION";
+    else if (cpr <= 15.0) floatSqueeze = "BALANCED_FLOAT";
+    else floatSqueeze = "SUPPLY_HEAVY";
+  }
+
+  const markov98Opt = gradingArbitrageLadder.find((opt) => opt.targetGrade === "9.8");
+  const markovExpectedProfit = markov98Opt ? markov98Opt.expectedNetProfit : 0;
+  const markovAction: ContrarianStrategyDossier["markovRecommendedAction"] =
+    markovExpectedProfit > 500
+      ? "SUBMIT_RAW_TO_SLAB"
+      : markovExpectedProfit > 0
+        ? "HOLD_RAW"
+        : "BUY_ESTABLISHED_SLAB";
+
+  const contrarianRegime: ContrarianStrategyDossier["contrarianRegime"] = isCapitulation
+    ? "CONTRARIAN_ACCUMULATE"
+    : (gradeMatrix["9.8"].contrarianSentimentScore ?? 50) > 75
+      ? "FADE_EUPHORIA"
+      : "NEUTRAL";
+
+  const contrarianStrategies: ContrarianStrategyDossier = {
+    bollingerMean90d: bollingerMean != null ? Number(bollingerMean.toFixed(2)) : null,
+    bollingerSigma90d: bollingerSigma != null ? Number(bollingerSigma.toFixed(2)) : null,
+    zScore,
+    isCapitulationDislocation: isCapitulation,
+    censusPressureRatio: cpr,
+    floatSqueezeSeverity: floatSqueeze,
+    markovGradingExpectedProfit: markovExpectedProfit,
+    markovRecommendedAction: markovAction,
+    contrarianRegime,
+  };
+
   const compositeVol = gradeMatrix["9.8"].annualizedVolatility ?? gradeMatrix["8.0"].annualizedVolatility;
   const macro5yComposite = gradeMatrix["9.8"].momenta.macro5yPct ?? gradeMatrix["RAW"].momenta.macro5yPct;
 
@@ -473,6 +646,13 @@ export function executeSovereignPricingEngine(
     timeHorizonYears,
     gradeMatrix,
     gradingArbitrageLadder,
+    traditionalStrategies,
+    contrarianStrategies,
+    macroBenchmarking: {
+      peggedBenchmarkSeat: `CE70-${input.issue ? input.series.slice(0, 3).toUpperCase() + input.issue : "SOV"}`,
+      cohortElasticityFactor: eraElasticityRatio,
+      genreRegime: `${era} Canonical Equity`,
+    },
     portfolioRiskSummary: {
       compositeAnnualizedVolatility: compositeVol,
       macro5yCompositeReturnPct: macro5yComposite,
