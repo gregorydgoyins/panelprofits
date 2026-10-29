@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Award, BriefcaseBusiness, Crown, Users } from "lucide-react";
 import Link from "next/link";
 import { getFirmDossier } from "@/lib/panel-profits/queries";
+import FirmConstellationStrategyDesk from "@/components/firms/FirmConstellationStrategyDesk";
 
 export const dynamic = "force-dynamic";
 
@@ -49,6 +50,8 @@ export default async function FirmPage({ params }: { params: Promise<{ firmId: s
         <div className="flex items-center gap-3"><Award className="h-5 w-5 text-cyan-300" /><h2 className="text-xl text-slate-100">Capability Posture</h2></div>
         <div className="mt-5 grid gap-3 text-sm sm:grid-cols-3"><p className="text-slate-400">Free Agents<br /><span className="text-slate-100">{dossier.counts.freeAgentCount}</span></p><p className="text-slate-400">Coverage Records<br /><span className="text-slate-100">{dossier.counts.coverageCount}</span></p><p className="text-slate-400">Certifications<br /><span className="text-slate-100">{dossier.counts.certificationCount}</span></p></div>
       </section>
+
+      <FirmConstellationStrategyDesk firmId={firmId} />
     </main>
   );
 }
