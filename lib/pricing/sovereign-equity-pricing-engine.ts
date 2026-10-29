@@ -20,7 +20,7 @@
 import { resolveComicEra, COMIC_ERA_PROFILES, type ComicEra } from "./comic-portfolio-tracker";
 import { executeFandomCapitalEngine, type FandomCapitalProfile } from "./fandom-capital-engine";
 import { executeFloatLiquidityEngine, type PhysicalSupplyAndFloatProfile } from "./float-liquidity-engine";
-import { executeEraValuationEngine, type EraHedonicValuationResult } from "./era-valuation-engine";
+import { executeEraValuationEngine, type EraHedonicValuationResult, ERA_VALUATION_PROFILES } from "./era-valuation-engine";
 import { executeContrarianDivergenceEngine, type ContrarianDivergenceSignal } from "./contrarian-divergence-engine";
 import { executeNarrativeCatalystEngine, type NarrativeCatalystProfile, type NarrativeEventRecord } from "./narrative-catalyst-engine";
 
@@ -420,19 +420,16 @@ export function executeSovereignPricingEngine(
       let isDirect = price != null && price > 0;
 
       if (!isDirect) {
-        // Elastic inter-grade ratio interpolation calibrated by era non-linearity:
-        // Era grade curvature (e.g. Copper/Modern 9.8 apex cliff vs Golden Age scarcity floor)
-        const eraCurvature =
-          era === "Copper" || era === "Modern" || era === "Post-Modern"
-            ? 1.15
-            : era === "Golden" || era === "Platinum"
-              ? 0.85
-              : 1.0;
+        // Elastic inter-grade ratio interpolation mathematically governed by the era profile's gradeNonLinearityExponent:
+        // Exponent ranges from 1.0 (linear survival for Platinum) to 3.2 (extreme 9.8 apex cliff for Modern)
+        const eraParams = ERA_VALUATION_PROFILES[era] ?? ERA_VALUATION_PROFILES.Silver;
+        const baselineExponent = 1.6; // Silver Age reference exponent
+        const relativeCurvature = eraParams.gradeNonLinearityExponent / baselineExponent;
 
         if (g === "2.0") {
-          price = p4 ? p4 * (0.65 / eraCurvature) : rawVal ? rawVal * 0.45 : undefined;
+          price = p4 ? p4 * (0.65 / relativeCurvature) : rawVal ? rawVal * 0.45 : undefined;
         } else if (g === "3.0") {
-          price = p4 ? p4 * 0.8 : rawVal ? rawVal * 0.6 : undefined;
+          price = p4 ? p4 * (0.80 / Math.pow(relativeCurvature, 0.5)) : rawVal ? rawVal * 0.6 : undefined;
         } else if (g === "5.0") {
           price = p4 && p6 ? p4 + (p6 - p4) * 0.5 : p6 ? p6 * 0.82 : undefined;
         } else if (g === "7.0") {
@@ -444,7 +441,7 @@ export function executeSovereignPricingEngine(
         } else if (g === "9.6") {
           price = p92 && p98 ? p92 + (p98 - p92) * 0.65 : p98 ? p98 * 0.75 : undefined;
         } else if (g === "10.0") {
-          price = p98 ? p98 * (1.35 * eraCurvature) : undefined;
+          price = p98 ? p98 * (1.35 * Math.pow(relativeCurvature, 0.8)) : undefined;
         }
       }
 

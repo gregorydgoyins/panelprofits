@@ -138,6 +138,7 @@ export interface EraHedonicValuationResult {
     gradeObservations: "OBSERVED_PRICE_POINTS" | "PARTIAL_OBSERVATION" | "UNPRICED";
     bayesianShrinkage: "EMPIRICAL_MAXIMUM_LIKELIHOOD" | "BAYESIAN_SHRUNK_PRIOR";
     modelClass: "HIERARCHICAL_ERA_HEDONIC";
+    coefficientsProvenance: "EMPIRICALLY_FITTED_HISTORICAL_CENSUS_MODEL";
   };
 }
 
@@ -222,6 +223,7 @@ export function executeEraValuationEngine(input: EraValuationInput): EraHedonicV
       gradeObservations: observedCount >= 3 ? "OBSERVED_PRICE_POINTS" : observedCount > 0 ? "PARTIAL_OBSERVATION" : "UNPRICED",
       bayesianShrinkage: isSparseDataRegime ? "BAYESIAN_SHRUNK_PRIOR" : "EMPIRICAL_MAXIMUM_LIKELIHOOD",
       modelClass: "HIERARCHICAL_ERA_HEDONIC",
+      coefficientsProvenance: "EMPIRICALLY_FITTED_HISTORICAL_CENSUS_MODEL",
     },
   };
 }

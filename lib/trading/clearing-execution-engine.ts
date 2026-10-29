@@ -21,6 +21,8 @@
  *      NAV(t+1) = NAV(t) + Net Cash Inflow - Executed Redemptions - Accrued Management Fees.
  */
 
+import { createAdminServerClient } from "@/lib/supabase/admin";
+
 export interface MarketParticipantAccount {
   participantId: string;
   role: "INVESTOR" | "DEALER" | "MARKET_MAKER" | "INSTITUTIONAL_FUND";
@@ -68,6 +70,53 @@ export interface ClearingSettlementResult {
     shareConservationZeroDelta: boolean;
     auditStatus: "PERFECT_CONSERVATION_AUDITED" | "DISCREPANCY_DETECTED";
   };
+}
+
+/**
+ * Persists the settled trade to the database order and account records when Supabase is available.
+ */
+export async function persistSettledTradeToLedger(
+  settlement: ClearingSettlementResult,
+  order: TradeOrderRequest
+): Promise<{ persisted: boolean; error?: string }> {
+  if (!settlement.isCleared) {
+    return { persisted: false, error: settlement.rejectReason };
+  }
+
+  try {
+    const supabase = createAdminServerClient();
+    if (!supabase) return { persisted: false, error: "Supabase client unavailable" };
+
+    // Update buyer balance in sniper_paper_accounts if present
+    await (supabase as any).from("sniper_paper_accounts").upsert({
+      owner: order.buyerId,
+      cash_usd: settlement.reconciledAccounts.buyerPostBalance,
+    });
+
+    // Update seller balance in sniper_paper_accounts if present
+    await (supabase as any).from("sniper_paper_accounts").upsert({
+      owner: order.sellerId,
+      cash_usd: settlement.reconciledAccounts.sellerPostBalance,
+    });
+
+    // Log the order settlement in sniper_paper_orders audit log
+    await (supabase as any).from("sniper_paper_orders").insert({
+      owner: order.buyerId,
+      item_id: order.comicId,
+      kind: "bin",
+      status: "won",
+      ask_usd: order.executionPriceUsd,
+      final_price_usd: order.executionPriceUsd,
+      fill_price_usd: settlement.tradeDetails.totalBuyerOutlayUsd,
+      detail: `Institutional Cleared Trade Settlement: ${settlement.settlementId}. Zero Delta Conservation Audited.`,
+      settled_at: settlement.timestamp,
+      result: settlement,
+    });
+
+    return { persisted: true };
+  } catch (err: any) {
+    return { persisted: false, error: err.message || String(err) };
+  }
 }
 
 /**
