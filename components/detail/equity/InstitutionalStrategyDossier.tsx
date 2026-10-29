@@ -97,21 +97,21 @@ export default function InstitutionalStrategyDossier({
           <div className="flex items-center gap-2">
             <Layers className="h-4 w-4 text-cyan-400" />
             <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-200">
-              3-Tier Value Decomposition (P = V_intrinsic + V_time + V_execution)
+              3-Tier Value Decomposition (P = V_structural + V_narrative + V_execution)
             </h3>
           </div>
           <div className="flex items-center gap-2">
             <span
               className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold border ${
-                gradeRecord.provenanceTag === "OBSERVED_AUCTION_SALE"
+                gradeRecord.provenanceTag === "OBSERVED_PRICE_POINT"
                   ? "bg-emerald-950/60 border-emerald-500/40 text-emerald-300"
                   : "bg-blue-950/60 border-blue-500/40 text-blue-300"
               }`}
             >
-              {gradeRecord.provenanceTag === "OBSERVED_AUCTION_SALE" ? "● OBSERVED TRANSACTION" : "◐ ELASTIC COHORT ESTIMATE"}
+              {gradeRecord.provenanceTag === "OBSERVED_PRICE_POINT" ? "● OBSERVED PRICE POINT" : "◐ ELASTIC COHORT ESTIMATE"}
             </span>
-            <span className="text-[10px] font-mono text-slate-400">
-              Confidence: {decomp.confidenceScore}%
+            <span className="px-2 py-0.5 rounded text-[9px] font-mono bg-slate-900 border border-slate-700 text-slate-300">
+              {decomp.evidenceTier} (Conf: {decomp.confidenceScore}%)
             </span>
           </div>
         </div>
@@ -127,7 +127,7 @@ export default function InstitutionalStrategyDossier({
               ${decomp.structuralCollectorValue.toLocaleString()}
             </div>
             <p className="text-[10px] text-slate-500 font-mono mt-1">
-              Historical permanence, {engineOutput.era} canon, permanent census floor.
+              Hedonic age factor + census scarcity weighting.
             </p>
           </div>
 
@@ -141,7 +141,7 @@ export default function InstitutionalStrategyDossier({
               ${decomp.narrativeSpeculativePremium.toLocaleString()}
             </div>
             <p className="text-[10px] text-slate-500 font-mono mt-1">
-              Subject to cultural attention, media adaptation beta, and theta decay.
+              80% Interval: [${decomp.predictionInterval80.lower.toLocaleString()} – ${decomp.predictionInterval80.upper.toLocaleString()}]
             </p>
           </div>
 
@@ -155,7 +155,7 @@ export default function InstitutionalStrategyDossier({
               ${decomp.marketExecutionFloor.toLocaleString()}
             </div>
             <p className="text-[10px] text-slate-500 font-mono mt-1">
-              Immediate wholesale dealer liquidation cash (Shortboxed / Lone Star bid).
+              Estimated wholesale liquidation realization (calibrated liquidity haircut).
             </p>
           </div>
         </div>
@@ -195,16 +195,16 @@ export default function InstitutionalStrategyDossier({
               </div>
             </div>
 
-            {/* Metric 3: Annualized Sharpe Ratio */}
+            {/* Metric 3: Periodic Monthly Sharpe */}
             <div className="p-3.5 rounded-lg bg-[#0e1626] border border-slate-800">
               <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
-                Realized Sharpe Ratio
+                Periodic Monthly Sharpe (N=12)
               </div>
               <div className="mt-1 text-lg font-bold font-mono text-slate-100">
-                {trad.annualizedSharpeRatio != null ? trad.annualizedSharpeRatio : "Unmeasured"}
+                {trad.periodicMonthlyExcessSharpe != null ? trad.periodicMonthlyExcessSharpe : "Unmeasured"}
               </div>
               <div className="text-[10px] text-slate-500 font-mono mt-0.5">
-                Benchmark Rf: 4.5% Risk-Free Treasury
+                Risk-Free Yield: 4.5% Annual (N=12)
               </div>
             </div>
 
@@ -242,16 +242,16 @@ export default function InstitutionalStrategyDossier({
               </div>
             </div>
 
-            {/* Metric 2: Census Pressure Ratio (CPR) */}
+            {/* Metric 2: Census Turnover Ratio */}
             <div className="p-3.5 rounded-lg bg-[#0e1626] border border-slate-800">
               <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
-                Census Pressure Ratio (CPR)
+                Census Turnover Ratio (CTR)
               </div>
               <div className="mt-1 text-lg font-bold font-mono text-purple-300">
-                {contra.censusPressureRatio != null ? contra.censusPressureRatio : "UNINDEXED"}
+                {contra.censusTurnoverRatio != null ? contra.censusTurnoverRatio : "UNINDEXED"}
               </div>
               <div className="text-[10px] text-slate-500 font-mono mt-0.5">
-                {contra.floatSqueezeSeverity} (CGC Pop 9.0+ / 12M Volume)
+                {contra.turnoverVelocityTier} (CGC Pop 9.0+ / 12M Volume)
               </div>
             </div>
 

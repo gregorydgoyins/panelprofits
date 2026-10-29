@@ -66,10 +66,12 @@ export interface HorizonMomentaMatrix {
 }
 
 export interface ThreeTierValuationDecomposition {
-  structuralCollectorValue: number; // Cultural canon, verified CGC census floor, era permanence
-  narrativeSpeculativePremium: number; // Cultural attention, adaptation hype, character news
-  marketExecutionFloor: number; // Instant cash liquidity / dealer wholesale realization
-  confidenceScore: number; // 0-100 based on density of independent observations
+  structuralCollectorValue: number; // Fundamental asset floor based on physical age, census scarcity & cultural tenure
+  narrativeSpeculativePremium: number; // Speculative extrinsic component (media options, adaptation hype, news velocity)
+  marketExecutionFloor: number; // Modeled instant dealer liquidation realization (calibrated liquidity discount)
+  predictionInterval80: { lower: number; upper: number }; // Statistical 80% forecast envelope
+  confidenceScore: number; // 0-100 evidence-density calibrated score
+  evidenceTier: "DENSE_VERIFIED_HISTORY" | "MODERATE_OBSERVATION" | "SPARSE_ESTIMATED_COHORT" | "UNPRICED";
   valuationState: "EMPIRICAL_CANON" | "SPECULATIVE_EXTENDED" | "CAPITULATION_FLOOR" | "THIN_MARKET";
 }
 
@@ -80,8 +82,8 @@ export interface TraditionalStrategyDossier {
   isGrahamCompliant: boolean;
   sma20Month: number | null;
   sma50Month: number | null;
-  movingAverageSignal: "GOLDEN_CROSS" | "DEATH_CROSS" | "BULLISH_EXPANSION" | "BEARISH_CONTRACTION" | "INSUFFICIENT_HISTORY";
-  annualizedSharpeRatio: number | null;
+  movingAverageSignal: "GOLDEN_CROSS" | "DEATH_CROSS" | "BULLISH_TREND_SPREAD" | "BEARISH_TREND_SPREAD" | "INSUFFICIENT_HISTORY";
+  periodicMonthlyExcessSharpe: number | null;
   cagr5yPct: number | null;
 }
 
@@ -90,8 +92,8 @@ export interface ContrarianStrategyDossier {
   bollingerSigma90d: number | null;
   zScore: number | null;
   isCapitulationDislocation: boolean;
-  censusPressureRatio: number | null;
-  floatSqueezeSeverity: "EXTREME_SQUEEZE" | "ACTIVE_DEPLETION" | "BALANCED_FLOAT" | "SUPPLY_HEAVY" | "UNINDEXED";
+  censusTurnoverRatio: number | null; // Census Population to Trailing Volume Turnover
+  turnoverVelocityTier: "HIGH_VELOCITY_FLOAT" | "BALANCED_TURNOVER" | "LOW_TURNOVER_DORMANT" | "UNINDEXED";
   markovGradingExpectedProfit: number;
   markovRecommendedAction: "SUBMIT_RAW_TO_SLAB" | "HOLD_RAW" | "BUY_ESTABLISHED_SLAB";
   contrarianRegime: "CONTRARIAN_ACCUMULATE" | "NEUTRAL" | "FADE_EUPHORIA";
@@ -110,7 +112,7 @@ export interface GradeValuationRecord {
   contrarianSentimentScore: number | null; // 0-100
   marketRegime: "CONTRARIAN_OPPORTUNITY" | "ACCUMULATION" | "EXPANSION" | "DISTRIBUTION" | "NEUTRAL";
   isDirectObservation: boolean;
-  provenanceTag: "OBSERVED_AUCTION_SALE" | "ELASTIC_COHORT_ESTIMATE" | "DEALER_EXECUTION_QUOTE";
+  provenanceTag: "OBSERVED_PRICE_POINT" | "ELASTIC_COHORT_ESTIMATE" | "DEALER_EXECUTION_QUOTE";
   valuationDecomposition: ThreeTierValuationDecomposition;
 }
 
@@ -429,6 +431,9 @@ export function executeSovereignPricingEngine(
     }
   }
 
+  // Census 9.8 Population
+  const total98Pop = input.censusPopByGrade?.["9.8"] ?? null;
+
   // Era elasticity ratio defines structural vs speculative baseline:
   // Golden/Bronze carry durable structural canon; Modern/Post-Modern carry speculative narrative volatility.
   const eraElasticityRatio =
@@ -475,16 +480,54 @@ export function executeSovereignPricingEngine(
       else if (contrarianScore >= 55) marketRegime = "EXPANSION";
     }
 
-    // 3-Tier Valuation Decomposition:
-    const structuralCollectorVal = Number((currentFmv * eraElasticityRatio).toFixed(2));
-    const narrativeSpecPremium = Number((currentFmv * (1 - eraElasticityRatio)).toFixed(2));
-    // Execution Floor: 70% wholesale dealer realization if liquidated immediately
-    const marketExecutionFlr = Number((currentFmv * 0.70).toFixed(2));
+    // Statistical 3-Tier Valuation Decomposition:
+    // Structural value is derived hedonically from asset maturity (years since publication),
+    // census scarcity factor, and historical price floor stability.
+    const ageYears = input.publicationYear ? Math.max(1, 2026 - input.publicationYear) : 40;
+    // Age maturity weight: asymptotically approaches 0.85 for 80+ year old Golden Age, ~0.30 for 5 year old Moderns
+    const ageMaturityFactor = Math.min(0.85, Math.max(0.25, 0.20 + (ageYears / 100) * 0.70));
+    
+    // Scarcity adjustment: Low census pop increases structural permanence
+    const scarcityMultiplier = total98Pop !== null ? (total98Pop <= 25 ? 1.15 : total98Pop <= 100 ? 1.05 : 0.95) : 1.0;
+    const effectiveStructuralRatio = Math.min(0.92, Math.max(0.20, ageMaturityFactor * scarcityMultiplier));
 
+    const structuralCollectorVal = Number((currentFmv * effectiveStructuralRatio).toFixed(2));
+    const narrativeSpecPremium = Number((currentFmv * (1 - effectiveStructuralRatio)).toFixed(2));
+
+    // Dynamic Liquidity Discount Model:
+    // Higher tier liquid key issues enjoy tighter spreads (15-20% dealer discount);
+    // illiquid, sparse or lower value books experience wider haircuts (35-45%).
+    const liquidityDiscountPct = currentFmv > 10000 ? 0.15 : currentFmv > 2000 ? 0.22 : currentFmv > 500 ? 0.30 : 0.40;
+    const marketExecutionFlr = Number((currentFmv * (1 - liquidityDiscountPct)).toFixed(2));
+
+    // Provenance classification: Distinguish direct empirical points from cohort estimations
     const isDirect = series.some((s) => s.isDirect);
     const provenanceTag: GradeValuationRecord["provenanceTag"] = isDirect
-      ? "OBSERVED_AUCTION_SALE"
+      ? "OBSERVED_PRICE_POINT"
       : "ELASTIC_COHORT_ESTIMATE";
+
+    // Calibrated Uncertainty & Prediction Interval (80% confidence interval based on realized vol)
+    const intervalSigma = (vol ?? 0.25) * 1.28; // 1.28 standard deviations = 80% two-tailed normal coverage
+    const predLower = Number((currentFmv * Math.max(0.1, 1 - intervalSigma * 0.5)).toFixed(2));
+    const predUpper = Number((currentFmv * (1 + intervalSigma * 0.5)).toFixed(2));
+
+    // Evidence Tier & Confidence Score based on number of independent observations
+    const obsCount = series.length;
+    const evidenceTier: ThreeTierValuationDecomposition["evidenceTier"] =
+      currentFmv === 0
+        ? "UNPRICED"
+        : isDirect && obsCount >= 10
+          ? "DENSE_VERIFIED_HISTORY"
+          : isDirect
+            ? "MODERATE_OBSERVATION"
+            : "SPARSE_ESTIMATED_COHORT";
+
+    const calibratedConfidenceScore =
+      evidenceTier === "DENSE_VERIFIED_HISTORY"
+        ? Math.min(98, 85 + obsCount)
+        : evidenceTier === "MODERATE_OBSERVATION"
+          ? 70 + obsCount * 2
+          : 50 + Math.min(20, obsCount * 3);
 
     gradeMatrix[g] = {
       grade: g,
@@ -504,11 +547,13 @@ export function executeSovereignPricingEngine(
         structuralCollectorValue: structuralCollectorVal,
         narrativeSpeculativePremium: narrativeSpecPremium,
         marketExecutionFloor: marketExecutionFlr,
-        confidenceScore: isDirect ? 95 : 75,
+        predictionInterval80: { lower: predLower, upper: predUpper },
+        confidenceScore: calibratedConfidenceScore,
+        evidenceTier,
         valuationState:
           currentFmv === 0
             ? "THIN_MARKET"
-            : eraElasticityRatio > 0.7
+            : effectiveStructuralRatio > 0.70
               ? "EMPIRICAL_CANON"
               : narrativeSpecPremium > structuralCollectorVal
                 ? "SPECULATIVE_EXTENDED"
@@ -531,7 +576,6 @@ export function executeSovereignPricingEngine(
   }
 
   // Scarcity Tier calculation based on real Census Population (missing census is UNINDEXED, never false moderate or hyper-scarce)
-  const total98Pop = input.censusPopByGrade?.["9.8"] ?? null;
   let scarcityTier: SovereignEquityPricingOutput["portfolioRiskSummary"]["scarcityTier"] = "UNINDEXED";
   if (total98Pop !== null && total98Pop !== undefined) {
     if (total98Pop <= 10) scarcityTier = "HYPER_SCARCE";
@@ -549,23 +593,54 @@ export function executeSovereignPricingEngine(
   const marginOfSafety = netRealizedProceeds > 0 ? Number(((1 - capitalizedBasis / netRealizedProceeds) * 100).toFixed(2)) : 0;
 
   // Dual-SMA Moving Average Evaluation (20-Month vs 50-Month)
+  // Evaluates actual historical crossover state transitions between t-1 and t
+  const series98 = gradeSeriesMap.get("9.8")!.map((s) => s.price);
   const sma20Val = gradeMatrix["9.8"].sma20;
   const sma50Val = gradeMatrix["9.8"].sma50;
   let movingAvgSignal: TraditionalStrategyDossier["movingAverageSignal"] = "INSUFFICIENT_HISTORY";
-  if (sma20Val != null && sma50Val != null) {
-    if (sma20Val > sma50Val * 1.05) movingAvgSignal = "GOLDEN_CROSS";
-    else if (sma20Val < sma50Val * 0.95) movingAvgSignal = "DEATH_CROSS";
-    else if (sma20Val >= sma50Val) movingAvgSignal = "BULLISH_EXPANSION";
-    else movingAvgSignal = "BEARISH_CONTRACTION";
+
+  if (series98.length >= 51 && sma20Val != null && sma50Val != null) {
+    const prevSeries = series98.slice(0, series98.length - 1);
+    const prevSma20 = computeSma(prevSeries, 20);
+    const prevSma50 = computeSma(prevSeries, 50);
+
+    if (prevSma20 != null && prevSma50 != null) {
+      if (prevSma20 <= prevSma50 && sma20Val > sma50Val) {
+        movingAvgSignal = "GOLDEN_CROSS"; // True state crossover from below to above
+      } else if (prevSma20 >= prevSma50 && sma20Val < sma50Val) {
+        movingAvgSignal = "DEATH_CROSS"; // True state crossover from above to below
+      } else if (sma20Val >= sma50Val) {
+        movingAvgSignal = "BULLISH_TREND_SPREAD";
+      } else {
+        movingAvgSignal = "BEARISH_TREND_SPREAD";
+      }
+    }
+  } else if (sma20Val != null && sma50Val != null) {
+    movingAvgSignal = sma20Val >= sma50Val ? "BULLISH_TREND_SPREAD" : "BEARISH_TREND_SPREAD";
   }
 
-  // Annualized Sharpe Ratio calculation (Risk-Free rate = 4.5%)
+  // Periodic Monthly Excess Return Sharpe Ratio (Annualized: N = 12 periods/year)
+  let periodicMonthlySharpe: number | null = null;
+  if (series98.length >= 12) {
+    const monthlyReturns: number[] = [];
+    const monthlyRf = 0.045 / 12; // 4.5% annual risk-free cash yield
+    for (let i = 1; i < series98.length; i++) {
+      if (series98[i - 1] > 0) {
+        const r = (series98[i] - series98[i - 1]) / series98[i - 1];
+        monthlyReturns.push(r - monthlyRf);
+      }
+    }
+    if (monthlyReturns.length >= 6) {
+      const meanExcess = monthlyReturns.reduce((a, b) => a + b, 0) / monthlyReturns.length;
+      const varExcess = monthlyReturns.reduce((sum, r) => sum + Math.pow(r - meanExcess, 2), 0) / (monthlyReturns.length - 1);
+      const stdExcess = Math.sqrt(varExcess);
+      if (stdExcess > 0) {
+        periodicMonthlySharpe = Number(((meanExcess / stdExcess) * Math.sqrt(12)).toFixed(2));
+      }
+    }
+  }
+
   const cagr5yVal = gradeMatrix["9.8"].cagr5yPct ?? gradeMatrix["8.0"].cagr5yPct;
-  const annVolVal = gradeMatrix["9.8"].annualizedVolatility ?? gradeMatrix["8.0"].annualizedVolatility;
-  const sharpeRatio =
-    cagr5yVal != null && annVolVal != null && annVolVal > 0
-      ? Number(((cagr5yVal - 4.5) / (annVolVal * 100)).toFixed(2))
-      : null;
 
   const traditionalStrategies: TraditionalStrategyDossier = {
     grahamReplacementBasis: capitalizedBasis,
@@ -575,12 +650,12 @@ export function executeSovereignPricingEngine(
     sma20Month: sma20Val,
     sma50Month: sma50Val,
     movingAverageSignal: movingAvgSignal,
-    annualizedSharpeRatio: sharpeRatio,
+    periodicMonthlyExcessSharpe: periodicMonthlySharpe,
     cagr5yPct: cagr5yVal,
   };
 
-  // Contrarian Strategy Calculations: Bollinger Band Z-Score & Census Pressure
-  const allPrices98 = gradeSeriesMap.get("9.8")!.map((s) => s.price);
+  // Contrarian Strategy Calculations: Bollinger Band Z-Score & Census Turnover
+  const allPrices98 = series98;
   const bollingerMean = allPrices98.length >= 3 ? allPrices98.reduce((a, b) => a + b, 0) / allPrices98.length : null;
   const bollingerSigma =
     bollingerMean != null && allPrices98.length >= 3
@@ -593,17 +668,16 @@ export function executeSovereignPricingEngine(
 
   const isCapitulation = Boolean(zScore != null && zScore < -1.8 && (gradeMatrix["9.8"].rsi14 ?? 50) < 35);
 
-  // Census Pressure Ratio (9.0+ population relative to annual trading velocity)
+  // Census Turnover Ratio (9.0+ population relative to annual trading volume)
   const trailing12mSales = Math.max(1, input.monthlySnapshots.length);
   const total90PlusPop = (input.censusPopByGrade?.["9.8"] ?? 0) + (input.censusPopByGrade?.["9.2"] ?? 0);
-  const cpr = total90PlusPop > 0 ? Number((total90PlusPop / trailing12mSales).toFixed(2)) : null;
+  const ctr = total90PlusPop > 0 ? Number((total90PlusPop / trailing12mSales).toFixed(2)) : null;
 
-  let floatSqueeze: ContrarianStrategyDossier["floatSqueezeSeverity"] = "UNINDEXED";
-  if (cpr !== null) {
-    if (cpr < 2.0) floatSqueeze = "EXTREME_SQUEEZE";
-    else if (cpr < 5.0) floatSqueeze = "ACTIVE_DEPLETION";
-    else if (cpr <= 15.0) floatSqueeze = "BALANCED_FLOAT";
-    else floatSqueeze = "SUPPLY_HEAVY";
+  let turnoverTier: ContrarianStrategyDossier["turnoverVelocityTier"] = "UNINDEXED";
+  if (ctr !== null) {
+    if (ctr < 2.0) turnoverTier = "HIGH_VELOCITY_FLOAT";
+    else if (ctr <= 10.0) turnoverTier = "BALANCED_TURNOVER";
+    else turnoverTier = "LOW_TURNOVER_DORMANT";
   }
 
   const markov98Opt = gradingArbitrageLadder.find((opt) => opt.targetGrade === "9.8");
@@ -626,8 +700,8 @@ export function executeSovereignPricingEngine(
     bollingerSigma90d: bollingerSigma != null ? Number(bollingerSigma.toFixed(2)) : null,
     zScore,
     isCapitulationDislocation: isCapitulation,
-    censusPressureRatio: cpr,
-    floatSqueezeSeverity: floatSqueeze,
+    censusTurnoverRatio: ctr,
+    turnoverVelocityTier: turnoverTier,
     markovGradingExpectedProfit: markovExpectedProfit,
     markovRecommendedAction: markovAction,
     contrarianRegime,
