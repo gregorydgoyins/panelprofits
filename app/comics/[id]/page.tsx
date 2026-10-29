@@ -550,7 +550,6 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
 
   // Extract comprehensive census population by canonical grade for sovereign engine
   const censusPopMap: Partial<Record<CanonicalGrade, number>> = {};
-  const isCompleteCoverage = Boolean(censusDossier?.grades && censusDossier.grades.length >= 6);
   if (censusDossier?.grades && censusDossier.grades.length > 0) {
     for (const gRow of censusDossier.grades) {
       const gLabel = String(gRow.grade_numeric ?? gRow.native_grade_text);
@@ -561,6 +560,10 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
   } else if (highGradeCount > 0) {
     censusPopMap["9.8"] = highGradeCount;
   }
+
+  // Strict check: all 6 qualifying tiers (10.0, 9.8, 9.6, 9.4, 9.2, 9.0) must be present in the census map
+  const required90PlusTiers: CanonicalGrade[] = ["9.0", "9.2", "9.4", "9.6", "9.8", "10.0"];
+  const isCompleteCoverage = required90PlusTiers.every((g) => censusPopMap[g] !== undefined);
 
   const sovereignEngineOutput = executeSovereignPricingEngine({
     comicId: comic.id,
