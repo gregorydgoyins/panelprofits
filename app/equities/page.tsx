@@ -3,6 +3,7 @@ import { getSovereignEquities } from "@/lib/equity/canonical-equities";
 import { calculateMarketIndices } from "@/lib/market/indices";
 import { EquitiesTradingFloor } from "@/components/equity/equities-trading-floor";
 import { CandlestickChart } from "lucide-react";
+import ConstellationExchangeBanner from "@/components/constellation/ConstellationExchangeBanner";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,9 @@ export default async function EquitiesPage() {
           Continuous price discovery, sovereign equity surveillance, and verified transaction clearing across all publishing eras. Incorporating real-time auction hammers, institutional float liquidity, and the curated CE70 benchmark index.
         </p>
       </header>
+
+      {/* Constellation Macro Radar Bridge */}
+      <ConstellationExchangeBanner />
 
       {/* Trading Floor Component */}
       <EquitiesTradingFloor

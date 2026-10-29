@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Boxes, ShieldCheck, Sparkles, Layers, SlidersHorizontal, ArrowUpRight } from "lucide-react";
+import ConstellationExchangeBanner from "@/components/constellation/ConstellationExchangeBanner";
 import {
   CANONICAL_16_ASSET_FAMILIES,
   getCanonicalAssetSurfaces,
@@ -25,6 +26,9 @@ export default async function AssetsPage() {
           Complete structural taxonomy governing the 16 Canonical Collectible Asset Classes across the sovereign comic equities landscape, alongside the curated 70 constituent seats of the CE70 benchmark index.
         </p>
       </header>
+
+      {/* Constellation Macro Radar Bridge */}
+      <ConstellationExchangeBanner />
 
       {/* 16 Canonical Collectible Asset Families */}
       <section>
