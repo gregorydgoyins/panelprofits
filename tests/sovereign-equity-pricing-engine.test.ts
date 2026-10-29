@@ -180,4 +180,93 @@ describe("Sovereign Canonical Equity Pricing Engine Verification Suite", () => {
     expect(output.contrarianStrategies.censusTurnoverRatio).toBeNull();
     expect(output.contrarianStrategies.turnoverVelocityTier).toBe("NO_OBSERVED_TRADES");
   });
+
+  it("verifies v3.6 institutional audit requirements: grade-level provenance, unmeasured turnover, full 9.0+ numerator, and pure measured volatility", () => {
+    // 1. Grade-level provenance: Issue has completed trades, but only in 9.2 (none in 9.8).
+    // Grade 9.2 must be OBSERVED_AUCTION_SALE while 9.8 must be VALUATION_SNAPSHOT.
+    const input: SovereignPricingEngineInput = {
+      comicId: "audit-3.6",
+      series: "X-Men",
+      issue: "94",
+      publicationYear: 1975,
+      completedSalesCount: 4,
+      completedSalesCountByGrade: {
+        "9.2": 4,
+        "9.8": 0,
+      },
+      monthlySnapshots: [
+        {
+          date: "2026-05-01",
+          epochMs: Date.parse("2026-05-01T00:00:00Z"),
+          pricesByGrade: { "9.2": 4400, "9.8": 22000 },
+        },
+        {
+          date: "2026-06-01",
+          epochMs: Date.parse("2026-06-01T00:00:00Z"),
+          pricesByGrade: { "9.2": 4450, "9.8": 22050 },
+        },
+        {
+          date: "2026-07-01",
+          epochMs: Date.parse("2026-07-01T00:00:00Z"),
+          pricesByGrade: { "9.2": 4480, "9.8": 22080 },
+        },
+        {
+          date: "2026-08-01",
+          epochMs: Date.parse("2026-08-01T00:00:00Z"),
+          pricesByGrade: { "9.2": 4500, "9.8": 22100 },
+        },
+        {
+          date: "2026-09-01",
+          epochMs: Date.parse("2026-09-01T00:00:00Z"),
+          pricesByGrade: { "9.2": 4550, "9.8": 22150 },
+        },
+        {
+          date: "2026-10-01",
+          epochMs: Date.parse("2026-10-01T00:00:00Z"),
+          pricesByGrade: { "9.2": 4600, "9.8": 22200 },
+        },
+      ],
+      // Comprehensive 9.0+ census
+      censusPopByGrade: {
+        "10.0": 0,
+        "9.8": 12,
+        "9.6": 34,
+        "9.4": 86,
+        "9.2": 150,
+        "9.0": 210,
+      },
+    };
+
+    const output = executeSovereignPricingEngine(input);
+
+    // Provenance strictly verified at grade level:
+    expect(output.gradeMatrix["9.2"].provenanceTag).toBe("OBSERVED_AUCTION_SALE");
+    expect(output.gradeMatrix["9.8"].provenanceTag).toBe("VALUATION_SNAPSHOT");
+    expect(output.gradeMatrix["8.0"].provenanceTag).toBe("ELASTIC_COHORT_ESTIMATE");
+
+    // Pure measured volatility with no undisclosed 0.05 floor:
+    // With prices [22000, 22100, 22200], realized annualized volatility is tiny (< 0.05)
+    const vol98 = output.gradeMatrix["9.8"].annualizedVolatility;
+    expect(vol98).toBeDefined();
+    expect(vol98!).toBeLessThan(0.05); // Real volatility is ~0.016
+    // Prediction interval must use actual vol98, not Math.max(0.05, vol)
+    const interval = output.gradeMatrix["9.8"].valuationDecomposition.predictionInterval80;
+    expect(interval).toBeDefined();
+    expect(interval!.lower).toBeGreaterThan(21000); // Extremely narrow spread reflecting low true volatility
+
+    // Comprehensive 9.0+ census turnover:
+    // Total 9.0+ pop = 12 + 34 + 86 + 150 + 210 = 492
+    // Trailing sales = 4 -> CTR = 492 / 4 = 123.0
+    expect(output.contrarianStrategies.censusTurnoverRatio).toBe(123.0);
+    expect(output.contrarianStrategies.turnoverVelocityTier).toBe("LOW_TURNOVER_DORMANT");
+
+    // When completedSalesCount is omitted, CTR must return UNMEASURED, never falling back to snapshot count
+    const omittedInput: SovereignPricingEngineInput = {
+      ...input,
+      completedSalesCount: undefined,
+    };
+    const omittedOutput = executeSovereignPricingEngine(omittedInput);
+    expect(omittedOutput.contrarianStrategies.censusTurnoverRatio).toBeNull();
+    expect(omittedOutput.contrarianStrategies.turnoverVelocityTier).toBe("UNMEASURED");
+  });
 });

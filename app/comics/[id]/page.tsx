@@ -531,6 +531,25 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     });
   }
 
+  // Extract comprehensive census population by canonical grade for sovereign engine
+  const censusPopMap: Partial<Record<CanonicalGrade, number>> = {};
+  if (censusDossier?.grades && censusDossier.grades.length > 0) {
+    for (const gRow of censusDossier.grades) {
+      const gLabel = String(gRow.grade_numeric ?? gRow.native_grade_text);
+      if (gLabel) {
+        censusPopMap[gLabel as CanonicalGrade] = gRow.count_at_grade || 0;
+      }
+    }
+  } else if (highGradeCount > 0) {
+    censusPopMap["9.8"] = highGradeCount;
+  }
+
+  // Extract completed auction sales count per specific grade
+  const completedSalesCountByGrade: Partial<Record<CanonicalGrade, number>> = {};
+  for (const [gLabel, count] of salesByGrade.entries()) {
+    completedSalesCountByGrade[gLabel as CanonicalGrade] = count;
+  }
+
   const sovereignEngineOutput = executeSovereignPricingEngine({
     comicId: comic.id,
     series: comic.series,
@@ -539,10 +558,9 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     publisher: authoritativePublisher,
     monthlySnapshots: Array.from(monthlySnapshotsMap.values()),
     completedSalesCount: salesObservations.length,
+    completedSalesCountByGrade,
     rawPurchaseCost: rawPrice != null ? Number(rawPrice) : undefined,
-    censusPopByGrade: {
-      "9.8": highGradeCount || undefined,
-    },
+    censusPopByGrade: censusPopMap,
   });
 
   // A cover found by a wiki name search for a different publisher is a false match: never show it.

@@ -52,6 +52,7 @@ export interface SovereignPricingEngineInput {
   publisher?: string;
   monthlySnapshots: SovereignMonthlySnapshot[];
   completedSalesCount?: number; // Verified completed auction transactions from sales_observations
+  completedSalesCountByGrade?: Partial<Record<CanonicalGrade, number>>; // Verified completed auction transactions per specific grade
   rawPurchaseCost?: number;
   censusPopByGrade?: Partial<Record<CanonicalGrade, number>>;
   annualCostOfCapitalRate?: number; // e.g. 0.075 (7.5%)
@@ -94,7 +95,7 @@ export interface ContrarianStrategyDossier {
   zScore: number | null;
   isCapitulationDislocation: boolean;
   censusTurnoverRatio: number | null; // Census Population to Trailing Completed Sales Volume Turnover
-  turnoverVelocityTier: "HIGH_VELOCITY_FLOAT" | "BALANCED_TURNOVER" | "LOW_TURNOVER_DORMANT" | "NO_OBSERVED_TRADES" | "UNINDEXED";
+  turnoverVelocityTier: "HIGH_VELOCITY_FLOAT" | "BALANCED_TURNOVER" | "LOW_TURNOVER_DORMANT" | "NO_OBSERVED_TRADES" | "UNMEASURED" | "UNINDEXED";
   markovGradingExpectedProfit: number;
   markovRecommendedAction: "SUBMIT_RAW_TO_SLAB" | "HOLD_RAW" | "BUY_ESTABLISHED_SLAB";
   contrarianRegime: "CONTRARIAN_ACCUMULATE" | "NEUTRAL" | "FADE_EUPHORIA";
@@ -499,7 +500,8 @@ export function executeSovereignPricingEngine(
     // Liquidity Haircut Model based on trading frequency & issue volume:
     // When completed sales are available, haircuts are calibrated to trading velocity;
     // otherwise calibrated to longitudinal snapshot frequency.
-    const trades = input.completedSalesCount;
+    const gradeSales = input.completedSalesCountByGrade?.[g];
+    const trades = gradeSales !== undefined ? gradeSales : input.completedSalesCount;
     const obsCount = series.length;
     const liquidityHaircut =
       trades !== undefined
@@ -520,19 +522,24 @@ export function executeSovereignPricingEngine(
     const marketExecutionFlr = Number((currentFmv * (1 - liquidityHaircut)).toFixed(2));
 
     // Provenance classification: Distinguish direct sales / snapshots from cohort interpolations
+    // GRADE-LEVEL INTEGRITY: A grade is ONLY marked OBSERVED_AUCTION_SALE if that specific grade
+    // has verified completed auction sales. A direct snapshot without verified sales is VALUATION_SNAPSHOT.
     const isDirect = series.some((s) => s.isDirect);
+    const hasGradeAuctionSale = gradeSales !== undefined ? gradeSales > 0 : false;
     const provenanceTag: GradeValuationRecord["provenanceTag"] = isDirect
-      ? (input.completedSalesCount !== undefined && input.completedSalesCount > 0 ? "OBSERVED_AUCTION_SALE" : "VALUATION_SNAPSHOT")
+      ? (hasGradeAuctionSale ? "OBSERVED_AUCTION_SALE" : "VALUATION_SNAPSHOT")
       : "ELASTIC_COHORT_ESTIMATE";
 
     // Rigorous Lognormal 80% Prediction Interval:
     // P_T in [ P_0 * exp( (mu - sigma^2 / 2)*T - 1.2816 * sigma * sqrt(T) ),
     //         P_0 * exp( (mu - sigma^2 / 2)*T + 1.2816 * sigma * sqrt(T) ) ]
     // Evaluated for 6-month horizon (T = 0.5) with drift mu approximated by risk-free rate r = 4.5%
-    // ZERO FAKE DATA MANDATE: If volatility is unmeasured (null or <= 0), do NOT fabricate 0.28!
+    // ZERO FAKE DATA MANDATE:
+    // If volatility is unmeasured (null or <= 0), do NOT fabricate!
+    // No hidden or undisclosed floor: uses pure measured volatility sigmaVal = vol.
     let predictionInterval80: { lower: number; upper: number } | null = null;
     if (vol !== null && vol > 0 && currentFmv > 0) {
-      const sigmaVal = Math.max(0.05, vol);
+      const sigmaVal = vol;
       const horizonT = 0.5;
       const driftMu = 0.045;
       const lognormalDrift = (driftMu - 0.5 * sigmaVal * sigmaVal) * horizonT;
@@ -702,24 +709,41 @@ export function executeSovereignPricingEngine(
 
   // Census Turnover Ratio (9.0+ population relative to annual trading volume)
   // ZERO FAKE DATA MANDATE:
-  // If completed sales are measured and equal 0, turnover is strictly NO_OBSERVED_TRADES (ctr = null).
-  // We NEVER substitute 1 or snapshot count to fabricate a fake non-zero turnover!
+  // 1. Numerator: Comprehensive CGC/PSA census population for all tiers >= 9.0 (10.0, 9.8, 9.6, 9.4, 9.2, 9.0).
+  // 2. Denominator: Strictly verified completed auction transactions (completedSalesCount).
+  //    If completedSalesCount is omitted/undefined, do NOT fall back to snapshot count; return UNMEASURED (ctr = null).
+  // 3. If completedSalesCount is measured and equals 0, return NO_OBSERVED_TRADES (ctr = null).
   const hasCompletedSalesMeasure = input.completedSalesCount !== undefined;
-  const trailing12mSales = hasCompletedSalesMeasure
-    ? input.completedSalesCount!
-    : input.monthlySnapshots.length;
+  
+  // Calculate comprehensive 9.0+ census population across all qualifying grades
+  const qualifying90PlusGrades: CanonicalGrade[] = ["9.0", "9.2", "9.4", "9.6", "9.8", "10.0"];
+  let total90PlusPop = 0;
+  let hasCensusData = false;
 
-  const total90PlusPop = (input.censusPopByGrade?.["9.8"] ?? 0) + (input.censusPopByGrade?.["9.2"] ?? 0);
+  if (input.censusPopByGrade) {
+    for (const g of qualifying90PlusGrades) {
+      const pop = input.censusPopByGrade[g];
+      if (pop !== undefined && pop !== null) {
+        total90PlusPop += pop;
+        hasCensusData = true;
+      }
+    }
+  }
 
   let ctr: number | null = null;
   let turnoverTier: ContrarianStrategyDossier["turnoverVelocityTier"] = "UNINDEXED";
 
-  if (total90PlusPop > 0) {
-    if (hasCompletedSalesMeasure && trailing12mSales === 0) {
+  if (hasCensusData && total90PlusPop > 0) {
+    if (!hasCompletedSalesMeasure) {
+      // Completed sales count not provided: NEVER fall back to monthly snapshots!
+      ctr = null;
+      turnoverTier = "UNMEASURED";
+    } else if (input.completedSalesCount === 0) {
       ctr = null;
       turnoverTier = "NO_OBSERVED_TRADES";
-    } else if (trailing12mSales > 0) {
-      ctr = Number((total90PlusPop / trailing12mSales).toFixed(2));
+    } else {
+      const salesVol = input.completedSalesCount!;
+      ctr = Number((total90PlusPop / salesVol).toFixed(2));
       if (ctr < 2.0) turnoverTier = "HIGH_VELOCITY_FLOAT";
       else if (ctr <= 10.0) turnoverTier = "BALANCED_TURNOVER";
       else turnoverTier = "LOW_TURNOVER_DORMANT";
