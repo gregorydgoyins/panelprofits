@@ -44,6 +44,11 @@ export interface ContrarianDivergenceSignal {
   actionRecommendation: "EXECUTE_IMMEDIATE_BUY" | "DOLLAR_COST_AVERAGE" | "HOLD" | "TAKE_PROFITS" | "WAIT_FOR_SUPPORT_CONFIRMATION";
   confidenceScore: number;
   marginOfSafetyBufferPct: number;
+  dataProvenance: {
+    priceZScore: "OBSERVED_PRICE_HISTORY" | "EMPIRICALLY_ESTIMATED" | "UNMEASURED";
+    demandZScore: "EMPIRICALLY_ESTIMATED" | "UNMEASURED";
+    signalState: "OBSERVED_CONTRARIAN_SIGNAL" | "UNMEASURED";
+  };
 }
 
 /**
@@ -73,6 +78,11 @@ export function executeContrarianDivergenceEngine(input: DivergenceStrategyInput
       actionRecommendation: "HOLD",
       confidenceScore: 0,
       marginOfSafetyBufferPct: input.marginOfSafetyPct,
+      dataProvenance: {
+        priceZScore: "UNMEASURED",
+        demandZScore: "UNMEASURED",
+        signalState: "UNMEASURED",
+      },
     };
   }
 
@@ -126,5 +136,10 @@ export function executeContrarianDivergenceEngine(input: DivergenceStrategyInput
     actionRecommendation: action,
     confidenceScore: confidence,
     marginOfSafetyBufferPct: input.marginOfSafetyPct,
+    dataProvenance: {
+      priceZScore: input.priceZScore90d !== null ? "OBSERVED_PRICE_HISTORY" : input.marketPriceDeltaPct90d !== null ? "EMPIRICALLY_ESTIMATED" : "UNMEASURED",
+      demandZScore: zDemand !== null ? "EMPIRICALLY_ESTIMATED" : "UNMEASURED",
+      signalState: "OBSERVED_CONTRARIAN_SIGNAL",
+    },
   };
 }

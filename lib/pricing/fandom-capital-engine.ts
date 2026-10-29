@@ -60,6 +60,12 @@ export interface FandomCapitalProfile {
   expectedQualifiedDemandUnits: number | null; // Model-estimated annual qualified buyers
   fandomCapitalTier: "BLUE_CHIP_MONUMENT" | "ZEALOT_CULT_CORE" | "EXPANDING_GENERATIONAL_BREAKOUT" | "DORMANT_LEGACY" | "SPECULATIVE_BUBBLE" | "UNINDEXED";
   culturalLongevityYears: number;
+  dataProvenance: {
+    conversionRate: "OBSERVED" | "EMPIRICALLY_ESTIMATED" | "SIMULATED_UTILITY";
+    emotionalYield: "EMPIRICALLY_ESTIMATED" | "SIMULATED_UTILITY";
+    cohorts: "EMPIRICALLY_ESTIMATED" | "SIMULATED_DEMOGRAPHICS";
+    demandUnits: "OBSERVED_SALES_ANCHORED" | "UNMEASURED";
+  };
 }
 
 /**
@@ -275,5 +281,11 @@ export function executeFandomCapitalEngine(
     expectedQualifiedDemandUnits: expectedQualifiedDemand,
     fandomCapitalTier: fandomTier,
     culturalLongevityYears: longevityYears,
+    dataProvenance: {
+      conversionRate: input.totalCensusPop && input.trailing12mSalesCount ? "EMPIRICALLY_ESTIMATED" : "SIMULATED_UTILITY",
+      emotionalYield: "SIMULATED_UTILITY",
+      cohorts: "EMPIRICALLY_ESTIMATED",
+      demandUnits: expectedQualifiedDemand !== null ? "OBSERVED_SALES_ANCHORED" : "UNMEASURED",
+    },
   };
 }

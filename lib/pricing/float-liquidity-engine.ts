@@ -82,6 +82,12 @@ export interface PhysicalSupplyAndFloatProfile {
   // Equity share representation
   simulatedEquitySharesTotal: number; // e.g. 100,000 baseline shares issued per equity seat
   simulatedCirculatingShares: number; // float-adjusted active equity shares
+  dataProvenance: {
+    censusSource: "OBSERVED_CENSUS" | "UNINDEXED";
+    circulatingFloat: "EMPIRICALLY_ESTIMATED" | "UNMEASURED";
+    amihudRatio: "OBSERVED_TRANSACTIONS" | "UNMEASURED";
+    marketImpact: "EMPIRICALLY_ESTIMATED" | "UNMEASURED";
+  };
 }
 
 /**
@@ -296,5 +302,11 @@ export function executeFloatLiquidityEngine(input: FloatLiquidityInput): Physica
     marketImpact,
     simulatedEquitySharesTotal: totalShares,
     simulatedCirculatingShares,
+    dataProvenance: {
+      censusSource: isCensusIndexed ? "OBSERVED_CENSUS" : "UNINDEXED",
+      circulatingFloat: circulatingFloat !== null ? "EMPIRICALLY_ESTIMATED" : "UNMEASURED",
+      amihudRatio: amihud.illiqValue !== null ? "OBSERVED_TRANSACTIONS" : "UNMEASURED",
+      marketImpact: marketImpact.oneUnitImpactPct !== null ? "EMPIRICALLY_ESTIMATED" : "UNMEASURED",
+    },
   };
 }

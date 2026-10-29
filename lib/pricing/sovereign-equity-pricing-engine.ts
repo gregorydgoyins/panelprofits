@@ -19,6 +19,9 @@
 
 import { resolveComicEra, COMIC_ERA_PROFILES, type ComicEra } from "./comic-portfolio-tracker";
 import { executeFandomCapitalEngine, type FandomCapitalProfile } from "./fandom-capital-engine";
+import { executeFloatLiquidityEngine, type PhysicalSupplyAndFloatProfile } from "./float-liquidity-engine";
+import { executeEraValuationEngine, type EraHedonicValuationResult } from "./era-valuation-engine";
+import { executeContrarianDivergenceEngine, type ContrarianDivergenceSignal } from "./contrarian-divergence-engine";
 
 export const CANONICAL_GRADES = [
   "RAW",
@@ -165,6 +168,9 @@ export interface SovereignEquityPricingOutput {
     liquidityAnchorGrade: CanonicalGrade;
   };
   fandomProfile: FandomCapitalProfile;
+  physicalFloatProfile: PhysicalSupplyAndFloatProfile;
+  eraValuationProfile: EraHedonicValuationResult;
+  contrarianDivergenceSignal: ContrarianDivergenceSignal;
 }
 
 /** Standard Normal CDF approximation */
@@ -848,6 +854,10 @@ export function executeSovereignPricingEngine(
   const compositeVol = gradeMatrix["9.8"].annualizedVolatility ?? gradeMatrix["8.0"].annualizedVolatility;
   const macro5yComposite = gradeMatrix["9.8"].momenta.macro5yPct ?? gradeMatrix["RAW"].momenta.macro5yPct;
 
+  const totalCensusSum = input.censusPopByGrade
+    ? Object.values(input.censusPopByGrade).reduce((a, b) => (a ?? 0) + (b ?? 0), 0)
+    : undefined;
+
   const fandomProfile = executeFandomCapitalEngine({
     comicId: input.comicId,
     series: input.series,
@@ -855,7 +865,48 @@ export function executeSovereignPricingEngine(
     era,
     publicationYear: input.publicationYear,
     trailing12mSalesCount: input.completedSalesCount ?? 0,
-    totalCensusPop: input.censusPopByGrade ? Object.values(input.censusPopByGrade).reduce((a, b) => (a ?? 0) + (b ?? 0), 0) : undefined,
+    totalCensusPop: totalCensusSum,
+  });
+
+  const physicalFloatProfile = executeFloatLiquidityEngine({
+    comicId: input.comicId,
+    series: input.series,
+    issue: input.issue,
+    era,
+    totalCensusPop: totalCensusSum,
+    censusPopByGrade: input.censusPopByGrade,
+    trailing12mSalesCount: input.completedSalesCount,
+    benchmarkFmvUsd: gradeMatrix["9.8"].currentFmv ?? gradeMatrix["8.0"].currentFmv,
+  });
+
+  const observedPricesMap: Partial<Record<CanonicalGrade, number>> = {};
+  for (const g of CANONICAL_GRADES) {
+    if (gradeMatrix[g] && gradeMatrix[g].currentFmv > 0) {
+      observedPricesMap[g] = gradeMatrix[g].currentFmv;
+    }
+  }
+
+  const eraValuationProfile = executeEraValuationEngine({
+    comicId: input.comicId,
+    series: input.series,
+    issue: input.issue,
+    era,
+    publicationYear: input.publicationYear,
+    totalCensusPop: totalCensusSum,
+    observedGradePrices: observedPricesMap,
+  });
+
+  const contrarianDivergenceSignal = executeContrarianDivergenceEngine({
+    comicId: input.comicId,
+    series: input.series,
+    issue: input.issue,
+    currentFmvUsd: gradeMatrix["9.8"].currentFmv ?? gradeMatrix["RAW"].currentFmv,
+    marketPriceDeltaPct90d: gradeMatrix["9.8"].momenta.change90dPct,
+    fundamentalDemandDeltaPct90d: fandomProfile.expectedQualifiedDemandUnits != null ? 5.0 : null,
+    priceZScore90d: zScore,
+    rsi14: gradeMatrix["9.8"].rsi14,
+    marginOfSafetyPct: traditionalStrategies.marginOfSafetyPct,
+    dealerExecutionFloor: gradeMatrix["9.8"].valuationDecomposition.marketExecutionFloor,
   });
 
   return {
@@ -882,5 +933,8 @@ export function executeSovereignPricingEngine(
       liquidityAnchorGrade: eraProfile.liquidityGradeAnchor as CanonicalGrade,
     },
     fandomProfile,
+    physicalFloatProfile,
+    eraValuationProfile,
+    contrarianDivergenceSignal,
   };
 }

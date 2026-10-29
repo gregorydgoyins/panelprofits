@@ -254,24 +254,32 @@ export default function InstitutionalStrategyDossier({
                 {contra.zScore != null ? `${contra.zScore}σ` : "N/A"}
               </div>
               <div className="text-[10px] text-slate-500 font-mono mt-0.5">
-                {contra.isCapitulationDislocation
-                  ? "CAPITULATION BUY (Z < -1.8 & RSI < 35)"
-                  : contra.fallingKnifeAlert
-                    ? "⚠️ FALLING KNIFE ALERT (Z < -1.8, Support Forming)"
-                    : "Within Statistical Envelope"}
+                {engineOutput.contrarianDivergenceSignal?.signalTier === "FALLING_KNIFE_DO_NOT_CATCH"
+                  ? "🚨 FALLING KNIFE: DO NOT CATCH (Momentum Falling)"
+                  : engineOutput.contrarianDivergenceSignal?.signalTier === "APEX_CAPITULATION_BUY"
+                    ? "💎 APEX CAPITULATION BUY (Z < -1.8 & RSI < 32)"
+                    : contra.isCapitulationDislocation
+                      ? "CAPITULATION BUY (Z < -1.8 & RSI < 35)"
+                      : contra.fallingKnifeAlert
+                        ? "⚠️ FALLING KNIFE ALERT (Z < -1.8, Support Forming)"
+                        : "Within Statistical Envelope"}
               </div>
             </div>
 
-            {/* Metric 2: Census Turnover Ratio */}
+            {/* Metric 2: Census Turnover Ratio & Physical Float */}
             <div className="p-3.5 rounded-lg bg-[#0e1626] border border-slate-800">
               <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
-                Census Turnover Ratio (CTR)
+                Census Turnover (CTR) & Float
               </div>
               <div className="mt-1 text-lg font-bold font-mono text-purple-300">
-                {contra.censusTurnoverRatio != null ? contra.censusTurnoverRatio : contra.turnoverVelocityTier}
+                {engineOutput.physicalFloatProfile?.circulatingFloatCopies != null
+                  ? `${engineOutput.physicalFloatProfile.circulatingFloatCopies} Float Copies`
+                  : contra.censusTurnoverRatio != null
+                    ? contra.censusTurnoverRatio
+                    : contra.turnoverVelocityTier}
               </div>
               <div className="text-[10px] text-slate-500 font-mono mt-0.5">
-                {contra.turnoverVelocityTier} · {contra.circulatingFloatEstimate !== null ? `~${contra.circulatingFloatEstimate} Float` : "Dormant"}
+                {engineOutput.fandomProfile?.fandomCapitalTier || contra.turnoverVelocityTier} · {engineOutput.physicalFloatProfile?.circulatingFloatPct != null ? `${engineOutput.physicalFloatProfile.circulatingFloatPct}% Circulating` : "Vaulted"}
               </div>
             </div>
 
