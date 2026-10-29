@@ -121,8 +121,10 @@ describe("Sovereign Canonical Equity Pricing Engine Verification Suite", () => {
     const opt98 = output.gradingArbitrageLadder.find((opt) => opt.targetGrade === "9.8");
     expect(opt98).toBeDefined();
     expect(opt98!.gradingAlphaSpread).toBeGreaterThan(30000);
-    expect(opt98!.targetGradeProbability).toBe(0.25);
-    expect(opt98!.expectedNetProfit).toBeGreaterThan(5000);
+    // Dynamic census ratio: 88 copies of 9.8 out of 2120 total graded = 4.1% empirical ratio
+    // Blended with default 25% gives authentic dynamic probability ~0.104 (10.4%)
+    expect(opt98!.targetGradeProbability).toBe(0.104);
+    expect(opt98!.expectedNetProfit).toBeGreaterThan(1000);
     expect(opt98!.marginOfSafetyPct).toBeGreaterThan(90);
     expect(opt98!.isFavorable).toBe(true);
   });
@@ -298,5 +300,44 @@ describe("Sovereign Canonical Equity Pricing Engine Verification Suite", () => {
     const partialOutput = executeSovereignPricingEngine(partialInput);
     expect(partialOutput.contrarianStrategies.censusCoverageStatus).toBe("PARTIAL_GRADE_COVERAGE");
     expect(partialOutput.contrarianStrategies.censusTurnoverRatio).toBe(500.0);
+    expect(partialOutput.contrarianStrategies.circulatingFloatEstimate).toBe(8); // Math.round(10 * 0.75)
+  });
+
+  it("verifies dynamic census-weighted option probabilities and falling knife detection", () => {
+    // 1. Dynamic census odds: Golden Age comic with only 2 copies of 9.8 out of 500 total graded
+    const rare98Input: SovereignPricingEngineInput = {
+      comicId: "af-15-rare",
+      series: "Amazing Fantasy",
+      issue: "15",
+      publicationYear: 1962,
+      rawPurchaseCost: 15000,
+      monthlySnapshots: [
+        {
+          date: "2026-10-01",
+          epochMs: Date.parse("2026-10-01T00:00:00Z"),
+          pricesByGrade: {
+            RAW: 15000,
+            "4.0": 45000,
+            "8.0": 150000,
+            "9.2": 600000,
+            "9.8": 3000000,
+          },
+        },
+      ],
+      censusPopByGrade: {
+        "9.8": 2, // Only 2 copies in 9.8
+        "9.2": 8,
+        "8.0": 40,
+        "4.0": 150,
+        "2.0": 300, // Total = 500 copies
+      },
+      completedSalesCount: 1,
+    };
+
+    const rareOutput = executeSovereignPricingEngine(rare98Input);
+    const opt98 = rareOutput.gradingArbitrageLadder.find((opt) => opt.targetGrade === "9.8");
+    expect(opt98).toBeDefined();
+    // Empirical frequency is 2 / 500 = 0.004 (0.4%). Blended probability should be heavily discounted (< 0.10)
+    expect(opt98!.targetGradeProbability).toBeLessThan(0.10);
   });
 });

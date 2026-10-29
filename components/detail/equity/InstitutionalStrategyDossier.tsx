@@ -244,13 +244,21 @@ export default function InstitutionalStrategyDossier({
               </div>
               <div
                 className={`mt-1 text-lg font-bold font-mono ${
-                  contra.isCapitulationDislocation ? "text-emerald-400" : "text-slate-200"
+                  contra.isCapitulationDislocation
+                    ? "text-emerald-400"
+                    : contra.fallingKnifeAlert
+                      ? "text-rose-400 animate-pulse"
+                      : "text-slate-200"
                 }`}
               >
                 {contra.zScore != null ? `${contra.zScore}σ` : "N/A"}
               </div>
               <div className="text-[10px] text-slate-500 font-mono mt-0.5">
-                {contra.isCapitulationDislocation ? "CAPITULATION BUY (Z < -1.8 & RSI < 35)" : "Within Statistical Envelope"}
+                {contra.isCapitulationDislocation
+                  ? "CAPITULATION BUY (Z < -1.8 & RSI < 35)"
+                  : contra.fallingKnifeAlert
+                    ? "⚠️ FALLING KNIFE ALERT (Z < -1.8, Support Forming)"
+                    : "Within Statistical Envelope"}
               </div>
             </div>
 
@@ -263,7 +271,7 @@ export default function InstitutionalStrategyDossier({
                 {contra.censusTurnoverRatio != null ? contra.censusTurnoverRatio : contra.turnoverVelocityTier}
               </div>
               <div className="text-[10px] text-slate-500 font-mono mt-0.5">
-                {contra.turnoverVelocityTier} · {contra.censusCoverageStatus === "COMPLETE_VERIFIED_CENSUS" ? "Complete Census" : contra.censusCoverageStatus === "PARTIAL_GRADE_COVERAGE" ? "Partial Census" : "Unindexed"}
+                {contra.turnoverVelocityTier} · {contra.circulatingFloatEstimate !== null ? `~${contra.circulatingFloatEstimate} Float` : "Dormant"}
               </div>
             </div>
 

@@ -97,6 +97,8 @@ export interface ContrarianStrategyDossier {
   bollingerSigma90d: number | null;
   zScore: number | null;
   isCapitulationDislocation: boolean;
+  fallingKnifeAlert: boolean; // Flagged when rapid price drop has NOT yet found support (Z < -1.8 but RSI still falling >= 35)
+  circulatingFloatEstimate: number | null; // Estimated circulating tradeable float (Trailing 12M Volume / Churn Factor)
   censusTurnoverRatio: number | null; // Census Population to Trailing Completed Sales Volume Turnover
   censusCoverageStatus: "COMPLETE_VERIFIED_CENSUS" | "PARTIAL_GRADE_COVERAGE" | "UNINDEXED";
   turnoverVelocityTier: "HIGH_VELOCITY_FLOAT" | "BALANCED_TURNOVER" | "LOW_TURNOVER_DORMANT" | "NO_OBSERVED_TRADES" | "UNMEASURED" | "UNINDEXED";
@@ -620,16 +622,37 @@ export function executeSovereignPricingEngine(
     };
   }
 
-  // Construct Grading Arbitrage Ladder
+  // Construct Grading Arbitrage Ladder with dynamic Census Empirical Probabilities
   const rawPrice = input.rawPurchaseCost ?? gradeMatrix["RAW"].currentFmv;
   const targetGradesForArbitrage: CanonicalGrade[] = ["8.0", "9.0", "9.2", "9.4", "9.6", "9.8"];
   const gradingArbitrageLadder: GradingArbitrageDiagnostics[] = [];
+
+  // Compute total graded population across all census tiers to calibrate dynamic empirical odds
+  let totalAllCensusGrades = 0;
+  if (input.censusPopByGrade) {
+    for (const count of Object.values(input.censusPopByGrade)) {
+      if (count && count > 0) totalAllCensusGrades += count;
+    }
+  }
 
   for (const tg of targetGradesForArbitrage) {
     const fmv = gradeMatrix[tg].currentFmv;
     if (fmv > 0 && rawPrice > 0) {
       const vol = gradeMatrix[tg].annualizedVolatility ?? 0.25;
-      gradingArbitrageLadder.push(evaluateGradingOption(rawPrice, fmv, tg, vol));
+      
+      // If authentic census population exists for this specific target grade,
+      // calculate empirical base-rate odds: Pop(target) / TotalAllGraded
+      let dynamicProb: number | undefined = undefined;
+      const tgPop = input.censusPopByGrade?.[tg];
+      if (tgPop !== undefined && tgPop !== null && totalAllCensusGrades > 0) {
+        // Base rate empirical frequency from actual historical CGC population
+        const empiricalRatio = tgPop / totalAllCensusGrades;
+        // Blend empirical ratio (70% weight) with default target ceiling (30% weight)
+        const defaultTierProb = tg === "9.8" ? 0.25 : tg === "9.6" ? 0.40 : tg === "9.4" ? 0.55 : tg === "9.2" ? 0.70 : tg === "9.0" ? 0.80 : 0.90;
+        dynamicProb = Number(Math.min(0.95, Math.max(0.01, empiricalRatio * 0.7 + defaultTierProb * 0.3)).toFixed(3));
+      }
+
+      gradingArbitrageLadder.push(evaluateGradingOption(rawPrice, fmv, tg, vol, 13.25, dynamicProb));
     }
   }
 
@@ -725,6 +748,9 @@ export function executeSovereignPricingEngine(
       : null;
 
   const isCapitulation = Boolean(zScore != null && zScore < -1.8 && (gradeMatrix["9.8"].rsi14 ?? 50) < 35);
+  // Falling Knife Alert: Price dislocation (Z < -1.8) where RSI has NOT bottomed out (RSI >= 35)
+  // Caution: Sellers are still dumping and bidding support has not formed!
+  const isFallingKnife = Boolean(zScore != null && zScore < -1.8 && !isCapitulation);
 
   // Census Turnover Ratio (9.0+ population relative to annual trading volume)
   // ZERO FAKE DATA MANDATE:
@@ -763,6 +789,7 @@ export function executeSovereignPricingEngine(
 
   let ctr: number | null = null;
   let turnoverTier: ContrarianStrategyDossier["turnoverVelocityTier"] = "UNINDEXED";
+  let circulatingFloat: number | null = null;
 
   if (recordedGradesCount > 0 && total90PlusPop > 0) {
     if (!hasCompletedSalesMeasure) {
@@ -772,9 +799,14 @@ export function executeSovereignPricingEngine(
     } else if (input.completedSalesCount === 0) {
       ctr = null;
       turnoverTier = "NO_OBSERVED_TRADES";
+      circulatingFloat = 0;
     } else {
       const salesVol = input.completedSalesCount!;
       ctr = Number((total90PlusPop / salesVol).toFixed(2));
+      // Circulating active float estimate: based on repeat churn factor (~1.8x velocity)
+      // Most trading books are the same copies circulating back to market.
+      circulatingFloat = Math.min(total90PlusPop, Math.max(1, Math.round(salesVol * 0.75)));
+
       if (ctr < 2.0) turnoverTier = "HIGH_VELOCITY_FLOAT";
       else if (ctr <= 10.0) turnoverTier = "BALANCED_TURNOVER";
       else turnoverTier = "LOW_TURNOVER_DORMANT";
@@ -801,6 +833,8 @@ export function executeSovereignPricingEngine(
     bollingerSigma90d: bollingerSigma != null ? Number(bollingerSigma.toFixed(2)) : null,
     zScore,
     isCapitulationDislocation: isCapitulation,
+    fallingKnifeAlert: isFallingKnife,
+    circulatingFloatEstimate: circulatingFloat,
     censusTurnoverRatio: ctr,
     censusCoverageStatus,
     turnoverVelocityTier: turnoverTier,
