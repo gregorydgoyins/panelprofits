@@ -1,8 +1,14 @@
 import { createServerClient, createPublicServerClient } from "@/lib/supabase/server";
+import { cookies } from "next/headers";
 import { Profile, Collection, CollectionItem, WatchlistItem } from "./types";
 import { ComicRecord } from "@/lib/comics/types";
 
 export async function getCurrentUser() {
+  const cookieStore = await cookies();
+  const allCookies = cookieStore.getAll();
+  const hasAuthCookie = allCookies.some((c) => c.name.startsWith("sb-") && c.name.endsWith("-auth-token"));
+  if (!hasAuthCookie) return null;
+
   const supabase = await createServerClient();
   const { data: { user }, error } = await supabase.auth.getUser();
   if (error || !user) return null;

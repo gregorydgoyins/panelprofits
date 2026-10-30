@@ -3,8 +3,15 @@ import { refreshSupabaseSession } from "@/lib/supabase/proxy";
 
 export async function proxy(request: NextRequest) {
   request.headers.set("x-panel-profits-path", request.nextUrl.pathname);
-  // Public evidence routes need no account refresh. Game and account routes retain their own checks.
+  // Public routes without an active user auth cookie do not need network auth refresh overhead.
+  const hasAuthCookie = request.cookies.getAll().some((c) => c.name.startsWith("sb-") || c.name.includes("auth-token"));
   if (
+    !hasAuthCookie ||
+    request.nextUrl.pathname === "/" ||
+    request.nextUrl.pathname === "/equities" ||
+    request.nextUrl.pathname === "/assets" ||
+    request.nextUrl.pathname === "/market" ||
+    request.nextUrl.pathname.startsWith("/comics") ||
     request.nextUrl.pathname === "/wiki" ||
     request.nextUrl.pathname.startsWith("/wiki/") ||
     request.nextUrl.pathname === "/api/mcp" ||
