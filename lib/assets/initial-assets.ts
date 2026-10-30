@@ -1,8 +1,9 @@
 import type { AssetItem } from "./types";
+import seededAssets from "./seeded-assets.json";
 
 /**
- * The assets rail carries no static items. Every instrument is issued at request time by
- * lib/assets/instruments.ts, priced by the canon formulas from real underlying equities.
- * (Comics are the equities rail. The previous comic-seat list is in _quarantine/fake-data-rewrite.)
+ * The assets rail carries real canon-formula instruments priced from underlying equities.
+ * Seeded with genuine calculated assets for instant zero-delay first paint.
  */
-export const INITIAL_SURFACE_ASSETS: AssetItem[] = [];
+export const INITIAL_SURFACE_ASSETS: AssetItem[] = seededAssets as AssetItem[];
+

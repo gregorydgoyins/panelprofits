@@ -13,6 +13,9 @@ import {
 } from "@/lib/equity/significance-classifier";
 import { TickerHeader } from "@/components/tickers/ticker-header";
 import { EquityCard } from "@/components/tickers/equity-card";
+import seededEquityCards from "@/lib/equity/seeded-equity-cards.json";
+
+const DEFAULT_SEEDED_EQUITIES = seededEquityCards as EquityItem[];
 
 const CARD_W = 227; // 215px card + 12px gap
 const SCROLL_SPEED = 55; // px/s (steady, readable, easily clickable live trading pace)
@@ -39,92 +42,94 @@ export function EquitiesRail({ items: initialItems = [], seedItems, indices = []
     if (seedItems && seedItems.length > 0) {
       return seedItems.filter((i) => (i?.pricing?.fmv_usd ?? 0) >= 17.00);
     }
-    return initialItems
-      .filter((item) => (item.referenceFmvUsd || 0) >= 17.00)
-      .map((item, idx) => {
-      const eraKey = (item.productionAge || item.originEra || "modern").toLowerCase().replace(/_age$/, "").replace(/\s+age$/, "");
-      const fmv = item.referenceFmvUsd || 0;
-      const itemGrade = item.referenceGrade ? String(item.referenceGrade).trim() : null;
+    if (initialItems && initialItems.length > 0) {
+      return initialItems
+        .filter((item) => (item.referenceFmvUsd || 0) >= 17.00)
+        .map((item, idx) => {
+          const eraKey = (item.productionAge || item.originEra || "modern").toLowerCase().replace(/_age$/, "").replace(/\s+age$/, "");
+          const fmv = item.referenceFmvUsd || 0;
+          const itemGrade = item.referenceGrade ? String(item.referenceGrade).trim() : null;
 
-      const bench = lookupReferenceFmv(item.seatNumber, item.title, item.canonicalIssueId);
-      const isTrulySovereign = !item.variant && isProvenSovereignCopy(itemGrade || "", bench, {
-        isVariant: Boolean(item.variant),
-        variantName: item.variant,
-      });
+          const bench = lookupReferenceFmv(item.seatNumber, item.title, item.canonicalIssueId);
+          const isTrulySovereign = !item.variant && isProvenSovereignCopy(itemGrade || "", bench, {
+            isVariant: Boolean(item.variant),
+            variantName: item.variant,
+          });
 
-      // Enforce Price Firewall: Scarcity Tier & Market Class gated by Historical & Cultural Significance
-      const keyBadge = item.keyBadge || resolveHistoricalKeyBadge(item.series, item.issueNumber);
-      const tier = resolveHistoricalScarcityTier({
-        year: item.year,
-        era: eraKey,
-        keyBadge,
-        isSovereign: isTrulySovereign,
-        variant: item.variant,
-      });
-      const marketClass = resolveHistoricalMarketClass({
-        isSovereign: isTrulySovereign,
-        fmv,
-        keyBadge,
-        year: item.year,
-        era: eraKey,
-        variant: item.variant,
-      });
-      const effectiveAssetClass = isTrulySovereign ? "SOV" : marketClass;
+          const keyBadge = item.keyBadge || resolveHistoricalKeyBadge(item.series, item.issueNumber);
+          const tier = resolveHistoricalScarcityTier({
+            year: item.year,
+            era: eraKey,
+            keyBadge,
+            isSovereign: isTrulySovereign,
+            variant: item.variant,
+          });
+          const marketClass = resolveHistoricalMarketClass({
+            isSovereign: isTrulySovereign,
+            fmv,
+            keyBadge,
+            year: item.year,
+            era: eraKey,
+            variant: item.variant,
+          });
+          const effectiveAssetClass = isTrulySovereign ? "SOV" : marketClass;
 
-      const cleanTicker = (
-        item.ticker &&
-        !item.ticker.startsWith("CE70") &&
-        !/^(RAW|SOV|STD|OTC|PREMIUM)$/i.test(item.ticker) &&
-        !item.ticker.includes("seat")
-      )
-        ? item.ticker.replace(/^\$/, "").replace(/\.(SOV|ANC|STD|OTC|PREMIUM)$/i, "").trim()
-        : formatComicEquityTicker(item.series, item.issueNumber);
+          const cleanTicker = (
+            item.ticker &&
+            !item.ticker.startsWith("CE70") &&
+            !/^(RAW|SOV|STD|OTC|PREMIUM)$/i.test(item.ticker) &&
+            !item.ticker.includes("seat")
+          )
+            ? item.ticker.replace(/^\$/, "").replace(/\.(SOV|ANC|STD|OTC|PREMIUM)$/i, "").trim()
+            : formatComicEquityTicker(item.series, item.issueNumber);
 
-      const vLower = (item.variant || "").toLowerCase();
-      const editionForm = vLower.includes("newsstand")
-        ? "NEWSSTAND"
-        : vLower.includes("print")
-        ? "REPRINT"
-        : item.variant
-        ? "VARIANT"
-        : "DIRECT";
+          const vLower = (item.variant || "").toLowerCase();
+          const editionForm = vLower.includes("newsstand")
+            ? "NEWSSTAND"
+            : vLower.includes("print")
+            ? "REPRINT"
+            : item.variant
+            ? "VARIANT"
+            : "DIRECT";
 
-      return {
-        entryId: `eq-${item.id || idx}`,
-        coverImageUrl: item.coverUrl || null,
-        pricing: {
-          fmv_usd: fmv,
-          grade: itemGrade,
-          delta_24: item.deltaPercent ?? null,
-          delta_30: null,
-          delta_90: null,
-          asset_class: effectiveAssetClass,
-        },
-        identity: {
-          assetId: cleanTicker,
-          productName: item.variant
-            ? `${item.series} #${item.issueNumber} [${item.variant}]`
-            : `${item.series} #${item.issueNumber}`,
-          year: item.year || null,
-          publisher: item.publisher || (item.lineage.includes("DC") ? "DC Comics" : item.lineage.includes("Marvel") ? "Marvel" : "Independent"),
-          variant: item.variant || null,
-          productionAge: eraKey,
-          scarcityTier: tier,
-          detailUrl: `/comics/${encodeURIComponent(cleanTicker || item.canonicalIssueId || item.id)}`,
-          assetClass: effectiveAssetClass,
-          marketPriceClass: marketClass,
-          isSovereign: isTrulySovereign,
-          certificationState: isTrulySovereign ? "SOVEREIGN_BLUE_LABEL" : "OBSERVED",
-          editionForm,
-          coverVerified: Boolean(item.coverUrl),
-          yearDivergence: false,
-          coverSuppressReason: null,
-          identityConfidence: isTrulySovereign ? 100 : (item as any).identityConfidence ?? null,
-          quarantined: false,
-          keyBadge,
-        },
-      };
-    });
+          return {
+            entryId: `eq-${item.id || idx}`,
+            coverImageUrl: item.coverUrl || null,
+            pricing: {
+              fmv_usd: fmv,
+              grade: itemGrade,
+              delta_24: item.deltaPercent ?? null,
+              delta_30: null,
+              delta_90: null,
+              asset_class: effectiveAssetClass,
+            },
+            identity: {
+              assetId: cleanTicker,
+              productName: item.variant
+                ? `${item.series} #${item.issueNumber} [${item.variant}]`
+                : `${item.series} #${item.issueNumber}`,
+              year: item.year || null,
+              publisher: item.publisher || (item.lineage.includes("DC") ? "DC Comics" : item.lineage.includes("Marvel") ? "Marvel" : "Independent"),
+              variant: item.variant || null,
+              productionAge: eraKey,
+              scarcityTier: tier,
+              detailUrl: `/comics/${encodeURIComponent(cleanTicker || item.canonicalIssueId || item.id)}`,
+              assetClass: effectiveAssetClass,
+              marketPriceClass: marketClass,
+              isSovereign: isTrulySovereign,
+              certificationState: isTrulySovereign ? "SOVEREIGN_BLUE_LABEL" : "OBSERVED",
+              editionForm,
+              coverVerified: Boolean(item.coverUrl),
+              yearDivergence: false,
+              coverSuppressReason: null,
+              identityConfidence: isTrulySovereign ? 100 : (item as any).identityConfidence ?? null,
+              quarantined: false,
+              keyBadge,
+            },
+          };
+        });
+    }
+    return DEFAULT_SEEDED_EQUITIES;
   }, [initialItems, seedItems]);
 
   const [items, setItems] = React.useState<EquityItem[]>(initialEquityItems);

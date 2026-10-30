@@ -43,13 +43,13 @@ export async function MarketShell({ children }: MarketShellProps) {
   // Random start across the covered-books rail (seq is a stable shuffle, so any window is a mix of publishers/eras)
   const randomInitialOffset = Math.floor(Math.random() * COVERED_BOOKS_TOTAL);
 
-  // Fetch bounded rails concurrently
+  // Fetch fast bounded rails concurrently.
+  // Note: EquitiesRail and AssetsRail now contain pre-calculated seed bundles
+  // for instantaneous zero-latency first-paint and smooth GPU hydration.
   const user = await getCurrentUser();
-  const [telemetry, newsStories, assetSurfaces, coveredSlice, marketIndices, diaryEntries] = await Promise.all([
+  const [telemetry, newsStories, marketIndices, diaryEntries] = await Promise.all([
     getMarketTelemetry(),
     getNewsStories(32),
-    getCanonicalAssetSurfaces(70),
-    getCoveredBooksSlice(randomInitialOffset, 80).catch(() => ({ items: [], nextOffset: 0, total: COVERED_BOOKS_TOTAL })),
     calculateMarketIndices(),
     user ? getDiaryEntries(user.id) : Promise.resolve([]),
   ]);
@@ -59,8 +59,8 @@ export async function MarketShell({ children }: MarketShellProps) {
       <Header />
       <RailVisibility setting="newsTicker"><NewsRail initialStories={newsStories} /></RailVisibility>
       <RailVisibility setting="marketTelemetry"><MarketTelemetryRail telemetry={telemetry} /></RailVisibility>
-      <RailVisibility setting="equities"><EquitiesRail items={[]} seedItems={coveredSlice.items} indices={marketIndices} initialOffset={randomInitialOffset} /></RailVisibility>
-      <RailVisibility setting="assets"><AssetsRail items={assetSurfaces} /></RailVisibility>
+      <RailVisibility setting="equities"><EquitiesRail items={[]} indices={marketIndices} initialOffset={randomInitialOffset} /></RailVisibility>
+      <RailVisibility setting="assets"><AssetsRail /></RailVisibility>
       <RailVisibility setting="diary"><DiaryRail entries={diaryEntries} /></RailVisibility>
       <main className="flex-1">{children}</main>
       <Footer />
