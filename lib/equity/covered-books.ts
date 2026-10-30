@@ -171,7 +171,9 @@ export function mapCoveredBook(row: RailBookRow): EquityItem | null {
   };
 }
 
-export async function getCoveredBooksSlice(offset: number, limit: number): Promise<{ items: EquityItem[]; nextOffset: number; total: number }> {
+import { createCachedQuery } from "@/lib/cache/wrapper";
+
+async function fetchCoveredBooksSliceRaw(offset: number, limit: number): Promise<{ items: EquityItem[]; nextOffset: number; total: number }> {
   const total = COVERED_BOOKS_TOTAL;
   const start = ((Math.max(0, offset) % total) + total) % total;
   const supabase = createAdminServerClient();
@@ -199,3 +201,9 @@ export async function getCoveredBooksSlice(offset: number, limit: number): Promi
     .filter((i): i is EquityItem => i !== null && (i.pricing?.fmv_usd ?? 0) >= 17.00);
   return { items, nextOffset: (start + limit) % total, total };
 }
+
+export const getCoveredBooksSlice = createCachedQuery(
+  fetchCoveredBooksSliceRaw,
+  "covered-books-slice",
+  { ttlSeconds: 300, staleWhileRevalidateSeconds: 3600, tags: ["covered-books", "rail"] }
+);

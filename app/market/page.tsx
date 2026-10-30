@@ -7,7 +7,7 @@ import { getFeaturedComics, getComicsPricingCoverage } from "@/lib/comics/querie
 import { resolveBaselinePrice } from "@/lib/pricing/baseline";
 import { formatComicEquityTicker } from "@/lib/equity/ticker-formatting";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function MarketPage() {
   const [{ state, recoveredIndices }, coverage, marketIndices, featuredComics, comicsPricingCoverage] = await Promise.all([

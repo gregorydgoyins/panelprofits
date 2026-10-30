@@ -11,7 +11,7 @@ import { AuthenticatedSnapshot } from "@/components/dashboard/authenticated-snap
 import { getPpcfCoverage } from "@/lib/ppcf/queries";
 import { calculateMarketIndices } from "@/lib/market/indices";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function DashboardPage() {
   const [user, featuredComics, ppcfCoverage, marketIndices] = await Promise.all([
