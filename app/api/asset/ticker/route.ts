@@ -44,6 +44,6 @@ export async function GET(request: Request) {
     surfaces,
   };
   return NextResponse.json(response, {
-    headers: { "Cache-Control": "public, max-age=15, stale-while-revalidate=60" },
+    headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" },
   });
 }

@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import dynamicImport from "next/dynamic";
 import { getComicById } from "@/lib/comics/queries";
 import { getCurrentUser, getComicUserStatus } from "@/lib/account/queries";
 import { PricingDossier } from "@/components/comics/pricing-dossier";
@@ -14,13 +15,10 @@ import { GcdBibliographicDossier } from "@/components/comics/gcd-bibliographic-d
 import { AtomicVariantsAndInternationalMatrix } from "@/components/comics/atomic-variants-and-international-matrix";
 import { BlendedHoldingDossier } from "@/components/comics/blended-holding-dossier";
 import { findComicBaseVideoForComic } from "@/lib/video/comicbase-archive";
-import { ComicBaseVideoPlayer } from "@/components/comics/comicbase-video-player";
 import { ComparativePriceMatrix } from "@/components/comics/comparative-price-matrix";
-import { VideoIntelligenceCard } from "@/components/comics/video-intelligence-card";
 import { getGcdRelationalData } from "@/lib/comics/gcd-relational-service";
 import AuctionHistoryCard from "@/components/detail/equity/AuctionHistoryCard";
 import HeroSection from "@/components/detail/equity/HeroSection";
-import TopChartSection from "@/components/detail/equity/TopChartSection";
 import PriceStatsPanel from "@/components/detail/equity/PriceStatsPanel";
 import NewsPanel from "@/components/detail/equity/NewsPanel";
 import type { DetailResponse, MarketMathData, TemporalMemory } from "@/components/detail/equity/types";
@@ -30,15 +28,31 @@ import { buildComicPriceHistory, normalizeGradeLabel } from "@/lib/pricing/histo
 import { resolvePriceTier, isDirectEdition, PREMIUM_MIN_PRICE } from "@/lib/pricing/market-tiers";
 import { resolveProductionAge } from "@/lib/equity/ticker-utils";
 import StorySummaryCard from "@/components/detail/equity/StorySummaryCard";
-import GradingArbitrageTerminal from "@/components/detail/equity/GradingArbitrageTerminal";
-import PortfolioAssetReplicationDesk from "@/components/detail/equity/PortfolioAssetReplicationDesk";
-import InstitutionalStrategyDossier from "@/components/detail/equity/InstitutionalStrategyDossier";
-import FinancialConstellationTerminal from "@/components/detail/equity/FinancialConstellationTerminal";
 import { resolveConstellationNode, calculateConstellationEquilibrium } from "@/lib/pricing/financial-constellation-engine";
 import { executeSovereignPricingEngine, type SovereignMonthlySnapshot, type CanonicalGrade } from "@/lib/pricing/sovereign-equity-pricing-engine";
 import { Suspense } from "react";
 import { resolveGcdStoryDossier } from "@/lib/comics/gcd-story-service";
 import { createAdminServerClient } from "@/lib/supabase/admin";
+
+// Lazy-load heavy analytical terminals and chart sections
+const TopChartSection = dynamicImport(() => import("@/components/detail/equity/TopChartSection"), {
+  loading: () => <div className="h-96 w-full animate-pulse rounded-lg bg-white/5 border border-white/10" />,
+});
+const VideoIntelligenceCard = dynamicImport(() => import("@/components/comics/video-intelligence-card").then(mod => mod.VideoIntelligenceCard), {
+  loading: () => <div className="h-48 w-full animate-pulse rounded-lg bg-white/5 border border-white/10" />,
+});
+const InstitutionalStrategyDossier = dynamicImport(() => import("@/components/detail/equity/InstitutionalStrategyDossier"), {
+  loading: () => <div className="h-64 w-full animate-pulse rounded-lg bg-white/5 border border-white/10" />,
+});
+const FinancialConstellationTerminal = dynamicImport(() => import("@/components/detail/equity/FinancialConstellationTerminal"), {
+  loading: () => <div className="h-64 w-full animate-pulse rounded-lg bg-white/5 border border-white/10" />,
+});
+const GradingArbitrageTerminal = dynamicImport(() => import("@/components/detail/equity/GradingArbitrageTerminal"), {
+  loading: () => <div className="h-64 w-full animate-pulse rounded-lg bg-white/5 border border-white/10" />,
+});
+const PortfolioAssetReplicationDesk = dynamicImport(() => import("@/components/detail/equity/PortfolioAssetReplicationDesk"), {
+  loading: () => <div className="h-64 w-full animate-pulse rounded-lg bg-white/5 border border-white/10" />,
+});
 
 import CensusBanner from "@/components/detail/equity/CensusBanner";
 import { MultiPerspectivePanel, type PerspectiveData } from "@/components/detail/shared/MultiPerspectivePanel";

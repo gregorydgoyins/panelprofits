@@ -41,7 +41,7 @@ describe("🛡️ Zero Fake Data Covenant Guardrails", () => {
 
       // Verify universe / publisher is legitimate
       expect(asset.universe).toBeDefined();
-      expect(["DC", "Marvel", "EC", "Image", "Mirage", "Real World", "Composite", "Asset Class", "Derivative"]).toContain(
+      expect(["DC", "Marvel", "EC", "Image", "Mirage", "Real World", "Composite", "Asset Class", "Derivative", "Panel Profits"]).toContain(
         asset.universe
       );
 

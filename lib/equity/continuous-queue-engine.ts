@@ -114,9 +114,25 @@ function upgradeCoverUrl(url: string | null | undefined): string | null {
   return trimmed;
 }
 
+function getEstimatedYearForEra(era: string): number {
+  switch (era.toLowerCase()) {
+    case "platinum": return 1935;
+    case "golden": return 1942;
+    case "atomic": return 1950;
+    case "silver": return 1963;
+    case "bronze": return 1977;
+    case "copper": return 1988;
+    case "modern": return 1995;
+    case "independent": return 1998;
+    case "postmodern": return 2008;
+    default: return 1990;
+  }
+}
+
 function mapDbRow(r: any, idx: number, offset: number, blockIndex: number): SovereignEquityItem {
-  const rawYear = r.publication_year ? Number(r.publication_year) : null;
-  const eraKey = resolveEra(rawYear, r.origin_era || r.production_age);
+  const parsedYear = r.publication_year ? Number(r.publication_year) : null;
+  const eraKey = resolveEra(parsedYear, r.origin_era || r.production_age);
+  const rawYear = parsedYear && parsedYear > 1930 ? parsedYear : getEstimatedYearForEra(eraKey);
   const rawFmv = r.fmv_usd != null && !isNaN(Number(r.fmv_usd)) ? Number(r.fmv_usd) : null;
   const cover = upgradeCoverUrl(r.cover_url);
   const ticker = formatComicEquityTicker(r.series, r.issue_number);
@@ -142,12 +158,13 @@ function mapDbRow(r: any, idx: number, offset: number, blockIndex: number): Sove
     status: r.status || "ACTIVE",
     coverUrl: cover,
     canonicalIssueId: r.id,
-    year: rawYear || undefined,
+    year: rawYear,
     publisher: resolveAuthoritativePublisher(r.series, r.publisher, rawYear),
     variant: r.variant || null,
     keyBadge,
   };
 }
+
 
 function interleaveItems(
   baseItems: SovereignEquityItem[],
