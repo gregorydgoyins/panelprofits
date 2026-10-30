@@ -317,6 +317,8 @@ describe("Sniper Radar Engine & Anti-Bullshit Filter", () => {
       imageUrl: "https://example.com/batman423.jpg",
       certNumber: "4019283001",
       anchorFmv: 275.00,
+      censusTotal: 1842,
+      censusCount98: 312,
     };
 
     const evalResult = evaluateAuctionListing(listing, profile);
