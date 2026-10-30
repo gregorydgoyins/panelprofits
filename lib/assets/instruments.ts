@@ -567,13 +567,15 @@ export function issueInstruments(unders: Underlying[], shocks: ShockMap = new Ma
   // ── INSTITUTIONAL COMIC LORE COMMODITIES ──
   try {
     const cmdData = JSON.parse(readFileSync(join(process.cwd(), "data/universe/curated-commodities.json"), "utf8"));
-    let cmi = 0;
+    let cmi = i;
     for (const cm of cmdData) {
+      const sym = `$${cm.symbol}`;
+      if (out.some((o) => o.symbol === sym)) continue;
       out.push(
         item(
           "COMMODITY",
           cmi++,
-          `$${cm.symbol}`,
+          sym,
           cm.name,
           `${cm.universe} Sovereign Reserve Commodity · Custodian: ${cm.sovereignCustodian}`,
           cm.priceUsd,
