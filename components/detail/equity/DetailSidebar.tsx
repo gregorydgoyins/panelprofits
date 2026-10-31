@@ -48,6 +48,7 @@ export default function DetailSidebar({
   onOpenExecModal,
   hasQuote = false,
   tradeConfirmation = null,
+  showNewsFeed = false,
 }: {
   variantId?: string;
   workName: string;
@@ -63,6 +64,7 @@ export default function DetailSidebar({
   onOpenExecModal?: (action: 'buy' | 'sell') => void;
   hasQuote?: boolean;
   tradeConfirmation?: { action: 'buy' | 'sell'; id: number } | null;
+  showNewsFeed?: boolean;
 }) {
   const accent = eraColors.border;
   const { entries: watchlist, isWatching, toggleWatchlist } = useWatchlist();
@@ -435,8 +437,8 @@ export default function DetailSidebar({
         </>
       )}
 
-      {/* ── NEWS HEADLINES ── */}
-      {card(
+      {/* ── NEWS HEADLINES (Opt-in to avoid duplicate feeds) ── */}
+      {showNewsFeed && card(
         <>
           {sectionHead('Intelligence Feed', <Newspaper className="w-3 h-3" />)}
           {topNews.length === 0 ? (

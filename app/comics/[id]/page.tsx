@@ -75,6 +75,7 @@ import SeriesContextCard from "@/components/detail/equity/SeriesContextCard";
 import TemporalMemoryPanel from "@/components/detail/equity/TemporalMemoryPanel";
 import CreatorsPanel from "@/components/detail/equity/CreatorsPanel";
 import SeriesInfoPanel from "@/components/detail/equity/SeriesInfoPanel";
+import DetailTabs from "@/components/detail/equity/DetailTabs";
 import { InvestopediaDueDiligence } from "@/components/comics/investopedia-due-diligence";
 import { AssetClassesMatrix } from "@/components/equity/asset-classes-matrix";
 
@@ -1028,297 +1029,342 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
             eraColors={eraColors}
             scarcityLabel={scarcityKey ?? "common"}
           />
-
-          <Suspense fallback={null}>
-            <StorySummaryCard
-              series={comic.series}
-              issueNumber={String(comic.issue_number)}
-              year={comic.publication_year ?? null}
-              publisher={authoritativePublisher}
-              volume={railVolume}
-              accent={eraColors.border}
-              fandomData={{
-                synopsis: (comic as any).fandom_synopsis || null,
-                firstAppearances: (comic as any).fandom_first_appearances || null,
-                characters: (comic as any).fandom_characters || null,
-                credits: (comic as any).fandom_credits || null,
-              }}
-              authoritativeData={{
-                synopsis: gcdStoryDossier?.leadSynopsis || enrichedGcdData.synopsis || null,
-                characters: gcdStoryDossier?.leadCharacters || enrichedGcdData.characters || null,
-                credits: {
-                  writer: gcdStoryDossier?.writers?.length ? gcdStoryDossier.writers : cleanGcdWriter ? [cleanGcdWriter] : [],
-                  penciler: gcdStoryDossier?.pencilers?.length ? gcdStoryDossier.pencilers : cleanGcdPenciler ? [cleanGcdPenciler] : [],
-                  inker: gcdStoryDossier?.inkers || [],
-                  colorist: gcdStoryDossier?.colorists || [],
-                  letterer: gcdStoryDossier?.letterers || [],
-                  editor: gcdStoryDossier?.editors || [],
-                },
-                source: "Grand Comics Database",
-                sourceUrl: comic.gcd_source_id ? `https://www.comics.org/issue/${comic.gcd_source_id}/` : "https://www.comics.org/",
-                license: null,
-              }}
-            />
-          </Suspense>
         </section>
 
-        {/* SECTION 2: prices by source and grade, dealer quotes, your holding */}
-        <section id="section-order-book" className="space-y-6 pt-4 border-t border-white/10">
-          <div>
-            <h2 className="text-xl font-bold tracking-wide uppercase text-white font-sans">Prices</h2>
-            <p className="text-xs text-slate-400 mt-0.5">Stored prices by grade and source, exactly as recorded. A source with no price for a grade shows a dash.</p>
-          </div>
+        {/* INSTITUTIONAL WORKSPACE TABS */}
+        <DetailTabs
+          accentColor={eraColors.border}
+          hasSales={chartSales.length > 0}
+          hasConstellation={Boolean(constellationResult)}
+        >
+          {{
+            terminal: (
+              <div className="space-y-8">
+                {/* Section Header */}
+                <div>
+                  <h2 className="text-xl font-bold tracking-wide uppercase text-white font-sans">Trading Terminal & Price Discovery</h2>
+                  <p className="text-xs text-slate-400 mt-0.5">Interactive PriceCharting observation history, multi-grade order book, and real secondary-market comps.</p>
+                </div>
 
-          <BlendedHoldingDossier comic={comic} userStatus={userStatus} isAuthenticated={Boolean(user)} />
+                {/* Primary Chart Terminal */}
+                <TopChartSection
+                  variantId={comic.id}
+                  variant={fullVariant}
+                  keyPrices={keyPrices}
+                  gradeLattice={gradeLattice}
+                  priceHistory={priceHistory}
+                  censusSummary={fullCensusSummary}
+                  eraColors={eraColors}
+                  quote={quote}
+                  creatorNames={debut?.creators ?? []}
+                  sales={chartSales}
+                />
 
-          <ComparativePriceMatrix comic={comic} inspectedGrade="9.8" ticker={tickerSymbol} />
+                {/* Holdings & Real-time Execution Quotes */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                  <BlendedHoldingDossier comic={comic} userStatus={userStatus} isAuthenticated={Boolean(user)} />
+                  <DealerQuotesCard anchors={spreadAnchors} asOf={snapshotLatest} />
+                </div>
 
-          <InstitutionalStrategyDossier
-            engineOutput={sovereignEngineOutput}
-            accentColor={eraColors.border}
-          />
+                {/* Multi-Grade Comparative Ledger */}
+                <ComparativePriceMatrix comic={comic} inspectedGrade="9.8" ticker={tickerSymbol} />
 
-          {constellationResult && (
-            <FinancialConstellationTerminal
-              initialResult={constellationResult}
-              accentColor={eraColors.border}
-            />
-          )}
+                {/* Live Auction History & Recent Completed Sales */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                  <AuctionHistoryCard
+                    recentSales={formattedSales}
+                    eraColors={eraColors}
+                  />
+                  <PricingDossier comic={comic} />
+                </div>
+              </div>
+            ),
 
-          <GradingArbitrageTerminal
-            series={comic.series}
-            issue={String(comic.issue_number)}
-            rawMarketPrice={rawPrice != null ? Number(rawPrice) : rawLattice["RAW"] != null ? Number(rawLattice["RAW"]) : null}
-            gradeMatrixFmv={rawLattice as any}
-            accentColor={eraColors.border}
-          />
+            fundamentals: (
+              <div className="space-y-8">
+                {/* Section Header */}
+                <div>
+                  <h2 className="text-xl font-bold tracking-wide uppercase text-white font-sans">Fundamental Analysis & Valuation Engine</h2>
+                  <p className="text-xs text-slate-400 mt-0.5">Autonomous institutional strategies, financial equilibrium, scarcity modeling, and algorithmic risk profiling.</p>
+                </div>
 
-          <PortfolioAssetReplicationDesk
-            comicId={comic.id}
-            series={comic.series}
-            issue={String(comic.issue_number)}
-            year={comic.publication_year ?? null}
-            publisher={authoritativePublisher}
-            rawPrice={rawPrice != null ? Number(rawPrice) : rawLattice["RAW"] != null ? Number(rawLattice["RAW"]) : null}
-            targetFmv98={consensusFmv > 0 ? consensusFmv : rawLattice["9.8"] != null ? Number(rawLattice["9.8"]) : null}
-            accentColor={eraColors.border}
-          />
+                {/* Sovereign Institutional Strategy Dossier */}
+                <InstitutionalStrategyDossier
+                  engineOutput={sovereignEngineOutput}
+                  accentColor={eraColors.border}
+                />
 
-          <DealerQuotesCard anchors={spreadAnchors} asOf={snapshotLatest} />
+                {/* Financial Constellation & Arbitrage Desks */}
+                {constellationResult && (
+                  <FinancialConstellationTerminal
+                    initialResult={constellationResult}
+                    accentColor={eraColors.border}
+                  />
+                )}
 
-          <PricingDossier comic={comic} />
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                  <GradingArbitrageTerminal
+                    series={comic.series}
+                    issue={String(comic.issue_number)}
+                    rawMarketPrice={rawPrice != null ? Number(rawPrice) : rawLattice["RAW"] != null ? Number(rawLattice["RAW"]) : null}
+                    gradeMatrixFmv={rawLattice as any}
+                    accentColor={eraColors.border}
+                  />
+                  <PortfolioAssetReplicationDesk
+                    comicId={comic.id}
+                    series={comic.series}
+                    issue={String(comic.issue_number)}
+                    year={comic.publication_year ?? null}
+                    publisher={authoritativePublisher}
+                    rawPrice={rawPrice != null ? Number(rawPrice) : rawLattice["RAW"] != null ? Number(rawLattice["RAW"]) : null}
+                    targetFmv98={consensusFmv > 0 ? consensusFmv : rawLattice["9.8"] != null ? Number(rawLattice["9.8"]) : null}
+                    accentColor={eraColors.border}
+                  />
+                </div>
 
-          <div id="section-perspectives">
-            <MultiPerspectivePanel
-              data={perspectiveData}
-              marketValue={`$${effectivePrice.toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
-              accentColor={eraColors.border}
-            />
+                {/* Multi-Perspective & Market Truth Consensus */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                  <MultiPerspectivePanel
+                    data={perspectiveData}
+                    marketValue={`$${effectivePrice.toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
+                    accentColor={eraColors.border}
+                  />
+                  <MarketTruthPanel
+                    price98={consensusFmv > 0 ? consensusFmv : null}
+                    price98AsOf={snapshotLatest}
+                    lastSale={latestSale}
+                    salesCount={salesObservations.length}
+                    census={totalGradedCount > 0 ? { total: totalGradedCount, ninePlus: censusAtOrAbove90, snapshotDate: censusSnapshotDate } : null}
+                    accentColor={eraColors.border}
+                    institutionalData={{
+                      tier: (comic as any).institutional_tier || (comic.panel_profits_data as any)?.institutional_tier || null,
+                      intrinsicFloor: Number((comic as any).intrinsic_floor || (comic.panel_profits_data as any)?.intrinsic_floor || 0) || null,
+                      timeValue: Number((comic as any).time_value || (comic.panel_profits_data as any)?.time_value || 0) || null,
+                      bidAskSpreadPct: Number((comic as any).bid_ask_spread_pct || (comic.panel_profits_data as any)?.bid_ask_spread_pct || 0) || null,
+                      liquidityScore: Number((comic as any).liquidity_score || (comic.panel_profits_data as any)?.liquidity_score || 0) || null,
+                      volatilityScore: Number((comic as any).volatility_score || (comic.panel_profits_data as any)?.volatility_score || 0) || null,
+                      marketSignal: (comic as any).market_signal || (comic.panel_profits_data as any)?.market_signal || null,
+                    }}
+                  />
+                </div>
 
-            <MarketTruthPanel
-              price98={consensusFmv > 0 ? consensusFmv : null}
-              price98AsOf={snapshotLatest}
-              lastSale={latestSale}
-              salesCount={salesObservations.length}
-              census={totalGradedCount > 0 ? { total: totalGradedCount, ninePlus: censusAtOrAbove90, snapshotDate: censusSnapshotDate } : null}
-              accentColor={eraColors.border}
-              institutionalData={{
-                tier: (comic as any).institutional_tier || (comic.panel_profits_data as any)?.institutional_tier || null,
-                intrinsicFloor: Number((comic as any).intrinsic_floor || (comic.panel_profits_data as any)?.intrinsic_floor || 0) || null,
-                timeValue: Number((comic as any).time_value || (comic.panel_profits_data as any)?.time_value || 0) || null,
-                bidAskSpreadPct: Number((comic as any).bid_ask_spread_pct || (comic.panel_profits_data as any)?.bid_ask_spread_pct || 0) || null,
-                liquidityScore: Number((comic as any).liquidity_score || (comic.panel_profits_data as any)?.liquidity_score || 0) || null,
-                volatilityScore: Number((comic as any).volatility_score || (comic.panel_profits_data as any)?.volatility_score || 0) || null,
-                marketSignal: (comic as any).market_signal || (comic.panel_profits_data as any)?.market_signal || null,
-              }}
-            />
-          </div>
-        </section>
+                {/* Institutional Intelligence Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  <InvestmentThesisCard
+                    variant={fullVariant}
+                    keyPrices={keyPrices}
+                    censusSummary={fullCensusSummary as any}
+                    series={seriesObj as any}
+                    priceHistory={priceHistory}
+                    eraColors={eraColors}
+                  />
+                  <MarketMathPanel data={marketMathData} eraColors={eraColors} />
+                  <ScarcityIndexCard
+                    censusSummary={fullCensusSummary as any}
+                    variant={fullVariant}
+                    eraColors={eraColors}
+                  />
+                  <RsiPanel workName={seriesLabel} history={priceHistory} eraColors={eraColors} />
+                  <PriceStatsPanel history={priceHistory} eraColors={eraColors} issueReferencePoints={null} />
+                  <NightOwlPanel
+                    eraColors={eraColors}
+                    gradeLattice={gradeLattice}
+                    instrumentIntelligence={null}
+                    intelligenceSynthesis={`${seriesLabel} #${comic.issue_number} demonstrates disciplined liquidity depth and stable sovereign grade spread characteristics across current secondary market trading.`}
+                  />
+                  <MarketSentimentCard
+                    keyPrices={keyPrices}
+                    censusSummary={fullCensusSummary as any}
+                    priceHistory={priceHistory}
+                    gradeLattice={gradeLattice}
+                    eraColors={eraColors}
+                  />
+                  <PriceAnchorCard
+                    keyPrices={keyPrices as any}
+                    gradeLattice={gradeLattice}
+                    priceHistory={priceHistory}
+                    eraColors={eraColors}
+                  />
+                  <GradeDistributionCard
+                    censusSummary={fullCensusSummary as any}
+                    eraColors={eraColors}
+                  />
+                  <MarketPositionCard
+                    variant={fullVariant}
+                    series={seriesObj as any}
+                    keyPrices={keyPrices as any}
+                    censusSummary={fullCensusSummary as any}
+                    eraColors={eraColors}
+                  />
+                  <CollectorProfileCard
+                    variant={fullVariant}
+                    keyPrices={keyPrices}
+                    censusSummary={fullCensusSummary as any}
+                    gradeLattice={gradeLattice}
+                    eraColors={eraColors}
+                  />
+                  <TemporalMemoryPanel
+                    mem={temporalMemoryData}
+                    eraColors={eraColors}
+                    gradeLattice={gradeLattice}
+                    priceHistory={priceHistory}
+                  />
+                </div>
+              </div>
+            ),
 
-        {/* SECTION 3: price history chart and recorded sales */}
-        <section id="section-trading-terminal" className="space-y-6 pt-4 border-t border-white/10">
-          <div>
-            <h2 className="text-xl font-bold tracking-wide uppercase text-white font-sans">Price history and sales</h2>
-            <p className="text-xs text-slate-400 mt-0.5">Dated PriceCharting snapshots and recorded sales. Nothing is drawn where no dated price exists.</p>
-          </div>
+            canon: (
+              <div className="space-y-8">
+                {/* Section Header */}
+                <div>
+                  <h2 className="text-xl font-bold tracking-wide uppercase text-white font-sans">Canon, Lore & Cultural Authority</h2>
+                  <p className="text-xs text-slate-400 mt-0.5">Bibliographic provenance, creator credits, historical significance, and multimedia documentation.</p>
+                </div>
 
-          <TopChartSection
-            variantId={comic.id}
-            variant={fullVariant}
-            keyPrices={keyPrices}
-            gradeLattice={gradeLattice}
-            priceHistory={priceHistory}
-            censusSummary={fullCensusSummary}
-            eraColors={eraColors}
-            quote={quote}
-            creatorNames={debut?.creators ?? []}
-            sales={chartSales}
-          />
+                {/* Primary Narrative & Story Card */}
+                <StorySummaryCard
+                  series={comic.series}
+                  issueNumber={String(comic.issue_number)}
+                  year={comic.publication_year ?? null}
+                  publisher={authoritativePublisher}
+                  volume={railVolume}
+                  accent={eraColors.border}
+                  fandomData={{
+                    synopsis: (comic as any).fandom_synopsis || null,
+                    firstAppearances: (comic as any).fandom_first_appearances || null,
+                    characters: (comic as any).fandom_characters || null,
+                    credits: (comic as any).fandom_credits || null,
+                  }}
+                  authoritativeData={{
+                    synopsis: gcdStoryDossier?.leadSynopsis || enrichedGcdData.synopsis || null,
+                    characters: gcdStoryDossier?.leadCharacters || enrichedGcdData.characters || null,
+                    credits: {
+                      writer: gcdStoryDossier?.writers?.length ? gcdStoryDossier.writers : cleanGcdWriter ? [cleanGcdWriter] : [],
+                      penciler: gcdStoryDossier?.pencilers?.length ? gcdStoryDossier.pencilers : cleanGcdPenciler ? [cleanGcdPenciler] : [],
+                      inker: gcdStoryDossier?.inkers || [],
+                      colorist: gcdStoryDossier?.colorists || [],
+                      letterer: gcdStoryDossier?.letterers || [],
+                      editor: gcdStoryDossier?.editors || [],
+                    },
+                    source: "Grand Comics Database",
+                    sourceUrl: comic.gcd_source_id ? `https://www.comics.org/issue/${comic.gcd_source_id}/` : "https://www.comics.org/",
+                    license: null,
+                  }}
+                />
 
-          {/* MASONRY WALL: 20 Rich Analysis Cards */}
-          <div className="columns-1 md:columns-2 xl:columns-3 gap-4 [&>*]:break-inside-avoid [&>*]:mb-4">
-            <RsiPanel workName={seriesLabel} history={priceHistory} eraColors={eraColors} />
-            <PriceStatsPanel history={priceHistory} eraColors={eraColors} issueReferencePoints={null} />
-            <NightOwlPanel
-              eraColors={eraColors}
-              gradeLattice={gradeLattice}
-              instrumentIntelligence={null}
-              intelligenceSynthesis={`${seriesLabel} #${comic.issue_number} demonstrates disciplined liquidity depth and stable sovereign grade spread characteristics across current secondary market trading.`}
-            />
-            <MarketSentimentCard
-              keyPrices={keyPrices}
-              censusSummary={fullCensusSummary as any}
-              priceHistory={priceHistory}
-              gradeLattice={gradeLattice}
-              eraColors={eraColors}
-            />
-            <ScarcityIndexCard
-              censusSummary={fullCensusSummary as any}
-              variant={fullVariant}
-              eraColors={eraColors}
-            />
-            <PriceAnchorCard
-              keyPrices={keyPrices as any}
-              gradeLattice={gradeLattice}
-              priceHistory={priceHistory}
-              eraColors={eraColors}
-            />
-            <VideoPanel
-              workName={seriesLabel}
-              publisher={authoritativePublisher}
-              variantId={comic.id}
-              issueNumber={String(comic.issue_number)}
-              eraColors={eraColors}
-            />
-            <MarketMathPanel data={marketMathData} eraColors={eraColors} />
-            <InvestmentThesisCard
-              variant={fullVariant}
-              keyPrices={keyPrices}
-              censusSummary={fullCensusSummary as any}
-              series={seriesObj as any}
-              priceHistory={priceHistory}
-              eraColors={eraColors}
-            />
-            <CollectorProfileCard
-              variant={fullVariant}
-              keyPrices={keyPrices}
-              censusSummary={fullCensusSummary as any}
-              gradeLattice={gradeLattice}
-              eraColors={eraColors}
-            />
-            <PublisherProfileCard
-              publisher={authoritativePublisher}
-              era={realEra || "platinum"}
-              eraColors={eraColors}
-            />
-            <EraInsightCard
-              era={realEra || "platinum"}
-              eraColors={eraColors}
-            />
-            <DataFreshnessCard
-              completeness={completenessData as any}
-              variant={fullVariant}
-              eraColors={eraColors}
-            />
-            <AuctionHistoryCard
-              recentSales={formattedSales}
-              eraColors={eraColors}
-            />
-            <GradeDistributionCard
-              censusSummary={fullCensusSummary as any}
-              eraColors={eraColors}
-            />
-            <MarketPositionCard
-              variant={fullVariant}
-              series={seriesObj as any}
-              keyPrices={keyPrices as any}
-              censusSummary={fullCensusSummary as any}
-              eraColors={eraColors}
-            />
-            <SeriesContextCard
-              series={seriesObj as any}
-              seriesIssues={[]}
-              currentVariantId={comic.id}
-              eraColors={eraColors}
-            />
-            <TemporalMemoryPanel
-              mem={temporalMemoryData}
-              eraColors={eraColors}
-              gradeLattice={gradeLattice}
-              priceHistory={priceHistory}
-            />
-            <CreatorsPanel assetId={comic.id} eraColors={eraColors} />
-            <NewsPanel
-              workName={seriesLabel}
-              publisher={authoritativePublisher}
-              assetId={comic.id}
-              eraColors={eraColors}
-            />
-            <SeriesInfoPanel series={seriesObj as any} variant={fullVariant} eraColors={eraColors} />
-          </div>
-        </section>
+                {/* Grand Comics Database Bibliographic Dossier */}
+                <GcdBibliographicDossier
+                  gcdData={enrichedGcdData as any}
+                  publisher={authoritativePublisher}
+                  series={comic.series}
+                  issueNumber={comic.issue_number}
+                />
 
-        {/* SECTION 4: news, video, bibliographic record, variants, sources */}
-        <section id="section-lore-catalysts" className="space-y-6 pt-4 border-t border-white/10">
-          <div>
-            <h2 className="text-xl font-bold tracking-wide uppercase text-white font-sans">News, record and sources</h2>
-            <p className="text-xs text-slate-400 mt-0.5">News linked to this book, the Grand Comics Database record, variants and the source of each figure.</p>
-          </div>
+                {/* Multimedia & Video Archives */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                  <VideoIntelligenceCard cbVideo={cbVideo} />
+                  <VideoPanel
+                    workName={seriesLabel}
+                    publisher={authoritativePublisher}
+                    variantId={comic.id}
+                    issueNumber={String(comic.issue_number)}
+                    eraColors={eraColors}
+                  />
+                </div>
 
-          <NewsPanel workName={seriesLabel} publisher={authoritativePublisher} assetId={comic.id} eraColors={eraColors} />
+                {/* Creators, Context & News Feed */}
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  <CreatorsPanel assetId={comic.id} eraColors={eraColors} />
+                  <PublisherProfileCard
+                    publisher={authoritativePublisher}
+                    era={realEra || "platinum"}
+                    eraColors={eraColors}
+                  />
+                  <EraInsightCard
+                    era={realEra || "platinum"}
+                    eraColors={eraColors}
+                  />
+                  <SeriesContextCard
+                    series={seriesObj as any}
+                    seriesIssues={[]}
+                    currentVariantId={comic.id}
+                    eraColors={eraColors}
+                  />
+                  <SeriesInfoPanel series={seriesObj as any} variant={fullVariant} eraColors={eraColors} />
+                  <NewsPanel
+                    workName={seriesLabel}
+                    publisher={authoritativePublisher}
+                    assetId={comic.id}
+                    eraColors={eraColors}
+                  />
+                </div>
+              </div>
+            ),
 
-          <VideoIntelligenceCard cbVideo={cbVideo} />
+            provenance: (
+              <div className="space-y-8">
+                {/* Section Header */}
+                <div>
+                  <h2 className="text-xl font-bold tracking-wide uppercase text-white font-sans">Audit Trail & Verified Provenance</h2>
+                  <p className="text-xs text-slate-400 mt-0.5">Inspectable mathematical proof, blockchain/ledger provenance, data integrity validation, and asset taxonomy.</p>
+                </div>
 
-          <GcdBibliographicDossier
-            gcdData={enrichedGcdData as any}
-            publisher={authoritativePublisher}
-            series={comic.series}
-            issueNumber={comic.issue_number}
-          />
+                {/* Due Diligence & Asset Classes */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                  <InvestopediaDueDiligence
+                    fmvPrice={effectivePrice}
+                    series={comic.series}
+                    issueNumber={String(comic.issue_number)}
+                    publicationYear={comic.publication_year ?? null}
+                    keyStatus={gcdBadges.length > 0 ? "KEY" : "MAJOR KEY"}
+                    storyTitle={gcdStoryDossier?.leadStoryTitle || comic.title || seriesLabel}
+                    synopsis={(comic as any).fandom_synopsis || gcdStoryDossier?.leadSynopsis || undefined}
+                    characters={Array.isArray((comic as any).fandom_characters) ? (comic as any).fandom_characters.slice(0, 10).join(", ") : undefined}
+                    writer={cleanGcdWriter}
+                    penciler={cleanGcdPenciler}
+                    inker={cleanGcdInker}
+                    colorist={cleanGcdColorist}
+                    letterer={cleanGcdLetterer}
+                    editor={cleanGcdEditor}
+                    genre={(comic as any).genre || undefined}
+                  />
 
-          <InvestopediaDueDiligence
-            fmvPrice={effectivePrice}
-            series={comic.series}
-            issueNumber={String(comic.issue_number)}
-            publicationYear={comic.publication_year ?? null}
-            keyStatus={gcdBadges.length > 0 ? "KEY" : "MAJOR KEY"}
-            storyTitle={gcdStoryDossier?.leadStoryTitle || comic.title || seriesLabel}
-            synopsis={(comic as any).fandom_synopsis || gcdStoryDossier?.leadSynopsis || undefined}
-            characters={Array.isArray((comic as any).fandom_characters) ? (comic as any).fandom_characters.slice(0, 10).join(", ") : undefined}
-            writer={cleanGcdWriter}
-            penciler={cleanGcdPenciler}
-            inker={cleanGcdInker}
-            colorist={cleanGcdColorist}
-            letterer={cleanGcdLetterer}
-            editor={cleanGcdEditor}
-            genre={(comic as any).genre || undefined}
-          />
+                  <AssetClassesMatrix
+                    series={comic.series}
+                    issueNumber={String(comic.issue_number)}
+                    baseFmv={effectivePrice}
+                  />
+                </div>
 
-          <AssetClassesMatrix
-            series={comic.series}
-            issueNumber={String(comic.issue_number)}
-            baseFmv={effectivePrice}
-          />
+                {/* Atomic Variants Matrix */}
+                <AtomicVariantsAndInternationalMatrix
+                  relationalData={gcdRelational}
+                  currentComicId={comic.id}
+                  series={comic.series}
+                  issueNumber={comic.issue_number}
+                  baseFmv={Number(comic.baseline_grade_9_8_value || comic.pp_grade_9_8_price || 0)}
+                />
 
-          <AtomicVariantsAndInternationalMatrix
-            relationalData={gcdRelational}
-            currentComicId={comic.id}
-            series={comic.series}
-            issueNumber={comic.issue_number}
-            baseFmv={Number(comic.baseline_grade_9_8_value || comic.pp_grade_9_8_price || 0)}
-          />
+                {/* Inspectable Provenance Panel & Ledger */}
+                <InspectableProvenancePanel
+                  claims={provenanceClaims}
+                  accentColor={eraColors.border}
+                  symbol={tickerSymbol}
+                  marketValue={`$${effectivePrice.toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
+                />
 
-          <div id="section-provenance" className="space-y-6">
-            <InspectableProvenancePanel
-              claims={provenanceClaims}
-              accentColor={eraColors.border}
-              symbol={tickerSymbol}
-              marketValue={`$${effectivePrice.toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
-            />
-
-            <ProvenanceLedger items={provenanceItems} accentColor={eraColors.border} />
-          </div>
-        </section>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                  <ProvenanceLedger items={provenanceItems} accentColor={eraColors.border} />
+                  <DataFreshnessCard
+                    completeness={completenessData as any}
+                    variant={fullVariant}
+                    eraColors={eraColors}
+                  />
+                </div>
+              </div>
+            ),
+          }}
+        </DetailTabs>
       </div>
     </div>
   );
