@@ -1,3 +1,6 @@
+"use client";
+
+import * as React from "react";
 import Link from "next/link";
 import { BookOpenText, Clock3 } from "lucide-react";
 
@@ -8,7 +11,23 @@ interface DiaryRailEntry {
   occurred_at: string;
 }
 
-export function DiaryRail({ entries }: { entries: DiaryRailEntry[] }) {
+export function DiaryRail({ initialEntries = [] }: { initialEntries?: DiaryRailEntry[] }) {
+  const [entries, setEntries] = React.useState<DiaryRailEntry[]>(initialEntries);
+
+  React.useEffect(() => {
+    const hasAuth = document.cookie.split("; ").some((c) => c.startsWith("sb-") || c.includes("auth-token"));
+    if (!hasAuth) return;
+
+    fetch("/api/account/state", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.authenticated && Array.isArray(data.diaryEntries)) {
+          setEntries(data.diaryEntries);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   if (!entries.length) return null;
   return (
     <aside aria-label="Broker diary rail" className="border-b border-slate-800/80 bg-[#080b10] py-1.5 text-xs text-slate-300">
