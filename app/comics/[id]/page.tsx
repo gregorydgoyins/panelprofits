@@ -631,11 +631,10 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
 
   // Canonical Asset Class & Market Price Tiers:
   // - OTC: 17.00 to 24.99 · STD: 25.00 to 44.99 · PREMIUM: 45.00 and up
-  // - SOV: reserved for direct universal 9.8 apex benchmark equities (verified CE70 seats)
-  const isDirect = isDirectEdition(comic.direct_or_variant) && isDirectEdition(comic.cover_variant);
+  // - Note: CE70 is a separate 70-book non-dollar macro composite index and has NO influence on individual comic pricing.
   const priceTier = resolvePriceTier(effectivePrice);
-  const isTrulySovereign = Boolean(isCe70Seat && isDirect && consensusFmv >= PREMIUM_MIN_PRICE);
-  const effectiveAssetClass = isTrulySovereign ? "SOV" : priceTier;
+  const isTrulySovereign = priceTier === "PREMIUM";
+  const effectiveAssetClass = priceTier;
 
   const completenessData = buildCompleteness({
     cover: Boolean(authoritativeCoverImage),
@@ -698,11 +697,11 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
 
   const atomicPrice = rawPrice != null && Number(rawPrice) > 0 ? Number(rawPrice) : null;
   const instrumentStates = {
-    sovereign: isTrulySovereign ? { grade: "9.8", priceUsd: consensusFmv } : null,
-    anchor: consensusFmv > 0 ? { grade: "9.8", priceUsd: consensusFmv, salesVolume: salesByGrade.get("9.8") ?? 0 } : null,
+    sovereign: null,
+    anchor: effectiveConsensusFmv > 0 ? { grade: "9.8", priceUsd: effectiveConsensusFmv, salesVolume: salesByGrade.get("9.8") ?? 0 } : null,
     atomic: atomicPrice != null ? { grade: "RAW", priceUsd: atomicPrice } : null,
-    anchorToAtomicMultiple: atomicPrice != null && consensusFmv > 0 ? Number((consensusFmv / atomicPrice).toFixed(1)) : null,
-    sovereignToAtomicMultiple: isTrulySovereign && atomicPrice != null ? Number((consensusFmv / atomicPrice).toFixed(1)) : null,
+    anchorToAtomicMultiple: atomicPrice != null && effectiveConsensusFmv > 0 ? Number((effectiveConsensusFmv / atomicPrice).toFixed(1)) : null,
+    sovereignToAtomicMultiple: null,
   };
 
   // PriceCharting dealer buy / retail sell pairs (live JSON API merged with stored spreads)
