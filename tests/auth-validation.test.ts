@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { resolveSupabaseConfig } from "@/lib/supabase/config";
+import { resolveSupabaseConfig, CANONICAL_SUPABASE_ANON_KEY } from "@/lib/supabase/config";
 
 export function normalizeAuthProviderError(message?: string | null): string {
   const raw = (message || "").trim();
@@ -76,13 +76,13 @@ describe("Auth & Safe Destination Validation", () => {
   it("prefers the canonical Clean project over legacy Final auth values", () => {
     const config = resolveSupabaseConfig({
       publicUrl: "https://vbcmjmakluyjnsmisoth.supabase.co",
-      publicAnonKey: "sb_publishable_xrJFtqLWJZlN_V76l7Csug_uBAPfgjc",
+      publicAnonKey: "sb_publishable_clean_test_key",
       serverUrl: "https://ghjlzrmuugquumqwlqgl.supabase.co",
       serverAnonKey: "legacy-final-auth-key",
     });
 
     expect(config.url).toBe("https://vbcmjmakluyjnsmisoth.supabase.co");
-    expect(config.anonKey).toBe("sb_publishable_xrJFtqLWJZlN_V76l7Csug_uBAPfgjc");
+    expect(config.anonKey).toBe(CANONICAL_SUPABASE_ANON_KEY);
   });
 
   it("turns provider configuration errors into actionable user guidance", () => {

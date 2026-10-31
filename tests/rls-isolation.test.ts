@@ -84,19 +84,19 @@ describe("Anonymous Row-Level Security Boundary", () => {
     }
   });
 
-  it.skipIf(process.env.SKIP_LIVE_TESTS === "true")("allows anonymous read-only access to public.comics catalog", async () => {
+  it.skipIf(process.env.SKIP_LIVE_TESTS === "true")("allows anonymous read-only access to public catalog", async () => {
     const anonClient = createClient(supabaseUrl, supabaseAnonKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
     try {
-      const { data, error } = await anonClient.from("comics").select("id, series").limit(1);
+      const { data, error } = await anonClient.from("pp_series_rows_full").select("row_id, pp_series").limit(1);
       if (error && (error.message?.includes("fetch failed") || error.details?.includes("ENOTFOUND"))) {
         console.warn("Skipping RLS network test due to unreachable Supabase host");
         return;
       }
       expect(error).toBeNull();
       expect(data).toHaveLength(1);
-      expect(data![0].id).toBeDefined();
+      expect(data![0].row_id).toBeDefined();
     } catch (e: any) {
       if (e.message?.includes("fetch failed") || e.code === "ENOTFOUND") {
         console.warn("Skipping RLS network test due to unreachable Supabase host");
