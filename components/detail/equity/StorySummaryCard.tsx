@@ -247,10 +247,7 @@ export default async function StorySummaryCard({
     };
   } else {
     try {
-      summary = await Promise.race([
-        getStorySummary({ series, issueNumber, year, publisher, volume }),
-        new Promise<null>((resolve) => setTimeout(() => resolve(null), 1500)),
-      ]);
+      summary = await getStorySummary({ series, issueNumber, year, publisher, volume });
     } catch {
       summary = null;
     }

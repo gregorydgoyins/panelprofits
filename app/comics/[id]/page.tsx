@@ -1053,6 +1053,37 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
             eraColors={eraColors}
             scarcityLabel={scarcityKey ?? "common"}
           />
+
+          {/* Direct Story Synopsis & Creator Credits Dossier */}
+          <StorySummaryCard
+            series={comic.series}
+            issueNumber={String(comic.issue_number)}
+            year={comic.publication_year ?? null}
+            publisher={authoritativePublisher}
+            volume={railVolume}
+            accent={eraColors.border}
+            fandomData={{
+              synopsis: (comic as any).fandom_synopsis || null,
+              firstAppearances: (comic as any).fandom_first_appearances || null,
+              characters: (comic as any).fandom_characters || null,
+              credits: (comic as any).fandom_credits || null,
+            }}
+            authoritativeData={{
+              synopsis: gcdStoryDossier?.leadSynopsis || enrichedGcdData.synopsis || null,
+              characters: gcdStoryDossier?.leadCharacters || enrichedGcdData.characters || null,
+              credits: {
+                writer: gcdStoryDossier?.writers?.length ? gcdStoryDossier.writers : cleanGcdWriter ? [cleanGcdWriter] : [],
+                penciler: gcdStoryDossier?.pencilers?.length ? gcdStoryDossier.pencilers : cleanGcdPenciler ? [cleanGcdPenciler] : [],
+                inker: gcdStoryDossier?.inkers || [],
+                colorist: gcdStoryDossier?.colorists || [],
+                letterer: gcdStoryDossier?.letterers || [],
+                editor: gcdStoryDossier?.editors || [],
+              },
+              source: "Grand Comics Database",
+              sourceUrl: comic.gcd_source_id ? `https://www.comics.org/issue/${comic.gcd_source_id}/` : "https://www.comics.org/",
+              license: null,
+            }}
+          />
         </section>
 
         {/* INSTITUTIONAL WORKSPACE TABS */}
