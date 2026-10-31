@@ -14,8 +14,6 @@ import { calculateMarketIndices } from "@/lib/market/indices";
 import { getNewsStories } from "@/lib/news/feed";
 import { getCurrentUser } from "@/lib/account/queries";
 import { getDiaryEntries } from "@/lib/panel-profits/queries";
-import { headers } from "next/headers";
-import { AuthFrontDoor } from "@/components/auth/front-door";
 import { RailVisibility } from "./rail-visibility";
 
 interface MarketShellProps {
@@ -23,23 +21,6 @@ interface MarketShellProps {
 }
 
 export async function MarketShell({ children }: MarketShellProps) {
-  const requestHeaders = await headers();
-  const pathname = requestHeaders.get("x-panel-profits-path") || "";
-  const isFrontDoor = pathname === "/sign-in" || pathname === "/sign-up";
-  if (isFrontDoor) return <AuthFrontDoor>{children}</AuthFrontDoor>;
-
-  if (pathname === "/wiki" || pathname.startsWith("/wiki/")) return <>{children}</>;
-
-  if (pathname.startsWith("/sniper")) {
-    return (
-      <div className="flex min-h-screen flex-col bg-[#07080B] text-slate-100 antialiased">
-        <React.Suspense fallback={null}><Header /></React.Suspense>
-        <main className="flex-1">{children}</main>
-        <Footer />
-      </div>
-    );
-  }
-
   // Random start across the covered-books rail (seq is a stable shuffle, so any window is a mix of publishers/eras)
   const randomInitialOffset = Math.floor(Math.random() * COVERED_BOOKS_TOTAL);
 

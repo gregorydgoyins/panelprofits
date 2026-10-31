@@ -6,7 +6,7 @@ import { getCleanEquityDetail } from "@/lib/panel-profits/assets";
 import { AssetClassesMatrix } from "@/components/equity/asset-classes-matrix";
 import { formatComicEquityTicker } from "@/lib/equity/canonical-equities";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 interface AssetSurfacePageProps {
   params: Promise<{ surfaceKey: string }>;

@@ -3,6 +3,10 @@ import { refreshSupabaseSession } from "@/lib/supabase/proxy";
 
 export async function proxy(request: NextRequest) {
   request.headers.set("x-panel-profits-path", request.nextUrl.pathname);
+  if (request.nextUrl.pathname.startsWith("/api/sniper/game")) {
+    return refreshSupabaseSession(request);
+  }
+
   // Public routes without an active user auth cookie do not need network auth refresh overhead.
   const hasAuthCookie = request.cookies.getAll().some((c) => c.name.startsWith("sb-") || c.name.includes("auth-token"));
   if (
