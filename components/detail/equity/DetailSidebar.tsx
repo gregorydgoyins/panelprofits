@@ -392,19 +392,19 @@ export default function DetailSidebar({
       )}
 
       {/* ── CENSUS SNAPSHOT ── */}
-      {censusSummary && card(
+      {censusSummary && censusSummary.totalGraded > 0 && card(
         <>
           {sectionHead('Census Snapshot', <Activity className="w-3 h-3" />)}
           <div className="flex items-baseline justify-between mb-2">
             <div>
               <div style={{ fontSize: '20px', color: '#fff', fontFamily: 'monospace', lineHeight: 1 }}>
-                {censusSummary.totalGraded.toLocaleString()}
+                {(censusSummary.totalGraded || 0).toLocaleString()}
               </div>
               <div style={{ fontSize: '7px', color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>total graded</div>
             </div>
             <div className="text-right">
-              <div style={{ fontSize: '16px', color: censusSummary.highGradeCount > 0 ? '#f87171' : 'rgba(255,255,255,0.3)', fontFamily: 'monospace', lineHeight: 1 }}>
-                {censusSummary.highGradeCount.toLocaleString()}
+              <div style={{ fontSize: '16px', color: (censusSummary.highGradeCount || 0) > 0 ? '#f87171' : 'rgba(255,255,255,0.3)', fontFamily: 'monospace', lineHeight: 1 }}>
+                {(censusSummary.highGradeCount || 0).toLocaleString()}
               </div>
               <div style={{ fontSize: '7px', color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>9.8+</div>
             </div>
@@ -427,9 +427,11 @@ export default function DetailSidebar({
               })}
             </div>
           )}
-          <div style={{ fontSize: '7px', color: 'rgba(255,255,255,0.18)', marginTop: 6 }}>
-            CGC Universal + SS · {new Date(censusSummary.snapshotDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
-          </div>
+          {censusSummary.snapshotDate && (
+            <div style={{ fontSize: '7px', color: 'rgba(255,255,255,0.18)', marginTop: 6 }}>
+              CGC Universal + SS · {new Date(censusSummary.snapshotDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+            </div>
+          )}
         </>
       )}
 
