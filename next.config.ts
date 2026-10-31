@@ -73,6 +73,42 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        source: "/",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, s-maxage=120, stale-while-revalidate=600",
+          },
+        ],
+      },
+      {
+        source: "/comics/:id",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, s-maxage=300, stale-while-revalidate=900",
+          },
+        ],
+      },
+      {
+        source: "/equities",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, s-maxage=120, stale-while-revalidate=600",
+          },
+        ],
+      },
+      {
+        source: "/market",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, s-maxage=120, stale-while-revalidate=600",
+          },
+        ],
+      },
+      {
         source: "/covers/:path*",
         headers: [
           {

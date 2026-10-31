@@ -3,7 +3,7 @@ import { getEquityDetail } from "@/lib/equity/queries";
 import { getComicById } from "@/lib/comics/queries";
 import { IndexDossierView } from "@/components/equity/index-dossier-view";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 interface EquityDetailPageProps {
   params: Promise<{ id: string }>;

@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description: "The celestial gravitational map of sequential art equities. Cross-asset relative pricing, anchor elasticity, and network transmission anchored by Action Comics #1.",
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export default async function ConstellationPage() {
   const network = getLiveConstellationNetwork();

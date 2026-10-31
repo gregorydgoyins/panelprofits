@@ -6,7 +6,7 @@ import { searchPpcfComics } from "@/lib/ppcf/queries";
 import { PpcfCard } from "@/components/ppcf/ppcf-card";
 import { Badge } from "@/components/ui/badge";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 120;
 
 interface ComicsPageProps {
   searchParams: Promise<{

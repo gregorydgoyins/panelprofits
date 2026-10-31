@@ -5,7 +5,7 @@ import { EquitiesTradingFloor } from "@/components/equity/equities-trading-floor
 import { CandlestickChart } from "lucide-react";
 import ConstellationExchangeBanner from "@/components/constellation/ConstellationExchangeBanner";
 
-export const revalidate = 60;
+export const revalidate = 120;
 
 export default async function EquitiesPage() {
   const [contracts, equities, indices] = await Promise.all([

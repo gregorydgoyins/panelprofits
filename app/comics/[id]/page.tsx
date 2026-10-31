@@ -89,7 +89,7 @@ import {
   type SaleRow, type SnapshotObservation, type ExecutionQuote,
 } from "@/lib/comics/detail-model";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 interface ComicDetailPageProps {
   params: Promise<{

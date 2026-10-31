@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowUpRight, BarChart3, GitCompareArrows } from "lucide-react";
 import { getPanelTelemetry } from "@/lib/panel-profits/queries";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 const recovered = [
   ["CE70", "70 constitutional seats · origin-era allocation · ACTIVE & POPULATED IN CLEAN SUPABASE"],
