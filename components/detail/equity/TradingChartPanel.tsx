@@ -44,7 +44,31 @@ export default function TradingChartPanel({
     });
   }, [history]);
 
-  const [grade, setGrade] = useState<string>(() => (availableGrades.includes('9.8') ? '9.8' : availableGrades[0] ?? '9.8'));
+  // Pick the grade with the richest history for default display.
+  // If 9.8 has multiple points, prefer 9.8; otherwise pick the grade with the most points,
+  // falling back to 9.8 if available.
+  const bestDefaultGrade = useMemo(() => {
+    if (availableGrades.length === 0) return '9.8';
+    const counts = new Map<string, number>();
+    for (const h of history) {
+      counts.set(h.grade, (counts.get(h.grade) || 0) + 1);
+    }
+    const count98 = counts.get('9.8') || 0;
+    if (count98 > 1) return '9.8';
+    
+    let maxGrade = availableGrades[0];
+    let maxCount = 0;
+    for (const g of availableGrades) {
+      const c = counts.get(g) || 0;
+      if (c > maxCount) {
+        maxCount = c;
+        maxGrade = g;
+      }
+    }
+    return maxCount > 1 ? maxGrade : (availableGrades.includes('9.8') ? '9.8' : availableGrades[0]);
+  }, [availableGrades, history]);
+
+  const [grade, setGrade] = useState<string>(() => bestDefaultGrade);
   const [chartType, setChartType] = useState<ChartType>('area');
   const [subIndicator, setSub] = useState<SubIndicator>('rsi');
   const [showVolume, setShowVol] = useState(false);
@@ -52,9 +76,9 @@ export default function TradingChartPanel({
 
   useEffect(() => {
     if (availableGrades.length > 0 && !availableGrades.includes(grade)) {
-      setGrade(availableGrades.includes('9.8') ? '9.8' : availableGrades[0]);
+      setGrade(bestDefaultGrade);
     }
-  }, [availableGrades, grade]);
+  }, [availableGrades, grade, bestDefaultGrade]);
 
   const pricePoints = useMemo(
     () => dailyLastPoints(history.filter((h) => h.grade === grade).map((h) => [+new Date(h.observedAt), h.priceUsd] as [number, number])),
