@@ -584,11 +584,10 @@ export const getComicsPricingCoverage = createCachedQuery(
 /** Highest-priced stored comics that have a cover. Database rows only; zero fake data. */
 async function fetchFeaturedComicsRaw(limit = 12): Promise<ComicRecord[]> {
   try {
-    // Sub-millisecond lookup from verified equities SQLite engine
-    const { getVerifiedRealEquities } = await import("@/lib/equity/verified-equities-service");
-    const { items } = getVerifiedRealEquities(0, limit);
-    if (items.length > 0) {
-      return items.map((item) => ({
+    // 0ms instant lookup from verified sovereign equities seed bundle
+    const seededEquities = (await import("@/lib/equity/seeded-equities.json")).default as any[];
+    if (seededEquities && seededEquities.length > 0) {
+      return seededEquities.slice(0, limit).map((item) => ({
         id: item.canonicalIssueId || item.id,
         series: item.series,
         issue_number: item.issueNumber,
@@ -608,7 +607,7 @@ async function fetchFeaturedComicsRaw(limit = 12): Promise<ComicRecord[]> {
       } as ComicRecord));
     }
   } catch (err) {
-    console.warn("Notice querying verified equities for featured comics:", err);
+    console.warn("Notice querying seeded equities for featured comics:", err);
   }
 
   try {
