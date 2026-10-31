@@ -629,11 +629,13 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     authoritativeCoverImage && (authoritativeCoverImage === railOwnCover || (!dbCoverContradicts && comic.cover_verified_at))
   );
 
-  // Canonical Asset Class & Market Price Tiers:
-  // - OTC: 17.00 to 24.99 · STD: 25.00 to 44.99 · PREMIUM: 45.00 and up
-  // - Note: CE70 is a separate 70-book non-dollar macro composite index and has NO influence on individual comic pricing.
+  // Pure Physical & Price Separation:
+  // 1. Physical / Certification Form: Blue Label Direct (the core universal, unmodified baseline)
+  // 2. Price Classification Tiers: OTC ($17–$24.99) · STD ($25–$44.99) · PREMIUM ($45+)
+  //    (Any Blue Label Direct can be OTC, Standard, or Premium depending strictly on its price)
+  const isDirect = isDirectEdition(comic.direct_or_variant) && isDirectEdition(comic.cover_variant);
+  const isBlueLabelDirect = isDirect;
   const priceTier = resolvePriceTier(effectivePrice);
-  const isTrulySovereign = priceTier === "PREMIUM";
   const effectiveAssetClass = priceTier;
 
   const completenessData = buildCompleteness({
@@ -655,10 +657,10 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     artifactType: "comic_issue",
     assetClass: effectiveAssetClass,
     marketLane: effectivePrice >= 45 ? "investment_grade" : effectivePrice >= 25 ? "standard_exchange" : "over_the_counter",
-    isSovereign: isTrulySovereign,
+    isSovereign: isBlueLabelDirect,
     marketPriceClass: priceTier,
-    certificationState: null,
-    editionForm: comic.direct_or_variant || null,
+    certificationState: isBlueLabelDirect ? "UNIVERSAL_BLUE_LABEL" : "VARIANT_OR_QUALIFIED",
+    editionForm: comic.direct_or_variant || (isBlueLabelDirect ? "Direct Edition" : "Variant / Other"),
     productId: comic.id,
     sourceSlug: comic.series.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
     issueNumber: String(comic.issue_number),
@@ -789,12 +791,12 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
       firmName: "ARNVELD CAPITAL / PANEL EXCHANGE",
       firmAumAllocation: "STRATEGIC OVERWEIGHT",
       targetPrice: Math.round(effectivePrice * 1.15),
-      convictionRating: isTrulySovereign ? "TIER 1 SOVEREIGN" : "TIER 2 PRIME",
+      convictionRating: isBlueLabelDirect ? "TIER 1 BLUE LABEL DIRECT" : "TIER 2 VARIANT",
       firmExposures: [comic.series, "Vintage Sovereign Keys"],
     },
     deskView: {
       operationalStatus: "ACTIVE CONTINUOUS ROUTING",
-      priorityLevel: isTrulySovereign ? "SOVEREIGN PRIORITY" : "STANDARD ROUTING",
+      priorityLevel: isBlueLabelDirect ? "DIRECT BLUE LABEL PRIORITY" : "VARIANT ROUTING",
       callbackUrgency: "IMMEDIATE",
       executionLiquidity: Object.keys(spreadAnchors).length > 0 ? "ORDER BOOK DEPTH ACTIVE" : "AUCTION BENCHMARK ROUTING",
     },
@@ -808,9 +810,9 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
 
   const marketMathData: MarketMathData = {
     variantId: comic.id,
-    sovereignGrade: isTrulySovereign ? "9.8" : "RAW",
-    marketPriceClass: isTrulySovereign ? "A_PRIME" : "PREMIUM",
-    isSovereign: isTrulySovereign,
+    sovereignGrade: isBlueLabelDirect ? "9.8" : "RAW",
+    marketPriceClass: priceTier === "PREMIUM" ? "A_PRIME" : "PREMIUM",
+    isSovereign: isBlueLabelDirect,
     partial: !technicalGrade || technicalPoints.length < 2,
     momentum: {
       roc30d: priceChangeByDays(technicalPoints, 30),
