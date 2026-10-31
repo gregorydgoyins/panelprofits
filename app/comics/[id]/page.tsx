@@ -80,6 +80,7 @@ import { InvestopediaDueDiligence } from "@/components/comics/investopedia-due-d
 import { AssetClassesMatrix } from "@/components/equity/asset-classes-matrix";
 
 import { DealerQuotesCard } from "@/components/comics/dealer-quotes-card";
+import { fetchLivePriceChartingProduct } from "@/lib/pricing/pricecharting-adapter";
 import { MarketTruthPanel } from "@/components/detail/shared/MarketTruthPanel";
 import { ProvenanceLedger } from "@/components/detail/shared/ProvenanceLedger";
 import { classifyScarcityTier } from "@/lib/equity/scarcity-float";
@@ -175,6 +176,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
   }
 
   const cbVideo = findComicBaseVideoForComic(comic.series, comic.issue_number);
+  const cleanSourceId = String((comic as any).pp_source_id || (comic.panel_profits_data as any)?.["pricecharting-id"] || comic.id || "").replace(/^pp-/i, "").trim() || null;
 
   let railRows: Array<{ comics_id: string; cover_url: string | null; cover_source: string | null; cover_suspect: boolean | null; cgc_total: number | null; printing: string | null; variant_label: string | null; volume: string | null }> = [];
   const snapshotObservations: SnapshotObservation[] = [];
@@ -184,9 +186,6 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
   const marketDataPromise = (async () => {
   try {
     const supabase = createAdminServerClient();
-    // Current pp_comics rows use their catalog id as the pp_price_history key.
-    // pp_source_id is a legacy field and is not present in the live schema.
-    const cleanSourceId = String((comic as any).pp_source_id || comic.id || "").replace(/^pp-/i, "").trim() || null;
 
     // Dated sales for this title and issue from sniper_sales (36,313 authentic completed auction sales) and graded_sales_observations
     const salesPromise =
@@ -267,7 +266,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
   } catch (_) {}
   })();
 
-  const [coverEvidence, censusDossier, userStatus, gcdRelational, gcdStoryDossier] = await Promise.all([
+  const [coverEvidence, censusDossier, userStatus, gcdRelational, gcdStoryDossier, livePriceCharting] = await Promise.all([
     getComicCoverEvidence(comic.id).catch((err) => {
       console.warn("Cover evidence read unavailable:", err);
       return null;
@@ -311,6 +310,12 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
       console.warn("GCD story dossier read unavailable:", err);
       return null;
     }),
+    cleanSourceId
+      ? fetchLivePriceChartingProduct(cleanSourceId).catch((err) => {
+          console.warn("PriceCharting live API unavailable:", err);
+          return null;
+        })
+      : Promise.resolve(null),
   ]);
   const seriesLabel = displaySeries(comic.series, comic.issue_number);
   const issueLabel = displayIssue(comic.issue_number);
@@ -389,7 +394,6 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     comic.comicbase_price ||
     0
   );
-  const effectivePrice = consensusFmv > 0 ? consensusFmv : candidateRawPrice;
 
   // Sales, price history and rail rows were fetched in parallel with the lookups above.
   await marketDataPromise;
@@ -406,12 +410,18 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
   const snapshotLatest = latestSnapshotDate(snapshotObservations);
   const snapshotCount = new Set(snapshotObservations.map((o) => o.observed_at)).size;
 
-  const rawLattice = panelProfitsGrades(comic) as Record<string, number | undefined>;
+  const rawLattice = {
+    ...(panelProfitsGrades(comic) as Record<string, number | undefined>),
+    ...(livePriceCharting ? Object.fromEntries(
+      Object.entries(livePriceCharting.grades)
+        .filter(([, v]) => v != null && v > 0)
+    ) : {}),
+  };
   const gradeLattice = Object.entries(rawLattice).map(([grade, priceUsd]) => ({
     grade,
     priceUsd: Number(priceUsd),
-    salesVolume: salesByGrade.get(grade) ?? null,
-    observedAt: null,
+    salesVolume: salesByGrade.get(grade) ?? (grade === "9.8" && livePriceCharting?.salesVolume ? livePriceCharting.salesVolume : null),
+    observedAt: livePriceCharting ? "Live PriceCharting API" : null,
   }));
 
   const railVolumeRaw = Number(railRows.find((r) => r.volume != null)?.volume);
@@ -453,14 +463,18 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
   const rawPrice = rawLattice["RAW"] ?? ppData.pricecharting?.raw ?? null;
   const grade10Price = rawLattice["10.0"] ?? ppData.pricecharting?.grade_10_0 ?? null;
 
+  const liveFmv98 = livePriceCharting?.grades["9.8"] ?? null;
+  const effectiveConsensusFmv = liveFmv98 != null && liveFmv98 > 0 ? liveFmv98 : consensusFmv;
+  const effectivePrice = effectiveConsensusFmv > 0 ? effectiveConsensusFmv : candidateRawPrice;
+
   const keyPrices = {
-    fmv98Usd: consensusFmv,
+    fmv98Usd: effectiveConsensusFmv,
     fmv10Usd: grade10Price != null ? Number(grade10Price) : null,
     fmvRawUsd: rawPrice != null ? Number(rawPrice) : null,
-    sovPriceUsd: consensusFmv,
+    sovPriceUsd: effectiveConsensusFmv,
     sovGrade: "9.8",
-    anchor9_8: consensusFmv,
-    display_fmv_usd: consensusFmv,
+    anchor9_8: effectiveConsensusFmv,
+    display_fmv_usd: effectiveConsensusFmv,
     display_grade: "9.8",
     premiumPct: null,
     gradeCount: Object.keys(rawLattice).length,
@@ -691,13 +705,23 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
     sovereignToAtomicMultiple: isTrulySovereign && atomicPrice != null ? Number((consensusFmv / atomicPrice).toFixed(1)) : null,
   };
 
-  // Stored PriceCharting dealer buy / retail sell pairs. Drives the spread strip, the quote card and the quote modal.
-  const spreadAnchors = ppSpreadAnchors(ppData.spreads);
+  // PriceCharting dealer buy / retail sell pairs (live JSON API merged with stored spreads)
+  const liveDealerSpreads: Record<string, { buy: number; sell: number }> = {};
+  if (livePriceCharting?.dealerQuotes) {
+    const { raw, grade4_0, grade6_0 } = livePriceCharting.dealerQuotes;
+    if (raw.bid && raw.ask) liveDealerSpreads["RAW"] = { buy: raw.bid, sell: raw.ask };
+    if (grade4_0.bid && grade4_0.ask) liveDealerSpreads["4.0"] = { buy: grade4_0.bid, sell: grade4_0.ask };
+    if (grade6_0.bid && grade6_0.ask) liveDealerSpreads["6.0"] = { buy: grade6_0.bid, sell: grade6_0.ask };
+  }
+  const spreadAnchors = {
+    ...ppSpreadAnchors(ppData.spreads),
+    ...ppSpreadAnchors(liveDealerSpreads),
+  };
   const quoteGrade = pickQuoteGrade(spreadAnchors);
   const quote: ExecutionQuote | null = quoteGrade
-    ? buildQuote(quoteGrade, quoteGrade === "9.8" ? (consensusFmv > 0 ? consensusFmv : null) : (rawLattice[quoteGrade] != null ? Number(rawLattice[quoteGrade]) : null), spreadAnchors, snapshotLatest)
-    : consensusFmv > 0
-      ? buildQuote("9.8", consensusFmv, spreadAnchors, snapshotLatest)
+    ? buildQuote(quoteGrade, quoteGrade === "9.8" ? (effectiveConsensusFmv > 0 ? effectiveConsensusFmv : null) : (rawLattice[quoteGrade] != null ? Number(rawLattice[quoteGrade]) : null), spreadAnchors, snapshotLatest)
+    : effectiveConsensusFmv > 0
+      ? buildQuote("9.8", effectiveConsensusFmv, spreadAnchors, snapshotLatest)
       : null;
 
   const provenanceItems = buildProvenanceLedger({
