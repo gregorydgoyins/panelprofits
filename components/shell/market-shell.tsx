@@ -46,12 +46,13 @@ export async function MarketShell({ children }: MarketShellProps) {
   // Fetch fast bounded rails concurrently.
   // Note: EquitiesRail and AssetsRail now contain pre-calculated seed bundles
   // for instantaneous zero-latency first-paint and smooth GPU hydration.
-  const user = await getCurrentUser();
+  const userPromise = getCurrentUser();
+  const diaryPromise = userPromise.then((user) => (user ? getDiaryEntries(user.id) : []));
   const [telemetry, newsStories, marketIndices, diaryEntries] = await Promise.all([
     getMarketTelemetry(),
     getNewsStories(32),
     calculateMarketIndices(),
-    user ? getDiaryEntries(user.id) : Promise.resolve([]),
+    diaryPromise,
   ]);
 
   return (

@@ -7,7 +7,7 @@ import {
   getCanonicalAssetSurfaces,
 } from "@/lib/equity/canonical-equities";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export default async function AssetsPage() {
   const seats = await getCanonicalAssetSurfaces(70);

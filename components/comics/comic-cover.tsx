@@ -98,7 +98,7 @@ export function ComicCover({
         src={resolvedUrl}
         alt={`${series} #${issueNumber}`}
         fill
-        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+        sizes={size === "sm" ? "80px" : size === "lg" ? "256px" : size === "full" ? "(max-width: 448px) 100vw, 448px" : "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 240px"}
         priority={priority}
         className="object-cover transition-transform duration-300 group-hover:scale-105"
         onError={() => setHasError(true)}

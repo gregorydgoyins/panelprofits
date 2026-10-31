@@ -52,7 +52,7 @@ export function NewsRail({ initialStories }: NewsRailProps) {
               return (
                 <a key={`${story.id}-${index}`} href={`/news/${story.id}`} className="group flex min-w-[320px] max-w-[720px] shrink-0 items-center gap-2.5 border border-slate-800/80 bg-[#0E111A] px-3 py-1.5 transition-colors hover:border-cyan-400/90 hover:bg-[#141824] rounded-sm">
                   {story.imageUrl ? (
-                      <img src={story.imageUrl} alt="" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/newsroom-default.svg"; }} className="h-7 w-10 shrink-0 rounded-sm object-cover opacity-80" />
+                      <img src={story.imageUrl} alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/newsroom-default.svg"; }} className="h-7 w-10 shrink-0 rounded-sm object-cover opacity-80" />
                   ) : null}
                   {corpTicker ? (
                     <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.12em] font-mono text-cyan-300 bg-[#0C1626] px-1.5 py-0.5 border border-cyan-500/40 rounded">

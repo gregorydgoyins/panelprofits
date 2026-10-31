@@ -71,43 +71,10 @@ const nextConfig: NextConfig = {
     ],
   },
   async headers() {
+    // HTML page rules (/, /market, /equities, /comics/:id) were removed on purpose: those pages show
+    // the signed-in visitor's name, diary and collection, so a shared CDN copy could leak one
+    // person's view to another. Only truly static files get long public caching here.
     return [
-      {
-        source: "/",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, s-maxage=120, stale-while-revalidate=600",
-          },
-        ],
-      },
-      {
-        source: "/comics/:id",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, s-maxage=300, stale-while-revalidate=900",
-          },
-        ],
-      },
-      {
-        source: "/equities",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, s-maxage=120, stale-while-revalidate=600",
-          },
-        ],
-      },
-      {
-        source: "/market",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, s-maxage=120, stale-while-revalidate=600",
-          },
-        ],
-      },
       {
         source: "/covers/:path*",
         headers: [

@@ -175,6 +175,97 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
 
   const cbVideo = findComicBaseVideoForComic(comic.series, comic.issue_number);
 
+  let railRows: Array<{ comics_id: string; cover_url: string | null; cover_source: string | null; cover_suspect: boolean | null; cgc_total: number | null; printing: string | null; variant_label: string | null; volume: string | null }> = [];
+  const snapshotObservations: SnapshotObservation[] = [];
+  let salesObservations: SaleRow[] = [];
+  // Start the sales / price-history / rail lookups now (they only need the base comic record)
+  // so they run at the same time as the cover/census/GCD lookups instead of after them.
+  const marketDataPromise = (async () => {
+  try {
+    const supabase = createAdminServerClient();
+    // Current pp_comics rows use their catalog id as the pp_price_history key.
+    // pp_source_id is a legacy field and is not present in the live schema.
+    const cleanSourceId = String((comic as any).pp_source_id || comic.id || "").replace(/^pp-/i, "").trim() || null;
+
+    // Dated sales for this title and issue from sniper_sales (36,313 authentic completed auction sales) and graded_sales_observations
+    const salesPromise =
+      comic.series && comic.issue_number
+        ? Promise.all([
+            supabase
+              .from("graded_sales_observations")
+              .select("sale_price, sale_date, native_grade_text, venue, native_designation, has_restoration, has_signature")
+              .ilike("title_name", comic.series.replace(/[\\%_]/g, (m: string) => `\\${m}`))
+              .eq("issue_number_raw", comic.issue_number)
+              .not("has_restoration", "is", true)
+              .not("has_signature", "is", true)
+              .order("sale_date", { ascending: true })
+              .limit(100),
+            supabase
+              .from("sniper_sales")
+              .select("price_usd, sold_at, grade, venue")
+              .ilike("series", comic.series.replace(/[\\%_]/g, (m: string) => `\\${m}`))
+              .eq("issue", comic.issue_number)
+              .order("sold_at", { ascending: true })
+              .limit(100),
+          ]).then(([gsoRes, ssRes]) => {
+            const list: SaleRow[] = [];
+            for (const r of gsoRes.data ?? []) {
+              list.push(r as SaleRow);
+            }
+            for (const s of ssRes.data ?? []) {
+              list.push({
+                sale_price: s.price_usd,
+                sale_date: s.sold_at,
+                native_grade_text: String(s.grade),
+                venue: s.venue,
+              });
+            }
+            return { data: list };
+          })
+        : Promise.resolve({ data: [] as SaleRow[] });
+
+    const histPromise = cleanSourceId
+      ? supabase
+          .from("pp_price_history")
+          .select("snapshot_date,pp_price_raw,pp_price_2_0,pp_price_3_0,pp_price_4_0,pp_price_5_0,pp_price_6_0,pp_price_7_0,pp_price_8_0,pp_price_9_0,pp_price_9_2,pp_price_9_4,pp_price_9_6,pp_price_9_8,pp_price_10_0")
+          .eq("pp_id", cleanSourceId)
+          .not("snapshot_date", "is", null)
+          .order("snapshot_date", { ascending: true })
+          .limit(400)
+      : Promise.resolve({ data: [] as Array<Record<string, any>> });
+
+    let railQuery = supabase
+      .from("rail_books")
+      .select("comics_id,cover_url,cover_source,cover_suspect,cgc_total,printing,variant_label,volume")
+      .eq("series", comic.series)
+      .eq("issue_number", String(comic.issue_number))
+      .limit(8);
+    if (comic.publication_year) railQuery = railQuery.eq("year", comic.publication_year);
+
+    const [salesRes, histRes, railRes] = await Promise.all([
+      salesPromise.then((r: any) => r, () => ({ data: [] })),
+      histPromise.then((r: any) => r, () => ({ data: [] })),
+      railQuery.then((r: any) => r, () => ({ data: null })),
+    ]);
+
+    salesObservations = (salesRes.data ?? []) as SaleRow[];
+    if (railRes.data) railRows = railRes.data as typeof railRows;
+
+    // Real dated Panel Profits prices: one row per PriceCharting snapshot (undated legacy loads are skipped).
+    const gradeCols: Array<[string, string]> = [
+      ["pp_price_raw", "RAW"], ["pp_price_2_0", "2.0"], ["pp_price_3_0", "3.0"], ["pp_price_4_0", "4.0"], ["pp_price_5_0", "5.0"],
+      ["pp_price_6_0", "6.0"], ["pp_price_7_0", "7.0"], ["pp_price_8_0", "8.0"], ["pp_price_9_0", "9.0"], ["pp_price_9_2", "9.2"],
+      ["pp_price_9_4", "9.4"], ["pp_price_9_6", "9.6"], ["pp_price_9_8", "9.8"], ["pp_price_10_0", "10.0"],
+    ];
+    for (const row of (histRes.data ?? []) as Array<Record<string, any>>) {
+      for (const [col, grade] of gradeCols) {
+        const amount = Number(row[col]);
+        if (amount > 0) snapshotObservations.push({ amount, observed_at: row.snapshot_date, grade_label: grade });
+      }
+    }
+  } catch (_) {}
+  })();
+
   const [coverEvidence, censusDossier, userStatus, gcdRelational, gcdStoryDossier] = await Promise.all([
     getComicCoverEvidence(comic.id).catch((err) => {
       console.warn("Cover evidence read unavailable:", err);
@@ -299,92 +390,8 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
   );
   const effectivePrice = consensusFmv > 0 ? consensusFmv : candidateRawPrice;
 
-  let railRows: Array<{ comics_id: string; cover_url: string | null; cover_source: string | null; cover_suspect: boolean | null; cgc_total: number | null; printing: string | null; variant_label: string | null; volume: string | null }> = [];
-  const snapshotObservations: SnapshotObservation[] = [];
-  let salesObservations: SaleRow[] = [];
-  try {
-    const supabase = createAdminServerClient();
-    // Current pp_comics rows use their catalog id as the pp_price_history key.
-    // pp_source_id is a legacy field and is not present in the live schema.
-    const cleanSourceId = String((comic as any).pp_source_id || comic.id || "").replace(/^pp-/i, "").trim() || null;
-
-    // Dated sales for this title and issue from sniper_sales (36,313 authentic completed auction sales) and graded_sales_observations
-    const salesPromise =
-      comic.series && comic.issue_number
-        ? Promise.all([
-            supabase
-              .from("graded_sales_observations")
-              .select("sale_price, sale_date, native_grade_text, venue, native_designation, has_restoration, has_signature")
-              .ilike("title_name", comic.series.replace(/[\\%_]/g, (m: string) => `\\${m}`))
-              .eq("issue_number_raw", comic.issue_number)
-              .not("has_restoration", "is", true)
-              .not("has_signature", "is", true)
-              .order("sale_date", { ascending: true })
-              .limit(100),
-            supabase
-              .from("sniper_sales")
-              .select("price_usd, sold_at, grade, venue")
-              .ilike("series", comic.series.replace(/[\\%_]/g, (m: string) => `\\${m}`))
-              .eq("issue", comic.issue_number)
-              .order("sold_at", { ascending: true })
-              .limit(100),
-          ]).then(([gsoRes, ssRes]) => {
-            const list: SaleRow[] = [];
-            for (const r of gsoRes.data ?? []) {
-              list.push(r as SaleRow);
-            }
-            for (const s of ssRes.data ?? []) {
-              list.push({
-                sale_price: s.price_usd,
-                sale_date: s.sold_at,
-                native_grade_text: String(s.grade),
-                venue: s.venue,
-              });
-            }
-            return { data: list };
-          })
-        : Promise.resolve({ data: [] as SaleRow[] });
-
-    const histPromise = cleanSourceId
-      ? supabase
-          .from("pp_price_history")
-          .select("snapshot_date,pp_price_raw,pp_price_2_0,pp_price_3_0,pp_price_4_0,pp_price_5_0,pp_price_6_0,pp_price_7_0,pp_price_8_0,pp_price_9_0,pp_price_9_2,pp_price_9_4,pp_price_9_6,pp_price_9_8,pp_price_10_0")
-          .eq("pp_id", cleanSourceId)
-          .not("snapshot_date", "is", null)
-          .order("snapshot_date", { ascending: true })
-          .limit(400)
-      : Promise.resolve({ data: [] as Array<Record<string, any>> });
-
-    let railQuery = supabase
-      .from("rail_books")
-      .select("comics_id,cover_url,cover_source,cover_suspect,cgc_total,printing,variant_label,volume")
-      .eq("series", comic.series)
-      .eq("issue_number", String(comic.issue_number))
-      .limit(8);
-    if (comic.publication_year) railQuery = railQuery.eq("year", comic.publication_year);
-
-    const [salesRes, histRes, railRes] = await Promise.all([
-      salesPromise.then((r: any) => r, () => ({ data: [] })),
-      histPromise.then((r: any) => r, () => ({ data: [] })),
-      railQuery.then((r: any) => r, () => ({ data: null })),
-    ]);
-
-    salesObservations = (salesRes.data ?? []) as SaleRow[];
-    if (railRes.data) railRows = railRes.data as typeof railRows;
-
-    // Real dated Panel Profits prices: one row per PriceCharting snapshot (undated legacy loads are skipped).
-    const gradeCols: Array<[string, string]> = [
-      ["pp_price_raw", "RAW"], ["pp_price_2_0", "2.0"], ["pp_price_3_0", "3.0"], ["pp_price_4_0", "4.0"], ["pp_price_5_0", "5.0"],
-      ["pp_price_6_0", "6.0"], ["pp_price_7_0", "7.0"], ["pp_price_8_0", "8.0"], ["pp_price_9_0", "9.0"], ["pp_price_9_2", "9.2"],
-      ["pp_price_9_4", "9.4"], ["pp_price_9_6", "9.6"], ["pp_price_9_8", "9.8"], ["pp_price_10_0", "10.0"],
-    ];
-    for (const row of (histRes.data ?? []) as Array<Record<string, any>>) {
-      for (const [col, grade] of gradeCols) {
-        const amount = Number(row[col]);
-        if (amount > 0) snapshotObservations.push({ amount, observed_at: row.snapshot_date, grade_label: grade });
-      }
-    }
-  } catch (_) {}
+  // Sales, price history and rail rows were fetched in parallel with the lookups above.
+  await marketDataPromise;
 
   const salesByGrade = countSalesByGrade(salesObservations);
   const formattedSales = toSaleList(salesObservations, 20).map((s) => ({

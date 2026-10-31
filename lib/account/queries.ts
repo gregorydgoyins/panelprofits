@@ -1,9 +1,10 @@
 import { createServerClient, createPublicServerClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
+import { cache } from "react";
 import { Profile, Collection, CollectionItem, WatchlistItem } from "./types";
 import { ComicRecord } from "@/lib/comics/types";
 
-export async function getCurrentUser() {
+export const getCurrentUser = cache(async function getCurrentUser() {
   const cookieStore = await cookies();
   const allCookies = cookieStore.getAll();
   const hasAuthCookie = allCookies.some((c) => c.name.startsWith("sb-") && c.name.endsWith("-auth-token"));
@@ -13,7 +14,7 @@ export async function getCurrentUser() {
   const { data: { user }, error } = await supabase.auth.getUser();
   if (error || !user) return null;
   return user;
-}
+});
 
 export async function getUserProfile(): Promise<Profile | null> {
   const user = await getCurrentUser();
