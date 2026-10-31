@@ -83,6 +83,8 @@ function resolveCensusSourceAuthority(gradingCompany: string, provider: string):
   return "Secondary Provider";
 }
 
+const censusDossierMemoryCache = new Map<string, ComicCensusDossier | null>();
+
 export async function getComicCensusDossier(
   series: string,
   issueNumber: string,
@@ -90,6 +92,10 @@ export async function getComicCensusDossier(
 ): Promise<ComicCensusDossier | null> {
   try {
     if (!series || !issueNumber) return null;
+    const cacheKey = `${series.trim().toLowerCase()}:${issueNumber.trim().toLowerCase()}:${options?.publicationYear || ""}:${options?.edition || ""}`;
+    if (censusDossierMemoryCache.has(cacheKey)) {
+      return censusDossierMemoryCache.get(cacheKey) || null;
+    }
     const db = createCleanReadOnlyServerClient();
     let snapshotQuery = db
       .from("graded_census_snapshots")
@@ -148,7 +154,7 @@ export async function getComicCensusDossier(
           runningHigher += count;
         }
 
-        return {
+        const result: ComicCensusDossier = {
           snapshot: {
             title_name: cgcPop.title,
             issue_number_raw: cgcPop.issue_number,
@@ -166,7 +172,10 @@ export async function getComicCensusDossier(
           certifications: [],
           sales: [],
         };
+        censusDossierMemoryCache.set(cacheKey, result);
+        return result;
       }
+      censusDossierMemoryCache.set(cacheKey, null);
       return null;
     }
     const snapshot = snapshots[0];
@@ -191,7 +200,7 @@ export async function getComicCensusDossier(
     const gradingCompany = companyNames.get(snapshot.grading_company_id) || "CGC";
     const sourceAuthority = resolveCensusSourceAuthority(gradingCompany, providerName);
 
-    return {
+    const result: ComicCensusDossier = {
       snapshot: {
         title_name: snapshot.title_name,
         issue_number_raw: snapshot.issue_number_raw,
@@ -219,6 +228,8 @@ export async function getComicCensusDossier(
         gradingCompany: companyNames.get(grading_company_id) || "Unknown grader",
       })),
     };
+    censusDossierMemoryCache.set(cacheKey, result);
+    return result;
   } catch (err) {
     console.warn("Failed to retrieve comic census dossier:", err);
     return null;

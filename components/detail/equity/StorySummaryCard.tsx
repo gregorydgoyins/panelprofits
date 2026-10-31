@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getStorySummary, type StoryEntityLink } from "@/lib/comics/story-summary";
+import { getStorySummary, type StorySummary, type StoryEntityLink } from "@/lib/comics/story-summary";
 import { slugifyCreatorName } from "@/lib/creators/creator-bio-service";
 import { BookOpen, Sparkles, Users, MapPin, Wrench, Quote, PenTool, Palette } from "lucide-react";
 
@@ -196,18 +196,9 @@ export default async function StorySummaryCard({
   fandomData,
   authoritativeData,
 }: StorySummaryCardProps) {
-  let summary = null;
-  try {
-    summary = await Promise.race([
-      getStorySummary({ series, issueNumber, year, publisher, volume }),
-      new Promise<null>((resolve) => setTimeout(() => resolve(null), 9000)),
-    ]);
-  } catch {
-    summary = null;
-  }
-
-  // If external fetch was empty/timed out but sovereign database has fandom data:
-  if (!summary && (authoritativeData?.synopsis || fandomData?.synopsis)) {
+  let summary: StorySummary | null = null;
+  // If authoritative or fandom data is already present from sovereign database, use it immediately (0ms latency)
+  if (authoritativeData?.synopsis || fandomData?.synopsis) {
     const synopsis = authoritativeData?.synopsis || fandomData?.synopsis || "";
     const characterNames = Array.isArray(authoritativeData?.characters)
       ? authoritativeData.characters
@@ -249,11 +240,20 @@ export default async function StorySummaryCard({
         letterers: authoritativeData?.credits?.letterer || fandomData?.credits?.letterer || [],
         editors: authoritativeData?.credits?.editor || fandomData?.credits?.editor || [],
       } : undefined,
-      source: authoritativeData?.source || "Marvel/DC Fandom Database",
-      sourceUrl: authoritativeData?.sourceUrl || "https://fandom.com",
-      license: authoritativeData?.license ?? "CC-BY-SA 3.0",
+      source: authoritativeData?.source || "Sovereign Catalog",
+      sourceUrl: authoritativeData?.sourceUrl || `/comics?q=${encodeURIComponent(series)}`,
+      license: authoritativeData?.license ?? null,
       referenceYear: year,
     };
+  } else {
+    try {
+      summary = await Promise.race([
+        getStorySummary({ series, issueNumber, year, publisher, volume }),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 1500)),
+      ]);
+    } catch {
+      summary = null;
+    }
   }
 
   if (!summary) return null;

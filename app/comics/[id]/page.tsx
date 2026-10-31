@@ -302,7 +302,7 @@ export default async function ComicDetailPage({ params }: ComicDetailPageProps) 
       return null;
     }),
     resolveGcdStoryDossier(
-      comic.gcd_source_id || (comic.gcd_data as any)?.["GCD - gcd_issue.id"] || (comic.gcd_data as any)?.["GCD Source ID"],
+      (comic as any).gcd_issue_id || comic.gcd_source_id || (comic.gcd_data as any)?.["GCD - gcd_issue.id"] || (comic.gcd_data as any)?.["GCD Source ID"],
       comic.series,
       comic.issue_number,
       comic.publication_year
